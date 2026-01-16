@@ -245,6 +245,152 @@ TEST(Ed25519PrivateKeyTest, Clone) {
   ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
+TEST(Ed25519PrivateKeyTest, CopyConstructor) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, (*key_pair)->public_key,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  Ed25519PrivateKey copy(*private_key);
+
+  EXPECT_THAT(copy, Eq(*private_key));
+}
+
+TEST(Ed25519PrivateKeyTest, CopyAssignment) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, (*key_pair)->public_key,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> other_key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(other_key_pair, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> other_public_key = Ed25519PublicKey::Create(
+      *other_params, (*other_key_pair)->public_key,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  RestrictedData other_private_key_bytes = RestrictedData(
+      (*other_key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> copy = Ed25519PrivateKey::Create(
+      *other_public_key, other_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *private_key;
+
+  EXPECT_THAT(*copy, Eq(*private_key));
+}
+
+TEST(Ed25519PrivateKeyTest, MoveConstructor) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, (*key_pair)->public_key,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  Ed25519PrivateKey expected = *private_key;
+  Ed25519PrivateKey moved(std::move(*private_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(Ed25519PrivateKeyTest, MoveAssignment) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, (*key_pair)->public_key,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> other_key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(other_key_pair, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> other_public_key = Ed25519PublicKey::Create(
+      *other_params, (*other_key_pair)->public_key,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  RestrictedData other_private_key_bytes = RestrictedData(
+      (*other_key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> moved = Ed25519PrivateKey::Create(
+      *other_public_key, other_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  Ed25519PrivateKey expected = *private_key;
+  *moved = std::move(*private_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

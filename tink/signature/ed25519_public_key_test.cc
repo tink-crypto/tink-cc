@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -231,6 +232,92 @@ TEST(Ed25519PublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = public_key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*public_key));
+}
+
+TEST(Ed25519PublicKeyTest, CopyConstructor) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  Ed25519PublicKey copy(*public_key);
+
+  EXPECT_THAT(copy, Eq(*public_key));
+}
+
+TEST(Ed25519PublicKeyTest, CopyAssignment) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<Ed25519PublicKey> copy = Ed25519PublicKey::Create(
+      *other_params, other_public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *public_key;
+
+  EXPECT_THAT(*copy, Eq(*public_key));
+}
+
+TEST(Ed25519PublicKeyTest, MoveConstructor) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  Ed25519PublicKey expected = *public_key;
+  Ed25519PublicKey moved(std::move(*public_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(Ed25519PublicKeyTest, MoveAssignment) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<Ed25519PublicKey> moved = Ed25519PublicKey::Create(
+      *other_params, other_public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  Ed25519PublicKey expected = *public_key;
+  *moved = std::move(*public_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

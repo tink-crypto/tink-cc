@@ -17,6 +17,7 @@
 #include "tink/signature/ed25519_parameters.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -79,8 +80,7 @@ TEST(Ed25519ParametersTest, CopyConstructor) {
 
   Ed25519Parameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetVariant(), Eq(Ed25519Parameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(Ed25519ParametersTest, CopyAssignment) {
@@ -88,10 +88,39 @@ TEST(Ed25519ParametersTest, CopyAssignment) {
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  Ed25519Parameters copy = *parameters;
+  absl::StatusOr<Ed25519Parameters> copy =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.GetVariant(), Eq(Ed25519Parameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(Ed25519ParametersTest, MoveConstructor) {
+  absl::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  Ed25519Parameters expected = *parameters;
+  Ed25519Parameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(Ed25519ParametersTest, MoveAssignment) {
+  absl::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> moved =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(moved, IsOk());
+
+  Ed25519Parameters expected = *parameters;
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(Ed25519ParametersTest, ParametersEquals) {

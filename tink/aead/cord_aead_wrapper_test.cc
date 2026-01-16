@@ -98,11 +98,11 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecrypt) {
   aad.Append("some_aad");
 
   auto encrypt_result = aead->Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  EXPECT_THAT(encrypt_result, IsOk());
   absl::Cord ciphertext = encrypt_result.value();
 
   auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+  EXPECT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 
@@ -117,7 +117,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   aad.Append("some_aad");
   auto encrypt_result =
       aead_set->get_primary()->get_primitive().Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  EXPECT_THAT(encrypt_result, IsOk());
   absl::Cord ciphertext;
   ciphertext.Append(aead_set->get_primary()->get_identifier());
   ciphertext.Append(encrypt_result.value());
@@ -134,7 +134,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
   auto entry_result =
       aead_set->AddPrimitive(std::move(aead), keyset_info.key_info(0));
-  EXPECT_TRUE(entry_result.ok()) << entry_result.status();
+  EXPECT_THAT(entry_result, IsOk());
 
   // Wrap the primitive set
   CordAeadWrapper wrapper;
@@ -145,7 +145,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   // Encrypt with the wrapped AEAD and check if result was equal to the
   // encryption with the primary key.
   auto encrypt_wrap_result = aead->Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_wrap_result.ok()) << encrypt_wrap_result.status();
+  EXPECT_THAT(encrypt_wrap_result, IsOk());
   EXPECT_EQ(ciphertext, encrypt_wrap_result.value());
 }
 
@@ -167,11 +167,11 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptManyChunks) {
   aad.Append("some_aad");
 
   auto encrypt_result = aead->Encrypt(plaintext_cord, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  EXPECT_THAT(encrypt_result, IsOk());
   absl::Cord ciphertext = encrypt_result.value();
 
   auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+  EXPECT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 

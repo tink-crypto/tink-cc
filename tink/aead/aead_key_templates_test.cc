@@ -100,7 +100,7 @@ TEST(AeadKeyTemplatesTest, testAesEaxKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test Aes256Eax().
@@ -123,7 +123,7 @@ TEST(AeadKeyTemplatesTest, testAesEaxKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 
@@ -273,7 +273,7 @@ TEST(AeadKeyTemplatesTest, testAesGcmSivKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test Aes256GcmSiv().
@@ -295,7 +295,7 @@ TEST(AeadKeyTemplatesTest, testAesGcmSivKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 
@@ -326,7 +326,7 @@ TEST(AeadKeyTemplatesTest, testAesCtrHmacAeadKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test Aes256CtrHmacSha256().
@@ -352,7 +352,7 @@ TEST(AeadKeyTemplatesTest, testAesCtrHmacAeadKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 
@@ -375,7 +375,7 @@ TEST(AeadKeyTemplatesTest, testXChaCha20Poly1305KeyTemplates) {
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result =
       key_manager->get_key_factory().NewKey(key_template.value());
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 struct XAesGcmKeyTemplateTestCase {
@@ -467,15 +467,15 @@ TEST(AeadKeyTemplatesTest, testKmsEnvelopeAead) {
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result =
       key_manager->get_key_factory().NewKey(key_template.value());
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(AeadKeyTemplatesTest, testKmsEnvelopeAeadMultipleKeysSameKek) {
   // Initialize the registry.
-  ASSERT_TRUE(AeadConfig::Register().ok());
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
 
   auto kek_uri_result = test::FakeKmsClient::CreateFakeKeyUri();
-  EXPECT_TRUE(kek_uri_result.ok()) << kek_uri_result.status();
+  EXPECT_THAT(kek_uri_result, IsOk());
   std::string kek_uri = kek_uri_result.value();
   auto register_fake_kms_client_status = test::FakeKmsClient::RegisterNewClient(
       kek_uri, /* credentials_path= */ "");
@@ -488,22 +488,22 @@ TEST(AeadKeyTemplatesTest, testKmsEnvelopeAeadMultipleKeysSameKek) {
       AeadKeyTemplates::KmsEnvelopeAead(kek_uri, dek_template);
   auto handle_result1 =
       KeysetHandle::GenerateNew(key_template1, KeyGenConfigGlobalRegistry());
-  EXPECT_TRUE(handle_result1.ok());
+  EXPECT_THAT(handle_result1, IsOk());
   auto handle1 = std::move(handle_result1.value());
   auto aead_result1 =
       handle1->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
-  EXPECT_TRUE(aead_result1.ok());
+  EXPECT_THAT(aead_result1, IsOk());
   auto aead1 = std::move(aead_result1.value());
 
   const KeyTemplate& key_template2 =
       AeadKeyTemplates::KmsEnvelopeAead(kek_uri, dek_template);
   auto handle_result2 =
       KeysetHandle::GenerateNew(key_template2, KeyGenConfigGlobalRegistry());
-  EXPECT_TRUE(handle_result2.ok());
+  EXPECT_THAT(handle_result2, IsOk());
   auto handle2 = std::move(handle_result2.value());
   auto aead_result2 =
       handle2->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
-  EXPECT_TRUE(aead_result2.ok());
+  EXPECT_THAT(aead_result2, IsOk());
   auto aead2 = std::move(aead_result2.value());
 
   EXPECT_THAT(EncryptThenDecrypt(*aead1, *aead2, "message", "aad"), IsOk());

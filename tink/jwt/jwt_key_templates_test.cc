@@ -35,15 +35,16 @@
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
-using ::crypto::tink::test::IsOk;
-using google::crypto::tink::KeyTemplate;
-
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::test::IsOk;
+using ::google::crypto::tink::KeyTemplate;
+using ::testing::Not;
+
 class JwtMacKeyTemplatesTest : public testing::TestWithParam<KeyTemplate> {
-  void SetUp() override { ASSERT_TRUE(JwtMacRegister().ok()); }
+  void SetUp() override { ASSERT_THAT(JwtMacRegister(), IsOk()); }
 };
 
 TEST_P(JwtMacKeyTemplatesTest, CreateComputeVerify) {
@@ -80,7 +81,8 @@ TEST_P(JwtMacKeyTemplatesTest, CreateComputeVerify) {
                                                 .AllowMissingExpiration()
                                                 .Build();
   ASSERT_THAT(validator2, IsOk());
-  EXPECT_FALSE((*jwt_mac)->VerifyMacAndDecode(*compact, *validator2).ok());
+  EXPECT_THAT((*jwt_mac)->VerifyMacAndDecode(*compact, *validator2),
+              Not(IsOk()));
 }
 
 INSTANTIATE_TEST_SUITE_P(JwtMacKeyTemplatesTest, JwtMacKeyTemplatesTest,
@@ -89,7 +91,7 @@ INSTANTIATE_TEST_SUITE_P(JwtMacKeyTemplatesTest, JwtMacKeyTemplatesTest,
 
 class JwtSignatureKeyTemplatesTest
     : public testing::TestWithParam<KeyTemplate> {
-  void SetUp() override { ASSERT_TRUE(JwtSignatureRegister().ok()); }
+  void SetUp() override { ASSERT_THAT(JwtSignatureRegister(), IsOk()); }
 };
 
 TEST_P(JwtSignatureKeyTemplatesTest, CreateComputeVerify) {
@@ -134,7 +136,7 @@ TEST_P(JwtSignatureKeyTemplatesTest, CreateComputeVerify) {
                                                 .AllowMissingExpiration()
                                                 .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE((*verify)->VerifyAndDecode(*compact, *validator2).ok());
+  EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator2), Not(IsOk()));
 }
 
 INSTANTIATE_TEST_SUITE_P(

@@ -24,14 +24,15 @@
 #include "absl/status/statusor.h"
 #include "tink/util/test_matchers.h"
 
+namespace crypto {
+namespace tink {
+namespace jwt_internal {
+
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::google::protobuf::ListValue;
 using ::google::protobuf::Struct;
-
-namespace crypto {
-namespace tink {
-namespace jwt_internal {
+using ::testing::Not;
 
 TEST(JsonUtil, ParseThenSerializeStructWtihStringListOk) {
   absl::StatusOr<Struct> proto =
@@ -73,7 +74,7 @@ TEST(JsonUtil, ParseListWithTailingCommaWorks) {
   // This is not allowed in the spec: https://www.json.org/json-en.html
   absl::StatusOr<ListValue> proto =
       JsonStringToProtoList(R"(["hello", "world",])");
-  EXPECT_TRUE(proto.ok());
+  EXPECT_THAT(proto, IsOk());
   ASSERT_THAT(ProtoListToJsonString(*proto),
               IsOkAndHolds(R"(["hello","world"])"));
 }
@@ -88,16 +89,15 @@ TEST(JsonUtil, ParseStructWithTailingCommaWorks) {
               IsOkAndHolds(R"({"some_key":false})"));
 }
 
-
 TEST(JsonUtil, ParseInvalidStructTokenNotOk) {
   absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false)");
-  ASSERT_FALSE(proto.ok());
+  ASSERT_THAT(proto, Not(IsOk()));
 }
 
 TEST(JsonUtil, ParseInvalidListTokenNotOk) {
   absl::StatusOr<Struct> proto = JsonStringToProtoStruct(R"(["one", )");
-  ASSERT_FALSE(proto.ok());
+  ASSERT_THAT(proto, Not(IsOk()));
 }
 
 TEST(JsonUtil, parseRecursiveJsonStringFails) {
@@ -110,7 +110,7 @@ TEST(JsonUtil, parseRecursiveJsonStringFails) {
     recursive_json.append("}");
   }
   absl::StatusOr<Struct> proto = JsonStringToProtoStruct(recursive_json);
-  EXPECT_FALSE(proto.ok());
+  EXPECT_THAT(proto, Not(IsOk()));
 }
 
 TEST(JsonUtil, ParseStructWithoutQuotesOk) {
@@ -123,19 +123,19 @@ TEST(JsonUtil, ParseStructWithoutQuotesOk) {
 
 TEST(JsonUtil, ParseListWithoutQuotesNotOk) {
   absl::StatusOr<ListValue> proto = JsonStringToProtoList(R"([one,two])");
-  EXPECT_FALSE(proto.ok());
+  EXPECT_THAT(proto, Not(IsOk()));
 }
 
 TEST(JsonUtil, ParseStructWithCommentNotOk) {
   absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false /* comment */})");
-  EXPECT_FALSE(proto.ok());
+  EXPECT_THAT(proto, Not(IsOk()));
 }
 
 TEST(JsonUtil, ParseListWithCommentNotOk) {
   absl::StatusOr<ListValue> proto =
       JsonStringToProtoList(R"(["hello", "world" /* comment */])");
-  EXPECT_FALSE(proto.ok());
+  EXPECT_THAT(proto, Not(IsOk()));
 }
 
 }  // namespace jwt_internal

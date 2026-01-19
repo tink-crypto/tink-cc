@@ -46,6 +46,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
+using ::testing::Not;
 
 absl::StatusOr<VerifiedJwt> CreateVerifiedJwt(const RawJwt& raw_jwt) {
   // Creating a VerifiedJwt is a bit complicated since it can only be created
@@ -249,12 +250,12 @@ TEST(VerifiedJwt, GetRegisteredCustomClaimNotOK) {
   absl::StatusOr<VerifiedJwt> jwt = CreateVerifiedJwt(*raw_jwt);
   ASSERT_THAT(jwt, IsOk());
 
-  EXPECT_FALSE(jwt->GetStringClaim("iss").ok());
-  EXPECT_FALSE(jwt->GetStringClaim("sub").ok());
-  EXPECT_FALSE(jwt->GetStringClaim("jti").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("nbf").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("iat").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("exp").ok());
+  EXPECT_THAT(jwt->GetStringClaim("iss"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetStringClaim("sub"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetStringClaim("jti"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("nbf"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("iat"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("exp"), Not(IsOk()));
 }
 
 TEST(VerifiedJwt, EmptyTokenHasAndIsReturnsFalse) {
@@ -285,20 +286,20 @@ TEST(VerifiedJwt, EmptyTokenGetReturnsNotOK) {
   absl::StatusOr<VerifiedJwt> jwt = CreateVerifiedJwt(*raw_jwt);
   ASSERT_THAT(jwt, IsOk());
 
-  EXPECT_FALSE(jwt->GetTypeHeader().ok());
-  EXPECT_FALSE(jwt->GetIssuer().ok());
-  EXPECT_FALSE(jwt->GetSubject().ok());
-  EXPECT_FALSE(jwt->GetAudiences().ok());
-  EXPECT_FALSE(jwt->GetJwtId().ok());
-  EXPECT_FALSE(jwt->GetExpiration().ok());
-  EXPECT_FALSE(jwt->GetNotBefore().ok());
-  EXPECT_FALSE(jwt->GetIssuedAt().ok());
+  EXPECT_THAT(jwt->GetTypeHeader(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetIssuer(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetSubject(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetAudiences(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetJwtId(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetExpiration(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNotBefore(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetIssuedAt(), Not(IsOk()));
   EXPECT_FALSE(jwt->IsNullClaim("null_claim"));
-  EXPECT_FALSE(jwt->GetBooleanClaim("boolean_claim").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("number_claim").ok());
-  EXPECT_FALSE(jwt->GetStringClaim("string_claim").ok());
-  EXPECT_FALSE(jwt->GetJsonObjectClaim("object_claim").ok());
-  EXPECT_FALSE(jwt->GetJsonArrayClaim("array_claim").ok());
+  EXPECT_THAT(jwt->GetBooleanClaim("boolean_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("number_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetStringClaim("string_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetJsonObjectClaim("object_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetJsonArrayClaim("array_claim"), Not(IsOk()));
 }
 
 TEST(VerifiedJwt, GetJsonPayload) {

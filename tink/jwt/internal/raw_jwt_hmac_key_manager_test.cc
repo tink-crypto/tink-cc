@@ -227,12 +227,12 @@ TEST(RawJwtHmacKeyManagerTest, GetPrimitiveFromNewKeysetHandle) {
 
   auto handle_result =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
-  ASSERT_TRUE(handle_result.ok()) << handle_result.status();
+  ASSERT_THAT(handle_result, IsOk());
   std::unique_ptr<KeysetHandle> handle = std::move(handle_result.value());
 
   auto mac_result =
       handle->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
-  ASSERT_TRUE(mac_result.ok()) << mac_result.status();
+  ASSERT_THAT(mac_result, IsOk());
   std::unique_ptr<Mac> mac = std::move(mac_result.value());
   auto tag_or = mac->ComputeMac("some plaintext");
   ASSERT_THAT(tag_or, IsOk());

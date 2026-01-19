@@ -74,7 +74,7 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
   { // hybrid_decrypt_set is nullptr.
     auto hybrid_decrypt_result =
         HybridDecryptWrapper().Wrap(nullptr);
-    EXPECT_FALSE(hybrid_decrypt_result.ok());
+    EXPECT_THAT(hybrid_decrypt_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInternal,
               hybrid_decrypt_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "non-NULL",
@@ -85,7 +85,7 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
     auto hybrid_decrypt_set = std::make_unique<PrimitiveSet<HybridDecrypt>>();
     auto hybrid_decrypt_result = HybridDecryptWrapper().Wrap(
         std::move(hybrid_decrypt_set));
-    EXPECT_FALSE(hybrid_decrypt_result.ok());
+    EXPECT_THAT(hybrid_decrypt_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
         hybrid_decrypt_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",
@@ -135,7 +135,7 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
     auto hybrid_decrypt_result = HybridDecryptWrapper().Wrap(
         std::make_unique<PrimitiveSet<HybridDecrypt>>(
             *std::move(hybrid_decrypt_set)));
-    EXPECT_TRUE(hybrid_decrypt_result.ok()) << hybrid_decrypt_result.status();
+    EXPECT_THAT(hybrid_decrypt_result, IsOk());
     std::unique_ptr<HybridDecrypt> hybrid_decrypt =
         std::move(hybrid_decrypt_result.value());
     std::string plaintext = "some_plaintext";
@@ -146,14 +146,14 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
                                    .Encrypt(plaintext, context_info)
                                    .value();
       auto decrypt_result = hybrid_decrypt->Decrypt(ciphertext, context_info);
-      EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+      EXPECT_THAT(decrypt_result, IsOk());
       EXPECT_EQ(plaintext, decrypt_result.value());
     }
 
     {  // No ciphertext prefix.
       std::string ciphertext = plaintext + hybrid_name_1;
       auto decrypt_result = hybrid_decrypt->Decrypt(ciphertext, context_info);
-      EXPECT_FALSE(decrypt_result.ok());
+      EXPECT_THAT(decrypt_result, Not(IsOk()));
       EXPECT_EQ(absl::StatusCode::kInvalidArgument,
                 decrypt_result.status().code());
       EXPECT_PRED_FORMAT2(testing::IsSubstring, "decryption failed",
@@ -168,14 +168,14 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
                             .Encrypt(plaintext, context_info)
                             .value();
       auto decrypt_result = hybrid_decrypt->Decrypt(ciphertext, context_info);
-      EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+      EXPECT_THAT(decrypt_result, IsOk());
       EXPECT_EQ(plaintext, decrypt_result.value());
     }
 
     {  // Bad ciphertext.
       std::string ciphertext = "some bad ciphertext";
       auto decrypt_result = hybrid_decrypt->Decrypt(ciphertext, context_info);
-      EXPECT_FALSE(decrypt_result.ok());
+      EXPECT_THAT(decrypt_result, Not(IsOk()));
       EXPECT_EQ(absl::StatusCode::kInvalidArgument,
           decrypt_result.status().code());
       EXPECT_PRED_FORMAT2(testing::IsSubstring, "decryption failed",

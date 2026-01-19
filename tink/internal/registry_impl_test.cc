@@ -292,7 +292,7 @@ void register_test_managers(const std::string& key_type_prefix,
     absl::Status status = Registry::RegisterKeyManager(
         absl::make_unique<TestAeadKeyManager>(key_type),
         /* new_key_allowed= */ true);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
   }
 }
 
@@ -301,7 +301,7 @@ void verify_test_managers(const std::string& key_type_prefix,
   for (int i = 0; i < manager_count; i++) {
     std::string key_type = key_type_prefix + std::to_string(i);
     auto manager_result = Registry::get_key_manager<Aead>(key_type);
-    EXPECT_TRUE(manager_result.ok()) << manager_result.status();
+    ASSERT_THAT(manager_result, IsOk());
     auto manager = manager_result.value();
     EXPECT_EQ(key_type, manager->get_key_type());
   }
@@ -317,20 +317,20 @@ TEST_F(RegistryTest, testRegisterKeyManagerMoreRestrictiveNewKeyAllowed) {
   absl::Status status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ true);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   auto result_before = Registry::NewKeyData(key_template);
-  EXPECT_TRUE(result_before.ok()) << result_before.status();
+  EXPECT_THAT(result_before, IsOk());
 
   // Re-register the key manager with new_key_allowed == false and check the
   // restriction (i.e. new key data cannot be created).
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ false);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   auto result_after = Registry::NewKeyData(key_template);
-  EXPECT_FALSE(result_after.ok());
+  EXPECT_THAT(result_after, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, result_after.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, key_type,
                       std::string(result_after.status().message()));
@@ -347,7 +347,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerLessRestrictiveNewKeyAllowed) {
   absl::Status status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ false);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   // Verify that re-registering the key manager with new_key_allowed == true is
   // not possible and that the restriction still holds after that operation
@@ -355,7 +355,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerLessRestrictiveNewKeyAllowed) {
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ true);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kAlreadyExists, status.code()) << status;
   EXPECT_PRED_FORMAT2(testing::IsSubstring, key_type,
                       std::string(status.message()))
@@ -365,7 +365,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerLessRestrictiveNewKeyAllowed) {
       << status;
 
   auto result_after = Registry::NewKeyData(key_template);
-  EXPECT_FALSE(result_after.ok());
+  EXPECT_THAT(result_after, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, result_after.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, key_type,
                       std::string(result_after.status().message()));
@@ -401,12 +401,12 @@ TEST_F(RegistryTest, testConcurrentRegistration) {
   // Check that there are no extra managers.
   std::string key_type = key_type_prefix_a + std::to_string(count_a - 1);
   auto manager_result = Registry::get_key_manager<Aead>(key_type);
-  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_THAT(manager_result, IsOk());
   EXPECT_EQ(key_type, manager_result.value()->get_key_type());
 
   key_type = key_type_prefix_a + std::to_string(count_a);
   manager_result = Registry::get_key_manager<Aead>(key_type);
-  EXPECT_FALSE(manager_result.ok());
+  EXPECT_THAT(manager_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kNotFound, manager_result.status().code());
 }
 
@@ -414,26 +414,26 @@ TEST_F(RegistryTest, testBasic) {
   std::string key_type_1 = "google.crypto.tink.AesCtrHmacAeadKey";
   std::string key_type_2 = "google.crypto.tink.AesGcmKey";
   auto manager_result = Registry::get_key_manager<Aead>(key_type_1);
-  EXPECT_FALSE(manager_result.ok());
+  EXPECT_THAT(manager_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kNotFound, manager_result.status().code());
 
   auto status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_1), true);
 
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_2), true);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   manager_result = Registry::get_key_manager<Aead>(key_type_1);
-  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_THAT(manager_result, IsOk());
   auto manager = manager_result.value();
   EXPECT_TRUE(manager->DoesSupport(key_type_1));
   EXPECT_FALSE(manager->DoesSupport(key_type_2));
 
   manager_result = Registry::get_key_manager<Aead>(key_type_2);
-  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_THAT(manager_result, IsOk());
   manager = manager_result.value();
   EXPECT_TRUE(manager->DoesSupport(key_type_2));
   EXPECT_FALSE(manager->DoesSupport(key_type_1));
@@ -444,29 +444,29 @@ TEST_F(RegistryTest, testRegisterKeyManager) {
 
   std::unique_ptr<TestAeadKeyManager> null_key_manager = nullptr;
   auto status = Registry::RegisterKeyManager(std::move(null_key_manager), true);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, status.code()) << status;
 
   // Register a key manager.
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_1), true);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   // Register the same key manager again, it should work (idempotence).
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_1), true);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   // Try overriding a key manager.
   AesGcmKeyManager key_type_manager;
   status = Registry::RegisterKeyManager(
       crypto::tink::internal::MakeKeyManager<Aead>(&key_type_manager), true);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kAlreadyExists, status.code()) << status;
 
   // Check the key manager is still registered.
   auto manager_result = Registry::get_key_manager<Aead>(key_type_1);
-  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_THAT(manager_result, IsOk());
   auto manager = manager_result.value();
   EXPECT_TRUE(manager->DoesSupport(key_type_1));
 }
@@ -536,7 +536,7 @@ TEST_F(RegistryTest, testGettingPrimitives) {
   // Key #1.
   {
     auto result = Registry::GetPrimitive<Aead>(keyset.key(0).key_data());
-    ASSERT_TRUE(result.ok()) << result.status();
+    ASSERT_THAT(result, IsOk());
     auto aead = std::move(result.value());
     EXPECT_EQ(DummyAead(key_type_1).Encrypt(plaintext, aad).value(),
               aead->Encrypt(plaintext, aad).value());
@@ -545,7 +545,7 @@ TEST_F(RegistryTest, testGettingPrimitives) {
   // Key #3.
   {
     auto result = Registry::GetPrimitive<Aead>(keyset.key(2).key_data());
-    ASSERT_TRUE(result.ok()) << result.status();
+    ASSERT_THAT(result, IsOk());
     auto aead = std::move(result.value());
     EXPECT_EQ(DummyAead(key_type_2).Encrypt(plaintext, aad).value(),
               aead->Encrypt(plaintext, aad).value());
@@ -562,22 +562,22 @@ TEST_F(RegistryTest, testNewKeyData) {
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_1),
       /*new_key_allowed=*/true);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_2),
       /*new_key_allowed=*/true);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_3),
       /*new_key_allowed=*/false);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   {  // A supported key type.
     KeyTemplate key_template;
     key_template.set_type_url(key_type_1);
     key_template.set_value("test value 42");
     auto new_key_data_result = Registry::NewKeyData(key_template);
-    ASSERT_TRUE(new_key_data_result.ok()) << new_key_data_result.status();
+    ASSERT_THAT(new_key_data_result, IsOk());
     EXPECT_EQ(key_type_1, new_key_data_result.value()->type_url());
     EXPECT_EQ(key_template.value(), new_key_data_result.value()->value());
   }
@@ -587,7 +587,7 @@ TEST_F(RegistryTest, testNewKeyData) {
     key_template.set_type_url(key_type_2);
     key_template.set_value("yet another test value 42");
     auto new_key_data_result = Registry::NewKeyData(key_template);
-    ASSERT_TRUE(new_key_data_result.ok()) << new_key_data_result.status();
+    ASSERT_THAT(new_key_data_result, IsOk());
     EXPECT_EQ(key_type_2, new_key_data_result.value()->type_url());
     EXPECT_EQ(key_template.value(), new_key_data_result.value()->value());
   }
@@ -597,7 +597,7 @@ TEST_F(RegistryTest, testNewKeyData) {
     key_template.set_type_url(key_type_3);
     key_template.set_value("some other value 72");
     auto new_key_data_result = Registry::NewKeyData(key_template);
-    EXPECT_FALSE(new_key_data_result.ok());
+    EXPECT_THAT(new_key_data_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
               new_key_data_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, key_type_3,
@@ -612,7 +612,7 @@ TEST_F(RegistryTest, testNewKeyData) {
     key_template.set_type_url(bad_type_url);
     key_template.set_value("some totally other value 42");
     auto new_key_data_result = Registry::NewKeyData(key_template);
-    EXPECT_FALSE(new_key_data_result.ok());
+    EXPECT_THAT(new_key_data_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kNotFound, new_key_data_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, bad_type_url,
                         std::string(new_key_data_result.status().message()));
@@ -631,11 +631,11 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
       internal::MakePrivateKeyManager<HybridDecrypt>(
           private_key_type_manager.get(), public_key_type_manager.get()),
       true);
-  ASSERT_TRUE(status.ok()) << status;
+  ASSERT_THAT(status, IsOk());
   AesGcmKeyManager key_type_manager;
   status = Registry::RegisterKeyManager(
       crypto::tink::internal::MakeKeyManager<Aead>(&key_type_manager), true);
-  ASSERT_TRUE(status.ok()) << status;
+  ASSERT_THAT(status, IsOk());
 
   // Get a test private key.
   auto ecies_key = test::GetEciesAesGcmHkdfTestKey(
@@ -646,7 +646,7 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   auto public_key_data_result = Registry::GetPublicKeyData(
       EciesAeadHkdfPrivateKeyManager().get_key_type(),
       ecies_key.SerializeAsString());
-  ASSERT_TRUE(public_key_data_result.ok()) << public_key_data_result.status();
+  ASSERT_THAT(public_key_data_result, IsOk());
   auto public_key_data = std::move(public_key_data_result.value());
   EXPECT_EQ(EciesAeadHkdfPublicKeyManager().get_key_type(),
             public_key_data->type_url());
@@ -657,7 +657,7 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   // Try with a wrong key type.
   auto wrong_key_type_result = Registry::GetPublicKeyData(
       AesGcmKeyManager().get_key_type(), ecies_key.SerializeAsString());
-  EXPECT_FALSE(wrong_key_type_result.ok());
+  EXPECT_THAT(wrong_key_type_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument,
             wrong_key_type_result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "PrivateKeyFactory",
@@ -667,7 +667,7 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   auto bad_key_result = Registry::GetPublicKeyData(
       EciesAeadHkdfPrivateKeyManager().get_key_type(),
       "some bad serialized key");
-  EXPECT_FALSE(bad_key_result.ok());
+  EXPECT_THAT(bad_key_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, bad_key_result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "Could not parse",
                       std::string(bad_key_result.status().message()));
@@ -676,31 +676,31 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
 // Tests that if we register the same type of wrapper twice, the second call
 // succeeds.
 TEST_F(RegistryTest, RegisterWrapperTwice) {
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
-          .ok());
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
-          .ok());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      IsOk());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      IsOk());
 }
 
 // Tests that if we register the same type of wrapper twice, the second call
 // succeeds.
 TEST_F(RegistryTest, RegisterTransformingWrapperTwice) {
-  EXPECT_TRUE(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>())
-                  .ok());
-  EXPECT_TRUE(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>())
-                  .ok());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  absl::make_unique<AeadVariantToStringWrapper>()),
+              IsOk());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  absl::make_unique<AeadVariantToStringWrapper>()),
+              IsOk());
 }
 
 // Test that if we register a second wrapper, wrapping to the same type as a
 // previous wrapper it will fail.
 TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixing) {
-  EXPECT_TRUE(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>())
-                  .ok());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  absl::make_unique<AeadVariantToStringWrapper>()),
+              IsOk());
   // We cannot register a different wrapper creating a std::string.
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
                   absl::make_unique<TestWrapper<std::string>>()),
@@ -726,37 +726,37 @@ TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixingBackwards) {
 // Tests that if we register different wrappers for the same primitive twice,
 // the second call fails.
 TEST_F(RegistryTest, RegisterDifferentWrappers) {
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
-          .ok());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      IsOk());
   absl::Status result = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<TestWrapper<Aead>>());
-  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kAlreadyExists, result.code());
 }
 
 // Tests that if we register different wrappers for different primitives, this
 // returns ok.
 TEST_F(RegistryTest, RegisterDifferentWrappersDifferentPrimitives) {
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Aead>>())
-          .ok());
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Mac>>())
-          .ok());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  absl::make_unique<TestWrapper<Aead>>()),
+              IsOk());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Mac>>()),
+      IsOk());
 }
 
 // Tests that if we do not register a wrapper, then calls to Wrap
 // fail with "No wrapper registered" -- even if there is a wrapper for a
 // different primitive registered.
 TEST_F(RegistryTest, NoWrapperRegistered) {
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Mac>>())
-          .ok());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Mac>>()),
+      IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> result =
       Registry::Wrap<Aead>(absl::make_unique<PrimitiveSet<Aead>>());
-  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kNotFound, result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "No wrapper registered",
                       std::string(result.status().message()));
@@ -765,13 +765,13 @@ TEST_F(RegistryTest, NoWrapperRegistered) {
 // Tests that if the wrapper fails, the error of the wrapped is forwarded
 // in GetWrappedPrimitive.
 TEST_F(RegistryTest, WrapperFails) {
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Aead>>())
-          .ok());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  absl::make_unique<TestWrapper<Aead>>()),
+              IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> result =
       Registry::Wrap<Aead>(absl::make_unique<PrimitiveSet<Aead>>());
-  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result, Not(IsOk()));
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "This is a test wrapper",
                       std::string(result.status().message()));
 }
@@ -807,28 +807,28 @@ TEST_F(RegistryTest, UsualWrappingTest) {
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
-  EXPECT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
-          .ok());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      IsOk());
 
   auto aead_result = Registry::Wrap<Aead>(
       std::make_unique<PrimitiveSet<Aead>>(*std::move(primitive_set)));
-  ASSERT_TRUE(aead_result.ok()) << aead_result.status();
+  ASSERT_THAT(aead_result, IsOk());
   std::unique_ptr<Aead> aead = std::move(aead_result.value());
   std::string plaintext = "some_plaintext";
   std::string aad = "some_aad";
 
   auto encrypt_result = aead->Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  EXPECT_THAT(encrypt_result, IsOk());
   std::string ciphertext = encrypt_result.value();
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "primary_aead", ciphertext);
 
   auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+  EXPECT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 
   decrypt_result = aead->Decrypt("some bad ciphertext", aad);
-  EXPECT_FALSE(decrypt_result.ok());
+  EXPECT_THAT(decrypt_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, decrypt_result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "decryption failed",
                       std::string(decrypt_result.status().message()));
@@ -1531,25 +1531,25 @@ TEST_F(RegistryTest, AsymmetricPrivateRegisterAlone) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  CreateTestPrivateKeyManagerFipsCompatible(), true)
-                  .ok());
-  ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+  ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                  CreateTestPrivateKeyManagerFipsCompatible(), true),
+              IsOk());
+  ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
   // Registering the same as asymmetric key managers must fail, because doing so
   // would mean we invalidate key managers previously obtained with
   // get_key_manager().
-  ASSERT_FALSE(Registry::RegisterAsymmetricKeyManagers(
-                   CreateTestPrivateKeyManagerFipsCompatible(),
-                   CreateTestPublicKeyManagerFipsCompatible(), true)
-                   .ok());
-  ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  CreateTestPrivateKeyManagerFipsCompatible(), true)
-                  .ok());
-  ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
+                  CreateTestPrivateKeyManagerFipsCompatible(),
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              Not(IsOk()));
+  ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                  CreateTestPrivateKeyManagerFipsCompatible(), true),
+              IsOk());
+  ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
 }
 
 TEST_F(RegistryTest, AsymmetricGetPrimitiveA) {
@@ -1558,14 +1558,14 @@ TEST_F(RegistryTest, AsymmetricGetPrimitiveA) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
   absl::StatusOr<const KeyManager<PrivatePrimitiveA>*> km =
       Registry::get_key_manager<PrivatePrimitiveA>(
           TestPrivateKeyTypeManager().get_key_type());
-  ASSERT_TRUE(km.ok()) << km.status();
+  ASSERT_THAT(km, IsOk());
   EXPECT_THAT(km.value()->get_key_type(),
               Eq(TestPrivateKeyTypeManager().get_key_type()));
 }
@@ -1576,14 +1576,14 @@ TEST_F(RegistryTest, AsymmetricGetPrimitiveB) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
   absl::StatusOr<const KeyManager<PrivatePrimitiveB>*> km =
       Registry::get_key_manager<PrivatePrimitiveB>(
           TestPrivateKeyTypeManager().get_key_type());
-  ASSERT_TRUE(km.ok()) << km.status();
+  ASSERT_THAT(km, IsOk());
   EXPECT_THAT(km.value()->get_key_type(),
               Eq(TestPrivateKeyTypeManager().get_key_type()));
 }
@@ -1594,14 +1594,14 @@ TEST_F(RegistryTest, AsymmetricGetPublicPrimitiveA) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
   absl::StatusOr<const KeyManager<PublicPrimitiveA>*> km =
       Registry::get_key_manager<PublicPrimitiveA>(
           TestPublicKeyTypeManager().get_key_type());
-  ASSERT_TRUE(km.ok()) << km.status();
+  ASSERT_THAT(km, IsOk());
   EXPECT_THAT(km.value()->get_key_type(),
               Eq(TestPublicKeyTypeManager().get_key_type()));
 }
@@ -1612,14 +1612,14 @@ TEST_F(RegistryTest, AsymmetricGetPublicPrimitiveB) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
   absl::StatusOr<const KeyManager<PublicPrimitiveB>*> km =
       Registry::get_key_manager<PublicPrimitiveB>(
           TestPublicKeyTypeManager().get_key_type());
-  ASSERT_TRUE(km.ok()) << km.status();
+  ASSERT_THAT(km, IsOk());
   EXPECT_THAT(km.value()->get_key_type(),
               Eq(TestPublicKeyTypeManager().get_key_type()));
 }
@@ -1630,10 +1630,10 @@ TEST_F(RegistryTest, AsymmetricGetWrongPrimitiveError) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
   absl::StatusOr<const KeyManager<PublicPrimitiveA>*> km =
       Registry::get_key_manager<PublicPrimitiveA>(
           TestPrivateKeyTypeManager().get_key_type());
@@ -1657,10 +1657,10 @@ TEST_F(PrivateKeyManagerImplTest, AsymmetricFactoryNewKeyFromMessage) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
 
   EcdsaKeyFormat key_format;
   key_format.mutable_params()->set_encoding(EcdsaSignatureEncoding::DER);
@@ -1684,14 +1684,14 @@ TEST_F(PrivateKeyManagerImplTest, AsymmetricNewKeyDisallowed) {
                     "not available";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), true)
-                  .ok());
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+                  CreateTestPublicKeyManagerFipsCompatible(), true),
+              IsOk());
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   CreateTestPrivateKeyManagerFipsCompatible(),
-                  CreateTestPublicKeyManagerFipsCompatible(), false)
-                  .ok());
+                  CreateTestPublicKeyManagerFipsCompatible(), false),
+              IsOk());
 
   KeyTemplate key_template;
   key_template.set_type_url(TestPrivateKeyTypeManager().get_key_type());
@@ -1732,10 +1732,10 @@ TEST_F(RegistryTest, RegisterAssymmetricReregistrationWithWrongClasses) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   absl::make_unique<TestPrivateKeyTypeManager>(),
-                  absl::make_unique<TestPublicKeyTypeManager>(), true)
-                  .ok());
+                  absl::make_unique<TestPublicKeyTypeManager>(), true),
+              IsOk());
   EXPECT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   absl::make_unique<TestPrivateKeyTypeManager2>(),
                   absl::make_unique<TestPublicKeyTypeManager>(), true),
@@ -1774,10 +1774,10 @@ TEST_F(RegistryTest, RegisterAssymmetricReregistrationWithNewKeyType) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(Registry::RegisterAsymmetricKeyManagers(
+  ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                   absl::make_unique<TestPrivateKeyTypeManager>(),
-                  absl::make_unique<TestPublicKeyTypeManager>(), true)
-                  .ok());
+                  absl::make_unique<TestPublicKeyTypeManager>(), true),
+              IsOk());
   EXPECT_THAT(
       Registry::RegisterAsymmetricKeyManagers(
           absl::make_unique<TestPrivateKeyTypeManager>(),

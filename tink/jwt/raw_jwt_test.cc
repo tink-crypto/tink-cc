@@ -132,30 +132,32 @@ TEST(RawJwt, LargeExpirationWorks) {
 
 TEST(RawJwt, TooLargeTimestampsFail) {
   absl::Time too_large = absl::FromUnixSeconds(253402300800);  // year 10000
-  EXPECT_FALSE(RawJwtBuilder().SetExpiration(too_large).Build().ok());
-  EXPECT_FALSE(
-      RawJwtBuilder().SetIssuedAt(too_large).WithoutExpiration().Build().ok());
-  EXPECT_FALSE(
-      RawJwtBuilder().SetNotBefore(too_large).WithoutExpiration().Build().ok());
+  EXPECT_THAT(RawJwtBuilder().SetExpiration(too_large).Build(), Not(IsOk()));
+  EXPECT_THAT(
+      RawJwtBuilder().SetIssuedAt(too_large).WithoutExpiration().Build(),
+      Not(IsOk()));
+  EXPECT_THAT(
+      RawJwtBuilder().SetNotBefore(too_large).WithoutExpiration().Build(),
+      Not(IsOk()));
 }
 
 TEST(RawJwt, NegativeTimestampsFail) {
   absl::Time neg = absl::FromUnixMillis(-1);
-  EXPECT_FALSE(RawJwtBuilder().SetExpiration(neg).Build().ok());
-  EXPECT_FALSE(
-      RawJwtBuilder().SetIssuedAt(neg).WithoutExpiration().Build().ok());
-  EXPECT_FALSE(
-      RawJwtBuilder().SetNotBefore(neg).WithoutExpiration().Build().ok());
+  EXPECT_THAT(RawJwtBuilder().SetExpiration(neg).Build(), Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder().SetIssuedAt(neg).WithoutExpiration().Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder().SetNotBefore(neg).WithoutExpiration().Build(),
+              Not(IsOk()));
 }
 
 TEST(RawJwt, SetExpirationAndWithoutExpirationFail) {
   absl::Time exp = absl::FromUnixMillis(12345);
-  EXPECT_FALSE(
-      RawJwtBuilder().SetExpiration(exp).WithoutExpiration().Build().ok());
+  EXPECT_THAT(RawJwtBuilder().SetExpiration(exp).WithoutExpiration().Build(),
+              Not(IsOk()));
 }
 
 TEST(RawJwt, NeitherSetExpirationNorWithoutExpirationFail) {
-  EXPECT_FALSE(RawJwtBuilder().Build().ok());
+  EXPECT_THAT(RawJwtBuilder().Build(), Not(IsOk()));
 }
 
 TEST(RawJwt, SetAudienceAndGetAudiencesOK) {
@@ -308,108 +310,100 @@ TEST(RawJwt, GetRegisteredCustomClaimNotOK) {
                                    .Build();
   ASSERT_THAT(jwt, IsOk());
 
-  EXPECT_FALSE(jwt->GetStringClaim("iss").ok());
-  EXPECT_FALSE(jwt->GetStringClaim("sub").ok());
-  EXPECT_FALSE(jwt->GetStringClaim("jti").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("nbf").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("iat").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("exp").ok());
+  EXPECT_THAT(jwt->GetStringClaim("iss"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetStringClaim("sub"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetStringClaim("jti"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("nbf"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("iat"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("exp"), Not(IsOk()));
 }
 
 TEST(RawJwt, SetRegisteredCustomClaimNotOK) {
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddStringClaim("iss", "issuer")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddStringClaim("sub", "issuer")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddStringClaim("jti", "issuer")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddNumberClaim("nbf", 123)
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddNumberClaim("iat", 123)
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddNumberClaim("exp", 123)
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddBooleanClaim("iss", true)
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(
-      RawJwtBuilder().WithoutExpiration().AddNullClaim("iss").Build().ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonObjectClaim("iss", "{\"1\": 2}")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonArrayClaim("iss", "[1,2]")
-                   .Build()
-                   .ok());
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddStringClaim("iss", "issuer")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddStringClaim("sub", "issuer")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddStringClaim("jti", "issuer")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(
+      RawJwtBuilder().WithoutExpiration().AddNumberClaim("nbf", 123).Build(),
+      Not(IsOk()));
+  EXPECT_THAT(
+      RawJwtBuilder().WithoutExpiration().AddNumberClaim("iat", 123).Build(),
+      Not(IsOk()));
+  EXPECT_THAT(
+      RawJwtBuilder().WithoutExpiration().AddNumberClaim("exp", 123).Build(),
+      Not(IsOk()));
+  EXPECT_THAT(
+      RawJwtBuilder().WithoutExpiration().AddBooleanClaim("iss", true).Build(),
+      Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder().WithoutExpiration().AddNullClaim("iss").Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonObjectClaim("iss", "{\"1\": 2}")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonArrayClaim("iss", "[1,2]")
+                  .Build(),
+              Not(IsOk()));
 }
 
 TEST(RawJwt, SetInvalidJsonObjectClaimNotOK) {
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonObjectClaim("obj", "invalid")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonObjectClaim("obj", R"("string")")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonObjectClaim("obj", "42")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonObjectClaim("obj", "[1,2]")
-                   .Build()
-                   .ok());
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonObjectClaim("obj", "invalid")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonObjectClaim("obj", R"("string")")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonObjectClaim("obj", "42")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonObjectClaim("obj", "[1,2]")
+                  .Build(),
+              Not(IsOk()));
 }
 
 TEST(RawJwt, SetInvalidJsonArrayClaimNotOK) {
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonArrayClaim("arr", "invalid")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonArrayClaim("arr", R"("string")")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonArrayClaim("arr", "42")
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(RawJwtBuilder()
-                   .WithoutExpiration()
-                   .AddJsonArrayClaim("arr", R"({"1": 2})")
-                   .Build()
-                   .ok());
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonArrayClaim("arr", "invalid")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonArrayClaim("arr", R"("string")")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonArrayClaim("arr", "42")
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtBuilder()
+                  .WithoutExpiration()
+                  .AddJsonArrayClaim("arr", R"({"1": 2})")
+                  .Build(),
+              Not(IsOk()));
 }
 
 TEST(RawJwt, EmptyTokenHasAndIsReturnsFalse) {
@@ -436,20 +430,20 @@ TEST(RawJwt, EmptyTokenGetReturnsNotOK) {
   absl::StatusOr<RawJwt> jwt = RawJwtBuilder().WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
-  EXPECT_FALSE(jwt->GetTypeHeader().ok());
-  EXPECT_FALSE(jwt->GetIssuer().ok());
-  EXPECT_FALSE(jwt->GetSubject().ok());
-  EXPECT_FALSE(jwt->GetAudiences().ok());
-  EXPECT_FALSE(jwt->GetJwtId().ok());
-  EXPECT_FALSE(jwt->GetExpiration().ok());
-  EXPECT_FALSE(jwt->GetNotBefore().ok());
-  EXPECT_FALSE(jwt->GetIssuedAt().ok());
+  EXPECT_THAT(jwt->GetTypeHeader(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetIssuer(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetSubject(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetAudiences(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetJwtId(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetExpiration(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNotBefore(), Not(IsOk()));
+  EXPECT_THAT(jwt->GetIssuedAt(), Not(IsOk()));
   EXPECT_FALSE(jwt->IsNullClaim("null_claim"));
-  EXPECT_FALSE(jwt->GetBooleanClaim("boolean_claim").ok());
-  EXPECT_FALSE(jwt->GetNumberClaim("number_claim").ok());
-  EXPECT_FALSE(jwt->GetStringClaim("string_claim").ok());
-  EXPECT_FALSE(jwt->GetJsonObjectClaim("object_claim").ok());
-  EXPECT_FALSE(jwt->GetJsonArrayClaim("array_claim").ok());
+  EXPECT_THAT(jwt->GetBooleanClaim("boolean_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetNumberClaim("number_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetStringClaim("string_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetJsonObjectClaim("object_claim"), Not(IsOk()));
+  EXPECT_THAT(jwt->GetJsonArrayClaim("array_claim"), Not(IsOk()));
 }
 
 TEST(RawJwt, BuildCanBeCalledTwice) {

@@ -750,6 +750,7 @@ cc_test(
         "//tink/internal:ec_util",
         "//tink/util:enums",
         "//tink/util:statusor",
+        "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",

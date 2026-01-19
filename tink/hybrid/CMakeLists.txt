@@ -735,6 +735,7 @@ tink_cc_test(
     tink::internal::ec_util
     tink::util::enums
     tink::util::statusor
+    tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ecies_aead_hkdf_cc_proto

@@ -24,10 +24,11 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/util/test_matchers.h"
 
-using ::crypto::tink::test::IsOk;
-
 namespace crypto {
 namespace tink {
+
+using ::crypto::tink::test::IsOk;
+using ::testing::Not;
 
 TEST(JwtValidator, ExpiredTokenNotOK) {
   absl::Time now = absl::Now();
@@ -37,7 +38,7 @@ TEST(JwtValidator, ExpiredTokenNotOK) {
 
   absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder().Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, NotExpiredTokenOK) {
@@ -59,12 +60,12 @@ TEST(JwtValidator, TokenWithExpEqualToNowIsExpired) {
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().SetFixedNow(now).Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, ClockSkewIsToLarge) {
-  EXPECT_FALSE(
-      JwtValidatorBuilder().SetClockSkew(absl::Minutes(11)).Build().ok());
+  EXPECT_THAT(JwtValidatorBuilder().SetClockSkew(absl::Minutes(11)).Build(),
+              Not(IsOk()));
 }
 
 TEST(JwtValidator, RecentlyExpiredTokenWithClockSkewOK) {
@@ -90,7 +91,7 @@ TEST(JwtValidator, NotBeforeInTheFutureNotOK) {
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, NotBeforeInThePastOK) {
@@ -166,9 +167,11 @@ TEST(JwtValidator, IssuedAt) {
           .AllowMissingExpiration()
           .Build();
   ASSERT_THAT(issued_at_validator, IsOk());
-  EXPECT_FALSE(issued_at_validator->Validate(*tokenIssuedInTheFuture).ok());
+  EXPECT_THAT(issued_at_validator->Validate(*tokenIssuedInTheFuture),
+              Not(IsOk()));
   EXPECT_THAT(issued_at_validator->Validate(*tokenIssuedInThePast), IsOk());
-  EXPECT_FALSE(issued_at_validator->Validate(*tokenWithoutIssuedAt).ok());
+  EXPECT_THAT(issued_at_validator->Validate(*tokenWithoutIssuedAt),
+              Not(IsOk()));
 }
 
 TEST(JwtValidator, IssuedAtWithClockSkew) {
@@ -186,8 +189,9 @@ TEST(JwtValidator, IssuedAtWithClockSkew) {
           .AllowMissingExpiration()
           .Build();
   ASSERT_THAT(validator_without_clock_skew, IsOk());
-  EXPECT_FALSE(
-      validator_without_clock_skew->Validate(*tokenOneMinuteInTheFuture).ok());
+  EXPECT_THAT(
+      validator_without_clock_skew->Validate(*tokenOneMinuteInTheFuture),
+      Not(IsOk()));
 
   absl::StatusOr<JwtValidator> validator_with_clock_skew =
       JwtValidatorBuilder()
@@ -207,7 +211,7 @@ TEST(JwtValidator, RequiresTypeHeaderButNotTypHeaderNotOK) {
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, InvalidTypeHeaderNotOK) {
@@ -220,7 +224,7 @@ TEST(JwtValidator, InvalidTypeHeaderNotOK) {
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, CorrectTypeHeaderOK) {
@@ -244,7 +248,7 @@ TEST(JwtValidator, TypeHeaderInTokenButNotInValiatorNotOK) {
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, IgnoreTypeHeaderOK) {
@@ -267,7 +271,7 @@ TEST(JwtValidator, RequiresIssuerButNotIssuerNotOK) {
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, InvalidIssuerNotOK) {
@@ -280,7 +284,7 @@ TEST(JwtValidator, InvalidIssuerNotOK) {
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, CorrectIssuerOK) {
@@ -304,7 +308,7 @@ TEST(JwtValidator, IssuerInTokenButNotInValiatorNotOK) {
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, IgnoreIssuerOK) {
@@ -327,7 +331,7 @@ TEST(JwtValidator, RequiresAudienceButNotAudienceNotOK) {
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, InvalidAudienceNotOK) {
@@ -340,7 +344,7 @@ TEST(JwtValidator, InvalidAudienceNotOK) {
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, CorrectAudienceOK) {
@@ -367,7 +371,7 @@ TEST(JwtValidator, AudienceInTokenButNotInValiatorNotOK) {
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, NoAudienceOK) {
@@ -403,7 +407,7 @@ TEST(JwtValidator, FixedNowExpiredNotOk) {
           .AllowMissingExpiration()
           .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, FixedNowNotYetValidNotOk) {
@@ -420,7 +424,7 @@ TEST(JwtValidator, FixedNowNotYetValidNotOk) {
           .AllowMissingExpiration()
           .Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(validator->Validate(*jwt).ok());
+  EXPECT_THAT(validator->Validate(*jwt), Not(IsOk()));
 }
 
 TEST(JwtValidator, FixedNowValidOk) {
@@ -456,32 +460,31 @@ TEST(JwtValidator, CallBuildTwiceOk) {
   ASSERT_THAT(jwt2, IsOk());
 
   EXPECT_THAT(validator1->Validate(*jwt1), IsOk());
-  EXPECT_FALSE(validator1->Validate(*jwt2).ok());
+  EXPECT_THAT(validator1->Validate(*jwt2), Not(IsOk()));
   EXPECT_THAT(validator2->Validate(*jwt2), IsOk());
-  EXPECT_FALSE(validator2->Validate(*jwt1).ok());
+  EXPECT_THAT(validator2->Validate(*jwt1), Not(IsOk()));
 }
 
 TEST(JwtValidator, InvalidValidators) {
-  EXPECT_FALSE(JwtValidatorBuilder()
-                   .ExpectTypeHeader("a")
-                   .IgnoreTypeHeader()
-                   .AllowMissingExpiration()
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(JwtValidatorBuilder()
-                   .ExpectIssuer("a")
-                   .IgnoreIssuer()
-                   .AllowMissingExpiration()
-                   .Build()
-                   .ok());
-  EXPECT_FALSE(JwtValidatorBuilder()
-                   .ExpectAudience("a")
-                   .IgnoreAudiences()
-                   .AllowMissingExpiration()
-                   .Build()
-                   .ok());
+  EXPECT_THAT(JwtValidatorBuilder()
+                  .ExpectTypeHeader("a")
+                  .IgnoreTypeHeader()
+                  .AllowMissingExpiration()
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(JwtValidatorBuilder()
+                  .ExpectIssuer("a")
+                  .IgnoreIssuer()
+                  .AllowMissingExpiration()
+                  .Build(),
+              Not(IsOk()));
+  EXPECT_THAT(JwtValidatorBuilder()
+                  .ExpectAudience("a")
+                  .IgnoreAudiences()
+                  .AllowMissingExpiration()
+                  .Build(),
+              Not(IsOk()));
 }
-
 
 }  // namespace tink
 }  // namespace crypto

@@ -319,7 +319,7 @@ TEST(RsaUtilTest, CopiesRsaPrivateKey) {
 
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsa(private_key);
-  EXPECT_TRUE(rsa_result.ok());
+  ASSERT_THAT(rsa_result, IsOk());
   internal::SslUniquePtr<RSA> rsa = std::move(rsa_result).value();
   const BIGNUM* n = nullptr;
   const BIGNUM* e = nullptr;
@@ -343,7 +343,7 @@ TEST(RsaUtilTest, CopiesRsaPublicKey) {
 
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPublicKeyToRsa(public_key);
-  EXPECT_TRUE(rsa_result.ok());
+  ASSERT_THAT(rsa_result, IsOk());
   internal::SslUniquePtr<RSA> rsa = std::move(rsa_result).value();
 
   const BIGNUM* n = nullptr;

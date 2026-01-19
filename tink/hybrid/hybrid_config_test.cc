@@ -123,7 +123,7 @@ TEST_F(HybridConfigTest, EncryptWrapperRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(HybridConfig::Register().ok());
+  ASSERT_THAT(HybridConfig::Register(), IsOk());
 
   google::crypto::tink::KeysetInfo::KeyInfo key_info;
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
@@ -139,9 +139,9 @@ TEST_F(HybridConfigTest, EncryptWrapperRegistered) {
   auto wrapped = Registry::Wrap(
       std::make_unique<PrimitiveSet<HybridEncrypt>>(*std::move(primitive_set)));
 
-  ASSERT_TRUE(wrapped.ok()) << wrapped.status();
+  ASSERT_THAT(wrapped, IsOk());
   auto encryption_result = wrapped.value()->Encrypt("secret", "");
-  ASSERT_TRUE(encryption_result.ok());
+  ASSERT_THAT(encryption_result, IsOk());
 
   std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
   EXPECT_EQ(
@@ -157,7 +157,7 @@ TEST_F(HybridConfigTest, DecryptWrapperRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(HybridConfig::Register().ok());
+  ASSERT_THAT(HybridConfig::Register(), IsOk());
 
   google::crypto::tink::KeysetInfo::KeyInfo key_info;
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
@@ -173,7 +173,7 @@ TEST_F(HybridConfigTest, DecryptWrapperRegistered) {
   auto wrapped = Registry::Wrap(
       std::make_unique<PrimitiveSet<HybridDecrypt>>(*std::move(primitive_set)));
 
-  ASSERT_TRUE(wrapped.ok()) << wrapped.status();
+  ASSERT_THAT(wrapped, IsOk());
 
   std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
   std::string encryption =

@@ -46,17 +46,19 @@
 #include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
 
-using crypto::tink::subtle::Random;
-using ::crypto::tink::test::IsOkAndHolds;
-using google::crypto::tink::EciesAeadHkdfPrivateKey;
-using google::crypto::tink::EcPointFormat;
-using google::crypto::tink::EllipticCurveType;
-using google::crypto::tink::HashType;
-using ::testing::Eq;
-
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::subtle::Random;
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
+using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
+using ::google::crypto::tink::EcPointFormat;
+using ::google::crypto::tink::EllipticCurveType;
+using ::google::crypto::tink::HashType;
+using ::testing::Eq;
+using ::testing::Not;
 
 class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
  protected:
@@ -103,7 +105,7 @@ class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
 
   void TestValidKey(const EciesAeadHkdfPrivateKey& ecies_key) {
     auto result(EciesAeadHkdfHybridDecrypt::New(ecies_key));
-    ASSERT_TRUE(result.ok()) << result.status();
+    ASSERT_THAT(result, IsOk());
     std::unique_ptr<HybridDecrypt> hybrid_decrypt(std::move(result.value()));
 
     std::unique_ptr<HybridEncrypt> hybrid_encrypt(std::move(
@@ -117,7 +119,7 @@ class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
           hybrid_encrypt->Encrypt(plaintext, context_info).value();
       {  // Regular decryption.
         auto decrypt_result = hybrid_decrypt->Decrypt(ciphertext, context_info);
-        EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+        EXPECT_THAT(decrypt_result, IsOk());
         EXPECT_EQ(plaintext, decrypt_result.value());
       }
       {  // Encryption and decryption with empty context info.
@@ -126,7 +128,7 @@ class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
             hybrid_encrypt->Encrypt(plaintext, empty_context_info).value();
         auto decrypt_result =
             hybrid_decrypt->Decrypt(ciphertext, empty_context_info);
-        ASSERT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+        ASSERT_THAT(decrypt_result, IsOk());
         EXPECT_EQ(plaintext, decrypt_result.value());
       }
       {  // Encryption and decryption w/ empty msg & context info.
@@ -137,13 +139,13 @@ class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
                 .value();
         auto decrypt_result =
             hybrid_decrypt->Decrypt(ciphertext, empty_context_info);
-        ASSERT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+        ASSERT_THAT(decrypt_result, IsOk());
         EXPECT_EQ(empty_plaintext, decrypt_result.value());
       }
       {  // Short bad ciphertext.
         auto decrypt_result =
             hybrid_decrypt->Decrypt(Random::GetRandomBytes(16), context_info);
-        EXPECT_FALSE(decrypt_result.ok());
+        EXPECT_THAT(decrypt_result, Not(IsOk()));
         EXPECT_EQ(absl::StatusCode::kInvalidArgument,
                   decrypt_result.status().code());
         EXPECT_PRED_FORMAT2(testing::IsSubstring, "ciphertext too short",
@@ -152,13 +154,13 @@ class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
       {  // Long but still bad ciphertext.
         auto decrypt_result =
             hybrid_decrypt->Decrypt(Random::GetRandomBytes(142), context_info);
-        EXPECT_FALSE(decrypt_result.ok());
+        EXPECT_THAT(decrypt_result, Not(IsOk()));
         // TODO(przydatek): add more checks while avoiding flakiness.
       }
       {  // Bad context info
         auto decrypt_result =
             hybrid_decrypt->Decrypt(ciphertext, Random::GetRandomBytes(14));
-        EXPECT_FALSE(decrypt_result.ok());
+        EXPECT_THAT(decrypt_result, Not(IsOk()));
       }
     }
   }
@@ -168,7 +170,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testInvalidKeys) {
   {  // No fields set.
     EciesAeadHkdfPrivateKey recipient_key;
     auto result = EciesAeadHkdfHybridDecrypt::New(recipient_key);
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "missing required fields",
                         std::string(result.status().message()));
@@ -180,7 +182,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testInvalidKeys) {
     recipient_key.mutable_public_key()->set_x("some x bytes");
     recipient_key.mutable_public_key()->set_y("some y bytes");
     auto result(EciesAeadHkdfHybridDecrypt::New(recipient_key));
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "missing required fields",
                         std::string(result.status().message()));
@@ -194,7 +196,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testInvalidKeys) {
     recipient_key.mutable_public_key()->set_y("some y bytes");
     recipient_key.mutable_public_key()->mutable_params();
     auto result(EciesAeadHkdfHybridDecrypt::New(recipient_key));
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kUnimplemented, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "Unsupported elliptic curve",
                         std::string(result.status().message()));
@@ -215,7 +217,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testInvalidKeys) {
     auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
     aead_dem->set_type_url("some.type.url/that.is.not.supported");
     auto result(EciesAeadHkdfHybridDecrypt::New(recipient_key));
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "Unsupported DEM",
                         std::string(result.status().message()));

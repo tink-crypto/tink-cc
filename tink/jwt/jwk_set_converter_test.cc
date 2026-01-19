@@ -560,7 +560,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 class JwkSetToPublicKeysetHandleTest
     : public testing::TestWithParam<std::tuple<std::string, std::string>> {
-  void SetUp() override { ASSERT_TRUE(JwtSignatureRegister().ok()); }
+  void SetUp() override { ASSERT_THAT(JwtSignatureRegister(), IsOk()); }
 };
 
 TEST_P(JwkSetToPublicKeysetHandleTest, VerifyValidJwtWithSuccess) {

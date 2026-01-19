@@ -68,7 +68,7 @@ TEST(JsonKeysetWriterTest, WriterCreation) {
   {  // Input stream is null.
     std::unique_ptr<std::ostream> null_stream(nullptr);
     auto writer_result = JsonKeysetWriter::New(std::move(null_stream));
-    EXPECT_FALSE(writer_result.ok());
+    EXPECT_THAT(writer_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
               writer_result.status().code());
   }
@@ -76,7 +76,7 @@ TEST(JsonKeysetWriterTest, WriterCreation) {
   {  // Stream with good keyset.
     std::unique_ptr<std::ostream> destination_stream(new std::stringstream());
     auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-    EXPECT_TRUE(writer_result.ok()) << writer_result.status();
+    EXPECT_THAT(writer_result, IsOk());
   }
 }
 
@@ -154,7 +154,7 @@ TEST(JsonKeysetWriterTest, WriteKeysetWithDestinationStreamErrors) {
   auto destination_stream = std::make_unique<std::ostream>(&buffer);
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
 
   auto status = writer->Write(keyset);
@@ -177,7 +177,7 @@ TEST(JsonKeysetWriterTest, WriteEncryptedKeysetWithDestinationStreamErrors) {
   auto destination_stream = std::make_unique<std::ostream>(&buffer);
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
 
   auto status = writer->Write(encrypted_keyset);

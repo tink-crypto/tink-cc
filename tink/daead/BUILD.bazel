@@ -332,6 +332,7 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink:core/key_manager_impl",
         "//tink:deterministic_aead",
+        "//tink/util:test_matchers",
         "@googletest//:gtest_main",
     ],
 )

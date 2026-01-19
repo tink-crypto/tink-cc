@@ -307,6 +307,7 @@ tink_cc_test(
     gmock
     tink::core::key_manager_impl
     tink::core::deterministic_aead
+    tink::util::test_matchers
     tink::proto::aes_siv_cc_proto
     tink::proto::common_cc_proto
     tink::proto::tink_cc_proto

@@ -132,20 +132,20 @@ TEST_F(DeterministicAeadSetWrapperTest, testBasic) {
     auto daead_result = DeterministicAeadWrapper().Wrap(
         std::make_unique<PrimitiveSet<DeterministicAead>>(
             *std::move(daead_set)));
-    EXPECT_TRUE(daead_result.ok()) << daead_result.status();
+    EXPECT_THAT(daead_result, IsOk());
     std::unique_ptr<DeterministicAead> daead = std::move(daead_result.value());
     std::string plaintext = "some_plaintext";
     std::string associated_data = "some_associated_data";
 
     auto encrypt_result =
         daead->EncryptDeterministically(plaintext, associated_data);
-    EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+    EXPECT_THAT(encrypt_result, IsOk());
     std::string ciphertext = encrypt_result.value();
     EXPECT_PRED_FORMAT2(testing::IsSubstring, daead_name_2, ciphertext);
 
     auto decrypt_result =
         daead->DecryptDeterministically(ciphertext, associated_data);
-    EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+    EXPECT_THAT(decrypt_result, IsOk());
     EXPECT_EQ(plaintext, decrypt_result.value());
 
     decrypt_result =

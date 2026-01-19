@@ -22,17 +22,20 @@
 #include "tink/core/key_manager_impl.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/deterministic_aead.h"
+#include "tink/util/test_matchers.h"
 #include "proto/aes_siv.pb.h"
 #include "proto/common.pb.h"
 #include "proto/tink.pb.h"
 
-using google::crypto::tink::AesSivKeyFormat;
-using google::crypto::tink::KeyTemplate;
-using google::crypto::tink::OutputPrefixType;
 
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::google::crypto::tink::AesSivKeyFormat;
+using ::google::crypto::tink::KeyTemplate;
+using ::google::crypto::tink::OutputPrefixType;
 
 TEST(DeterministicAeadKeyTemplatesTest, testAesSivKeyTemplates) {
   std::string type_url = "type.googleapis.com/google.crypto.tink.AesSivKey";
@@ -59,7 +62,7 @@ TEST(DeterministicAeadKeyTemplatesTest, testAesSivKeyTemplates) {
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result =
         key_manager->get_key_factory().NewKey(key_template.value());
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 

@@ -92,7 +92,7 @@ TEST_F(DeterministicAeadConfigTest, WrappersRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(DeterministicAeadConfig::Register().ok());
+  ASSERT_THAT(DeterministicAeadConfig::Register(), IsOk());
 
   google::crypto::tink::KeysetInfo::KeyInfo key_info;
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
@@ -109,15 +109,15 @@ TEST_F(DeterministicAeadConfigTest, WrappersRegistered) {
 
   auto registry_wrapped = Registry::Wrap(std::move(primitive_set));
 
-  ASSERT_TRUE(registry_wrapped.ok()) << registry_wrapped.status();
+  ASSERT_THAT(registry_wrapped, IsOk());
   auto encryption_result =
       registry_wrapped.value()->EncryptDeterministically("secret", "");
-  ASSERT_TRUE(encryption_result.ok());
+  ASSERT_THAT(encryption_result, IsOk());
 
   auto decryption_result =
       DummyDeterministicAead("dummy").DecryptDeterministically(
           encryption_result.value(), "");
-  ASSERT_TRUE(decryption_result.status().ok());
+  ASSERT_THAT(decryption_result.status(), IsOk());
   EXPECT_THAT(decryption_result.value(), Eq("secret"));
 
   decryption_result = DummyDeterministicAead("dummy").DecryptDeterministically(

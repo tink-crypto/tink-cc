@@ -132,7 +132,7 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
     auto pk_verify_result = PublicKeyVerifyWrapper().Wrap(
         std::make_unique<PrimitiveSet<PublicKeyVerify>>(
             *std::move(pk_verify_set)));
-    EXPECT_THAT(pk_verify_result, IsOk());
+    ASSERT_THAT(pk_verify_result, IsOk());
     std::unique_ptr<PublicKeyVerify> pk_verify =
         std::move(pk_verify_result.value());
     std::string data = "some data to sign";

@@ -124,11 +124,11 @@ TEST(PublicKeySignSetWrapperTest, TestBasic) {
     // Wrap pk_sign_set and test the resulting PublicKeySign.
     auto pk_sign_result = PublicKeySignWrapper().Wrap(
         std::make_unique<PrimitiveSet<PublicKeySign>>(*std::move(pk_sign_set)));
-    EXPECT_THAT(pk_sign_result, IsOk());
+    ASSERT_THAT(pk_sign_result, IsOk());
     std::unique_ptr<PublicKeySign> pk_sign = std::move(pk_sign_result.value());
     std::string data = "some data to sign";
     auto sign_result = pk_sign->Sign(data);
-    EXPECT_THAT(sign_result, IsOk());
+    ASSERT_THAT(sign_result, IsOk());
     std::string signature = sign_result.value();
     std::unique_ptr<PublicKeyVerify> pk_verify(
         new DummyPublicKeyVerify(signature_name_2));
@@ -158,12 +158,12 @@ TEST(PublicKeySignSetWrapperTest, TestLegacySignatures) {
   // Wrap pk_sign_set and test the resulting PublicKeySign.
   auto pk_sign_result = PublicKeySignWrapper().Wrap(
       std::make_unique<PrimitiveSet<PublicKeySign>>(*std::move(pk_sign_set)));
-  EXPECT_THAT(pk_sign_result, IsOk());
+  ASSERT_THAT(pk_sign_result, IsOk());
   std::unique_ptr<PublicKeySign> pk_sign = std::move(pk_sign_result.value());
 
   // Compute the signature via wrapper.
   auto sign_result = pk_sign->Sign(data);
-  EXPECT_THAT(sign_result, IsOk());
+  ASSERT_THAT(sign_result, IsOk());
   std::string signature = sign_result.value();
   EXPECT_PRED_FORMAT2(testing::IsSubstring, signature_name, signature);
 

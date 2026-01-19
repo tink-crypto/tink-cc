@@ -57,22 +57,20 @@ using ::google::crypto::tink::OutputPrefixType;
 using ::testing::_;
 using ::testing::ByMove;
 using ::testing::IsNull;
-using ::testing::StrictMock;
 using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::Return;
+using ::testing::StrictMock;
 using ::testing::Test;
 
 class PublicKeyVerifySetWrapperTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-  }
-  void TearDown() override {
-  }
+  void SetUp() override {}
+  void TearDown() override {}
 };
 
 TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
-  { // pk_verify_set is nullptr.
+  {  // pk_verify_set is nullptr.
     auto pk_verify_result = PublicKeyVerifyWrapper().Wrap(nullptr);
     EXPECT_FALSE(pk_verify_result.ok());
     EXPECT_EQ(absl::StatusCode::kInternal, pk_verify_result.status().code());
@@ -80,18 +78,18 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
                         std::string(pk_verify_result.status().message()));
   }
 
-  { // pk_verify_set has no primary primitive.
+  {  // pk_verify_set has no primary primitive.
     auto pk_verify_set = std::make_unique<PrimitiveSet<PublicKeyVerify>>();
     auto pk_verify_result =
         PublicKeyVerifyWrapper().Wrap(std::move(pk_verify_set));
     EXPECT_FALSE(pk_verify_result.ok());
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-        pk_verify_result.status().code());
+              pk_verify_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",
                         std::string(pk_verify_result.status().message()));
   }
 
-  { // Correct pk_verify_set;
+  {  // Correct pk_verify_set;
     KeysetInfo::KeyInfo* key_info;
     KeysetInfo keyset_info;
 
@@ -134,7 +132,7 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
     auto pk_verify_result = PublicKeyVerifyWrapper().Wrap(
         std::make_unique<PrimitiveSet<PublicKeyVerify>>(
             *std::move(pk_verify_set)));
-    EXPECT_TRUE(pk_verify_result.ok()) << pk_verify_result.status();
+    EXPECT_THAT(pk_verify_result, IsOk());
     std::unique_ptr<PublicKeyVerify> pk_verify =
         std::move(pk_verify_result.value());
     std::string data = "some data to sign";
@@ -142,7 +140,7 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
         new DummyPublicKeySign(signature_name_0));
     std::string signature = pk_sign->Sign(data).value();
     absl::Status status = pk_verify->Verify(signature, data);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
   }
 }
 

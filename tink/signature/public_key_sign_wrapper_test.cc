@@ -53,7 +53,6 @@ using ::google::crypto::tink::OutputPrefixType;
 using ::testing::_;
 using ::testing::ByMove;
 using ::testing::IsNull;
-using ::testing::StrictMock;
 using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::Return;
@@ -125,16 +124,16 @@ TEST(PublicKeySignSetWrapperTest, TestBasic) {
     // Wrap pk_sign_set and test the resulting PublicKeySign.
     auto pk_sign_result = PublicKeySignWrapper().Wrap(
         std::make_unique<PrimitiveSet<PublicKeySign>>(*std::move(pk_sign_set)));
-    EXPECT_TRUE(pk_sign_result.ok()) << pk_sign_result.status();
+    EXPECT_THAT(pk_sign_result, IsOk());
     std::unique_ptr<PublicKeySign> pk_sign = std::move(pk_sign_result.value());
     std::string data = "some data to sign";
     auto sign_result = pk_sign->Sign(data);
-    EXPECT_TRUE(sign_result.ok()) << sign_result.status();
+    EXPECT_THAT(sign_result, IsOk());
     std::string signature = sign_result.value();
     std::unique_ptr<PublicKeyVerify> pk_verify(
         new DummyPublicKeyVerify(signature_name_2));
     auto verify_status = pk_verify->Verify(signature, data);
-    EXPECT_TRUE(verify_status.ok()) << verify_status;
+    EXPECT_THAT(verify_status, IsOk());
   }
 }
 
@@ -159,7 +158,7 @@ TEST(PublicKeySignSetWrapperTest, TestLegacySignatures) {
   // Wrap pk_sign_set and test the resulting PublicKeySign.
   auto pk_sign_result = PublicKeySignWrapper().Wrap(
       std::make_unique<PrimitiveSet<PublicKeySign>>(*std::move(pk_sign_set)));
-  EXPECT_TRUE(pk_sign_result.ok()) << pk_sign_result.status();
+  EXPECT_THAT(pk_sign_result, IsOk());
   std::unique_ptr<PublicKeySign> pk_sign = std::move(pk_sign_result.value());
 
   // Compute the signature via wrapper.
@@ -180,7 +179,7 @@ TEST(PublicKeySignSetWrapperTest, TestLegacySignatures) {
   std::string legacy_data = data;
   legacy_data.append(1, CryptoFormat::kLegacyStartByte);
   status = raw_pk_verify->Verify(raw_signature, legacy_data);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 }
 
 KeysetInfo::KeyInfo PopulateKeyInfo(uint32_t key_id,
@@ -219,8 +218,8 @@ class PublicKeySignSetWrapperWithMonitoringTest : public Test {
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
         absl::make_unique<internal::MockMonitoringClientFactory>();
-    auto sign_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+    auto sign_monitoring_client = absl::make_unique<
+        testing::StrictMock<internal::MockMonitoringClient>>();
     sign_monitoring_client_ = sign_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the

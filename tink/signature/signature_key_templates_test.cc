@@ -84,7 +84,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
 
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP256Raw().
@@ -111,7 +111,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
 
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {
@@ -139,7 +139,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
 
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP384().
@@ -164,7 +164,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP384Sha512().
@@ -189,7 +189,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP384Sha384().
@@ -214,7 +214,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP521().
@@ -239,7 +239,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 
@@ -270,7 +270,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithIeeeEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP384Ieee().
@@ -296,7 +296,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithIeeeEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test EcdsaP521Ieee().
@@ -322,7 +322,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithIeeeEncoding) {
         &sign_key_type_manager, &verify_key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 
@@ -354,7 +354,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPkcs13072Sha256F4) {
   auto key_manager = internal::MakeKeyManager<PublicKeySign>(&key_type_manager);
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPkcs14096Sha512F4) {
@@ -384,7 +384,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPkcs14096Sha512F4) {
   auto key_manager = internal::MakeKeyManager<PublicKeySign>(&key_type_manager);
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss3072Sha256Sha256F4) {
@@ -417,7 +417,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss3072Sha256Sha256F4) {
   auto key_manager = internal::MakeKeyManager<PublicKeySign>(&key_type_manager);
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss4096Sha384Sha384F4) {
@@ -450,7 +450,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss4096Sha384Sha384F4) {
   auto key_manager = internal::MakeKeyManager<PublicKeySign>(&key_type_manager);
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss4096Sha512Sha512F4) {
@@ -484,7 +484,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss4096Sha512Sha512F4) {
   auto key_manager = internal::MakeKeyManager<PublicKeySign>(&key_type_manager);
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(SignatureKeyTemplatesTest, KeyTemplatesWithEd25519) {
@@ -507,7 +507,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithEd25519) {
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   Ed25519KeyFormat key_format;
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 TEST(SignatureKeyTemplatesTest, KeyTemplatesWithEd25519WithRawOutput) {
@@ -532,7 +532,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithEd25519WithRawOutput) {
   EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
   Ed25519KeyFormat key_format;
   auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-  EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+  EXPECT_THAT(new_key_result, IsOk());
 }
 
 }  // namespace

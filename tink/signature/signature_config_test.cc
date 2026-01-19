@@ -141,7 +141,7 @@ TEST_F(SignatureConfigTest, PublicKeySignWrapperRegistered) {
                     "not available";
   }
 
-  ASSERT_TRUE(SignatureConfig::Register().ok());
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
 
   google::crypto::tink::KeysetInfo::KeyInfo key_info;
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
@@ -157,9 +157,9 @@ TEST_F(SignatureConfigTest, PublicKeySignWrapperRegistered) {
   auto wrapped = Registry::Wrap(
       std::make_unique<PrimitiveSet<PublicKeySign>>(*std::move(primitive_set)));
 
-  ASSERT_TRUE(wrapped.ok()) << wrapped.status();
+  ASSERT_THAT(wrapped, IsOk());
   auto signature_result = wrapped.value()->Sign("message");
-  ASSERT_TRUE(signature_result.ok());
+  ASSERT_THAT(signature_result, IsOk());
 
   std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
   EXPECT_EQ(signature_result.value(),
@@ -175,7 +175,7 @@ TEST_F(SignatureConfigTest, PublicKeyVerifyWrapperRegistered) {
                     "not available";
   }
 
-  ASSERT_TRUE(SignatureConfig::Register().ok());
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
 
   google::crypto::tink::KeysetInfo::KeyInfo key_info;
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
@@ -194,9 +194,10 @@ TEST_F(SignatureConfigTest, PublicKeyVerifyWrapperRegistered) {
   auto wrapped = Registry::Wrap(std::make_unique<PrimitiveSet<PublicKeyVerify>>(
       *std::move(primitive_set)));
 
-  ASSERT_TRUE(wrapped.ok()) << wrapped.status();
-  ASSERT_TRUE(
-      wrapped.value()->Verify(absl::StrCat(prefix, signature), "message").ok());
+  ASSERT_THAT(wrapped, IsOk());
+  ASSERT_THAT(
+      wrapped.value()->Verify(absl::StrCat(prefix, signature), "message"),
+      IsOk());
 }
 
 // FIPS-only mode tests

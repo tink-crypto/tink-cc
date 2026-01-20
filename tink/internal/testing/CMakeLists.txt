@@ -84,6 +84,7 @@ tink_cc_library(
     tink::subtle::common_enums
     tink::util::status
     tink::util::statusor
+    tink::util::test_util
   TESTONLY
 )
 

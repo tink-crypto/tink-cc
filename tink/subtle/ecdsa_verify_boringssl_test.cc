@@ -66,35 +66,35 @@ TEST_F(EcdsaVerifyBoringSslTest, BasicSigning) {
   for (EcdsaSignatureEncoding encoding : encodings) {
     auto ec_key_result =
         SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256);
-    ASSERT_TRUE(ec_key_result.ok()) << ec_key_result.status();
+    ASSERT_THAT(ec_key_result, IsOk());
     auto ec_key = std::move(ec_key_result.value());
 
     auto signer_result =
         EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+    ASSERT_THAT(signer_result, IsOk());
     auto signer = std::move(signer_result.value());
 
     auto verifier_result =
         EcdsaVerifyBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+    ASSERT_THAT(verifier_result, IsOk());
     auto verifier = std::move(verifier_result.value());
 
     std::string message = "some data to be signed";
     auto sign_result = signer->Sign(message);
-    ASSERT_TRUE(sign_result.ok()) << sign_result.status();
+    ASSERT_THAT(sign_result, IsOk());
     std::string signature = sign_result.value();
     EXPECT_NE(signature, message);
     auto status = verifier->Verify(signature, message);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
 
     status = verifier->Verify(signature + "some trailing data", message);
-    EXPECT_FALSE(status.ok()) << status;
+    EXPECT_THAT(status, Not(IsOk()));
 
     status = verifier->Verify("some bad signature", message);
-    EXPECT_FALSE(status.ok());
+    EXPECT_THAT(status, Not(IsOk()));
 
     status = verifier->Verify(signature, "some bad message");
-    EXPECT_FALSE(status.ok());
+    EXPECT_THAT(status, Not(IsOk()));
   }
 }
 
@@ -108,12 +108,12 @@ TEST_F(EcdsaVerifyBoringSslTest, EncodingsMismatch) {
   for (EcdsaSignatureEncoding encoding : encodings) {
     auto ec_key_result =
         SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256);
-    ASSERT_TRUE(ec_key_result.ok()) << ec_key_result.status();
+    ASSERT_THAT(ec_key_result, IsOk());
     auto ec_key = std::move(ec_key_result.value());
 
     auto signer_result =
         EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+    ASSERT_THAT(signer_result, IsOk());
     auto signer = std::move(signer_result.value());
 
     auto verifier_result =
@@ -121,16 +121,16 @@ TEST_F(EcdsaVerifyBoringSslTest, EncodingsMismatch) {
                                   encoding == EcdsaSignatureEncoding::DER
                                       ? EcdsaSignatureEncoding::IEEE_P1363
                                       : EcdsaSignatureEncoding::DER);
-    ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+    ASSERT_THAT(verifier_result, IsOk());
     auto verifier = std::move(verifier_result.value());
 
     std::string message = "some data to be signed";
     auto sign_result = signer->Sign(message);
-    ASSERT_TRUE(sign_result.ok()) << sign_result.status();
+    ASSERT_THAT(sign_result, IsOk());
     std::string signature = sign_result.value();
     EXPECT_NE(signature, message);
     auto status = verifier->Verify(signature, message);
-    EXPECT_FALSE(status.ok()) << status;
+    EXPECT_THAT(status, Not(IsOk()));
   }
 }
 
@@ -143,7 +143,7 @@ TEST_F(EcdsaVerifyBoringSslTest, NewErrors) {
       SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
   auto verifier_result = EcdsaVerifyBoringSsl::New(
       ec_key, HashType::SHA1, EcdsaSignatureEncoding::IEEE_P1363);
-  EXPECT_FALSE(verifier_result.ok()) << verifier_result.status();
+  EXPECT_THAT(verifier_result, Not(IsOk()));
 }
 
 static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(

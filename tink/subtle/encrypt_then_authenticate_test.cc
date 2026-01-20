@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -32,12 +33,16 @@
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::testing::Not;
 
 // Copied from
 // https://tools.ietf.org/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.
@@ -134,10 +139,10 @@ TEST(AesGcmBoringSslTest, testRfcVectors) {
     std::string associated_data = test::HexDecodeOrDie(test.associated_data);
     auto res = createAead2(std::move(enc_key), test.iv_size, std::move(mac_key),
                            test.tag_size, test.hash_type);
-    EXPECT_TRUE(res.ok()) << res.status();
+    ASSERT_THAT(res, IsOk());
     auto cipher = std::move(res.value());
     auto pt = cipher->Decrypt(ct, associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
   }
 }
 
@@ -148,16 +153,16 @@ TEST(EncryptThenAuthenticateTest, testEncryptDecrypt) {
   int tag_size = 16;
   auto res = createAead(encryption_key_size, iv_size, mac_key_size, tag_size,
                         HashType::SHA1);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
 
   std::string message = "Some data to encrypt.";
   std::string associated_data = "Some associated data.";
   auto ct = cipher->Encrypt(message, associated_data);
-  EXPECT_TRUE(ct.ok()) << ct.status();
+  ASSERT_THAT(ct, IsOk());
   EXPECT_EQ(ct.value().size(), message.size() + iv_size + tag_size);
   auto pt = cipher->Decrypt(ct.value(), associated_data);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
@@ -168,17 +173,17 @@ TEST(EncryptThenAuthenticateTest, testEncryptDecrypt_randomMessage) {
   int tag_size = 16;
   auto res = createAead(encryption_key_size, iv_size, mac_key_size, tag_size,
                         HashType::SHA1);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
 
   for (int i = 0; i < 256; i++) {
     std::string message = Random::GetRandomBytes(i);
     std::string associated_data = Random::GetRandomBytes(i);
     auto ct = cipher->Encrypt(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + iv_size + tag_size);
     auto pt = cipher->Decrypt(ct.value(), associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -190,7 +195,7 @@ TEST(AesCtrBoringSslTest, testMultipleEncrypt) {
   int tag_size = 16;
   auto res = createAead(encryption_key_size, iv_size, mac_key_size, tag_size,
                         HashType::SHA1);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
 
   std::string message = Random::GetRandomBytes(20);
@@ -207,7 +212,7 @@ TEST(EncryptThenAuthenticateTest, testEncryptDecrypt_invalidTagSize) {
   int tag_size = 9;
   auto res = createAead(encryption_key_size, iv_size, mac_key_size, tag_size,
                         HashType::SHA1);
-  EXPECT_FALSE(res.ok()) << res.status();
+  EXPECT_THAT(res, Not(IsOk()));
 }
 
 TEST(EncryptThenAuthenticateTest, testDecrypt_modifiedCiphertext) {
@@ -217,18 +222,19 @@ TEST(EncryptThenAuthenticateTest, testDecrypt_modifiedCiphertext) {
   int tag_size = 16;
   auto res = createAead(encryption_key_size, iv_size, mac_key_size, tag_size,
                         HashType::SHA1);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
 
   std::string message = "Some data to encrypt.";
   std::string associated_data = "Some data to authenticate.";
   std::string ct = cipher->Encrypt(message, associated_data).value();
-  EXPECT_TRUE(cipher->Decrypt(ct, associated_data).ok());
+  EXPECT_THAT(cipher->Decrypt(ct, associated_data), IsOk());
   // Modify the ciphertext
   for (size_t i = 0; i < ct.size() * 8; i++) {
     std::string modified_ct = ct;
     modified_ct[i / 8] ^= 1 << (i % 8);
-    EXPECT_FALSE(cipher->Decrypt(modified_ct, associated_data).ok()) << i;
+    EXPECT_THAT(cipher->Decrypt(modified_ct, associated_data), Not(IsOk()))
+        << i;
   }
 
   // Modify the associated data
@@ -236,13 +242,14 @@ TEST(EncryptThenAuthenticateTest, testDecrypt_modifiedCiphertext) {
     std::string modified_associated_data = associated_data;
     modified_associated_data[i / 8] ^= 1 << (i % 8);
     auto decrypted = cipher->Decrypt(ct, modified_associated_data);
-    EXPECT_FALSE(decrypted.ok()) << i << " pt:" << decrypted.value();
+    EXPECT_THAT(decrypted, Not(IsOk())) << i << " pt:" << decrypted.value();
   }
 
   // Truncate the ciphertext
   for (size_t i = 0; i < ct.size(); i++) {
     std::string truncated_ct(ct, 0, i);
-    EXPECT_FALSE(cipher->Decrypt(truncated_ct, associated_data).ok()) << i;
+    EXPECT_THAT(cipher->Decrypt(truncated_ct, associated_data), Not(IsOk()))
+        << i;
   }
 }
 
@@ -259,13 +266,13 @@ TEST(EncryptThenAuthenticateTest, testParamsEmptyVersusNullStringView) {
     const std::string message = "Some data to encrypt.";
     const absl::string_view associated_data;
     const std::string ct = cipher->Encrypt(message, "").value();
-    EXPECT_TRUE(cipher->Decrypt(ct, associated_data).ok());
+    EXPECT_THAT(cipher->Decrypt(ct, associated_data), IsOk());
   }
   {  // Both message and associated_data null string_view.
     const absl::string_view message;
     const absl::string_view associated_data;
     const std::string ct = cipher->Encrypt(message, "").value();
-    EXPECT_TRUE(cipher->Decrypt(ct, associated_data).ok());
+    EXPECT_THAT(cipher->Decrypt(ct, associated_data), IsOk());
   }
 }
 
@@ -297,17 +304,17 @@ TEST(EncryptThenAuthenticateTest, testAuthBypassShouldNotWork) {
   associated_data.reserve(kAssociatedDataSize + kCiphertextSpace);
   associated_data.resize(kAssociatedDataSize, 'a');
   auto encrypted = cipher->Encrypt(message, associated_data);
-  EXPECT_TRUE(encrypted.ok()) << encrypted.status();
+  ASSERT_THAT(encrypted, IsOk());
   auto ct = encrypted.value();
   auto decrypted = cipher->Decrypt(ct, associated_data);
-  EXPECT_TRUE(decrypted.ok()) << decrypted.status();
+  EXPECT_THAT(decrypted, IsOk());
 
   // Test that the 2^29-byte associated_data is NOT considered equal to an empty
   // associated_data. That is, test that a valid tag for (ciphertext,
   // associated_data) is INVALID for (associated_data + ciphertext, "").
   ct = std::move(associated_data) + ct;
   decrypted = cipher->Decrypt(ct, "");
-  EXPECT_FALSE(decrypted.ok());
+  EXPECT_THAT(decrypted, Not(IsOk()));
 }
 
 }  // namespace

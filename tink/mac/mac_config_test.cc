@@ -127,7 +127,7 @@ TEST_F(MacConfigTest, MacWrappersRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(MacConfig::Register().ok());
+  ASSERT_THAT(MacConfig::Register(), IsOk());
 
   KeysetInfo::KeyInfo key_info;
   key_info.set_status(KeyStatusType::ENABLED);
@@ -143,9 +143,9 @@ TEST_F(MacConfigTest, MacWrappersRegistered) {
   auto primitive_result = Registry::Wrap(
       std::make_unique<PrimitiveSet<Mac>>(*std::move(primitive_set)));
 
-  ASSERT_TRUE(primitive_result.ok()) << primitive_result.status();
+  ASSERT_THAT(primitive_result, IsOk());
   auto mac_result = primitive_result.value()->ComputeMac("verified text");
-  ASSERT_TRUE(mac_result.ok());
+  ASSERT_THAT(mac_result, IsOk());
 
   EXPECT_TRUE(
       DummyMac("dummy").VerifyMac(mac_result.value(), "verified text").ok());

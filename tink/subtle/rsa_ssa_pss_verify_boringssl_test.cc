@@ -125,7 +125,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, BasicVerify) {
   ASSERT_THAT(verifier, IsOk());
   absl::Status status =
       (*verifier)->Verify(kNistTestVector.signature, kNistTestVector.message);
-  EXPECT_TRUE(status.ok()) << status << internal::GetSslErrors();
+  EXPECT_THAT(status, IsOk()) << internal::GetSslErrors();
 }
 
 TEST(RsaSsaPssVerifyBoringSslTest, NewErrors) {
@@ -145,7 +145,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, NewErrors) {
 
   {  // Small modulus.
     auto result = RsaSsaPssVerifyBoringSsl::New(small_pub_key, nist_params);
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring,
                         "only modulus size >= 2048-bit is supported",
@@ -154,7 +154,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, NewErrors) {
 
   {  // Use SHA1 for digital signature.
     auto result = RsaSsaPssVerifyBoringSsl::New(nist_pub_key, sha1_hash_params);
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring,
                         "SHA1 is not safe for digital signature",
@@ -183,7 +183,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
     modified_message[i / 8] ^= 1 << (i % 8);
     absl::Status status =
         (*verifier)->Verify(kNistTestVector.signature, modified_message);
-    EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
+    EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
   // Modify the signature.
   for (std::size_t i = 0; i < kNistTestVector.signature.length(); i++) {
@@ -191,14 +191,14 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
     modified_signature[i / 8] ^= 1 << (i % 8);
     absl::Status status =
         (*verifier)->Verify(modified_signature, kNistTestVector.message);
-    EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
+    EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
   // Truncate the signature.
   for (std::size_t i = 0; i < kNistTestVector.signature.length(); i++) {
     std::string truncated_signature(kNistTestVector.signature, 0, i);
     absl::Status status =
         (*verifier)->Verify(truncated_signature, kNistTestVector.message);
-    EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
+    EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
 }
 

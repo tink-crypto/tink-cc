@@ -91,12 +91,12 @@ TEST_F(Ed25519SignBoringSslTest, testBasicSign) {
 
   // Create a new signer.
   auto signer_result = Ed25519SignBoringSsl::New(key->private_key);
-  ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+  ASSERT_THAT(signer_result, IsOk());
   auto signer = std::move(signer_result.value());
 
   // Create a new verifier.
   auto verifier_result = Ed25519VerifyBoringSsl::New(key->public_key);
-  ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+  ASSERT_THAT(verifier_result, IsOk());
   auto verifier = std::move(verifier_result.value());
 
   // Sign a message.
@@ -105,13 +105,13 @@ TEST_F(Ed25519SignBoringSslTest, testBasicSign) {
   EXPECT_NE(signature, message);
   EXPECT_EQ(signature.size(), kEd25519SignatureLenInBytes);
   auto status = verifier->Verify(signature, message);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   status = verifier->Verify("some bad signature", message);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
 
   status = verifier->Verify(signature, "some bad message");
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
 
   // Loop 100 times, sign a random message twice using the signer and verify
   // that the signatures are the same.
@@ -122,7 +122,7 @@ TEST_F(Ed25519SignBoringSslTest, testBasicSign) {
     EXPECT_EQ(signature1, signature2);
     // Verify that the signatures are valid.
     status = verifier->Verify(signature1, message);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
   }
 }
 
@@ -140,7 +140,7 @@ TEST_F(Ed25519SignBoringSslTest, testInvalidPrivateKeys) {
       continue;
     }
     SecretData key(keysize, 'x');
-    EXPECT_FALSE(Ed25519SignBoringSsl::New(key).ok());
+    EXPECT_THAT(Ed25519SignBoringSsl::New(key), Not(IsOk()));
   }
 }
 
@@ -155,12 +155,12 @@ TEST_F(Ed25519SignBoringSslTest, testMessageEmptyVersusNullStringView) {
 
   // Create a new signer.
   auto signer_result = Ed25519SignBoringSsl::New(key->private_key);
-  ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+  ASSERT_THAT(signer_result, IsOk());
   auto signer = std::move(signer_result.value());
 
   // Create a new verifier.
   auto verifier_result = Ed25519VerifyBoringSsl::New(key->public_key);
-  ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+  ASSERT_THAT(verifier_result, IsOk());
   auto verifier = std::move(verifier_result.value());
 
   // Message is a null string_view.
@@ -169,7 +169,7 @@ TEST_F(Ed25519SignBoringSslTest, testMessageEmptyVersusNullStringView) {
   EXPECT_NE(signature, empty_message);
   EXPECT_EQ(signature.size(), kEd25519SignatureLenInBytes);
   auto status = verifier->Verify(signature, empty_message);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   // Message is an empty string.
   const std::string message = "";
@@ -177,13 +177,13 @@ TEST_F(Ed25519SignBoringSslTest, testMessageEmptyVersusNullStringView) {
   EXPECT_EQ(signature.size(), kEd25519SignatureLenInBytes);
   EXPECT_NE(signature, message);
   status = verifier->Verify(signature, message);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   // Message is a default constructed string_view.
   signature = signer->Sign(absl::string_view()).value();
   EXPECT_EQ(signature.size(), kEd25519SignatureLenInBytes);
   status = verifier->Verify(signature, absl::string_view());
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 }
 
 struct TestVector {
@@ -335,19 +335,19 @@ TEST_F(Ed25519SignBoringSslTest, testWithTestVectors) {
 
     // Create a new signer.
     auto signer_result = Ed25519SignBoringSsl::New(private_key);
-    ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+    ASSERT_THAT(signer_result, IsOk());
     auto signer = std::move(signer_result.value());
 
     // Create a new verifier.
     auto verifier_result = Ed25519VerifyBoringSsl::New(v.public_key);
-    ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+    ASSERT_THAT(verifier_result, IsOk());
     auto verifier = std::move(verifier_result.value());
 
     std::string signature = signer->Sign(v.message).value();
     EXPECT_TRUE(signature == v.expected_signature);
 
     auto status = verifier->Verify(signature, v.message);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
   }
 }
 

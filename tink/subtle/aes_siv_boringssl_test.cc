@@ -39,6 +39,8 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::testing::Not;
+
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 using ::crypto::tink::test::IsOk;
@@ -68,14 +70,14 @@ TEST(AesSivBoringSslTest, testEncryptDecrypt) {
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string associated_data = "Associated data";
   std::string message = "Some data to encrypt.";
   auto ct = cipher->EncryptDeterministically(message, associated_data);
-  EXPECT_TRUE(ct.ok()) << ct.status();
+  ASSERT_THAT(ct, IsOk());
   auto pt = cipher->DecryptDeterministically(ct.value(), associated_data);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
@@ -87,27 +89,27 @@ TEST(AesSivBoringSslTest, testNullPtrStringView) {
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   // Checks that a default constructed string_view works.
   auto cipher = std::move(res.value());
   absl::string_view null;
   auto ct = cipher->EncryptDeterministically(null, null);
-  EXPECT_TRUE(ct.ok()) << ct.status();
+  ASSERT_THAT(ct, IsOk());
   auto pt = cipher->DecryptDeterministically(ct.value(), null);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ("", pt.value());
   // Decryption with ct == null should return an appropriate status.
   pt = cipher->DecryptDeterministically(null, "");
-  EXPECT_FALSE(pt.ok());
+  EXPECT_THAT(pt, Not(IsOk()));
   // Associated data with an empty string view is the same an empty string.
   std::string message("123456789abcdefghijklmnop");
   ct = cipher->EncryptDeterministically(message, null);
   pt = cipher->DecryptDeterministically(ct.value(), "");
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(message, pt.value());
   ct = cipher->EncryptDeterministically(message, "");
   pt = cipher->DecryptDeterministically(ct.value(), null);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(message, pt.value());
 }
 
@@ -127,9 +129,10 @@ TEST(AesSivBoringSslTest, testEncryptDecryptKeySizes) {
         absl::string_view(keymaterial).substr(0, keysize));
     auto cipher = AesSivBoringSsl::New(key);
     if (keysize == 64) {
-      EXPECT_TRUE(cipher.ok());
+      EXPECT_THAT(cipher, IsOk());
     } else {
-      EXPECT_FALSE(cipher.ok()) << "Accepted invalid key size:" << keysize;
+      EXPECT_THAT(cipher, Not(IsOk()))
+          << "Accepted invalid key size:" << keysize;
     }
   }
 }
@@ -143,23 +146,23 @@ TEST(AesSivBoringSslTest, testEncryptDecryptMessageSize) {
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string associated_data = "Associated data";
   for (int i = 0; i < 1024; ++i) {
     std::string message = std::string(i, 'a');
     auto ct = cipher->EncryptDeterministically(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     auto pt = cipher->DecryptDeterministically(ct.value(), associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
   for (int i = 1024; i < 100000; i += 5000) {
     std::string message = std::string(i, 'a');
     auto ct = cipher->EncryptDeterministically(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     auto pt = cipher->DecryptDeterministically(ct.value(), associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -173,15 +176,15 @@ TEST(AesSivBoringSslTest, testEncryptDecryptAssociatedDataSize) {
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string message = "Some plaintext";
   for (int i = 0; i < 1028; ++i) {
     std::string associated_data = std::string(i, 'a');
     auto ct = cipher->EncryptDeterministically(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     auto pt = cipher->DecryptDeterministically(ct.value(), associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -194,21 +197,21 @@ TEST(AesSivBoringSslTest, testDecryptModification) {
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string associated_data = "Associated data";
   for (int i = 0; i < 50; ++i) {
     std::string message = std::string(i, 'a');
     auto ct = cipher->EncryptDeterministically(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     std::string ciphertext = ct.value();
     for (size_t b = 0; b < ciphertext.size(); ++b) {
       for (int bit = 0; bit < 8; ++bit) {
         std::string modified = ciphertext;
         modified[b] ^= (1 << bit);
         auto pt = cipher->DecryptDeterministically(modified, associated_data);
-        EXPECT_FALSE(pt.ok()) << "Modified ciphertext decrypted."
-                              << " byte:" << b << " bit:" << bit;
+        EXPECT_THAT(pt, Not(IsOk())) << "Modified ciphertext decrypted."
+                                     << " byte:" << b << " bit:" << bit;
       }
     }
   }

@@ -20,18 +20,23 @@
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::testing::Not;
 
 class HkdfTest : public ::testing::Test {};
 
@@ -102,7 +107,7 @@ TEST_F(HkdfTest, testBasic) {
         Hkdf::ComputeHkdf(test.hash_type, test::HexDecodeOrDie(test.ikm_hex),
                           test::HexDecodeOrDie(test.salt_hex),
                           test::HexDecodeOrDie(test.info_hex), test.out_len);
-    ASSERT_TRUE(hkdf_or.ok());
+    ASSERT_THAT(hkdf_or, IsOk());
     EXPECT_EQ(test::HexEncode(hkdf_or.value()), test.out_key_hex);
   }
 }
@@ -114,7 +119,7 @@ TEST_F(HkdfTest, testBasicSecretData) {
         util::SecretDataFromStringView(test::HexDecodeOrDie(test.ikm_hex)),
         test::HexDecodeOrDie(test.salt_hex),
         test::HexDecodeOrDie(test.info_hex), test.out_len);
-    ASSERT_TRUE(hkdf_or.ok());
+    ASSERT_THAT(hkdf_or, IsOk());
     EXPECT_EQ(
         test::HexEncode(util::SecretDataAsStringView(hkdf_or.value())),
         test.out_key_hex);
@@ -127,7 +132,7 @@ TEST_F(HkdfTest, testLongOutput) {
       test.hash_type, test::HexDecodeOrDie(test.ikm_hex),
       test::HexDecodeOrDie(test.salt_hex), test::HexDecodeOrDie(test.info_hex),
       255 * 32 + 1 /* 255 * hashLength + 1 */);
-  EXPECT_FALSE(status_or_string.ok());
+  EXPECT_THAT(status_or_string, Not(IsOk()));
   EXPECT_EQ(status_or_string.status().message(), "HKDF failed");
 }
 
@@ -141,7 +146,7 @@ TEST_F(HkdfTest, ComputeEciesHkdfSecretData) {
         test.hash_type, kem_bytes, shared_secret,
         test::HexDecodeOrDie(test.salt_hex),
         test::HexDecodeOrDie(test.info_hex), test.out_len);
-    ASSERT_TRUE(hkdf_or.ok());
+    ASSERT_THAT(hkdf_or, IsOk());
     EXPECT_EQ(
         test::HexEncode(util::SecretDataAsStringView(hkdf_or.value())),
         test.out_key_hex);

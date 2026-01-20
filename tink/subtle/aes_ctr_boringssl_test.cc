@@ -38,6 +38,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Not;
 
 TEST(AesCtrBoringSslTest, TestEncryptDecrypt) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
@@ -49,14 +50,14 @@ TEST(AesCtrBoringSslTest, TestEncryptDecrypt) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   int iv_size = 12;
   auto res = AesCtrBoringSsl::New(key, iv_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  EXPECT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string message = "Some data to encrypt.";
   auto ct = cipher->Encrypt(message);
-  EXPECT_TRUE(ct.ok()) << ct.status();
+  EXPECT_THAT(ct, IsOk());
   EXPECT_EQ(ct.value().size(), message.size() + iv_size);
   auto pt = cipher->Decrypt(ct.value());
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
@@ -70,15 +71,15 @@ TEST(AesCtrBoringSslTest, TestEncryptDecrypt_randomMessage) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   int iv_size = 12;
   auto res = AesCtrBoringSsl::New(key, iv_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  EXPECT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   for (int i = 0; i < 256; i++) {
     std::string message = Random::GetRandomBytes(i);
     auto ct = cipher->Encrypt(message);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    EXPECT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + iv_size);
     auto pt = cipher->Decrypt(ct.value());
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -93,14 +94,14 @@ TEST(AesCtrBoringSslTest, TestEncryptDecrypt_randomKey_randomMessage) {
     SecretData key = Random::GetRandomKeyBytes(16);
     int iv_size = 12;
     auto res = AesCtrBoringSsl::New(key, iv_size);
-    EXPECT_TRUE(res.ok()) << res.status();
+    EXPECT_THAT(res, IsOk());
     auto cipher = std::move(res.value());
     std::string message = Random::GetRandomBytes(i);
     auto ct = cipher->Encrypt(message);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    EXPECT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + iv_size);
     auto pt = cipher->Decrypt(ct.value());
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -115,11 +116,11 @@ TEST(AesCtrBoringSslTest, TestEncryptDecrypt_invalidIvSize) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   int iv_size = 11;
   auto res1 = AesCtrBoringSsl::New(key, iv_size);
-  EXPECT_FALSE(res1.ok()) << res1.status();
+  EXPECT_THAT(res1, Not(IsOk()));
 
   iv_size = 17;
   auto res2 = AesCtrBoringSsl::New(key, iv_size);
-  EXPECT_FALSE(res2.ok()) << res2.status();
+  EXPECT_THAT(res2, Not(IsOk()));
 }
 
 TEST(AesCtrBoringSslTest, TestNistTestVector) {
@@ -136,10 +137,10 @@ TEST(AesCtrBoringSslTest, TestNistTestVector) {
   std::string message(test::HexDecodeOrDie("6bc1bee22e409f96e93d7e117393172a"));
   int iv_size = 16;
   auto res = AesCtrBoringSsl::New(key, iv_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  EXPECT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   auto pt = cipher->Decrypt(ciphertext);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
@@ -152,7 +153,7 @@ TEST(AesCtrBoringSslTest, TestMultipleEncrypt) {
   SecretData key = Random::GetRandomKeyBytes(16);
   int iv_size = 12;
   auto res = AesCtrBoringSsl::New(key, iv_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  EXPECT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string message = "Some data to encrypt.";
   auto ct1 = cipher->Encrypt(message);

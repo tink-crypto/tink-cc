@@ -64,7 +64,7 @@ using ::testing::Test;
 
 TEST(MacWrapperTest, WrapNullptr) {
   auto mac_result = MacWrapper().Wrap(nullptr);
-  EXPECT_FALSE(mac_result.ok());
+  EXPECT_THAT(mac_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInternal, mac_result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "non-NULL",
                       std::string(mac_result.status().message()));
@@ -73,7 +73,7 @@ TEST(MacWrapperTest, WrapNullptr) {
 TEST(MacWrapperTest, WrapEmpty) {
   auto mac_set = std::make_unique<PrimitiveSet<Mac>>();
   auto mac_result = MacWrapper().Wrap(std::move(mac_set));
-  EXPECT_FALSE(mac_result.ok());
+  EXPECT_THAT(mac_result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, mac_result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",
                       std::string(mac_result.status().message()));
@@ -118,20 +118,20 @@ TEST(MacWrapperTest, Basic) {
   // Wrap mac_set and test the resulting Mac.
   auto mac_result = MacWrapper().Wrap(
       std::make_unique<PrimitiveSet<Mac>>(*std::move(mac_set)));
-  EXPECT_TRUE(mac_result.ok()) << mac_result.status();
+  EXPECT_THAT(mac_result, IsOk());
   std::unique_ptr<Mac> mac = std::move(mac_result.value());
   std::string data = "some_data_for_mac";
 
   auto compute_mac_result = mac->ComputeMac(data);
-  EXPECT_TRUE(compute_mac_result.ok()) << compute_mac_result.status();
+  EXPECT_THAT(compute_mac_result, IsOk());
   std::string mac_value = compute_mac_result.value();
   EXPECT_PRED_FORMAT2(testing::IsSubstring, mac_name_2, mac_value);
 
   absl::Status status = mac->VerifyMac(mac_value, data);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   status = mac->VerifyMac("some bad mac", data);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, status.code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "verification failed",
                       std::string(status.message()));
@@ -156,30 +156,30 @@ TEST(MacWrapperTest, testLegacyAuthentication) {
   // Wrap mac_set and test the resulting Mac.
   auto mac_result = MacWrapper().Wrap(
       std::make_unique<PrimitiveSet<Mac>>(*std::move(mac_set)));
-  EXPECT_TRUE(mac_result.ok()) << mac_result.status();
+  EXPECT_THAT(mac_result, IsOk());
   std::unique_ptr<Mac> mac = std::move(mac_result.value());
   std::string data = "Some data to authenticate";
 
   // Compute and verify MAC via wrapper.
   auto compute_mac_result = mac->ComputeMac(data);
-  EXPECT_TRUE(compute_mac_result.ok()) << compute_mac_result.status();
+  EXPECT_THAT(compute_mac_result, IsOk());
   std::string mac_value = compute_mac_result.value();
   EXPECT_PRED_FORMAT2(testing::IsSubstring, mac_name, mac_value);
   auto status = mac->VerifyMac(mac_value, data);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 
   // Try verifying on raw Mac-primitive using original data.
   std::unique_ptr<Mac> raw_mac(new DummyMac(mac_name));  // same as in wrapper
   std::string raw_mac_value = mac_value.substr(CryptoFormat::kNonRawPrefixSize);
   status = raw_mac->VerifyMac(raw_mac_value, data);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, status.code());
 
   // Verify on raw Mac-primitive using legacy-formatted data.
   std::string legacy_data = data;
   legacy_data.append(1, CryptoFormat::kLegacyStartByte);
   status = raw_mac->VerifyMac(raw_mac_value, legacy_data);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
 }
 
 // Produces a mac which starts in the same way as a legacy non-raw signature.

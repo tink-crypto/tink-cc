@@ -954,6 +954,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
+    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1036,6 +1037,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
+    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1051,6 +1053,7 @@ tink_cc_test(
     absl::strings
     tink::util::status
     tink::util::statusor
+    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1135,6 +1138,7 @@ tink_cc_test(
     tink::core::aead
     tink::util::secret_data
     tink::util::statusor
+    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1357,7 +1361,6 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -1478,6 +1481,7 @@ tink_cc_test(
     tink::util::istream_input_stream
     tink::util::status
     tink::util::statusor
+    tink::util::test_matchers
 )
 
 tink_cc_test(
@@ -1497,6 +1501,7 @@ tink_cc_test(
     tink::util::ostream_output_stream
     tink::util::status
     tink::util::statusor
+    tink::util::test_matchers
 )
 
 tink_cc_test(

@@ -104,7 +104,7 @@ TEST_F(StreamingAeadConfigTest, WrappersRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  ASSERT_TRUE(StreamingAeadConfig::Register().ok());
+  ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
 
   google::crypto::tink::KeysetInfo::KeyInfo key_info;
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
@@ -119,7 +119,7 @@ TEST_F(StreamingAeadConfigTest, WrappersRegistered) {
 
   auto primitive_result = Registry::Wrap(
       std::make_unique<PrimitiveSet<StreamingAead>>(*std::move(primitive_set)));
-  ASSERT_TRUE(primitive_result.ok()) << primitive_result.status();
+  ASSERT_THAT(primitive_result, IsOk()) << primitive_result.status();
 }
 
 // FIPS-only mode tests

@@ -44,6 +44,7 @@ using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Not;
 
 TEST(AesEaxBoringSslTest, TestBasic) {
   if (IsFipsModeEnabled()) {
@@ -54,15 +55,15 @@ TEST(AesEaxBoringSslTest, TestBasic) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 12;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string message = "Some data to encrypt.";
   std::string associated_data = "Some data to authenticate.";
   auto ct = cipher->Encrypt(message, associated_data);
-  EXPECT_TRUE(ct.ok()) << ct.status();
+  ASSERT_THAT(ct, IsOk());
   EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
   auto pt = cipher->Decrypt(ct.value(), associated_data);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
@@ -75,16 +76,16 @@ TEST(AesEaxBoringSslTest, TestMessageSize) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 12;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   for (size_t size = 0; size < 260; size++) {
     std::string message(size, 'x');
     std::string associated_data = "";
     auto ct = cipher->Encrypt(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
     auto pt = cipher->Decrypt(ct.value(), associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -98,16 +99,16 @@ TEST(AesEaxBoringSslTest, TestAssociatedDataSize) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 12;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   for (size_t size = 0; size < 260; size++) {
     std::string message("Some message");
     std::string associated_data(size, 'x');
     auto ct = cipher->Encrypt(message, associated_data);
-    EXPECT_TRUE(ct.ok()) << ct.status();
+    ASSERT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
     auto pt = cipher->Decrypt(ct.value(), associated_data);
-    EXPECT_TRUE(pt.ok()) << pt.status();
+    EXPECT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
@@ -121,15 +122,15 @@ TEST(AesEaxBoringSslTest, TestLongNonce) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 16;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
   std::string message = "Some data to encrypt.";
   std::string associated_data = "Some associated data.";
   auto ct = cipher->Encrypt(message, associated_data);
-  EXPECT_TRUE(ct.ok()) << ct.status();
+  ASSERT_THAT(ct, IsOk());
   EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
   auto pt = cipher->Decrypt(ct.value(), associated_data);
-  EXPECT_TRUE(pt.ok()) << pt.status();
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
@@ -145,24 +146,26 @@ TEST(AesEaxBoringSslTest, TestModification) {
   std::string message = "Some data to encrypt.";
   std::string associated_data = "Some data to authenticate.";
   std::string ct = cipher->Encrypt(message, associated_data).value();
-  EXPECT_TRUE(cipher->Decrypt(ct, associated_data).ok());
+  EXPECT_THAT(cipher->Decrypt(ct, associated_data), IsOk());
   // Modify the ciphertext
   for (size_t i = 0; i < ct.size() * 8; i++) {
     std::string modified_ct = ct;
     modified_ct[i / 8] ^= 1 << (i % 8);
-    EXPECT_FALSE(cipher->Decrypt(modified_ct, associated_data).ok()) << i;
+    EXPECT_THAT(cipher->Decrypt(modified_ct, associated_data), Not(IsOk()))
+        << i;
   }
   // Modify the associated data
   for (size_t i = 0; i < associated_data.size() * 8; i++) {
     std::string modified_associated_data = associated_data;
     modified_associated_data[i / 8] ^= 1 << (i % 8);
     auto decrypted = cipher->Decrypt(ct, modified_associated_data);
-    EXPECT_FALSE(decrypted.ok()) << i << " pt:" << decrypted.value();
+    EXPECT_THAT(decrypted, Not(IsOk())) << i << " pt:" << decrypted.value();
   }
   // Truncate the ciphertext
   for (size_t i = 0; i < ct.size(); i++) {
     std::string truncated_ct(ct, 0, i);
-    EXPECT_FALSE(cipher->Decrypt(truncated_ct, associated_data).ok()) << i;
+    EXPECT_THAT(cipher->Decrypt(truncated_ct, associated_data), Not(IsOk()))
+        << i;
   }
 }
 
@@ -178,7 +181,7 @@ TEST(AesEaxBoringSslTest, TestInvalidKeySizes) {
     }
     SecretData key(keysize, 'x');
     auto cipher = AesEaxBoringSsl::New(key, nonce_size);
-    EXPECT_FALSE(cipher.ok());
+    EXPECT_THAT(cipher, Not(IsOk()));
   }
 }
 
@@ -196,7 +199,7 @@ TEST(AesEaxBoringSslTest, TestEmpty) {
   std::string tag(test::HexDecodeOrDie("9607977cd7556b1dfedf0c73a35a5197"));
   std::string ciphertext = nonce + tag;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
-  EXPECT_TRUE(res.ok()) << res.status();
+  ASSERT_THAT(res, IsOk());
   auto cipher = std::move(res.value());
 
   // Test decryption of the arguments above.
@@ -205,40 +208,40 @@ TEST(AesEaxBoringSslTest, TestEmpty) {
   absl::string_view null_string_view;
 
   auto pt = cipher->Decrypt(ciphertext, empty_string);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   pt = cipher->Decrypt(ciphertext, empty_string_view);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   pt = cipher->Decrypt(ciphertext, null_string_view);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   // Test encryption.
   auto ct = cipher->Encrypt(empty_string, empty_string);
-  EXPECT_TRUE(ct.ok());
+  ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   ct = cipher->Encrypt(empty_string_view, empty_string_view);
-  EXPECT_TRUE(ct.ok());
+  ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   ct = cipher->Encrypt(empty_string_view, empty_string_view);
-  EXPECT_TRUE(ct.ok());
+  ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   ct = cipher->Encrypt(null_string_view, null_string_view);
-  EXPECT_TRUE(ct.ok());
+  ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_TRUE(pt.ok());
+  EXPECT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 }
 

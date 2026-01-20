@@ -63,32 +63,32 @@ TEST_F(EcdsaSignBoringSslTest, testBasicSigning) {
         SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
     auto signer_result =
         EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+    ASSERT_THAT(signer_result, IsOk());
     auto signer = std::move(signer_result.value());
 
     auto verifier_result =
         EcdsaVerifyBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+    ASSERT_THAT(verifier_result, IsOk());
     auto verifier = std::move(verifier_result.value());
 
     std::string message = "some data to be signed";
     std::string signature = signer->Sign(message).value();
     EXPECT_NE(signature, message);
     auto status = verifier->Verify(signature, message);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
 
     status = verifier->Verify("some bad signature", message);
-    EXPECT_FALSE(status.ok());
+    EXPECT_THAT(status, Not(IsOk()));
 
     status = verifier->Verify(signature, "some bad message");
-    EXPECT_FALSE(status.ok());
+    EXPECT_THAT(status, Not(IsOk()));
 
     // Message is a null string_view.
     const absl::string_view empty_message;
     signature = signer->Sign(empty_message).value();
     EXPECT_NE(signature, empty_message);
     status = verifier->Verify(signature, empty_message);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
   }
 }
 
@@ -104,7 +104,7 @@ TEST_F(EcdsaSignBoringSslTest, testEncodingsMismatch) {
         SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
     auto signer_result =
         EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+    ASSERT_THAT(signer_result, IsOk());
     auto signer = std::move(signer_result.value());
 
     auto verifier_result =
@@ -112,14 +112,14 @@ TEST_F(EcdsaSignBoringSslTest, testEncodingsMismatch) {
                                   encoding == EcdsaSignatureEncoding::DER
                                       ? EcdsaSignatureEncoding::IEEE_P1363
                                       : EcdsaSignatureEncoding::DER);
-    ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+    ASSERT_THAT(verifier_result, IsOk());
     auto verifier = std::move(verifier_result.value());
 
     std::string message = "some data to be signed";
     std::string signature = signer->Sign(message).value();
     EXPECT_NE(signature, message);
     auto status = verifier->Verify(signature, message);
-    EXPECT_FALSE(status.ok()) << status;
+    EXPECT_THAT(status, Not(IsOk()));
   }
 }
 
@@ -135,19 +135,19 @@ TEST_F(EcdsaSignBoringSslTest, testSignatureSizesWithIEEE_P1364Encoding) {
     auto ec_key = SubtleUtilBoringSSL::GetNewEcKey(curve).value();
     auto signer_result = EcdsaSignBoringSsl::New(
         ec_key, HashType::SHA256, EcdsaSignatureEncoding::IEEE_P1363);
-    ASSERT_TRUE(signer_result.ok()) << signer_result.status();
+    ASSERT_THAT(signer_result, IsOk());
     auto signer = std::move(signer_result.value());
 
     auto verifier_result = EcdsaVerifyBoringSsl::New(
         ec_key, HashType::SHA256, EcdsaSignatureEncoding::IEEE_P1363);
-    ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+    ASSERT_THAT(verifier_result, IsOk());
     auto verifier = std::move(verifier_result.value());
 
     std::string message = "some data to be signed";
     std::string signature = signer->Sign(message).value();
     EXPECT_NE(signature, message);
     auto status = verifier->Verify(signature, message);
-    EXPECT_TRUE(status.ok()) << status;
+    EXPECT_THAT(status, IsOk());
 
     // Check signature size.
     absl::StatusOr<int32_t> field_size_in_bytes =
@@ -166,7 +166,7 @@ TEST_F(EcdsaSignBoringSslTest, testNewErrors) {
       SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
   auto signer_result = EcdsaSignBoringSsl::New(ec_key, HashType::SHA1,
                                                EcdsaSignatureEncoding::DER);
-  EXPECT_FALSE(signer_result.ok()) << signer_result.status();
+  EXPECT_THAT(signer_result, Not(IsOk()));
 }
 
 // TODO(bleichen): add Wycheproof tests.

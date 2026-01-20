@@ -67,7 +67,7 @@ TEST(MacKeyTemplatesTest, testHmacKeyTemplates) {
     auto key_manager = internal::MakeKeyManager<Mac>(&key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test Hmac256BittagSha256().
@@ -90,7 +90,7 @@ TEST(MacKeyTemplatesTest, testHmacKeyTemplates) {
     auto key_manager = internal::MakeKeyManager<Mac>(&key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test Hmac256BittagSha512().
@@ -114,7 +114,7 @@ TEST(MacKeyTemplatesTest, testHmacKeyTemplates) {
     auto key_manager = internal::MakeKeyManager<Mac>(&key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 
   {  // Test Hmac512BittagSha512().
@@ -137,7 +137,7 @@ TEST(MacKeyTemplatesTest, testHmacKeyTemplates) {
     auto key_manager = internal::MakeKeyManager<Mac>(&key_type_manager);
     EXPECT_EQ(key_manager->get_key_type(), key_template.type_url());
     auto new_key_result = key_manager->get_key_factory().NewKey(key_format);
-    EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
+    EXPECT_THAT(new_key_result, IsOk());
   }
 }
 

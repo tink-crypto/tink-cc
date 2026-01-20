@@ -118,7 +118,7 @@ TEST(AesCmacBoringSslTest, Truncation) {
   EXPECT_THAT((*cmac)->VerifyMac(*tag, kMessage), IsOk());
   for (size_t i = 0; i < tag->size(); i++) {
     std::string modified_tag(*tag, 0, i);
-    EXPECT_FALSE((*cmac)->VerifyMac(modified_tag, kMessage).ok())
+    EXPECT_THAT((*cmac)->VerifyMac(modified_tag, kMessage), Not(IsOk()))
         << "tag:" << test::HexEncode(*tag)
         << " modified:" << test::HexEncode(modified_tag);
   }

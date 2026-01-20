@@ -34,6 +34,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -41,15 +42,17 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::test::IsOk;
+using ::testing::Not;
+
 absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> GetEncrypter(
     const SecretData& ikm, HashType hkdf_hash, int derived_key_size,
     int ciphertext_offset, int ciphertext_segment_size,
     absl::string_view associated_data) {
   AesGcmHkdfStreamSegmentEncrypter::Params params;
   params.salt = Random::GetRandomBytes(derived_key_size);
-  auto hkdf_result = Hkdf::ComputeHkdf(
-      hkdf_hash, ikm, params.salt, associated_data,
-      derived_key_size);
+  auto hkdf_result = Hkdf::ComputeHkdf(hkdf_hash, ikm, params.salt,
+                                       associated_data, derived_key_size);
   if (!hkdf_result.ok()) return hkdf_result.status();
   params.key = hkdf_result.value();
   params.ciphertext_offset = ciphertext_offset;
@@ -60,16 +63,14 @@ absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> GetEncrypter(
 TEST(AesGcmHkdfStreamSegmentDecrypterTest, testBasic) {
   for (int ikm_size : {16, 32}) {
     for (HashType hkdf_hash : {SHA1, SHA256, SHA512}) {
-      for (int derived_key_size = 16;
-           derived_key_size <= ikm_size;
+      for (int derived_key_size = 16; derived_key_size <= ikm_size;
            derived_key_size += 16) {
         for (int ciphertext_offset : {0, 5, 10}) {
           for (int ct_segment_size : {80, 128, 200}) {
             for (std::string associated_data : {"associated data", "42", ""}) {
               SCOPED_TRACE(absl::StrCat(
-                  "hkdf_hash = ", EnumToString(hkdf_hash),
-                  ", ikm_size = ", ikm_size,
-                  ", associated_data = '", associated_data, "'",
+                  "hkdf_hash = ", EnumToString(hkdf_hash), ", ikm_size = ",
+                  ikm_size, ", associated_data = '", associated_data, "'",
                   ", derived_key_size = ", derived_key_size,
                   ", ciphertext_offset = ", ciphertext_offset,
                   ", ciphertext_segment_size = ", ct_segment_size));
@@ -83,13 +84,13 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testBasic) {
               params.ciphertext_segment_size = ct_segment_size;
               params.associated_data = associated_data;
               auto result = AesGcmHkdfStreamSegmentDecrypter::New(params);
-              EXPECT_TRUE(result.ok()) << result.status();
+              EXPECT_THAT(result, IsOk());
               auto dec = std::move(result.value());
 
               // Try to use the decrypter.
               std::vector<uint8_t> pt;
               auto status = dec->DecryptSegment(pt, 42, false, nullptr);
-              EXPECT_FALSE(status.ok());
+              EXPECT_THAT(status, Not(IsOk()));
               EXPECT_EQ(absl::StatusCode::kFailedPrecondition, status.code());
               EXPECT_PRED_FORMAT2(testing::IsSubstring, "not initialized",
                                   std::string(status.message()));
@@ -101,7 +102,7 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testBasic) {
                                          ct_segment_size, associated_data)
                                 .value());
               status = dec->Init(enc->get_header());
-              EXPECT_TRUE(status.ok()) << status;
+              EXPECT_THAT(status, IsOk());
 
               // Use the constructed decrypter.
               int header_size =
@@ -115,17 +116,17 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testBasic) {
               int segment_number = 0;
               for (int pt_size : {1, 10, dec->get_plaintext_segment_size()}) {
                 for (bool is_last_segment : {false, true}) {
-                  SCOPED_TRACE(absl::StrCat(
-                      "plaintext_size = ", pt_size,
-                      ", is_last_segment = ", is_last_segment));
+                  SCOPED_TRACE(
+                      absl::StrCat("plaintext_size = ", pt_size,
+                                   ", is_last_segment = ", is_last_segment));
                   std::vector<uint8_t> pt(pt_size, 'p');
                   std::vector<uint8_t> ct;
                   std::vector<uint8_t> decrypted;
                   auto status = enc->EncryptSegment(pt, is_last_segment, &ct);
-                  EXPECT_TRUE(status.ok()) << status;
+                  EXPECT_THAT(status, IsOk());
                   status = dec->DecryptSegment(ct, segment_number,
                                                is_last_segment, &decrypted);
-                  EXPECT_TRUE(status.ok()) << status;
+                  EXPECT_THAT(status, IsOk());
                   EXPECT_EQ(pt, decrypted);
                   segment_number++;
                   EXPECT_EQ(segment_number, enc->get_segment_number());
@@ -133,15 +134,15 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testBasic) {
               }
 
               // Try decryption with wrong params.
-              std::vector<uint8_t> ct(
-                  dec->get_ciphertext_segment_size() + 1, 'c');
+              std::vector<uint8_t> ct(dec->get_ciphertext_segment_size() + 1,
+                                      'c');
               status = dec->DecryptSegment(ct, 42, true, nullptr);
-              EXPECT_FALSE(status.ok());
+              EXPECT_THAT(status, Not(IsOk()));
               EXPECT_PRED_FORMAT2(testing::IsSubstring, "ciphertext too long",
                                   std::string(status.message()));
               ct.resize(dec->get_plaintext_segment_size());
               status = dec->DecryptSegment(ct, 42, true, nullptr);
-              EXPECT_FALSE(status.ok());
+              EXPECT_THAT(status, Not(IsOk()));
               EXPECT_PRED_FORMAT2(testing::IsSubstring, "must be non-null",
                                   std::string(status.message()));
             }
@@ -152,15 +153,14 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testBasic) {
   }
 }
 
-
 TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongDerivedKeySize) {
   for (int derived_key_size : {12, 24, 64}) {
     for (HashType hkdf_hash : {SHA1, SHA256, SHA512}) {
       for (int ct_segment_size : {128, 200}) {
-        SCOPED_TRACE(absl::StrCat(
-            "derived_key_size = ", derived_key_size,
-            ", hkdf_hash = ", EnumToString(hkdf_hash),
-            ", ciphertext_segment_size = ", ct_segment_size));
+        SCOPED_TRACE(
+            absl::StrCat("derived_key_size = ", derived_key_size,
+                         ", hkdf_hash = ", EnumToString(hkdf_hash),
+                         ", ciphertext_segment_size = ", ct_segment_size));
         AesGcmHkdfStreamSegmentDecrypter::Params params;
         params.ikm = Random::GetRandomKeyBytes(derived_key_size);
         params.hkdf_hash = hkdf_hash;
@@ -169,7 +169,7 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongDerivedKeySize) {
         params.ciphertext_segment_size = ct_segment_size;
         params.associated_data = "associated data";
         auto result = AesGcmHkdfStreamSegmentDecrypter::New(params);
-        EXPECT_FALSE(result.ok());
+        EXPECT_THAT(result, Not(IsOk()));
         EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
         EXPECT_PRED_FORMAT2(testing::IsSubstring, "must be 16 or 32",
                             std::string(result.status().message()));
@@ -182,10 +182,9 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongIkmSize) {
   for (int derived_key_size : {16, 32}) {
     for (HashType hkdf_hash : {SHA1, SHA256, SHA512}) {
       for (int ikm_size_delta : {-8, -4, -2, -1}) {
-        SCOPED_TRACE(absl::StrCat(
-            "derived_key_size = ", derived_key_size,
-            ", hkdf_hash = ", EnumToString(hkdf_hash),
-            ", ikm_size_delta = ", ikm_size_delta));
+        SCOPED_TRACE(absl::StrCat("derived_key_size = ", derived_key_size,
+                                  ", hkdf_hash = ", EnumToString(hkdf_hash),
+                                  ", ikm_size_delta = ", ikm_size_delta));
         AesGcmHkdfStreamSegmentDecrypter::Params params;
         params.ikm =
             Random::GetRandomKeyBytes(derived_key_size + ikm_size_delta);
@@ -195,7 +194,7 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongIkmSize) {
         params.ciphertext_segment_size = 128;
         params.associated_data = "associated data";
         auto result = AesGcmHkdfStreamSegmentDecrypter::New(params);
-        EXPECT_FALSE(result.ok());
+        EXPECT_THAT(result, Not(IsOk()));
         EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
         EXPECT_PRED_FORMAT2(testing::IsSubstring, "ikm too small",
                             std::string(result.status().message()));
@@ -208,10 +207,9 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongCiphertextOffset) {
   for (int derived_key_size : {16, 32}) {
     for (HashType hkdf_hash : {SHA1, SHA256, SHA512}) {
       for (int ciphertext_offset : {-16, -10, -3, -1}) {
-        SCOPED_TRACE(absl::StrCat(
-            "derived_key_size = ", derived_key_size,
-            ", hkdf_hash = ", EnumToString(hkdf_hash),
-            ", ciphertext_offset = ", ciphertext_offset));
+        SCOPED_TRACE(absl::StrCat("derived_key_size = ", derived_key_size,
+                                  ", hkdf_hash = ", EnumToString(hkdf_hash),
+                                  ", ciphertext_offset = ", ciphertext_offset));
         AesGcmHkdfStreamSegmentDecrypter::Params params;
         params.ikm = Random::GetRandomKeyBytes(derived_key_size);
         params.hkdf_hash = hkdf_hash;
@@ -220,7 +218,7 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongCiphertextOffset) {
         params.ciphertext_segment_size = 128;
         params.associated_data = "associated data";
         auto result = AesGcmHkdfStreamSegmentDecrypter::New(params);
-        EXPECT_FALSE(result.ok());
+        EXPECT_THAT(result, Not(IsOk()));
         EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
         EXPECT_PRED_FORMAT2(testing::IsSubstring, "must be non-negative",
                             std::string(result.status().message()));
@@ -235,16 +233,17 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongCiphertextSegmentSize) {
       for (int ciphertext_offset : {0, 1, 5, 10}) {
         int min_ct_segment_size = derived_key_size + ciphertext_offset +
                                   8 +   // nonce_prefix_size + 1
-                                  16 +   // tag_size
+                                  16 +  // tag_size
                                   1;
 
-        for (int ct_segment_size : {min_ct_segment_size - 5,
-                min_ct_segment_size - 1, min_ct_segment_size,
-                min_ct_segment_size + 1, min_ct_segment_size + 10}) {
-          SCOPED_TRACE(absl::StrCat(
-              "derived_key_size = ", derived_key_size,
-              ", ciphertext_offset = ", ciphertext_offset,
-              ", ciphertext_segment_size = ", ct_segment_size));
+        for (int ct_segment_size :
+             {min_ct_segment_size - 5, min_ct_segment_size - 1,
+              min_ct_segment_size, min_ct_segment_size + 1,
+              min_ct_segment_size + 10}) {
+          SCOPED_TRACE(
+              absl::StrCat("derived_key_size = ", derived_key_size,
+                           ", ciphertext_offset = ", ciphertext_offset,
+                           ", ciphertext_segment_size = ", ct_segment_size));
           AesGcmHkdfStreamSegmentDecrypter::Params params;
           params.ikm = Random::GetRandomKeyBytes(derived_key_size);
           params.hkdf_hash = hkdf_hash;
@@ -253,13 +252,13 @@ TEST(AesGcmHkdfStreamSegmentDecrypterTest, testWrongCiphertextSegmentSize) {
           params.ciphertext_segment_size = ct_segment_size;
           auto result = AesGcmHkdfStreamSegmentDecrypter::New(params);
           if (ct_segment_size < min_ct_segment_size) {
-            EXPECT_FALSE(result.ok());
+            EXPECT_THAT(result, Not(IsOk()));
             EXPECT_EQ(absl::StatusCode::kInvalidArgument,
                       result.status().code());
             EXPECT_PRED_FORMAT2(testing::IsSubstring, "too small",
                                 std::string(result.status().message()));
           } else {
-            EXPECT_TRUE(result.ok()) << result.status();
+            EXPECT_THAT(result, IsOk());
           }
         }
       }

@@ -103,11 +103,11 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, BasicVerify) {
   internal::RsaSsaPkcs1Params params{nist_test_vector.sig_hash};
 
   auto verifier_result = RsaSsaPkcs1VerifyBoringSsl::New(pub_key, params);
-  ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+  ASSERT_THAT(verifier_result, IsOk());
   auto verifier = std::move(verifier_result.value());
   auto status =
       verifier->Verify(nist_test_vector.signature, nist_test_vector.message);
-  EXPECT_TRUE(status.ok()) << status << internal::GetSslErrors();
+  EXPECT_THAT(status, IsOk()) << internal::GetSslErrors();
 }
 
 TEST_F(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
@@ -122,7 +122,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
 
   {  // Small modulus.
     auto result = RsaSsaPkcs1VerifyBoringSsl::New(small_pub_key, nist_params);
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring,
                         "only modulus size >= 2048-bit is supported",
@@ -132,7 +132,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
   {  // Use SHA1 for digital signature.
     auto result =
         RsaSsaPkcs1VerifyBoringSsl::New(nist_pub_key, sha1_hash_params);
-    EXPECT_FALSE(result.ok());
+    EXPECT_THAT(result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring,
                         "SHA1 is not safe for digital signature",
@@ -149,7 +149,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {
   internal::RsaSsaPkcs1Params params{nist_test_vector.sig_hash};
 
   auto verifier_result = RsaSsaPkcs1VerifyBoringSsl::New(pub_key, params);
-  ASSERT_TRUE(verifier_result.ok()) << verifier_result.status();
+  ASSERT_THAT(verifier_result, IsOk());
   auto verifier = std::move(verifier_result.value());
   // Modify the message.
   for (std::size_t i = 0; i < nist_test_vector.message.length(); i++) {
@@ -157,7 +157,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {
     modified_message[i / 8] ^= 1 << (i % 8);
     auto status =
         verifier->Verify(nist_test_vector.signature, modified_message);
-    EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
+    EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
   // Modify the signature.
   for (std::size_t i = 0; i < nist_test_vector.signature.length(); i++) {
@@ -165,14 +165,14 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {
     modified_signature[i / 8] ^= 1 << (i % 8);
     auto status =
         verifier->Verify(modified_signature, nist_test_vector.message);
-    EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
+    EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
   // Truncate the signature.
   for (std::size_t i = 0; i < nist_test_vector.signature.length(); i++) {
     std::string truncated_signature(nist_test_vector.signature, 0, i);
     auto status =
         verifier->Verify(truncated_signature, nist_test_vector.message);
-    EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
+    EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
 }
 

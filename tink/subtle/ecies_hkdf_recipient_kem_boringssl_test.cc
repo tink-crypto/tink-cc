@@ -37,6 +37,7 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
 class EciesHkdfRecipientKemBoringSslTest : public ::testing::Test {};
@@ -87,13 +88,13 @@ TEST_F(EciesHkdfRecipientKemBoringSslTest, TestBasic) {
     auto ecies_kem_or = EciesHkdfRecipientKemBoringSsl::New(
         test.curve,
         util::SecretDataFromStringView(test::HexDecodeOrDie(test.priv_hex)));
-    ASSERT_TRUE(ecies_kem_or.ok());
+    ASSERT_THAT(ecies_kem_or, IsOk());
     auto ecies_kem = std::move(ecies_kem_or).value();
     auto kem_key_or = ecies_kem->GenerateKey(
         test::HexDecodeOrDie(test.pub_encoded_hex), test.hash,
         test::HexDecodeOrDie(test.salt_hex),
         test::HexDecodeOrDie(test.info_hex), test.out_len, test.point_format);
-    ASSERT_TRUE(kem_key_or.ok());
+    ASSERT_THAT(kem_key_or, IsOk());
     EXPECT_EQ(test.out_key_hex,
               test::HexEncode(
                   util::SecretDataAsStringView(kem_key_or.value())));
@@ -120,7 +121,7 @@ TEST_F(EciesHkdfNistPCurveRecipientKemBoringSslTest, TestNew) {
       EllipticCurveType::NIST_P256,
       util::SecretDataFromStringView(
           test::HexDecodeOrDie(kNistP256PrivateKeyHex)));
-  ASSERT_TRUE(status_or_recipient_kem.ok());
+  ASSERT_THAT(status_or_recipient_kem, IsOk());
 }
 
 TEST_F(EciesHkdfNistPCurveRecipientKemBoringSslTest, TestNewInvalidCurve) {
@@ -153,14 +154,14 @@ TEST_F(EciesHkdfNistPCurveRecipientKemBoringSslTest, TestGenerateKey) {
       EllipticCurveType::NIST_P256,
       util::SecretDataFromStringView(
           test::HexDecodeOrDie(kNistP256PrivateKeyHex)));
-  ASSERT_TRUE(status_or_recipient_kem.ok());
+  ASSERT_THAT(status_or_recipient_kem, IsOk());
   auto recipient_kem = std::move(status_or_recipient_kem.value());
 
   auto status_or_shared_key = recipient_kem->GenerateKey(
       test::HexDecodeOrDie(kNistP256PublicValueHex), HashType::SHA256,
       test::HexDecodeOrDie(kSaltHex), test::HexDecodeOrDie(kInfoHex), 32,
       EcPointFormat::UNCOMPRESSED);
-  ASSERT_TRUE(status_or_shared_key.ok());
+  ASSERT_THAT(status_or_shared_key, IsOk());
 
   EXPECT_EQ(test::HexEncode(
                 util::SecretDataAsStringView(status_or_shared_key.value())),
@@ -177,7 +178,7 @@ TEST_F(EciesHkdfX25519RecipientKemBoringSslTest, TestNew) {
       EllipticCurveType::CURVE25519,
       util::SecretDataFromStringView(
           test::HexDecodeOrDie(kX25519PrivateKeyHex)));
-  ASSERT_TRUE(status_or_recipient_kem.ok());
+  ASSERT_THAT(status_or_recipient_kem, IsOk());
 }
 
 TEST_F(EciesHkdfX25519RecipientKemBoringSslTest, TestNewInvalidCurve) {

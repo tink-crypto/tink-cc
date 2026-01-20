@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -573,6 +574,202 @@ TEST(EcdsaPrivateKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = private_key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*private_key));
+}
+
+TEST(EcdsaPrivateKeyTest, CopyConstructor) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EcdsaPrivateKey copy(*private_key);
+
+  EXPECT_THAT(copy, Eq(*private_key));
+}
+
+TEST(EcdsaPrivateKeyTest, CopyAssignment) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<EcdsaParameters> other_parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+          .SetHashType(EcdsaParameters::HashType::kSha384)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(EcdsaParameters::Variant::kLegacy)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> other_ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P384);
+  ASSERT_THAT(other_ec_key, IsOk());
+
+  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
+                             BigInteger(other_ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> other_public_key =
+      EcdsaPublicKey::Create(*other_parameters, other_public_point,
+                             /*id_requirement=*/456, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  RestrictedBigInteger other_private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(other_ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EcdsaPrivateKey> copy = EcdsaPrivateKey::Create(
+      *other_public_key, other_private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *private_key;
+
+  EXPECT_THAT(*copy, Eq(*private_key));
+}
+
+TEST(EcdsaPrivateKeyTest, MoveConstructor) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EcdsaPrivateKey expected = *private_key;
+  EcdsaPrivateKey moved(std::move(*private_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(EcdsaPrivateKeyTest, MoveAssignment) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<EcdsaParameters> other_parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+          .SetHashType(EcdsaParameters::HashType::kSha384)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(EcdsaParameters::Variant::kLegacy)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> other_ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P384);
+  ASSERT_THAT(other_ec_key, IsOk());
+
+  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
+                             BigInteger(other_ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> other_public_key =
+      EcdsaPublicKey::Create(*other_parameters, other_public_point,
+                             /*id_requirement=*/456, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  RestrictedBigInteger other_private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(other_ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EcdsaPrivateKey> moved = EcdsaPrivateKey::Create(
+      *other_public_key, other_private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  EcdsaPrivateKey expected = *private_key;
+  *moved = std::move(*private_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

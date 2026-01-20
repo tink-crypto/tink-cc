@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -344,6 +345,130 @@ TEST(EcdsaPublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = public_key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*public_key));
+}
+
+TEST(EcdsaPublicKeyTest, CopyConstructor) {
+  absl::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, kP256EcPoint, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  EcdsaPublicKey copy(*public_key);
+
+  EXPECT_THAT(copy, Eq(*public_key));
+}
+
+TEST(EcdsaPublicKeyTest, CopyAssignment) {
+  absl::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, kP256EcPoint, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EcdsaParameters> other_params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+          .SetHashType(EcdsaParameters::HashType::kSha384)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(EcdsaParameters::Variant::kLegacy)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<internal::EcKey> other_ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P384);
+  ASSERT_THAT(other_ec_key, IsOk());
+
+  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
+                             BigInteger(other_ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> copy = EcdsaPublicKey::Create(
+      *other_params, other_public_point,
+      /*id_requirement=*/0x05060708, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *public_key;
+
+  EXPECT_THAT(*copy, Eq(*public_key));
+}
+
+TEST(EcdsaPublicKeyTest, MoveConstructor) {
+  absl::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, kP256EcPoint, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  EcdsaPublicKey expected = *public_key;
+  EcdsaPublicKey moved(std::move(*public_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(EcdsaPublicKeyTest, MoveAssignment) {
+  absl::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, kP256EcPoint, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EcdsaParameters> other_params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+          .SetHashType(EcdsaParameters::HashType::kSha384)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(EcdsaParameters::Variant::kLegacy)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<internal::EcKey> other_ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P384);
+  ASSERT_THAT(other_ec_key, IsOk());
+
+  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
+                             BigInteger(other_ec_key->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> moved = EcdsaPublicKey::Create(
+      *other_params, other_public_point,
+      /*id_requirement=*/0x05060708, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  EcdsaPublicKey expected(*public_key);
+  *moved = std::move(*public_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

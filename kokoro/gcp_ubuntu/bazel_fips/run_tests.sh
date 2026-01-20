@@ -57,6 +57,9 @@ readonly CACHE_FLAGS
 cat <<EOF > _do_run_test.sh
 set -euo pipefail
 
+# Install missing Clang 17 libraries at runtime. One can also do this in the base Dockerfile.
+apt-get update && apt-get install -y libxml2 libtinfo6
+
 bazelisk build ${CACHE_FLAGS[@]} \
   --//tink/config:use_only_fips=True \
   --build_tag_filters=fips,-requires_boringcrypto_update \

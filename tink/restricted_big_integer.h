@@ -54,9 +54,6 @@ class RestrictedBigInteger {
   explicit RestrictedBigInteger(SecretData secret_big_integer,
                                 SecretKeyAccessToken token);
 
-  explicit RestrictedBigInteger(const RestrictedData& secret_big_integer,
-                                SecretKeyAccessToken token);
-
   // Returns the value of this RestrictedBigInteger object.
   absl::string_view GetSecret(SecretKeyAccessToken token) const {
     return util::SecretDataAsStringView(secret_);

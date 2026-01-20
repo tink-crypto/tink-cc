@@ -198,8 +198,9 @@ const RestrictedBigInteger& EcdsaPrivateKey::GetPrivateKeyValue(
     PartialKeyAccessToken token) const {
   absl::MutexLock lock(mutex_);
   if (!private_key_value_big_integer_.has_value()) {
-    private_key_value_big_integer_.emplace(private_key_value_,
-                                           InsecureSecretKeyAccess::Get());
+    private_key_value_big_integer_.emplace(
+        private_key_value_.GetSecret(InsecureSecretKeyAccess::Get()),
+        InsecureSecretKeyAccess::Get());
   }
   return *private_key_value_big_integer_;
 }

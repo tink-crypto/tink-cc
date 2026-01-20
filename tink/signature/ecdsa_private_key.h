@@ -19,10 +19,12 @@
 
 #include <memory>
 
-#include "absl/base/call_once.h"
 #include "absl/base/macros.h"
+#include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -43,14 +45,29 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
   EcdsaPrivateKey(const EcdsaPrivateKey& other)
       : public_key_(other.public_key_),
         private_key_value_(other.private_key_value_) {
-    absl::call_once(other.once_, [&] {
-      if (other.private_key_value_big_integer_ != nullptr) {
-        private_key_value_big_integer_ = std::make_unique<RestrictedBigInteger>(
-            *other.private_key_value_big_integer_);
-      }
-    });
+    absl::MutexLock lock(other.mutex_);
+    private_key_value_big_integer_ = other.private_key_value_big_integer_;
   }
-  EcdsaPrivateKey& operator=(const EcdsaPrivateKey& other) = delete;
+
+  EcdsaPrivateKey& operator=(const EcdsaPrivateKey& other) {
+    if (this == &other) {
+      return *this;
+    }
+
+    absl::optional<RestrictedBigInteger> tmp_private_key_value_big_integer;
+    {
+      absl::MutexLock lock(other.mutex_);
+      tmp_private_key_value_big_integer = other.private_key_value_big_integer_;
+    }
+
+    public_key_ = other.public_key_;
+    private_key_value_ = other.private_key_value_;
+    absl::MutexLock lock(mutex_);
+    private_key_value_big_integer_ = tmp_private_key_value_big_integer;
+
+    return *this;
+  }
+
   EcdsaPrivateKey(EcdsaPrivateKey&& other) = default;
   EcdsaPrivateKey& operator=(EcdsaPrivateKey&& other) = default;
 
@@ -110,8 +127,9 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
   EcdsaPublicKey public_key_;
   RestrictedData private_key_value_;
 
-  mutable absl::once_flag once_;
-  mutable std::unique_ptr<RestrictedBigInteger> private_key_value_big_integer_;
+  mutable absl::Mutex mutex_;
+  mutable absl::optional<RestrictedBigInteger> private_key_value_big_integer_
+      ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace tink

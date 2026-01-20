@@ -20,11 +20,11 @@
 #include <memory>
 #include <utility>
 
-#include "absl/base/call_once.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_buffer.h"
@@ -196,10 +196,11 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
 
 const RestrictedBigInteger& EcdsaPrivateKey::GetPrivateKeyValue(
     PartialKeyAccessToken token) const {
-  absl::call_once(once_, [&] {
-    private_key_value_big_integer_ = std::make_unique<RestrictedBigInteger>(
-        private_key_value_, InsecureSecretKeyAccess::Get());
-  });
+  absl::MutexLock lock(mutex_);
+  if (!private_key_value_big_integer_.has_value()) {
+    private_key_value_big_integer_.emplace(private_key_value_,
+                                           InsecureSecretKeyAccess::Get());
+  }
   return *private_key_value_big_integer_;
 }
 

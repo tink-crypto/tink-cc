@@ -818,11 +818,12 @@ cc_library(
         "//tink/internal:ssl_unique_ptr",
         "//tink/subtle:common_enums",
         "//tink/util:secret_data",
-        "@abseil-cpp//absl/base",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/synchronization",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
     ],
 )

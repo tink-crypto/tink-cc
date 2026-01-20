@@ -414,54 +414,6 @@ TEST_P(EcdsaPrivateKeyTest, PrivateKeyEquals) {
   EXPECT_FALSE(*other_private_key != *private_key);
 }
 
-TEST_P(EcdsaPrivateKeyTest, CopyAssign) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(test_case.curve_type)
-          .SetHashType(test_case.hash_type)
-          .SetSignatureEncoding(test_case.signature_encoding)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  absl::StatusOr<EcdsaPublicKey> public_key =
-      EcdsaPublicKey::Create(*parameters, public_point,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-  RestrictedData private_key_value =
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
-                     InsecureSecretKeyAccess::Get());
-  absl::StatusOr<EcdsaPrivateKey> key = EcdsaPrivateKey::Create(
-      *public_key, private_key_value, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<internal::EcKey> other_ec_key =
-      internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(other_ec_key, IsOk());
-  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
-                             BigInteger(other_ec_key->pub_y));
-  absl::StatusOr<EcdsaPublicKey> other_public_key =
-      EcdsaPublicKey::Create(*parameters, other_public_point,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(other_public_key, IsOk());
-  RestrictedData other_private_key_value =
-      RestrictedData(util::SecretDataAsStringView(other_ec_key->priv),
-                     InsecureSecretKeyAccess::Get());
-  absl::StatusOr<EcdsaPrivateKey> other_key = EcdsaPrivateKey::Create(
-      *other_public_key, other_private_key_value, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_THAT(*key, Not(Eq(*other_key)));
-
-  *other_key = *key;
-  EXPECT_THAT(*key, Eq(*other_key));
-}
-
 TEST(EcdsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()

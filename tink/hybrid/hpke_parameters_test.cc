@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -183,6 +184,7 @@ TEST(HpkeParametersTest, BuildWithoutAeadIdFails) {
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .Build();
+
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -199,8 +201,7 @@ TEST(HpkeParametersTest, CopyConstructor) {
 
   HpkeParameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetVariant(), Eq(HpkeParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(HpkeParametersTest, CopyAssignment) {
@@ -213,10 +214,59 @@ TEST(HpkeParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  HpkeParameters copy = *parameters;
+  absl::StatusOr<HpkeParameters> copy =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.GetVariant(), Eq(HpkeParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(HpkeParametersTest, MoveConstructor) {
+  absl::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  HpkeParameters expected = *parameters;
+  HpkeParameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(HpkeParametersTest, MoveAssignment) {
+  absl::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<HpkeParameters> moved =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  ASSERT_THAT(moved, IsOk());
+
+  HpkeParameters expected = *parameters;
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(HpkeParametersTest, ParametersEquals) {

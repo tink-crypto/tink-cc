@@ -746,6 +746,196 @@ TEST(HpkePrivateKeyTest, DifferentKeyTypesNotEqual) {
   EXPECT_FALSE(*public_key == *private_key);
 }
 
+TEST(HpkePrivateKeyTest, CopyConstructor) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes(
+      reinterpret_cast<const char*>((*x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  HpkePrivateKey copy(*private_key);
+
+  EXPECT_THAT(copy, Eq(*private_key));
+}
+
+TEST(HpkePrivateKeyTest, CopyAssignment) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes(
+      reinterpret_cast<const char*>((*x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<HpkeParameters> other_params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> other_x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(other_x25519_key, IsOk());
+
+  std::string other_public_key_bytes(
+      reinterpret_cast<const char*>((*other_x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData other_private_key_bytes = RestrictedData(
+      (*other_x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> other_public_key =
+      HpkePublicKey::Create(*other_params, other_public_key_bytes,
+                            /*id_requirement=*/456, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> copy = HpkePrivateKey::Create(
+      *other_public_key, other_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *private_key;
+
+  EXPECT_THAT(*copy, Eq(*private_key));
+}
+
+TEST(HpkePrivateKeyTest, MoveConstructor) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes(
+      reinterpret_cast<const char*>((*x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  HpkePrivateKey expected = *private_key;
+  HpkePrivateKey moved(std::move(*private_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(HpkePrivateKeyTest, MoveAssignment) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes(
+      reinterpret_cast<const char*>((*x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<HpkeParameters> other_params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> other_x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(other_x25519_key, IsOk());
+
+  std::string other_public_key_bytes(
+      reinterpret_cast<const char*>((*other_x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData other_private_key_bytes = RestrictedData(
+      (*other_x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> other_public_key =
+      HpkePublicKey::Create(*other_params, other_public_key_bytes,
+                            /*id_requirement=*/456, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> moved = HpkePrivateKey::Create(
+      *other_public_key, other_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  HpkePrivateKey expected = *private_key;
+  *moved = std::move(*private_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
+}
+
 TEST(HpkePrivateKeyTest, Clone) {
   absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()

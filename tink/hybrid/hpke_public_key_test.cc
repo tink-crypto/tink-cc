@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -566,7 +567,130 @@ TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*public_key != *other_public_key);
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
+
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(HpkePublicKeyTest, CopyConstructor) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  HpkePublicKey copy(*public_key);
+
+  EXPECT_THAT(copy, Eq(*public_key));
+}
+
+TEST(HpkePublicKeyTest, CopyAssignment) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkeParameters> other_params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> copy = HpkePublicKey::Create(
+      *other_params, other_public_key_bytes, /*id_requirement=*/0x05060708,
+      GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *public_key;
+
+  EXPECT_THAT(*copy, Eq(*public_key));
+}
+
+TEST(HpkePublicKeyTest, MoveConstructor) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  HpkePublicKey expected = *public_key;
+  HpkePublicKey moved(std::move(*public_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(HpkePublicKeyTest, MoveAssignment) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkeParameters> other_params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> moved = HpkePublicKey::Create(
+      *other_params, other_public_key_bytes, /*id_requirement=*/0x05060708,
+      GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  HpkePublicKey expected = *public_key;
+  *moved = std::move(*public_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST(HpkePublicKeyTest, Clone) {

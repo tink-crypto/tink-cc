@@ -365,13 +365,13 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::span
     tink::core::aead
     tink::core::crypto_format
     tink::core::primitive_set
     tink::subtle::subtle_util
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )

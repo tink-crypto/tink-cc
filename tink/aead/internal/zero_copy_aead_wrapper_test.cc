@@ -27,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead.h"
@@ -35,7 +36,6 @@
 #include "tink/crypto_format.h"
 #include "tink/primitive_set.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -52,7 +52,6 @@ using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::_;
 using ::testing::HasSubstr;
-using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::Unused;
 
@@ -78,55 +77,49 @@ TEST(ZeroCopyAeadWrapperEmptyTest, Empty) {
                                           HasSubstr("no primary")));
 }
 
-class ZeroCopyAeadWrapperTest : public testing::Test {
- protected:
-  void SetUp() override {
-    // Defines a Tink-type key.
-    KeysetInfo::KeyInfo key_info;
-    key_info.set_output_prefix_type(OutputPrefixType::TINK);
-    key_info.set_key_id(1234543);
-    key_info.set_status(KeyStatusType::ENABLED);
+// Returns an AEAD with expected return values for all its functions set via
+// EXPECT_CALL. All values are derived from constants kPlaintext, kAad, and
+// kCiphertext.
+std::unique_ptr<MockZeroCopyAead> SetUpMockZeroCopyAead() {
+  auto aead = absl::make_unique<MockZeroCopyAead>();
 
-    // Creates a new AEAD set, adds a mock AEAD corresponding to the above key,
-    // and stores the set as aead_set_.
-    auto aead_set = std::make_unique<PrimitiveSet<ZeroCopyAead>>();
-    auto entry = aead_set->AddPrimitive(SetUpMockZeroCopyAead(), key_info);
-    ASSERT_THAT(entry, IsOk());
-    ASSERT_THAT(aead_set->set_primary(*entry), IsOk());
-    aead_set_ = std::move(aead_set);
-  }
+  EXPECT_CALL(*aead, MaxEncryptionSize(kPlaintext.size()))
+      .WillRepeatedly(Return(kCiphertext.size()));
+  EXPECT_CALL(*aead, Encrypt(kPlaintext, kAad, _))
+      .WillRepeatedly([&](Unused, Unused, absl::Span<char> buffer) {
+        memcpy(buffer.data(), kCiphertext.data(), kCiphertext.size());
+        return kCiphertext.size();
+      });
+  EXPECT_CALL(*aead, MaxDecryptionSize(kCiphertext.size()))
+      .WillRepeatedly(Return(kPlaintext.size()));
+  EXPECT_CALL(*aead, Decrypt(kCiphertext, kAad, _))
+      .WillRepeatedly([&](Unused, Unused, absl::Span<char> buffer) {
+        std::memcpy(buffer.data(), kPlaintext.data(), kPlaintext.size());
+        return kPlaintext.size();
+      });
 
-  // Returns an AEAD with expected return values for all its functions set via
-  // EXPECT_CALL. All values are derived from constants kPlaintext, kAad, and
-  // kCiphertext.
-  std::unique_ptr<MockZeroCopyAead> SetUpMockZeroCopyAead() {
-    auto aead = absl::make_unique<MockZeroCopyAead>();
+  return aead;
+}
 
-    EXPECT_CALL(*aead, MaxEncryptionSize(kPlaintext.size()))
-        .WillRepeatedly(Return(kCiphertext.size()));
-    EXPECT_CALL(*aead, Encrypt(kPlaintext, kAad, _))
-        .WillRepeatedly(Invoke([&](Unused, Unused, absl::Span<char> buffer) {
-          memcpy(buffer.data(), kCiphertext.data(), kCiphertext.size());
-          return kCiphertext.size();
-        }));
-    EXPECT_CALL(*aead, MaxDecryptionSize(kCiphertext.size()))
-        .WillRepeatedly(Return(kPlaintext.size()));
-    EXPECT_CALL(*aead, Decrypt(kCiphertext, kAad, _))
-        .WillRepeatedly(Invoke([&](Unused, Unused, absl::Span<char> buffer) {
-          std::memcpy(buffer.data(), kPlaintext.data(), kPlaintext.size());
-          return kPlaintext.size();
-        }));
+TEST(ZeroCopyAeadWrapperTest, EncryptDecrypt) {
+  // Defines a Tink-type key.
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(1234543);
+  key_info.set_status(KeyStatusType::ENABLED);
 
-    return aead;
-  }
+  // Creates a new AEAD set, adds a mock AEAD corresponding to the above key.
+  PrimitiveSet<ZeroCopyAead>::Builder aead_set_builder;
+  aead_set_builder.AddPrimaryPrimitive(SetUpMockZeroCopyAead(), key_info);
+  absl::StatusOr<PrimitiveSet<ZeroCopyAead>> primitive_set =
+      std::move(aead_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
+  auto aead_set_ptr =
+      std::make_unique<PrimitiveSet<ZeroCopyAead>>(std::move(*primitive_set));
 
-  std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set_;
-};
-
-TEST_F(ZeroCopyAeadWrapperTest, EncryptDecrypt) {
   ZeroCopyAeadWrapper wrapper;
   absl::StatusOr<std::unique_ptr<Aead>> aead_set =
-      wrapper.Wrap(std::move(aead_set_));
+      wrapper.Wrap(std::move(aead_set_ptr));
   ASSERT_THAT(aead_set, IsOk());
 
   absl::StatusOr<std::string> ciphertext =
@@ -138,9 +131,24 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecrypt) {
   EXPECT_EQ(*plaintext, kPlaintext);
 }
 
-TEST_F(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
+TEST(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
+  // Defines a Tink-type key.
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(1234543);
+  key_info.set_status(KeyStatusType::ENABLED);
+
+  // Creates a new AEAD set, adds a mock AEAD corresponding to the above key.
+  PrimitiveSet<ZeroCopyAead>::Builder aead_set_builder;
+  aead_set_builder.AddPrimaryPrimitive(SetUpMockZeroCopyAead(), key_info);
+  absl::StatusOr<PrimitiveSet<ZeroCopyAead>> primitive_set =
+      std::move(aead_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
+  auto aead_set_ptr =
+      std::make_unique<PrimitiveSet<ZeroCopyAead>>(std::move(*primitive_set));
+
   // Manually encrypt with the primary key.
-  ZeroCopyAead& aead = aead_set_->get_primary()->get_primitive();
+  ZeroCopyAead& aead = aead_set_ptr->get_primary()->get_primitive();
   std::string ciphertext;
   subtle::ResizeStringUninitialized(
       &ciphertext, CryptoFormat::kNonRawPrefixSize +
@@ -150,21 +158,29 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
       absl::MakeSpan(ciphertext)
           .subspan(CryptoFormat::kNonRawPrefixSize, ciphertext.size()));
   ASSERT_THAT(ciphertext_size, IsOk());
-  const std::string& key_id = aead_set_->get_primary()->get_identifier();
+  const std::string& key_id = aead_set_ptr->get_primary()->get_identifier();
   std::memcpy(&ciphertext[0], key_id.data(), key_id.size());
   ciphertext.resize(key_id.size() + *ciphertext_size);
 
-  // Add a second key.
-  KeysetInfo::KeyInfo key_info;
-  key_info.set_output_prefix_type(OutputPrefixType::TINK);
-  key_info.set_key_id(42);
-  key_info.set_status(KeyStatusType::ENABLED);
+  // Rebuild the PrimitiveSet with a second key.
+  KeysetInfo::KeyInfo key_info2;
+  key_info2.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info2.set_key_id(42);
+  key_info2.set_status(KeyStatusType::ENABLED);
   std::unique_ptr<ZeroCopyAead> aead1 = absl::make_unique<MockZeroCopyAead>();
-  ASSERT_THAT(aead_set_->AddPrimitive(std::move(aead1), key_info).status(),
-              IsOk());
+
+  PrimitiveSet<ZeroCopyAead>::Builder new_aead_set_builder;
+  new_aead_set_builder.AddPrimaryPrimitive(SetUpMockZeroCopyAead(), key_info);
+  new_aead_set_builder.AddPrimitive(std::move(aead1), key_info2);
+  absl::StatusOr<PrimitiveSet<ZeroCopyAead>> new_aead_set =
+      std::move(new_aead_set_builder).Build();
+  ASSERT_THAT(new_aead_set, IsOk());
+  aead_set_ptr =
+      std::make_unique<PrimitiveSet<ZeroCopyAead>>(std::move(*new_aead_set));
+
   ZeroCopyAeadWrapper wrapper;
   absl::StatusOr<std::unique_ptr<Aead>> aead_set =
-      wrapper.Wrap(std::move(aead_set_));
+      wrapper.Wrap(std::move(aead_set_ptr));
   ASSERT_THAT(aead_set, IsOk());
 
   // Encrypt with the wrapped AEAD and check that the result is equal to
@@ -175,19 +191,32 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
   EXPECT_EQ(*wrap_ciphertext, ciphertext);
 }
 
-TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
-  // Add raw key to AEAD set.
+TEST(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
+  // Defines a Tink-type key.
   KeysetInfo::KeyInfo key_info;
-  key_info.set_output_prefix_type(OutputPrefixType::RAW);
-  key_info.set_key_id(1234);
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(1234543);
   key_info.set_status(KeyStatusType::ENABLED);
-  auto entry = aead_set_->AddPrimitive(SetUpMockZeroCopyAead(), key_info);
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(aead_set_->set_primary(*entry), IsOk());
+
+  // Add raw key to AEAD set.
+  KeysetInfo::KeyInfo key_info2;
+  key_info2.set_output_prefix_type(OutputPrefixType::RAW);
+  key_info2.set_key_id(1234);
+  key_info2.set_status(KeyStatusType::ENABLED);
+
+  // Rebuild the PrimitiveSet with the raw key as primary.
+  PrimitiveSet<ZeroCopyAead>::Builder aead_set_builder;
+  aead_set_builder.AddPrimitive(SetUpMockZeroCopyAead(), key_info);
+  aead_set_builder.AddPrimaryPrimitive(SetUpMockZeroCopyAead(), key_info2);
+  absl::StatusOr<PrimitiveSet<ZeroCopyAead>> primitive_set =
+      std::move(aead_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
+  auto aead_set_ptr =
+      std::make_unique<PrimitiveSet<ZeroCopyAead>>(std::move(*primitive_set));
 
   // Manually encrypt with the raw key.
   absl::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
-      raw_primitives = aead_set_->get_raw_primitives();
+      raw_primitives = aead_set_ptr->get_raw_primitives();
   ASSERT_THAT(raw_primitives, IsOk());
   EXPECT_EQ((*raw_primitives)->size(), 1);
   ZeroCopyAead& aead = (*raw_primitives)->front()->get_primitive();
@@ -203,7 +232,7 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
   // encrypting directly with the raw key.
   ZeroCopyAeadWrapper wrapper;
   absl::StatusOr<std::unique_ptr<Aead>> aead_set =
-      wrapper.Wrap(std::move(aead_set_));
+      wrapper.Wrap(std::move(aead_set_ptr));
   ASSERT_THAT(aead_set, IsOk());
   absl::StatusOr<std::string> wrap_ciphertext =
       (*aead_set)->Encrypt(kPlaintext, kAad);
@@ -227,10 +256,25 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
   EXPECT_EQ(*wrap_plaintext, kPlaintext);
 }
 
-TEST_F(ZeroCopyAeadWrapperTest, EncryptBadDecrypt) {
+TEST(ZeroCopyAeadWrapperTest, EncryptBadDecrypt) {
+  // Defines a Tink-type key.
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(1234543);
+  key_info.set_status(KeyStatusType::ENABLED);
+
+  // Creates a new AEAD set, adds a mock AEAD corresponding to the above key.
+  PrimitiveSet<ZeroCopyAead>::Builder aead_set_builder;
+  aead_set_builder.AddPrimaryPrimitive(SetUpMockZeroCopyAead(), key_info);
+  absl::StatusOr<PrimitiveSet<ZeroCopyAead>> primitive_set =
+      std::move(aead_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
+  auto aead_set_ptr =
+      std::make_unique<PrimitiveSet<ZeroCopyAead>>(std::move(*primitive_set));
+
   ZeroCopyAeadWrapper wrapper;
   absl::StatusOr<std::unique_ptr<Aead>> aead_set =
-      wrapper.Wrap(std::move(aead_set_));
+      wrapper.Wrap(std::move(aead_set_ptr));
   ASSERT_THAT(aead_set, IsOk());
 
   absl::StatusOr<std::string> plaintext =

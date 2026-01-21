@@ -66,96 +66,118 @@ TEST(AeadSetWrapperTest, WrapEmpty) {
                       std::string(aead_result.status().message()));
 }
 
-std::unique_ptr<PrimitiveSet<CordAead>> setup_keyset() {
-  KeysetInfo::KeyInfo* key_info;
-  KeysetInfo keyset_info;
-
-  uint32_t key_id_0 = 1234543;
-  key_info = keyset_info.add_key_info();
-  key_info->set_output_prefix_type(OutputPrefixType::TINK);
-  key_info->set_key_id(key_id_0);
-  key_info->set_status(KeyStatusType::ENABLED);
-  std::string aead_name_0 = "aead0";
-  auto aead_set = std::make_unique<PrimitiveSet<CordAead>>();
-  std::unique_ptr<CordAead> aead =
-      absl::make_unique<DummyCordAead>(aead_name_0);
-  auto entry_result =
-      aead_set->AddPrimitive(std::move(aead), keyset_info.key_info(0));
-  auto aead_set_result = aead_set->set_primary(entry_result.value());
-  return aead_set;
-}
-
 TEST(AeadSetWrapperTest, WrapperEncryptDecrypt) {
-  // Wrap aead_set and test the resulting Aead.
-  auto aead_set = setup_keyset();
+  uint32_t key_id = 1234543;
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(key_id);
+  key_info.set_status(KeyStatusType::ENABLED);
+  std::string aead_name = "aead0";
+  auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
+  std::unique_ptr<CordAead> aead =
+      absl::make_unique<DummyCordAead>(aead_name);
+  aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
+  auto aead_set = std::move(aead_set_builder).Build();
+  ASSERT_THAT(aead_set, IsOk());
+
   CordAeadWrapper wrapper;
-  auto aead_result = wrapper.Wrap(std::move(aead_set));
+  auto aead_result = wrapper.Wrap(
+      std::make_unique<PrimitiveSet<CordAead>>(*std::move(aead_set)));
   ASSERT_THAT(aead_result, IsOk());
-  auto aead = std::move(aead_result.value());
+  auto wrapped_aead = std::move(aead_result.value());
   absl::Cord plaintext;
   plaintext.Append("some_plaintext");
   absl::Cord aad;
   aad.Append("some_aad");
 
-  auto encrypt_result = aead->Encrypt(plaintext, aad);
+  auto encrypt_result = wrapped_aead->Encrypt(plaintext, aad);
   EXPECT_THAT(encrypt_result, IsOk());
   absl::Cord ciphertext = encrypt_result.value();
 
-  auto decrypt_result = aead->Decrypt(ciphertext, aad);
+  auto decrypt_result = wrapped_aead->Decrypt(ciphertext, aad);
   EXPECT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 
 TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
-  // Wrap aead_set and test the resulting Aead.
-  auto aead_set = setup_keyset();
+  // Prepare key info for the primary key
+  uint32_t key_id_0 = 1234543;
+  KeysetInfo::KeyInfo key_info_0;
+  key_info_0.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info_0.set_key_id(key_id_0);
+  key_info_0.set_status(KeyStatusType::ENABLED);
+  std::string aead_name_0 = "aead0";
 
-  // Encrypt with the primary key
+  // Build PrimitiveSet with only the primary key
+  auto primary_aead_set_builder = PrimitiveSet<CordAead>::Builder();
+  std::unique_ptr<CordAead> primary_aead =
+      absl::make_unique<DummyCordAead>(aead_name_0);
+  primary_aead_set_builder.AddPrimaryPrimitive(std::move(primary_aead),
+                                               key_info_0);
+  auto primary_aead_set = std::move(primary_aead_set_builder)
+                              .Build();
+  ASSERT_THAT(primary_aead_set, IsOk());
+
+  // Encrypt with the primary key Aead
   absl::Cord plaintext;
   plaintext.Append("some_plaintext");
   absl::Cord aad;
   aad.Append("some_aad");
-  auto encrypt_result =
-      aead_set->get_primary()->get_primitive().Encrypt(plaintext, aad);
-  EXPECT_THAT(encrypt_result, IsOk());
-  absl::Cord ciphertext;
-  ciphertext.Append(aead_set->get_primary()->get_identifier());
-  ciphertext.Append(encrypt_result.value());
-
-  // Add a second key
-  KeysetInfo::KeyInfo* key_info;
-  KeysetInfo keyset_info;
-  uint32_t key_id = 42;
-  key_info = keyset_info.add_key_info();
-  key_info->set_output_prefix_type(OutputPrefixType::TINK);
-  key_info->set_key_id(key_id);
-  key_info->set_status(KeyStatusType::ENABLED);
-  std::string aead_name = "aead1";
-  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
-  auto entry_result =
-      aead_set->AddPrimitive(std::move(aead), keyset_info.key_info(0));
-  EXPECT_THAT(entry_result, IsOk());
-
-  // Wrap the primitive set
   CordAeadWrapper wrapper;
-  auto aead_result = wrapper.Wrap(std::move(aead_set));
-  ASSERT_THAT(aead_result, IsOk());
-  aead = std::move(aead_result.value());
+  auto wrapped_primary_aead_result =
+      wrapper.Wrap(std::make_unique<PrimitiveSet<CordAead>>(
+          *std::move(primary_aead_set)));
+  ASSERT_THAT(wrapped_primary_aead_result, IsOk());
+  auto wrapped_primary_aead = std::move(wrapped_primary_aead_result.value());
+  auto encrypt_result = wrapped_primary_aead->Encrypt(plaintext, aad);
+  EXPECT_THAT(encrypt_result, IsOk());
+  absl::Cord ciphertext = encrypt_result.value();
 
-  // Encrypt with the wrapped AEAD and check if result was equal to the
-  // encryption with the primary key.
-  auto encrypt_wrap_result = aead->Encrypt(plaintext, aad);
-  EXPECT_THAT(encrypt_wrap_result, IsOk());
-  EXPECT_EQ(ciphertext, encrypt_wrap_result.value());
+  // Builder for the multi-key PrimitiveSet
+  auto multi_aead_set_builder = PrimitiveSet<CordAead>::Builder();
+  std::unique_ptr<CordAead> aead0 =
+      absl::make_unique<DummyCordAead>(aead_name_0);
+  multi_aead_set_builder.AddPrimaryPrimitive(std::move(aead0),
+                                             key_info_0);
+  uint32_t key_id_1 = 42;
+  KeysetInfo::KeyInfo key_info_1;
+  key_info_1.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info_1.set_key_id(key_id_1);
+  key_info_1.set_status(KeyStatusType::ENABLED);
+  std::string aead_name_1 = "aead1";
+  std::unique_ptr<CordAead> aead_1 =
+      absl::make_unique<DummyCordAead>(aead_name_1);
+  multi_aead_set_builder.AddPrimitive(std::move(aead_1),
+                                      key_info_1);
+  auto multi_aead_set = std::move(multi_aead_set_builder).Build();
+  auto wrapped_multi_aead_result = wrapper.Wrap(
+      std::make_unique<PrimitiveSet<CordAead>>(*std::move(multi_aead_set)));
+  ASSERT_THAT(wrapped_multi_aead_result, IsOk());
+  auto wrapped_multi_aead = std::move(wrapped_multi_aead_result.value());
+
+  auto decrypt_result = wrapped_multi_aead->Decrypt(ciphertext, aad);
+  EXPECT_THAT(decrypt_result, IsOk());
+  EXPECT_EQ(plaintext, decrypt_result.value());
 }
 
 TEST(AeadSetWrapperTest, WrapperEncryptDecryptManyChunks) {
-  // Wrap aead_set and test the resulting Aead.
-  auto aead_set = setup_keyset();
+  uint32_t key_id = 1234543;
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(key_id);
+  key_info.set_status(KeyStatusType::ENABLED);
+  std::string aead_name = "aead0";
+  auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
+  std::unique_ptr<CordAead> aead =
+      absl::make_unique<DummyCordAead>(aead_name);
+  aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
+  auto aead_set = std::move(aead_set_builder).Build();
+
   CordAeadWrapper wrapper;
-  auto aead_result = wrapper.Wrap(std::move(aead_set));
+  auto aead_result = wrapper.Wrap(
+      std::make_unique<PrimitiveSet<CordAead>>(*std::move(aead_set)));
   ASSERT_THAT(aead_result, IsOk());
-  auto aead = std::move(aead_result.value());
+  auto wrapped_aead = std::move(aead_result.value());
 
   std::string plaintext = "";
   for (int i = 0; i < 1000; i++) {
@@ -166,22 +188,36 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptManyChunks) {
   absl::Cord aad;
   aad.Append("some_aad");
 
-  auto encrypt_result = aead->Encrypt(plaintext_cord, aad);
+  auto encrypt_result = wrapped_aead->Encrypt(plaintext_cord, aad);
   EXPECT_THAT(encrypt_result, IsOk());
   absl::Cord ciphertext = encrypt_result.value();
 
-  auto decrypt_result = aead->Decrypt(ciphertext, aad);
+  auto decrypt_result = wrapped_aead->Decrypt(ciphertext, aad);
   EXPECT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 
 TEST(AeadSetWrapperTest, WrapperEncryptBadDecrypt) {
   // Wrap aead_set and test the resulting Aead.
-  auto aead_set = setup_keyset();
+  uint32_t key_id = 1234543;
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::TINK);
+  key_info.set_key_id(key_id);
+  key_info.set_status(KeyStatusType::ENABLED);
+  std::string aead_name = "aead0";
+  auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
+  std::unique_ptr<CordAead> aead =
+      absl::make_unique<DummyCordAead>(aead_name);
+  aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
+  auto aead_set = std::move(aead_set_builder).Build();
+  ASSERT_THAT(aead_set, IsOk());
+
   CordAeadWrapper wrapper;
-  auto aead_result = wrapper.Wrap(std::move(aead_set));
+  auto aead_result = wrapper.Wrap(
+      std::make_unique<PrimitiveSet<CordAead>>(*std::move(aead_set)));
   ASSERT_THAT(aead_result, IsOk());
-  auto aead = std::move(aead_result.value());
+  // Encrypt with the primary key
+  auto wrapped_aead = std::move(aead_result.value());
   absl::Cord plaintext;
   plaintext.Append("some_plaintext");
   absl::Cord aad;
@@ -189,7 +225,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptBadDecrypt) {
 
   absl::Cord bad_ciphertext;
   bad_ciphertext.Append("some bad ciphertext");
-  auto decrypt_result = aead->Decrypt(bad_ciphertext, aad);
+  auto decrypt_result = wrapped_aead->Decrypt(bad_ciphertext, aad);
   EXPECT_FALSE(decrypt_result.ok());
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, decrypt_result.status().code());
   EXPECT_THAT(decrypt_result.status(),

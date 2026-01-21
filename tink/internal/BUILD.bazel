@@ -306,7 +306,7 @@ cc_test(
         ":key_info",
         "//proto:tink_cc_proto",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 

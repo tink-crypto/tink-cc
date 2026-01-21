@@ -11,8 +11,8 @@ cc_library(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@protobuf",
         "@protobuf//:cc_wkt_protos",
-        "@protobuf//:protobuf",
     ],
 )
 
@@ -24,6 +24,6 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink/util:test_matchers",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )

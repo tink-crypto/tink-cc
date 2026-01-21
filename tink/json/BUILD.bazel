@@ -13,7 +13,7 @@ cc_library(
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -31,7 +31,7 @@ cc_library(
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -56,7 +56,7 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -126,6 +126,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )

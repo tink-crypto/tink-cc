@@ -60,7 +60,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -72,7 +72,7 @@ cc_test(
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -90,7 +90,7 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -107,7 +107,7 @@ cc_test(
         "@abseil-cpp//absl/time",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -130,7 +130,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/types:optional",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -159,7 +159,7 @@ cc_test(
         "@abseil-cpp//absl/time",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -213,7 +213,7 @@ cc_test(
         "@abseil-cpp//absl/time",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -276,7 +276,7 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -634,7 +634,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/types:optional",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -659,7 +659,7 @@ cc_test(
         "@abseil-cpp//absl/time",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -730,7 +730,7 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -819,7 +819,7 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -893,7 +893,7 @@ cc_test(
         "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -967,7 +967,7 @@ cc_test(
         "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 

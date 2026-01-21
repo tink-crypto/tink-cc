@@ -92,7 +92,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 

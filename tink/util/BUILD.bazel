@@ -56,7 +56,7 @@ cc_library(
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 
@@ -296,7 +296,7 @@ cc_library(
     name = "protobuf_helper",
     hdrs = ["protobuf_helper.h"],
     include_prefix = "tink/util",
-    deps = ["@protobuf//:protobuf"],
+    deps = ["@protobuf"],
 )
 
 cc_library(
@@ -535,7 +535,7 @@ cc_test(
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
-        "@protobuf//:protobuf",
+        "@protobuf",
     ],
 )
 

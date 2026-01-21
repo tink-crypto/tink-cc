@@ -27,12 +27,11 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_key_set_info.h"
 #include "tink/key_status.h"
 #include "tink/primitive_set.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -57,7 +56,7 @@ TEST(MonitoringUtilTest,
 }
 
 TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetNullPrimary) {
-  PrimitiveSet<std::string> primitive_set;
+  PrimitiveSet<std::string>::Builder primitive_set_builder;
   auto some_string = absl::make_unique<std::string>("Text");
   KeysetInfo::KeyInfo key_info;
   key_info.set_type_url(
@@ -65,10 +64,11 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetNullPrimary) {
   key_info.set_status(KeyStatusType::ENABLED);
   key_info.set_key_id(1);
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
-  absl::StatusOr<PrimitiveSet<std::string>::Entry<std::string> *> added_entry =
-      primitive_set.AddPrimitive(std::move(some_string), key_info);
-  ASSERT_THAT(added_entry, IsOk());
-  EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(primitive_set).status(),
+  primitive_set_builder.AddPrimitive(std::move(some_string), key_info);
+  absl::StatusOr<PrimitiveSet<std::string>> primitive_set =
+      std::move(primitive_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
+  EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(*primitive_set).status(),
               test::StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -105,7 +105,8 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetValid) {
       {"key1", "value1"},
       {"key2", "value2"},
   };
-  PrimitiveSet<std::string> primitive_set(kAnnotations);
+  PrimitiveSet<std::string>::Builder primitive_set_builder;
+  primitive_set_builder.AddAnnotations(kAnnotations);
 
   constexpr absl::string_view kPrimitive1KeyTyepUrl =
       "type.googleapis.com/google.crypto.tink.SomePrimitiveInstance";
@@ -124,18 +125,17 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetValid) {
           /*status=*/KeyStatusType::ENABLED, /*key_id=*/2,
           /*prefix_type=*/OutputPrefixType::TINK);
 
-  absl::StatusOr<PrimitiveSet<std::string>::Entry<std::string> *> added_entry =
-      primitive_set.AddPrimitive(std::move(primitive_1.primitive),
-                                 primitive_1.key_info);
-  ASSERT_THAT(added_entry, IsOk());
-  ASSERT_THAT(primitive_set.set_primary(*added_entry), IsOk());
+  primitive_set_builder.AddPrimaryPrimitive(std::move(primitive_1.primitive),
+                                            primitive_1.key_info);
+  primitive_set_builder.AddPrimitive(std::move(primitive_2.primitive),
+                                     primitive_2.key_info);
 
-  added_entry = primitive_set.AddPrimitive(std::move(primitive_2.primitive),
-                                           primitive_2.key_info);
-  ASSERT_THAT(added_entry, IsOk());
+  absl::StatusOr<PrimitiveSet<std::string>> primitive_set =
+      std::move(primitive_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
 
   absl::StatusOr<internal::MonitoringKeySetInfo> monitoring_keyset_info =
-      MonitoringKeySetInfoFromPrimitiveSet(primitive_set);
+      MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   ASSERT_THAT(monitoring_keyset_info, IsOk());
   EXPECT_EQ(monitoring_keyset_info->GetPrimaryKeyId(), 1);
   EXPECT_THAT(monitoring_keyset_info->GetAnnotations(),

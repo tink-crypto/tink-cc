@@ -639,38 +639,30 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto public_key_verify_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(kAnnotations);
-  ASSERT_THAT(
-      public_key_verify_primitive_set
-          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
-                             absl::make_unique<DummyPublicKeyVerify>("verify0"),
-                             "jwtverify0"),
-                         keyset_info.key_info(0))
-          .status(),
-      IsOk());
-  ASSERT_THAT(
-      public_key_verify_primitive_set
-          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
-                             absl::make_unique<DummyPublicKeyVerify>("verify1"),
-                             "jwtverify1"),
-                         keyset_info.key_info(1))
-          .status(),
-      IsOk());
+  PrimitiveSet<JwtPublicKeyVerifyInternal>::Builder verify_set_builder;
+  verify_set_builder.AddAnnotations(kAnnotations);
+  verify_set_builder.AddPrimitive(
+      JwtPublicKeyVerifyImpl::Raw(
+          absl::make_unique<DummyPublicKeyVerify>("verify0"), "jwtverify0"),
+      keyset_info.key_info(0));
+  verify_set_builder.AddPrimitive(
+      JwtPublicKeyVerifyImpl::Raw(
+          absl::make_unique<DummyPublicKeyVerify>("verify1"), "jwtverify1"),
+      keyset_info.key_info(1));
   // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>::Entry<
-      JwtPublicKeyVerifyInternal> *>
-      last = public_key_verify_primitive_set->AddPrimitive(
-          JwtPublicKeyVerifyImpl::Raw(
-              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
+  verify_set_builder.AddPrimaryPrimitive(
+      JwtPublicKeyVerifyImpl::Raw(
+          absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>>
+      public_key_verify_primitive_set = std::move(verify_set_builder).Build();
+  ASSERT_THAT(public_key_verify_primitive_set, IsOk());
 
   // Create a PublicKeyVerify primitive and verify some data.
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> public_key_verify =
       JwtPublicKeyVerifyWrapper().Wrap(
-          std::move(public_key_verify_primitive_set));
+          std::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(
+              *std::move(public_key_verify_primitive_set)));
   ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()

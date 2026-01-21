@@ -504,17 +504,16 @@ tink_cc_test(
   SRCS
     monitoring_util_test.cc
   DEPS
-    tink::internal::monitoring
+    tink::internal::monitoring_key_set_info
     tink::internal::monitoring_util
     gmock
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_status
     tink::core::primitive_set
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )

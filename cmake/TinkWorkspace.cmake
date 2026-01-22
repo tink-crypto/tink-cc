@@ -61,8 +61,8 @@ if (TINK_BUILD_TESTS)
   else()
     http_archive(
       NAME googletest
-      URL https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz
-      SHA256 78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399
+      URL https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz
+      SHA256 65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
     )
   endif()
 
@@ -76,8 +76,8 @@ if (TINK_BUILD_TESTS)
 
   http_archive(
     NAME wycheproof
-    URL https://github.com/google/wycheproof/archive/d8ed1ba95ac4c551db67f410c06131c3bc00a97c.zip
-    SHA256 eb1d558071acf1aa6d677d7f1cabec2328d1cf8381496c17185bd92b52ce7545
+    URL https://github.com/c2sp/wycheproof/archive/b51abcfb8dafa5316791e57cf48512a2147d9671.zip
+    SHA256 56ba9f3deba06b1cc33430a770a9b6bd6ddc8af69188ea0b46d10bda60176978
     DATA_ONLY
   )
   # Symlink the Wycheproof test data.

@@ -50,8 +50,10 @@ using ::testing::UnorderedElementsAreArray;
 
 TEST(MonitoringUtilTest,
      MonitoringKeySetInfoFromPrimitiveSetEmptyPrimitiveSet) {
-  PrimitiveSet<std::string> primitive_set;
-  EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(primitive_set).status(),
+  absl::StatusOr<PrimitiveSet<std::string>> primitive_set =
+      PrimitiveSet<std::string>::Builder().Build();
+  ASSERT_THAT(primitive_set, IsOk());
+  EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(*primitive_set).status(),
               test::StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

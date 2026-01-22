@@ -249,8 +249,6 @@ cc_test(
         "//tink/internal:monitoring",
         "//tink/internal:monitoring_client_mocks",
         "//tink/internal:registry_impl",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/container:flat_hash_map",

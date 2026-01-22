@@ -78,10 +78,12 @@ TEST_F(DeterministicAeadSetWrapperTest, testBasic) {
   }
 
   {  // daead_set has no primary primitive.
-    std::unique_ptr<PrimitiveSet<DeterministicAead>> daead_set(
-        new PrimitiveSet<DeterministicAead>());
-    auto daead_result =
-        DeterministicAeadWrapper().Wrap(std::move(daead_set));
+    absl::StatusOr<PrimitiveSet<DeterministicAead>> empty_daead_set =
+        PrimitiveSet<DeterministicAead>::Builder().Build();
+    ASSERT_THAT(empty_daead_set, IsOk());
+    auto daead_result = DeterministicAeadWrapper().Wrap(
+        std::make_unique<PrimitiveSet<DeterministicAead>>(
+            *std::move(empty_daead_set)));
     EXPECT_FALSE(daead_result.ok());
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
               daead_result.status().code());

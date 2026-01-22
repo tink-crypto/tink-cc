@@ -1059,7 +1059,7 @@ cc_test(
     name = "aes_gcm_boringssl_test",
     size = "small",
     srcs = ["aes_gcm_boringssl_test.cc"],
-    data = ["//testvectors:aes_gcm"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":aes_gcm_boringssl",
@@ -1169,7 +1169,7 @@ cc_test(
     name = "aes_eax_boringssl_test",
     size = "small",
     srcs = ["aes_eax_boringssl_test.cc"],
-    data = ["//testvectors:aes_eax"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":aes_eax_boringssl",
@@ -1228,7 +1228,7 @@ cc_test(
     name = "aes_siv_boringssl_test",
     size = "small",
     srcs = ["aes_siv_boringssl_test.cc"],
-    data = ["//testvectors:aes_siv_cmac"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":aes_siv_boringssl",
@@ -1276,10 +1276,7 @@ cc_test(
     name = "ecdsa_verify_boringssl_test",
     size = "small",
     srcs = ["ecdsa_verify_boringssl_test.cc"],
-    data = [
-        "//testvectors:ecdsa",
-        "//testvectors:ecdsa_webcrypto",
-    ],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":common_enums",
@@ -1334,7 +1331,7 @@ cc_test(
     name = "ed25519_verify_boringssl_test",
     size = "small",
     srcs = ["ed25519_verify_boringssl_test.cc"],
-    data = ["//testvectors:eddsa"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":ed25519_verify_boringssl",
@@ -1361,7 +1358,7 @@ cc_test(
     name = "rsa_ssa_pss_verify_boringssl_test",
     size = "small",
     srcs = ["rsa_ssa_pss_verify_boringssl_test.cc"],
-    data = ["//testvectors:rsa_pss"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":common_enums",
@@ -1419,7 +1416,7 @@ cc_test(
     name = "rsa_ssa_pkcs1_verify_boringssl_test",
     size = "small",
     srcs = ["rsa_ssa_pkcs1_verify_boringssl_test.cc"],
-    data = ["//testvectors:rsa_signature"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":common_enums",
@@ -1471,7 +1468,7 @@ cc_test(
     name = "aes_gcm_siv_boringssl_test",
     size = "small",
     srcs = ["aes_gcm_siv_boringssl_test.cc"],
-    data = ["//testvectors:aes_gcm_siv"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":aes_gcm_siv_boringssl",
@@ -1528,7 +1525,7 @@ cc_test(
     name = "xchacha20_poly1305_boringssl_test",
     size = "small",
     srcs = ["xchacha20_poly1305_boringssl_test.cc"],
-    data = ["//testvectors:chacha20_poly1305"],
+    data = ["//:testvectors"],
     tags = ["fips"],
     deps = [
         ":subtle_util",

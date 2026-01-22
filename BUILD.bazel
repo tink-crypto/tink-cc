@@ -1,0 +1,15 @@
+load("//third_party/wycheproof:build_defs.bzl", "wycheproof_vectors")
+
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+# Make test vectors available at a build system agnostic relateive path. This
+# also simplifies accessing the the test vectors in the Bazel module
+# environment.
+wycheproof_vectors(
+    name = "testvectors",
+    testonly = 1,
+    srcs = ["@wycheproof//:testvectors"],
+    outdir = "testvectors",
+)

@@ -431,11 +431,7 @@ cc_test(
 cc_test(
     name = "ec_util_test",
     srcs = ["ec_util_test.cc"],
-    data = [
-        "//testvectors:ecdh",
-        "//testvectors:ecdsa_webcrypto",
-        "//testvectors:eddsa",
-    ],
+    data = ["//:testvectors"],
     deps = [
         ":bn_util",
         ":ec_util",

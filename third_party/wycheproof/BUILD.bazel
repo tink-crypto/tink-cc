@@ -1,0 +1,12 @@
+"""Defines a set of genrules to copy test vectors from Wycheproof.
+
+This is needed to assist the transition to using Bazel Modules, in that Bazel
+Modules packages use a different folder naming for dependencies compared to
+WORKSPACE-based packages.
+"""
+
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+exports_files(["wycheproof.BUILD.bazel"])

@@ -18,10 +18,12 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -42,7 +44,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -453,6 +454,210 @@ TEST(EciesPrivateKeyTest, DifferentKeyTypesNotEqual) {
   EXPECT_TRUE(*public_key != *private_key);
   EXPECT_FALSE(*private_key == *public_key);
   EXPECT_FALSE(*public_key == *private_key);
+}
+
+TEST(EciesPrivateKeyTest, CopyConstructor) {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
+                  internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
+                                           /*id_requirement=*/123,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_bytes,
+                                            GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EciesPrivateKey copy(*private_key);
+
+  EXPECT_THAT(copy, Eq(*private_key));
+}
+
+TEST(EciesPrivateKeyTest, CopyAssignment) {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
+                  internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
+                                           /*id_requirement=*/123,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_bytes,
+                                            GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<EciesParameters> other_params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> other_x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(other_x25519_key, IsOk());
+
+  std::string other_public_key_bytes = std::string(
+      reinterpret_cast<const char*>((*other_x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData other_private_key_bytes = RestrictedData(
+      (*other_x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPublicKey> other_public_key =
+      EciesPublicKey::CreateForCurveX25519(
+          *other_params, other_public_key_bytes,
+          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  absl::StatusOr<EciesPrivateKey> copy = EciesPrivateKey::CreateForCurveX25519(
+      *other_public_key, other_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *private_key;
+
+  EXPECT_THAT(*copy, Eq(*private_key));
+}
+
+TEST(EciesPrivateKeyTest, MoveConstructor) {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
+                  internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
+                                           /*id_requirement=*/123,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_bytes,
+                                            GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EciesPrivateKey expected = *private_key;
+  EciesPrivateKey moved(std::move(*private_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(EciesPrivateKeyTest, MoveAssignment) {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
+                  internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
+                                           /*id_requirement=*/123,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_bytes,
+                                            GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<EciesParameters> other_params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> other_x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(other_x25519_key, IsOk());
+
+  std::string other_public_key_bytes = std::string(
+      reinterpret_cast<const char*>((*other_x25519_key)->public_value),
+      internal::X25519KeyPubKeySize());
+  RestrictedData other_private_key_bytes = RestrictedData(
+      (*other_x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPublicKey> other_public_key =
+      EciesPublicKey::CreateForCurveX25519(
+          *other_params, other_public_key_bytes,
+          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  absl::StatusOr<EciesPrivateKey> moved = EciesPrivateKey::CreateForCurveX25519(
+      *other_public_key, other_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  EciesPrivateKey expected = *private_key;
+  *moved = std::move(*private_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST(EciesPrivateKeyTest, Clone) {

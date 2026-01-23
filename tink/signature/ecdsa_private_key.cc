@@ -18,17 +18,12 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/safe_stringops.h"
-#include "tink/internal/secret_buffer.h"
-#include "tink/util/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -149,48 +144,18 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
     const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
     PartialKeyAccessToken token) {
-  size_t expected_length = public_key.GetParameters().GetPrivateKeyLength();
-
-  auto adjust_private_key =
-      [&](absl::string_view current_key_sv) -> absl::StatusOr<RestrictedData> {
-    absl::string_view tmp_key = current_key_sv;
-
-    // If key is longer than expected, we remove leading bytes and check that
-    // each of them is zero.
-    while (tmp_key.length() > expected_length) {
-      if (tmp_key[0] != '\0') {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Private key is too long and has a non-zero leading byte. "
-            "Expected length: ",
-            expected_length, ", Actual length: ", current_key_sv.length()));
-      }
-      tmp_key.remove_prefix(1);
-    }
-
-    // Initialize a string of expected_length with all zeros.
-    internal::SecretBuffer padded_key(expected_length, '\0');
-
-    // Replace the end of the string with tmp_key.
-    internal::SafeMemCopy(
-        padded_key.data() + expected_length - tmp_key.length(), tmp_key.data(),
-        tmp_key.length());
-    return RestrictedData(util::internal::AsSecretData(std::move(padded_key)),
-                          InsecureSecretKeyAccess::Get());
-  };
+  RestrictedBigInteger private_key_value_big_integer = RestrictedBigInteger(
+      private_key_value.Get(InsecureSecretKeyAccess::Get()),
+      InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<RestrictedData> adjusted_private_key =
-      internal::CallWithCoreDumpProtection(
-          [&]() -> absl::StatusOr<RestrictedData> {
-            absl::string_view private_key_string =
-                private_key_value.GetSecret(InsecureSecretKeyAccess::Get());
-            absl::StatusOr<RestrictedData> adjusted_private_key =
-                adjust_private_key(private_key_string);
-            return adjusted_private_key;
-          });
+      private_key_value_big_integer.EncodeWithFixedSize(
+          public_key.GetParameters().GetPrivateKeyLength());
 
   if (!adjusted_private_key.ok()) {
     return adjusted_private_key.status();
   }
+
   return Create(public_key, *adjusted_private_key, token);
 }
 

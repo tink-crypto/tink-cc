@@ -53,7 +53,6 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
-using ::testing::Not;
 using ::testing::StrEq;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -288,10 +287,7 @@ TEST(EcdsaPrivateKeyTest, CreateWithPrivateKeyWithOneTooManyBytes) {
       EcdsaPrivateKey::CreateAllowNonConstantTime(
           *public_key, private_key_value, GetPartialKeyAccess())
           .status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr(
-              "Private key is too long and has a non-zero leading byte.")));
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("too long")));
 }
 
 TEST(EcdsaPrivateKeyTest, CreateWithPrivateKeyWithOneTooFewBytes) {

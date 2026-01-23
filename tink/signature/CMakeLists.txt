@@ -804,11 +804,8 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::ec_util
     tink::internal::err_util
-    tink::internal::safe_stringops
-    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
-    tink::util::secret_data
 )
 
 tink_cc_library(

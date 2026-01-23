@@ -17,8 +17,10 @@
 #ifndef TINK_RESTRICTED_BIG_INTEGER_H_
 #define TINK_RESTRICTED_BIG_INTEGER_H_
 
+#include <cstddef>
 #include <cstdint>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
@@ -63,6 +65,13 @@ class RestrictedBigInteger {
   const SecretData& GetSecretData(SecretKeyAccessToken token) const {
     return secret_;
   }
+
+  // Returns the integer as a RestrictedData encoded on `encoding_size` bytes.
+  // If the encoding is smaller than the encoding size, it is padded with
+  // leading zeros. If the encoding is larger than the encoding size,
+  // returns an error.
+  absl::StatusOr<RestrictedData> EncodeWithFixedSize(
+      size_t encoding_size) const;
 
   int64_t SizeInBytes() const { return secret_.size(); }
 

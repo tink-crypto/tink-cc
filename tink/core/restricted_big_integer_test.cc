@@ -21,15 +21,21 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 
+using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
+using ::testing::Not;
 
 constexpr absl::string_view kHexBigInt =
     "b3510a2bcd4ce644c5b594ae5059e12b2f054b658d5da5959a2fdf1871b808bc3df3e628"
@@ -244,6 +250,25 @@ TEST(RestrictedRestrictedBigIntegerTest, MoveAssignment) {
   EXPECT_THAT(moved_to.SizeInBytes(), Eq(256));
   EXPECT_THAT(moved_to.GetSecret(InsecureSecretKeyAccess::Get()),
               Eq(test::HexDecodeOrDie(kHexBigInt)));
+}
+
+TEST(RestrictedRestrictedBigIntegerTest, EncodeWithFixedSizeShortInput) {
+  RestrictedBigInteger unpadded_big_integer(
+      test::HexDecodeOrDie(kHexBigIntPadded), InsecureSecretKeyAccess::Get());
+  absl::StatusOr<RestrictedData> padded_data =
+      unpadded_big_integer.EncodeWithFixedSize(
+          test::HexDecodeOrDie(kHexBigInt).size());
+  EXPECT_THAT(padded_data, IsOk());
+  EXPECT_THAT(padded_data->GetSecret(InsecureSecretKeyAccess::Get()),
+              Eq(test::HexDecodeOrDie(kHexBigInt)));
+}
+
+TEST(RestrictedRestrictedBigIntegerTest,
+     EncodeWithFixedSizeErrorOnTooLongInput) {
+  RestrictedBigInteger big_integer(test::HexDecodeOrDie(kHexBigInt),
+                                   InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(big_integer.SizeInBytes(), Eq(256));
+  EXPECT_THAT(big_integer.EncodeWithFixedSize(255), Not(IsOk()));
 }
 
 }  // namespace tink

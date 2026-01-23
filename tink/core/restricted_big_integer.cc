@@ -18,10 +18,17 @@
 
 #include <cstddef>
 #include <string>
+#include <utility>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/safe_stringops.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
@@ -55,6 +62,29 @@ RestrictedBigInteger::RestrictedBigInteger(SecretData secret_big_integer,
       secret_ = util::SecretDataFromStringView("");
     }
   });
+}
+
+absl::StatusOr<RestrictedData> RestrictedBigInteger::EncodeWithFixedSize(
+    size_t encoding_size) const {
+  return internal::CallWithCoreDumpProtection(
+      [&]() -> absl::StatusOr<RestrictedData> {
+        if (secret_.size() > encoding_size) {
+          return absl::Status(
+              absl::StatusCode::kInvalidArgument,
+              absl::StrCat("Input integer is too long to be encoded on ",
+                           encoding_size,
+                           "bytes, Actual length: ", secret_.size()));
+        }
+        internal::SecretBuffer padded_key(encoding_size, '\0');
+
+        internal::SafeMemCopy(
+            padded_key.data() + encoding_size - secret_.size(), secret_.data(),
+            secret_.size());
+
+        return RestrictedData(
+            util::internal::AsSecretData(std::move(padded_key)),
+            InsecureSecretKeyAccess::Get());
+      });
 }
 
 bool RestrictedBigInteger::operator==(const RestrictedBigInteger& other) const {

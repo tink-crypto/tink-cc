@@ -413,6 +413,7 @@ tink_cc_library(
     tink::hybrid::hybrid_parameters
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::parameters
@@ -420,8 +421,6 @@ tink_cc_library(
     tink::aead::aes_gcm_parameters
     tink::aead::xchacha20_poly1305_parameters
     tink::daead::aes_siv_parameters
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

@@ -22,6 +22,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -30,8 +31,6 @@
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_parameters.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -142,6 +141,21 @@ absl::StatusOr<EciesParameters> EciesParameters::Builder::Build() {
 
   return EciesParameters(curve_type_, hash_type_, point_format_, dem_id_, salt_,
                          variant_);
+}
+
+int EciesParameters::GetPrivateKeyLength() const {
+  switch (curve_type_) {
+    case CurveType::kNistP256:
+      return 32;
+    case CurveType::kNistP384:
+      return 48;
+    case CurveType::kNistP521:
+      return 66;
+    case CurveType::kX25519:
+      return 32;
+    default:
+      return 0;
+  }
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>>

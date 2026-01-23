@@ -43,6 +43,7 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
+using ::testing::Gt;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -113,6 +114,7 @@ TEST_P(EciesParametersTest, Build) {
   EXPECT_THAT(parameters->GetSalt(), Eq(salt));
   EXPECT_THAT(parameters->GetVariant(), Eq(variant.variant));
   EXPECT_THAT(parameters->HasIdRequirement(), Eq(variant.has_id_requirement));
+  EXPECT_THAT(parameters->GetPrivateKeyLength(), Gt(0));
 }
 
 TEST(EciesParametersTest, BuildWithX25519Curve) {

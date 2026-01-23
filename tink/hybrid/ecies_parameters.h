@@ -19,13 +19,12 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -122,6 +121,10 @@ class EciesParameters : public HybridParameters {
   EciesParameters& operator=(const EciesParameters& other) = default;
   EciesParameters(EciesParameters&& other) = default;
   EciesParameters& operator=(EciesParameters&& other) = default;
+
+  // Returns the length of the private key in bytes, which is:
+  // 32 for P-256, 48 for P-384, 66 for P-521 and 32 for X25519.
+  int GetPrivateKeyLength() const;
 
   CurveType GetCurveType() const { return curve_type_; }
 

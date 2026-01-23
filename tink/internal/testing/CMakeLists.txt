@@ -94,6 +94,7 @@ tink_cc_test(
     wycheproof_util_test.cc
   DATA
     wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::internal::testing::wycheproof_util
     gmock

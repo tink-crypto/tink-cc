@@ -28,10 +28,15 @@ namespace tink {
 namespace internal {
 namespace wycheproof_testing {
 
-// Reads test vector from a file.
+// Reads test vectors from a file.
 // The filename is relative to the directory with the test vectors.
 absl::StatusOr<google::protobuf::Struct> ReadTestVectors(
     const std::string &filename);
+
+// Reads test vectors from a file.
+// The filename is relative to the directory with the V1 test vectors.
+absl::StatusOr<google::protobuf::Struct> ReadTestVectorsV1(
+    const std::string& filename);
 
 std::string GetBytesFromHexValue(const google::protobuf::Value &val);
 

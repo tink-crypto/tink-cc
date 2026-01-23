@@ -13,3 +13,10 @@ wycheproof_vectors(
     srcs = ["@wycheproof//:testvectors"],
     outdir = "testvectors",
 )
+
+wycheproof_vectors(
+    name = "testvectors_v1",
+    testonly = 1,
+    srcs = ["@wycheproof//:testvectors_v1"],
+    outdir = "testvectors_v1",
+)

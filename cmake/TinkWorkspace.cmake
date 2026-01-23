@@ -81,9 +81,12 @@ if (TINK_BUILD_TESTS)
     DATA_ONLY
   )
   # Symlink the Wycheproof test data.
-  # Tests expect Wycheproof test vectors to be in a local testvectors/ folder.
+  # Tests expect Wycheproof test vectors to be in a local testvectors{,_v1}/ folder.
   add_directory_alias("${wycheproof_SOURCE_DIR}/testvectors"
     "${CMAKE_BINARY_DIR}/testvectors")
+  add_directory_alias("${wycheproof_SOURCE_DIR}/testvectors_v1"
+    "${CMAKE_BINARY_DIR}/testvectors_v1")
+
 endif()
 
 if (NOT TINK_USE_INSTALLED_ABSEIL)

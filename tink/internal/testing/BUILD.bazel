@@ -99,7 +99,10 @@ cc_library(
 cc_test(
     name = "wycheproof_util_test",
     srcs = ["wycheproof_util_test.cc"],
-    data = ["//:testvectors"],
+    data = [
+        "//:testvectors",
+        "//:testvectors_v1",
+    ],
     deps = [
         ":wycheproof_util",
         "//tink/subtle:common_enums",

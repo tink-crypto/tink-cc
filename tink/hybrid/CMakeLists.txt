@@ -456,9 +456,12 @@ tink_cc_library(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_public_key
     tink::hybrid::hybrid_private_key
+    absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
+    absl::synchronization
     absl::optional
     crypto
     tink::core::ec_point
@@ -473,9 +476,6 @@ tink_cc_library(
     tink::internal::err_util
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

@@ -19,14 +19,17 @@
 
 #include <memory>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/status/statusor.h"
+#include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
+#include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_public_key.h"
 #include "tink/hybrid/hybrid_private_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -36,8 +39,33 @@ namespace tink {
 class EciesPrivateKey final : public HybridPrivateKey {
  public:
   // Copyable and movable.
-  EciesPrivateKey(const EciesPrivateKey& other) = default;
-  EciesPrivateKey& operator=(const EciesPrivateKey& other) = default;
+  EciesPrivateKey(const EciesPrivateKey& other)
+      : public_key_(other.public_key_),
+        private_key_bytes_(other.private_key_bytes_) {
+    absl::MutexLock lock(other.mutex_);
+
+    private_key_value_big_integer_ = other.private_key_value_big_integer_;
+  }
+
+  EciesPrivateKey& operator=(const EciesPrivateKey& other) {
+    if (this == &other) {
+      return *this;
+    }
+
+    absl::optional<RestrictedBigInteger> tmp_private_key_value_big_integer;
+    {
+      absl::MutexLock lock(other.mutex_);
+      tmp_private_key_value_big_integer = other.private_key_value_big_integer_;
+    }
+
+    public_key_ = other.public_key_;
+    private_key_bytes_ = other.private_key_bytes_;
+    absl::MutexLock lock(mutex_);
+    private_key_value_big_integer_ = tmp_private_key_value_big_integer;
+
+    return *this;
+  }
+
   EciesPrivateKey(EciesPrivateKey&& other) = default;
   EciesPrivateKey& operator=(EciesPrivateKey&& other) = default;
 
@@ -51,15 +79,37 @@ class EciesPrivateKey final : public HybridPrivateKey {
       PartialKeyAccessToken token);
 
   absl::optional<RestrictedBigInteger> GetNistPrivateKeyValue(
-      PartialKeyAccessToken token) const {
-    return private_key_value_;
-  }
+      PartialKeyAccessToken token) const;
 
   absl::optional<RestrictedData> GetX25519PrivateKeyBytes(
       PartialKeyAccessToken token) const {
-    return private_key_bytes_;
+    switch (public_key_.GetParameters().GetCurveType()) {
+      case EciesParameters::CurveType::kX25519:
+        return private_key_bytes_;
+      default:
+        return absl::nullopt;
+    }
   }
 
+  // Creates a new EciesPrivateKey for a nist curve. Will return an error
+  // if private_key_value.size is not of length
+  // public_key.GetParameters().GetPrivateKeyLength()
+  static absl::StatusOr<EciesPrivateKey> CreateForNistCurve(
+      const EciesPublicKey& public_key, const RestrictedData& private_key_value,
+      PartialKeyAccessToken token);
+  // Returns the bytes of length GetParameters().GetPrivateKeyLength()
+  // or null opt for X25519 keys.
+  absl::optional<RestrictedData> GetNistPrivateKeyBytes(
+      PartialKeyAccessToken token) const {
+    switch (public_key_.GetParameters().GetCurveType()) {
+      case EciesParameters::CurveType::kNistP256:
+      case EciesParameters::CurveType::kNistP384:
+      case EciesParameters::CurveType::kNistP521:
+        return private_key_bytes_;
+      default:
+        return absl::nullopt;
+    }
+  }
   const EciesPublicKey& GetPublicKey() const override { return public_key_; }
 
   bool operator==(const Key& other) const override;
@@ -71,21 +121,15 @@ class EciesPrivateKey final : public HybridPrivateKey {
  private:
   // Creates a NIST curve-based ECIES private key.
   explicit EciesPrivateKey(const EciesPublicKey& public_key,
-                           const RestrictedBigInteger& private_key_value)
-      : public_key_(public_key),
-        private_key_value_(private_key_value),
-        private_key_bytes_(absl::nullopt) {}
-
-  // Creates an X25519-based ECIES private key.
-  explicit EciesPrivateKey(const EciesPublicKey& public_key,
-                           const RestrictedData& private_key_bytes)
-      : public_key_(public_key),
-        private_key_value_(absl::nullopt),
-        private_key_bytes_(private_key_bytes) {}
+                           const RestrictedData& private_key_value)
+      : public_key_(public_key), private_key_bytes_(private_key_value) {}
 
   EciesPublicKey public_key_;
-  absl::optional<RestrictedBigInteger> private_key_value_;
   absl::optional<RestrictedData> private_key_bytes_;
+
+  mutable absl::Mutex mutex_;
+  mutable absl::optional<RestrictedBigInteger> private_key_value_big_integer_
+      ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace tink

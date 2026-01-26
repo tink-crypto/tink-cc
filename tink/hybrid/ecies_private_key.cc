@@ -19,9 +19,11 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -43,9 +45,6 @@
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -69,7 +68,7 @@ absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
 }
 
 absl::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
-                                 const RestrictedBigInteger& private_key_value,
+                                 const RestrictedData& private_key_value,
                                  PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
@@ -164,9 +163,17 @@ absl::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
 }  // namespace
 
 absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
-    const EciesPublicKey& public_key,
-    const RestrictedBigInteger& private_key_value,
+    const EciesPublicKey& public_key, const RestrictedData& private_key_value,
     PartialKeyAccessToken token) {
+  size_t key_length = public_key.GetParameters().GetPrivateKeyLength();
+  if (private_key_value.size() !=
+      public_key.GetParameters().GetPrivateKeyLength()) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Private key length ", private_key_value.size(),
+                     " is different from expected length ", key_length));
+  }
+
   // Validate that public and private key match.
   absl::Status key_pair_validation =
       ValidateNistKeyPair(public_key, private_key_value, token);
@@ -174,6 +181,40 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
     return key_pair_validation;
   }
   return EciesPrivateKey(public_key, private_key_value);
+}
+
+absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
+    const EciesPublicKey& public_key,
+    const RestrictedBigInteger& private_key_value,
+    PartialKeyAccessToken token) {
+  absl::StatusOr<RestrictedData> adjusted_private_key =
+      private_key_value.EncodeWithFixedSize(
+          public_key.GetParameters().GetPrivateKeyLength());
+  if (!adjusted_private_key.ok()) {
+    return adjusted_private_key.status();
+  }
+
+  return EciesPrivateKey::CreateForNistCurve(public_key, *adjusted_private_key,
+                                             token);
+}
+
+absl::optional<RestrictedBigInteger> EciesPrivateKey::GetNistPrivateKeyValue(
+    PartialKeyAccessToken token) const {
+  absl::MutexLock lock(mutex_);
+  switch (public_key_.GetParameters().GetCurveType()) {
+    case EciesParameters::CurveType::kNistP256:
+    case EciesParameters::CurveType::kNistP384:
+    case EciesParameters::CurveType::kNistP521:
+      if (!private_key_value_big_integer_.has_value()) {
+        private_key_value_big_integer_.emplace(
+            private_key_bytes_.value().GetSecret(
+                InsecureSecretKeyAccess::Get()),
+            InsecureSecretKeyAccess::Get());
+      }
+      return *private_key_value_big_integer_;
+    default:
+      return absl::nullopt;
+  }
 }
 
 absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
@@ -208,7 +249,7 @@ bool EciesPrivateKey::operator==(const Key& other) const {
   if (public_key_ != that->public_key_) {
     return false;
   }
-  if (private_key_value_ != that->private_key_value_) {
+  if (private_key_bytes_ != that->private_key_bytes_) {
     return false;
   }
   return private_key_bytes_ == that->private_key_bytes_;

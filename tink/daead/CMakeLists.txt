@@ -226,6 +226,7 @@ tink_cc_test(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::crypto_format
     tink::core::deterministic_aead

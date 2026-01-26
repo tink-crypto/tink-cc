@@ -26,6 +26,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/daead/failing_daead.h"
@@ -61,18 +62,14 @@ namespace {
 
 class DeterministicAeadSetWrapperTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-  }
-  void TearDown() override {
-  }
+  void SetUp() override {}
+  void TearDown() override {}
 };
 
 TEST_F(DeterministicAeadSetWrapperTest, testBasic) {
   {  // daead_set is nullptr.
-    auto daead_result =
-        DeterministicAeadWrapper().Wrap(nullptr);
-    EXPECT_FALSE(daead_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInternal, daead_result.status().code());
+    auto daead_result = DeterministicAeadWrapper().Wrap(nullptr);
+    EXPECT_THAT(daead_result, StatusIs(absl::StatusCode::kInternal));
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "non-NULL",
                         std::string(daead_result.status().message()));
   }
@@ -84,9 +81,7 @@ TEST_F(DeterministicAeadSetWrapperTest, testBasic) {
     auto daead_result = DeterministicAeadWrapper().Wrap(
         std::make_unique<PrimitiveSet<DeterministicAead>>(
             *std::move(empty_daead_set)));
-    EXPECT_FALSE(daead_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-              daead_result.status().code());
+    EXPECT_THAT(daead_result, StatusIs(absl::StatusCode::kInvalidArgument));
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",
                         std::string(daead_result.status().message()));
   }
@@ -152,11 +147,9 @@ TEST_F(DeterministicAeadSetWrapperTest, testBasic) {
 
     decrypt_result =
         daead->DecryptDeterministically("some bad ciphertext", associated_data);
-    EXPECT_FALSE(decrypt_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-              decrypt_result.status().code());
-    EXPECT_PRED_FORMAT2(testing::IsSubstring, "decryption failed",
-                        std::string(decrypt_result.status().message()));
+    EXPECT_THAT(decrypt_result,
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         testing::HasSubstr("decryption failed")));
   }
 }
 
@@ -227,8 +220,8 @@ class DeterministicAeadSetWrapperWithMonitoringTest : public Test {
     Registry::Reset();
   }
 
-  internal::MockMonitoringClient *encryption_monitoring_client_;
-  internal::MockMonitoringClient *decryption_monitoring_client_;
+  internal::MockMonitoringClient* encryption_monitoring_client_;
+  internal::MockMonitoringClient* decryption_monitoring_client_;
 };
 
 // Test that successful encrypt operations are logged.
@@ -297,7 +290,6 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
-
   // Create a deterministic AEAD and encrypt/decrypt some data.
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       DeterministicAeadWrapper().Wrap(
@@ -307,7 +299,6 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
   constexpr absl::string_view plaintext = "This is some plaintext!";
   constexpr absl::string_view associated_data = "Some associated data!";
-
 
   // Check that calling DecryptDeterministically triggers a Log() call.
   absl::StatusOr<std::string> ciphertext =
@@ -350,7 +341,6 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
   constexpr absl::string_view plaintext = "This is some plaintext!";
   constexpr absl::string_view associated_data = "Some associated data!";
 
-
   // Check that calling EncryptDeterministically triggers a LogFailure() call.
   EXPECT_CALL(*encryption_monitoring_client_, LogFailure());
   absl::StatusOr<std::string> ciphertext =
@@ -385,7 +375,6 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
   constexpr absl::string_view associated_data = "Some associated data!";
   constexpr absl::string_view ciphertext = "This is some ciphertext!";
-
 
   // Check that calling DecryptDeterministically triggers a LogFailure() call.
   EXPECT_CALL(*decryption_monitoring_client_, LogFailure());

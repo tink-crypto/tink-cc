@@ -60,6 +60,7 @@ using ::crypto::tink::test::DummyDeterministicAead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
+using ::testing::Not;
 
 class DeterministicAeadConfigTest : public ::testing::Test {
  protected:
@@ -122,7 +123,7 @@ TEST_F(DeterministicAeadConfigTest, WrappersRegistered) {
 
   decryption_result = DummyDeterministicAead("dummy").DecryptDeterministically(
       encryption_result.value(), "wrong");
-  EXPECT_FALSE(decryption_result.status().ok());
+  EXPECT_THAT(decryption_result, Not(IsOk()));
 }
 
 TEST_F(DeterministicAeadConfigTest, RegisterFipsValidTemplates) {

@@ -36,15 +36,17 @@
 #include "proto/kms_envelope.pb.h"
 #include "proto/tink.pb.h"
 
-using google::crypto::tink::KeyTemplate;
-using google::crypto::tink::KmsAeadKeyFormat;
-using google::crypto::tink::KmsEnvelopeAeadKeyFormat;
-using google::crypto::tink::OutputPrefixType;
-
 namespace crypto {
 namespace tink {
 namespace test {
 namespace {
+
+using ::google::crypto::tink::KeyTemplate;
+using ::google::crypto::tink::KmsAeadKeyFormat;
+using ::google::crypto::tink::KmsEnvelopeAeadKeyFormat;
+using ::google::crypto::tink::OutputPrefixType;
+using ::crypto::tink::test::IsOk;
+using ::testing::Not;
 
 // TODO(b/174740983) Add this function to aead_key_templates.
 KeyTemplate NewKmsAeadKeyTemplate(std::string key_uri) {
@@ -74,30 +76,30 @@ KeyTemplate NewKmsEnvelopeKeyTemplate(std::string key_uri,
 
 class FakeKmsClientTest : public ::testing::Test {
  protected:
-  static void SetUpTestSuite() { ASSERT_TRUE(AeadConfig::Register().ok()); }
+  static void SetUpTestSuite() { ASSERT_THAT(AeadConfig::Register(), IsOk()); }
 };
 
 TEST_F(FakeKmsClientTest, CreateNewAeadSuccess) {
   auto uri_result = FakeKmsClient::CreateFakeKeyUri();
-  EXPECT_TRUE(uri_result.ok()) << uri_result.status();
+  EXPECT_THAT(uri_result, IsOk());
   std::string key_uri = uri_result.value();
 
   auto client_result = FakeKmsClient::New(key_uri, "");
-  EXPECT_TRUE(client_result.ok()) << client_result.status();
+  ASSERT_THAT(client_result, IsOk());
   auto client = std::move(client_result.value());
   EXPECT_TRUE(client->DoesSupport(key_uri));
 
   auto aead_result = client->GetAead(key_uri);
-  EXPECT_TRUE(aead_result.ok()) << aead_result.status();
+  ASSERT_THAT(aead_result, IsOk());
   auto aead = std::move(aead_result.value());
 
   std::string plaintext = "some_plaintext";
   std::string aad = "some_aad";
   auto encrypt_result = aead->Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  ASSERT_THAT(encrypt_result, IsOk());
   std::string ciphertext = encrypt_result.value();
   auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+  ASSERT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 
@@ -107,7 +109,7 @@ TEST_F(FakeKmsClientTest, ClientIsBound) {
       "CL3oi0kSVwpMCjB0eXBlLmdvb2dsZWFwaXMuY29tL2dvb2dsZS5jcnlwdG8udGluay5BZXNF"
       "YXhLZXkSFhICCBAaEPFnQNgtxEG0vEek8bBfgL8YARABGL3oi0kgAQ";
   auto client_result = FakeKmsClient::New(key_uri, "");
-  EXPECT_TRUE(client_result.ok()) << client_result.status();
+  ASSERT_THAT(client_result, IsOk());
   auto client = std::move(client_result.value());
 
   // No other key_uri is accepted, even a valid one.
@@ -117,12 +119,12 @@ TEST_F(FakeKmsClientTest, ClientIsBound) {
       "RWF4S2V5EhYSAggQGhALi4dQMjUR0faRYElRXi__GAEQARjt8tjYByAB";
   EXPECT_FALSE(client->DoesSupport(another_key_uri));
   auto aead_result = client->GetAead(another_key_uri);
-  EXPECT_FALSE(aead_result.ok());
+  EXPECT_THAT(aead_result, Not(IsOk()));
 }
 
 TEST_F(FakeKmsClientTest, ClientIsUnbound) {
   auto client_result = FakeKmsClient::New("", "");
-  EXPECT_TRUE(client_result.ok()) << client_result.status();
+  ASSERT_THAT(client_result, IsOk());
   auto client = std::move(client_result.value());
 
   // All valid 'fake-kms' key_uris are accepted.
@@ -130,9 +132,9 @@ TEST_F(FakeKmsClientTest, ClientIsUnbound) {
       "fake-kms://"
       "CL3oi0kSVwpMCjB0eXBlLmdvb2dsZWFwaXMuY29tL2dvb2dsZS5jcnlwdG8udGluay5BZXNF"
       "YXhLZXkSFhICCBAaEPFnQNgtxEG0vEek8bBfgL8YARABGL3oi0kgAQ";
-  EXPECT_TRUE(client->DoesSupport(uri));
+  ASSERT_TRUE(client->DoesSupport(uri));
   auto aead_result = client->GetAead(uri);
-  EXPECT_TRUE(aead_result.ok());
+  ASSERT_THAT(aead_result, IsOk());
 
   std::string another_uri =
       "fake-kms://"
@@ -140,12 +142,12 @@ TEST_F(FakeKmsClientTest, ClientIsUnbound) {
       "RWF4S2V5EhYSAggQGhALi4dQMjUR0faRYElRXi__GAEQARjt8tjYByAB";
   EXPECT_TRUE(client->DoesSupport(another_uri));
   auto another_aead_result = client->GetAead(another_uri);
-  EXPECT_TRUE(another_aead_result.ok()) << another_aead_result.status();
+  EXPECT_THAT(another_aead_result, IsOk());
 }
 
 TEST_F(FakeKmsClientTest, RegisterAndEncryptDecryptWithKmsAead) {
   auto uri_result = FakeKmsClient::CreateFakeKeyUri();
-  EXPECT_TRUE(uri_result.ok()) << uri_result.status();
+  ASSERT_THAT(uri_result, IsOk());
   std::string key_uri = uri_result.value();
   auto status = FakeKmsClient::RegisterNewClient(key_uri, "");
   EXPECT_THAT(status, IsOk());
@@ -153,46 +155,46 @@ TEST_F(FakeKmsClientTest, RegisterAndEncryptDecryptWithKmsAead) {
   KeyTemplate key_template = NewKmsAeadKeyTemplate(key_uri);
   auto handle_result =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
-  EXPECT_TRUE(handle_result.ok()) << handle_result.status();
+  ASSERT_THAT(handle_result, IsOk());
   auto aead_result = handle_result.value()->GetPrimitive<crypto::tink::Aead>(
       ConfigGlobalRegistry());
-  EXPECT_TRUE(aead_result.ok()) << aead_result.status();
+  ASSERT_THAT(aead_result, IsOk());
   auto aead = std::move(aead_result.value());
 
   std::string plaintext = "some_plaintext";
   std::string aad = "some_aad";
   auto encrypt_result = aead->Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  EXPECT_THAT(encrypt_result, IsOk());
   std::string ciphertext = encrypt_result.value();
   auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+  ASSERT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 
 TEST_F(FakeKmsClientTest, RegisterAndEncryptDecryptWithKmsEnvelopeAead) {
   auto uri_result = FakeKmsClient::CreateFakeKeyUri();
-  EXPECT_TRUE(uri_result.ok()) << uri_result.status();
+  ASSERT_THAT(uri_result, IsOk());
   std::string key_uri = uri_result.value();
   auto status = FakeKmsClient::RegisterNewClient(key_uri, "");
-  EXPECT_THAT(status, IsOk());
+  ASSERT_THAT(status, IsOk());
 
   KeyTemplate key_template =
       NewKmsEnvelopeKeyTemplate(key_uri, AeadKeyTemplates::Aes128Gcm());
   auto handle_result =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
-  EXPECT_TRUE(handle_result.ok()) << handle_result.status();
+  ASSERT_THAT(handle_result, IsOk());
   auto aead_result = handle_result.value()->GetPrimitive<crypto::tink::Aead>(
       ConfigGlobalRegistry());
-  EXPECT_TRUE(aead_result.ok()) << aead_result.status();
+  ASSERT_THAT(aead_result, IsOk());
   auto aead = std::move(aead_result.value());
 
   std::string plaintext = "some_plaintext";
   std::string aad = "some_aad";
   auto encrypt_result = aead->Encrypt(plaintext, aad);
-  EXPECT_TRUE(encrypt_result.ok()) << encrypt_result.status();
+  ASSERT_THAT(encrypt_result, IsOk());
   std::string ciphertext = encrypt_result.value();
   auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_TRUE(decrypt_result.ok()) << decrypt_result.status();
+  ASSERT_THAT(decrypt_result, IsOk());
   EXPECT_EQ(plaintext, decrypt_result.value());
 }
 

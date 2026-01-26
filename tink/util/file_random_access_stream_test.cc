@@ -49,6 +49,7 @@ namespace util {
 namespace {
 
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 
 // Opens test file `filename` and returns a file descriptor to it.
 absl::StatusOr<int> OpenTestFileToRead(absl::string_view filename) {
@@ -95,7 +96,7 @@ void ReadAndVerifyChunk(RandomAccessStream* ra_stream,
   int stream_size = ra_stream->size().value();
   EXPECT_EQ(file_contents.size(), stream_size);
   auto status = ra_stream->PRead(position, count, buffer.get());
-  EXPECT_TRUE(status.ok());
+  ASSERT_THAT(status, IsOk());
   int read_count = buffer->size();
   int expected_count = count;
   if (position + count > stream_size) {
@@ -122,7 +123,7 @@ TEST(FileRandomAccessStreamTest, ReadingStreams) {
     std::string stream_contents;
     auto status =
         ReadAll(ra_stream.get(), 1 + (stream_size / 10), &stream_contents);
-    EXPECT_EQ(absl::StatusCode::kOutOfRange, status.code());
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kOutOfRange));
     EXPECT_EQ("EOF", status.message());
     EXPECT_EQ(file_contents, stream_contents);
     EXPECT_EQ(stream_size, ra_stream->size().value());
@@ -147,7 +148,7 @@ TEST(FileRandomAccessStreamTest, ReadingStreamsTillLastByte) {
     // Read from the beginning till the last byte.
     auto status = ra_stream->PRead(/* position = */ 0,
                                    stream_size, buffer.get());
-    EXPECT_TRUE(status.ok());
+    ASSERT_THAT(status, IsOk());
     EXPECT_EQ(stream_size, ra_stream->size().value());
     EXPECT_EQ(0, memcmp(&file_contents[0],
                         buffer->get_mem_block(), stream_size));
@@ -199,7 +200,7 @@ TEST(FileRandomAccessStreamTest, NegativeReadPosition) {
                                 " position = ", position));
 
       auto status = ra_stream->PRead(position, count, buffer.get());
-      EXPECT_EQ(absl::StatusCode::kInvalidArgument, status.code());
+      EXPECT_THAT(status, StatusIs(absl::StatusCode::kInvalidArgument));
     }
   }
 }
@@ -221,7 +222,7 @@ TEST(FileRandomAccessStreamTest, NotPositiveReadCount) {
       SCOPED_TRACE(absl::StrCat("stream_size = ", stream_size,
                                 " count = ", count));
       auto status = ra_stream->PRead(position, count, buffer.get());
-      EXPECT_EQ(absl::StatusCode::kInvalidArgument, status.code());
+      EXPECT_THAT(status, StatusIs(absl::StatusCode::kInvalidArgument));
     }
   }
 }
@@ -244,7 +245,7 @@ TEST(FileRandomAccessStreamTest, ReadPositionAfterEof) {
                                 " position = ", position));
 
       auto status = ra_stream->PRead(position, count, buffer.get());
-      EXPECT_EQ(absl::StatusCode::kOutOfRange, status.code());
+      EXPECT_THAT(status, StatusIs(absl::StatusCode::kOutOfRange));
       EXPECT_EQ(0, buffer->size());
     }
   }

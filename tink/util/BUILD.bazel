@@ -391,6 +391,7 @@ cc_test(
     deps = [
         ":errors",
         ":status",
+        ":test_matchers",
         "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
@@ -402,6 +403,7 @@ cc_test(
     srcs = ["enums_test.cc"],
     deps = [
         ":enums",
+        ":test_matchers",
         "//proto:common_cc_proto",
         "//proto:ecdsa_cc_proto",
         "//proto:tink_cc_proto",
@@ -484,6 +486,7 @@ cc_test(
     deps = [
         ":istream_input_stream",
         ":status",
+        ":test_matchers",
         ":test_util",
         "//tink/internal:test_file_util",
         "//tink/subtle:random",
@@ -501,6 +504,7 @@ cc_test(
     deps = [
         ":ostream_output_stream",
         ":status",
+        ":test_matchers",
         ":test_util",
         "//tink/internal:test_file_util",
         "//tink/subtle:random",
@@ -529,6 +533,7 @@ cc_test(
         ":secret_data",
         ":secret_proto",
         ":statusor",
+        ":test_matchers",
         "//proto:test_proto_cc_proto",
         "//tink:secret_data",
         "//tink/internal:secret_buffer",

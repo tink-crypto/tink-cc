@@ -299,6 +299,7 @@ tink_cc_test(
   DEPS
     tink::util::errors
     tink::util::status
+    tink::util::test_matchers
     gmock
     absl::status
 )
@@ -309,6 +310,7 @@ tink_cc_test(
     enums_test.cc
   DEPS
     tink::util::enums
+    tink::util::test_matchers
     gmock
     tink::subtle::common_enums
     tink::proto::common_cc_proto
@@ -385,6 +387,7 @@ tink_cc_test(
   DEPS
     tink::util::istream_input_stream
     tink::util::status
+    tink::util::test_matchers
     tink::util::test_util
     gmock
     absl::memory
@@ -402,6 +405,7 @@ tink_cc_test(
   DEPS
     tink::util::ostream_output_stream
     tink::util::status
+    tink::util::test_matchers
     tink::util::test_util
     gmock
     absl::memory
@@ -514,6 +518,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::secret_proto
     tink::util::statusor
+    tink::util::test_matchers
     protobuf::libprotobuf
     gmock
     absl::memory

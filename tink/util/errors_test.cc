@@ -19,18 +19,20 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "tink/util/status.h"
+#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::test::StatusIs;
+
 TEST(ErrorsTest, ToStatusFAbslStatusCodeTest) {
   const char* const msg = "test message %s 2 %d";
   const char* expected_msg = "test message asdf 2 42";
   absl::Status status = ToStatusF(absl::StatusCode::kUnknown, msg, "asdf", 42);
-  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status, StatusIs(absl::StatusCode::kUnknown));
   EXPECT_EQ(expected_msg, status.message());
-  EXPECT_EQ(absl::StatusCode::kUnknown, status.code());
 }
 
 }  // namespace

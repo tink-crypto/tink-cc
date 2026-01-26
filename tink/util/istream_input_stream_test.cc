@@ -37,11 +37,15 @@
 #include "tink/internal/test_file_util.h"
 #include "tink/subtle/random.h"
 #include "tink/util/status.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 
 // Creates a new test file with the specified 'filename', writes 'size' random
 // bytes to the file, and returns an istream for reading from the file.
@@ -94,7 +98,7 @@ TEST_F(IstreamInputStreamTest, testReadingStreams) {
         std::move(input));
     std::string stream_contents;
     auto status = ReadTillEnd(input_stream.get(), &stream_contents);
-    EXPECT_EQ(absl::StatusCode::kOutOfRange, status.code());
+    ASSERT_THAT(status, StatusIs(absl::StatusCode::kOutOfRange));
     EXPECT_EQ("EOF", status.message());
     EXPECT_EQ(file_contents, stream_contents);
   }
@@ -112,7 +116,7 @@ TEST_F(IstreamInputStreamTest, testCustomBufferSizes) {
         std::move(input), buffer_size);
     const void* buffer;
     auto next_result = input_stream->Next(&buffer);
-    EXPECT_TRUE(next_result.ok()) << next_result.status();
+    ASSERT_THAT(next_result, IsOk());
     EXPECT_EQ(buffer_size, next_result.value());
     EXPECT_EQ(file_contents.substr(0, buffer_size),
               std::string(static_cast<const char*>(buffer), buffer_size));
@@ -134,7 +138,7 @@ TEST_F(IstreamInputStreamTest, testBackupAndPosition) {
       std::move(input), buffer_size);
   EXPECT_EQ(0, input_stream->Position());
   auto next_result = input_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  ASSERT_THAT(next_result, IsOk());
   EXPECT_EQ(buffer_size, next_result.value());
   EXPECT_EQ(buffer_size, input_stream->Position());
   EXPECT_EQ(file_contents.substr(0, buffer_size),
@@ -149,7 +153,7 @@ TEST_F(IstreamInputStreamTest, testBackupAndPosition) {
   }
   // Call Next(), it should return exactly the backed up bytes.
   next_result = input_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  EXPECT_THAT(next_result, IsOk());
   EXPECT_EQ(total_backup_size, next_result.value());
   EXPECT_EQ(buffer_size, input_stream->Position());
   EXPECT_EQ(
@@ -166,7 +170,7 @@ TEST_F(IstreamInputStreamTest, testBackupAndPosition) {
 
   // Call Next(), it should return exactly the backed up bytes.
   next_result = input_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  EXPECT_THAT(next_result, IsOk());
   EXPECT_EQ(total_backup_size, next_result.value());
   EXPECT_EQ(buffer_size, input_stream->Position());
   EXPECT_EQ(
@@ -175,7 +179,7 @@ TEST_F(IstreamInputStreamTest, testBackupAndPosition) {
 
   // Call Next() again, it should return the second block.
   next_result = input_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  EXPECT_THAT(next_result, IsOk());
   EXPECT_EQ(buffer_size, next_result.value());
   EXPECT_EQ(2 * buffer_size, input_stream->Position());
   EXPECT_EQ(file_contents.substr(buffer_size, buffer_size),
@@ -193,7 +197,7 @@ TEST_F(IstreamInputStreamTest, testBackupAndPosition) {
 
   // Call Next() again, it should return the second block.
   next_result = input_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  EXPECT_THAT(next_result, IsOk());
   EXPECT_EQ(buffer_size, next_result.value());
   EXPECT_EQ(2 * buffer_size, input_stream->Position());
   EXPECT_EQ(file_contents.substr(buffer_size, buffer_size),

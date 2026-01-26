@@ -20,11 +20,10 @@
 
 #include "gtest/gtest.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
 #include "proto/tink.pb.h"
-
-using crypto::tink::util::Enums;
 
 namespace crypto {
 
@@ -32,6 +31,10 @@ namespace pb = google::crypto::tink;
 
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::util::Enums;
+using ::testing::Not;
 
 class EnumsTest : public ::testing::Test {};
 
@@ -113,8 +116,8 @@ TEST_F(EnumsTest, testHashSize) {
   EXPECT_EQ(Enums::HashLength(pb::HashType::SHA256).value(), 32);
   EXPECT_EQ(Enums::HashLength(pb::HashType::SHA384).value(), 48);
   EXPECT_EQ(Enums::HashLength(pb::HashType::SHA512).value(), 64);
-  EXPECT_TRUE(!Enums::HashLength(pb::HashType::UNKNOWN_HASH).ok());
-  EXPECT_TRUE(!Enums::HashLength(pb::HashType::SHA1).ok());
+  EXPECT_THAT(Enums::HashLength(pb::HashType::UNKNOWN_HASH), Not(IsOk()));
+  EXPECT_THAT(Enums::HashLength(pb::HashType::SHA1), Not(IsOk()));
 }
 
 TEST_F(EnumsTest, testEcPointFormat) {

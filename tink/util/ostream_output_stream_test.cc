@@ -32,11 +32,14 @@
 #include "tink/internal/test_file_util.h"
 #include "tink/subtle/random.h"
 #include "tink/util/status.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::IsOk;
 
 // Creates a new test ostream which will write to the file 'filename'.
 std::unique_ptr<std::ostream> GetTestOstream(absl::string_view filename) {
@@ -85,7 +88,7 @@ TEST_F(OstreamOutputStreamTest, WritingStreams) {
     auto output_stream = absl::make_unique<util::OstreamOutputStream>(
         std::move(output));
     auto status = WriteToStream(output_stream.get(), stream_contents);
-    EXPECT_TRUE(status.ok()) << status;
+    ASSERT_THAT(status, IsOk());
     std::string ostream_contents = test::ReadTestFile(filename);
     EXPECT_EQ(stream_size, ostream_contents.size());
     EXPECT_EQ(stream_contents, ostream_contents);
@@ -104,11 +107,11 @@ TEST_F(OstreamOutputStreamTest, CustomBufferSizes) {
         std::move(output), buffer_size);
     void* buffer;
     auto next_result = output_stream->Next(&buffer);
-    EXPECT_TRUE(next_result.ok()) << next_result.status();
+    ASSERT_THAT(next_result, IsOk());
     EXPECT_EQ(buffer_size, next_result.value());
     output_stream->BackUp(buffer_size);
     auto status = WriteToStream(output_stream.get(), stream_contents);
-    EXPECT_TRUE(status.ok()) << status;
+    ASSERT_THAT(status, IsOk());
     std::string ostream_contents = test::ReadTestFile(filename);
     EXPECT_EQ(stream_size, ostream_contents.size());
     EXPECT_EQ(stream_contents, ostream_contents);
@@ -129,7 +132,7 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
       std::move(output), buffer_size);
   EXPECT_EQ(0, output_stream->Position());
   auto next_result = output_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  ASSERT_THAT(next_result, IsOk());
   EXPECT_EQ(buffer_size, next_result.value());
   EXPECT_EQ(buffer_size, output_stream->Position());
   std::memcpy(buffer, stream_contents.data(), buffer_size);
@@ -146,7 +149,7 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
 
   // Call Next(), it should succeed.
   next_result = output_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  ASSERT_THAT(next_result, IsOk());
 
   // BackUp() some bytes, again fewer than returned by Next().
   total_backup_size = 0;
@@ -160,12 +163,12 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
 
   // Call Next(), it should succeed;
   next_result = output_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  ASSERT_THAT(next_result, IsOk());
 
   // Call Next() again, it should return a full block.
   auto prev_position = output_stream->Position();
   next_result = output_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  ASSERT_THAT(next_result, IsOk());
   EXPECT_EQ(buffer_size, next_result.value());
   EXPECT_EQ(prev_position + buffer_size, output_stream->Position());
   std::memcpy(buffer, stream_contents.data() + buffer_size, buffer_size);
@@ -186,7 +189,7 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
 
   // Call Next() again, it should return a full block.
   next_result = output_stream->Next(&buffer);
-  EXPECT_TRUE(next_result.ok()) << next_result.status();
+  ASSERT_THAT(next_result, IsOk());
   EXPECT_EQ(buffer_size, next_result.value());
   EXPECT_EQ(prev_position + buffer_size, output_stream->Position());
   std::memcpy(buffer, stream_contents.data() + buffer_size, buffer_size);
@@ -194,7 +197,7 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
   // Write the remaining stream contents to stream.
   auto status = WriteToStream(
       output_stream.get(), stream_contents.substr(output_stream->Position()));
-  EXPECT_TRUE(status.ok()) << status;
+  ASSERT_THAT(status, IsOk());
   std::string ostream_contents = test::ReadTestFile(filename);
   EXPECT_EQ(stream_size, ostream_contents.size());
   EXPECT_EQ(stream_contents, ostream_contents);

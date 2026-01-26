@@ -28,6 +28,7 @@
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
+#include "tink/util/test_matchers.h"
 #include "proto/test_proto.pb.h"
 
 namespace crypto {
@@ -36,6 +37,7 @@ namespace util {
 namespace {
 
 using ::crypto::tink::internal::SecretBuffer;
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::internal::AsSecretData;
 using ::google::crypto::tink::NestedTestProto;
 using ::google::crypto::tink::TestProto;
@@ -146,7 +148,7 @@ TYPED_TEST(SecretProtoTest, FromSecretData) {
   crypto::tink::SecretData data = AsSecretData(buffer);
   StatusOr<SecretProto<TypeParam>> secret_proto =
       SecretProto<TypeParam>::ParseFromSecretData(data);
-  ASSERT_TRUE(secret_proto.ok()) << secret_proto.status();
+  ASSERT_THAT(secret_proto, IsOk());
   EXPECT_TRUE(MessageDifferencer::Equals(**secret_proto, proto));
 }
 
@@ -156,7 +158,7 @@ TYPED_TEST(SecretProtoTest, AsSecretData) {
   SecretProto<TypeParam> secret_proto(proto);
   absl::StatusOr<crypto::tink::SecretData> secret_serialized =
       secret_proto.SerializeAsSecretData();
-  ASSERT_TRUE(secret_serialized.ok()) << secret_serialized.status();
+  ASSERT_THAT(secret_serialized, IsOk());
   EXPECT_EQ(serialized, SecretDataAsStringView(*secret_serialized));
 }
 

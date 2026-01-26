@@ -27,8 +27,15 @@ cc_library(
     hdrs = ["util.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":call_with_core_dump_protection",
+        ":safe_stringops",
+        ":secret_buffer",
+        "//tink:secret_data",
+        "//tink/util:secret_data",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -254,6 +261,10 @@ cc_test(
     srcs = ["util_test.cc"],
     deps = [
         ":util",
+        "//tink:secret_data",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],

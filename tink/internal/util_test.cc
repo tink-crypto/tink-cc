@@ -20,14 +20,24 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
+#include "tink/secret_data.h"
+#include "tink/util/secret_data.h"
+#include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::test::EqualsSecretData;
+using ::crypto::tink::test::HexDecodeOrDie;
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
+using ::testing::Not;
 
 constexpr absl::string_view kLongString =
     "a long buffer with \n several \n newlines";
@@ -114,6 +124,57 @@ TEST(UtilTest, IsNotPrintableAscii) {
   EXPECT_THAT(IsPrintableAscii(" "), IsFalse());
   EXPECT_THAT(IsPrintableAscii("\x7f"), IsFalse());
   EXPECT_THAT(IsPrintableAscii("ö"), IsFalse());
+}
+
+TEST(UtilTest, ParseBigIntToFixedLengthSuccessesWithZeros) {
+  EXPECT_THAT(ParseBigIntToFixedLength("", 0),
+              IsOkAndHolds(EqualsSecretData(SecretData())));
+
+  EXPECT_THAT(ParseBigIntToFixedLength("", 1),
+              IsOkAndHolds(EqualsSecretData(SecretData(1, 0))));
+
+  EXPECT_THAT(ParseBigIntToFixedLength("", 10),
+              IsOkAndHolds(EqualsSecretData(SecretData(10, 0))));
+
+  EXPECT_THAT(ParseBigIntToFixedLength(HexDecodeOrDie("0000"), 0),
+              IsOkAndHolds(EqualsSecretData(SecretData())));
+
+  EXPECT_THAT(ParseBigIntToFixedLength(HexDecodeOrDie("0000"), 2),
+              IsOkAndHolds(EqualsSecretData(SecretData(2, 0))));
+
+  EXPECT_THAT(ParseBigIntToFixedLength(HexDecodeOrDie("0000"), 10),
+              IsOkAndHolds(EqualsSecretData(SecretData(10, 0))));
+}
+
+TEST(UtilTest, ParseBigIntToFixedLengthSuccesses) {
+  SecretData padded_data =
+      SecretDataFromStringView(HexDecodeOrDie("000011223344"));
+  absl::string_view padded_data_view =
+      util::SecretDataAsStringView(padded_data);
+  SecretData non_padded_data =
+      SecretDataFromStringView(HexDecodeOrDie("11223344"));
+  absl::string_view non_padded_data_view =
+      util::SecretDataAsStringView(non_padded_data);
+
+  EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data_view, 4),
+              IsOkAndHolds(EqualsSecretData(non_padded_data)));
+  EXPECT_THAT(ParseBigIntToFixedLength(padded_data_view, 4),
+              IsOkAndHolds(EqualsSecretData(non_padded_data)));
+
+  EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data_view, 6),
+              IsOkAndHolds(EqualsSecretData(padded_data)));
+  EXPECT_THAT(ParseBigIntToFixedLength(padded_data_view, 6),
+              IsOkAndHolds(EqualsSecretData(padded_data)));
+}
+
+TEST(UtilTest, ParseBigIntToFixedLengthFailures) {
+  std::string padded_data = HexDecodeOrDie("000011223344");
+  std::string non_padded_data = HexDecodeOrDie("11223344");
+
+  EXPECT_THAT(ParseBigIntToFixedLength(padded_data, 0), Not(IsOk()));
+  EXPECT_THAT(ParseBigIntToFixedLength(padded_data, 3), Not(IsOk()));
+  EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data, 0), Not(IsOk()));
+  EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data, 3), Not(IsOk()));
 }
 
 }  // namespace

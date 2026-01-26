@@ -27,9 +27,16 @@ tink_cc_library(
     util.cc
     util.h
   DEPS
+    tink::internal::call_with_core_dump_protection
+    tink::internal::safe_stringops
+    tink::internal::secret_buffer
     absl::core_headers
     absl::absl_log
+    absl::status
+    absl::statusor
     absl::strings
+    tink::core::secret_data
+    tink::util::secret_data
 )
 
 tink_cc_library(
@@ -221,6 +228,10 @@ tink_cc_test(
     tink::internal::util
     gmock
     absl::strings
+    tink::core::secret_data
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(

@@ -24,24 +24,25 @@
 #include <string>
 #include <utility>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
-using crypto::tink::test::AddRawKey;
-using crypto::tink::test::AddTinkKey;
-
-using ::crypto::tink::test::IsOk;
-using google::crypto::tink::EncryptedKeyset;
-using google::crypto::tink::KeyData;
-using google::crypto::tink::Keyset;
-using google::crypto::tink::KeyStatusType;
-
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::AddRawKey;
+using ::crypto::tink::test::AddTinkKey;
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::EncryptedKeyset;
+using ::google::crypto::tink::KeyData;
+using ::google::crypto::tink::Keyset;
+using ::google::crypto::tink::KeyStatusType;
 
 class BinaryKeysetReaderTest : public ::testing::Test {
  protected:
@@ -50,7 +51,7 @@ class BinaryKeysetReaderTest : public ::testing::Test {
     AddTinkKey("some key type", 42, key, KeyStatusType::ENABLED,
                KeyData::SYMMETRIC, &keyset_);
     AddRawKey("some other key type", 711, key, KeyStatusType::ENABLED,
-               KeyData::SYMMETRIC, &keyset_);
+              KeyData::SYMMETRIC, &keyset_);
     keyset_.set_primary_key_id(42);
     good_serialized_keyset_ = keyset_.SerializeAsString();
     bad_serialized_keyset_ = "some weird string";
@@ -71,14 +72,11 @@ class BinaryKeysetReaderTest : public ::testing::Test {
   std::string good_serialized_encrypted_keyset_;
 };
 
-
 TEST_F(BinaryKeysetReaderTest, testReaderCreation) {
   {  // Input stream is null.
     std::unique_ptr<std::istream> null_stream(nullptr);
     auto reader_result = BinaryKeysetReader::New(std::move(null_stream));
-    EXPECT_FALSE(reader_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-              reader_result.status().code());
+    EXPECT_THAT(reader_result, StatusIs(absl::StatusCode::kInvalidArgument));
   }
 
   {  // Good serialized keyset.
@@ -122,8 +120,7 @@ TEST_F(BinaryKeysetReaderTest, testReadFromString) {
     EXPECT_THAT(reader_result, IsOk());
     auto reader = std::move(reader_result.value());
     auto read_result = reader->Read();
-    EXPECT_FALSE(read_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, read_result.status().code());
+    EXPECT_THAT(read_result, StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
@@ -147,8 +144,7 @@ TEST_F(BinaryKeysetReaderTest, testReadFromStream) {
     EXPECT_THAT(reader_result, IsOk());
     auto reader = std::move(reader_result.value());
     auto read_result = reader->Read();
-    EXPECT_FALSE(read_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, read_result.status().code());
+    EXPECT_THAT(read_result, StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
@@ -170,9 +166,8 @@ TEST_F(BinaryKeysetReaderTest, testReadEncryptedFromString) {
     EXPECT_THAT(reader_result, IsOk());
     auto reader = std::move(reader_result.value());
     auto read_encrypted_result = reader->ReadEncrypted();
-    EXPECT_FALSE(read_encrypted_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-              read_encrypted_result.status().code());
+    EXPECT_THAT(read_encrypted_result,
+                StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
@@ -199,9 +194,8 @@ TEST_F(BinaryKeysetReaderTest, testReadEncryptedFromStream) {
     EXPECT_THAT(reader_result, IsOk());
     auto reader = std::move(reader_result.value());
     auto read_encrypted_result = reader->ReadEncrypted();
-    EXPECT_FALSE(read_encrypted_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-              read_encrypted_result.status().code());
+    EXPECT_THAT(read_encrypted_result,
+                StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 

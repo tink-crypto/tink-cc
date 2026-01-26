@@ -39,20 +39,20 @@
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
-using crypto::tink::test::AddRawKey;
-using crypto::tink::test::AddTinkKey;
-
-using ::crypto::tink::test::IsOk;
-using google::crypto::tink::EncryptedKeyset;
-using google::crypto::tink::KeyData;
-using google::crypto::tink::Keyset;
-using google::crypto::tink::KeyStatusType;
-using testing::Le;
-using testing::SizeIs;
-
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::AddRawKey;
+using ::crypto::tink::test::AddTinkKey;
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::EncryptedKeyset;
+using ::google::crypto::tink::KeyData;
+using ::google::crypto::tink::Keyset;
+using ::google::crypto::tink::KeyStatusType;
+using ::testing::Le;
+using ::testing::SizeIs;
 
 class BinaryKeysetWriterTest : public ::testing::Test {
  protected:
@@ -87,9 +87,7 @@ TEST_F(BinaryKeysetWriterTest, testWriterCreation) {
   {  // Input stream is null.
     std::unique_ptr<std::ostream> null_stream(nullptr);
     auto writer_result = BinaryKeysetWriter::New(std::move(null_stream));
-    EXPECT_FALSE(writer_result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-              writer_result.status().code());
+    EXPECT_THAT(writer_result, StatusIs(absl::StatusCode::kInvalidArgument));
   }
 
   {  // Stream with good keyset.
@@ -130,13 +128,11 @@ TEST_F(BinaryKeysetWriterTest, testDestinationStreamErrors) {
   auto writer = std::move(writer_result.value());
   {  // Write keyset.
     auto status = writer->Write(keyset_);
-    EXPECT_FALSE(status.ok()) << status;
-    EXPECT_EQ(absl::StatusCode::kUnknown, status.code());
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kUnknown));
   }
   {  // Write encrypted keyset.
     auto status = writer->Write(encrypted_keyset_);
-    EXPECT_FALSE(status.ok()) << status;
-    EXPECT_EQ(absl::StatusCode::kUnknown, status.code());
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kUnknown));
   }
 }
 

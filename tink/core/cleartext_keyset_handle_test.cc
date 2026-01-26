@@ -17,11 +17,11 @@
 #include "tink/cleartext_keyset_handle.h"
 
 #include <istream>
-#include <memory>
 #include <ostream>
 #include <sstream>
 #include <utility>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "tink/binary_keyset_reader.h"
@@ -32,18 +32,17 @@
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
-using crypto::tink::test::AddRawKey;
-using crypto::tink::test::AddTinkKey;
-
-using ::crypto::tink::test::IsOk;
-using google::crypto::tink::KeyData;
-using google::crypto::tink::Keyset;
-using google::crypto::tink::KeyStatusType;
-
-
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::test::AddRawKey;
+using ::crypto::tink::test::AddTinkKey;
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::KeyData;
+using ::google::crypto::tink::Keyset;
+using ::google::crypto::tink::KeyStatusType;
 
 class CleartextKeysetHandleTest : public ::testing::Test {
  protected:
@@ -71,8 +70,7 @@ TEST_F(CleartextKeysetHandleTest, testRead) {
     auto reader =
         std::move(BinaryKeysetReader::New("invalid serialized keyset").value());
     auto result = CleartextKeysetHandle::Read(std::move(reader));
-    EXPECT_FALSE(result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
+    EXPECT_THAT(result, StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 

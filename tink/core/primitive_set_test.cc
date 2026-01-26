@@ -38,10 +38,12 @@
 
 using ::crypto::tink::test::DummyMac;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
+using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAreArray;
 
@@ -356,7 +358,7 @@ TEST_F(PrimitiveSetTest, DisabledKey) {
   auto add_primitive_result = PrimitiveSet<Mac>::Builder{}
                                   .AddPrimitive(std::move(mac_1), key_info_1)
                                   .Build();
-  EXPECT_FALSE(add_primitive_result.ok());
+  EXPECT_THAT(add_primitive_result, Not(IsOk()));
 }
 
 KeysetInfo::KeyInfo CreateKey(uint32_t key_id,
@@ -522,7 +524,7 @@ TEST_F(PrimitiveSetTest, LegacyConcurrentOperations) {
     key_info.set_status(KeyStatusType::ENABLED);
     std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
     auto get_result = mac_set.get_primitives(prefix);
-    EXPECT_TRUE(get_result.ok()) << get_result.status();
+    EXPECT_THAT(get_result, IsOk());
     auto macs = get_result.value();
     if (key_id >= offset_b && key_id < offset_a + count) {
       EXPECT_EQ(2, macs->size());  // overlapping key_id range
@@ -612,9 +614,8 @@ TEST_F(PrimitiveSetTest, LegacyBasic) {
 
   // Try adding a "consumed" unique_ptr as a primitive.
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_6), key_6);
-  EXPECT_FALSE(add_primitive_result.ok());
-  EXPECT_EQ(absl::StatusCode::kInvalidArgument,
-            add_primitive_result.status().code());
+  EXPECT_THAT(add_primitive_result,
+              StatusIs(absl::StatusCode::kInvalidArgument));
 
   std::string data = "some data";
 
@@ -797,7 +798,7 @@ TEST_F(PrimitiveSetTest, LegacyDisabledKey) {
   // Add all the primitives.
   auto add_primitive_result =
       primitive_set.AddPrimitive(std::move(mac_1), key_info_1);
-  EXPECT_FALSE(add_primitive_result.ok());
+  EXPECT_THAT(add_primitive_result, Not(IsOk()));
 }
 
 TEST_F(PrimitiveSetTest, LegacyGetAll) {

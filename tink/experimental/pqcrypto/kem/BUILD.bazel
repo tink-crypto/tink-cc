@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 # package containing hybrid encryption implementations of PQC primitives
 
 package(default_visibility = ["//:__subpackages__"])

@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_visibility = ["//:__subpackages__"])
 
 licenses(["notice"])
@@ -35,11 +38,11 @@ cc_library(
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:safe_stringops",
         "//tink/internal:sanitizing_allocator",
-        "@boringssl//:crypto",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
+        "@boringssl//:crypto",
     ],
 )
 

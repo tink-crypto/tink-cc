@@ -124,7 +124,7 @@ TEST(JwtHmacKeyManagerTest, ValidateKeyWithUnknownAlgorithm_fails) {
   key.set_algorithm(JwtHmacAlgorithm::HS_UNKNOWN);
   key.set_key_value("0123456789abcdef0123456789abcdef");
 
-  EXPECT_FALSE(JwtHmacKeyManager().ValidateKey(key).ok());
+  EXPECT_THAT(JwtHmacKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(JwtHmacKeyManagerTest, ValidateHS256Key) {

@@ -136,18 +136,18 @@ class JwtPublicKeyWrappersTest : public ::testing::Test {
 };
 
 TEST_F(JwtPublicKeyWrappersTest, WrapNullptrSign) {
-  EXPECT_FALSE(JwtPublicKeySignWrapper().Wrap(nullptr).ok());
+  EXPECT_THAT(JwtPublicKeySignWrapper().Wrap(nullptr), Not(IsOk()));
 }
 
 TEST_F(JwtPublicKeyWrappersTest, WrapNullptrVerify) {
-  EXPECT_FALSE(JwtPublicKeyVerifyWrapper().Wrap(nullptr).ok());
+  EXPECT_THAT(JwtPublicKeyVerifyWrapper().Wrap(nullptr), Not(IsOk()));
 }
 
 TEST_F(JwtPublicKeyWrappersTest, WrapEmptySign) {
   auto jwt_sign_set =
       absl::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>();
   auto result = JwtPublicKeySignWrapper().Wrap(std::move(jwt_sign_set));
-  EXPECT_FALSE(result.ok());
+  EXPECT_THAT(result, Not(IsOk()));
 }
 
 TEST_F(JwtPublicKeyWrappersTest, CannotWrapPrimitivesFromNonRawOrTinkKeys) {
@@ -157,20 +157,18 @@ TEST_F(JwtPublicKeyWrappersTest, CannotWrapPrimitivesFromNonRawOrTinkKeys) {
       KeysetHandle::GenerateNew(tink_key_template,
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(keyset_handle, IsOk());
-  EXPECT_FALSE(
-      (*keyset_handle)
-          ->GetPrimitive<crypto::tink::JwtPublicKeySign>(ConfigGlobalRegistry())
-          .status()
-          .ok());
+  EXPECT_THAT((*keyset_handle)
+                  ->GetPrimitive<crypto::tink::JwtPublicKeySign>(
+                      ConfigGlobalRegistry()),
+              Not(IsOk()));
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*keyset_handle)->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  EXPECT_FALSE((*public_handle)
-                   ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
-                       ConfigGlobalRegistry())
-                   .status()
-                   .ok());
+  EXPECT_THAT((*public_handle)
+                  ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
+                      ConfigGlobalRegistry()),
+              Not(IsOk()));
 }
 
 TEST_F(JwtPublicKeyWrappersTest, GenerateRawSignVerifySuccess) {
@@ -181,16 +179,16 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateRawSignVerifySuccess) {
   absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> jwt_sign =
       (*handle)->GetPrimitive<crypto::tink::JwtPublicKeySign>(
           ConfigGlobalRegistry());
-  EXPECT_THAT(jwt_sign, IsOk());
+  ASSERT_THAT(jwt_sign, IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-  EXPECT_THAT(public_handle, IsOk());
+  ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verify =
       (*public_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
               ConfigGlobalRegistry());
-  EXPECT_THAT(jwt_verify, IsOk());
+  ASSERT_THAT(jwt_verify, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
@@ -216,7 +214,7 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateRawSignVerifySuccess) {
   ASSERT_THAT(validator2, IsOk());
   absl::StatusOr<VerifiedJwt> verified_jwt2 =
       (*jwt_verify)->VerifyAndDecode(*compact, *validator2);
-  EXPECT_FALSE(verified_jwt2.ok());
+  EXPECT_THAT(verified_jwt2, Not(IsOk()));
   // Make sure the error message is interesting
   EXPECT_THAT(verified_jwt2.status().message(), Eq("wrong issuer"));
 
@@ -230,7 +228,7 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateRawSignVerifySuccess) {
           ConfigGlobalRegistry());
   ASSERT_THAT(tink_verify, IsOk());
 
-  EXPECT_THAT((*tink_verify)->VerifyAndDecode(*compact, *validator).status(),
+  EXPECT_THAT((*tink_verify)->VerifyAndDecode(*compact, *validator),
               Not(IsOk()));
 }
 
@@ -242,16 +240,16 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateTinkSignVerifySuccess) {
   absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> jwt_sign =
       (*handle)->GetPrimitive<crypto::tink::JwtPublicKeySign>(
           ConfigGlobalRegistry());
-  EXPECT_THAT(jwt_sign, IsOk());
+  ASSERT_THAT(jwt_sign, IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-  EXPECT_THAT(public_handle, IsOk());
+  ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verify =
       (*public_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
               ConfigGlobalRegistry());
-  EXPECT_THAT(jwt_verify, IsOk());
+  ASSERT_THAT(jwt_verify, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
@@ -296,7 +294,7 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateTinkSignVerifySuccess) {
 
   absl::StatusOr<VerifiedJwt> verified_jwt_2 =
       (*verify_with_new_key_id)->VerifyAndDecode(*compact, *validator);
-  EXPECT_FALSE(verified_jwt_2.ok());
+  EXPECT_THAT(verified_jwt_2, Not(IsOk()));
 }
 
 TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
@@ -317,12 +315,12 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
     ASSERT_THAT(jwt_sign1, IsOk());
     absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle1 =
         handle1->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-    EXPECT_THAT(public_handle1, IsOk());
+    ASSERT_THAT(public_handle1, IsOk());
     absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verify1 =
         (*public_handle1)
             ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
                 ConfigGlobalRegistry());
-    EXPECT_THAT(jwt_verify1, IsOk());
+    ASSERT_THAT(jwt_verify1, IsOk());
 
     absl::StatusOr<uint32_t> new_id = manager.Add(key_template);
     ASSERT_THAT(new_id, IsOk());
@@ -333,12 +331,12 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
     ASSERT_THAT(jwt_sign2, IsOk());
     absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle2 =
         handle2->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-    EXPECT_THAT(public_handle2, IsOk());
+    ASSERT_THAT(public_handle2, IsOk());
     absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verify2 =
         (*public_handle2)
             ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
                 ConfigGlobalRegistry());
-    EXPECT_THAT(jwt_verify2, IsOk());
+    ASSERT_THAT(jwt_verify2, IsOk());
 
     ASSERT_THAT(manager.SetPrimary(*new_id), IsOk());
     std::unique_ptr<KeysetHandle> handle3 = manager.GetKeysetHandle();
@@ -348,12 +346,12 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
     ASSERT_THAT(jwt_sign3, IsOk());
     absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle3 =
         handle3->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-    EXPECT_THAT(public_handle3, IsOk());
+    ASSERT_THAT(public_handle3, IsOk());
     absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verify3 =
         (*public_handle3)
             ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
                 ConfigGlobalRegistry());
-    EXPECT_THAT(jwt_verify3, IsOk());
+    ASSERT_THAT(jwt_verify3, IsOk());
 
     ASSERT_THAT(manager.Disable(*old_id), IsOk());
     std::unique_ptr<KeysetHandle> handle4 = manager.GetKeysetHandle();
@@ -363,12 +361,12 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
     ASSERT_THAT(jwt_sign4, IsOk());
     absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle4 =
         handle4->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-    EXPECT_THAT(public_handle4, IsOk());
+    ASSERT_THAT(public_handle4, IsOk());
     absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verify4 =
         (*public_handle4)
             ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
                 ConfigGlobalRegistry());
-    EXPECT_THAT(jwt_verify4, IsOk());
+    ASSERT_THAT(jwt_verify4, IsOk());
 
     absl::StatusOr<RawJwt> raw_jwt =
         RawJwtBuilder().SetJwtId("id123").WithoutExpiration().Build();
@@ -399,7 +397,8 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
                 IsOk());
     EXPECT_THAT((*jwt_verify3)->VerifyAndDecode(*compact1, *validator).status(),
                 IsOk());
-    EXPECT_FALSE((*jwt_verify4)->VerifyAndDecode(*compact1, *validator).ok());
+    EXPECT_THAT((*jwt_verify4)->VerifyAndDecode(*compact1, *validator),
+                Not(IsOk()));
 
     EXPECT_THAT((*jwt_verify1)->VerifyAndDecode(*compact2, *validator).status(),
                 IsOk());
@@ -407,9 +406,11 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
                 IsOk());
     EXPECT_THAT((*jwt_verify3)->VerifyAndDecode(*compact2, *validator).status(),
                 IsOk());
-    EXPECT_FALSE((*jwt_verify4)->VerifyAndDecode(*compact2, *validator).ok());
+    EXPECT_THAT((*jwt_verify4)->VerifyAndDecode(*compact2, *validator),
+                Not(IsOk()));
 
-    EXPECT_FALSE((*jwt_verify1)->VerifyAndDecode(*compact3, *validator).ok());
+    EXPECT_THAT((*jwt_verify1)->VerifyAndDecode(*compact3, *validator),
+                Not(IsOk()));
     EXPECT_THAT((*jwt_verify2)->VerifyAndDecode(*compact3, *validator).status(),
                 IsOk());
     EXPECT_THAT((*jwt_verify3)->VerifyAndDecode(*compact3, *validator).status(),
@@ -417,7 +418,8 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
     EXPECT_THAT((*jwt_verify4)->VerifyAndDecode(*compact3, *validator).status(),
                 IsOk());
 
-    EXPECT_FALSE((*jwt_verify1)->VerifyAndDecode(*compact4, *validator).ok());
+    EXPECT_THAT((*jwt_verify1)->VerifyAndDecode(*compact4, *validator),
+                Not(IsOk()));
     EXPECT_THAT((*jwt_verify2)->VerifyAndDecode(*compact4, *validator).status(),
                 IsOk());
     EXPECT_THAT((*jwt_verify3)->VerifyAndDecode(*compact4, *validator).status(),
@@ -679,7 +681,8 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
 
   // Check that calling Sign triggers a Log() call.
   EXPECT_CALL(*monitoring_client_, LogFailure());
-  EXPECT_FALSE((*public_key_verify)->VerifyAndDecode(compact, *validator).ok());
+  EXPECT_THAT((*public_key_verify)->VerifyAndDecode(compact, *validator),
+              Not(IsOk()));
 }
 
 }  // namespace

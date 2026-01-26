@@ -126,14 +126,14 @@ class JwtMacWrapperTest : public ::testing::Test {
 TEST_F(JwtMacWrapperTest, WrapNullptr) {
   absl::StatusOr<std::unique_ptr<JwtMac>> mac_result =
       JwtMacWrapper().Wrap(nullptr);
-  EXPECT_FALSE(mac_result.ok());
+  EXPECT_THAT(mac_result, Not(IsOk()));
 }
 
 TEST_F(JwtMacWrapperTest, WrapEmpty) {
   auto jwt_mac_set = absl::make_unique<PrimitiveSet<JwtMacInternal>>();
   absl::StatusOr<std::unique_ptr<crypto::tink::JwtMac>> jwt_mac_result =
       JwtMacWrapper().Wrap(std::move(jwt_mac_set));
-  EXPECT_FALSE(jwt_mac_result.ok());
+  EXPECT_THAT(jwt_mac_result, Not(IsOk()));
 }
 
 TEST_F(JwtMacWrapperTest, CannotWrapPrimitivesFromNonRawOrTinkKeys) {
@@ -142,23 +142,22 @@ TEST_F(JwtMacWrapperTest, CannotWrapPrimitivesFromNonRawOrTinkKeys) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(tink_key_template,
                                 KeyGenConfigGlobalRegistry());
-  EXPECT_THAT(keyset_handle, IsOk());
+  ASSERT_THAT(keyset_handle, IsOk());
 
-  EXPECT_FALSE((*keyset_handle)
-                   ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry())
-                   .status()
-                   .ok());
+  EXPECT_THAT((*keyset_handle)
+                  ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry()),
+              Not(IsOk()));
 }
 
 TEST_F(JwtMacWrapperTest, GenerateRawComputeVerifySuccess) {
   KeyTemplate key_template = createTemplate(OutputPrefixType::RAW);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
-  EXPECT_THAT(keyset_handle, IsOk());
+  ASSERT_THAT(keyset_handle, IsOk());
   absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
-  EXPECT_THAT(jwt_mac, IsOk());
+  ASSERT_THAT(jwt_mac, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
@@ -185,7 +184,7 @@ TEST_F(JwtMacWrapperTest, GenerateRawComputeVerifySuccess) {
   ASSERT_THAT(validator2, IsOk());
   absl::StatusOr<VerifiedJwt> verified_jwt2 =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator2);
-  EXPECT_FALSE(verified_jwt2.ok());
+  EXPECT_THAT(verified_jwt2, Not(IsOk()));
   // Make sure the error message is interesting
   EXPECT_THAT(verified_jwt2.status().message(), Eq("wrong issuer"));
 
@@ -208,11 +207,11 @@ TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
   KeyTemplate key_template = createTemplate(OutputPrefixType::TINK);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
-  EXPECT_THAT(keyset_handle, IsOk());
+  ASSERT_THAT(keyset_handle, IsOk());
   absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
-  EXPECT_THAT(jwt_mac, IsOk());
+  ASSERT_THAT(jwt_mac, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
@@ -257,7 +256,7 @@ TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
 
   absl::StatusOr<VerifiedJwt> verified_jwt_2 =
       (*jwt_mac_with_new_key_id)->VerifyMacAndDecode(*compact, *validator);
-  EXPECT_FALSE(verified_jwt_2.ok());
+  EXPECT_THAT(verified_jwt_2, Not(IsOk()));
 }
 
 TEST_F(JwtMacWrapperTest, KeyRotation) {
@@ -326,7 +325,8 @@ TEST_F(JwtMacWrapperTest, KeyRotation) {
                 IsOk());
     EXPECT_THAT((*jwt_mac3)->VerifyMacAndDecode(*compact1, *validator).status(),
                 IsOk());
-    EXPECT_FALSE((*jwt_mac4)->VerifyMacAndDecode(*compact1, *validator).ok());
+    EXPECT_THAT((*jwt_mac4)->VerifyMacAndDecode(*compact1, *validator),
+                Not(IsOk()));
 
     EXPECT_THAT((*jwt_mac1)->VerifyMacAndDecode(*compact2, *validator).status(),
                 IsOk());
@@ -334,9 +334,11 @@ TEST_F(JwtMacWrapperTest, KeyRotation) {
                 IsOk());
     EXPECT_THAT((*jwt_mac3)->VerifyMacAndDecode(*compact2, *validator).status(),
                 IsOk());
-    EXPECT_FALSE((*jwt_mac4)->VerifyMacAndDecode(*compact2, *validator).ok());
+    EXPECT_THAT((*jwt_mac4)->VerifyMacAndDecode(*compact2, *validator),
+                Not(IsOk()));
 
-    EXPECT_FALSE((*jwt_mac1)->VerifyMacAndDecode(*compact3, *validator).ok());
+    EXPECT_THAT((*jwt_mac1)->VerifyMacAndDecode(*compact3, *validator),
+                Not(IsOk()));
     EXPECT_THAT((*jwt_mac2)->VerifyMacAndDecode(*compact3, *validator).status(),
                 IsOk());
     EXPECT_THAT((*jwt_mac3)->VerifyMacAndDecode(*compact3, *validator).status(),
@@ -344,7 +346,8 @@ TEST_F(JwtMacWrapperTest, KeyRotation) {
     EXPECT_THAT((*jwt_mac4)->VerifyMacAndDecode(*compact3, *validator).status(),
                 IsOk());
 
-    EXPECT_FALSE((*jwt_mac1)->VerifyMacAndDecode(*compact4, *validator).ok());
+    EXPECT_THAT((*jwt_mac1)->VerifyMacAndDecode(*compact4, *validator),
+                Not(IsOk()));
     EXPECT_THAT((*jwt_mac2)->VerifyMacAndDecode(*compact4, *validator).status(),
                 IsOk());
     EXPECT_THAT((*jwt_mac3)->VerifyMacAndDecode(*compact4, *validator).status(),
@@ -512,7 +515,7 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
 
   // Check that calling VerifyMac triggers a Log() call.
   absl::StatusOr<std::string> compact = (*mac)->ComputeMacAndEncode(*raw_jwt);
-  EXPECT_THAT(compact.status(), IsOk());
+  ASSERT_THAT(compact, IsOk());
 
   absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectTypeHeader("typeHeader")
@@ -565,7 +568,7 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
 
   // Check that calling ComputeMac triggers a LogFailure() call.
   EXPECT_CALL(*compute_monitoring_client_, LogFailure());
-  EXPECT_FALSE((*jwt_mac)->ComputeMacAndEncode(*raw_jwt).status().ok());
+  EXPECT_THAT((*jwt_mac)->ComputeMacAndEncode(*raw_jwt), Not(IsOk()));
 }
 
 // Test that monitoring logs verify failures correctly.
@@ -609,8 +612,8 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
 
   // Check that calling VerifyMac triggers a LogFailure() call.
   EXPECT_CALL(*verify_monitoring_client_, LogFailure());
-  EXPECT_FALSE(
-      (*jwt_mac)->VerifyMacAndDecode(invalid_compact, *validator).ok());
+  EXPECT_THAT((*jwt_mac)->VerifyMacAndDecode(invalid_compact, *validator),
+              Not(IsOk()));
 }
 
 }  // namespace

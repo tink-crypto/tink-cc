@@ -139,7 +139,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, CreatePrivateKeyAndValidate) {
 
   // Change key to an invalid algorithm.
   key->mutable_public_key()->set_algorithm(JwtRsaSsaPkcs1Algorithm::RS_UNKNOWN);
-  EXPECT_FALSE(JwtRsaSsaPkcs1SignKeyManager().ValidateKey(*key).ok());
+  EXPECT_THAT(JwtRsaSsaPkcs1SignKeyManager().ValidateKey(*key), Not(IsOk()));
 }
 
 TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
@@ -155,7 +155,8 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
 
   // Change key to an invalid algorithm.
   public_key->set_algorithm(JwtRsaSsaPkcs1Algorithm::RS_UNKNOWN);
-  EXPECT_FALSE(JwtRsaSsaPkcs1VerifyKeyManager().ValidateKey(*public_key).ok());
+  EXPECT_THAT(JwtRsaSsaPkcs1VerifyKeyManager().ValidateKey(*public_key),
+              Not(IsOk()));
 }
 
 TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
@@ -202,10 +203,9 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
   absl::StatusOr<JwtValidator> validator2 =
       JwtValidatorBuilder().ExpectIssuer("unknown").Build();
   ASSERT_THAT(validator2, IsOk());
-  EXPECT_FALSE(
-      (*verify)
-          ->VerifyAndDecodeWithKid(*compact, *validator2, /*kid=*/absl::nullopt)
-          .ok());
+  EXPECT_THAT((*verify)->VerifyAndDecodeWithKid(*compact, *validator2,
+                                                /*kid=*/absl::nullopt),
+              Not(IsOk()));
 
   // Token with kid header
   absl::StatusOr<std::string> token_with_kid =
@@ -333,7 +333,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify2 =
       JwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
           key2->public_key());
-  EXPECT_THAT(verify2, IsOk());
+  ASSERT_THAT(verify2, IsOk());
 
   EXPECT_THAT(
       (*verify2)

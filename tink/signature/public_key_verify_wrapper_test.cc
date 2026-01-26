@@ -72,7 +72,7 @@ class PublicKeyVerifySetWrapperTest : public ::testing::Test {
 TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
   {  // pk_verify_set is nullptr.
     auto pk_verify_result = PublicKeyVerifyWrapper().Wrap(nullptr);
-    EXPECT_FALSE(pk_verify_result.ok());
+    EXPECT_THAT(pk_verify_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInternal, pk_verify_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "non-NULL",
                         std::string(pk_verify_result.status().message()));
@@ -82,7 +82,7 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
     auto pk_verify_set = std::make_unique<PrimitiveSet<PublicKeyVerify>>();
     auto pk_verify_result =
         PublicKeyVerifyWrapper().Wrap(std::move(pk_verify_set));
-    EXPECT_FALSE(pk_verify_result.ok());
+    EXPECT_THAT(pk_verify_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
               pk_verify_result.status().code());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",

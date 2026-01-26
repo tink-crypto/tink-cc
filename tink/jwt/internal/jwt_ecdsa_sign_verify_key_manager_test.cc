@@ -117,7 +117,7 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, CreatePrivateKeyAndValidate) {
 
   // Change key to an invalid algorithm.
   key->mutable_public_key()->set_algorithm(JwtEcdsaAlgorithm::ES_UNKNOWN);
-  EXPECT_FALSE(JwtEcdsaSignKeyManager().ValidateKey(*key).ok());
+  EXPECT_THAT(JwtEcdsaSignKeyManager().ValidateKey(*key), Not(IsOk()));
 }
 
 TEST(JwtEcdsaSignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
@@ -132,7 +132,7 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
 
   // Change key to an invalid algorithm.
   public_key->set_algorithm(JwtEcdsaAlgorithm::ES_UNKNOWN);
-  EXPECT_FALSE(JwtEcdsaVerifyKeyManager().ValidateKey(*public_key).ok());
+  EXPECT_THAT(JwtEcdsaVerifyKeyManager().ValidateKey(*public_key), Not(IsOk()));
 }
 
 TEST(JwtEcdsaSignVerifyKeyManagerTest, GetAndUsePrimitive) {
@@ -307,7 +307,7 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify2 =
       JwtEcdsaVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
           key2->public_key());
-  EXPECT_THAT(verify2, IsOk());
+  ASSERT_THAT(verify2, IsOk());
 
   EXPECT_THAT(
       (*verify2)

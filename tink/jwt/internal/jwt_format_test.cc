@@ -31,14 +31,16 @@
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
-using ::google::crypto::tink::OutputPrefixType;
-using testing::Eq;
 
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
+
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
+using ::google::crypto::tink::OutputPrefixType;
+using ::testing::Eq;
+using ::testing::Not;
 
 TEST(JwtFormat, EncodeDecodeHeader) {
   std::string header = R"({"alg":"HS256"})";
@@ -97,12 +99,12 @@ TEST(JwtFormat, DecodeAndValidateFixedHeaderHS256) {
 
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
 
   EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
               IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "RS256", absl::nullopt, absl::nullopt).ok());
+  EXPECT_THAT(ValidateHeader(*header, "RS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, DecodeAndValidateFixedHeaderRS256) {
@@ -115,49 +117,49 @@ TEST(JwtFormat, DecodeAndValidateFixedHeaderRS256) {
 
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
 
   EXPECT_THAT(ValidateHeader(*header, "RS256", absl::nullopt, absl::nullopt),
               IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt).ok());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, CreateValidateHeader) {
   absl::StatusOr<std::string> encoded_header =
       CreateHeader("PS384", absl::nullopt, absl::nullopt);
-  EXPECT_THAT(encoded_header, IsOk());
+  ASSERT_THAT(encoded_header, IsOk());
 
   std::string json_header;
   ASSERT_TRUE(DecodeHeader(*encoded_header, &json_header));
 
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
 
   EXPECT_THAT(ValidateHeader(*header, "PS384", absl::nullopt, absl::nullopt),
               IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt).ok());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, CreateValidateHeaderWithTypeAndKid) {
   absl::StatusOr<std::string> encoded_header =
       CreateHeader("PS384", "JWT", "kid-1234");
-  EXPECT_THAT(encoded_header, IsOk());
+  ASSERT_THAT(encoded_header, IsOk());
 
   std::string json_header;
   ASSERT_TRUE(DecodeHeader(*encoded_header, &json_header));
 
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
 
   EXPECT_THAT(GetTypeHeader(*header), Eq("JWT"));
   EXPECT_THAT(ValidateHeader(*header, "PS384", absl::nullopt, absl::nullopt),
               IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt).ok());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
 
   auto it = header->fields().find("kid");
   EXPECT_FALSE(it == header->fields().end());
@@ -168,15 +170,16 @@ TEST(JwtFormat, CreateValidateHeaderWithTypeAndKid) {
 
 TEST(JwtFormat, ValidateEmptyHeaderFails) {
   google::protobuf::Struct empty_header;
-  EXPECT_FALSE(
-      ValidateHeader(empty_header, "HS256", absl::nullopt, absl::nullopt).ok());
+  EXPECT_THAT(
+      ValidateHeader(empty_header, "HS256", absl::nullopt, absl::nullopt),
+      Not(IsOk()));
 }
 
 TEST(JwtFormat, ValidateHeaderWithUnknownTypeOk) {
   std::string json_header = R"({"alg":"HS256","typ":"unknown"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
 
   EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
               IsOk());
@@ -188,16 +191,16 @@ TEST(JwtFormat, ValidateHeaderRejectsCrit) {
       R"("http://example.invalid/UNDEFINED":true})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt).ok());
+  ASSERT_THAT(header, IsOk());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, ValidateHeaderWithUnknownEntry) {
   std::string json_header = R"({"alg":"HS256","unknown":"header"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
   EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
               IsOk());
 }
@@ -206,48 +209,49 @@ TEST(JwtFormat, ValidateHeaderWithInvalidAlgTypFails) {
   std::string json_header = R"({"alg":true})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt).ok());
+  ASSERT_THAT(header, IsOk());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, ValidateHeaderWithTinkKid) {
   std::string json_header = R"({"alg":"HS256","kid":"tink_kid"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
   EXPECT_THAT(ValidateHeader(*header, "HS256", "tink_kid", absl::nullopt),
               IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", "other_tink_kid", absl::nullopt).ok());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", "other_tink_kid", absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, ValidateHeaderWithTinkKidMissingFails) {
   std::string json_header = R"({"alg":"HS256"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
   // If tink_kid is set, then the kid is required in the header.
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", "tink_kid", absl::nullopt).ok());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", "tink_kid", absl::nullopt),
+              Not(IsOk()));
 }
 
 TEST(JwtFormat, ValidateHeaderWithCustomKid) {
   std::string json_header = R"({"alg":"HS256","kid":"custom_kid"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
   EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, "custom_kid"),
               IsOk());
-  EXPECT_FALSE(
-      ValidateHeader(*header, "HS256", absl::nullopt, "other_custom_kid").ok());
+  EXPECT_THAT(
+      ValidateHeader(*header, "HS256", absl::nullopt, "other_custom_kid"),
+      Not(IsOk()));
 }
 
 TEST(JwtFormat, ValidateHeaderWithCustomKidMissingFails) {
   std::string json_header = R"({"alg":"HS256"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
+  ASSERT_THAT(header, IsOk());
   // If custom_kid is set, then the kid is not required in the header.
   EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, "custom_kid"),
               IsOk());
@@ -257,8 +261,8 @@ TEST(JwtFormat, ValidateHeaderWithTinkAndCustomKidFails) {
   std::string json_header = R"({"alg":"HS256","kid":"tink_kid"})";
   absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
-  EXPECT_THAT(header, IsOk());
-  EXPECT_FALSE(ValidateHeader(*header, "HS256", "kid", "kid").ok());
+  ASSERT_THAT(header, IsOk());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", "kid", "kid"), Not(IsOk()));
 }
 
 TEST(JwtFormat, GetKidWithTinkOutputPrefixType) {
@@ -369,13 +373,13 @@ TEST(RawJwt, FromJsonExpExpiration) {
 TEST(RawJwt, FromJsonExpirationTooLarge) {
   absl::StatusOr<RawJwt> jwt =
       RawJwtParser::FromJson(absl::nullopt, R"({"exp":1e30})");
-  EXPECT_FALSE(jwt.ok());
+  EXPECT_THAT(jwt, Not(IsOk()));
 }
 
 TEST(RawJwt, FromJsonNegativeExpirationAreInvalid) {
   absl::StatusOr<RawJwt> jwt =
       RawJwtParser::FromJson(absl::nullopt, R"({"exp":-1})");
-  EXPECT_FALSE(jwt.ok());
+  EXPECT_THAT(jwt, Not(IsOk()));
 }
 
 TEST(RawJwt, FromJsonPreservesStringAud) {
@@ -403,15 +407,22 @@ TEST(RawJwt, FromJsonPreservesListAud) {
 }
 
 TEST(RawJwt, FromJsonWithBadRegisteredTypes) {
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"iss":123})").ok());
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"sub":123})").ok());
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"aud":123})").ok());
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"aud":[]})").ok());
-  EXPECT_FALSE(
-      RawJwtParser::FromJson(absl::nullopt, R"({"aud":["abc",123]})").ok());
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"exp":"abc"})").ok());
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"nbf":"abc"})").ok());
-  EXPECT_FALSE(RawJwtParser::FromJson(absl::nullopt, R"({"iat":"abc"})").ok());
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"iss":123})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"sub":123})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"aud":123})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"aud":[]})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"aud":["abc",123]})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"exp":"abc"})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"nbf":"abc"})"),
+              Not(IsOk()));
+  EXPECT_THAT(RawJwtParser::FromJson(absl::nullopt, R"({"iat":"abc"})"),
+              Not(IsOk()));
 }
 
 }  // namespace jwt_internal

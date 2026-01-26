@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,16 +34,6 @@ namespace util {
 namespace {
 
 constexpr int kDefaultBufferSize = 128 * 1024;
-
-// Attempts to close file descriptor fd, while ignoring EINTR.
-// (code borrowed from ZeroCopy-streams)
-int close_ignoring_eintr(int fd) {
-  int result;
-  do {
-    result = close(fd);
-  } while (result < 0 && errno == EINTR);
-  return result;
-}
 
 // Attempts to read 'count' bytes of data data from file descriptor fd
 // to 'buf' while ignoring EINTR.
@@ -102,7 +92,7 @@ void FileInputStream::BackUp(int count) {
   position_ = position_ - actual_count;
 }
 
-FileInputStream::~FileInputStream() { close_ignoring_eintr(fd_); }
+FileInputStream::~FileInputStream() { close(fd_); }
 
 int64_t FileInputStream::Position() const { return position_; }
 

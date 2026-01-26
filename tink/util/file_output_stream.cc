@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,17 +35,6 @@ namespace tink {
 namespace util {
 
 namespace {
-
-// Attempts to close file descriptor fd, while ignoring EINTR.
-// (code borrowed from ZeroCopy-streams)
-int close_ignoring_eintr(int fd) {
-  int result;
-  do {
-    result = close(fd);
-  } while (result < 0 && errno == EINTR);
-  return result;
-}
-
 
 // Attempts to write 'count' bytes of data data from 'buf'
 // to file descriptor fd, while ignoring EINTR.
@@ -157,7 +146,7 @@ absl::Status FileOutputStream::Close() {
       total_written += write_result;
     }
   }
-  if (close_ignoring_eintr(fd_) == -1) {
+  if (close(fd_) == -1) {
     status_ = ToStatusF(absl::StatusCode::kInternal, "I/O error upon close: %d",
                         errno);
     return status_;

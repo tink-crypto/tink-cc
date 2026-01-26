@@ -36,20 +36,6 @@ namespace crypto {
 namespace tink {
 namespace util {
 
-namespace {
-
-// Attempts to close file descriptor fd, while ignoring EINTR.
-// (code borrowed from ZeroCopy-streams)
-int close_ignoring_eintr(int fd) {
-  int result;
-  do {
-    result = close(fd);
-  } while (result < 0 && errno == EINTR);
-  return result;
-}
-
-}  // anonymous namespace
-
 FileRandomAccessStream::FileRandomAccessStream(int file_descriptor) {
   fd_ = file_descriptor;
 }
@@ -88,7 +74,7 @@ absl::Status FileRandomAccessStream::PRead(int64_t position, int count,
 }
 
 FileRandomAccessStream::~FileRandomAccessStream() {
-  close_ignoring_eintr(fd_);
+  close(fd_);
 }
 
 absl::StatusOr<int64_t> FileRandomAccessStream::size() {

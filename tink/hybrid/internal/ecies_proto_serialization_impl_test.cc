@@ -46,7 +46,6 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/enums.h"
@@ -1532,8 +1531,7 @@ TEST_P(EciesProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   if (test_case.curve_type != EciesParameters::CurveType::kX25519) {
     expected_private_key = EciesPrivateKey::CreateForNistCurve(
         *expected_public_key,
-        RestrictedBigInteger(key_pair->private_key,
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
   } else {
     expected_private_key = EciesPrivateKey::CreateForCurveX25519(
@@ -1623,8 +1621,7 @@ TEST_P(EciesProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   if (test_case.curve_type != EciesParameters::CurveType::kX25519) {
     expected_private_key = EciesPrivateKey::CreateForNistCurve(
         *expected_public_key,
-        RestrictedBigInteger(key_pair->private_key,
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
   } else {
     expected_private_key = EciesPrivateKey::CreateForCurveX25519(
@@ -1872,8 +1869,7 @@ TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   if (test_case.curve_type != EciesParameters::CurveType::kX25519) {
     private_key = EciesPrivateKey::CreateForNistCurve(
         *public_key,
-        RestrictedBigInteger(key_pair->private_key,
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
   } else {
     private_key = EciesPrivateKey::CreateForCurveX25519(
@@ -1989,8 +1985,7 @@ TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
   if (test_case.curve_type != EciesParameters::CurveType::kX25519) {
     private_key = EciesPrivateKey::CreateForNistCurve(
         *public_key,
-        RestrictedBigInteger(key_pair->private_key,
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
   } else {
     private_key = EciesPrivateKey::CreateForCurveX25519(

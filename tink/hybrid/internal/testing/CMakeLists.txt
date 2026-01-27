@@ -42,17 +42,16 @@ tink_cc_library(
   DEPS
     tink::hybrid::internal::testing::hybrid_test_vectors
     absl::absl_check
+    absl::statusor
     absl::optional
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )

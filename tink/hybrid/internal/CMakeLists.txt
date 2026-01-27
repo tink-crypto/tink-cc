@@ -638,7 +638,6 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::core::secret_key_access_token
@@ -661,9 +660,11 @@ tink_cc_library(
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::internal::util
     tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
 )
@@ -687,7 +688,6 @@ tink_cc_test(
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::aead::internal::aes_ctr_hmac_proto_structs
     tink::hybrid::ecies_parameters

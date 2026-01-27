@@ -17,6 +17,7 @@
 #include "tink/hybrid/internal/ecies_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -49,12 +50,13 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/util.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
@@ -796,14 +798,23 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
     return public_key.status();
   }
 
+  absl::StatusOr<SecretData> private_key_exact_bytes =
+      ParseBigIntToFixedLength(SecretDataAsStringView(proto_key.key_value()),
+                               parameters->GetPrivateKeyLength());
+  if (!private_key_exact_bytes.ok()) {
+    return private_key_exact_bytes.status();
+  }
   if (IsNistCurve(parameters->GetCurveType())) {
     return EciesPrivateKey::CreateForNistCurve(
-        *public_key, RestrictedBigInteger(proto_key.key_value(), *token),
+        *public_key,
+        RestrictedData(*private_key_exact_bytes,
+                       InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
   }
 
   return EciesPrivateKey::CreateForCurveX25519(
-      *public_key, RestrictedData(proto_key.key_value(), *token),
+      *public_key,
+      RestrictedData(*private_key_exact_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
 }
 
@@ -886,8 +897,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     if (!encoding_length.ok()) {
       return encoding_length.status();
     }
-    absl::optional<RestrictedBigInteger> secret =
-        key.GetNistPrivateKeyValue(GetPartialKeyAccess());
+    absl::optional<RestrictedData> secret =
+        key.GetNistPrivateKeyBytes(GetPartialKeyAccess());
     if (!secret.has_value()) {
       return absl::InternalError(
           "NIST private key is missing NIST private key value.");

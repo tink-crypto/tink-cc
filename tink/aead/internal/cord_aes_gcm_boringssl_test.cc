@@ -220,7 +220,7 @@ TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
       }
     }
   }
-  EXPECT_EQ(skipped, 159);
+  EXPECT_EQ(skipped, 183);
   EXPECT_EQ(errors, 0);
 }
 

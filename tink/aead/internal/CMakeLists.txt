@@ -251,7 +251,7 @@ tink_cc_test(
   SRCS
     ssl_aead_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::aead::internal::ssl_aead
     tink::aead::internal::wycheproof_aead
@@ -275,7 +275,7 @@ tink_cc_test(
   SRCS
     cord_aes_gcm_boringssl_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::wycheproof_aead
@@ -315,7 +315,7 @@ tink_cc_test(
   SRCS
     zero_copy_aes_gcm_boringssl_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::aead::internal::wycheproof_aead
     tink::aead::internal::zero_copy_aead
@@ -1069,7 +1069,7 @@ tink_cc_test(
   SRCS
     wycheproof_aead_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::aead::internal::wycheproof_aead
     gmock

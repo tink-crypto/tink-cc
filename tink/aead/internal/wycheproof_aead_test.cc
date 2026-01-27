@@ -29,7 +29,7 @@ using ::testing::Eq;
 TEST(WycheproofAeadTest, ReadWycheproofTestVectors) {
   std::vector<WycheproofTestVector> test_vectors =
       ReadWycheproofTestVectors("aes_gcm_test.json");
-  EXPECT_THAT(test_vectors.size(), 256);
+  EXPECT_THAT(test_vectors.size(), 316);
 
   WycheproofTestVector entry = test_vectors.at(0);
 

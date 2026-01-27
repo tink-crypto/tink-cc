@@ -255,7 +255,7 @@ cc_test(
     name = "cord_aes_gcm_boringssl_test",
     size = "small",
     srcs = ["cord_aes_gcm_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":cord_aes_gcm_boringssl",
         ":wycheproof_aead",
@@ -312,7 +312,7 @@ cc_test(
 cc_test(
     name = "zero_copy_aes_gcm_boringssl_test",
     srcs = ["zero_copy_aes_gcm_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":wycheproof_aead",
         ":zero_copy_aead",
@@ -353,7 +353,7 @@ cc_test(
 cc_test(
     name = "ssl_aead_test",
     srcs = ["ssl_aead_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":ssl_aead",
         ":wycheproof_aead",
@@ -1098,7 +1098,7 @@ cc_test(
 cc_test(
     name = "wycheproof_aead_test",
     srcs = ["wycheproof_aead_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":wycheproof_aead",
         "//tink/util:test_util",

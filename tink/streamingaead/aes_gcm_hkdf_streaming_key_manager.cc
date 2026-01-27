@@ -16,6 +16,7 @@
 
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
 
+#include <cstdint>
 #include <string>
 
 #include "absl/status/status.h"
@@ -50,7 +51,8 @@ absl::Status ValidateParams(const AesGcmHkdfStreamingParams& params) {
   int header_size = 1 + params.derived_key_size() +
       AesGcmHkdfStreamSegmentEncrypter::kNoncePrefixSizeInBytes;
   if (params.ciphertext_segment_size() <=
-      header_size + AesGcmHkdfStreamSegmentEncrypter::kTagSizeInBytes) {
+      static_cast<uint64_t>(
+          header_size + AesGcmHkdfStreamSegmentEncrypter::kTagSizeInBytes)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_segment_size too small");
   }

@@ -270,9 +270,9 @@ cc_library(
     deps = [
         ":streaming_aead_parameters",
         "//tink:parameters",
-        "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
     ],
@@ -560,7 +560,6 @@ cc_test(
         "//tink/subtle:test_util",
         "//tink/util:istream_input_stream",
         "//tink/util:ostream_output_stream",
-        "//tink/util:status",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/memory",

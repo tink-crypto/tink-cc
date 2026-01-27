@@ -16,11 +16,13 @@
 
 #include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/log/absl_check.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
@@ -29,7 +31,6 @@
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -43,7 +44,7 @@ std::string Xor(absl::string_view a, absl::string_view b) {
   ABSL_CHECK_EQ(a.size(), b.size());
   std::string result;
   result.resize(a.size());
-  for (int i = 0; i < a.size(); ++i) {
+  for (size_t i = 0; i < a.size(); ++i) {
     result[i] = a[i] ^ b[i];
   }
   return result;

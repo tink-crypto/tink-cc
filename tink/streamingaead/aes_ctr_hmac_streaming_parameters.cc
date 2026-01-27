@@ -20,10 +20,9 @@
 #include <map>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -115,9 +114,9 @@ AesCtrHmacStreamingParameters::Builder::Build() {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Tag size is too small.");
   }
-  static const std::map<AesCtrHmacStreamingParameters::HashType, uint32_t>*
+  static const std::map<AesCtrHmacStreamingParameters::HashType, int>*
       max_tag_size =
-          new std::map<AesCtrHmacStreamingParameters::HashType, uint32_t>(
+          new std::map<AesCtrHmacStreamingParameters::HashType, int>(
               {{AesCtrHmacStreamingParameters::HashType::kSha1, 20},
                {AesCtrHmacStreamingParameters::HashType::kSha256, 32},
                {AesCtrHmacStreamingParameters::HashType::kSha512, 64}});

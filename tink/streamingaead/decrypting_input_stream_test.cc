@@ -1,5 +1,4 @@
-// Copyright 2019 Google Inc.
-//
+// Copyright 2019 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +15,7 @@
 
 #include "tink/streamingaead/decrypting_input_stream.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <sstream>
@@ -37,7 +37,6 @@
 #include "tink/subtle/test_util.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/ostream_output_stream.h"
-#include "tink/util/status.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
@@ -111,7 +110,7 @@ struct StreamingAeadSpec {
 std::shared_ptr<PrimitiveSet<StreamingAead>> GetTestStreamingAeadSet(
     const std::vector<StreamingAeadSpec>& spec) {
   PrimitiveSet<StreamingAead>::Builder saead_set_builder;
-  int i = 0;
+  size_t i = 0;
   for (auto& s : spec) {
     KeysetInfo::KeyInfo key_info;
     key_info.set_output_prefix_type(OutputPrefixType::RAW);

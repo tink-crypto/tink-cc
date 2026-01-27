@@ -248,10 +248,10 @@ tink_cc_library(
   DEPS
     tink::streamingaead::streaming_aead_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::parameters
-    tink::util::status
     tink::util::statusor
 )
 
@@ -525,7 +525,6 @@ tink_cc_test(
     tink::subtle::test_util
     tink::util::istream_input_stream
     tink::util::ostream_output_stream
-    tink::util::status
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto

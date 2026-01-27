@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ struct StreamingAeadSpec {
 std::shared_ptr<PrimitiveSet<StreamingAead>> GetTestStreamingAeadSet(
     const std::vector<StreamingAeadSpec>& spec) {
   PrimitiveSet<StreamingAead>::Builder saead_set_builder;
-  int i = 0;
+  size_t i = 0;
   for (auto& s : spec) {
     KeysetInfo::KeyInfo key_info;
     key_info.set_output_prefix_type(OutputPrefixType::RAW);

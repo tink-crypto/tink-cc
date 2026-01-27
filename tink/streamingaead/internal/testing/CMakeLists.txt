@@ -8,6 +8,7 @@ tink_cc_library(
   DEPS
     tink::streamingaead::internal::testing::streamingaead_test_vector
     absl::absl_check
+    absl::statusor
     absl::strings
     absl::string_view
     tink::core::insecure_secret_key_access
@@ -15,7 +16,6 @@ tink_cc_library(
     tink::core::restricted_data
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )

@@ -53,6 +53,7 @@ namespace {
 
 class PrimitiveSetTest : public ::testing::Test {};
 
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 void add_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
                     int primitives_count) {
   for (int i = 0; i < primitives_count; i++) {
@@ -66,6 +67,7 @@ void add_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
     EXPECT_THAT(add_result, IsOk());
   }
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
 
 void add_primitives(PrimitiveSet<Mac>::Builder* primitive_set_builder,
                     int key_id_offset, int primitives_count) {
@@ -496,6 +498,8 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   }
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_F(PrimitiveSetTest, LegacyConcurrentOperations) {
   PrimitiveSet<Mac> mac_set;
   int offset_a = 100;
@@ -801,6 +805,7 @@ TEST_F(PrimitiveSetTest, LegacyDisabledKey) {
   EXPECT_THAT(add_primitive_result, Not(IsOk()));
 }
 
+
 TEST_F(PrimitiveSetTest, LegacyGetAll) {
   PrimitiveSet<Mac> pset;
   EXPECT_THAT(
@@ -870,6 +875,8 @@ TEST_F(PrimitiveSetTest, LegacyGetAll) {
 
   EXPECT_THAT(mac_id_and_type, UnorderedElementsAreArray(expected_result));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 }  // namespace
 }  // namespace tink

@@ -274,10 +274,11 @@ class PrimitiveSet {
       const absl::flat_hash_map<std::string, std::string>& annotations)
       : annotations_(annotations) {}
 
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Adds 'primitive' to this set for the specified 'key'.
   ABSL_DEPRECATED(
-      "Mutating PrimitiveSets after construction is deprecated. Use "
-      "PrimitiveSet<>::Builder instead.")
+     "Mutating PrimitiveSets after construction is deprecated. Use "
+     "PrimitiveSet<>::Builder instead.")
   absl::StatusOr<Entry<P>*> AddPrimitive(
       std::unique_ptr<P> primitive,
       const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
@@ -285,11 +286,11 @@ class PrimitiveSet {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "PrimitiveSet is not mutable.");
     }
-
     absl::MutexLock lock(*primitives_mutex_);
     return AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
                             primitives_in_keyset_order_);
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
   // Returns the entries with primitives identified by 'identifier'.
   absl::StatusOr<const Primitives*> get_primitives(
@@ -308,6 +309,7 @@ class PrimitiveSet {
     return get_primitives(CryptoFormat::kRawPrefix);
   }
 
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Sets the given 'primary' as the primary primitive of this set.
   ABSL_DEPRECATED(
       "Mutating PrimitiveSets after construction is deprecated. Use "
@@ -320,6 +322,7 @@ class PrimitiveSet {
     absl::MutexLock lock(*primitives_mutex_);
     return SetPrimaryImpl(&primary_, primary, primitives_);
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
   // Returns the entry with the primary primitive.
   const Entry<P>* get_primary() const {

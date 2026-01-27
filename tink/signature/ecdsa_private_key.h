@@ -19,13 +19,10 @@
 
 #include <memory>
 
-#include "absl/base/macros.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
@@ -88,21 +85,12 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
       PartialKeyAccessToken token);
   const RestrictedData& GetPrivateKey() const;
 
-  // Deprecated. Will be removed in Tink 3.0.0.
-  ABSL_DEPRECATE_AND_INLINE()
+  // Deprecated. Will be removed in Tink 3.0.0. Please use the version taking
+  // a `RestrictedData` object instead.
   static absl::StatusOr<EcdsaPrivateKey> Create(
       const EcdsaPublicKey& public_key,
       const RestrictedBigInteger& private_key_value,
-      PartialKeyAccessToken token) {
-    absl::string_view private_key_value_string =
-        private_key_value.GetSecret(InsecureSecretKeyAccess::Get());
-
-    return EcdsaPrivateKey::CreateAllowNonConstantTime(
-        public_key,
-        RestrictedData(private_key_value_string,
-                       InsecureSecretKeyAccess::Get()),
-        token);
-  }
+      PartialKeyAccessToken token);
 
   const RestrictedBigInteger& GetPrivateKeyValue(
       PartialKeyAccessToken token) const;

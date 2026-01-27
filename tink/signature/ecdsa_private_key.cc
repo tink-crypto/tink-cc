@@ -159,6 +159,24 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
   return Create(public_key, *adjusted_private_key, token);
 }
 
+absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
+    const EcdsaPublicKey& public_key,
+    const RestrictedBigInteger& private_key_value,
+    PartialKeyAccessToken token) {
+  RestrictedData private_key_value_restricted_data = RestrictedData(
+      private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
+      InsecureSecretKeyAccess::Get());
+
+  // Validate that the public and private key match.
+  absl::Status key_pair_validation =
+      ValidateKeyPair(public_key, private_key_value_restricted_data, token);
+  if (!key_pair_validation.ok()) {
+    return key_pair_validation;
+  }
+
+  return EcdsaPrivateKey(public_key, private_key_value_restricted_data);
+}
+
 const RestrictedBigInteger& EcdsaPrivateKey::GetPrivateKeyValue(
     PartialKeyAccessToken token) const {
   absl::MutexLock lock(mutex_);

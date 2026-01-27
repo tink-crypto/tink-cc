@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -136,9 +137,13 @@ void CreatePrivateKeyAndCheck(const TestCase& test_case,
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
-              Eq(RestrictedData(util::SecretDataAsStringView(ec_key.priv),
-                                InsecureSecretKeyAccess::Get())));
+  if constexpr (std::is_same_v<PrivateKeyType, RestrictedBigInteger>) {
+    EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
+                Eq(private_key_value));
+  } else {
+    EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
+                Eq(private_key_value));
+  }
 }
 
 TEST_P(EcdsaPrivateKeyTest, CreatePrivateKeyWorks) {
@@ -295,7 +300,7 @@ TEST(EcdsaPrivateKeyTest, CreateWithPrivateKeyWithOneTooFewBytes) {
       "5e06e5dc416789b2377a305132455025354d27eec2420c30a0b1658503e14780");
   std::string public_y = HexDecodeOrDie(
       "f43e6af3ef0dabe891693cefc8bf3fe51733a02e19a6fa418a21fc2040ea1b92");
-  // Private key with 33 bytes (NIST P-256 takes 32 bytes).
+  // Private key with 31 bytes (NIST P-256 takes 32 bytes).
   std::string private_key_bytes = HexDecodeOrDie(
       "68e0e126325d313dd9cf888e1163c9844cc6f9d9e41ae075338d34e2878cb9");
   ASSERT_THAT(public_x.length(), Eq(32));
@@ -368,6 +373,145 @@ TEST_P(EcdsaPrivateKeyTest, CreateMismatchedKeyPairFails) {
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Invalid EC key pair")));
+}
+
+TEST_P(EcdsaPrivateKeyTest,
+       CreateMismatchedKeyPairWithRestrictedBigIntegerFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(test_case.curve_type)
+          .SetHashType(test_case.hash_type)
+          .SetSignatureEncoding(test_case.signature_encoding)
+          .SetVariant(test_case.variant)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key1 = internal::NewEcKey(test_case.curve);
+  ASSERT_THAT(ec_key1, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key1->pub_x), BigInteger(ec_key1->pub_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key1 =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             test_case.id_requirement, GetPartialKeyAccess());
+  ASSERT_THAT(public_key1, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key2 = internal::NewEcKey(test_case.curve);
+  ASSERT_THAT(ec_key2, IsOk());
+
+  RestrictedBigInteger private_key_value2 =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key2->priv),
+                           InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(EcdsaPrivateKey::Create(*public_key1, private_key_value2,
+                                      GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid EC key pair")));
+}
+
+TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithLeadingZerosWorks) {
+  std::string public_x = HexDecodeOrDie(
+      "bc95b9d6e70821a0bc477d7032085c780e2cae8fdf3d08508989f154b4c327d0");
+  std::string public_y = HexDecodeOrDie(
+      "6b7ae183d851aec7d1b81f3fb152aa5f661231953e0e4b7c99d14c3f671d3258");
+  std::string private_key_bytes = HexDecodeOrDie(
+      "005356ba39d3d19daab9f2146ae03f5c9b7f2f69a219356b2283977a5e55e5d0b8");
+
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EcPoint public_point((BigInteger(public_x)), BigInteger(public_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(EcdsaPrivateKey::Create(*public_key, private_key_value,
+                                      GetPartialKeyAccess()),
+              IsOk());
+}
+
+TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithOneTooManyBytes) {
+  std::string public_x = HexDecodeOrDie(
+      "bc95b9d6e70821a0bc477d7032085c780e2cae8fdf3d08508989f154b4c327d0");
+  std::string public_y = HexDecodeOrDie(
+      "6b7ae183d851aec7d1b81f3fb152aa5f661231953e0e4b7c99d14c3f671d3258");
+  // Private key with 33 bytes.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "ff5356ba39d3d19daab9f2146ae03f5c9b7f2f69a219356b2283977a5e55e5d0b8");
+
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EcPoint public_point((BigInteger(public_x)), BigInteger(public_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  // This fails at key pair validation.
+  EXPECT_THAT(
+      EcdsaPrivateKey::Create(*public_key, private_key_value,
+                              GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("Invalid")));
+}
+
+TEST(EcdsaPrivateKeyTest,
+     CreateWithRestrictedBigIntegerWithOneTooFewBytesWorks) {
+  std::string public_x = HexDecodeOrDie(
+      "5e06e5dc416789b2377a305132455025354d27eec2420c30a0b1658503e14780");
+  std::string public_y = HexDecodeOrDie(
+      "f43e6af3ef0dabe891693cefc8bf3fe51733a02e19a6fa418a21fc2040ea1b92");
+  // Private key with 31 bytes (NIST P-256 takes 32 bytes).
+  std::string private_key_bytes = HexDecodeOrDie(
+      "68e0e126325d313dd9cf888e1163c9844cc6f9d9e41ae075338d34e2878cb9");
+
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EcPoint public_point((BigInteger(public_x)), BigInteger(public_y));
+
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(EcdsaPrivateKey::Create(*public_key, private_key_value,
+                                      GetPartialKeyAccess()),
+              IsOk());
 }
 
 TEST_P(EcdsaPrivateKeyTest, PrivateKeyEquals) {

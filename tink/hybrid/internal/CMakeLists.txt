@@ -444,6 +444,7 @@ tink_cc_test(
     gmock
     absl::btree
     absl::status
+    absl::statusor
     absl::strings
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -452,11 +453,9 @@ tink_cc_test(
     tink::config::global_registry
     tink::hybrid::hpke_config
     tink::hybrid::hpke_proto_serialization
-    tink::hybrid::hybrid_config
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
     tink::subtle::hybrid_test_util
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto

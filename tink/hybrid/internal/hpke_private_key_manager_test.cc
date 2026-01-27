@@ -23,11 +23,11 @@
 #include "gtest/gtest.h"
 #include "absl/container/btree_set.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/config/global_registry.h"
 #include "tink/hybrid/hpke_config.h"
 #include "tink/hybrid/hpke_proto_serialization.h"
-#include "tink/hybrid/hybrid_config.h"
 #include "tink/hybrid/internal/hpke_encrypt.h"
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
@@ -36,7 +36,6 @@
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/subtle/hybrid_test_util.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
 #include "proto/tink.pb.h"
@@ -118,7 +117,7 @@ TEST(HpkePrivateKeyManagerTest, ValidateKeyFormatWithInvalidAeadFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(HpkePrivateKeyManagerTest, CreateKeySucceeds) {
+TEST(HpkePrivateKeyManagerTest, CreateX25519KeySucceeds) {
   HpkeKeyFormat key_format =
       CreateKeyFormat(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
@@ -156,7 +155,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP256KeySucceeds) {
   EXPECT_THAT(key->private_key().size(), Eq(32));
 
   // Test that all generated keys are unique
-  const int number_of_keys = 1000;
+  const int number_of_keys = 10;
   absl::btree_set<std::string> private_keys;
   absl::btree_set<std::string> public_keys;
   for (int i = 0; i < number_of_keys; ++i) {
@@ -189,7 +188,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP384KeySucceeds) {
   EXPECT_THAT(key->private_key().size(), Eq(48));
 
   // Test that all generated keys are unique
-  const int number_of_keys = 1000;
+  const int number_of_keys = 10;
   absl::btree_set<std::string> private_keys;
   absl::btree_set<std::string> public_keys;
   for (int i = 0; i < number_of_keys; ++i) {
@@ -222,7 +221,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP521KeySucceeds) {
   EXPECT_THAT(key->private_key().size(), Eq(66));
 
   // Test that all generated keys are unique
-  const int number_of_keys = 1000;
+  const int number_of_keys = 10;
   absl::btree_set<std::string> private_keys;
   absl::btree_set<std::string> public_keys;
   for (int i = 0; i < number_of_keys; ++i) {

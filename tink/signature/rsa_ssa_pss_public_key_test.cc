@@ -18,17 +18,18 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -54,7 +55,7 @@ struct TestCase {
 const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
 
 // Test vector from
-// https://github.com/google/wycheproof/blob/master/testvectors/rsa_pss_2048_sha256_mgf1_32_test.json
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pss_2048_sha256_mgf1_32_test.json
 constexpr absl::string_view kHex2048BitRsaModulus =
     "00a2b451a07d0aa5f96e455671513550514a8a5b462ebef717094fa1fee82224e637f9746d"
     "3f7cafd31878d80325b6ef5a1700f65903b469429e89d6eac8845097b5ab393189db92512e"
@@ -366,9 +367,139 @@ TEST(RsaSsaPssPublicKeyTest, Clone) {
       /*id_requirement=*/0x02030400, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  // CLone the key
+  // Clone the key
   std::unique_ptr<Key> cloned_key = public_key->Clone();
   ASSERT_THAT(*cloned_key, Eq(*public_key));
+}
+
+TEST(RsaSsaPssPublicKeyTest, CopyConstructor) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
+
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, modulus,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RsaSsaPssPublicKey copy(*public_key);
+
+  EXPECT_THAT(copy, Eq(*public_key));
+}
+
+TEST(RsaSsaPssPublicKeyTest, CopyAssignment) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetSaltLengthInBytes(64)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
+
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, modulus,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<RsaSsaPssPublicKey> copy = RsaSsaPssPublicKey::Create(
+      *other_parameters, modulus,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *public_key;
+
+  EXPECT_THAT(*copy, Eq(*public_key));
+}
+
+TEST(RsaSsaPssPublicKeyTest, MoveConstructor) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
+
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, modulus,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RsaSsaPssPublicKey expected(*public_key);
+  RsaSsaPssPublicKey moved(std::move(*public_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(RsaSsaPssPublicKeyTest, MoveAssignment) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetSaltLengthInBytes(64)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
+
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, modulus,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<RsaSsaPssPublicKey> moved = RsaSsaPssPublicKey::Create(
+      *other_parameters, modulus,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  RsaSsaPssPublicKey expected(*public_key);
+  *moved = *public_key;
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

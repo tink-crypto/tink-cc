@@ -19,10 +19,12 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #else
@@ -32,7 +34,6 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -373,24 +374,16 @@ TEST(RsaSsaPssParametersTest, CopyConstructor) {
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
-          .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
-          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
-          .SetSaltLengthInBytes(64)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
   RsaSsaPssParameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetVariant(), Eq(RsaSsaPssParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
-  EXPECT_THAT(parameters->GetModulusSizeInBits(), Eq(2048));
-  EXPECT_THAT(parameters->GetPublicExponent(), Eq(kF4));
-  EXPECT_THAT(parameters->GetSigHashType(),
-              Eq(RsaSsaPssParameters::HashType::kSha512));
-  EXPECT_THAT(parameters->GetMgf1HashType(),
-              Eq(RsaSsaPssParameters::HashType::kSha512));
-  EXPECT_THAT(parameters->GetSaltLengthInBytes(), Eq(64));
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(RsaSsaPssParametersTest, CopyAssignment) {
@@ -398,24 +391,74 @@ TEST(RsaSsaPssParametersTest, CopyAssignment) {
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
-          .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
-          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
-          .SetSaltLengthInBytes(64)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  RsaSsaPssParameters copy = *parameters;
+  absl::StatusOr<RsaSsaPssParameters> copy =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(3072)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetSaltLengthInBytes(64)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.GetVariant(), Eq(RsaSsaPssParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
-  EXPECT_THAT(parameters->GetModulusSizeInBits(), Eq(2048));
-  EXPECT_THAT(parameters->GetPublicExponent(), Eq(kF4));
-  EXPECT_THAT(parameters->GetSigHashType(),
-              Eq(RsaSsaPssParameters::HashType::kSha512));
-  EXPECT_THAT(parameters->GetMgf1HashType(),
-              Eq(RsaSsaPssParameters::HashType::kSha512));
-  EXPECT_THAT(parameters->GetSaltLengthInBytes(), Eq(64));
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(RsaSsaPssParametersTest, MoveConstructor) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RsaSsaPssParameters expected(*parameters);
+  RsaSsaPssParameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(RsaSsaPssParametersTest, MoveAssignment) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<RsaSsaPssParameters> moved =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(3072)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetSaltLengthInBytes(64)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(moved, IsOk());
+
+  RsaSsaPssParameters expected(*parameters);
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(RsaSsaPssParametersTest, ParametersEquals) {

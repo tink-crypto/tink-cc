@@ -17,6 +17,7 @@
 #include "tink/signature/ml_dsa_parameters.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -94,32 +95,54 @@ TEST_P(MlDsaParametersTest, CreateWithInvalidInstanceFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_P(MlDsaParametersTest, CopyConstructor) {
-  VariantTestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
+TEST(MlDsaParametersTest, CopyConstructor) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
   MlDsaParameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetInstance(), Eq(test_case.instance));
-  EXPECT_THAT(copy.GetVariant(), Eq(test_case.variant));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(test_case.has_id_requirement));
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
-TEST_P(MlDsaParametersTest, CopyAssignment) {
-  VariantTestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
+TEST(MlDsaParametersTest, CopyAssignment) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
-  MlDsaParameters copy = *parameters;
+  absl::StatusOr<MlDsaParameters> copy = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.GetInstance(), Eq(test_case.instance));
-  EXPECT_THAT(copy.GetVariant(), Eq(test_case.variant));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(test_case.has_id_requirement));
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(MlDsaParametersTest, MoveConstructor) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  MlDsaParameters expected(*parameters);
+  MlDsaParameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(MlDsaParametersTest, MoveAssignment) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<MlDsaParameters> moved = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(moved, IsOk());
+
+  MlDsaParameters expected(*parameters);
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(MlDsaParametersTest, ParametersEquals) {
@@ -165,11 +188,10 @@ TEST_P(MlDsaParametersTest, DifferentVariantNotEqual) {
   EXPECT_FALSE(*parameters == *other_parameters);
 }
 
-TEST_P(MlDsaParametersTest, Clone) {
-  VariantTestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
+TEST(MlDsaParametersTest, Clone) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));

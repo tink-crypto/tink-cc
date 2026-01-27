@@ -19,12 +19,14 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
@@ -275,14 +277,13 @@ TEST_P(MlDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_public_key == *public_key);
 }
 
-TEST_P(MlDsaPublicKeyTest, Clone) {
-  TestCase test_case = GetParam();
-
+TEST(MlDsaPublicKeyTest, Clone) {
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      test_case.instance, MlDsaParameters::Variant::kTink);
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  std::string public_key_bytes = GeneratePublicKey(test_case.instance);
+  std::string public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa65);
 
   absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -292,7 +293,105 @@ TEST_P(MlDsaPublicKeyTest, Clone) {
   // Clone the key.
   std::unique_ptr<Key> cloned_key = public_key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*public_key));
+  EXPECT_THAT(*cloned_key, Eq(*public_key));
+}
+
+TEST(MlDsaPublicKeyTest, CopyConstructor) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa65);
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  MlDsaPublicKey copy(*public_key);
+
+  EXPECT_THAT(copy, Eq(*public_key));
+}
+
+TEST(MlDsaPublicKeyTest, CopyAssignment) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa65);
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  std::string other_public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa87);
+
+  absl::StatusOr<MlDsaPublicKey> copy = MlDsaPublicKey::Create(
+      *other_parameters, other_public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *public_key;
+
+  EXPECT_THAT(*copy, Eq(*public_key));
+}
+
+TEST(MlDsaPublicKeyTest, MoveConstructor) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa65);
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  MlDsaPublicKey expected(*public_key);
+  MlDsaPublicKey moved(std::move(*public_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(MlDsaPublicKeyTest, MoveAssignment) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa65);
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  std::string other_public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa87);
+
+  absl::StatusOr<MlDsaPublicKey> moved = MlDsaPublicKey::Create(
+      *other_parameters, other_public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  MlDsaPublicKey expected(*public_key);
+  *moved = std::move(*public_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

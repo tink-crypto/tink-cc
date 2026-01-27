@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
@@ -316,14 +317,13 @@ TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_private_key == *private_key);
 }
 
-TEST_P(MlDsaPrivateKeyTest, Clone) {
-  TestCase test_case = GetParam();
-
+TEST(MlDsaPrivateKeyTest, Clone) {
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      test_case.instance, MlDsaParameters::Variant::kTink);
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
+  absl::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -338,7 +338,137 @@ TEST_P(MlDsaPrivateKeyTest, Clone) {
   // Clone the key.
   std::unique_ptr<Key> cloned_key = private_key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*private_key));
+  EXPECT_THAT(*cloned_key, Eq(*private_key));
+}
+
+TEST(MlDsaPrivateKeyTest, CopyConstructor) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  MlDsaPrivateKey copy(*private_key);
+
+  EXPECT_THAT(copy, Eq(*private_key));
+}
+
+TEST(MlDsaPrivateKeyTest, CopyAssignment) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<KeyPair> other_key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa87);
+  ASSERT_THAT(other_key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> other_public_key = MlDsaPublicKey::Create(
+      *other_parameters, other_key_pair->public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> copy = MlDsaPrivateKey::Create(
+      *other_public_key, other_key_pair->private_seed_bytes,
+      GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *private_key;
+
+  EXPECT_THAT(*copy, Eq(*private_key));
+}
+
+TEST(MlDsaPrivateKeyTest, MoveConstructor) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  MlDsaPrivateKey expected(*private_key);
+  MlDsaPrivateKey moved(std::move(*private_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(MlDsaPrivateKeyTest, MoveAssignment) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<KeyPair> other_key_pair =
+      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa87);
+  ASSERT_THAT(other_key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> other_public_key = MlDsaPublicKey::Create(
+      *other_parameters, other_key_pair->public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> moved = MlDsaPrivateKey::Create(
+      *other_public_key, other_key_pair->private_seed_bytes,
+      GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  MlDsaPrivateKey expected(*private_key);
+  *moved = std::move(*private_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

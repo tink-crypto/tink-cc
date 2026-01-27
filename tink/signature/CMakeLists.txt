@@ -1782,6 +1782,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     crypto
@@ -1829,6 +1830,7 @@ tink_cc_test(
     absl::absl_check
     absl::absl_log
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     crypto

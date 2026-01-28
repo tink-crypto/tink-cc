@@ -45,6 +45,7 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::testing::_;
 using ::testing::Eq;
+using ::testing::Not;
 using ::testing::Pair;
 using ::testing::SizeIs;
 using ::testing::StrEq;
@@ -83,34 +84,34 @@ class BrokenDummyPrfSet : public PrfSet {
 TEST(PrfSetTest, ComputePrimary) {
   DummyPrfSet prfset;
   auto output = prfset.ComputePrimary("DummyInput", 16);
-  EXPECT_TRUE(output.ok()) << output.status();
+  EXPECT_THAT(output, IsOk());
   BrokenDummyPrfSet broken_prfset;
   auto broken_output = broken_prfset.ComputePrimary("DummyInput", 16);
-  EXPECT_FALSE(broken_output.ok())
+  EXPECT_THAT(broken_output, Not(IsOk()))
       << "Expected broken PrfSet to not be able to compute the primary PRF";
 }
 
 TEST(PrfSetWrapperTest, TestPrimitivesEndToEnd) {
   auto status = PrfConfig::Register();
-  ASSERT_TRUE(status.ok()) << status;
+  ASSERT_THAT(status, IsOk());
   auto keyset_manager_result =
       KeysetManager::New(PrfKeyTemplates::HkdfSha256());
-  ASSERT_TRUE(keyset_manager_result.ok()) << keyset_manager_result.status();
+  ASSERT_THAT(keyset_manager_result, IsOk());
   auto keyset_manager = std::move(keyset_manager_result.value());
   auto id_result = keyset_manager->Add(PrfKeyTemplates::HmacSha256());
-  ASSERT_TRUE(id_result.ok()) << id_result.status();
+  ASSERT_THAT(id_result, IsOk());
   uint32_t hmac_sha256_id = id_result.value();
   id_result = keyset_manager->Add(PrfKeyTemplates::HmacSha512());
-  ASSERT_TRUE(id_result.ok()) << id_result.status();
+  ASSERT_THAT(id_result, IsOk());
   uint32_t hmac_sha512_id = id_result.value();
   id_result = keyset_manager->Add(PrfKeyTemplates::AesCmac());
-  ASSERT_TRUE(id_result.ok()) << id_result.status();
+  ASSERT_THAT(id_result, IsOk());
   uint32_t aes_cmac_id = id_result.value();
   auto keyset_handle = keyset_manager->GetKeysetHandle();
   uint32_t hkdf_id = keyset_handle->GetKeysetInfo().primary_key_id();
   auto prf_set_result =
       keyset_handle->GetPrimitive<crypto::tink::PrfSet>(ConfigGlobalRegistry());
-  ASSERT_TRUE(prf_set_result.ok()) << prf_set_result.status();
+  ASSERT_THAT(prf_set_result, IsOk());
   auto prf_set = std::move(prf_set_result.value());
   EXPECT_THAT(prf_set->GetPrimaryId(), Eq(hkdf_id));
   auto prf_map = prf_set->GetPrfs();
@@ -146,12 +147,12 @@ TEST(PrfSetWrapperTest, TestPrimitivesEndToEnd) {
         results.push_back(output);
       }
       output_result = prf.second->Compute(input2, output_length);
-      EXPECT_TRUE(output_result.ok()) << output_result.status();
+      EXPECT_THAT(output_result, IsOk());
       if (output_result.ok()) {
         results.push_back(output_result.value());
       }
       output_result = prf.second->Compute(input, output_length);
-      EXPECT_TRUE(output_result.ok()) << output_result.status();
+      EXPECT_THAT(output_result, IsOk());
       if (output_result.ok()) {
         EXPECT_THAT(output_result.value(), StrEq(output));
       }

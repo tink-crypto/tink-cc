@@ -18,16 +18,17 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -215,6 +216,7 @@ TEST(SlhDsaPublicKeyTest, Clone) {
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
                                SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
@@ -226,7 +228,117 @@ TEST(SlhDsaPublicKeyTest, Clone) {
   // Clone the key.
   std::unique_ptr<Key> cloned_key = public_key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*public_key));
+  EXPECT_THAT(*cloned_key, Eq(*public_key));
+}
+
+TEST(SlhDsaPublicKeyTest, CopyConstructor) {
+  absl::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  SlhDsaPublicKey copy(*public_key);
+
+  EXPECT_THAT(copy, Eq(*public_key));
+}
+
+TEST(SlhDsaPublicKeyTest, CopyAssignment) {
+  absl::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<SlhDsaParameters> other_params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<SlhDsaPublicKey> copy = SlhDsaPublicKey::Create(
+      *other_params, other_public_key_bytes, /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *public_key;
+
+  EXPECT_THAT(*copy, Eq(*public_key));
+}
+
+TEST(SlhDsaPublicKeyTest, MoveConstructor) {
+  absl::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  SlhDsaPublicKey expected(*public_key);
+  SlhDsaPublicKey moved(std::move(*public_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(SlhDsaPublicKeyTest, MoveAssignment) {
+  absl::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<SlhDsaParameters> other_params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<SlhDsaPublicKey> moved = SlhDsaPublicKey::Create(
+      *other_params, other_public_key_bytes, /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  SlhDsaPublicKey expected(*public_key);
+  *moved = std::move(*public_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 }  // namespace

@@ -1866,8 +1866,8 @@ tink_cc_test(
     tink::signature::slh_dsa_parameters
     gmock
     absl::status
+    absl::statusor
     tink::core::parameters
-    tink::util::statusor
     tink::util::test_matchers
 )
 
@@ -1904,6 +1904,7 @@ tink_cc_test(
     tink::signature::slh_dsa_public_key
     gmock
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::insecure_secret_key_access
@@ -1911,7 +1912,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl
@@ -1948,11 +1948,11 @@ tink_cc_test(
     tink::signature::slh_dsa_public_key
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl

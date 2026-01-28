@@ -17,12 +17,13 @@
 #include "tink/signature/slh_dsa_parameters.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -32,7 +33,6 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
-using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -149,12 +149,7 @@ TEST(SlhDsaParametersTest, CopyConstructor) {
 
   SlhDsaParameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetHashType(), Eq(SlhDsaParameters::HashType::kSha2));
-  EXPECT_THAT(copy.GetPrivateKeySizeInBytes(), Eq(64));
-  EXPECT_THAT(copy.GetSignatureType(),
-              Eq(SlhDsaParameters::SignatureType::kSmallSignature));
-  EXPECT_THAT(copy.GetVariant(), Eq(SlhDsaParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(SlhDsaParametersTest, CopyAssignment) {
@@ -165,13 +160,51 @@ TEST(SlhDsaParametersTest, CopyAssignment) {
                                SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  SlhDsaParameters copy = *parameters;
-  EXPECT_THAT(copy.GetHashType(), Eq(SlhDsaParameters::HashType::kSha2));
-  EXPECT_THAT(copy.GetPrivateKeySizeInBytes(), Eq(64));
-  EXPECT_THAT(copy.GetSignatureType(),
-              Eq(SlhDsaParameters::SignatureType::kSmallSignature));
-  EXPECT_THAT(copy.GetVariant(), Eq(SlhDsaParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  absl::StatusOr<SlhDsaParameters> copy =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(SlhDsaParametersTest, MoveConstructor) {
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  SlhDsaParameters expected(*parameters);
+  SlhDsaParameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(SlhDsaParametersTest, MoveAssignment) {
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<SlhDsaParameters> moved =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(moved, IsOk());
+
+  SlhDsaParameters expected(*parameters);
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(SlhDsaParametersTest, ParametersEquals) {
@@ -214,9 +247,10 @@ TEST(SlhDsaParametersTest, Clone) {
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
-  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+  EXPECT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

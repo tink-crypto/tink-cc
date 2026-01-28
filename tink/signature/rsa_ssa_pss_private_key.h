@@ -19,14 +19,17 @@
 
 #include <memory>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/status/statusor.h"
+#include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -34,9 +37,24 @@ namespace tink {
 class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
  public:
   // Copyable and movable.
-  RsaSsaPssPrivateKey(const RsaSsaPssPrivateKey& other) = default;
-  RsaSsaPssPrivateKey& operator=(const RsaSsaPssPrivateKey& other) =
-      default;
+  RsaSsaPssPrivateKey(const RsaSsaPssPrivateKey& other)
+      : public_key_(other.public_key_),
+        p_(other.p_),
+        q_(other.q_),
+        dp_(other.dp_),
+        dq_(other.dq_),
+        d_(other.d_),
+        q_inv_(other.q_inv_) {
+    absl::MutexLock lock(other.mutex_);
+    p_big_integer_ = other.p_big_integer_;
+    q_big_integer_ = other.q_big_integer_;
+    dp_big_integer_ = other.dp_big_integer_;
+    dq_big_integer_ = other.dq_big_integer_;
+    d_big_integer_ = other.d_big_integer_;
+    q_inv_big_integer_ = other.q_inv_big_integer_;
+  }
+
+  RsaSsaPssPrivateKey& operator=(const RsaSsaPssPrivateKey& other);
   RsaSsaPssPrivateKey(RsaSsaPssPrivateKey&& other) = default;
   RsaSsaPssPrivateKey& operator=(RsaSsaPssPrivateKey&& other) = default;
 
@@ -45,7 +63,7 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
    public:
     // Copyable and movable.
     Builder(const Builder& other) = default;
-    Builder& operator=(const Builder& other) = default;
+    Builder& operator=(const Builder& other) = delete;
     Builder(Builder&& other) = default;
     Builder& operator=(Builder&& other) = default;
 
@@ -53,6 +71,16 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
     Builder() = default;
 
     Builder& SetPublicKey(const RsaSsaPssPublicKey& public_key);
+
+    Builder& SetPrimeP(const RestrictedData& p);
+    Builder& SetPrimeQ(const RestrictedData& q);
+    Builder& SetPrimeExponentP(const RestrictedData& dp);
+    Builder& SetPrimeExponentQ(const RestrictedData& dq);
+    Builder& SetPrivateExponent(const RestrictedData& d);
+    Builder& SetCrtCoefficient(const RestrictedData& q_inv);
+
+    // Deprecated: will be removed in Tink 3.0.0
+
     Builder& SetPrimeP(const RestrictedBigInteger& p);
     Builder& SetPrimeQ(const RestrictedBigInteger& q);
     Builder& SetPrimeExponentP(const RestrictedBigInteger& dp);
@@ -65,29 +93,45 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
 
    private:
     absl::optional<RsaSsaPssPublicKey> public_key_;
-    absl::optional<RestrictedBigInteger> p_;
-    absl::optional<RestrictedBigInteger> q_;
-    absl::optional<RestrictedBigInteger> dp_;
-    absl::optional<RestrictedBigInteger> dq_;
-    absl::optional<RestrictedBigInteger> d_;
-    absl::optional<RestrictedBigInteger> q_inv_;
+    absl::optional<RestrictedData> p_;
+    absl::optional<RestrictedData> q_;
+    absl::optional<RestrictedData> dp_;
+    absl::optional<RestrictedData> dq_;
+    absl::optional<RestrictedData> d_;
+    absl::optional<RestrictedData> q_inv_;
+    absl::optional<RestrictedBigInteger> p_big_integer_;
+    absl::optional<RestrictedBigInteger> q_big_integer_;
+    absl::optional<RestrictedBigInteger> dp_big_integer_;
+    absl::optional<RestrictedBigInteger> dq_big_integer_;
+    absl::optional<RestrictedBigInteger> d_big_integer_;
+    absl::optional<RestrictedBigInteger> q_inv_big_integer_;
   };
 
-  const RestrictedBigInteger& GetPrimeP(PartialKeyAccessToken token) const {
-    return p_;
-  }
+  const RestrictedData& GetPrimePData() const { return p_; }
 
-  const RestrictedBigInteger& GetPrimeQ(PartialKeyAccessToken token) const {
-    return q_;
-  }
+  const RestrictedData& GetPrimeQData() const { return q_; }
 
-  const RestrictedBigInteger& GetPrivateExponent() const { return d_; }
+  const RestrictedData& GetPrimeExponentPData() const { return dp_; }
 
-  const RestrictedBigInteger& GetPrimeExponentP() const { return dp_; }
+  const RestrictedData& GetPrimeExponentQData() const { return dq_; }
 
-  const RestrictedBigInteger& GetPrimeExponentQ() const { return dq_; }
+  const RestrictedData& GetPrivateExponentData() const { return d_; }
 
-  const RestrictedBigInteger& GetCrtCoefficient() const { return q_inv_; }
+  const RestrictedData& GetCrtCoefficientData() const { return q_inv_; }
+
+  // Deprecated: will be removed in Tink 3.0.0
+
+  const RestrictedBigInteger& GetPrimeP(PartialKeyAccessToken token) const;
+
+  const RestrictedBigInteger& GetPrimeQ(PartialKeyAccessToken token) const;
+
+  const RestrictedBigInteger& GetPrivateExponent() const;
+
+  const RestrictedBigInteger& GetPrimeExponentP() const;
+
+  const RestrictedBigInteger& GetPrimeExponentQ() const;
+
+  const RestrictedBigInteger& GetCrtCoefficient() const;
 
   const RsaSsaPssPublicKey& GetPublicKey() const override {
     return public_key_;
@@ -105,12 +149,9 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
 
  private:
   explicit RsaSsaPssPrivateKey(const RsaSsaPssPublicKey& public_key,
-                                 const RestrictedBigInteger& p,
-                                 const RestrictedBigInteger& q,
-                                 const RestrictedBigInteger& dp,
-                                 const RestrictedBigInteger& dq,
-                                 const RestrictedBigInteger& d,
-                                 const RestrictedBigInteger& q_inv)
+                               RestrictedData p, RestrictedData q,
+                               RestrictedData dp, RestrictedData dq,
+                               RestrictedData d, RestrictedData q_inv)
       : public_key_(public_key),
         p_(p),
         q_(q),
@@ -120,12 +161,26 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
         q_inv_(q_inv) {}
 
   RsaSsaPssPublicKey public_key_;
-  RestrictedBigInteger p_;
-  RestrictedBigInteger q_;
-  RestrictedBigInteger dp_;
-  RestrictedBigInteger dq_;
-  RestrictedBigInteger d_;
-  RestrictedBigInteger q_inv_;
+  RestrictedData p_;
+  RestrictedData q_;
+  RestrictedData dp_;
+  RestrictedData dq_;
+  RestrictedData d_;
+  RestrictedData q_inv_;
+
+  mutable absl::Mutex mutex_;
+  mutable absl::optional<RestrictedBigInteger> p_big_integer_
+      ABSL_GUARDED_BY(mutex_);
+  mutable absl::optional<RestrictedBigInteger> q_big_integer_
+      ABSL_GUARDED_BY(mutex_);
+  mutable absl::optional<RestrictedBigInteger> dp_big_integer_
+      ABSL_GUARDED_BY(mutex_);
+  mutable absl::optional<RestrictedBigInteger> dq_big_integer_
+      ABSL_GUARDED_BY(mutex_);
+  mutable absl::optional<RestrictedBigInteger> d_big_integer_
+      ABSL_GUARDED_BY(mutex_);
+  mutable absl::optional<RestrictedBigInteger> q_inv_big_integer_
+      ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace tink

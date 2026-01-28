@@ -713,7 +713,12 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
     tink::signature::signature_private_key
+    absl::core_headers
     absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::synchronization
     absl::optional
     crypto
     tink::core::big_integer
@@ -721,11 +726,10 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::core::secret_data
     tink::internal::bn_util
-    tink::internal::call_with_core_dump_protection
     tink::internal::ssl_unique_ptr
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -1577,6 +1581,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::test_matchers

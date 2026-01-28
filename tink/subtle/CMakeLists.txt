@@ -1108,7 +1108,7 @@ tink_cc_test(
   SRCS
     aes_eax_boringssl_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::subtle::aes_eax_boringssl
     gmock
@@ -1164,7 +1164,7 @@ tink_cc_test(
   SRCS
     aes_siv_boringssl_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::subtle::aes_siv_boringssl
     gmock

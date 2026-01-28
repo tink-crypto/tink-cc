@@ -42,7 +42,7 @@ namespace {
 using ::testing::Not;
 
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
@@ -282,7 +282,7 @@ TEST(AesSivBoringSslTest, TestVectors) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors("aes_siv_cmac_test.json");
+      ReadTestVectorsV1("aes_siv_cmac_test.json");
   ASSERT_THAT(parsed_input, IsOk());
   WycheproofTest(*parsed_input, /*expected_skipped_tests_groups=*/2);
 }

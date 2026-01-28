@@ -1172,7 +1172,7 @@ cc_test(
     name = "aes_eax_boringssl_test",
     size = "small",
     srcs = ["aes_eax_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     tags = ["fips"],
     deps = [
         ":aes_eax_boringssl",
@@ -1231,7 +1231,7 @@ cc_test(
     name = "aes_siv_boringssl_test",
     size = "small",
     srcs = ["aes_siv_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     tags = ["fips"],
     deps = [
         ":aes_siv_boringssl",

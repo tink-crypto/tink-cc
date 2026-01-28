@@ -20,6 +20,9 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/types/optional.h"
 #include "tink/internal/rsa_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -32,26 +35,27 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
-absl::Status ValidateKeyPair(
-    const BigInteger& public_exponent, const BigInteger& modulus,
-    const RestrictedBigInteger& p, const RestrictedBigInteger& q,
-    const RestrictedBigInteger& d, const RestrictedBigInteger& dp,
-    const RestrictedBigInteger& dq, const RestrictedBigInteger& q_inv) {
+absl::Status ValidateKeyPair(const BigInteger& public_exponent,
+                             const BigInteger& modulus, const RestrictedData& p,
+                             const RestrictedData& q, const RestrictedData& d,
+                             const RestrictedData& dp, const RestrictedData& dq,
+                             const RestrictedData& q_inv) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
       internal::RsaPrivateKeyToRsa(internal::RsaPrivateKey{
           /*n=*/std::string(modulus.GetValue()),
           /*e=*/std::string(public_exponent.GetValue()),
-          /*d=*/d.GetSecretData(InsecureSecretKeyAccess::Get()),
-          /*p=*/p.GetSecretData(InsecureSecretKeyAccess::Get()),
-          /*q=*/q.GetSecretData(InsecureSecretKeyAccess::Get()),
-          /*dp=*/dp.GetSecretData(InsecureSecretKeyAccess::Get()),
-          /*dq=*/dq.GetSecretData(InsecureSecretKeyAccess::Get()),
-          /*crt=*/q_inv.GetSecretData(InsecureSecretKeyAccess::Get()),
+          /*d=*/d.Get(InsecureSecretKeyAccess::Get()),
+          /*p=*/p.Get(InsecureSecretKeyAccess::Get()),
+          /*q=*/q.Get(InsecureSecretKeyAccess::Get()),
+          /*dp=*/dp.Get(InsecureSecretKeyAccess::Get()),
+          /*dq=*/dq.Get(InsecureSecretKeyAccess::Get()),
+          /*crt=*/q_inv.Get(InsecureSecretKeyAccess::Get()),
       });
   return rsa.status();
 }
@@ -65,42 +69,79 @@ JwtRsaSsaPssPrivateKey::Builder& JwtRsaSsaPssPrivateKey::Builder::SetPublicKey(
 }
 
 JwtRsaSsaPssPrivateKey::Builder& JwtRsaSsaPssPrivateKey::Builder::SetPrimeP(
-    const RestrictedBigInteger& p) {
+    const RestrictedData& p) {
   p_ = p;
   return *this;
 }
 
 JwtRsaSsaPssPrivateKey::Builder& JwtRsaSsaPssPrivateKey::Builder::SetPrimeQ(
-    const RestrictedBigInteger& q) {
+    const RestrictedData& q) {
   q_ = q;
   return *this;
 }
 
 JwtRsaSsaPssPrivateKey::Builder&
-JwtRsaSsaPssPrivateKey::Builder::SetPrimeExponentP(
-    const RestrictedBigInteger& dp) {
+JwtRsaSsaPssPrivateKey::Builder::SetPrimeExponentP(const RestrictedData& dp) {
   dp_ = dp;
   return *this;
 }
 
 JwtRsaSsaPssPrivateKey::Builder&
-JwtRsaSsaPssPrivateKey::Builder::SetPrimeExponentQ(
-    const RestrictedBigInteger& dq) {
+JwtRsaSsaPssPrivateKey::Builder::SetPrimeExponentQ(const RestrictedData& dq) {
   dq_ = dq;
   return *this;
 }
 
 JwtRsaSsaPssPrivateKey::Builder&
-JwtRsaSsaPssPrivateKey::Builder::SetPrivateExponent(
-    const RestrictedBigInteger& d) {
+JwtRsaSsaPssPrivateKey::Builder::SetPrivateExponent(const RestrictedData& d) {
   d_ = d;
   return *this;
 }
 
 JwtRsaSsaPssPrivateKey::Builder&
 JwtRsaSsaPssPrivateKey::Builder::SetCrtCoefficient(
-    const RestrictedBigInteger& q_inv) {
+    const RestrictedData& q_inv) {
   q_inv_ = q_inv;
+  return *this;
+}
+
+JwtRsaSsaPssPrivateKey::Builder& JwtRsaSsaPssPrivateKey::Builder::SetPrimeP(
+    const RestrictedBigInteger& p) {
+  p_big_integer_ = p;
+  return *this;
+}
+
+JwtRsaSsaPssPrivateKey::Builder& JwtRsaSsaPssPrivateKey::Builder::SetPrimeQ(
+    const RestrictedBigInteger& q) {
+  q_big_integer_ = q;
+  return *this;
+}
+
+JwtRsaSsaPssPrivateKey::Builder&
+JwtRsaSsaPssPrivateKey::Builder::SetPrimeExponentP(
+    const RestrictedBigInteger& dp) {
+  dp_big_integer_ = dp;
+  return *this;
+}
+
+JwtRsaSsaPssPrivateKey::Builder&
+JwtRsaSsaPssPrivateKey::Builder::SetPrimeExponentQ(
+    const RestrictedBigInteger& dq) {
+  dq_big_integer_ = dq;
+  return *this;
+}
+
+JwtRsaSsaPssPrivateKey::Builder&
+JwtRsaSsaPssPrivateKey::Builder::SetPrivateExponent(
+    const RestrictedBigInteger& d) {
+  d_big_integer_ = d;
+  return *this;
+}
+
+JwtRsaSsaPssPrivateKey::Builder&
+JwtRsaSsaPssPrivateKey::Builder::SetCrtCoefficient(
+    const RestrictedBigInteger& q_inv) {
+  q_inv_big_integer_ = q_inv;
   return *this;
 }
 
@@ -111,36 +152,195 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
                         "Cannot build without setting the public key");
   }
 
-  if (!p_.has_value() || !q_.has_value()) {
+  bool at_least_one_big_integer =
+      p_big_integer_.has_value() || q_big_integer_.has_value() ||
+      d_big_integer_.has_value() || dp_big_integer_.has_value() ||
+      dq_big_integer_.has_value() || q_inv_big_integer_.has_value();
+  bool at_least_one_restricted_data = p_.has_value() || q_.has_value() ||
+                                      d_.has_value() || dp_.has_value() ||
+                                      dq_.has_value() || q_inv_.has_value();
+  bool all_big_integers =
+      p_big_integer_.has_value() && q_big_integer_.has_value() &&
+      d_big_integer_.has_value() && dp_big_integer_.has_value() &&
+      dq_big_integer_.has_value() && q_inv_big_integer_.has_value();
+  bool all_restricted_data = p_.has_value() && q_.has_value() &&
+                             d_.has_value() && dp_.has_value() &&
+                             dq_.has_value() && q_inv_.has_value();
+
+  if (at_least_one_big_integer && at_least_one_restricted_data) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Cannot build without setting both prime factors");
+                        "Cannot build with a mix of RestrictedData and "
+                        "RestrictedBigInteger parameters");
   }
 
-  if (!dp_.has_value() || !dq_.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Cannot build without setting both prime exponents");
+  if (all_big_integers) {
+    // p and q won't have any leading zeros if initialized from
+    // RestrictedBigInteger.
+    RestrictedData p_data(
+        p_big_integer_->GetSecretData(InsecureSecretKeyAccess::Get()),
+        InsecureSecretKeyAccess::Get());
+    RestrictedData q_data(
+        q_big_integer_->GetSecretData(InsecureSecretKeyAccess::Get()),
+        InsecureSecretKeyAccess::Get());
+
+    absl::StatusOr<RestrictedData> dp_data =
+        dp_big_integer_->EncodeWithFixedSize(p_data.size());
+    if (!dp_data.ok()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Prime exponent d is too large, expected", p_data.size(),
+                       " , got ", dp_big_integer_->SizeInBytes()));
+    }
+    absl::StatusOr<RestrictedData> dq_data =
+        dq_big_integer_->EncodeWithFixedSize(q_data.size());
+    if (!dq_data.ok()) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Prime exponent dq is too large, expected", q_data.size(), " , got ",
+          dq_big_integer_->SizeInBytes()));
+    }
+    absl::StatusOr<RestrictedData> d_data = d_big_integer_->EncodeWithFixedSize(
+        public_key_->GetModulus(token).SizeInBytes());
+    if (!d_data.ok()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Private exponent d has incorrect length: expected ",
+                       public_key_->GetModulus(token).SizeInBytes(), " got ",
+                       d_big_integer_->SizeInBytes()));
+    }
+
+    absl::StatusOr<RestrictedData> q_inv_data =
+        q_inv_big_integer_->EncodeWithFixedSize(p_data.size());
+    if (!q_inv_data.ok()) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "CRT coefficient q_inv has incorrect length: expected ",
+          p_data.size(), " got ", q_inv_big_integer_->SizeInBytes()));
+    }
+
+    absl::Status key_pair_validation =
+        ValidateKeyPair(public_key_->GetParameters().GetPublicExponent(),
+                        public_key_->GetModulus(token), p_data, q_data, *d_data,
+                        *dp_data, *dq_data, *q_inv_data);
+    if (!key_pair_validation.ok()) {
+      return key_pair_validation;
+    }
+    return JwtRsaSsaPssPrivateKey(*public_key_, p_data, q_data, *dp_data,
+                                  *dq_data, *d_data, *q_inv_data);
   }
 
-  if (!d_.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Cannot build without setting the private exponent");
+  if (all_restricted_data) {
+    absl::Status key_pair_validation = ValidateKeyPair(
+        public_key_->GetParameters().GetPublicExponent(),
+        public_key_->GetModulus(token), *p_, *q_, *d_, *dp_, *dq_, *q_inv_);
+    if (!key_pair_validation.ok()) {
+      return key_pair_validation;
+    }
+    return JwtRsaSsaPssPrivateKey(*public_key_, *p_, *q_, *dp_, *dq_, *d_,
+                                  *q_inv_);
   }
 
-  if (!q_inv_.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Cannot build without setting the CRT coefficient");
+  return absl::Status(absl::StatusCode::kInvalidArgument,
+                      "Cannot build without setting all parameters (either "
+                      "RestrictedData or RestrictedBigInteger).");
+}
+
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeP(
+    PartialKeyAccessToken token) const {
+  absl::MutexLock lock(mutex_);
+  if (!p_big_integer_.has_value()) {
+    p_big_integer_ =
+        RestrictedBigInteger(p_.GetSecret(InsecureSecretKeyAccess::Get()),
+                             InsecureSecretKeyAccess::Get());
+  }
+  return *p_big_integer_;
+}
+
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeQ(
+    PartialKeyAccessToken token) const {
+  absl::MutexLock lock(mutex_);
+  if (!q_big_integer_.has_value()) {
+    q_big_integer_ =
+        RestrictedBigInteger(q_.GetSecret(InsecureSecretKeyAccess::Get()),
+                             InsecureSecretKeyAccess::Get());
+  }
+  return *q_big_integer_;
+}
+
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrivateExponent() const {
+  absl::MutexLock lock(mutex_);
+  if (!d_big_integer_.has_value()) {
+    d_big_integer_ =
+        RestrictedBigInteger(d_.GetSecret(InsecureSecretKeyAccess::Get()),
+                             InsecureSecretKeyAccess::Get());
+  }
+  return *d_big_integer_;
+}
+
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentP() const {
+  absl::MutexLock lock(mutex_);
+  if (!dp_big_integer_.has_value()) {
+    dp_big_integer_ =
+        RestrictedBigInteger(dp_.GetSecret(InsecureSecretKeyAccess::Get()),
+                             InsecureSecretKeyAccess::Get());
+  }
+  return *dp_big_integer_;
+}
+
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentQ() const {
+  absl::MutexLock lock(mutex_);
+  if (!dq_big_integer_.has_value()) {
+    dq_big_integer_ =
+        RestrictedBigInteger(dq_.GetSecret(InsecureSecretKeyAccess::Get()),
+                             InsecureSecretKeyAccess::Get());
+  }
+  return *dq_big_integer_;
+}
+
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetCrtCoefficient() const {
+  absl::MutexLock lock(mutex_);
+  if (!q_inv_big_integer_.has_value()) {
+    q_inv_big_integer_ =
+        RestrictedBigInteger(q_inv_.GetSecret(InsecureSecretKeyAccess::Get()),
+                             InsecureSecretKeyAccess::Get());
+  }
+  return *q_inv_big_integer_;
+}
+
+JwtRsaSsaPssPrivateKey& JwtRsaSsaPssPrivateKey::operator=(
+    const JwtRsaSsaPssPrivateKey& other) {
+  if (this == &other) {
+    return *this;
   }
 
-  // Validate key pair.
-  absl::Status key_pair_validation = ValidateKeyPair(
-      public_key_->GetParameters().GetPublicExponent(),
-      public_key_->GetModulus(token), *p_, *q_, *d_, *dp_, *dq_, *q_inv_);
-  if (!key_pair_validation.ok()) {
-    return key_pair_validation;
+  absl::optional<RestrictedBigInteger> p_big_integer;
+  absl::optional<RestrictedBigInteger> q_big_integer;
+  absl::optional<RestrictedBigInteger> dp_big_integer;
+  absl::optional<RestrictedBigInteger> dq_big_integer;
+  absl::optional<RestrictedBigInteger> d_big_integer;
+  absl::optional<RestrictedBigInteger> q_inv_big_integer;
+  {
+    absl::MutexLock lock(other.mutex_);
+    p_big_integer = other.p_big_integer_;
+    q_big_integer = other.q_big_integer_;
+    dp_big_integer = other.dp_big_integer_;
+    dq_big_integer = other.dq_big_integer_;
+    d_big_integer = other.d_big_integer_;
+    q_inv_big_integer = other.q_inv_big_integer_;
   }
 
-  return JwtRsaSsaPssPrivateKey(*public_key_, *p_, *q_, *dp_, *dq_, *d_,
-                                *q_inv_);
+  public_key_ = other.public_key_;
+  p_ = other.p_;
+  q_ = other.q_;
+  dp_ = other.dp_;
+  dq_ = other.dq_;
+  d_ = other.d_;
+  q_inv_ = other.q_inv_;
+
+  absl::MutexLock lock(mutex_);
+  p_big_integer_ = p_big_integer;
+  q_big_integer_ = q_big_integer;
+  dp_big_integer_ = dp_big_integer;
+  dq_big_integer_ = dq_big_integer;
+  d_big_integer_ = d_big_integer;
+  q_inv_big_integer_ = q_inv_big_integer;
+  return *this;
 }
 
 bool JwtRsaSsaPssPrivateKey::operator==(const Key& other) const {

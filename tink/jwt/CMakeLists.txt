@@ -445,8 +445,11 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_signature_private_key
+    absl::core_headers
     absl::status
     absl::statusor
+    absl::strings
+    absl::synchronization
     absl::optional
     crypto
     tink::core::big_integer
@@ -454,6 +457,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
 )
@@ -994,6 +998,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -1003,6 +1008,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::test_matchers

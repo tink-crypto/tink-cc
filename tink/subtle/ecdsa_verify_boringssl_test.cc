@@ -48,7 +48,7 @@ using ::crypto::tink::internal::wycheproof_testing::
     GetEllipticCurveTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
@@ -151,7 +151,8 @@ static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
     subtle::EcdsaSignatureEncoding encoding) {
   SubtleUtilBoringSSL::EcKey key;
   const auto& test_group_fields = test_group.struct_value().fields();
-  const auto& key_fields = test_group_fields.at("key").struct_value().fields();
+  const auto& key_fields =
+      test_group_fields.at("publicKey").struct_value().fields();
   key.pub_x = GetIntegerFromHexValue(key_fields.at("wx"));
   key.pub_y = GetIntegerFromHexValue(key_fields.at("wy"));
   key.curve = GetEllipticCurveTypeFromValue(key_fields.at("curve"));
@@ -172,7 +173,7 @@ bool TestSignatures(const std::string& filename,
                     int expected_skipped_test_groups,
                     subtle::EcdsaSignatureEncoding encoding) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors(filename);
+      ReadTestVectorsV1(filename);
   ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
@@ -261,14 +262,33 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP521) {
                              subtle::EcdsaSignatureEncoding::DER));
 }
 
-TEST_F(EcdsaVerifyBoringSslTest, WycheproofWithIeeeP1363Encoding) {
+TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP256WithIeeeP1363Encoding) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
-  int expected_skipped_test_groups = 15;
-  ASSERT_TRUE(TestSignatures("ecdsa_webcrypto_test.json",
-                             expected_skipped_test_groups,
+  ASSERT_TRUE(TestSignatures("ecdsa_secp256r1_sha256_p1363_test.json",
+                             /*expected_skipped_test_groups=*/0,
+                             subtle::EcdsaSignatureEncoding::IEEE_P1363));
+}
+
+TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP384WithIeeeP1363Encoding) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+  ASSERT_TRUE(TestSignatures("ecdsa_secp384r1_sha512_p1363_test.json",
+                             /*expected_skipped_test_groups=*/0,
+                             subtle::EcdsaSignatureEncoding::IEEE_P1363));
+}
+
+TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP521WithIeeeP1363Encoding) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+  ASSERT_TRUE(TestSignatures("ecdsa_secp521r1_sha512_p1363_test.json",
+                             /*expected_skipped_test_groups=*/0,
                              subtle::EcdsaSignatureEncoding::IEEE_P1363));
 }
 

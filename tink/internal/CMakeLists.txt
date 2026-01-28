@@ -402,7 +402,7 @@ tink_cc_test(
   SRCS
     ec_util_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::internal::bn_util
     tink::internal::ec_util

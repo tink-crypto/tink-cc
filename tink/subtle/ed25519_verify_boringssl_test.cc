@@ -46,7 +46,7 @@ namespace subtle {
 namespace {
 
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
@@ -238,7 +238,7 @@ INSTANTIATE_TEST_SUITE_P(Ed25519VerifyBoringSslParamsTests,
 static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
     const google::protobuf::Value& test_group) {
   const google::protobuf::Value& key =
-      test_group.struct_value().fields().at("key");
+      test_group.struct_value().fields().at("publicKey");
   std::string public_key =
       GetBytesFromHexValue(key.struct_value().fields().at("pk"));
   auto result = Ed25519VerifyBoringSsl::New(public_key);
@@ -255,7 +255,7 @@ static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
 // by tink.
 bool TestSignatures(const std::string& filename) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors(filename);
+      ReadTestVectorsV1(filename);
   ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
@@ -314,7 +314,7 @@ bool TestSignatures(const std::string& filename) {
 }
 
 TEST_F(Ed25519VerifyBoringSslTest, WycheproofCurve25519) {
-  ASSERT_TRUE(TestSignatures("eddsa_test.json"));
+  ASSERT_TRUE(TestSignatures("ed25519_test.json"));
 }
 
 TEST(Ed25519VerifyBoringSslFipsTest, testFipsMode) {

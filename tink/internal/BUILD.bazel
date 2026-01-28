@@ -448,7 +448,7 @@ cc_test(
 cc_test(
     name = "ec_util_test",
     srcs = ["ec_util_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":bn_util",
         ":ec_util",

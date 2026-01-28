@@ -61,7 +61,7 @@ using ::testing::ValuesIn;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 
 // Test vector from
 // https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/Digital-Signatures
@@ -222,7 +222,7 @@ std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
     absl::string_view file_name) {
   std::vector<RsaSsaPssWycheproofTestVector> test_vectors;
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors(std::string(file_name));
+      ReadTestVectorsV1(std::string(file_name));
   ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
@@ -232,12 +232,14 @@ std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
     for (const google::protobuf::Value& test :
          test_group.struct_value().fields().at("tests").list_value().values()) {
       auto test_fields = test.struct_value().fields();
+      auto public_key_fields =
+          test_group_fields.at("publicKey").struct_value().fields();
       test_vectors.push_back({
           /*file_name=*/std::string(file_name),
           /*key=*/
           {
-              GetIntegerFromHexValue(test_group_fields.at("n")),
-              GetIntegerFromHexValue(test_group_fields.at("e")),
+              GetIntegerFromHexValue(public_key_fields.at("modulus")),
+              GetIntegerFromHexValue(public_key_fields.at("publicExponent")),
           },
           /*hash_type=*/GetHashTypeFromValue(test_group_fields.at("sha")),
           /*mgf_hash_type=*/

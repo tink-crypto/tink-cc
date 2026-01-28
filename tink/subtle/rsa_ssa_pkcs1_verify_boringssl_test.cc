@@ -49,7 +49,7 @@ namespace {
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
@@ -179,9 +179,12 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {
 static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> GetVerifier(
     const google::protobuf::Value& test_group) {
   auto test_group_fields = test_group.struct_value().fields();
+
   internal::RsaPublicKey key;
-  key.n = GetIntegerFromHexValue(test_group_fields.at("n"));
-  key.e = GetIntegerFromHexValue(test_group_fields.at("e"));
+  const auto& public_key_fields =
+      test_group_fields.at("publicKey").struct_value().fields();
+  key.n = GetIntegerFromHexValue(public_key_fields.at("modulus"));
+  key.e = GetIntegerFromHexValue(public_key_fields.at("publicExponent"));
 
   HashType md = GetHashTypeFromValue(test_group_fields.at("sha"));
   internal::RsaSsaPkcs1Params params;
@@ -197,7 +200,7 @@ static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> GetVerifier(
 // Tests signature verification using the test vectors in the specified file.
 bool TestSignatures(const std::string& filename) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors(filename);
+      ReadTestVectorsV1(filename);
   ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");

@@ -58,7 +58,7 @@ namespace {
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::
     GetEllipticCurveTypeFromValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::test::EqualsSecretData;
@@ -78,34 +78,6 @@ using ::testing::SizeIs;
 using ::testing::TestParamInfo;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
-
-// Use wycheproof test vectors to verify Ed25519 key generation from a seed (the
-// private key) results in the public/private key.
-TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
-  absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors("eddsa_test.json");
-  ASSERT_THAT(parsed_input, IsOk());
-
-  const google::protobuf::Value& test_groups =
-      parsed_input->fields().at("testGroups");
-
-  // For this test we are only interested in Ed25519 keys.
-  for (const google::protobuf::Value& test_group :
-       test_groups.list_value().values()) {
-    const google::protobuf::Value& key_value =
-        test_group.struct_value().fields().at("key");
-    SecretData private_key = util::SecretDataFromStringView(
-        GetBytesFromHexValue(key_value.struct_value().fields().at("sk")));
-    std::string public_key =
-        GetBytesFromHexValue(key_value.struct_value().fields().at("pk"));
-
-    absl::StatusOr<std::unique_ptr<Ed25519Key>> key =
-        NewEd25519Key(private_key);
-    ASSERT_THAT(key, IsOk());
-    EXPECT_EQ((*key)->public_key, public_key);
-    EXPECT_TRUE(util::SecretDataEquals((*key)->private_key, private_key));
-  }
-}
 
 TEST(EcUtilTest, NewEd25519KeyInvalidSeed) {
   std::string valid_seed = test::HexDecodeOrDie(
@@ -649,17 +621,30 @@ TEST(EcUtilTest, GetEcPointReturnsAValidPoint) {
                              test::HexDecodeOrDie(kYCoordinateHex)));
 }
 
-TEST(EcUtilTest, EcSignatureIeeeToDer) {
+struct WycheproofTest {
+  std::string test_name;
+  std::string filename;
+};
+
+using EcUtilWycheproofTest = TestWithParam<WycheproofTest>;
+
+TEST_P(EcUtilWycheproofTest, EcSignatureIeeeToDer) {
+  const WycheproofTest& wycheproof_test = GetParam();
+
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors("ecdsa_webcrypto_test.json");
+      ReadTestVectorsV1(wycheproof_test.filename);
   ASSERT_THAT(parsed_input, IsOk());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
   for (const google::protobuf::Value& test_group :
        test_groups.list_value().values()) {
-    EllipticCurveType curve = GetEllipticCurveTypeFromValue(
-        test_group.struct_value().fields().at("key").struct_value().fields().at(
-            "curve"));
+    EllipticCurveType curve =
+        GetEllipticCurveTypeFromValue(test_group.struct_value()
+                                          .fields()
+                                          .at("publicKey")
+                                          .struct_value()
+                                          .fields()
+                                          .at("curve"));
     if (curve == EllipticCurveType::UNKNOWN_CURVE) {
       continue;
     }
@@ -702,6 +687,17 @@ TEST(EcUtilTest, EcSignatureIeeeToDer) {
     }
   }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    EcUtilWycheproofTestInstantiation, EcUtilWycheproofTest,
+    ValuesIn<WycheproofTest>({
+        {"P256", "ecdsa_secp256r1_webcrypto_test.json"},
+        {"P384", "ecdsa_secp384r1_webcrypto_test.json"},
+        {"P521", "ecdsa_secp521r1_webcrypto_test.json"},
+    }),
+    [](const TestParamInfo<EcUtilWycheproofTest::ParamType>& info) {
+      return info.param.test_name;
+    });
 
 using EcKeyFromSslEcKeyTestWithParam =
     testing::TestWithParam<EllipticCurveType>;
@@ -772,7 +768,7 @@ bool HasFlag(const google::protobuf::Value& flags, absl::string_view value) {
 std::vector<EcdhWycheproofTestVector> ReadEcdhWycheproofTestVectors(
     absl::string_view file_name) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors(std::string(file_name));
+      ReadTestVectorsV1(std::string(file_name));
   ABSL_CHECK_OK(parsed_input.status());
   std::vector<EcdhWycheproofTestVector> test_vectors;
   const google::protobuf::Value& test_groups =
@@ -878,7 +874,13 @@ std::vector<EcdhWycheproofTestVector> GetEcUtilComputeEcdhSharedSecretParams() {
       /*file_name=*/"ecdh_secp521r1_test.json");
   test_vectors.insert(test_vectors.end(), others.begin(), others.end());
   others = ReadEcdhWycheproofTestVectors(
-      /*file_name=*/"ecdh_test.json");
+      /*file_name=*/"ecdh_secp256r1_webcrypto_test.json");
+  test_vectors.insert(test_vectors.end(), others.begin(), others.end());
+  others = ReadEcdhWycheproofTestVectors(
+      /*file_name=*/"ecdh_secp384r1_webcrypto_test.json");
+  test_vectors.insert(test_vectors.end(), others.begin(), others.end());
+  others = ReadEcdhWycheproofTestVectors(
+      /*file_name=*/"ecdh_secp521r1_webcrypto_test.json");
   test_vectors.insert(test_vectors.end(), others.begin(), others.end());
   return test_vectors;
 }

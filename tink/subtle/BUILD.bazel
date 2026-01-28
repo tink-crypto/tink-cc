@@ -1279,7 +1279,7 @@ cc_test(
     name = "ecdsa_verify_boringssl_test",
     size = "small",
     srcs = ["ecdsa_verify_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     tags = ["fips"],
     deps = [
         ":common_enums",
@@ -1334,7 +1334,7 @@ cc_test(
     name = "ed25519_verify_boringssl_test",
     size = "small",
     srcs = ["ed25519_verify_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     tags = ["fips"],
     deps = [
         ":ed25519_verify_boringssl",
@@ -1361,7 +1361,7 @@ cc_test(
     name = "rsa_ssa_pss_verify_boringssl_test",
     size = "small",
     srcs = ["rsa_ssa_pss_verify_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     tags = ["fips"],
     deps = [
         ":common_enums",
@@ -1419,7 +1419,7 @@ cc_test(
     name = "rsa_ssa_pkcs1_verify_boringssl_test",
     size = "small",
     srcs = ["rsa_ssa_pkcs1_verify_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     tags = ["fips"],
     deps = [
         ":common_enums",

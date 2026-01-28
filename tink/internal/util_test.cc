@@ -177,6 +177,16 @@ TEST(UtilTest, ParseBigIntToFixedLengthFailures) {
   EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data, 3), Not(IsOk()));
 }
 
+TEST(UtilTest, StripZeros) {
+  EXPECT_EQ(
+      WithoutLeadingZeros(absl::string_view(HexDecodeOrDie("000011223344"))),
+      HexDecodeOrDie("11223344"));
+  EXPECT_EQ(WithoutLeadingZeros(HexDecodeOrDie("11223344")),
+            HexDecodeOrDie("11223344"));
+  EXPECT_EQ(WithoutLeadingZeros(HexDecodeOrDie("0000")), "");
+  EXPECT_EQ(WithoutLeadingZeros(""), "");
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

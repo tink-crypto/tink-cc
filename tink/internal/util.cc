@@ -15,8 +15,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/util.h"
 
+#include <cstddef>
 #include <functional>
-#include <iterator>
+#include <string>
 #include <utility>
 
 #include "absl/log/absl_log.h"
@@ -24,7 +25,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/string_view.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
@@ -70,9 +70,7 @@ bool IsPrintableAscii(absl::string_view input) {
   return true;
 }
 
-void LogFatal(absl::string_view msg) {
-  ABSL_LOG(FATAL) <<  msg;
-}
+void LogFatal(absl::string_view msg) { ABSL_LOG(FATAL) << msg; }
 
 absl::StatusOr<SecretData> ParseBigIntToFixedLength(absl::string_view val,
                                                     int length) {
@@ -92,6 +90,15 @@ absl::StatusOr<SecretData> ParseBigIntToFixedLength(absl::string_view val,
     }
     val.remove_prefix(to_truncate);
     return util::SecretDataFromStringView(val);
+  }
+}
+
+absl::string_view WithoutLeadingZeros(const absl::string_view val) {
+  size_t padding_pos = val.find_first_not_of('\0');
+  if (padding_pos != std::string::npos) {
+    return val.substr(padding_pos);
+  } else {
+    return "";
   }
 }
 

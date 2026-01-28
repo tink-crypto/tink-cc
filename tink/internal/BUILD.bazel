@@ -1,6 +1,5 @@
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
-
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
@@ -33,11 +32,11 @@ cc_library(
     hdrs = ["util.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":call_with_core_dump_protection",
         ":safe_stringops",
         ":secret_buffer",
         "//tink:secret_data",
         "//tink/util:secret_data",
+        "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",

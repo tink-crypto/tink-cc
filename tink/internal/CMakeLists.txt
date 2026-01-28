@@ -27,9 +27,9 @@ tink_cc_library(
     util.cc
     util.h
   DEPS
-    tink::internal::call_with_core_dump_protection
     tink::internal::safe_stringops
     tink::internal::secret_buffer
+    absl::algorithm_container
     absl::core_headers
     absl::absl_log
     absl::status

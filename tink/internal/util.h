@@ -58,6 +58,9 @@ ABSL_ATTRIBUTE_NORETURN void LogFatal(absl::string_view msg);
 absl::StatusOr<SecretData> ParseBigIntToFixedLength(absl::string_view val,
                                                     int length);
 
+// Remove all leading zeros of the input.
+absl::string_view WithoutLeadingZeros(absl::string_view val);
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

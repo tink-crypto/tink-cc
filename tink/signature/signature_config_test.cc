@@ -32,14 +32,11 @@
 #include "tink/crypto_format.h"
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
-#include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key_status.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/primitive_set.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
-#include "tink/signature/key_gen_config_v0.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "proto/rsa_ssa_pss.pb.h"
@@ -323,7 +320,7 @@ RsaKeyValues GenerateRsaKeyValues(int modulus_size_in_bits) {
 
   // Generate an RSA key pair and get the values.
   ABSL_CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
-                            /*cb=*/nullptr));
+                                 /*cb=*/nullptr));
 
   const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dp_bn, *dq_bn, *q_inv_bn;
 
@@ -336,7 +333,7 @@ RsaKeyValues GenerateRsaKeyValues(int modulus_size_in_bits) {
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   ABSL_CHECK_OK(e_str);
   absl::StatusOr<std::string> d_str =
-      internal::BignumToString(d_bn, BN_num_bytes(d_bn));
+      internal::BignumToString(d_bn, (modulus_size_in_bits + 7) / 8);
   ABSL_CHECK_OK(d_str);
 
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
@@ -351,13 +348,13 @@ RsaKeyValues GenerateRsaKeyValues(int modulus_size_in_bits) {
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
 
   absl::StatusOr<std::string> dp_str =
-      internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
+      internal::BignumToString(dp_bn, BN_num_bytes(p_bn));
   ABSL_CHECK_OK(dp_str);
   absl::StatusOr<std::string> dq_str =
-      internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
+      internal::BignumToString(dq_bn, BN_num_bytes(q_bn));
   ABSL_CHECK_OK(dq_str);
   absl::StatusOr<std::string> q_inv_str =
-      internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
+      internal::BignumToString(q_inv_bn, BN_num_bytes(p_bn));
   ABSL_CHECK_OK(q_inv_str);
 
   return RsaKeyValues{*n_str,  *e_str,  *p_str, *q_str,
@@ -692,18 +689,18 @@ TEST_F(SignatureConfigTest, RsaSsaPssProtoPrivateKeySerializationRegistered) {
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(key_values.p,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(key_values.q,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              key_values.dp, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              key_values.dq, InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              key_values.d, InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedBigInteger(
-              key_values.q_inv, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(key_values.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(key_values.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(key_values.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(key_values.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(key_values.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(key_values.q_inv, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =

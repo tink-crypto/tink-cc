@@ -17,15 +17,19 @@
 #include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
@@ -37,17 +41,19 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -61,6 +67,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
+using ::crypto::tink::util::SecretDataAsStringView;
 
 class RsaSsaPssParamsTP : public Message {
  public:
@@ -407,14 +414,65 @@ absl::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
     return public_key.status();
   }
 
+  RestrictedData p_data =
+      internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
+        return RestrictedData(
+            WithoutLeadingZeros(SecretDataAsStringView(proto_key.p())),
+            InsecureSecretKeyAccess::Get());
+      });
+
+  RestrictedData q_data =
+      internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
+        return RestrictedData(
+            WithoutLeadingZeros(SecretDataAsStringView(proto_key.q())),
+            InsecureSecretKeyAccess::Get());
+      });
+
+  absl::StatusOr<SecretData> dp_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.dp()), p_data.size());
+  if (!dp_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse dp: expected length ", p_data.size(),
+                     ", got ", SecretDataAsStringView(proto_key.dp()).size()));
+  }
+
+  absl::StatusOr<SecretData> dq_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.dq()), q_data.size());
+  if (!dq_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse dq: expected length ", q_data.size(),
+                     ", got ", SecretDataAsStringView(proto_key.dq()).size()));
+  }
+
+  absl::StatusOr<SecretData> crt_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.crt()), p_data.size());
+  if (!crt_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse crt: expected length ", p_data.size(),
+                     ", got ", SecretDataAsStringView(proto_key.crt()).size()));
+  }
+
+  absl::StatusOr<SecretData> d_data =
+      ParseBigIntToFixedLength(SecretDataAsStringView(proto_key.d()),
+                               (parameters->GetModulusSizeInBits() + 7) / 8);
+  if (!d_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse d: expected length ",
+                     (parameters->GetModulusSizeInBits() + 7) / 8, ", got ",
+                     SecretDataAsStringView(proto_key.d()).size()));
+  }
+
   return RsaSsaPssPrivateKey::Builder()
       .SetPublicKey(*public_key)
-      .SetPrimeP(RestrictedBigInteger(proto_key.p(), *token))
-      .SetPrimeQ(RestrictedBigInteger(proto_key.q(), *token))
-      .SetPrimeExponentP(RestrictedBigInteger(proto_key.dp(), *token))
-      .SetPrimeExponentQ(RestrictedBigInteger(proto_key.dq(), *token))
-      .SetPrivateExponent(RestrictedBigInteger(proto_key.d(), *token))
-      .SetCrtCoefficient(RestrictedBigInteger(proto_key.crt(), *token))
+      .SetPrimeP(p_data)
+      .SetPrimeQ(q_data)
+      .SetPrimeExponentP(
+          RestrictedData(*dp_data, InsecureSecretKeyAccess::Get()))
+      .SetPrimeExponentQ(
+          RestrictedData(*dq_data, InsecureSecretKeyAccess::Get()))
+      .SetPrivateExponent(
+          RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
+      .SetCrtCoefficient(RestrictedData(*crt_data, *token))
       .Build(GetPartialKeyAccess());
 }
 
@@ -516,15 +574,12 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
   proto_private_key.mutable_public_key()->set_e(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  // OSS proto library complains if input is not converted to a string.
-  proto_private_key.set_p(
-      key.GetPrimeP(GetPartialKeyAccess()).GetSecretData(*token));
-  proto_private_key.set_q(
-      key.GetPrimeQ(GetPartialKeyAccess()).GetSecretData(*token));
-  proto_private_key.set_dp(key.GetPrimeExponentP().GetSecretData(*token));
-  proto_private_key.set_dq(key.GetPrimeExponentQ().GetSecretData(*token));
-  proto_private_key.set_d(key.GetPrivateExponent().GetSecretData(*token));
-  proto_private_key.set_crt(key.GetCrtCoefficient().GetSecretData(*token));
+  proto_private_key.set_p(key.GetPrimePData().Get(*token));
+  proto_private_key.set_q(key.GetPrimeQData().Get(*token));
+  proto_private_key.set_dp(key.GetPrimeExponentPData().Get(*token));
+  proto_private_key.set_dq(key.GetPrimeExponentQData().Get(*token));
+  proto_private_key.set_d(key.GetPrivateExponentData().Get(*token));
+  proto_private_key.set_crt(key.GetCrtCoefficientData().Get(*token));
 
   RestrictedData serialized_private_key =
       RestrictedData(proto_private_key.SerializeAsSecretData(), *token);

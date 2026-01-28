@@ -46,7 +46,6 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
@@ -451,7 +450,7 @@ KeyValues GenerateKeyValues(int modulus_size_in_bits) {
 
   // Generate an RSA key pair and get the values.
   ABSL_CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
-                            /*cb=*/nullptr));
+                                 /*cb=*/nullptr));
 
   const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dp_bn, *dq_bn, *q_inv_bn;
 
@@ -464,7 +463,7 @@ KeyValues GenerateKeyValues(int modulus_size_in_bits) {
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   ABSL_CHECK_OK(e_str);
   absl::StatusOr<std::string> d_str =
-      internal::BignumToString(d_bn, BN_num_bytes(d_bn));
+      internal::BignumToString(d_bn, (modulus_size_in_bits + 7) / 8);
   ABSL_CHECK_OK(d_str);
 
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
@@ -479,13 +478,13 @@ KeyValues GenerateKeyValues(int modulus_size_in_bits) {
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
 
   absl::StatusOr<std::string> dp_str =
-      internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
+      internal::BignumToString(dp_bn, BN_num_bytes(p_bn));
   ABSL_CHECK_OK(dp_str);
   absl::StatusOr<std::string> dq_str =
-      internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
+      internal::BignumToString(dq_bn, BN_num_bytes(q_bn));
   ABSL_CHECK_OK(dq_str);
   absl::StatusOr<std::string> q_inv_str =
-      internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
+      internal::BignumToString(q_inv_bn, BN_num_bytes(p_bn));
   ABSL_CHECK_OK(q_inv_str);
 
   return KeyValues{*n_str,  *e_str,  *p_str, *q_str,
@@ -722,18 +721,18 @@ TEST_P(RsaSsaPssProtoSerializationTest, ParsePrivateKeySucceeds) {
   absl::StatusOr<RsaSsaPssPrivateKey> expected_private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*expected_public_key)
-          .SetPrimeP(RestrictedBigInteger(key_values.p,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(key_values.q,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              key_values.dp, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              key_values.dq, InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              key_values.d, InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedBigInteger(
-              key_values.q_inv, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(key_values.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(key_values.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(key_values.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(key_values.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(key_values.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(key_values.q_inv, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
 
   EXPECT_THAT(**key, Eq(*expected_private_key));
@@ -946,18 +945,18 @@ TEST_P(RsaSsaPssProtoSerializationTest, SerializePrivateKeySucceeds) {
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(key_values.p,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(key_values.q,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              key_values.dp, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              key_values.dq, InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              key_values.d, InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedBigInteger(
-              key_values.q_inv, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(key_values.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(key_values.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(key_values.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(key_values.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(key_values.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(key_values.q_inv, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -1030,18 +1029,18 @@ TEST_F(RsaSsaPssProtoSerializationTest,
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(key_values.p,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(key_values.q,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              key_values.dp, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              key_values.dq, InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              key_values.d, InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedBigInteger(
-              key_values.q_inv, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(key_values.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(key_values.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(key_values.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(key_values.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(key_values.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(key_values.q_inv, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -1171,12 +1170,12 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(values.p, token))
-          .SetPrimeQ(RestrictedBigInteger(values.q, token))
-          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
-          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
-          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
-          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .SetPrimeP(RestrictedData(values.p, token))
+          .SetPrimeQ(RestrictedData(values.q, token))
+          .SetPrimeExponentP(RestrictedData(values.dp, token))
+          .SetPrimeExponentQ(RestrictedData(values.dq, token))
+          .SetPrivateExponent(RestrictedData(values.d, token))
+          .SetCrtCoefficient(RestrictedData(values.q_inv, token))
           .Build(GetPartialKeyAccess());
 
   ABSL_CHECK_OK(public_key.status());
@@ -1220,12 +1219,12 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(values.p, token))
-          .SetPrimeQ(RestrictedBigInteger(values.q, token))
-          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
-          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
-          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
-          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .SetPrimeP(RestrictedData(values.p, token))
+          .SetPrimeQ(RestrictedData(values.q, token))
+          .SetPrimeExponentP(RestrictedData(values.dp, token))
+          .SetPrimeExponentQ(RestrictedData(values.dq, token))
+          .SetPrivateExponent(RestrictedData(values.d, token))
+          .SetCrtCoefficient(RestrictedData(values.q_inv, token))
           .Build(GetPartialKeyAccess());
 
   ABSL_CHECK_OK(public_key.status());
@@ -1268,12 +1267,12 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(values.p, token))
-          .SetPrimeQ(RestrictedBigInteger(values.q, token))
-          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
-          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
-          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
-          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .SetPrimeP(RestrictedData(values.p, token))
+          .SetPrimeQ(RestrictedData(values.q, token))
+          .SetPrimeExponentP(RestrictedData(values.dp, token))
+          .SetPrimeExponentQ(RestrictedData(values.dq, token))
+          .SetPrivateExponent(RestrictedData(values.d, token))
+          .SetCrtCoefficient(RestrictedData(values.q_inv, token))
           .Build(GetPartialKeyAccess());
 
   ABSL_CHECK_OK(public_key.status());

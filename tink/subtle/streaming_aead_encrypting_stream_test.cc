@@ -46,6 +46,7 @@ namespace {
 using crypto::tink::OutputStream;
 using crypto::tink::subtle::test::DummyStreamSegmentEncrypter;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 using crypto::tink::util::OstreamOutputStream;
 using ::testing::Not;
 
@@ -75,7 +76,7 @@ std::unique_ptr<OutputStream> GetEncryptingStream(int pt_segment_size,
   auto enc_stream = std::move(StreamingAeadEncryptingStream::New(
                                   std::move(seg_enc), std::move(ct_destination))
                                   .value());
-  EXPECT_EQ(0, enc_stream->Position());
+  EXPECT_EQ(enc_stream->Position(), 0);
   return enc_stream;
 }
 
@@ -108,7 +109,7 @@ TEST_F(StreamingAeadEncryptingStreamTest, WritingStreams) {
 
           // Backup the entire first buffer.
           enc_stream->BackUp(buffer_size);
-          EXPECT_EQ(0, enc_stream->Position());
+          EXPECT_EQ(enc_stream->Position(), 0);
 
           // Write plaintext to the stream, and close the stream.
           std::string pt = Random::GetRandomBytes(pt_size);
@@ -123,8 +124,7 @@ TEST_F(StreamingAeadEncryptingStreamTest, WritingStreams) {
 
           // Try closing the stream again.
           status = enc_stream->Close();
-          EXPECT_THAT(status, Not(IsOk()));
-          EXPECT_EQ(absl::StatusCode::kFailedPrecondition, status.code());
+          EXPECT_THAT(status, StatusIs(absl::StatusCode::kFailedPrecondition));
         }
       }
     }
@@ -149,12 +149,12 @@ TEST_F(StreamingAeadEncryptingStreamTest, EmptyPlaintext) {
   EXPECT_EQ(header_size + DummyStreamSegmentEncrypter::kSegmentTagSize,
             refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, EmptyPlaintextWithBackup) {
@@ -176,7 +176,7 @@ TEST_F(StreamingAeadEncryptingStreamTest, EmptyPlaintextWithBackup) {
 
   // Backup the entire segment, and close the stream.
   enc_stream->BackUp(buffer_size);
-  EXPECT_EQ(0, enc_stream->Position());
+  EXPECT_EQ(enc_stream->Position(), 0);
   auto close_status = enc_stream->Close();
   EXPECT_THAT(close_status, IsOk());
   EXPECT_EQ(refs.seg_enc->get_generated_output_size(),
@@ -185,13 +185,12 @@ TEST_F(StreamingAeadEncryptingStreamTest, EmptyPlaintextWithBackup) {
   EXPECT_EQ(header_size + DummyStreamSegmentEncrypter::kSegmentTagSize,
             refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, OneSegmentPlaintext) {
@@ -218,13 +217,12 @@ TEST_F(StreamingAeadEncryptingStreamTest, OneSegmentPlaintext) {
   EXPECT_EQ(pt_segment_size + DummyStreamSegmentEncrypter::kSegmentTagSize,
             refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, NextAfterBackup) {
@@ -304,13 +302,12 @@ TEST_F(StreamingAeadEncryptingStreamTest, OneSegmentPlaintextWithBackup) {
       header_size + pt_size + DummyStreamSegmentEncrypter::kSegmentTagSize,
       refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, ManySegmentsPlaintext) {
@@ -350,18 +347,17 @@ TEST_F(StreamingAeadEncryptingStreamTest, ManySegmentsPlaintext) {
   EXPECT_EQ(refs.seg_enc->get_ciphertext_segment_size(), ct_segment_size);
   EXPECT_EQ(ct_segment_size * seg_count, refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
   // The previous segments are marked as not-last ones.
   for (int i = 1; i < seg_count - 1; i++) {
-    EXPECT_EQ(DummyStreamSegmentEncrypter::kNotLastSegment,
-              refs.ct_buf->str()[(ct_segment_size * i) - 1]);
+    EXPECT_EQ(refs.ct_buf->str()[(ct_segment_size * i) - 1],
+              DummyStreamSegmentEncrypter::kNotLastSegment);
   }
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, ManySegmentsPlaintextWithBackup) {
@@ -405,18 +401,17 @@ TEST_F(StreamingAeadEncryptingStreamTest, ManySegmentsPlaintextWithBackup) {
   EXPECT_EQ(ct_segment_size * seg_count - backup_size,
             refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
   // The previous segments are marked as not-last ones.
   for (int i = 1; i < seg_count - 1; i++) {
-    EXPECT_EQ(DummyStreamSegmentEncrypter::kNotLastSegment,
-              refs.ct_buf->str()[(ct_segment_size * i) - 1]);
+    EXPECT_EQ(refs.ct_buf->str()[(ct_segment_size * i) - 1],
+              DummyStreamSegmentEncrypter::kNotLastSegment);
   }
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, ManySegmentsPlaintextWithFullBackup) {
@@ -458,18 +453,17 @@ TEST_F(StreamingAeadEncryptingStreamTest, ManySegmentsPlaintextWithFullBackup) {
   EXPECT_EQ(refs.seg_enc->get_ciphertext_segment_size(), ct_segment_size);
   EXPECT_EQ(ct_segment_size * (seg_count - 1), refs.ct_buf->str().size());
   // The last segment is marked as such.
-  EXPECT_EQ(DummyStreamSegmentEncrypter::kLastSegment,
-            refs.ct_buf->str().back());
+  EXPECT_EQ(refs.ct_buf->str().back(),
+            DummyStreamSegmentEncrypter::kLastSegment);
   // The previous segments are marked as not-last ones.
   for (int i = 1; i < seg_count - 1; i++) {
-    EXPECT_EQ(DummyStreamSegmentEncrypter::kNotLastSegment,
-              refs.ct_buf->str()[(ct_segment_size * i) - 1]);
+    EXPECT_EQ(refs.ct_buf->str()[(ct_segment_size * i) - 1],
+              DummyStreamSegmentEncrypter::kNotLastSegment);
   }
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST_F(StreamingAeadEncryptingStreamTest, BackupAndPosition) {
@@ -565,8 +559,7 @@ TEST_F(StreamingAeadEncryptingStreamTest, BackupAndPosition) {
 
   // Try closing the stream again.
   close_status = enc_stream->Close();
-  EXPECT_THAT(close_status, Not(IsOk()));
-  EXPECT_EQ(absl::StatusCode::kFailedPrecondition, close_status.code());
+  EXPECT_THAT(close_status, StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 }  // namespace

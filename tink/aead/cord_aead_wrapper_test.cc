@@ -37,6 +37,10 @@
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
+namespace crypto {
+namespace tink {
+namespace {
+
 using ::crypto::tink::test::DummyCordAead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -44,26 +48,20 @@ using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 
-namespace crypto {
-namespace tink {
-namespace {
-
 TEST(AeadSetWrapperTest, WrapNullptr) {
   CordAeadWrapper wrapper;
   auto aead_result = wrapper.Wrap(nullptr);
-  EXPECT_FALSE(aead_result.ok());
-  EXPECT_EQ(absl::StatusCode::kInternal, aead_result.status().code());
-  EXPECT_PRED_FORMAT2(testing::IsSubstring, "non-NULL",
-                      std::string(aead_result.status().message()));
+  EXPECT_THAT(aead_result.status(),
+              StatusIs(absl::StatusCode::kInternal,
+                       testing::HasSubstr("non-NULL")));
 }
 
 TEST(AeadSetWrapperTest, WrapEmpty) {
   CordAeadWrapper wrapper;
   auto aead_result = wrapper.Wrap(absl::make_unique<PrimitiveSet<CordAead>>());
-  EXPECT_FALSE(aead_result.ok());
-  EXPECT_EQ(absl::StatusCode::kInvalidArgument, aead_result.status().code());
-  EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",
-                      std::string(aead_result.status().message()));
+  EXPECT_THAT(aead_result.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       testing::HasSubstr("no primary")));
 }
 
 TEST(AeadSetWrapperTest, WrapperEncryptDecrypt) {
@@ -74,8 +72,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecrypt) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string aead_name = "aead0";
   auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
-  std::unique_ptr<CordAead> aead =
-      absl::make_unique<DummyCordAead>(aead_name);
+  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
   aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
   auto aead_set = std::move(aead_set_builder).Build();
   ASSERT_THAT(aead_set, IsOk());
@@ -114,8 +111,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
       absl::make_unique<DummyCordAead>(aead_name_0);
   primary_aead_set_builder.AddPrimaryPrimitive(std::move(primary_aead),
                                                key_info_0);
-  auto primary_aead_set = std::move(primary_aead_set_builder)
-                              .Build();
+  auto primary_aead_set = std::move(primary_aead_set_builder).Build();
   ASSERT_THAT(primary_aead_set, IsOk());
 
   // Encrypt with the primary key Aead
@@ -124,9 +120,8 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   absl::Cord aad;
   aad.Append("some_aad");
   CordAeadWrapper wrapper;
-  auto wrapped_primary_aead_result =
-      wrapper.Wrap(std::make_unique<PrimitiveSet<CordAead>>(
-          *std::move(primary_aead_set)));
+  auto wrapped_primary_aead_result = wrapper.Wrap(
+      std::make_unique<PrimitiveSet<CordAead>>(*std::move(primary_aead_set)));
   ASSERT_THAT(wrapped_primary_aead_result, IsOk());
   auto wrapped_primary_aead = std::move(wrapped_primary_aead_result.value());
   auto encrypt_result = wrapped_primary_aead->Encrypt(plaintext, aad);
@@ -137,8 +132,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   auto multi_aead_set_builder = PrimitiveSet<CordAead>::Builder();
   std::unique_ptr<CordAead> aead0 =
       absl::make_unique<DummyCordAead>(aead_name_0);
-  multi_aead_set_builder.AddPrimaryPrimitive(std::move(aead0),
-                                             key_info_0);
+  multi_aead_set_builder.AddPrimaryPrimitive(std::move(aead0), key_info_0);
   uint32_t key_id_1 = 42;
   KeysetInfo::KeyInfo key_info_1;
   key_info_1.set_output_prefix_type(OutputPrefixType::TINK);
@@ -147,8 +141,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   std::string aead_name_1 = "aead1";
   std::unique_ptr<CordAead> aead_1 =
       absl::make_unique<DummyCordAead>(aead_name_1);
-  multi_aead_set_builder.AddPrimitive(std::move(aead_1),
-                                      key_info_1);
+  multi_aead_set_builder.AddPrimitive(std::move(aead_1), key_info_1);
   auto multi_aead_set = std::move(multi_aead_set_builder).Build();
   auto wrapped_multi_aead_result = wrapper.Wrap(
       std::make_unique<PrimitiveSet<CordAead>>(*std::move(multi_aead_set)));
@@ -168,8 +161,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptManyChunks) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string aead_name = "aead0";
   auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
-  std::unique_ptr<CordAead> aead =
-      absl::make_unique<DummyCordAead>(aead_name);
+  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
   aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
   auto aead_set = std::move(aead_set_builder).Build();
 
@@ -206,8 +198,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptBadDecrypt) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string aead_name = "aead0";
   auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
-  std::unique_ptr<CordAead> aead =
-      absl::make_unique<DummyCordAead>(aead_name);
+  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
   aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
   auto aead_set = std::move(aead_set_builder).Build();
   ASSERT_THAT(aead_set, IsOk());
@@ -226,8 +217,6 @@ TEST(AeadSetWrapperTest, WrapperEncryptBadDecrypt) {
   absl::Cord bad_ciphertext;
   bad_ciphertext.Append("some bad ciphertext");
   auto decrypt_result = wrapped_aead->Decrypt(bad_ciphertext, aad);
-  EXPECT_FALSE(decrypt_result.ok());
-  EXPECT_EQ(absl::StatusCode::kInvalidArgument, decrypt_result.status().code());
   EXPECT_THAT(decrypt_result.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        testing::HasSubstr("decryption failed")));

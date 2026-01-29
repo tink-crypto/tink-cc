@@ -41,7 +41,7 @@ bazel_dep(
 )
 bazel_dep(
     name = "googletest",
-    version = "1.17.0",
+    version = "1.17.0.bcr.2",
 )
 bazel_dep(
     name = "protobuf",
@@ -53,12 +53,12 @@ bazel_dep(
 )
 bazel_dep(
     name = "abseil-cpp",
-    version = "20250814.1",
+    version = "20260107.0",
 )
 
 bazel_dep(
     name = "google_benchmark",
-    version = "1.9.1",
+    version = "1.9.5",
     dev_dependency = True,
 )
 

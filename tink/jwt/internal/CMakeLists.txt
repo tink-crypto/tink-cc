@@ -1137,6 +1137,7 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl

@@ -455,13 +455,18 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*rsa_ssa_pss_public_key)
           .SetPrimeP(
-              jwt_rsa_ssa_pss_private_key.GetPrimeP(GetPartialKeyAccess()))
+              jwt_rsa_ssa_pss_private_key.GetPrimePData(GetPartialKeyAccess()))
           .SetPrimeQ(
-              jwt_rsa_ssa_pss_private_key.GetPrimeQ(GetPartialKeyAccess()))
-          .SetPrivateExponent(jwt_rsa_ssa_pss_private_key.GetPrivateExponent())
-          .SetPrimeExponentP(jwt_rsa_ssa_pss_private_key.GetPrimeExponentP())
-          .SetPrimeExponentQ(jwt_rsa_ssa_pss_private_key.GetPrimeExponentQ())
-          .SetCrtCoefficient(jwt_rsa_ssa_pss_private_key.GetCrtCoefficient())
+              jwt_rsa_ssa_pss_private_key.GetPrimeQData(GetPartialKeyAccess()))
+          .SetPrivateExponent(
+              jwt_rsa_ssa_pss_private_key.GetPrivateExponentData(
+                  GetPartialKeyAccess()))
+          .SetPrimeExponentP(jwt_rsa_ssa_pss_private_key.GetPrimeExponentPData(
+              GetPartialKeyAccess()))
+          .SetPrimeExponentQ(jwt_rsa_ssa_pss_private_key.GetPrimeExponentQData(
+              GetPartialKeyAccess()))
+          .SetCrtCoefficient(jwt_rsa_ssa_pss_private_key.GetCrtCoefficientData(
+              GetPartialKeyAccess()))
           .Build(GetPartialKeyAccess());
   if (!rsa_ssa_pss_public_key.ok()) {
     return rsa_ssa_pss_public_key.status();

@@ -639,6 +639,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional

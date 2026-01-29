@@ -1170,6 +1170,7 @@ cc_test(
         "//tink:keyset_handle",
         "//tink:partial_key_access",
         "//tink:restricted_big_integer",
+        "//tink:restricted_data",
         "//tink/internal:bn_util",
         "//tink/internal:configuration_impl",
         "//tink/internal:key_gen_configuration_impl",

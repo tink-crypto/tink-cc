@@ -144,7 +144,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
 
   {  // Test EcdsaP384().
     // Check that returned template is correct.
-    const KeyTemplate& key_template = SignatureKeyTemplates::EcdsaP384();
+    const KeyTemplate& key_template = SignatureKeyTemplates::EcdsaP384Sha512();
     EXPECT_EQ(type_url, key_template.type_url());
     EXPECT_EQ(OutputPrefixType::TINK, key_template.output_prefix_type());
     EcdsaKeyFormat key_format;
@@ -154,7 +154,8 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithDerEncoding) {
     EXPECT_EQ(EcdsaSignatureEncoding::DER, key_format.params().encoding());
 
     // Check that reference to the same object is returned.
-    const KeyTemplate& key_template_2 = SignatureKeyTemplates::EcdsaP384();
+    const KeyTemplate& key_template_2 =
+        SignatureKeyTemplates::EcdsaP384Sha512();
     EXPECT_EQ(&key_template, &key_template_2);
 
     // Check that the template works with the key manager.

@@ -904,7 +904,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
           "NIST private key is missing NIST private key value.");
     }
     absl::StatusOr<SecretData> key_value = GetSecretValueOfFixedLength(
-        *secret, *encoding_length, InsecureSecretKeyAccess::Get());
+        RestrictedData(secret->GetSecret(InsecureSecretKeyAccess::Get()),
+                       InsecureSecretKeyAccess::Get()),
+        *encoding_length, InsecureSecretKeyAccess::Get());
     if (!key_value.ok()) {
       return key_value.status();
     }

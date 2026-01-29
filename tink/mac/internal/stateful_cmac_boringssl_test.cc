@@ -55,7 +55,7 @@ constexpr absl::string_view kCmacOnDataSmallTagSizeHex = "c856e183e8dee9bb9940";
 
 using ::crypto::tink::internal::StatefulMac;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretDataAsStringView;
@@ -163,7 +163,7 @@ struct StatefulCmacTestVector {
 // Reads the Wycheproof test vectors for AES-CMAC.
 std::vector<StatefulCmacTestVector> GetWycheproofCmakeTestVectors() {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
-      ReadTestVectors("aes_cmac_test.json");
+      ReadTestVectorsV1("aes_cmac_test.json");
   ABSL_CHECK_OK(parsed_input.status());
   std::vector<StatefulCmacTestVector> test_vectors;
   const google::protobuf::Value &test_groups =

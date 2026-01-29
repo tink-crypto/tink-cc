@@ -274,7 +274,7 @@ cc_test(
 cc_test(
     name = "stateful_hmac_boringssl_test",
     srcs = ["stateful_hmac_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":stateful_hmac_boringssl",
         ":stateful_mac",
@@ -299,7 +299,7 @@ cc_test(
 cc_test(
     name = "stateful_cmac_boringssl_test",
     srcs = ["stateful_cmac_boringssl_test.cc"],
-    data = ["//:testvectors"],
+    data = ["//:testvectors_v1"],
     deps = [
         ":stateful_cmac_boringssl",
         ":stateful_mac",

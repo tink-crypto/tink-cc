@@ -260,7 +260,7 @@ tink_cc_test(
   SRCS
     stateful_hmac_boringssl_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::mac::internal::stateful_hmac_boringssl
     tink::mac::internal::stateful_mac
@@ -286,7 +286,7 @@ tink_cc_test(
   SRCS
     stateful_cmac_boringssl_test.cc
   DATA
-    wycheproof::testvectors
+    wycheproof::testvectors_v1
   DEPS
     tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_mac

@@ -59,7 +59,7 @@ using ::testing::HasSubstr;
 using ::testing::SizeIs;
 
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
-using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 
 struct TestVector {
   TestVector(std::string test_name, std::string hex_key, HashType hash_type,
@@ -336,13 +336,13 @@ bool WycheproofTest(const google::protobuf::Struct &parsed_input,
 TEST(StatefulHmacBoringSslTest, TestVectors) {
   // Test Hmac with SHA256
   absl::StatusOr<google::protobuf::Struct> parsed_input_256 =
-      ReadTestVectors("hmac_sha256_test.json");
+      ReadTestVectorsV1("hmac_sha256_test.json");
   ASSERT_THAT(parsed_input_256, IsOk());
   ASSERT_TRUE(WycheproofTest(*parsed_input_256, HashType::SHA256));
 
   // Test Hmac with SHA512
   absl::StatusOr<google::protobuf::Struct> parsed_input_sha512 =
-      ReadTestVectors("hmac_sha512_test.json");
+      ReadTestVectorsV1("hmac_sha512_test.json");
   ASSERT_THAT(parsed_input_sha512, IsOk());
   ASSERT_TRUE(WycheproofTest(*parsed_input_sha512, HashType::SHA512));
 }

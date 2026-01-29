@@ -172,8 +172,11 @@ TEST(BnEncodingUtilTest, GetSecretRestrictedBigIntegerValueOfFixedLength) {
                                              InsecureSecretKeyAccess::Get());
     absl::StatusOr<SecretData> bn_bytes_fixed_length =
         // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-        GetSecretValueOfFixedLength(bn_bytes_restricted, 10,
-                                    InsecureSecretKeyAccess::Get());
+        GetSecretValueOfFixedLength(
+            RestrictedData(
+                bn_bytes_restricted.GetSecret(InsecureSecretKeyAccess::Get()),
+                InsecureSecretKeyAccess::Get()),
+            10, InsecureSecretKeyAccess::Get());
 
     EXPECT_THAT(bn_bytes_fixed_length,
                 IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
@@ -190,8 +193,11 @@ TEST(BnEncodingUtilTest,
                                            InsecureSecretKeyAccess::Get());
   absl::StatusOr<SecretData> bn_bytes_fixed_length =
       // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-      GetSecretValueOfFixedLength(bn_bytes_restricted, 2,
-                                  InsecureSecretKeyAccess::Get());
+      GetSecretValueOfFixedLength(
+          RestrictedData(
+              bn_bytes_restricted.GetSecret(InsecureSecretKeyAccess::Get()),
+              InsecureSecretKeyAccess::Get()),
+          2, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(bn_bytes_fixed_length.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -205,8 +211,11 @@ TEST(BnEncodingUtilTest,
 
   absl::StatusOr<SecretData> bn_bytes_fixed_length =
       // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-      GetSecretValueOfFixedLength(bn_bytes_restricted, 8,
-                                  InsecureSecretKeyAccess::Get());
+      GetSecretValueOfFixedLength(
+          RestrictedData(
+              bn_bytes_restricted.GetSecret(InsecureSecretKeyAccess::Get()),
+              InsecureSecretKeyAccess::Get()),
+          8, InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(
       bn_bytes_fixed_length,

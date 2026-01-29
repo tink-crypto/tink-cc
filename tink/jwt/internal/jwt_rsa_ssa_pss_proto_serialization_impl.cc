@@ -17,16 +17,19 @@
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -37,16 +40,19 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/util.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -60,6 +66,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
+using ::crypto::tink::util::SecretDataAsStringView;
 
 using JwtRsaSsaPssProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, JwtRsaSsaPssParameters>;
@@ -421,14 +428,65 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> ParsePrivateKey(
     return public_key.status();
   }
 
+  RestrictedData p_data =
+      internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
+        return RestrictedData(
+            WithoutLeadingZeros(SecretDataAsStringView(private_key.p())),
+            InsecureSecretKeyAccess::Get());
+      });
+
+  RestrictedData q_data =
+      internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
+        return RestrictedData(
+            WithoutLeadingZeros(SecretDataAsStringView(private_key.q())),
+            InsecureSecretKeyAccess::Get());
+      });
+
+  absl::StatusOr<SecretData> dp_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(private_key.dp()), p_data.size());
+  if (!dp_data.ok()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Failed to parse dp: expected length ", p_data.size(), ", got ",
+        SecretDataAsStringView(private_key.dp()).size()));
+  }
+
+  absl::StatusOr<SecretData> dq_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(private_key.dq()), q_data.size());
+  if (!dq_data.ok()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Failed to parse dq: expected length ", q_data.size(), ", got ",
+        SecretDataAsStringView(private_key.dq()).size()));
+  }
+
+  absl::StatusOr<SecretData> crt_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(private_key.crt()), p_data.size());
+  if (!crt_data.ok()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Failed to parse crt: expected length ", p_data.size(), ", got ",
+        SecretDataAsStringView(private_key.crt()).size()));
+  }
+
+  absl::StatusOr<SecretData> d_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(private_key.d()),
+      (public_key->GetParameters().GetModulusSizeInBits() + 7) / 8);
+  if (!d_data.ok()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Failed to parse d: expected length ",
+        (public_key->GetParameters().GetModulusSizeInBits() + 7) / 8, ", got ",
+        SecretDataAsStringView(private_key.d()).size()));
+  }
+
   return JwtRsaSsaPssPrivateKey::Builder()
       .SetPublicKey(*public_key)
-      .SetPrimeP(RestrictedBigInteger(private_key.p(), *token))
-      .SetPrimeQ(RestrictedBigInteger(private_key.q(), *token))
-      .SetPrimeExponentP(RestrictedBigInteger(private_key.dp(), *token))
-      .SetPrimeExponentQ(RestrictedBigInteger(private_key.dq(), *token))
-      .SetPrivateExponent(RestrictedBigInteger(private_key.d(), *token))
-      .SetCrtCoefficient(RestrictedBigInteger(private_key.crt(), *token))
+      .SetPrimeP(p_data)
+      .SetPrimeQ(q_data)
+      .SetPrimeExponentP(
+          RestrictedData(*dp_data, InsecureSecretKeyAccess::Get()))
+      .SetPrimeExponentQ(
+          RestrictedData(*dq_data, InsecureSecretKeyAccess::Get()))
+      .SetPrivateExponent(
+          RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
+      .SetCrtCoefficient(RestrictedData(*crt_data, *token))
       .Build(GetPartialKeyAccess());
 }
 
@@ -524,17 +582,17 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   private_key_tp.set_version(0);
   *private_key_tp.mutable_public_key() = *std::move(public_key_tp);
   *private_key_tp.mutable_p() =
-      private_key.GetPrimeP(GetPartialKeyAccess()).GetSecretData(*token);
+      private_key.GetPrimePData(GetPartialKeyAccess()).Get(*token);
   *private_key_tp.mutable_q() =
-      private_key.GetPrimeQ(GetPartialKeyAccess()).GetSecretData(*token);
+      private_key.GetPrimeQData(GetPartialKeyAccess()).Get(*token);
   *private_key_tp.mutable_dp() =
-      private_key.GetPrimeExponentP().GetSecretData(*token);
+      private_key.GetPrimeExponentPData(GetPartialKeyAccess()).Get(*token);
   *private_key_tp.mutable_dq() =
-      private_key.GetPrimeExponentQ().GetSecretData(*token);
+      private_key.GetPrimeExponentQData(GetPartialKeyAccess()).Get(*token);
   *private_key_tp.mutable_d() =
-      private_key.GetPrivateExponent().GetSecretData(*token);
+      private_key.GetPrivateExponentData(GetPartialKeyAccess()).Get(*token);
   *private_key_tp.mutable_crt() =
-      private_key.GetCrtCoefficient().GetSecretData(*token);
+      private_key.GetCrtCoefficientData(GetPartialKeyAccess()).Get(*token);
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type = ToOutputPrefixType(
       private_key.GetPublicKey().GetParameters().GetKidStrategy());

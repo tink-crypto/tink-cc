@@ -1300,6 +1300,7 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::statusor
+    absl::strings
     absl::string_view
     absl::optional
     crypto
@@ -1309,6 +1310,7 @@ tink_cc_test(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_key_access_token
     tink::internal::bn_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
@@ -1317,6 +1319,7 @@ tink_cc_test(
     tink::internal::serialization_registry
     tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
+    tink::internal::testing::field_with_number
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key

@@ -25,10 +25,13 @@
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/testing/field_with_number.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/secret_key_access_token.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -58,6 +61,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_testing::FieldWithNumber;
+using ::crypto::tink::internal::proto_testing::SerializeMessage;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
@@ -969,6 +974,70 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
   ASSERT_THAT(expected_private_key, IsOk());
 
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
+}
+
+TEST_F(JwtRsaSsaPssProtoSerializationTest,
+       PrivateKeyAndSerializationWithPaddingSucceeds) {
+  KeyValues key_values = GenerateKeyValues(2048);
+  SecretKeyAccessToken token = InsecureSecretKeyAccess::Get();
+
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
+      JwtRsaSsaPssParameters::Builder()
+          .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kIgnored)
+          .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(BigInteger(kF4Str))
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+      JwtRsaSsaPssPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetModulus(BigInteger(key_values.n))
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+      JwtRsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedData(key_values.p, token))
+          .SetPrimeQ(RestrictedData(key_values.q, token))
+          .SetPrimeExponentP(RestrictedData(key_values.dp, token))
+          .SetPrimeExponentQ(RestrictedData(key_values.dq, token))
+          .SetPrivateExponent(RestrictedData(key_values.d, token))
+          .SetCrtCoefficient(RestrictedData(key_values.q_inv, token))
+          .Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPrivateKey",
+      {FieldWithNumber(2).IsSubMessage({
+           FieldWithNumber(2).IsVarint(JwtRsaSsaPssAlgorithm::PS256),
+           FieldWithNumber(3).IsString(key_values.n),
+           FieldWithNumber(4).IsString(key_values.e),
+       }),
+       // We pad each number with some zeros to get non-canonical padding.
+       FieldWithNumber(4).IsString(
+           absl::StrCat("\x00\x00", key_values.p)),  // Not ordered
+       FieldWithNumber(5).IsString(absl::StrCat("\x00\x00\x00", key_values.q)),
+       FieldWithNumber(6).IsString(absl::StrCat("\x00\x00\x00", key_values.dp)),
+       FieldWithNumber(7).IsString(absl::StrCat("\x00\x00", key_values.dq)),
+       FieldWithNumber(3).IsString(
+           absl::StrCat("\x00\x00\x00\x00", key_values.d)),
+       FieldWithNumber(8).IsString(absl::StrCat("\x00", key_values.q_inv))},
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
+
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterJwtRsaSsaPssProtoSerializationWithMutableRegistry(registry),
+      IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(serialization, InsecureSecretKeyAccess::Get());
+
+  ASSERT_THAT(key.status(), IsOk());
+  EXPECT_TRUE(**key == *private_key);
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest,

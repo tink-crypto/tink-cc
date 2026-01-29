@@ -214,10 +214,7 @@ tink_cc_library(
     absl::strings
     crypto
     tink::core::secret_data
-    tink::config::tink_fips
     tink::subtle::common_enums
-    tink::util::errors
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -376,10 +373,9 @@ tink_cc_test(
     absl::statusor
     absl::strings
     crypto
+    tink::core::secret_data
     tink::subtle::random
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

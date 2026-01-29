@@ -337,7 +337,6 @@ tink_cc_library(
     tink::internal::util
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key
-    tink::util::secret_data
     tink::util::statusor
 )
 

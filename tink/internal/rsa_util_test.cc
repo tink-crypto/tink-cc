@@ -34,10 +34,9 @@
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -257,7 +256,7 @@ void ExpectBignumEquals(const BIGNUM* bn, absl::string_view data) {
 // Checks if a BIGNUM is equal to a SecretData value.
 void ExpectBignumEquals(const BIGNUM* bn, const SecretData& data) {
   absl::StatusOr<SecretData> converted =
-      internal::BignumToSecretData(bn, BN_num_bytes(bn));
+      internal::BignumToSecretData(bn, data.size());
   ASSERT_THAT(converted, IsOk());
   EXPECT_TRUE(util::SecretDataEquals(*converted, data));
 }

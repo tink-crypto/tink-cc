@@ -27,15 +27,13 @@
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
-#include "tink/config/tink_fips.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/ssl_util.h"
-#include "tink/util/errors.h"
-#include "tink/util/secret_data.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -77,7 +75,7 @@ absl::Status ValidateRsaModulusSize(size_t modulus_size) {
   return absl::OkStatus();
 }
 
-absl::Status ValidateRsaPublicExponent(const BIGNUM *exponent) {
+absl::Status ValidateRsaPublicExponent(const BIGNUM* exponent) {
   if (exponent == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Public exponent must not be NULL.");
@@ -111,9 +109,9 @@ absl::Status ValidateRsaPublicExponent(absl::string_view exponent) {
   return ValidateRsaPublicExponent(e->get());
 }
 
-absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
-                           RsaPrivateKey *private_key,
-                           RsaPublicKey *public_key) {
+absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM* e,
+                           RsaPrivateKey* private_key,
+                           RsaPublicKey* public_key) {
   internal::SslUniquePtr<RSA> rsa(RSA_new());
   if (rsa == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
@@ -151,7 +149,7 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
     return e_str.status();
   }
   absl::StatusOr<SecretData> d_str =
-      internal::BignumToSecretData(d_bn, BN_num_bytes(d_bn));
+      internal::BignumToSecretData(d_bn, (modulus_size_in_bits + 7) / 8);
   if (!d_str.ok()) {
     return d_str.status();
   }
@@ -181,17 +179,17 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   const BIGNUM *dp_bn, *dq_bn, *crt_bn;
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &crt_bn);
   absl::StatusOr<SecretData> dp_str =
-      internal::BignumToSecretData(dp_bn, BN_num_bytes(dp_bn));
+      internal::BignumToSecretData(dp_bn, BN_num_bytes(p_bn));
   if (!dp_str.ok()) {
     return dp_str.status();
   }
   absl::StatusOr<SecretData> dq_str =
-      internal::BignumToSecretData(dq_bn, BN_num_bytes(dq_bn));
+      internal::BignumToSecretData(dq_bn, BN_num_bytes(q_bn));
   if (!dq_str.ok()) {
     return dq_str.status();
   }
   absl::StatusOr<SecretData> crt_str =
-      internal::BignumToSecretData(crt_bn, BN_num_bytes(crt_bn));
+      internal::BignumToSecretData(crt_bn, BN_num_bytes(p_bn));
   if (!crt_str.ok()) {
     return crt_str.status();
   }
@@ -202,7 +200,7 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   return absl::OkStatus();
 }
 
-absl::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
+absl::Status GetRsaModAndExponents(const RsaPrivateKey& key, RSA* rsa) {
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n);
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
@@ -232,7 +230,7 @@ absl::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
   return absl::OkStatus();
 }
 
-absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa) {
+absl::Status GetRsaPrimeFactors(const RsaPrivateKey& key, RSA* rsa) {
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> p =
       internal::SecretDataToBignum(key.p);
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> q =
@@ -253,7 +251,7 @@ absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa) {
   return absl::OkStatus();
 }
 
-absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa) {
+absl::Status GetRsaCrtParams(const RsaPrivateKey& key, RSA* rsa) {
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dp =
       internal::SecretDataToBignum(key.dp);
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dq =
@@ -281,7 +279,7 @@ absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa) {
 }
 
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
-    const RsaPrivateKey &private_key) {
+    const RsaPrivateKey& private_key) {
   auto n = internal::StringToBignum(private_key.n);
   if (!n.ok()) {
     return n.status();
@@ -332,7 +330,7 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
 }
 
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
-    const RsaPublicKey &public_key) {
+    const RsaPublicKey& public_key) {
   auto n = internal::StringToBignum(public_key.n);
   if (!n.ok()) {
     return n.status();
@@ -359,7 +357,7 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
   return std::move(rsa);
 }
 
-absl::Status RsaCheckPublicKey(const RSA *key) {
+absl::Status RsaCheckPublicKey(const RSA* key) {
   if (key == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "RSA key is null");
   }
@@ -373,9 +371,9 @@ absl::Status RsaCheckPublicKey(const RSA *key) {
     return absl::OkStatus();
   }
 
-  const BIGNUM *n = nullptr;
-  const BIGNUM *e = nullptr;
-  const BIGNUM *d = nullptr;
+  const BIGNUM* n = nullptr;
+  const BIGNUM* e = nullptr;
+  const BIGNUM* d = nullptr;
   RSA_get0_key(key, &n, &e, &d);
 
   if (e == nullptr) {

@@ -44,14 +44,11 @@
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
-
-using ::crypto::tink::util::SecretDataFromStringView;
 
 // Computes an RSA-SSA PSS signature using `rsa_private_key` over `digest`;
 // `digest` is the digest of the message to sign computed with `sig_md`,
@@ -139,20 +136,16 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
       key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
   private_key.e = std::string(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  private_key.d = SecretDataFromStringView(
-      key.GetPrivateExponent().GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.p =
-      SecretDataFromStringView(key.GetPrimeP(GetPartialKeyAccess())
-                                   .GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.q =
-      SecretDataFromStringView(key.GetPrimeQ(GetPartialKeyAccess())
-                                   .GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.dp = SecretDataFromStringView(
-      key.GetPrimeExponentP().GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.dq = SecretDataFromStringView(
-      key.GetPrimeExponentQ().GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.crt = SecretDataFromStringView(
-      key.GetCrtCoefficient().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.d =
+      key.GetPrivateExponentData().Get(InsecureSecretKeyAccess::Get());
+  private_key.p = key.GetPrimePData().Get(InsecureSecretKeyAccess::Get());
+  private_key.q = key.GetPrimeQData().Get(InsecureSecretKeyAccess::Get());
+  private_key.dp =
+      key.GetPrimeExponentPData().Get(InsecureSecretKeyAccess::Get());
+  private_key.dq =
+      key.GetPrimeExponentQData().Get(InsecureSecretKeyAccess::Get());
+  private_key.crt =
+      key.GetCrtCoefficientData().Get(InsecureSecretKeyAccess::Get());
   internal::RsaSsaPssParams params;
   absl::StatusOr<subtle::HashType> mgf1_hash =
       ToSubtle(key.GetParameters().GetMgf1HashType());

@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ml_dsa_public_key.h"
 
@@ -28,7 +29,15 @@ namespace tink {
 namespace internal {
 
 // Creates a new PublicKeyVerify primitive using the ML-DSA implementation from
-// BoringSSL. Only ML-DSA-65 is supported at the moment.
+// BoringSSL. Only ML-DSA-65 and ML-DSA-87 are supported at the moment.
+// This function allows to specify a context which is used for the signature
+// verification.
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
+    NewMlDsaVerifyWithContextBoringSsl(MlDsaPublicKey public_key,
+                                       absl::string_view context);
+
+// Creates a new PublicKeyVerify primitive using the ML-DSA implementation from
+// BoringSSL. Only ML-DSA-65 and ML-DSA-87 are supported at the moment.
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewMlDsaVerifyBoringSsl(
     MlDsaPublicKey public_key);
 

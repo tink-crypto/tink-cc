@@ -100,7 +100,36 @@ TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
 
-  EXPECT_NE(*signature, message);
+  EXPECT_EQ((*signature).size(), test_case.output_prefix.size() +
+                                     SignatureBytes(test_case.instance));
+  EXPECT_EQ(test_case.output_prefix,
+            (*signature).substr(0, test_case.output_prefix.size()));
+}
+
+TEST_P(MlDsaSignBoringSslTest, SignatureWithContextLengthIsCorrect) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> key_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, test_case.id_requirement);
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewMlDsaSignWithContextBoringSsl(**private_key, "some context");
+  ASSERT_THAT(signer, IsOk());
+
+  std::string message = "message to be signed";
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+
   EXPECT_EQ((*signature).size(), test_case.output_prefix.size() +
                                      SignatureBytes(test_case.instance));
   EXPECT_EQ(test_case.output_prefix,
@@ -142,6 +171,64 @@ TEST_P(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   EXPECT_NE(*first_signature, *second_signature);
 }
 
+TEST_P(MlDsaSignBoringSslTest, SignatureWithContextIsNonDeterministic) {
+  TestCase test_case = GetParam();
+
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+
+  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
+      test_case.instance, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, absl::nullopt);
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewMlDsaSignWithContextBoringSsl(**private_key, "some context");
+  ASSERT_THAT(signer, IsOk());
+
+  // Sign the same message twice, using the same private key.
+  std::string message = "message to be signed";
+  absl::StatusOr<std::string> first_signature = (*signer)->Sign(message);
+  ASSERT_THAT(first_signature, IsOk());
+
+  absl::StatusOr<std::string> second_signature = (*signer)->Sign(message);
+  ASSERT_THAT(second_signature, IsOk());
+
+  // Check the signatures' sizes.
+  EXPECT_EQ((*first_signature).size(), SignatureBytes(test_case.instance));
+  EXPECT_EQ((*second_signature).size(), SignatureBytes(test_case.instance));
+
+  EXPECT_NE(*first_signature, *second_signature);
+}
+
+TEST_P(MlDsaSignBoringSslTest, SignatureWithContextTooLongFails) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> key_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, test_case.id_requirement);
+  ASSERT_THAT(private_key, IsOk());
+
+  std::string long_context(255 + 1, 'a');
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewMlDsaSignWithContextBoringSsl(**private_key, long_context);
+  EXPECT_THAT(signer, StatusIs(absl::StatusCode::kInternal));
+}
+
 TEST_P(MlDsaSignBoringSslTest, FipsMode) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
@@ -160,6 +247,27 @@ TEST_P(MlDsaSignBoringSslTest, FipsMode) {
   // Create a new signer.
   EXPECT_THAT(NewMlDsaSignBoringSsl(**private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST_P(MlDsaSignBoringSslTest, FipsModeWithContext) {
+  if (!IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test assumes kOnlyUseFips.";
+  }
+
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> key_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, absl::nullopt);
+  ASSERT_THAT(private_key, IsOk());
+
+  // Create a new signer.
+  EXPECT_THAT(
+      NewMlDsaSignWithContextBoringSsl(**private_key, "some context").status(),
+      StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

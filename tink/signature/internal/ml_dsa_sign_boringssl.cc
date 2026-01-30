@@ -49,23 +49,26 @@ class MlDsa65SignBoringSsl : public PublicKeySign {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const MlDsaPrivateKey& private_key);
+      const MlDsaPrivateKey& private_key, absl::string_view context);
 
   // Computes the signature for 'data'.
   absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   explicit MlDsa65SignBoringSsl(
       MlDsaPrivateKey private_key,
-      util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key)
+      util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key,
+      absl::string_view context)
       : private_key_(std::move(private_key)),
-        boringssl_private_key_(std::move(boringssl_private_key)) {}
+        boringssl_private_key_(std::move(boringssl_private_key)),
+        context_(context) {}
 
   MlDsaPrivateKey private_key_;
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key_;
+  std::string context_;
 };
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa65SignBoringSsl::New(
-    const MlDsaPrivateKey& private_key) {
+    const MlDsaPrivateKey& private_key, absl::string_view context) {
   absl::Status status =
       internal::CheckFipsCompatibility<MlDsa65SignBoringSsl>();
   if (!status.ok()) {
@@ -75,6 +78,10 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa65SignBoringSsl::New(
   if (private_key.GetPublicKey().GetParameters().GetInstance() !=
       MlDsaParameters::Instance::kMlDsa65) {
     return absl::InternalError("Expected ML-DSA-65");
+  }
+
+  if (context.size() > 255) {
+    return absl::InternalError("Context length is too long.");
   }
 
   auto boringssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
@@ -96,7 +103,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa65SignBoringSsl::New(
   }
 
   return absl::make_unique<MlDsa65SignBoringSsl>(
-      std::move(private_key), std::move(boringssl_private_key));
+      std::move(private_key), std::move(boringssl_private_key), context);
 }
 
 absl::StatusOr<std::string> MlDsa65SignBoringSsl::Sign(
@@ -114,7 +121,8 @@ absl::StatusOr<std::string> MlDsa65SignBoringSsl::Sign(
                                        private_key_.GetOutputPrefix().size()),
             boringssl_private_key_.get(),
             reinterpret_cast<const uint8_t*>(data.data()), data.size(),
-            /* context = */ nullptr, /* context_len = */ 0)) {
+            reinterpret_cast<const uint8_t*>(context_.data()),
+            context_.size())) {
       return absl::InternalError("Failed to generate ML-DSA signature.");
     }
     internal::DfsanClearLabel(&signature[0], signature_buffer_size);
@@ -133,23 +141,26 @@ class MlDsa87SignBoringSsl : public PublicKeySign {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const MlDsaPrivateKey& private_key);
+      const MlDsaPrivateKey& private_key, absl::string_view context);
 
   // Computes the signature for 'data'.
   absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   explicit MlDsa87SignBoringSsl(
       MlDsaPrivateKey private_key,
-      util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key)
+      util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key,
+      absl::string_view context)
       : private_key_(std::move(private_key)),
-        boringssl_private_key_(std::move(boringssl_private_key)) {}
+        boringssl_private_key_(std::move(boringssl_private_key)),
+        context_(context) {}
 
   MlDsaPrivateKey private_key_;
   util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key_;
+  std::string context_;
 };
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa87SignBoringSsl::New(
-    const MlDsaPrivateKey& private_key) {
+    const MlDsaPrivateKey& private_key, absl::string_view context) {
   absl::Status status =
       internal::CheckFipsCompatibility<MlDsa87SignBoringSsl>();
   if (!status.ok()) {
@@ -159,6 +170,10 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa87SignBoringSsl::New(
   if (private_key.GetPublicKey().GetParameters().GetInstance() !=
       MlDsaParameters::Instance::kMlDsa87) {
     return absl::InternalError("Expected ML-DSA-87");
+  }
+
+  if (context.size() > 255) {
+    return absl::InternalError("Context length is too long.");
   }
 
   auto boringssl_private_key = util::MakeSecretUniquePtr<MLDSA87_private_key>();
@@ -180,7 +195,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa87SignBoringSsl::New(
   }
 
   return absl::make_unique<MlDsa87SignBoringSsl>(
-      std::move(private_key), std::move(boringssl_private_key));
+      std::move(private_key), std::move(boringssl_private_key), context);
 }
 
 absl::StatusOr<std::string> MlDsa87SignBoringSsl::Sign(
@@ -198,7 +213,8 @@ absl::StatusOr<std::string> MlDsa87SignBoringSsl::Sign(
                                        private_key_.GetOutputPrefix().size()),
             boringssl_private_key_.get(),
             reinterpret_cast<const uint8_t*>(data.data()), data.size(),
-            /* context = */ nullptr, /* context_len = */ 0)) {
+            reinterpret_cast<const uint8_t*>(context_.data()),
+            context_.size())) {
       return absl::InternalError("Failed to generate ML-DSA signature.");
     }
     internal::DfsanClearLabel(&signature[0], signature_buffer_size);
@@ -213,17 +229,23 @@ absl::StatusOr<std::string> MlDsa87SignBoringSsl::Sign(
 
 }  // namespace
 
-absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
-    MlDsaPrivateKey private_key) {
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignWithContextBoringSsl(
+    MlDsaPrivateKey private_key, absl::string_view context) {
   switch (private_key.GetPublicKey().GetParameters().GetInstance()) {
     case MlDsaParameters::Instance::kMlDsa65:
-      return MlDsa65SignBoringSsl::New(std::move(private_key));
+      return MlDsa65SignBoringSsl::New(std::move(private_key), context);
     case MlDsaParameters::Instance::kMlDsa87:
-      return MlDsa87SignBoringSsl::New(std::move(private_key));
+      return MlDsa87SignBoringSsl::New(std::move(private_key), context);
     default:
       return absl::InvalidArgumentError(
           "Only ML-DSA-65 and ML-DSA-87 are supported");
   }
+}
+
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
+    MlDsaPrivateKey private_key) {
+  return NewMlDsaSignWithContextBoringSsl(std::move(private_key),
+                                          /* context = */ "");
 }
 
 }  // namespace internal

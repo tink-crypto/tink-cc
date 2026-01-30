@@ -796,6 +796,7 @@ tink_cc_library(
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::internal::util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key

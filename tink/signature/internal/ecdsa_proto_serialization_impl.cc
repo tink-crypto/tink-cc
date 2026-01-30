@@ -45,6 +45,7 @@
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
@@ -496,14 +497,16 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, public_point, serialization.IdRequirement(),
       GetPartialKeyAccess());
-
-  absl::string_view key_value = SecretDataAsStringView(proto_key.key_value());
-  if (key_value.length() > parameters->GetPrivateKeyLength() &&
-      key_value[0] == 0) {
-    key_value.remove_prefix(1);
+  if (!public_key.ok()) {
+    return public_key.status();
   }
-  RestrictedData private_key_value =
-      RestrictedData(util::SecretDataFromStringView(key_value), *token);
+  absl::StatusOr<SecretData> key_value = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.key_value()),
+      public_key->GetParameters().GetPrivateKeyLength());
+  if (!key_value.ok()) {
+    return key_value.status();
+  }
+  RestrictedData private_key_value = RestrictedData(*key_value, *token);
   return EcdsaPrivateKey::Create(*public_key, private_key_value,
                                  GetPartialKeyAccess());
 }

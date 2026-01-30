@@ -705,6 +705,7 @@ tink_cc_test(
     tink::util::enums
     tink::util::secret_data
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto

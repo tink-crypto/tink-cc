@@ -646,6 +646,7 @@ cc_test(
         "//tink/util:enums",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
+        "//tink/util:test_util",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

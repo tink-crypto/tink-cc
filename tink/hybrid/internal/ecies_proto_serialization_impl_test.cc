@@ -51,6 +51,7 @@
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -68,6 +69,7 @@ namespace {
 
 using ::crypto::tink::internal::KeyMaterialTypeEnum;
 using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesGcmKeyFormat;
@@ -1827,6 +1829,102 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
+}
+
+TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithShorterKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  EciesAeadHkdfParams params;
+  *params.mutable_kem_params() =
+      CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
+  *params.mutable_dem_params() = CreateAesGcmDemParams(16);
+  params.set_ec_point_format(EcPointFormat::UNCOMPRESSED);
+  EciesAeadHkdfKeyFormat key_format_proto;
+  *key_format_proto.mutable_params() = params;
+
+  // The private key is 31 bytes long, so that the parsing step should pad an
+  // additional null byte.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "0a11c3c4ed77aa0d6fc34ee0f91d5970ff22619cc2583cf51bc5654ec9400d");
+  std::string x = HexDecodeOrDie(
+      "9031a2a43467ed31a8de8e2b28861c0ca5605ff4443c3dbea0bd47ebb65a02ae");
+  std::string y = HexDecodeOrDie(
+      "8d094fc9fa9b328ca3060802045d5c5f6b0a51a432a844a7f0f3dbf9de039f43");
+
+  EciesAeadHkdfPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_x(x);
+  public_key_proto.set_y(y);
+  *public_key_proto.mutable_params() = params;
+
+  EciesAeadHkdfPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(private_key_bytes);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kTink,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), IsOk());
+}
+
+TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithPaddedKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  EciesAeadHkdfParams params;
+  *params.mutable_kem_params() =
+      CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
+  *params.mutable_dem_params() = CreateAesGcmDemParams(16);
+  params.set_ec_point_format(EcPointFormat::UNCOMPRESSED);
+  EciesAeadHkdfKeyFormat key_format_proto;
+  *key_format_proto.mutable_params() = params;
+
+  // The private key is 34 bytes long, so that the parsing step should
+  // trim 2 of the 3 leading 0s.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "0000000a11c3c4ed77aa0d6fc34ee0f91d5970ff22619cc2583cf51bc5654ec9400d");
+  std::string x = HexDecodeOrDie(
+      "9031a2a43467ed31a8de8e2b28861c0ca5605ff4443c3dbea0bd47ebb65a02ae");
+  std::string y = HexDecodeOrDie(
+      "8d094fc9fa9b328ca3060802045d5c5f6b0a51a432a844a7f0f3dbf9de039f43");
+
+  EciesAeadHkdfPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_x(x);
+  public_key_proto.set_y(y);
+  *public_key_proto.mutable_params() = params;
+
+  EciesAeadHkdfPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(private_key_bytes);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kTink,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), IsOk());
 }
 
 TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {

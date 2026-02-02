@@ -29,7 +29,6 @@ tink_cc_library(
   DEPS
     tink::internal::safe_stringops
     tink::internal::secret_buffer
-    absl::algorithm_container
     absl::core_headers
     absl::absl_log
     absl::status
@@ -224,6 +223,7 @@ tink_cc_test(
   DEPS
     tink::internal::util
     gmock
+    absl::statusor
     absl::strings
     tink::core::secret_data
     tink::util::secret_data

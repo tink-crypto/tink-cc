@@ -15,10 +15,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/util.h"
 
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -36,11 +39,42 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::IsFalse;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::Not;
 
 constexpr absl::string_view kLongString =
     "a long buffer with \n several \n newlines";
+
+class Base {
+ public:
+  virtual ~Base() = default;
+};
+
+class Derived : public Base {};
+
+class OtherDerived : public Base {};
+
+TEST(DynamicCastOrError, Works) {
+  std::unique_ptr<Base> base = std::make_unique<Derived>();
+  absl::StatusOr<std::unique_ptr<Derived>> derived =
+      DynamicCast<Derived>(std::move(base));
+  EXPECT_THAT(derived, IsOkAndHolds(Not(IsNull())));
+}
+
+TEST(DynamicCastOrError, NullptrMakesError) {
+  std::unique_ptr<Base> base = nullptr;
+  absl::StatusOr<std::unique_ptr<Derived>> derived =
+      DynamicCast<Derived>(std::move(base));
+  EXPECT_THAT(derived, Not(IsOk()));
+}
+
+TEST(DynamicCastOrError, OtherDerivedMakesError) {
+  std::unique_ptr<Base> base = std::make_unique<OtherDerived>();
+  absl::StatusOr<std::unique_ptr<Derived>> derived =
+      DynamicCast<Derived>(std::move(base));
+  EXPECT_THAT(derived.status(), Not(IsOk()));
+}
 
 TEST(UtilTest, EnsureStringNonNull) {
   // Purposely create a string_view from nullptr.

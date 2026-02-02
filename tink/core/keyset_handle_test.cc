@@ -1103,8 +1103,9 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithGlobalRegistryConfig) {
 
 TEST_P(KeysetHandlePrefixTest,
        GetPrimitiveWithBespokeConfigUsingPrimitiveGettersSucceeds) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
+  if (!internal::IsBoringSsl() || internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "XChaCha20-Poly1305 is only available in BoringSSL in "
+                    "non-FIPS mode.";
   }
   Registry::Reset();
   ASSERT_THAT(AeadConfig::Register(), IsOk());
@@ -1150,8 +1151,9 @@ TEST_P(KeysetHandlePrefixTest,
 
 TEST_F(KeysetHandleTest,
        GetPrimitiveWithBespokeConfigUsingMultipleKeysPrimitiveGettersSucceeds) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
+  if (!internal::IsBoringSsl() || internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "XChaCha20-Poly1305 is only available in BoringSSL in "
+                    "non-FIPS mode.";
   }
   Registry::Reset();
   ASSERT_THAT(AeadConfig::Register(), IsOk());
@@ -1215,8 +1217,9 @@ TEST_F(KeysetHandleTest,
 
 TEST_F(KeysetHandleTest,
        GetPrimitiveWithBespokeConfigMultipleKeysMixedPrimitiveGettersSucceeds) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
+  if (!internal::IsBoringSsl() || internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "XChaCha20-Poly1305 is only available in BoringSSL in "
+                    "non-FIPS mode.";
   }
   Registry::Reset();
   ASSERT_THAT(AeadConfig::Register(), IsOk());

@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -62,6 +63,7 @@ namespace {
 
 using ::crypto::tink::internal::KeyMaterialTypeEnum;
 using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::EcdsaKeyFormat;
@@ -1077,6 +1079,96 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
+}
+
+TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithShorterKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  EcdsaParams params;
+  params.set_curve(EllipticCurveType::NIST_P256);
+  params.set_hash_type(HashType::SHA256);
+  params.set_encoding(EcdsaSignatureEncoding::DER);
+
+  // The private key is 31 bytes long, so that the parsing step should pad an
+  // additional null byte.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "0a11c3c4ed77aa0d6fc34ee0f91d5970ff22619cc2583cf51bc5654ec9400d");
+  std::string x = HexDecodeOrDie(
+      "9031a2a43467ed31a8de8e2b28861c0ca5605ff4443c3dbea0bd47ebb65a02ae");
+  std::string y = HexDecodeOrDie(
+      "8d094fc9fa9b328ca3060802045d5c5f6b0a51a432a844a7f0f3dbf9de039f43");
+
+  google::crypto::tink::EcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_x(x);
+  public_key_proto.set_y(y);
+  *public_key_proto.mutable_params() = params;
+
+  google::crypto::tink::EcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(private_key_bytes);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kTink,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), IsOk());
+}
+
+TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithPaddedKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  EcdsaParams params;
+  params.set_curve(EllipticCurveType::NIST_P256);
+  params.set_hash_type(HashType::SHA256);
+  params.set_encoding(EcdsaSignatureEncoding::DER);
+
+  // The private key is 31 bytes long, padded to 31, so that the parsing step
+  // should trim 2 of the 3 leading null bytes.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "0000000a11c3c4ed77aa0d6fc34ee0f91d5970ff22619cc2583cf51bc5654ec9400d");
+  std::string x = HexDecodeOrDie(
+      "9031a2a43467ed31a8de8e2b28861c0ca5605ff4443c3dbea0bd47ebb65a02ae");
+  std::string y = HexDecodeOrDie(
+      "8d094fc9fa9b328ca3060802045d5c5f6b0a51a432a844a7f0f3dbf9de039f43");
+
+  google::crypto::tink::EcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_x(x);
+  public_key_proto.set_y(y);
+  *public_key_proto.mutable_params() = params;
+
+  google::crypto::tink::EcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(private_key_bytes);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kTink,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), IsOk());
 }
 
 TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {

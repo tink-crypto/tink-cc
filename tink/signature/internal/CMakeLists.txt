@@ -835,6 +835,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::util::secret_data
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
 )

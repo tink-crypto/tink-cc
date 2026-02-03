@@ -17,6 +17,7 @@
 #include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -24,10 +25,12 @@
 #include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
@@ -39,11 +42,12 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
@@ -59,11 +63,11 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_parsing::BytesField;
 using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
-using ::crypto::tink::internal::proto_parsing::BytesField;
-using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 using ::crypto::tink::util::SecretDataAsStringView;
@@ -129,34 +133,22 @@ class RsaSsaPkcs1PrivateKeyTP final : public Message {
   }
 
   const SecretData& d() const { return d_.value(); }
-  void set_d(absl::string_view d) {
-    *d_.mutable_value() = util::SecretDataFromStringView(d);
-  }
+  void set_d(SecretData d) { *d_.mutable_value() = std::move(d); }
 
   const SecretData& p() const { return p_.value(); }
-  void set_p(absl::string_view p) {
-    *p_.mutable_value() = util::SecretDataFromStringView(p);
-  }
+  void set_p(SecretData p) { *p_.mutable_value() = std::move(p); }
 
   const SecretData& q() const { return q_.value(); }
-  void set_q(absl::string_view q) {
-    *q_.mutable_value() = util::SecretDataFromStringView(q);
-  }
+  void set_q(SecretData q) { *q_.mutable_value() = std::move(q); }
 
   const SecretData& dp() const { return dp_.value(); }
-  void set_dp(absl::string_view dp) {
-    *dp_.mutable_value() = util::SecretDataFromStringView(dp);
-  }
+  void set_dp(SecretData dp) { *dp_.mutable_value() = std::move(dp); }
 
   const SecretData& dq() const { return dq_.value(); }
-  void set_dq(absl::string_view dq) {
-    *dq_.mutable_value() = util::SecretDataFromStringView(dq);
-  }
+  void set_dq(SecretData dq) { *dq_.mutable_value() = std::move(dq); }
 
   const SecretData& crt() const { return crt_.value(); }
-  void set_crt(absl::string_view crt) {
-    *crt_.mutable_value() = util::SecretDataFromStringView(crt);
-  }
+  void set_crt(SecretData crt) { *crt_.mutable_value() = std::move(crt); }
 
  private:
   size_t num_fields() const override { return 8; }
@@ -409,20 +401,65 @@ absl::StatusOr<RsaSsaPkcs1PrivateKey> ParsePrivateKey(
     return public_key.status();
   }
 
+  RestrictedData p_data =
+      internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
+        return RestrictedData(
+            WithoutLeadingZeros(SecretDataAsStringView(proto_key.p())),
+            InsecureSecretKeyAccess::Get());
+      });
+
+  RestrictedData q_data =
+      internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
+        return RestrictedData(
+            WithoutLeadingZeros(SecretDataAsStringView(proto_key.q())),
+            InsecureSecretKeyAccess::Get());
+      });
+
+  absl::StatusOr<SecretData> dp_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.dp()), p_data.size());
+  if (!dp_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse dp: expected length ", p_data.size(),
+                     ", got ", SecretDataAsStringView(proto_key.dp()).size()));
+  }
+
+  absl::StatusOr<SecretData> dq_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.dq()), q_data.size());
+  if (!dq_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse dq: expected length ", q_data.size(),
+                     ", got ", SecretDataAsStringView(proto_key.dq()).size()));
+  }
+
+  absl::StatusOr<SecretData> crt_data = ParseBigIntToFixedLength(
+      SecretDataAsStringView(proto_key.crt()), p_data.size());
+  if (!crt_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse crt: expected length ", p_data.size(),
+                     ", got ", SecretDataAsStringView(proto_key.crt()).size()));
+  }
+
+  absl::StatusOr<SecretData> d_data =
+      ParseBigIntToFixedLength(SecretDataAsStringView(proto_key.d()),
+                               (parameters->GetModulusSizeInBits() + 7) / 8);
+  if (!d_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse d: expected length ",
+                     (parameters->GetModulusSizeInBits() + 7) / 8, ", got ",
+                     SecretDataAsStringView(proto_key.d()).size()));
+  }
+
   return RsaSsaPkcs1PrivateKey::Builder()
       .SetPublicKey(*public_key)
-      .SetPrimeP(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key.p()), *token))
-      .SetPrimeQ(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key.q()), *token))
+      .SetPrimeP(p_data)
+      .SetPrimeQ(q_data)
       .SetPrimeExponentP(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key.dp()), *token))
+          RestrictedData(*dp_data, InsecureSecretKeyAccess::Get()))
       .SetPrimeExponentQ(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key.dq()), *token))
+          RestrictedData(*dq_data, InsecureSecretKeyAccess::Get()))
       .SetPrivateExponent(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key.d()), *token))
-      .SetCrtCoefficient(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key.crt()), *token))
+          RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
+      .SetCrtCoefficient(RestrictedData(*crt_data, *token))
       .Build(GetPartialKeyAccess());
 }
 
@@ -501,14 +538,12 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   proto_private_key.mutable_public_key()->set_e(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
   proto_private_key.set_version(0);
-  proto_private_key.set_p(
-      key.GetPrimeP(GetPartialKeyAccess()).GetSecret(*token));
-  proto_private_key.set_q(
-      key.GetPrimeQ(GetPartialKeyAccess()).GetSecret(*token));
-  proto_private_key.set_dp(key.GetPrimeExponentP().GetSecret(*token));
-  proto_private_key.set_dq(key.GetPrimeExponentQ().GetSecret(*token));
-  proto_private_key.set_d(key.GetPrivateExponent().GetSecret(*token));
-  proto_private_key.set_crt(key.GetCrtCoefficient().GetSecret(*token));
+  proto_private_key.set_p(key.GetPrimePData(GetPartialKeyAccess()).Get(*token));
+  proto_private_key.set_q(key.GetPrimeQData(GetPartialKeyAccess()).Get(*token));
+  proto_private_key.set_dp(key.GetPrimeExponentPData().Get(*token));
+  proto_private_key.set_dq(key.GetPrimeExponentQData().Get(*token));
+  proto_private_key.set_d(key.GetPrivateExponentData().Get(*token));
+  proto_private_key.set_crt(key.GetCrtCoefficientData().Get(*token));
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
@@ -564,8 +599,8 @@ RsaSsaPkcs1ProtoPrivateKeySerializer() {
 
 absl::Status RegisterRsaSsaPkcs1ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  if (absl::Status status = registry.RegisterParametersParser(
-          RsaSsaPkcs1ProtoParametersParser());
+  if (absl::Status status =
+          registry.RegisterParametersParser(RsaSsaPkcs1ProtoParametersParser());
       !status.ok()) {
     return status;
   }
@@ -582,8 +617,8 @@ absl::Status RegisterRsaSsaPkcs1ProtoSerializationWithMutableRegistry(
     return status;
   }
 
-  if (absl::Status status = registry.RegisterKeySerializer(
-          RsaSsaPkcs1ProtoPublicKeySerializer());
+  if (absl::Status status =
+          registry.RegisterKeySerializer(RsaSsaPkcs1ProtoPublicKeySerializer());
       !status.ok()) {
     return status;
   }

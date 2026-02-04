@@ -508,18 +508,18 @@ TEST_F(JwtSignatureConfigTest,
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
       JwtRsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(Base64WebSafeDecode(kP),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(Base64WebSafeDecode(kQ),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              Base64WebSafeDecode(kDp), InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              Base64WebSafeDecode(kDq), InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              Base64WebSafeDecode(kD), InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedBigInteger(
-              Base64WebSafeDecode(kQInv), InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(RestrictedData(Base64WebSafeDecode(kP),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(RestrictedData(Base64WebSafeDecode(kQ),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(RestrictedData(Base64WebSafeDecode(kDp),
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(RestrictedData(Base64WebSafeDecode(kDq),
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(RestrictedData(Base64WebSafeDecode(kD),
+                                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(Base64WebSafeDecode(kQInv),
+                                            InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

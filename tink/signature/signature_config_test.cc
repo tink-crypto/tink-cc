@@ -61,7 +61,6 @@
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/registry.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ed25519_parameters.h"
@@ -478,18 +477,18 @@ TEST_F(SignatureConfigTest, RsaSsaPkcs1ProtoPrivateKeySerializationRegistered) {
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(key_values.p,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(key_values.q,
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              key_values.dp, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              key_values.dq, InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              key_values.d, InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedBigInteger(
-              key_values.q_inv, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(key_values.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(key_values.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(key_values.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(key_values.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(key_values.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(key_values.q_inv, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
@@ -896,9 +895,9 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
 
   ASSERT_THAT(ec_key, IsOk());
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,

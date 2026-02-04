@@ -26,8 +26,10 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
@@ -59,12 +61,16 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
       "E-ZEbrqivH_2iCLUS7wAl6XvARt1KkIaUxPPSYB9yk31s0Q8UK96E3_OrADAYtAJs-M3JxCL"
       "fNgqh56HDnETTQhH3rCT5T3yJws",
       &p));
+  RestrictedData p_data =
+      RestrictedData(WithoutLeadingZeros(p), InsecureSecretKeyAccess::Get());
   std::string q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "1u_RiFDP7LBYh3N4GXLT9OpSKYP0uQZyiaZwBtOCBNJgQxaj10RWjsZu0c6Iedis4S7B_coS"
       "KB0Kj9PaPaBzg-IySRvvcQuPamQu66riMhjVtG6TlV8CLCYKrYl52ziqK0E_ym2QnkwsUX7e"
       "YTB7LbAHRK9GqocDE5B0f808I4s",
       &q));
+  RestrictedData q_data =
+      RestrictedData(WithoutLeadingZeros(q), InsecureSecretKeyAccess::Get());
   std::string d;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "GRtbIQmhOZtyszfgKdg4u_N-R_mZGU_9k7JQ_jn1DnfTuMdSNprTeaSTyWfSNkuaAwnOEbIQ"
@@ -73,25 +79,36 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
       "XOfUENOyMqADC6p1M3h33tsurY15k9qMSpG9OX_IJAXmxzAh_tWiZOwk2K4yxH9tS3Lq1yX8"
       "C1EWmeRDkK2ahecG85-oLKQt5VEpWHKmjOi_gJSdSgqcN96X52esAQ",
       &d));
+  absl::StatusOr<SecretData> d_data =
+      ParseBigIntToFixedLength(d, (parameters.GetModulusSizeInBits() + 7) / 8);
+  ABSL_CHECK_OK(d_data.status());
   std::string prime_exponent_p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "KkMTWqBUefVwZ2_Dbj1pPQqyHSHjj90L5x_MOzqYAJMcLMZtbUtwKqvVDq3tbEo3ZIcohbDt"
       "t6SbfmWzggabpQxNxuBpoOOf_a_HgMXK_lhqigI4y_kqS1wY52IwjUn5rgRrJ-yYo1h41KR-"
       "vz2pYhEAeYrhttWtxVqLCRViD6c",
       &prime_exponent_p));
+  absl::StatusOr<SecretData> prime_exponent_p_data =
+      ParseBigIntToFixedLength(prime_exponent_p, p_data.size());
+  ABSL_CHECK_OK(prime_exponent_p_data.status());
   std::string prime_exponent_q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "AvfS0-gRxvn0bwJoMSnFxYcK1WnuEjQFluMGfwGitQBWtfZ1Er7t1xDkbN9GQTB9yqpDoYaN"
       "06H7CFtrkxhJIBQaj6nkF5KKS3TQtQ5qCzkOkmxIe3KRbBymXxkb5qwUpX5ELD5xFc6Feiaf"
       "WYY63TmmEAu_lRFCOJ3xDea-ots",
       &prime_exponent_q));
+  absl::StatusOr<SecretData> prime_exponent_q_data =
+      ParseBigIntToFixedLength(prime_exponent_q, q_data.size());
+  ABSL_CHECK_OK(prime_exponent_q_data.status());
   std::string q_inverse;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "lSQi-w9CpyUReMErP1RsBLk7wNtOvs5EQpPqmuMvqW57NBUczScEoPwmUqqabu9V0-Py4dQ5"
       "7_bapoKRu1R90bvuFnU63SHWEFglZQvJDMeAvmj4sm-Fp0oYu_neotgQ0hzbI5gry7ajdYy9"
       "-2lNx_76aBZoOUu9HCJ-UsfSOI8",
       &q_inverse));
-
+  absl::StatusOr<SecretData> q_inverse_data =
+      ParseBigIntToFixedLength(q_inverse, p_data.size());
+  ABSL_CHECK_OK(q_inverse_data.status());
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(parameters, BigInteger(public_modulus),
                                    id_requirement, GetPartialKeyAccess());
@@ -99,16 +116,16 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(p, InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(q, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              prime_exponent_p, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              prime_exponent_q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(p_data)
+          .SetPrimeQ(q_data)
+          .SetPrimeExponentP(RestrictedData(*prime_exponent_p_data,
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(RestrictedData(*prime_exponent_q_data,
+                                            InsecureSecretKeyAccess::Get()))
           .SetPrivateExponent(
-              RestrictedBigInteger(d, InsecureSecretKeyAccess::Get()))
+              RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
           .SetCrtCoefficient(
-              RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get()))
+              RestrictedData(*q_inverse_data, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
   return *private_key;
@@ -145,23 +162,27 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       &public_modulus));
   std::string p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-                "AOQA7Ky1XEGqZcc7uSXwFbKjSNCmVBhCGqsDRdKJ1ErSmW98gnJ7pBIHTmiyFd"
+      "AOQA7Ky1XEGqZcc7uSXwFbKjSNCmVBhCGqsDRdKJ1ErSmW98gnJ7pBIHTmiyFd"
       "JqU20SzY-YB05Xj3bfSYptJRPLO2cGiwrwjRB_EsG8OqexX_5le9_8x-8i6MhY3xGX5LABYs"
       "8dB0aLl3ysOtRgIvCeyeoJ0I7nRYjwDlexxjl9z7OI28cW7Tdvljbk-LAgBmygsMluP2-n7T"
       "58Dl-SD-8BT5eiGFDFu76h_vmyTXB1_zToAqBK2C5oM7OF_7Z7zuLjx7vz40xH6KD7Rkkvcw"
       "m95wfhYEZtHYFwqUhajE1vD5nCcGcCNhquTLzPlW5RN2Asxm-_Dk-p7pIkH9aAP0k",
       &p));
+  RestrictedData p_data =
+      RestrictedData(WithoutLeadingZeros(p), InsecureSecretKeyAccess::Get());
   std::string q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-                "AMTv-c5IRTRvbx7Vyf06df2Rm2AwdaRlwy1QG3YAdojQ_PhICNH0-mTHqYaeNZ"
+      "AMTv-c5IRTRvbx7Vyf06df2Rm2AwdaRlwy1QG3YAdojQ_PhICNH0-mTHqYaeNZ"
       "Rja6KniFKqaYimgdccW2UhGGKZXQhHhyucZ-AE0NtPLFkd7RhegcrH5sbHOcDtWCSGwcne9W"
       "zs54VyhIhGmOS5HYuLUD-sB0NgMzm8vNsnF_qIt458x6L4GE97HnRnLdSJBFaNkEdLJGXN1f"
       "btJIGgdKN1aOc5KafTi-q2DAHEe3SmTzFPWD6NJ-jo0aJE9fXRQ06BUwUJtZXwaC4FCpcZKn"
       "e2PSglc8AlqQOulcFLrsJ8fnG_vc7trS_pw9zCxaaJQduYPyTbM9_szBj206lJb90",
       &q));
+  RestrictedData q_data =
+      RestrictedData(WithoutLeadingZeros(q), InsecureSecretKeyAccess::Get());
   std::string prime_exponent_p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-                "WQVTYwtcffb9zhAvdfSLRDgkkfKfGumUZ_jbJhzSWnRnm_PNKs3DfZaEsrP1eT"
+      "WQVTYwtcffb9zhAvdfSLRDgkkfKfGumUZ_jbJhzSWnRnm_PNKs3DfZaEsrP1eT"
       "YyZH_W6p29HIVrako7-GQs-dF72_neB-Nr8Gjs9d98N0U16anN9-JGXcQPh0nLrp7TlzSzU5"
       "JN6OlPuEm2nnz6p2AYDdzPJTx_FbxEnVC3yHKqybpBtTXqYJ6c08oKnxmh6H_FBqCY_Atgwe"
       "jF4-Kvfe3RGa8cN008xG2TlAJd4e7wOcPsYpFWXqgop4tGEAW-_S9aKLRMptfcqB3zj1eLXt"
@@ -169,7 +190,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       &prime_exponent_p));
   std::string prime_exponent_q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-                "AI3R7wghPU0Mbm47MPGeFvga0lSLsTxJWCuag5wPq0zNi07UuR1RmLvYmPlrl1"
+      "AI3R7wghPU0Mbm47MPGeFvga0lSLsTxJWCuag5wPq0zNi07UuR1RmLvYmPlrl1"
       "Qb4JhKoz48oDEbD2e0cRC7q47duIRM1keOo7NMZId6VYp7pZEmBbvdBxDgyXNouE_dh1JzsD"
       "PXysZr-IsWo-YadO9XzNt9a-GWNm1-wFXlqjvuFpmSvEVc-kzKcd0LrJJgdXJLEbp1n2l8uH"
       "fQwLhkr3pDA993Z8sG6byFitH_B5Sya1csN3UcO8BbYRPFK4bxQtIXCY0YN98ZODzjvoOfSN"
@@ -177,13 +198,24 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       &prime_exponent_q));
   std::string q_inverse;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-                "AL6gykI07B_tLc5MEUbwAZec8frBkcIvwdlnbchmov9q5sBnI7xJt07BJlyrm8"
+      "AL6gykI07B_tLc5MEUbwAZec8frBkcIvwdlnbchmov9q5sBnI7xJt07BJlyrm8"
       "p_XWuOblmx6Qg4ccKwE1jt3Cd36J7X92D9IJwfagytmeT4wmruM7Qbuzg7iGeX4RJ4CLkvsJ"
       "ZRSh8Fvum-qMwEynypVJMB5-Uw8Y_6Cd_nMZeSK7pJs8ewrS7LDY7ODnrzxkJ1xRCXpVbvsB"
       "0mKcOmhM9fD6Q1qkjwmBn4MYBE2D1im_S2Ybt2AiSjAxMX6M8u8N8hXcEu0ozeTfsZy1HOF9"
       "HuTRdOdEh4P-ZvzQqawSLF5HTk82_-F-yiTPhtlcqCNFbCs0pKGeZIFZQ9ZfK5kn8",
       &q_inverse));
-
+  absl::StatusOr<SecretData> d_data =
+      ParseBigIntToFixedLength(d, (parameters.GetModulusSizeInBits() + 7) / 8);
+  ABSL_CHECK_OK(d_data.status());
+  absl::StatusOr<SecretData> prime_exponent_p_data =
+      ParseBigIntToFixedLength(prime_exponent_p, p_data.size());
+  ABSL_CHECK_OK(prime_exponent_p_data.status());
+  absl::StatusOr<SecretData> prime_exponent_q_data =
+      ParseBigIntToFixedLength(prime_exponent_q, q_data.size());
+  ABSL_CHECK_OK(prime_exponent_q_data.status());
+  absl::StatusOr<SecretData> q_inverse_data =
+      ParseBigIntToFixedLength(q_inverse, p_data.size());
+  ABSL_CHECK_OK(q_inverse_data.status());
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(parameters, BigInteger(public_modulus),
                                    id_requirement, GetPartialKeyAccess());
@@ -191,16 +223,16 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(p, InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(q, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              prime_exponent_p, InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              prime_exponent_q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(p_data)
+          .SetPrimeQ(q_data)
+          .SetPrimeExponentP(RestrictedData(*prime_exponent_p_data,
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(RestrictedData(*prime_exponent_q_data,
+                                            InsecureSecretKeyAccess::Get()))
           .SetPrivateExponent(
-              RestrictedBigInteger(d, InsecureSecretKeyAccess::Get()))
+              RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
           .SetCrtCoefficient(
-              RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get()))
+              RestrictedData(*q_inverse_data, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
   return *private_key;
@@ -264,7 +296,8 @@ SignatureTestVector CreateTestVector2() {
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
       HexDecodeOrDie(
-          /* Tink Prefix: */ "0199887766"
+          /* Tink Prefix: */
+          "0199887766"
           "67cbf2475fff2908ba2fbde91e5ac21901427cf3328b17a41a1ba41f955d64b6358c"
           "78417ca19d1bd83f360fe28e48c7e4fd3946349e19812d9fa41b546c6751fd49b4ad"
           "986c9f38c3af9993a8466b91839415e6e334f6306984957784854bde60c3926cc103"
@@ -288,7 +321,8 @@ SignatureTestVector CreateTestVector3() {
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
       HexDecodeOrDie(
-          /* Crunchy Prefix: */ "0099887766"
+          /* Crunchy Prefix: */
+          "0099887766"
           "67cbf2475fff2908ba2fbde91e5ac21901427cf3328b17a41a1ba41f955d64b6358c"
           "78417ca19d1bd83f360fe28e48c7e4fd3946349e19812d9fa41b546c6751fd49b4ad"
           "986c9f38c3af9993a8466b91839415e6e334f6306984957784854bde60c3926cc103"

@@ -1192,7 +1192,6 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::config::global_registry
     tink::internal::bn_util

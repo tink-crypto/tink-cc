@@ -1326,7 +1326,6 @@ cc_test(
         "//tink:public_key_sign",
         "//tink:public_key_verify",
         "//tink:registry",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink/config:global_registry",
         "//tink/internal:bn_util",

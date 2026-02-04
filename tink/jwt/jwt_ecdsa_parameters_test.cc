@@ -186,6 +186,29 @@ TEST(JwtEcdsaParametersTest, Clone) {
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
+TEST(JwtEcdsaParametersTest, GetPrivateKeyLength) {
+  absl::StatusOr<JwtEcdsaParameters> es256_parameters =
+      JwtEcdsaParameters::Create(
+          JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(es256_parameters, IsOk());
+  EXPECT_THAT(es256_parameters->GetPrivateKeyLength(), Eq(32));
+
+  absl::StatusOr<JwtEcdsaParameters> es384_parameters =
+      JwtEcdsaParameters::Create(
+          JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtEcdsaParameters::Algorithm::kEs384);
+  ASSERT_THAT(es384_parameters, IsOk());
+  EXPECT_THAT(es384_parameters->GetPrivateKeyLength(), Eq(48));
+
+  absl::StatusOr<JwtEcdsaParameters> es512_parameters =
+      JwtEcdsaParameters::Create(
+          JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtEcdsaParameters::Algorithm::kEs512);
+  ASSERT_THAT(es512_parameters, IsOk());
+  EXPECT_THAT(es512_parameters->GetPrivateKeyLength(), Eq(66));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

@@ -62,5 +62,18 @@ bool JwtEcdsaParameters::operator==(const Parameters& other) const {
   return true;
 }
 
+int JwtEcdsaParameters::GetPrivateKeyLength() const {
+  switch (algorithm_) {
+    case Algorithm::kEs256:
+      return 32;
+    case Algorithm::kEs384:
+      return 48;
+    case Algorithm::kEs512:
+      return 66;
+    default:
+      return 0;
+  }
+}
+
 }  // namespace tink
 }  // namespace crypto

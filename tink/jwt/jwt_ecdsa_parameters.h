@@ -93,6 +93,8 @@ class JwtEcdsaParameters : public JwtSignatureParameters {
     return kid_strategy_ == KidStrategy::kBase64EncodedKeyId;
   }
 
+  int GetPrivateKeyLength() const;
+
   bool operator==(const Parameters& other) const override;
 
   std::unique_ptr<Parameters> Clone() const override {

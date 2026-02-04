@@ -16,12 +16,17 @@
 
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/util.h"
+#include "tink/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -39,6 +44,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -61,7 +67,7 @@ absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
 }
 
 absl::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
-                             const RestrictedBigInteger& private_key_value,
+                             const RestrictedData& private_key_value,
                              PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
@@ -120,8 +126,14 @@ absl::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
 
 absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
     const JwtEcdsaPublicKey& public_key,
-    const RestrictedBigInteger& private_key_value,
-    PartialKeyAccessToken token) {
+    const RestrictedData& private_key_value, PartialKeyAccessToken token) {
+  size_t key_length = public_key.GetParameters().GetPrivateKeyLength();
+  if (private_key_value.size() != key_length) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Private key length ", private_key_value.size(),
+                     " is different from expected length ", key_length));
+  }
+
   // Validate that the public and private key match.
   absl::Status key_pair_validation =
       ValidateKeyPair(public_key, private_key_value, token);
@@ -130,6 +142,53 @@ absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
   }
 
   return JwtEcdsaPrivateKey(public_key, private_key_value);
+}
+
+absl::StatusOr<JwtEcdsaPrivateKey>
+JwtEcdsaPrivateKey::CreateAllowNonConstantTime(
+    const JwtEcdsaPublicKey& public_key,
+    const RestrictedData& private_key_value, PartialKeyAccessToken token) {
+  absl::StatusOr<SecretData> adjusted_private_key =
+      internal::ParseBigIntToFixedLength(
+          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
+          public_key.GetParameters().GetPrivateKeyLength());
+  if (!adjusted_private_key.ok()) {
+    return adjusted_private_key.status();
+  }
+
+  return Create(public_key,
+                RestrictedData(std::move(*adjusted_private_key),
+                               InsecureSecretKeyAccess::Get()),
+                token);
+}
+
+absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
+    const JwtEcdsaPublicKey& public_key,
+    const RestrictedBigInteger& private_key_value,
+    PartialKeyAccessToken token) {
+  absl::StatusOr<RestrictedData> private_key_data =
+      private_key_value.EncodeWithFixedSize(
+          public_key.GetParameters().GetPrivateKeyLength());
+
+  if (!private_key_data.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Private key is longer than expected length, got: ",
+                     private_key_value.SizeInBytes(), "expected ",
+                     public_key.GetParameters().GetPrivateKeyLength()));
+  }
+
+  return JwtEcdsaPrivateKey::Create(public_key, *private_key_data, token);
+}
+
+const RestrictedBigInteger& JwtEcdsaPrivateKey::GetPrivateKeyValue(
+    PartialKeyAccessToken token) const {
+  absl::MutexLock lock(mutex_);
+  if (!private_key_value_big_integer_.has_value()) {
+    private_key_value_big_integer_.emplace(
+        private_key_value_.GetSecret(InsecureSecretKeyAccess::Get()),
+        InsecureSecretKeyAccess::Get());
+  }
+  return *private_key_value_big_integer_;
 }
 
 bool JwtEcdsaPrivateKey::operator==(const Key& other) const {

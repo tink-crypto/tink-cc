@@ -996,7 +996,6 @@ cc_test(
         "//tink:key",
         "//tink:parameters",
         "//tink:partial_key_access",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink/internal:bn_util",
         "//tink/internal:mutable_serialization_registry",

@@ -503,6 +503,194 @@ TEST(JwtEcdsaPrivateKeyTest, Clone) {
   ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
+TEST(JwtEcdsaPrivateKeyTest, CopyConstructor) {
+  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
+      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicPoint(public_point)
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  JwtEcdsaPrivateKey copy(*private_key);
+
+  EXPECT_THAT(copy, Eq(*private_key));
+}
+
+TEST(JwtEcdsaPrivateKeyTest, CopyAssignment) {
+  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
+      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicPoint(public_point)
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<JwtEcdsaParameters> other_parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
+                                 JwtEcdsaParameters::Algorithm::kEs384);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> other_ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P384);
+  ASSERT_THAT(other_ec_key, IsOk());
+
+  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
+                             BigInteger(other_ec_key->pub_y));
+
+  absl::StatusOr<JwtEcdsaPublicKey> other_public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*other_parameters)
+          .SetPublicPoint(other_public_point)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  RestrictedData other_private_key_value =
+      RestrictedData(util::SecretDataAsStringView(other_ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtEcdsaPrivateKey> copy = JwtEcdsaPrivateKey::Create(
+      *other_public_key, other_private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *private_key;
+
+  EXPECT_THAT(*copy, Eq(*private_key));
+}
+
+TEST(JwtEcdsaPrivateKeyTest, MoveConstructor) {
+  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
+      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicPoint(public_point)
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  JwtEcdsaPrivateKey expected = *private_key;
+  JwtEcdsaPrivateKey moved(std::move(*private_key));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(JwtEcdsaPrivateKeyTest, MoveAssignment) {
+  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
+      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicPoint(public_point)
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<JwtEcdsaParameters> other_parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
+                                 JwtEcdsaParameters::Algorithm::kEs384);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<internal::EcKey> other_ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P384);
+  ASSERT_THAT(other_ec_key, IsOk());
+
+  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
+                             BigInteger(other_ec_key->pub_y));
+
+  absl::StatusOr<JwtEcdsaPublicKey> other_public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*other_parameters)
+          .SetPublicPoint(other_public_point)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  RestrictedData other_private_key_value =
+      RestrictedData(util::SecretDataAsStringView(other_ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtEcdsaPrivateKey> moved = JwtEcdsaPrivateKey::Create(
+      *other_public_key, other_private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(moved, IsOk());
+
+  JwtEcdsaPrivateKey expected = *private_key;
+  *moved = std::move(*private_key);
+
+  EXPECT_THAT(*moved, Eq(expected));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

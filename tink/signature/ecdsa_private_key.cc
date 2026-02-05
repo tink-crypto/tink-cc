@@ -18,12 +18,15 @@
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/util.h"
+#include "tink/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -144,19 +147,19 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
     const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
     PartialKeyAccessToken token) {
-  RestrictedBigInteger private_key_value_big_integer = RestrictedBigInteger(
-      private_key_value.Get(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<RestrictedData> adjusted_private_key =
-      private_key_value_big_integer.EncodeWithFixedSize(
+  absl::StatusOr<SecretData> adjusted_private_key =
+      internal::ParseBigIntToFixedLength(
+          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
           public_key.GetParameters().GetPrivateKeyLength());
 
   if (!adjusted_private_key.ok()) {
     return adjusted_private_key.status();
   }
 
-  return Create(public_key, *adjusted_private_key, token);
+  return Create(public_key,
+                RestrictedData(std::move(*adjusted_private_key),
+                               InsecureSecretKeyAccess::Get()),
+                token);
 }
 
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(

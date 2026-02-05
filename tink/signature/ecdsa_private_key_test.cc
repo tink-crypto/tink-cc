@@ -292,7 +292,7 @@ TEST(EcdsaPrivateKeyTest, CreateWithPrivateKeyWithOneTooManyBytes) {
       EcdsaPrivateKey::CreateAllowNonConstantTime(
           *public_key, private_key_value, GetPartialKeyAccess())
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("too long")));
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("too large")));
 }
 
 TEST(EcdsaPrivateKeyTest, CreateWithPrivateKeyWithOneTooFewBytes) {

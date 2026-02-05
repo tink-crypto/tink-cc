@@ -1076,7 +1076,7 @@ tink_cc_library(
     tink::core::partial_key_access_token
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::internal::configuration_impl
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
@@ -1138,12 +1138,14 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::core::secret_data
     tink::internal::bn_util
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::internal::ssl_unique_ptr
+    tink::internal::util
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization

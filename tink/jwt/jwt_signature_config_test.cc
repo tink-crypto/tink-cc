@@ -270,8 +270,8 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

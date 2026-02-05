@@ -56,7 +56,7 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
-#include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
@@ -124,7 +124,7 @@ absl::StatusOr<std::string> AlgorithmName(
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSigner(
     const EcdsaParameters& params, const EcPoint& public_point,
-    const RestrictedBigInteger& private_key_value) {
+    const RestrictedData& private_key_value) {
   absl::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
       params, public_point,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
@@ -162,7 +162,7 @@ NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
           raw_ecdsa_parameters.value(),
           jwt_ecdsa_private_key.GetPublicKey().GetPublicPoint(
               GetPartialKeyAccess()),
-          jwt_ecdsa_private_key.GetPrivateKeyValue(GetPartialKeyAccess()));
+          jwt_ecdsa_private_key.GetPrivateKey(GetPartialKeyAccess()));
   if (!ecdsa_sign_boringssl.ok()) {
     return ecdsa_sign_boringssl.status();
   }

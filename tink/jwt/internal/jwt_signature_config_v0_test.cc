@@ -40,6 +40,7 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/util.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_sign_key_manager.h"
@@ -69,6 +70,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -291,10 +293,14 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetParameters(*params)
             .Build(GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
+
+    absl::StatusOr<SecretData> private_key_data =
+        internal::ParseBigIntToFixedLength(Base64WebSafeDecode(kEs256S),
+                                           params->GetPrivateKeyLength());
+    ABSL_CHECK_OK(private_key_data);
     absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
         *std::move(public_key),
-        RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(*private_key_data, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
     ABSL_CHECK_OK(private_key);
 
@@ -335,10 +341,14 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetIdRequirement(0x01020304)
             .Build(GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
+
+    absl::StatusOr<SecretData> private_key_data =
+        internal::ParseBigIntToFixedLength(Base64WebSafeDecode(kEs256S),
+                                           params->GetPrivateKeyLength());
+    ABSL_CHECK_OK(private_key_data);
     absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
         *std::move(public_key),
-        RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(*private_key_data, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
     ABSL_CHECK_OK(private_key);
 
@@ -377,10 +387,15 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetCustomKid("custom-kid")
             .Build(GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
+
+    absl::StatusOr<SecretData> private_key_data =
+        internal::ParseBigIntToFixedLength(Base64WebSafeDecode(kEs256S),
+                                           params->GetPrivateKeyLength());
+    ABSL_CHECK_OK(private_key_data);
+
     absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
         *std::move(public_key),
-        RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(*private_key_data, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
     ABSL_CHECK_OK(private_key);
 

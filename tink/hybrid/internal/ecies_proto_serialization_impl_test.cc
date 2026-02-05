@@ -1927,6 +1927,50 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithPaddedKey) {
   EXPECT_THAT(key.status(), IsOk());
 }
 
+TEST_F(EciesProtoSerializationTest, ParsePrivateKeyTooLongFails) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  EciesAeadHkdfParams params;
+  *params.mutable_kem_params() =
+      CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
+  *params.mutable_dem_params() = CreateAesGcmDemParams(16);
+  params.set_ec_point_format(EcPointFormat::COMPRESSED);
+  EciesAeadHkdfKeyFormat key_format_proto;
+  *key_format_proto.mutable_params() = params;
+
+  absl::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(key_pair, IsOk());
+
+  EciesAeadHkdfPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_x(key_pair->x);
+  public_key_proto.set_y(key_pair->y);
+  *public_key_proto.mutable_params() = params;
+
+  EciesAeadHkdfPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(absl::StrCat("\x11", key_pair->private_key));
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kTink,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                     HasSubstr("too large")));
+}
+
 TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   TestCase test_case = GetParam();
   MutableSerializationRegistry registry;

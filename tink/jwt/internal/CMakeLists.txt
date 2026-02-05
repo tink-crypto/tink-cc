@@ -1346,7 +1346,6 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::core::secret_key_access_token
@@ -1361,12 +1360,15 @@ tink_cc_library(
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::internal::util
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_public_key
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1387,7 +1389,6 @@ tink_cc_test(
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::ec_util
     tink::internal::mutable_serialization_registry
@@ -1402,6 +1403,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::util::secret_data
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
 )

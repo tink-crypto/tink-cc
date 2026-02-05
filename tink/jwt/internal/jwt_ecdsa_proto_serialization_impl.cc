@@ -17,6 +17,7 @@
 #include "tink/jwt/internal/jwt_ecdsa_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -39,23 +40,26 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/util.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::ParseBigIntToFixedLength;
 using ::crypto::tink::internal::proto_parsing::BytesField;
 using ::crypto::tink::internal::proto_parsing::EnumField;
 using ::crypto::tink::internal::proto_parsing::Field;
@@ -489,10 +493,17 @@ absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
     return public_key.status();
   }
 
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(proto_private_key.key_value(), *token);
-  return JwtEcdsaPrivateKey::Create(*public_key, private_key_value,
-                                    GetPartialKeyAccess());
+  absl::StatusOr<SecretData> private_key_value = ParseBigIntToFixedLength(
+      util::SecretDataAsStringView(proto_private_key.key_value()),
+      parameters->GetPrivateKeyLength());
+  if (!private_key_value.ok()) {
+    return private_key_value.status();
+  }
+  return JwtEcdsaPrivateKey::Create(
+      *public_key,
+      RestrictedData(std::move(*private_key_value),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
@@ -507,8 +518,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return proto_public_key.status();
   }
 
-  absl::StatusOr<RestrictedBigInteger> restricted_input =
-      key.GetPrivateKeyValue(GetPartialKeyAccess());
+  absl::StatusOr<RestrictedData> restricted_input =
+      key.GetPrivateKey(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
   }

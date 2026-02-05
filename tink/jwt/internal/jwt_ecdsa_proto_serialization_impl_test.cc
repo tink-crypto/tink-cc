@@ -43,11 +43,11 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_ecdsa.pb.h"
 
@@ -56,6 +56,7 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtEcdsaAlgorithm;
@@ -795,8 +796,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
       JwtEcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
+          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                         InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
@@ -864,8 +865,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
       JwtEcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
+          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                         InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
@@ -1060,6 +1061,94 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutSecretKeyAccess) {
                                      HasSubstr("SecretKeyAccess is required")));
 }
 
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithShorterKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<JwtEcdsaParameters> parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
+                                 JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  // The private key is 31 bytes long, so that the parsing step should pad an
+  // additional null byte.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "0a11c3c4ed77aa0d6fc34ee0f91d5970ff22619cc2583cf51bc5654ec9400d");
+  std::string x = HexDecodeOrDie(
+      "9031a2a43467ed31a8de8e2b28861c0ca5605ff4443c3dbea0bd47ebb65a02ae");
+  std::string y = HexDecodeOrDie(
+      "8d094fc9fa9b328ca3060802045d5c5f6b0a51a432a844a7f0f3dbf9de039f43");
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key_proto.set_x(x);
+  public_key_proto.set_y(y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(private_key_bytes);
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), IsOk());
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithPaddedKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<JwtEcdsaParameters> parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
+                                 JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  // The private key is 34 bytes long, so that the parsing step should
+  // trim 2 of the 3 leading 0s.
+  std::string private_key_bytes = HexDecodeOrDie(
+      "0000000a11c3c4ed77aa0d6fc34ee0f91d5970ff22619cc2583cf51bc5654ec9400d");
+  std::string x = HexDecodeOrDie(
+      "9031a2a43467ed31a8de8e2b28861c0ca5605ff4443c3dbea0bd47ebb65a02ae");
+  std::string y = HexDecodeOrDie(
+      "8d094fc9fa9b328ca3060802045d5c5f6b0a51a432a844a7f0f3dbf9de039f43");
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key_proto.set_x(x);
+  public_key_proto.set_y(y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(private_key_bytes);
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    OutputPrefixTypeEnum::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), IsOk());
+}
+
 TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   TestCase test_case = GetParam();
   MutableSerializationRegistry registry;
@@ -1089,8 +1178,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -1165,8 +1254,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -1234,8 +1323,8 @@ TEST_F(JwtEcdsaProtoSerializationTest,
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

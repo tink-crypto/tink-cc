@@ -33,6 +33,7 @@ namespace {
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::subtle::HashType;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 
 TEST(WycheproofUtilTest, GetBytesFromHexValue) {
@@ -92,6 +93,12 @@ TEST(WycheproofUtilTest, ReadTestVectorsV1) {
   EXPECT_THAT(algorithm.string_value(), Eq("ECDSA"));
   EXPECT_THAT(test_groups.list_value().values_size(), Eq(104));
   EXPECT_THAT(tests.list_value().values_size(), Eq(4));
+}
+
+TEST(WycheproofUtilTest, ReadTestVectorsV1_invalidFileFails) {
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectorsV1(/*filename=*/"non_existent_file.json");
+  ASSERT_THAT(parsed_input.status(), StatusIs(absl::StatusCode::kNotFound));
 }
 
 }  // namespace

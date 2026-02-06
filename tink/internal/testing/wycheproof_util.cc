@@ -60,6 +60,11 @@ absl::StatusOr<google::protobuf::Struct> ReadTestVectorsV1(
 
   std::ifstream input_stream;
   input_stream.open(test_vectors_path);
+  if (!input_stream.is_open()) {
+    return absl::Status(
+        absl::StatusCode::kNotFound,
+        absl::StrCat("unable to open file ", test_vectors_path));
+  }
   std::string input_string =
       std::string(std::istreambuf_iterator<char>(input_stream), {});
 

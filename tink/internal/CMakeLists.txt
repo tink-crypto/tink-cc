@@ -214,6 +214,7 @@ tink_cc_library(
     crypto
     tink::core::secret_data
     tink::subtle::common_enums
+    tink::util::secret_data
 )
 
 tink_cc_test(

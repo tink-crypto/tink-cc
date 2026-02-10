@@ -105,34 +105,43 @@ absl::Status ValidateRsaModulusSize(size_t modulus_size);
 // than 65536 can lead to weak instantiations of RSA. A public exponent which is
 // odd and greater than 65536 conforms to the requirements set by NIST FIPS
 // 186-4 (Appendix B.3.1).
-absl::Status ValidateRsaPublicExponent(const BIGNUM *exponent);
+absl::Status ValidateRsaPublicExponent(const BIGNUM* exponent);
 
 // Validates whether `exponent` is a valid bignum, is odd, greater than 65536
 // and smaller than 32 bits.
 absl::Status ValidateRsaPublicExponent(absl::string_view exponent);
 
 // Creates a new RSA key pair and populates `private_key` and `public_key`.
-absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
-                           RsaPrivateKey *private_key,
-                           RsaPublicKey *public_key);
+absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM* e,
+                           RsaPrivateKey* private_key,
+                           RsaPublicKey* public_key);
 
 // Returns `key`'s private and public exponents (d and e) and mosulus
 // (n) writing a copy of them into `rsa`.
-absl::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa);
+absl::Status GetRsaModAndExponents(const RsaPrivateKey& key, RSA* rsa);
 
 // Returns `key`'s prime factors (p and q) writing a copy of them into `rsa`.
-absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa);
+absl::Status GetRsaPrimeFactors(const RsaPrivateKey& key, RSA* rsa);
 
 // Returns `key`'s CRT parameters (dp and dq) writing a copy of them into `rsa`.
-absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa);
+absl::Status GetRsaCrtParams(const RsaPrivateKey& key, RSA* rsa);
 
 // Creates a OpenSSL/BoringSSL RSA key from `private_key`.
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
-    const RsaPrivateKey &private_key);
+    const RsaPrivateKey& private_key);
+
+// Creates a OpenSSL/BoringSSL RSA key from `private_key`. `private_key` needs
+// to meet the following requirements:
+// * `private_key.d.size() == private_key.n.size()`
+// * `private_key.dp.size() == private_key.p.size()`
+// * `private_key.dq.size() == private_key.q.size()`
+// * `private_key.crt.size() == private_key.p.size()`
+absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsaFixedSizeInputs(
+    const RsaPrivateKey& private_key);
 
 // Creates a OpenSSL/BoringSSL RSA key from an `public_key`.
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
-    const RsaPublicKey &public_key);
+    const RsaPublicKey& public_key);
 
 // Performs some basic checks on the given RSA public key `key` as in [1] when
 // OpenSSL is used as a backend. This is needed because with OpenSSL calls to
@@ -140,9 +149,10 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
 // populated don't work [2]. When BoringSSL is used, it uses BoringSSL's
 // RSA_check_key.
 //
-// [1] https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa_impl.c#L76
+// [1]
+// https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa_impl.c#L76
 // [2] https://www.openssl.org/docs/man1.1.1/man3/RSA_check_key.html
-absl::Status RsaCheckPublicKey(const RSA *key);
+absl::Status RsaCheckPublicKey(const RSA* key);
 
 }  // namespace internal
 }  // namespace tink

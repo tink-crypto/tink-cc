@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
@@ -75,6 +76,75 @@ absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> GetKeyPair(
     return res;
   }
   return {{public_key, private_key}};
+}
+
+// Hardcoded test key pair with valid encoding lengths.
+std::pair<RsaPublicKey, RsaPrivateKey> GetValidKeyPair() {
+  const std::string p = test::HexDecodeOrDie(
+      "f063c33f27afe76a92df6d2706e7105ea9c68603c6ddef9962f202e91794fe0600bf983c"
+      "de161863ac015421fd005da1be745b639d6fb6e2eb34f61831642c0778e005516b65280b"
+      "02c1a16807e82357c116368eda31345df5d57f9313c050f53dbd026e25ed3f126c84a37d"
+      "d11b6f3b87a803ecdddce8ae6063294e74b91435");
+
+  const std::string q = test::HexDecodeOrDie(
+      "c2b333115745d5818ab71f2f89028d62af07bb0025500682937e37c7e99b54fa3893404b"
+      "64c5b003b77ce43f55116a4ff4958b2267b63a2e848f919595801a79a6859f8e12d16167"
+      "6d465fc0a1164fb86311ca274ee6773b6cb2abb8f438399022e4a97cb6df94aeb9710405"
+      "5e7bd50248aad4e9d18f6b7da5c676e274ad4243");
+
+  const std::string n = test::HexDecodeOrDie(
+      "b6d3dfab89b51431fd17c10771143a14aa3736af3b186afd17a7725c28d686fd088605f1"
+      "38079bcac25555495802ace0cba6b5462e6527bc73ac7fcac0c6c5c97798e1471b080322"
+      "9b78a12d661c6a932dfcc954c28bf59fed6bd9feeaf92da160ce082c74e7c3961d78e6b7"
+      "01604941cd68ddc0ef3c383362b3a5c3b075bd68af89d3aabd9f78c5e8a7cc0f611d356a"
+      "271f287d640b934308e85651b535007e85ec74f064feff71629fe4715d6a3656519d5264"
+      "75907a548968a30577b9cfe5ff1a2ff302897691e548308be208b44a23e0bb49e9e858ac"
+      "f6483d89df777789a083058d04fb11368268f633443792b15008ebd07f3c235466350ca4"
+      "ef76f3df");
+
+  const std::string e = test::HexDecodeOrDie("010001");
+
+  const std::string d = test::HexDecodeOrDie(
+      "3dbbfe574c791618291787c90d0060fa505db37be90efe3576f2c635635ec91710f53c"
+      "756ecf76e638c79ab458e1126217b2339cbe96ce9b9e4d9d9b278c170647f999fc2a1f02"
+      "fc0116730a42e40e82a3312c04906ab5266b03938935ebace244af5d6831937ee2261288"
+      "893c1038bc5cf16f8bb1dc9a3793b9089cb2ed96e67b1108386c5761049242c14b156cff"
+      "e572c133e03abedccd7039994ea2eabf7099c9f6dbdcc71a532850c4ea680254c86a196a"
+      "7fa262fef566e79889fc3ea695a6ca2e7a0920fd4bb58a565601513aa42c7ac29998ae7d"
+      "fad1d5b5f326dc8788fb4f0b36abadad77ff1f3a6f4f8fafdde53e645af136810367a703"
+      "d88ba1b99d");
+
+  const std::string dp = test::HexDecodeOrDie(
+      "954a8fce601a69911167fac4fb0f736626f028f89d7fe5b68ff1970725e31d23a3415a"
+      "0dab2b73b82af1a44b7b71c7b494b074b557e8325f990d8a2c9a3808f41708a1a4e01ab1"
+      "94ad008dfa2ab6eb842b615d3eb8994859763c427f980b9efbbf7cebce767571ef423fd9"
+      "bd60a9361a75744e03c401d6ebbce6b89785fc0f65");
+
+  const std::string dq = test::HexDecodeOrDie(
+      "38976fab85ab75b08e8a45954284ac65d7ac2e8d8f4ae06989c7711d39687dddb11e13"
+      "dd163063c5e0ca7b6971277bb83bc64fc7b34f833fcc2612d1e0bf78728d955f58235e1a"
+      "aabe576b33895efbd30370c34a83a3775a9d709d7b47f923ba227a464d4ab657f8254c95"
+      "379e4bee1118e016bcd3bd9527d34c8977af244113");
+
+  const std::string crt = test::HexDecodeOrDie(
+      "3aa13692a88932fe13ca704577c720d994012e2ee90898716c23da4c3544cf0e9eb456"
+      "2b09c92bf8645884fe152cc6613445af1724994dcc92ec253fa1b47b961aa47b3c3abbdd"
+      "5a413c7ee6a673461867a9dd6179ab7eb3e157fc3e0d06b794d3ea09ba8f5470fe9d47a8"
+      "f548549f030e6ea67c169c4cae697bef7237514f4b");
+
+  RsaPublicKey public_key;
+  public_key.n = n;
+  public_key.e = e;
+  RsaPrivateKey private_key;
+  private_key.n = public_key.n;
+  private_key.e = public_key.e;
+  private_key.d = util::SecretDataFromStringView(d);
+  private_key.p = util::SecretDataFromStringView(p);
+  private_key.q = util::SecretDataFromStringView(q);
+  private_key.dp = util::SecretDataFromStringView(dp);
+  private_key.dq = util::SecretDataFromStringView(dq);
+  private_key.crt = util::SecretDataFromStringView(crt);
+  return {public_key, private_key};
 }
 
 TEST(RsaUtilTest, BasicSanityChecks) {
@@ -332,6 +402,112 @@ TEST(RsaUtilTest, CopiesRsaPrivateKey) {
   ExpectBignumEquals(d, private_key.d);
   ExpectBignumEquals(p, private_key.p);
   ExpectBignumEquals(q, private_key.q);
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputsWorks) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  ASSERT_THAT(rsa_result, IsOk());
+  internal::SslUniquePtr<RSA> rsa = std::move(rsa_result).value();
+  const BIGNUM* n_bn = nullptr;
+  const BIGNUM* e_bn = nullptr;
+  const BIGNUM* d_bn = nullptr;
+  RSA_get0_key(rsa.get(), &n_bn, &e_bn, &d_bn);
+  const BIGNUM* p_bn = nullptr;
+  const BIGNUM* q_bn = nullptr;
+  RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
+  ExpectBignumEquals(n_bn, valid_private_key.n);
+  ExpectBignumEquals(e_bn, valid_private_key.e);
+  ExpectBignumEquals(d_bn, valid_private_key.d);
+  ExpectBignumEquals(p_bn, valid_private_key.p);
+  ExpectBignumEquals(q_bn, valid_private_key.q);
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedP) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  std::string padded_p =
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(valid_private_key.p));
+
+  valid_private_key.p = util::SecretDataFromStringView(padded_p);
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedD) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  std::string padded_d =
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(valid_private_key.d));
+  valid_private_key.d = util::SecretDataFromStringView(padded_d);
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedQ) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  std::string padded_q =
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(valid_private_key.q));
+  valid_private_key.q = util::SecretDataFromStringView(padded_q);
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedDp) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  std::string padded_dp =
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(valid_private_key.dp));
+  valid_private_key.dp = util::SecretDataFromStringView(padded_dp);
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedDq) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  std::string padded_dq =
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(valid_private_key.dq));
+  valid_private_key.dq = util::SecretDataFromStringView(padded_dq);
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedCrt) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  std::string padded_crt =
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(valid_private_key.crt));
+  valid_private_key.crt = util::SecretDataFromStringView(padded_crt);
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+  EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(RsaUtilTest, CopiesRsaPublicKey) {

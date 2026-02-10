@@ -202,6 +202,7 @@ cc_library(
         ":ssl_util",
         "//tink:secret_data",
         "//tink/subtle:common_enums",
+        "//tink/util:secret_data",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

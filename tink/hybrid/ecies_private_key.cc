@@ -16,7 +16,9 @@
 
 #include "tink/hybrid/ecies_private_key.h"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -25,7 +27,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -37,13 +38,16 @@
 #include "tink/hybrid/ecies_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -196,6 +200,25 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
 
   return EciesPrivateKey::CreateForNistCurve(public_key, *adjusted_private_key,
                                              token);
+}
+
+absl::StatusOr<EciesPrivateKey>
+EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
+    const EciesPublicKey& public_key, const RestrictedData& private_key_value,
+    PartialKeyAccessToken token) {
+  absl::StatusOr<SecretData> adjusted_private_key =
+      internal::ParseBigIntToFixedLength(
+          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
+          public_key.GetParameters().GetPrivateKeyLength());
+
+  if (!adjusted_private_key.ok()) {
+    return adjusted_private_key.status();
+  }
+
+  return CreateForNistCurve(public_key,
+                            RestrictedData(std::move(*adjusted_private_key),
+                                           InsecureSecretKeyAccess::Get()),
+                            token);
 }
 
 absl::optional<RestrictedBigInteger> EciesPrivateKey::GetNistPrivateKeyValue(

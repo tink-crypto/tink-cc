@@ -74,6 +74,19 @@ class EciesPrivateKey final : public HybridPrivateKey {
       const RestrictedBigInteger& private_key_value,
       PartialKeyAccessToken token);
 
+  // Creates a new EciesPrivateKey for a nist curve. Will return an error
+  // if private_key_value is not of length
+  // public_key.GetParameters().GetPrivateKeyLength()
+  static absl::StatusOr<EciesPrivateKey> CreateForNistCurve(
+      const EciesPublicKey& public_key, const RestrictedData& private_key_value,
+      PartialKeyAccessToken token);
+
+  // Pads private_key_value to GetPrivateKeyLength() if needed,
+  // truncates leading zeros if needed.
+  static absl::StatusOr<EciesPrivateKey> CreateForNistCurveAllowNonConstantTime(
+      const EciesPublicKey& public_key, const RestrictedData& private_key_value,
+      PartialKeyAccessToken token);
+
   static absl::StatusOr<EciesPrivateKey> CreateForCurveX25519(
       const EciesPublicKey& public_key, const RestrictedData& private_key_bytes,
       PartialKeyAccessToken token);
@@ -91,12 +104,6 @@ class EciesPrivateKey final : public HybridPrivateKey {
     }
   }
 
-  // Creates a new EciesPrivateKey for a nist curve. Will return an error
-  // if private_key_value.size is not of length
-  // public_key.GetParameters().GetPrivateKeyLength()
-  static absl::StatusOr<EciesPrivateKey> CreateForNistCurve(
-      const EciesPublicKey& public_key, const RestrictedData& private_key_value,
-      PartialKeyAccessToken token);
   // Returns the bytes of length GetParameters().GetPrivateKeyLength()
   // or null opt for X25519 keys.
   absl::optional<RestrictedData> GetNistPrivateKeyBytes(

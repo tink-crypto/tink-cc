@@ -51,10 +51,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::StrEq;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -233,6 +236,188 @@ TEST_P(EciesPrivateKeyTest, CreateNistCurvePrivateKeyFailsTooFewBytes) {
           *public_key, shortened_private_key_value, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_P(EciesPrivateKeyTest, CreateNistCurvePrivateKeyAllowNonConstantTime) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(test_case.curve_type)
+          .SetHashType(test_case.hash_type)
+          .SetNistCurvePointFormat(test_case.point_format)
+          .SetDemId(test_case.dem_id)
+          .SetVariant(test_case.variant)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, public_point,
+                                         test_case.id_requirement,
+                                         GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
+          *public_key, private_key_value, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_THAT(private_key->GetParameters(), Eq(*params));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
+  EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
+  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
+              Eq(private_key_value));
+  EXPECT_THAT(
+      private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
+      Eq(RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                              InsecureSecretKeyAccess::Get())));
+  EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),
+              Eq(absl::nullopt));
+}
+
+TEST(EciesPrivateKeyTest, CreateWithPrivateKeyWithLeadingZeros) {
+  std::string public_x = HexDecodeOrDie(
+      "bc95b9d6e70821a0bc477d7032085c780e2cae8fdf3d08508989f154b4c327d0");
+  std::string public_y = HexDecodeOrDie(
+      "6b7ae183d851aec7d1b81f3fb152aa5f661231953e0e4b7c99d14c3f671d3258");
+  std::string private_key_bytes = HexDecodeOrDie(
+      "005356ba39d3d19daab9f2146ae03f5c9b7f2f69a219356b2283977a5e55e5d0b8");
+  ASSERT_THAT(public_x.length(), Eq(32));
+  ASSERT_THAT(public_y.length(), Eq(32));
+  ASSERT_THAT(private_key_bytes.length(), Eq(33));
+
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  EcPoint public_point((BigInteger(public_x)), BigInteger(public_y));
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, public_point,
+                                         /*id_requirement=*/123,
+                                         GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(
+      EciesPrivateKey::CreateForNistCurve(*public_key, private_key_value,
+                                          GetPartialKeyAccess())
+          .status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          StrEq("Private key length 33 is different from expected length 32")));
+  EXPECT_THAT(EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
+                  *public_key, private_key_value, GetPartialKeyAccess()),
+              IsOk());
+}
+
+TEST(EciesPrivateKeyTest, CreateWithPrivateKeyWithOneTooManyBytes) {
+  std::string public_x = HexDecodeOrDie(
+      "bc95b9d6e70821a0bc477d7032085c780e2cae8fdf3d08508989f154b4c327d0");
+  std::string public_y = HexDecodeOrDie(
+      "6b7ae183d851aec7d1b81f3fb152aa5f661231953e0e4b7c99d14c3f671d3258");
+  // Private key with 33 bytes (NIST P-256 takes 32 bytes).
+  std::string private_key_bytes = HexDecodeOrDie(
+      "ff5356ba39d3d19daab9f2146ae03f5c9b7f2f69a219356b2283977a5e55e5d0b8");
+  ASSERT_THAT(private_key_bytes.length(), Eq(33));
+
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  EcPoint public_point((BigInteger(public_x)), BigInteger(public_y));
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, public_point,
+                                         /*id_requirement=*/123,
+                                         GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(
+      EciesPrivateKey::CreateForNistCurve(*public_key, private_key_value,
+                                          GetPartialKeyAccess())
+          .status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          StrEq("Private key length 33 is different from expected length 32")));
+  EXPECT_THAT(
+      EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
+          *public_key, private_key_value, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("too large")));
+}
+
+TEST(EciesPrivateKeyTest, CreateWithPrivateKeyWithOneTooFewBytes) {
+  std::string public_x = HexDecodeOrDie(
+      "5e06e5dc416789b2377a305132455025354d27eec2420c30a0b1658503e14780");
+  std::string public_y = HexDecodeOrDie(
+      "f43e6af3ef0dabe891693cefc8bf3fe51733a02e19a6fa418a21fc2040ea1b92");
+  // Private key with 31 bytes (NIST P-256 takes 32 bytes).
+  std::string private_key_bytes = HexDecodeOrDie(
+      "68e0e126325d313dd9cf888e1163c9844cc6f9d9e41ae075338d34e2878cb9");
+  ASSERT_THAT(public_x.length(), Eq(32));
+  ASSERT_THAT(public_y.length(), Eq(32));
+  ASSERT_THAT(private_key_bytes.length(), Eq(31));
+
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  EcPoint public_point((BigInteger(public_x)), BigInteger(public_y));
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, public_point,
+                                         /*id_requirement=*/123,
+                                         GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_value =
+      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(
+      EciesPrivateKey::CreateForNistCurve(*public_key, private_key_value,
+                                          GetPartialKeyAccess())
+          .status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          StrEq("Private key length 31 is different from expected length 32")));
+  EXPECT_THAT(EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
+                  *public_key, private_key_value, GetPartialKeyAccess())
+                  .status(),
+              IsOk());
 }
 
 TEST(EciesPublicKeyTest, CreateX25519PublicKey) {

@@ -425,7 +425,7 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputsWorks) {
   ExpectBignumEquals(q_bn, valid_private_key.q);
 }
 
-TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedP) {
+TEST(RsaUtilTest, SslRsaPrivateKeyCreationWithPaddedP) {
   std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
   RsaPrivateKey valid_private_key = valid_key_pair.second;
 
@@ -438,9 +438,10 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedP) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
   EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+  ASSERT_THAT(RsaPrivateKeyToRsa(valid_private_key), IsOk());
 }
 
-TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedD) {
+TEST(RsaUtilTest, SslRsaPrivateKeyCreationWithPaddedD) {
   std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
   RsaPrivateKey valid_private_key = valid_key_pair.second;
 
@@ -452,9 +453,10 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedD) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
   EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+  ASSERT_THAT(RsaPrivateKeyToRsa(valid_private_key), IsOk());
 }
 
-TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedQ) {
+TEST(RsaUtilTest, SslRsaPrivateKeyCreationWithPaddedQ) {
   std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
   RsaPrivateKey valid_private_key = valid_key_pair.second;
 
@@ -466,9 +468,10 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedQ) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
   EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+  ASSERT_THAT(RsaPrivateKeyToRsa(valid_private_key), IsOk());
 }
 
-TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedDp) {
+TEST(RsaUtilTest, SslRsaPrivateKeyCreationWithPaddedDp) {
   std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
   RsaPrivateKey valid_private_key = valid_key_pair.second;
 
@@ -480,9 +483,10 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedDp) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
   EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+  ASSERT_THAT(RsaPrivateKeyToRsa(valid_private_key), IsOk());
 }
 
-TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedDq) {
+TEST(RsaUtilTest, SslRsaPrivateKeyCreationWithPaddedDq) {
   std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
   RsaPrivateKey valid_private_key = valid_key_pair.second;
 
@@ -494,9 +498,10 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedDq) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
   EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+  ASSERT_THAT(RsaPrivateKeyToRsa(valid_private_key), IsOk());
 }
 
-TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedCrt) {
+TEST(RsaUtilTest, SslRsaPrivateKeyCreationWithPaddedCrt) {
   std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
   RsaPrivateKey valid_private_key = valid_key_pair.second;
 
@@ -508,6 +513,63 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputFailsWithPaddedCrt) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
   EXPECT_THAT(rsa_result, StatusIs(absl::StatusCode::kInvalidArgument));
+  ASSERT_THAT(RsaPrivateKeyToRsa(valid_private_key), IsOk());
+}
+
+TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputEqualsRsaPrivateKey) {
+  std::pair<RsaPublicKey, RsaPrivateKey> valid_key_pair = GetValidKeyPair();
+  RsaPrivateKey valid_private_key = valid_key_pair.second;
+
+  absl::StatusOr<internal::SslUniquePtr<RSA>> adjusted_rsa =
+      RsaPrivateKeyToRsaFixedSizeInputs(valid_private_key);
+
+  ASSERT_THAT(adjusted_rsa, IsOk());
+  const BIGNUM* n = nullptr;
+  const BIGNUM* e = nullptr;
+  const BIGNUM* d = nullptr;
+  RSA_get0_key(adjusted_rsa->get(), &n, &e, &d);
+  const BIGNUM* p = nullptr;
+  const BIGNUM* q = nullptr;
+  RSA_get0_factors(adjusted_rsa->get(), &p, &q);
+  const BIGNUM* dp = nullptr;
+  const BIGNUM* dq = nullptr;
+  const BIGNUM* crt = nullptr;
+  RSA_get0_crt_params(adjusted_rsa->get(), &dp, &dq, &crt);
+
+  // Here the adjustment for the encodings should be done in the
+  // `RsaPrivateKeyToRsa` function.
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
+      RsaPrivateKeyToRsa(valid_private_key);
+  ASSERT_THAT(rsa, IsOk());
+  const BIGNUM* n2 = nullptr;
+  const BIGNUM* e2 = nullptr;
+  const BIGNUM* d2 = nullptr;
+  RSA_get0_key(rsa->get(), &n2, &e2, &d2);
+  const BIGNUM* p2 = nullptr;
+  const BIGNUM* q2 = nullptr;
+  RSA_get0_factors(rsa->get(), &p2, &q2);
+  const BIGNUM* dp2 = nullptr;
+  const BIGNUM* dq2 = nullptr;
+  const BIGNUM* crt2 = nullptr;
+  RSA_get0_crt_params(rsa->get(), &dp2, &dq2, &crt2);
+
+  ExpectBignumEquals(n, valid_private_key.n);
+  ExpectBignumEquals(e, valid_private_key.e);
+  ExpectBignumEquals(d, valid_private_key.d);
+  ExpectBignumEquals(p, valid_private_key.p);
+  ExpectBignumEquals(q, valid_private_key.q);
+  ExpectBignumEquals(dp, valid_private_key.dp);
+  ExpectBignumEquals(dq, valid_private_key.dq);
+  ExpectBignumEquals(crt, valid_private_key.crt);
+
+  ExpectBignumEquals(n2, valid_private_key.n);
+  ExpectBignumEquals(e2, valid_private_key.e);
+  ExpectBignumEquals(d2, valid_private_key.d);
+  ExpectBignumEquals(p2, valid_private_key.p);
+  ExpectBignumEquals(q2, valid_private_key.q);
+  ExpectBignumEquals(dp2, valid_private_key.dp);
+  ExpectBignumEquals(dq2, valid_private_key.dq);
+  ExpectBignumEquals(crt2, valid_private_key.crt);
 }
 
 TEST(RsaUtilTest, CopiesRsaPublicKey) {

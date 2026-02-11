@@ -410,11 +410,19 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsaFixedSizeInputs(
       return status;
     }
 
-    if (RSA_check_key(rsa.get()) == 0) {
+    int check_key_status = RSA_check_key(rsa.get());
+
+    if (check_key_status == 0) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Could not load RSA key: ", internal::GetSslErrors()));
     }
+
+    if (check_key_status == -1) {
+      return absl::Status(absl::StatusCode::kInternal,
+                          "An error ocurred while checking the key");
+    }
+
 #ifdef OPENSSL_IS_BORINGSSL
     if (RSA_check_fips(rsa.get()) == 0) {
       return absl::Status(

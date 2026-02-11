@@ -1961,3 +1961,28 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME composite_ml_dsa_parameters
+  SRCS
+    composite_ml_dsa_parameters.cc
+    composite_ml_dsa_parameters.h
+  DEPS
+    tink::signature::signature_parameters
+    absl::status
+    absl::statusor
+    tink::core::parameters
+)
+
+tink_cc_test(
+  NAME composite_ml_dsa_parameters_test
+  SRCS
+    composite_ml_dsa_parameters_test.cc
+  DEPS
+    tink::signature::composite_ml_dsa_parameters
+    gmock
+    absl::status
+    absl::statusor
+    tink::core::parameters
+    tink::util::test_matchers
+)

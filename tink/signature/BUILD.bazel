@@ -1972,3 +1972,30 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "composite_ml_dsa_parameters",
+    srcs = ["composite_ml_dsa_parameters.cc"],
+    hdrs = ["composite_ml_dsa_parameters.h"],
+    include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":signature_parameters",
+        "//tink:parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "composite_ml_dsa_parameters_test",
+    srcs = ["composite_ml_dsa_parameters_test.cc"],
+    deps = [
+        ":composite_ml_dsa_parameters",
+        "//tink:parameters",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

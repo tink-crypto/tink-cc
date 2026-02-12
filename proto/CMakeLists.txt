@@ -195,6 +195,14 @@ tink_cc_proto(
 )
 
 tink_cc_proto(
+  NAME composite_ml_dsa_cc_proto
+  SRCS composite_ml_dsa.proto
+  DEPS
+    tink::proto::ml_dsa_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_proto(
   NAME empty_cc_proto
   SRCS empty.proto
 )

@@ -1,5 +1,5 @@
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 package(default_visibility = ["//:__subpackages__"])
 
@@ -235,6 +235,16 @@ proto_library(
 )
 
 proto_library(
+    name = "composite_ml_dsa_proto",
+    srcs = ["composite_ml_dsa.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ml_dsa_proto",
+        ":tink_proto",
+    ],
+)
+
+proto_library(
     name = "empty_proto",
     srcs = ["empty.proto"],
     visibility = ["//visibility:public"],
@@ -444,6 +454,12 @@ cc_proto_library(
     name = "slh_dsa_cc_proto",
     visibility = ["//visibility:public"],
     deps = ["//proto:slh_dsa_proto"],
+)
+
+cc_proto_library(
+    name = "composite_ml_dsa_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//proto:composite_ml_dsa_proto"],
 )
 
 filegroup(

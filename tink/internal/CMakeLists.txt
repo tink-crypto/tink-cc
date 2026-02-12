@@ -30,10 +30,12 @@ tink_cc_library(
     tink::internal::safe_stringops
     tink::internal::secret_buffer
     absl::core_headers
+    absl::absl_check
     absl::absl_log
     absl::status
     absl::statusor
     absl::strings
+    tink::core::key
     tink::core::secret_data
     tink::util::secret_data
 )
@@ -227,6 +229,9 @@ tink_cc_test(
     gmock
     absl::statusor
     absl::strings
+    absl::optional
+    tink::core::key
+    tink::core::parameters
     tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers

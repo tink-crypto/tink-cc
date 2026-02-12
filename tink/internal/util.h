@@ -19,10 +19,12 @@
 #include <memory>
 
 #include "absl/base/attributes.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/key.h"
 #include "tink/secret_data.h"
 
 namespace crypto {
@@ -44,6 +46,16 @@ absl::StatusOr<std::unique_ptr<S>> DynamicCast(std::unique_ptr<T> in) {
   }
   in.release();
   return absl::WrapUnique(out);
+}
+
+// Clone a key of type T. May die if T::Clone doesn't return a T -- guaranteed
+// to never happen for Tink implementations.
+template <typename T>
+std::unique_ptr<T> CloneKeyOrDie(const T& key) {
+  static_assert(std::is_convertible_v<T*, Key*>);
+  absl::StatusOr<std::unique_ptr<T>> result = DynamicCast<T>(key.Clone());
+  ABSL_CHECK_OK(result);
+  return std::move(*result);
 }
 
 // Return an empty string if str.data() is nullptr; otherwise return str.

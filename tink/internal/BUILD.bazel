@@ -34,9 +34,11 @@ cc_library(
     deps = [
         ":safe_stringops",
         ":secret_buffer",
+        "//tink:key",
         "//tink:secret_data",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -264,12 +266,15 @@ cc_test(
     srcs = ["util_test.cc"],
     deps = [
         ":util",
+        "//tink:key",
+        "//tink:parameters",
         "//tink:secret_data",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

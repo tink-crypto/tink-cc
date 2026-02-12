@@ -1143,3 +1143,53 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME composite_ml_dsa_proto_serialization_impl
+  SRCS
+    composite_ml_dsa_proto_serialization_impl.cc
+    composite_ml_dsa_proto_serialization_impl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::signature::composite_ml_dsa_parameters
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME composite_ml_dsa_proto_serialization_impl_test
+  SRCS
+    composite_ml_dsa_proto_serialization_impl_test.cc
+  DEPS
+    tink::signature::internal::composite_ml_dsa_proto_serialization_impl
+    gmock
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::signature::composite_ml_dsa_parameters
+    tink::util::test_matchers
+    tink::proto::composite_ml_dsa_cc_proto
+    tink::proto::ml_dsa_cc_proto
+    tink::proto::tink_cc_proto
+  TAGS
+    exclude_if_openssl
+)

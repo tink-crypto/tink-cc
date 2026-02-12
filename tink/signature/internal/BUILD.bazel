@@ -1012,3 +1012,50 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "composite_ml_dsa_proto_serialization_impl",
+    srcs = ["composite_ml_dsa_proto_serialization_impl.cc"],
+    hdrs = ["composite_ml_dsa_proto_serialization_impl.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:proto_parser_enum_field",
+        "//tink/internal:proto_parser_fields",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
+        "//tink/internal:serialization_registry",
+        "//tink/internal:tink_proto_structs",
+        "//tink/signature:composite_ml_dsa_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "composite_ml_dsa_proto_serialization_impl_test",
+    srcs = ["composite_ml_dsa_proto_serialization_impl_test.cc"],
+    deps = [
+        ":composite_ml_dsa_proto_serialization_impl",
+        "//proto:composite_ml_dsa_cc_proto",
+        "//proto:ml_dsa_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/internal:serialization_registry",
+        "//tink/internal:tink_proto_structs",
+        "//tink/signature:composite_ml_dsa_parameters",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+        "@googletest//:gtest_main",
+    ],
+)

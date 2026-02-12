@@ -280,29 +280,10 @@ absl::Status GetRsaCrtParams(const RsaPrivateKey& key, RSA* rsa) {
   return absl::OkStatus();
 }
 
-absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
-    const RsaPrivateKey& private_key) {
-  auto n = internal::StringToBignum(private_key.n);
-  if (!n.ok()) {
-    return n.status();
-  }
-  auto validation_result = ValidateRsaModulusSize(BN_num_bits(n->get()));
-  if (!validation_result.ok()) {
-    return validation_result;
-  }
-  // Check RSA's public exponent
-  auto exponent_status = ValidateRsaPublicExponent(private_key.e);
-  if (!exponent_status.ok()) {
-    return exponent_status;
-  }
+absl::StatusOr<RsaPrivateKey> RsaPrivateKeyAdjustEncodingLengths(
+    RsaPrivateKey private_key) {
   return CallWithCoreDumpProtection(
-      [&]() -> absl::StatusOr<internal::SslUniquePtr<RSA>> {
-        internal::SslUniquePtr<RSA> rsa(RSA_new());
-        if (rsa.get() == nullptr) {
-          return absl::Status(absl::StatusCode::kInternal,
-                              "BoringSsl RSA allocation error");
-        }
-
+      [&private_key]() -> absl::StatusOr<RsaPrivateKey> {
         absl::string_view trimmed_p =
             WithoutLeadingZeros(util::SecretDataAsStringView(private_key.p));
 
@@ -333,17 +314,45 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
           return adjusted_d.status();
         }
 
-        RsaPrivateKey adjusted_private_key;
-        adjusted_private_key.n = private_key.n;
-        adjusted_private_key.e = private_key.e;
-        adjusted_private_key.d = *adjusted_d;
-        adjusted_private_key.p = util::SecretDataFromStringView(trimmed_p);
-        adjusted_private_key.q = util::SecretDataFromStringView(trimmed_q);
-        adjusted_private_key.dp = *adjusted_dp;
-        adjusted_private_key.dq = *adjusted_dq;
-        adjusted_private_key.crt = *adjusted_crt;
-        return RsaPrivateKeyToRsaFixedSizeInputs(adjusted_private_key);
+        private_key.p = util::SecretDataFromStringView(trimmed_p);
+        private_key.q = util::SecretDataFromStringView(trimmed_q);
+        private_key.dp = std::move(*adjusted_dp);
+        private_key.dq = std::move(*adjusted_dq);
+        private_key.crt = std::move(*adjusted_crt);
+        private_key.d = std::move(*adjusted_d);
+        return private_key;
       });
+}
+
+absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
+    const RsaPrivateKey& private_key) {
+  auto n = internal::StringToBignum(private_key.n);
+  if (!n.ok()) {
+    return n.status();
+  }
+  auto validation_result = ValidateRsaModulusSize(BN_num_bits(n->get()));
+  if (!validation_result.ok()) {
+    return validation_result;
+  }
+  // Check RSA's public exponent
+  auto exponent_status = ValidateRsaPublicExponent(private_key.e);
+  if (!exponent_status.ok()) {
+    return exponent_status;
+  }
+
+  internal::SslUniquePtr<RSA> rsa(RSA_new());
+  if (rsa.get() == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "BoringSsl RSA allocation error");
+  }
+
+  absl::StatusOr<RsaPrivateKey> adjusted_private_key =
+      RsaPrivateKeyAdjustEncodingLengths(private_key);
+  if (!adjusted_private_key.ok()) {
+    return adjusted_private_key.status();
+  }
+
+  return RsaPrivateKeyToRsaFixedSizeInputs(*adjusted_private_key);
 }
 
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsaFixedSizeInputs(

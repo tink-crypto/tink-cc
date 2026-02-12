@@ -126,6 +126,15 @@ absl::Status GetRsaPrimeFactors(const RsaPrivateKey& key, RSA* rsa);
 // Returns `key`'s CRT parameters (dp and dq) writing a copy of them into `rsa`.
 absl::Status GetRsaCrtParams(const RsaPrivateKey& key, RSA* rsa);
 
+// Adjusts the encoding lengths of the private key components to the correct
+// values, i.e:
+// * `private_key.d.size() == private_key.n.size()`
+// * `private_key.dp.size() == private_key.p.size()`
+// * `private_key.dq.size() == private_key.q.size()`
+// * `private_key.crt.size() == private_key.p.size()`
+absl::StatusOr<RsaPrivateKey> RsaPrivateKeyAdjustEncodingLengths(
+    RsaPrivateKey private_key);
+
 // Creates a OpenSSL/BoringSSL RSA key from `private_key`.
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
     const RsaPrivateKey& private_key);

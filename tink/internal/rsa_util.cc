@@ -33,6 +33,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/internal/util.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 
@@ -301,32 +302,47 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
           return absl::Status(absl::StatusCode::kInternal,
                               "BoringSsl RSA allocation error");
         }
-        absl::Status status = GetRsaModAndExponents(private_key, rsa.get());
-        if (!status.ok()) {
-          return status;
-        }
-        status = GetRsaPrimeFactors(private_key, rsa.get());
-        if (!status.ok()) {
-          return status;
-        }
-        status = GetRsaCrtParams(private_key, rsa.get());
-        if (!status.ok()) {
-          return status;
+
+        absl::string_view trimmed_p =
+            WithoutLeadingZeros(util::SecretDataAsStringView(private_key.p));
+
+        absl::string_view trimmed_q =
+            WithoutLeadingZeros(util::SecretDataAsStringView(private_key.q));
+
+        absl::StatusOr<SecretData> adjusted_dp = ParseBigIntToFixedLength(
+            util::SecretDataAsStringView(private_key.dp), trimmed_p.size());
+        if (!adjusted_dp.ok()) {
+          return adjusted_dp.status();
         }
 
-        if (RSA_check_key(rsa.get()) == 0) {
-          return absl::Status(absl::StatusCode::kInvalidArgument,
-                              absl::StrCat("Could not load RSA key: ",
-                                           internal::GetSslErrors()));
+        absl::StatusOr<SecretData> adjusted_dq = ParseBigIntToFixedLength(
+            util::SecretDataAsStringView(private_key.dq), trimmed_q.size());
+        if (!adjusted_dq.ok()) {
+          return adjusted_dq.status();
         }
-#ifdef OPENSSL_IS_BORINGSSL
-        if (RSA_check_fips(rsa.get()) == 0) {
-          return absl::Status(absl::StatusCode::kInvalidArgument,
-                              absl::StrCat("Could not load RSA key: ",
-                                           internal::GetSslErrors()));
+
+        absl::StatusOr<SecretData> adjusted_crt = ParseBigIntToFixedLength(
+            util::SecretDataAsStringView(private_key.crt), trimmed_p.size());
+        if (!adjusted_crt.ok()) {
+          return adjusted_crt.status();
         }
-#endif
-        return std::move(rsa);
+
+        absl::StatusOr<SecretData> adjusted_d = ParseBigIntToFixedLength(
+            util::SecretDataAsStringView(private_key.d), private_key.n.size());
+        if (!adjusted_d.ok()) {
+          return adjusted_d.status();
+        }
+
+        RsaPrivateKey adjusted_private_key;
+        adjusted_private_key.n = private_key.n;
+        adjusted_private_key.e = private_key.e;
+        adjusted_private_key.d = *adjusted_d;
+        adjusted_private_key.p = util::SecretDataFromStringView(trimmed_p);
+        adjusted_private_key.q = util::SecretDataFromStringView(trimmed_q);
+        adjusted_private_key.dp = *adjusted_dp;
+        adjusted_private_key.dq = *adjusted_dq;
+        adjusted_private_key.crt = *adjusted_crt;
+        return RsaPrivateKeyToRsaFixedSizeInputs(adjusted_private_key);
       });
 }
 

@@ -200,6 +200,7 @@ cc_library(
         ":fips_utils",
         ":ssl_unique_ptr",
         ":ssl_util",
+        ":util",
         "//tink:secret_data",
         "//tink/subtle:common_enums",
         "//tink/util:secret_data",

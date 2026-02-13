@@ -1232,3 +1232,35 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME composite_ml_dsa_util_boringssl
+  SRCS
+    composite_ml_dsa_util_boringssl.cc
+    composite_ml_dsa_util_boringssl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    crypto
+    tink::signature::composite_ml_dsa_parameters
+    tink::subtle::subtle_util
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME composite_ml_dsa_util_boringssl_test
+  SRCS
+    composite_ml_dsa_util_boringssl_test.cc
+  DEPS
+    tink::signature::internal::composite_ml_dsa_util_boringssl
+    gmock
+    absl::statusor
+    tink::signature::composite_ml_dsa_parameters
+    tink::util::test_matchers
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

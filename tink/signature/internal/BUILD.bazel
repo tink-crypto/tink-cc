@@ -1098,3 +1098,32 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "composite_ml_dsa_util_boringssl",
+    srcs = ["composite_ml_dsa_util_boringssl.cc"],
+    hdrs = ["composite_ml_dsa_util_boringssl.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink/signature:composite_ml_dsa_parameters",
+        "//tink/subtle:subtle_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "composite_ml_dsa_util_boringssl_test",
+    srcs = ["composite_ml_dsa_util_boringssl_test.cc"],
+    deps = [
+        ":composite_ml_dsa_util_boringssl",
+        "//tink/signature:composite_ml_dsa_parameters",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

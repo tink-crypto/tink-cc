@@ -58,6 +58,7 @@ cc_library(
         "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink:secret_data",
+        "//tink/internal:fips_utils",
         "//tink/internal:util",
         "//tink/signature:rsa_ssa_pss_parameters",
         "//tink/signature:rsa_ssa_pss_private_key",

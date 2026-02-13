@@ -53,6 +53,7 @@ tink_cc_library(
     tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
+    tink::internal::fips_utils
     tink::internal::util
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key

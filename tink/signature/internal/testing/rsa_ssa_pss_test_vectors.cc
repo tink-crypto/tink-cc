@@ -26,6 +26,7 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
@@ -405,7 +406,7 @@ SignatureTestVector CreateTestVector5() {
 }
 
 // ModulusSize: 4096 bits
-SignatureTestVector CreateTestVector6() {
+SignatureTestVector Create4096BitTestVector() {
   absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(4096)
@@ -439,7 +440,7 @@ SignatureTestVector CreateTestVector6() {
 }
 
 // Sha384
-SignatureTestVector CreateTestVector7() {
+SignatureTestVector CreateTestVector6() {
   absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
@@ -465,7 +466,7 @@ SignatureTestVector CreateTestVector7() {
 }
 
 // SaltLength: 0
-SignatureTestVector CreateTestVector8() {
+SignatureTestVector CreateTestVector7() {
   absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
@@ -493,11 +494,16 @@ SignatureTestVector CreateTestVector8() {
 }  // namespace
 
 std::vector<SignatureTestVector> CreateRsaSsaPssTestVectors() {
-  return {CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-          CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
-          CreateTestVector6(), CreateTestVector7(), CreateTestVector8()};
-}
+  std::vector<SignatureTestVector> test_vectors = {
+      CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
+      CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
+      CreateTestVector6(), CreateTestVector7()};
 
+  if (!internal::IsFipsModeEnabled()) {
+    test_vectors.push_back(Create4096BitTestVector());
+  }
+  return test_vectors;
+}
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

@@ -1150,20 +1150,40 @@ tink_cc_library(
     composite_ml_dsa_proto_serialization_impl.cc
     composite_ml_dsa_proto_serialization_impl.h
   DEPS
+    tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::ed25519_proto_serialization_impl
+    tink::signature::internal::ml_dsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
+    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
     tink::internal::proto_parser_options
+    tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::internal::util
     tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_public_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::signature_public_key
   TAGS
     exclude_if_openssl
 )
@@ -1174,18 +1194,34 @@ tink_cc_test(
     composite_ml_dsa_proto_serialization_impl_test.cc
   DEPS
     tink::signature::internal::composite_ml_dsa_proto_serialization_impl
+    tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::ed25519_proto_serialization_impl
+    tink::signature::internal::ml_dsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
     gmock
     absl::status
     absl::statusor
     absl::string_view
     absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::internal::util
     tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_private_key
+    tink::signature::composite_ml_dsa_public_key
+    tink::signature::signature_private_key
+    tink::signature::signature_public_key
+    tink::signature::internal::testing::composite_ml_dsa_test_util
     tink::util::test_matchers
     tink::proto::composite_ml_dsa_cc_proto
     tink::proto::ml_dsa_cc_proto

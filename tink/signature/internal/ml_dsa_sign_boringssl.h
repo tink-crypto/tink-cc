@@ -32,11 +32,15 @@ namespace internal {
 // BoringSSL. Only ML-DSA-65 and ML-DSA-87 are supported at the moment.
 // This function allows to specify a context which is used for the signature
 // generation.
+//
+// This function unconditionally returns an error in non-BoringSSL builds.
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignWithContextBoringSsl(
     MlDsaPrivateKey private_key, absl::string_view context);
 
 // Creates a new PublicKeySign primitive using the ML-DSA implementation from
 // BoringSSL. Only ML-DSA-65 and ML-DSA-87 are supported at the moment.
+//
+// This function unconditionally returns an error in non-BoringSSL builds.
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
     MlDsaPrivateKey private_key);
 

@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -25,7 +26,6 @@
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -34,12 +34,16 @@ namespace internal {
 // Creates a new ML-DSA private key from `parameters`. If `id_requirement` is
 // set, the key will have the specified ID requirement. Otherwise, the key will
 // have no ID requirement.
+//
+// This function unconditionally returns an error in non-BoringSSL builds.
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     const MlDsaParameters& params, absl::optional<int> id_requirement);
 
 // Creates a new SLH-DSA private key from `parameters`. If `id_requirement` is
 // set, the key will have the specified ID requirement. Otherwise, the key will
 // have no ID requirement.
+//
+// This function unconditionally returns an error in non-BoringSSL builds.
 absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement);
 

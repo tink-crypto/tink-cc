@@ -16,6 +16,7 @@
 
 #include "tink/signature/ml_dsa_public_key.h"
 
+#include <cstddef>
 #include <string>
 
 #include "absl/status/status.h"
@@ -23,7 +24,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/mldsa.h"
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -32,6 +32,9 @@
 namespace crypto {
 namespace tink {
 namespace {
+
+static constexpr size_t kMlDsa65PublicKeyBytes = 1952;
+static constexpr size_t kMlDsa87PublicKeyBytes = 2592;
 
 absl::StatusOr<std::string> ComputeOutputPrefix(
     const MlDsaParameters& parameters, absl::optional<int> id_requirement) {
@@ -71,17 +74,17 @@ absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
 
   switch (parameters.GetInstance()) {
     case MlDsaParameters::Instance::kMlDsa65: {
-      if (public_key_bytes.size() != MLDSA65_PUBLIC_KEY_BYTES) {
+      if (public_key_bytes.size() != kMlDsa65PublicKeyBytes) {
         return absl::InvalidArgumentError(absl::StrCat(
-            "Invalid ML-DSA public key size. Only ", MLDSA65_PUBLIC_KEY_BYTES,
+            "Invalid ML-DSA public key size. Only ", kMlDsa65PublicKeyBytes,
             "-byte keys are currently supported for ML-DSA-65."));
       }
       break;
     }
     case MlDsaParameters::Instance::kMlDsa87: {
-      if (public_key_bytes.size() != MLDSA87_PUBLIC_KEY_BYTES) {
+      if (public_key_bytes.size() != kMlDsa87PublicKeyBytes) {
         return absl::InvalidArgumentError(absl::StrCat(
-            "Invalid ML-DSA public key size. Only ", MLDSA87_PUBLIC_KEY_BYTES,
+            "Invalid ML-DSA public key size. Only ", kMlDsa87PublicKeyBytes,
             "-byte keys are currently supported for ML-DSA-87."));
       }
       break;

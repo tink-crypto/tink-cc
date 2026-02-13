@@ -19,12 +19,12 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +40,8 @@ class SlhDsaPrivateKey final : public SignaturePrivateKey {
   // Creates a new SLH-DSA private key from `private_key_bytes`. Returns an
   // error if `public_key` does not belong to the same key pair as
   // `private_key_bytes`.
+  //
+  // This function unconditionally returns an error in non-BoringSSL builds.
   static absl::StatusOr<SlhDsaPrivateKey> Create(
       const SlhDsaPublicKey& public_key,
       const RestrictedData& private_key_bytes, PartialKeyAccessToken token);

@@ -26,8 +26,14 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
+#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
 #include "openssl/slhdsa.h"
+#endif
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
@@ -67,6 +73,7 @@ absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
   }
 }
 
+#ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa65Key(
     const MlDsaParameters& params, absl::optional<int> id_requirement) {
   if (params.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
@@ -124,11 +131,16 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa87Key(
   }
   return absl::make_unique<MlDsaPrivateKey>(*key);
 }
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     const MlDsaParameters& params, absl::optional<int> id_requirement) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in BoringSSL builds.");
+#else
   switch (params.GetInstance()) {
     case MlDsaParameters::Instance::kMlDsa65:
       return CreateMlDsa65Key(params, id_requirement);
@@ -138,10 +150,15 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
       return absl::InvalidArgumentError(
           "Only ML-DSA-65 and ML-DSA-87 are supported");
   }
+#endif  // OPENSSL_IS_BORINGSSL
 }
 
 absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "SLH-DSA is only supported in BoringSSL builds.");
+#else
   uint8_t public_key_bytes[SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES];
   uint8_t private_key_bytes[SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES];
 
@@ -168,6 +185,7 @@ absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
   }
 
   return absl::make_unique<SlhDsaPrivateKey>(*private_key);
+#endif  // OPENSSL_IS_BORINGSSL
 }
 
 absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(

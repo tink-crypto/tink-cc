@@ -1775,8 +1775,6 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1823,8 +1821,6 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::output_prefix_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1886,6 +1882,7 @@ tink_cc_library(
     tink::signature::signature_private_key
     tink::signature::slh_dsa_public_key
     absl::status
+    absl::statusor
     absl::string_view
     crypto
     tink::core::insecure_secret_key_access
@@ -1894,10 +1891,6 @@ tink_cc_library(
     tink::core::restricted_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
-    tink::util::status
-    tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1933,16 +1926,14 @@ tink_cc_library(
     tink::signature::slh_dsa_parameters
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::output_prefix_util
-    tink::util::status
     tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(

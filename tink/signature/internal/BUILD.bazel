@@ -213,7 +213,6 @@ cc_library(
         "//tink/signature:slh_dsa_public_key",
         "//tink/subtle:common_enums",
         "//tink/util:secret_data",
-        "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

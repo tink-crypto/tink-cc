@@ -327,9 +327,6 @@ tink_cc_library(
     tink::signature::slh_dsa_public_key
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -380,8 +377,6 @@ tink_cc_library(
     tink::signature::ml_dsa_private_key
     tink::subtle::subtle_util
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -423,8 +418,6 @@ tink_cc_library(
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -463,8 +456,6 @@ tink_cc_library(
     tink::signature::internal::ml_dsa_proto_serialization_impl
     absl::status
     tink::internal::mutable_serialization_registry
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1035,8 +1026,6 @@ tink_cc_library(
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(

@@ -20,9 +20,16 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
+#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mem.h"
 #include "openssl/slhdsa.h"
+#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -30,8 +37,6 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/slh_dsa_public_key.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -39,6 +44,10 @@ namespace tink {
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "SLH-DSA is only supported in BoringSSL builds.");
+#else
   // Only 64-byte private keys are currently supported.
   if (private_key_bytes.size() != SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -79,6 +88,7 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   }
 
   return SlhDsaPrivateKey(public_key, private_key_bytes);
+#endif
 }
 
 bool SlhDsaPrivateKey::operator==(const Key& other) const {

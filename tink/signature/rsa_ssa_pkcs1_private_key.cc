@@ -16,7 +16,7 @@
 
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 
-#include <memory>
+#include <string>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
+#include "tink/internal/rsa_util.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -32,7 +33,6 @@
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -43,143 +43,26 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::CallWithCoreDumpProtection;
-
 absl::Status ValidateKeyPair(const RsaSsaPkcs1PublicKey& public_key,
                              const RestrictedData& p, const RestrictedData& q,
                              const RestrictedData& d, const RestrictedData& dp,
                              const RestrictedData& dq,
                              const RestrictedData& q_inv,
                              PartialKeyAccessToken token) {
-  const BigInteger& public_exponent =
-      public_key.GetParameters().GetPublicExponent();
-  const BigInteger& modulus = public_key.GetModulus(token);
-
-  internal::SslUniquePtr<RSA> rsa(RSA_new());
-  if (rsa.get() == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Internal RSA allocation error");
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
-      internal::StringToBignum(modulus.GetValue());
-  if (!n.ok()) {
-    return n.status();
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
-      internal::StringToBignum(public_exponent.GetValue());
-  if (!e.ok()) {
-    return e.status();
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> d_bn =
-      internal::StringToBignum(d.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!d_bn.ok()) {
-    return d_bn.status();
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> p_bn =
-      internal::StringToBignum(p.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!p_bn.ok()) {
-    return p_bn.status();
-  }
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> q_bn =
-      internal::StringToBignum(q.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!q_bn.ok()) {
-    return q_bn.status();
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dp_bn =
-      internal::StringToBignum(dp.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!dp_bn.ok()) {
-    return dp_bn.status();
-  }
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dq_bn =
-      internal::StringToBignum(dq.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!dq_bn.ok()) {
-    return dq_bn.status();
-  }
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> q_inv_bn =
-      internal::StringToBignum(q_inv.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!q_inv_bn.ok()) {
-    return q_inv_bn.status();
-  }
-
-  return CallWithCoreDumpProtection([&]() -> absl::Status {
-    /// Checks for size and leading zeros.
-    const absl::string_view p_sd = p.GetSecret(InsecureSecretKeyAccess::Get());
-    if (p_sd.size() > 1 && p_sd[0] == 0) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Prime factor p has leading zeros");
-    }
-    const absl::string_view q_sd = q.GetSecret(InsecureSecretKeyAccess::Get());
-    if (q_sd.size() > 1 && q_sd[0] == 0) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Prime factor q has leading zeros");
-    }
-
-    if (dp.size() != p.size()) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Prime exponent dp has incorrect length: expected ",
-                       p.size(), " got ", dp.size()));
-    }
-
-    if (dq.size() != q.size()) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Prime exponent dq has incorrect length: expected ",
-                       q.size(), " got ", dq.size()));
-    }
-
-    int modulus_size_in_bytes =
-        (public_key.GetParameters().GetModulusSizeInBits() + 7) / 8;
-    if (d.size() != modulus_size_in_bytes) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Private exponent d has incorrect length: expected ",
-                       modulus_size_in_bytes, " got ", d.size()));
-    }
-
-    if (q_inv.size() != p.size()) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("CRT coefficient has incorrect length: expected ",
-                       p.size(), " got ", q_inv.size()));
-    }
-
-    // Build RSA key from the given values.  The RSA object takes ownership
-    // of the given values after the call.
-    if (RSA_set0_key(rsa.get(), n->release(), e->release(), d_bn->release()) !=
-            1 ||
-        RSA_set0_factors(rsa.get(), p_bn->release(), q_bn->release()) != 1 ||
-        RSA_set0_crt_params(rsa.get(), dp_bn->release(), dq_bn->release(),
-                            q_inv_bn->release()) != 1) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Internal RSA key loading error");
-    }
-
-    // Validate key.
-    int check_key_status = RSA_check_key(rsa.get());
-    if (check_key_status == 0) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "RSA key pair is not valid");
-    }
-
-    if (check_key_status == -1) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "An error ocurred while checking the key");
-    }
-
-#ifdef OPENSSL_IS_BORINGSSL
-    if (RSA_check_fips(rsa.get()) == 0) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "RSA key pair is not valid in FIPS mode");
-    }
-#endif
-    return absl::OkStatus();
-  });
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
+      internal::RsaPrivateKeyToRsaFixedSizeInputs(internal::RsaPrivateKey{
+          /*n=*/std::string(public_key.GetModulus(token).GetValue()),
+          /*e=*/
+          std::string(
+              public_key.GetParameters().GetPublicExponent().GetValue()),
+          /*d=*/d.Get(InsecureSecretKeyAccess::Get()),
+          /*p=*/p.Get(InsecureSecretKeyAccess::Get()),
+          /*q=*/q.Get(InsecureSecretKeyAccess::Get()),
+          /*dp=*/dp.Get(InsecureSecretKeyAccess::Get()),
+          /*dq=*/dq.Get(InsecureSecretKeyAccess::Get()),
+          /*crt=*/q_inv.Get(InsecureSecretKeyAccess::Get()),
+      });
+  return rsa.status();
 }
 
 }  // namespace

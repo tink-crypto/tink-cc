@@ -17,6 +17,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
+    tink::internal::fips_utils
     tink::internal::util
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key

@@ -626,7 +626,7 @@ cc_library(
         "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink:secret_data",
-        "//tink/internal:bn_util",
+        "//tink/internal:rsa_util",
         "//tink/internal:ssl_unique_ptr",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",

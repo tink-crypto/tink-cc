@@ -20,6 +20,7 @@ cc_library(
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
+        "//tink/internal:fips_utils",
         "//tink/internal:util",
         "//tink/signature:rsa_ssa_pkcs1_parameters",
         "//tink/signature:rsa_ssa_pkcs1_private_key",

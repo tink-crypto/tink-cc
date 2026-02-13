@@ -26,6 +26,7 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -357,7 +358,7 @@ SignatureTestVector CreateTestVector4() {
       HexDecodeOrDie("aa"));
 }
 
-SignatureTestVector CreateTestVector5() {
+SignatureTestVector Create4096BitsTestVector() {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(4096)
@@ -388,7 +389,7 @@ SignatureTestVector CreateTestVector5() {
       HexDecodeOrDie("aa"));
 }
 
-SignatureTestVector CreateTestVector6() {
+SignatureTestVector CreateTestVector5() {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
@@ -414,9 +415,14 @@ SignatureTestVector CreateTestVector6() {
 }  // namespace
 
 std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
-  return {CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-          CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
-          CreateTestVector6()};
+  std::vector<SignatureTestVector> test_vectors = {
+      CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
+      CreateTestVector3(), CreateTestVector4(), CreateTestVector5()};
+  if (!internal::IsFipsModeEnabled()) {
+    test_vectors.push_back(Create4096BitsTestVector());
+  }
+
+  return test_vectors;
 }
 
 }  // namespace internal

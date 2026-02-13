@@ -597,7 +597,7 @@ tink_cc_library(
     tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::bn_util
+    tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
 )
 

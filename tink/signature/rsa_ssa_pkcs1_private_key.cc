@@ -345,6 +345,59 @@ absl::StatusOr<RsaSsaPkcs1PrivateKey> RsaSsaPkcs1PrivateKey::Builder::Build(
                       "RestrictedData or RestrictedBigInteger).");
 }
 
+absl::StatusOr<RsaSsaPkcs1PrivateKey>
+RsaSsaPkcs1PrivateKey::Builder::BuildAllowNonConstantTime(
+    PartialKeyAccessToken token) {
+  if (!public_key_.has_value()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Cannot build without setting the public key");
+  }
+
+  if (p_big_integer_.has_value() || q_big_integer_.has_value() ||
+      d_big_integer_.has_value() || dp_big_integer_.has_value() ||
+      dq_big_integer_.has_value() || q_inv_big_integer_.has_value()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "BuildAllowNonConstantTime method can only be used by "
+                        "setting RestrictedData fields.");
+  }
+
+  if (!p_.has_value() || !q_.has_value() || !d_.has_value() ||
+      !dp_.has_value() || !dq_.has_value() || !q_inv_.has_value()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "BuildAllowNonConstantTime method requires that all "
+                        "RestrictedData fields are set.");
+  }
+
+  internal::RsaPrivateKey private_key;
+  private_key.n = public_key_->GetModulus(token).GetValue();
+  private_key.e = public_key_->GetParameters().GetPublicExponent().GetValue();
+  private_key.d = d_->Get(InsecureSecretKeyAccess::Get());
+  private_key.p = p_->Get(InsecureSecretKeyAccess::Get());
+  private_key.q = q_->Get(InsecureSecretKeyAccess::Get());
+  private_key.dp = dp_->Get(InsecureSecretKeyAccess::Get());
+  private_key.dq = dq_->Get(InsecureSecretKeyAccess::Get());
+  private_key.crt = q_inv_->Get(InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<internal::RsaPrivateKey> adjusted_private_key =
+      internal::RsaPrivateKeyAdjustEncodingLengths(private_key);
+
+  if (!adjusted_private_key.ok()) {
+    return adjusted_private_key.status();
+  }
+
+  p_ = RestrictedData(adjusted_private_key->p, InsecureSecretKeyAccess::Get());
+  q_ = RestrictedData(adjusted_private_key->q, InsecureSecretKeyAccess::Get());
+  dp_ =
+      RestrictedData(adjusted_private_key->dp, InsecureSecretKeyAccess::Get());
+  dq_ =
+      RestrictedData(adjusted_private_key->dq, InsecureSecretKeyAccess::Get());
+  d_ = RestrictedData(adjusted_private_key->d, InsecureSecretKeyAccess::Get());
+  q_inv_ =
+      RestrictedData(adjusted_private_key->crt, InsecureSecretKeyAccess::Get());
+
+  return Build(token);
+}
+
 bool RsaSsaPkcs1PrivateKey::operator==(const Key& other) const {
   const RsaSsaPkcs1PrivateKey* that =
       dynamic_cast<const RsaSsaPkcs1PrivateKey*>(&other);

@@ -49,13 +49,16 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
+#include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/composite_ml_dsa_public_key.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization_impl.h"
 #include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
 #include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
+#include "tink/signature/signature_private_key.h"
 #include "tink/signature/signature_public_key.h"
 
 namespace crypto {
@@ -208,6 +211,43 @@ class CompositeMlDsaPublicKeyTP final : public Message {
   MessageField<CompositeMlDsaParamsTP> params_{4};
 };
 
+class CompositeMlDsaPrivateKeyTP final : public Message {
+ public:
+  CompositeMlDsaPrivateKeyTP() = default;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const KeyDataTP& ml_dsa_private_key() const {
+    return ml_dsa_private_key_.value();
+  }
+  KeyDataTP* mutable_ml_dsa_private_key() {
+    return ml_dsa_private_key_.mutable_value();
+  }
+
+  const KeyDataTP& classical_private_key() const {
+    return classical_private_key_.value();
+  }
+  KeyDataTP* mutable_classical_private_key() {
+    return classical_private_key_.mutable_value();
+  }
+
+  const CompositeMlDsaParamsTP& params() const { return params_.value(); }
+  CompositeMlDsaParamsTP* mutable_params() { return params_.mutable_value(); }
+
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{&version_, &ml_dsa_private_key_,
+                                       &classical_private_key_, &params_}[i];
+  }
+
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
+  MessageField<KeyDataTP> ml_dsa_private_key_{2};
+  MessageField<KeyDataTP> classical_private_key_{3};
+  MessageField<CompositeMlDsaParamsTP> params_{4};
+};
+
 using CompositeMlDsaProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization,
                          CompositeMlDsaParameters>;
@@ -218,6 +258,10 @@ using CompositeMlDsaPublicKeyParserImpl =
     KeyParserImpl<ProtoKeySerialization, CompositeMlDsaPublicKey>;
 using CompositeMlDsaPublicKeySerializerImpl =
     KeySerializerImpl<CompositeMlDsaPublicKey, ProtoKeySerialization>;
+using CompositeMlDsaPrivateKeyParserImpl =
+    KeyParserImpl<ProtoKeySerialization, CompositeMlDsaPrivateKey>;
+using CompositeMlDsaPrivateKeySerializerImpl =
+    KeySerializerImpl<CompositeMlDsaPrivateKey, ProtoKeySerialization>;
 
 constexpr absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.CompositeMlDsaPrivateKey";
@@ -480,6 +524,101 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
+absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
+    const ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (serialization.TypeUrl() != kPrivateTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing CompositeMlDsaPrivateKey.");
+  }
+  if (serialization.GetKeyMaterialTypeEnum() !=
+      KeyMaterialTypeEnum::kAsymmetricPrivate) {
+    return absl::InvalidArgumentError(
+        "Wrong key material type when parsing CompositeMlDsaPrivateKey.");
+  }
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
+  }
+
+  CompositeMlDsaPrivateKeyTP proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse CompositeMlDsaPrivateKey proto");
+  }
+  if (proto_key.version() != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
+  }
+
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      ToParameters(serialization.GetOutputPrefixTypeEnum(),
+                   proto_key.params().ml_dsa_instance(),
+                   proto_key.params().classical_algorithm());
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  absl::StatusOr<SerializationRegistry*> serialization_registry =
+      GetSerializationRegistry();
+  if (!serialization_registry.ok()) {
+    return serialization_registry.status();
+  }
+
+  // Parse ML-DSA Private Key
+  RestrictedData ml_dsa_serialized_key(proto_key.ml_dsa_private_key().value(),
+                                       *token);
+  // Subkeys are always in raw format and have no id requirement.
+  absl::StatusOr<ProtoKeySerialization> ml_dsa_serialization =
+      ProtoKeySerialization::Create(
+          proto_key.ml_dsa_private_key().type_url(),
+          std::move(ml_dsa_serialized_key),
+          proto_key.ml_dsa_private_key().key_material_type(),
+          OutputPrefixTypeEnum::kRaw, /*id_requirement=*/absl::nullopt);
+  if (!ml_dsa_serialization.ok()) {
+    return ml_dsa_serialization.status();
+  }
+  absl::StatusOr<std::unique_ptr<Key>> parsed_ml_dsa_key =
+      (*serialization_registry)->ParseKey(*ml_dsa_serialization, token);
+  if (!parsed_ml_dsa_key.ok()) {
+    return parsed_ml_dsa_key.status();
+  }
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> ml_dsa_private_key =
+      DynamicCast<MlDsaPrivateKey>(std::move(*parsed_ml_dsa_key));
+  if (!ml_dsa_private_key.ok()) {
+    return absl::InvalidArgumentError(
+        "Parsed ML-DSA key is not an MlDsaPrivateKey");
+  }
+
+  // Parse Classical Private Key
+  RestrictedData classical_serialized_key(
+      proto_key.classical_private_key().value(), *token);
+  // Subkeys are always in raw format and have no id requirement.
+  absl::StatusOr<ProtoKeySerialization> classical_serialization =
+      ProtoKeySerialization::Create(
+          proto_key.classical_private_key().type_url(),
+          std::move(classical_serialized_key),
+          proto_key.classical_private_key().key_material_type(),
+          OutputPrefixTypeEnum::kRaw, /*id_requirement=*/absl::nullopt);
+  if (!classical_serialization.ok()) {
+    return classical_serialization.status();
+  }
+  absl::StatusOr<std::unique_ptr<Key>> parsed_classical_key =
+      (*serialization_registry)->ParseKey(*classical_serialization, token);
+  if (!parsed_classical_key.ok()) {
+    return parsed_classical_key.status();
+  }
+  absl::StatusOr<std::unique_ptr<SignaturePrivateKey>> classical_private_key =
+      DynamicCast<SignaturePrivateKey>(std::move(*parsed_classical_key));
+  if (!classical_private_key.ok()) {
+    return absl::InvalidArgumentError(
+        "Parsed classical key is not a SignaturePrivateKey");
+  }
+
+  return CompositeMlDsaPrivateKey::Create(
+      *parameters, **ml_dsa_private_key, std::move(*classical_private_key),
+      serialization.IdRequirement(), GetPartialKeyAccess());
+}
+
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const CompositeMlDsaParameters& parameters) {
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
@@ -596,6 +735,108 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       key.GetIdRequirement());
 }
 
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
+    const CompositeMlDsaPrivateKey& key,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
+  }
+
+  absl::StatusOr<CompositeMlDsaParamsTP> params =
+      FromParameters(key.GetPublicKey().GetParameters());
+  if (!params.ok()) {
+    return params.status();
+  }
+
+  absl::StatusOr<SerializationRegistry*> serialization_registry =
+      GetSerializationRegistry();
+  if (!serialization_registry.ok()) {
+    return serialization_registry.status();
+  }
+
+  // Serialize ML-DSA Private Key
+  absl::StatusOr<std::unique_ptr<Serialization>> ml_dsa_serialization =
+      (*serialization_registry)
+          ->SerializeKey<ProtoKeySerialization>(key.GetMlDsaPrivateKey(),
+                                                token);
+  if (!ml_dsa_serialization.ok()) {
+    return ml_dsa_serialization.status();
+  }
+  absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
+      ml_dsa_proto_key_serialization =
+          DynamicCast<ProtoKeySerialization>(std::move(*ml_dsa_serialization));
+  if (!ml_dsa_proto_key_serialization.ok()) {
+    return ml_dsa_proto_key_serialization.status();
+  }
+  if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
+      OutputPrefixTypeEnum::kRaw) {
+    return absl::InvalidArgumentError(
+        "Require raw output prefix for ML-DSA private key.");
+  }
+  if ((*ml_dsa_proto_key_serialization)->IdRequirement().has_value()) {
+    return absl::InvalidArgumentError(
+        "ML-DSA private key cannot have ID requirement.");
+  }
+  KeyDataTP ml_dsa_key_data;
+  ml_dsa_key_data.set_type_url((*ml_dsa_proto_key_serialization)->TypeUrl());
+  ml_dsa_key_data.set_key_material_type(
+      (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeEnum());
+  ml_dsa_key_data.set_value((*ml_dsa_proto_key_serialization)
+                                ->SerializedKeyProto()
+                                .GetSecret(*token));
+
+  // Serialize Classical Private Key
+  absl::StatusOr<std::unique_ptr<Serialization>> classical_serialization =
+      (*serialization_registry)
+          ->SerializeKey<ProtoKeySerialization>(key.GetClassicalPrivateKey(),
+                                                token);
+  if (!classical_serialization.ok()) {
+    return classical_serialization.status();
+  }
+  absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
+      classical_proto_key_serialization = DynamicCast<ProtoKeySerialization>(
+          std::move(*classical_serialization));
+  if (!classical_proto_key_serialization.ok()) {
+    return classical_proto_key_serialization.status();
+  }
+  if ((*classical_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
+      OutputPrefixTypeEnum::kRaw) {
+    return absl::InvalidArgumentError(
+        "Require raw output prefix for classical private key.");
+  }
+  if ((*classical_proto_key_serialization)->IdRequirement().has_value()) {
+    return absl::InvalidArgumentError(
+        "Classical private key cannot have ID requirement.");
+  }
+  KeyDataTP classical_key_data;
+  classical_key_data.set_type_url(
+      (*classical_proto_key_serialization)->TypeUrl());
+  classical_key_data.set_key_material_type(
+      (*classical_proto_key_serialization)->GetKeyMaterialTypeEnum());
+  classical_key_data.set_value((*classical_proto_key_serialization)
+                                   ->SerializedKeyProto()
+                                   .GetSecret(*token));
+
+  CompositeMlDsaPrivateKeyTP proto_key;
+  proto_key.set_version(0);
+  *proto_key.mutable_params() = *params;
+  *proto_key.mutable_ml_dsa_private_key() = ml_dsa_key_data;
+  *proto_key.mutable_classical_private_key() = classical_key_data;
+
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
+
+  RestrictedData restricted_output =
+      RestrictedData(proto_key.SerializeAsSecretData(), *token);
+  return ProtoKeySerialization::Create(
+      kPrivateTypeUrl, std::move(restricted_output),
+      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
+}
+
 CompositeMlDsaProtoParametersParserImpl& CompositeMlDsaProtoParametersParser() {
   static auto parser = new CompositeMlDsaProtoParametersParserImpl(
       kPrivateTypeUrl, ParseParameters);
@@ -621,6 +862,18 @@ CompositeMlDsaPublicKeySerializerImpl& CompositeMlDsaPublicKeySerializer() {
   return *serializer;
 }
 
+CompositeMlDsaPrivateKeyParserImpl& CompositeMlDsaPrivateKeyParser() {
+  static auto* parser =
+      new CompositeMlDsaPrivateKeyParserImpl(kPrivateTypeUrl, ParsePrivateKey);
+  return *parser;
+}
+
+CompositeMlDsaPrivateKeySerializerImpl& CompositeMlDsaPrivateKeySerializer() {
+  static auto* serializer =
+      new CompositeMlDsaPrivateKeySerializerImpl(SerializePrivateKey);
+  return *serializer;
+}
+
 }  // namespace
 
 absl::Status RegisterCompositeMlDsaProtoSerializationWithMutableRegistry(
@@ -640,7 +893,17 @@ absl::Status RegisterCompositeMlDsaProtoSerializationWithMutableRegistry(
       !status.ok()) {
     return status;
   }
-  return registry.RegisterKeySerializer(&CompositeMlDsaPublicKeySerializer());
+  if (absl::Status status =
+          registry.RegisterKeySerializer(&CompositeMlDsaPublicKeySerializer());
+      !status.ok()) {
+    return status;
+  }
+  if (absl::Status status =
+          registry.RegisterKeyParser(&CompositeMlDsaPrivateKeyParser());
+      !status.ok()) {
+    return status;
+  }
+  return registry.RegisterKeySerializer(&CompositeMlDsaPrivateKeySerializer());
 }
 
 absl::Status RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(
@@ -660,7 +923,17 @@ absl::Status RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(
       !status.ok()) {
     return status;
   }
-  return builder.RegisterKeySerializer(&CompositeMlDsaPublicKeySerializer());
+  if (absl::Status status =
+          builder.RegisterKeySerializer(&CompositeMlDsaPublicKeySerializer());
+      !status.ok()) {
+    return status;
+  }
+  if (absl::Status status =
+          builder.RegisterKeyParser(&CompositeMlDsaPrivateKeyParser());
+      !status.ok()) {
+    return status;
+  }
+  return builder.RegisterKeySerializer(&CompositeMlDsaPrivateKeySerializer());
 }
 
 }  // namespace internal

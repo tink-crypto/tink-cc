@@ -1181,8 +1181,11 @@ tink_cc_library(
     tink::internal::tink_proto_structs
     tink::internal::util
     tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_private_key
     tink::signature::composite_ml_dsa_public_key
+    tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
+    tink::signature::signature_private_key
     tink::signature::signature_public_key
   TAGS
     exclude_if_openssl

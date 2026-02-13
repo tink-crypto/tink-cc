@@ -1027,6 +1027,7 @@ tink_cc_test(
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(

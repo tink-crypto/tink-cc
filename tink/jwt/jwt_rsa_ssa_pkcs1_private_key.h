@@ -91,6 +91,15 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
     // Creates JwtRsaSsaPkcs1 private key object from this builder.
     absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> Build(PartialKeyAccessToken token);
 
+    // Create JWT RsaSsaPkcs1 private key object, and perform the following
+    // operations on the input:
+    // * Trim leading zeros of `p` and `q`
+    // * Pad/trim `dp`, `q_inv`, `d` and `dq` so that `dp.size()==p.size()`,
+    // `q_inv.size()==p.size()`, `d.size() == n.size()` and  `dq.size() ==
+    // q.size()`
+    absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> BuildAllowNonConstantTime(
+        PartialKeyAccessToken token);
+
    private:
     absl::optional<JwtRsaSsaPkcs1PublicKey> public_key_;
     absl::optional<RestrictedData> p_;

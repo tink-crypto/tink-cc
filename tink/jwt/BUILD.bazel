@@ -978,6 +978,7 @@ cc_test(
         "//tink/internal:bn_util",
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:test_matchers",
+        "//tink/util:test_util",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

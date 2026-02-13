@@ -91,6 +91,15 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
     // Creates RsaSsaPss private key object from this builder.
     absl::StatusOr<RsaSsaPssPrivateKey> Build(PartialKeyAccessToken token);
 
+    // Create RsaSsaPss private key object, and perform the following
+    // operations on the input:
+    // * Trim leading zeros of `p` and `q`
+    // * Pad/trim `dp`, `q_inv`, `d` and `dq` so that `dp.size()==p.size()`,
+    // `q_inv.size()==p.size()`, `d.size() == n.size()` and  `dq.size() ==
+    // q.size()`
+    absl::StatusOr<RsaSsaPssPrivateKey> BuildAllowNonConstantTime(
+        PartialKeyAccessToken token);
+
    private:
     absl::optional<RsaSsaPssPublicKey> public_key_;
     absl::optional<RestrictedData> p_;

@@ -740,6 +740,7 @@ cc_library(
         "//tink:secret_data",
         "//tink/internal:rsa_util",
         "//tink/internal:ssl_unique_ptr",
+        "//tink/util:secret_data",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

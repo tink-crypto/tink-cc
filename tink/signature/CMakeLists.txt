@@ -733,6 +733,7 @@ tink_cc_library(
     tink::core::secret_data
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::util::secret_data
 )
 
 tink_cc_library(

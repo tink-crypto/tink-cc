@@ -47,7 +47,7 @@ absl::Status ValidateKeyPair(const BigInteger& public_exponent,
                              const RestrictedData& dp, const RestrictedData& dq,
                              const RestrictedData& q_inv) {
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
-      internal::RsaPrivateKeyToRsa(internal::RsaPrivateKey{
+      internal::RsaPrivateKeyToRsaFixedSizeInputs(internal::RsaPrivateKey{
           /*n=*/std::string(modulus.GetValue()),
           /*e=*/std::string(public_exponent.GetValue()),
           /*d=*/d.Get(InsecureSecretKeyAccess::Get()),

@@ -492,7 +492,7 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
           RestrictedData(*dq_data, InsecureSecretKeyAccess::Get()))
       .SetPrivateExponent(
           RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
-      .SetCrtCoefficient(RestrictedData(private_key.crt(), *token))
+      .SetCrtCoefficient(RestrictedData(*crt_data, *token))
       .Build(GetPartialKeyAccess());
 }
 

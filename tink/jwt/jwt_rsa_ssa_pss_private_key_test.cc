@@ -390,8 +390,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   absl::StatusOr<std::string> e_str =
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   ASSERT_THAT(e_str, IsOk());
-  absl::StatusOr<std::string> d_str =
-      internal::BignumToString(d_bn, BN_num_bytes(d_bn));
+  absl::StatusOr<std::string> d_str = internal::BignumToString(d_bn, 2048 / 8);
   ASSERT_THAT(d_str, IsOk());
   absl::StatusOr<std::string> p_str =
       internal::BignumToString(p_bn, BN_num_bytes(p_bn));
@@ -400,13 +399,13 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
       internal::BignumToString(q_bn, BN_num_bytes(q_bn));
   ASSERT_THAT(q_str, IsOk());
   absl::StatusOr<std::string> dp_str =
-      internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
+      internal::BignumToString(dp_bn, BN_num_bytes(p_bn));
   ASSERT_THAT(dp_str, IsOk());
   absl::StatusOr<std::string> dq_str =
-      internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
+      internal::BignumToString(dq_bn, BN_num_bytes(q_bn));
   ASSERT_THAT(dq_str, IsOk());
   absl::StatusOr<std::string> q_inv_str =
-      internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
+      internal::BignumToString(q_inv_bn, BN_num_bytes(p_bn));
   ASSERT_THAT(q_inv_str, IsOk());
 
   absl::StatusOr<JwtRsaSsaPssParameters> parameters =

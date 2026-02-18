@@ -1410,3 +1410,29 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "core/low_level_crypto_access_token_test",
+    srcs = ["core/low_level_crypto_access_token_test.cc"],
+    deps = [
+        ":low_level_crypto_access",
+        ":low_level_crypto_access_token",
+        "@abseil-cpp//absl/base:core_headers",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "low_level_crypto_access",
+    hdrs = ["low_level_crypto_access.h"],
+    include_prefix = "tink",
+    visibility = ["//visibility:public"],
+    deps = [":low_level_crypto_access_token"],
+)
+
+cc_library(
+    name = "low_level_crypto_access_token",
+    hdrs = ["low_level_crypto_access_token.h"],
+    include_prefix = "tink",
+    visibility = ["//visibility:public"],
+)

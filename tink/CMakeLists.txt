@@ -1333,3 +1333,30 @@ tink_cc_test(
     tink::internal::secret_buffer
     tink::util::secret_data
 )
+
+tink_cc_library(
+  NAME low_level_crypto_access
+  SRCS
+    low_level_crypto_access.h
+  DEPS
+    tink::core::low_level_crypto_access_token
+  PUBLIC
+)
+
+tink_cc_library(
+  NAME low_level_crypto_access_token
+  SRCS
+    low_level_crypto_access_token.h
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME low_level_crypto_access_token_test
+  SRCS
+    core/low_level_crypto_access_token_test.cc
+  DEPS
+    tink::core::low_level_crypto_access
+    tink::core::low_level_crypto_access_token
+    gmock
+    absl::core_headers
+)

@@ -43,7 +43,6 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/enums.h"
@@ -1246,11 +1245,12 @@ TEST_P(EciesProtoSerializationTest, ParsePrivateKey) {
 
   absl::StatusOr<EciesPrivateKey> expected_private_key;
   if (test_case.curve_type != EciesParameters::CurveType::kX25519) {
-    expected_private_key = EciesPrivateKey::CreateForNistCurve(
-        *expected_public_key,
-        RestrictedBigInteger(key_pair->private_key,
-                             InsecureSecretKeyAccess::Get()),
-        GetPartialKeyAccess());
+    expected_private_key =
+        EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
+            *expected_public_key,
+            RestrictedData(key_pair->private_key,
+                           InsecureSecretKeyAccess::Get()),
+            GetPartialKeyAccess());
   } else {
     expected_private_key = EciesPrivateKey::CreateForCurveX25519(
         *expected_public_key,
@@ -1488,10 +1488,9 @@ TEST_P(EciesProtoSerializationTest, SerializePrivateKey) {
 
   absl::StatusOr<EciesPrivateKey> private_key;
   if (test_case.curve_type != EciesParameters::CurveType::kX25519) {
-    private_key = EciesPrivateKey::CreateForNistCurve(
+    private_key = EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
         *public_key,
-        RestrictedBigInteger(key_pair->private_key,
-                             InsecureSecretKeyAccess::Get()),
+        RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
   } else {
     private_key = EciesPrivateKey::CreateForCurveX25519(

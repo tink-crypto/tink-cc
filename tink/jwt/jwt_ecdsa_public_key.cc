@@ -124,7 +124,7 @@ JwtEcdsaPublicKey::Builder::ComputeKid() {
     char buffer[4];
     internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(buffer),
                                *id_requirement_);
-    absl::WebSafeBase64Escape(absl::string_view(buffer, 4), &base64_kid);
+    base64_kid = absl::WebSafeBase64Escape(absl::string_view(buffer, 4));
     return base64_kid;
   }
   if (parameters_->GetKidStrategy() ==

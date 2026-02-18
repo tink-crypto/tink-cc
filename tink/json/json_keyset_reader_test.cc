@@ -105,7 +105,7 @@ class JsonKeysetReaderTest : public ::testing::Test {
     std::string enc_keyset = "some ciphertext with keyset";
     encrypted_keyset_.set_encrypted_keyset(enc_keyset);
     std::string enc_keyset_base64;
-    absl::Base64Escape(enc_keyset, &enc_keyset_base64);
+    enc_keyset_base64 = absl::Base64Escape(enc_keyset);
     auto keyset_info = encrypted_keyset_.mutable_keyset_info();
     keyset_info->set_primary_key_id(42);
     auto key_info = keyset_info->add_key_info();

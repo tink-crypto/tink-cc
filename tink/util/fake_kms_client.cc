@@ -147,7 +147,7 @@ absl::StatusOr<std::string> FakeKmsClient::CreateFakeKeyUri() {
     return status;
   }
   std::string encoded_keyset;
-  absl::WebSafeBase64Escape(keyset.str(), &encoded_keyset);
+  encoded_keyset = absl::WebSafeBase64Escape(keyset.str());
   return absl::StrCat(kKeyUriPrefix, encoded_keyset);
 }
 

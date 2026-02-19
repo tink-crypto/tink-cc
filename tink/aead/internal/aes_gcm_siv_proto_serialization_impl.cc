@@ -89,6 +89,7 @@ class AesGcmSivKeyTP : public proto_parsing::Message {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
@@ -213,7 +214,8 @@ absl::StatusOr<AesGcmSivKey> ParseKey(
   }
 
   return AesGcmSivKey::Create(
-      *parameters, RestrictedData(std::move(key_struct.key_value()), *token),
+      *parameters,
+      RestrictedData(*std::move(key_struct).mutable_key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

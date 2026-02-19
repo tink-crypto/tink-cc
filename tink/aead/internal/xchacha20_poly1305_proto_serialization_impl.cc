@@ -63,6 +63,7 @@ class XChaCha20Poly1305KeyTP : public Message {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
@@ -192,7 +193,8 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
   if (!parameters.ok()) return parameters.status();
 
   return XChaCha20Poly1305Key::Create(
-      parameters->GetVariant(), RestrictedData(key.key_value(), *token),
+      parameters->GetVariant(),
+      RestrictedData(*std::move(key).mutable_key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

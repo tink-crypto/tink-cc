@@ -118,6 +118,7 @@ class AesEaxKeyTP : public Message {
   AesEaxParamsTP* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
@@ -264,9 +265,9 @@ absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
           .Build();
   if (!parameters.ok()) return parameters.status();
 
-  return AesEaxKey::Create(*parameters, RestrictedData(key.key_value(), *token),
-                           serialization.IdRequirement(),
-                           GetPartialKeyAccess());
+  return AesEaxKey::Create(
+      *parameters, RestrictedData(std::move(*key.mutable_key_value()), *token),
+      serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(

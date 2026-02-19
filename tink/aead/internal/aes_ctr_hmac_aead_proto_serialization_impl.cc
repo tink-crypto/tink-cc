@@ -265,10 +265,10 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
 
   return AesCtrHmacAeadKey::Builder()
       .SetParameters(*parameters)
-      .SetAesKeyBytes(
-          RestrictedData(std::move(key.aes_ctr_key().key_value()), *token))
-      .SetHmacKeyBytes(
-          RestrictedData(std::move(key.hmac_key().key_value()), *token))
+      .SetAesKeyBytes(RestrictedData(
+          std::move(*key.mutable_aes_ctr_key()->mutable_key_value()), *token))
+      .SetHmacKeyBytes(RestrictedData(
+          std::move(*key.mutable_hmac_key()->mutable_key_value()), *token))
       .SetIdRequirement(serialization.IdRequirement())
       .Build(GetPartialKeyAccess());
 }

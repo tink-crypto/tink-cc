@@ -66,6 +66,7 @@ class AesGcmKeyTP : public Message {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const SecretData& key_value() const { return key_value_.value(); }
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
@@ -225,7 +226,8 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
   if (!parameters.ok()) return parameters.status();
 
   return AesGcmKey::Create(
-      *parameters, RestrictedData(proto_key.key_value(), *token),
+      *parameters,
+      RestrictedData(*std::move(proto_key).mutable_key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

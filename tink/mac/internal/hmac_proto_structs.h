@@ -92,6 +92,7 @@ class HmacKeyTP : public proto_parsing::Message {
   HmacParamsTP* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }

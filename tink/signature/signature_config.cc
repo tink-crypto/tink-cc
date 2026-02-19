@@ -17,7 +17,11 @@
 #include "tink/signature/signature_config.h"
 
 #include "absl/memory/memory.h"
-#include "tink/config/config_util.h"
+#include "absl/status/status.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
 #include "tink/config/tink_fips.h"
 #include "tink/registry.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
@@ -26,6 +30,11 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/ml_dsa_sign_key_manager.h"
+#include "tink/signature/internal/ml_dsa_verify_key_manager.h"
+#endif
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
@@ -34,7 +43,6 @@
 #include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
-#include "tink/util/status.h"
 #include "proto/config.pb.h"
 
 namespace crypto {
@@ -93,6 +101,22 @@ absl::Status SignatureConfig::Register() {
 
   status = RegisterEd25519ProtoSerialization();
   if (!status.ok()) return status;
+
+  // Tink implements PQC signatures with BoringSSL, not OpenSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+  // ML-DSA
+  status =
+      Registry::RegisterKeyManager(internal::MakeMlDsaSignKeyManager(), true);
+  if (!status.ok()) return status;
+
+  // Creating a new public key doesn't make sense and is therefore not allowed.
+  status = Registry::RegisterKeyManager(internal::MakeMlDsaVerifyKeyManager(),
+                                        false);
+  if (!status.ok()) return status;
+
+  status = RegisterMlDsaProtoSerialization();
+  if (!status.ok()) return status;
+#endif
 
   return absl::OkStatus();
 }

@@ -285,7 +285,6 @@ tink_cc_test(
   DEPS
     tink::internal::key_info
     gmock
-    protobuf::libprotobuf-lite
     tink::proto::tink_cc_proto
 )
 
@@ -2024,4 +2023,55 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
+)
+
+tink_cc_library(
+  NAME legacy_key_manager_impl
+  SRCS
+    legacy_key_manager_impl.cc
+    legacy_key_manager_impl.h
+  DEPS
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::tink_proto_structs
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    tink::core::key
+    tink::core::key_manager
+    tink::core::parameters
+    tink::core::private_key
+    tink::core::restricted_data
+    tink::util::constants
+    tink::util::protobuf_helper
+)
+
+tink_cc_test(
+  NAME legacy_key_manager_impl_test
+  SRCS
+    legacy_key_manager_impl_test.cc
+  DEPS
+    tink::internal::legacy_key_manager_impl
+    gmock
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::core::key_manager
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::signature::signature_config
+    tink::signature::internal::ml_dsa_sign_key_manager
+    tink::signature::internal::ml_dsa_verify_key_manager
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::common_cc_proto
+    tink::proto::ecdsa_cc_proto
+    tink::proto::ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
 )

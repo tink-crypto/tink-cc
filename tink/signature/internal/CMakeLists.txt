@@ -1253,3 +1253,84 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME ml_dsa_sign_key_manager
+  SRCS
+    ml_dsa_sign_key_manager.cc
+    ml_dsa_sign_key_manager.h
+  DEPS
+    tink::signature::internal::key_creators
+    tink::signature::internal::ml_dsa_sign_boringssl
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    tink::core::key
+    tink::core::key_manager
+    tink::core::parameters
+    tink::core::public_key_sign
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::util::constants
+    tink::util::protobuf_helper
+    tink::proto::ml_dsa_cc_proto
+)
+
+tink_cc_library(
+  NAME ml_dsa_verify_key_manager
+  SRCS
+    ml_dsa_verify_key_manager.cc
+    ml_dsa_verify_key_manager.h
+  DEPS
+    tink::signature::internal::ml_dsa_verify_boringssl
+    absl::status
+    absl::statusor
+    absl::strings
+    tink::core::key
+    tink::core::key_manager
+    tink::core::public_key_verify
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::signature::ml_dsa_public_key
+    tink::util::constants
+)
+
+tink_cc_test(
+  NAME ml_dsa_sign_key_manager_test
+  SRCS
+    ml_dsa_sign_key_manager_test.cc
+  DEPS
+    tink::signature::internal::ml_dsa_sign_key_manager
+    tink::signature::internal::ml_dsa_verify_key_manager
+    gmock
+    absl::statusor
+    tink::core::key_manager
+    tink::core::public_key_sign
+    tink::signature::signature_config
+    tink::util::test_matchers
+    tink::proto::ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME ml_dsa_verify_key_manager_test
+  SRCS
+    ml_dsa_verify_key_manager_test.cc
+  DEPS
+    tink::signature::internal::ml_dsa_verify_key_manager
+    gmock
+    absl::string_view
+    tink::core::key_manager
+    tink::core::public_key_verify
+    tink::signature::signature_config
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)

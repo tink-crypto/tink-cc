@@ -378,9 +378,13 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_verify_key_manager
     absl::core_headers
     absl::memory
+    absl::status
+    crypto
     tink::core::registry
-    tink::config::config_util
     tink::config::tink_fips
+    tink::signature::internal::ml_dsa_proto_serialization
+    tink::signature::internal::ml_dsa_sign_key_manager
+    tink::signature::internal::ml_dsa_verify_key_manager
     tink::util::status
     tink::proto::config_cc_proto
 )

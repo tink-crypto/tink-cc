@@ -62,19 +62,19 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
   private_key.e = std::string(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
   private_key.d = SecretDataFromStringView(
-      key.GetPrivateExponent().GetSecret(InsecureSecretKeyAccess::Get()));
+      key.GetPrivateExponentData().GetSecret(InsecureSecretKeyAccess::Get()));
   private_key.p =
-      SecretDataFromStringView(key.GetPrimeP(GetPartialKeyAccess())
+      SecretDataFromStringView(key.GetPrimePData(GetPartialKeyAccess())
                                    .GetSecret(InsecureSecretKeyAccess::Get()));
   private_key.q =
-      SecretDataFromStringView(key.GetPrimeQ(GetPartialKeyAccess())
+      SecretDataFromStringView(key.GetPrimeQData(GetPartialKeyAccess())
                                    .GetSecret(InsecureSecretKeyAccess::Get()));
   private_key.dp = SecretDataFromStringView(
-      key.GetPrimeExponentP().GetSecret(InsecureSecretKeyAccess::Get()));
+      key.GetPrimeExponentPData().GetSecret(InsecureSecretKeyAccess::Get()));
   private_key.dq = SecretDataFromStringView(
-      key.GetPrimeExponentQ().GetSecret(InsecureSecretKeyAccess::Get()));
+      key.GetPrimeExponentQData().GetSecret(InsecureSecretKeyAccess::Get()));
   private_key.crt = SecretDataFromStringView(
-      key.GetCrtCoefficient().GetSecret(InsecureSecretKeyAccess::Get()));
+      key.GetCrtCoefficientData().GetSecret(InsecureSecretKeyAccess::Get()));
   internal::RsaSsaPkcs1Params params;
   switch (key.GetParameters().GetHashType()) {
     case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha256:

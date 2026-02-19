@@ -39,7 +39,6 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
@@ -421,18 +420,18 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
     absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
         RsaSsaPkcs1PrivateKey::Builder()
             .SetPublicKey(*public_key)
-            .SetPrimeP(RestrictedBigInteger(rsa_private_key.p,
-                                            InsecureSecretKeyAccess::Get()))
-            .SetPrimeQ(RestrictedBigInteger(rsa_private_key.q,
-                                            InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentP(RestrictedBigInteger(
-                rsa_private_key.dp, InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentQ(RestrictedBigInteger(
-                rsa_private_key.dq, InsecureSecretKeyAccess::Get()))
-            .SetPrivateExponent(RestrictedBigInteger(
-                rsa_private_key.d, InsecureSecretKeyAccess::Get()))
-            .SetCrtCoefficient(RestrictedBigInteger(
-                rsa_private_key.crt, InsecureSecretKeyAccess::Get()))
+            .SetPrimeP(RestrictedData(rsa_private_key.p,
+                                      InsecureSecretKeyAccess::Get()))
+            .SetPrimeQ(RestrictedData(rsa_private_key.q,
+                                      InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
+                                              InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
+                                              InsecureSecretKeyAccess::Get()))
+            .SetPrivateExponent(RestrictedData(rsa_private_key.d,
+                                               InsecureSecretKeyAccess::Get()))
+            .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
+                                              InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
     return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
   }
@@ -445,19 +444,18 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(HexDecodeOrDie(kHex3072BitRsaP),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(HexDecodeOrDie(kHex3072BitRsaQ),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              HexDecodeOrDie(kHex3072BitRsaDp), InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              HexDecodeOrDie(kHex3072BitRsaDq), InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              HexDecodeOrDie(kHex3072BitRsaD), InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(
-              RestrictedBigInteger(HexDecodeOrDie(kHex3072BitRsaQinv),
-                                   InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHex3072BitRsaP),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHex3072BitRsaQ),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(RestrictedData(HexDecodeOrDie(kHex3072BitRsaDp),
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(RestrictedData(HexDecodeOrDie(kHex3072BitRsaDq),
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(RestrictedData(HexDecodeOrDie(kHex3072BitRsaD),
+                                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(HexDecodeOrDie(kHex3072BitRsaQinv),
+                                            InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
   return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
@@ -487,18 +485,18 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
     absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
         RsaSsaPkcs1PrivateKey::Builder()
             .SetPublicKey(*public_key)
-            .SetPrimeP(RestrictedBigInteger(rsa_private_key.p,
-                                            InsecureSecretKeyAccess::Get()))
-            .SetPrimeQ(RestrictedBigInteger(rsa_private_key.q,
-                                            InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentP(RestrictedBigInteger(
-                rsa_private_key.dp, InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentQ(RestrictedBigInteger(
-                rsa_private_key.dq, InsecureSecretKeyAccess::Get()))
-            .SetPrivateExponent(RestrictedBigInteger(
-                rsa_private_key.d, InsecureSecretKeyAccess::Get()))
-            .SetCrtCoefficient(RestrictedBigInteger(
-                rsa_private_key.crt, InsecureSecretKeyAccess::Get()))
+            .SetPrimeP(RestrictedData(rsa_private_key.p,
+                                      InsecureSecretKeyAccess::Get()))
+            .SetPrimeQ(RestrictedData(rsa_private_key.q,
+                                      InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
+                                              InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
+                                              InsecureSecretKeyAccess::Get()))
+            .SetPrivateExponent(RestrictedData(rsa_private_key.d,
+                                               InsecureSecretKeyAccess::Get()))
+            .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
+                                              InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
     return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
   }
@@ -511,19 +509,18 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedBigInteger(HexDecodeOrDie(kHex4096BitRsaP),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedBigInteger(HexDecodeOrDie(kHex4096BitRsaQ),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedBigInteger(
-              HexDecodeOrDie(kHex4096BitRsaDp), InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedBigInteger(
-              HexDecodeOrDie(kHex4096BitRsaDq), InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedBigInteger(
-              HexDecodeOrDie(kHex4096BitRsaD), InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(
-              RestrictedBigInteger(HexDecodeOrDie(kHex4096BitRsaQinv),
-                                   InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHex4096BitRsaP),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHex4096BitRsaQ),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(RestrictedData(HexDecodeOrDie(kHex4096BitRsaDp),
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(RestrictedData(HexDecodeOrDie(kHex4096BitRsaDq),
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(RestrictedData(HexDecodeOrDie(kHex4096BitRsaD),
+                                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(HexDecodeOrDie(kHex4096BitRsaQinv),
+                                            InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
   return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);

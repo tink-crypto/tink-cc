@@ -730,7 +730,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
       dynamic_cast<const EcdsaPrivateKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string locally_derived_key_value =
-      test::HexEncode(key->GetPrivateKeyValue(GetPartialKeyAccess())
+      test::HexEncode(key->GetPrivateKey(GetPartialKeyAccess())
                           .GetSecret(InsecureSecretKeyAccess::Get()));
 
   // Derive with EcdsaSignKeyManager in global registry.

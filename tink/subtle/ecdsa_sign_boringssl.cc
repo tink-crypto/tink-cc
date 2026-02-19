@@ -107,7 +107,7 @@ absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
   subtle_ec_key.pub_x = std::string(ec_point.GetX().GetValue());
   subtle_ec_key.pub_y = std::string(ec_point.GetY().GetValue());
   subtle_ec_key.priv = util::SecretDataFromStringView(
-      key.GetPrivateKeyValue(GetPartialKeyAccess())
+      key.GetPrivateKey(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get()));
   absl::StatusOr<subtle::EllipticCurveType> converted_curve_type =
       ConvertCurveType(key.GetPublicKey().GetParameters().GetCurveType());

@@ -16,8 +16,6 @@
 
 #include "tink/mac/internal/hmac_proto_serialization_impl.h"
 
-#include <array>
-#include <cstdint>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -212,7 +210,8 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
   if (!parameters.ok()) return parameters.status();
 
   return HmacKey::Create(
-      *parameters, RestrictedData(std::move(proto_key.key_value()), *token),
+      *parameters,
+      RestrictedData(std::move(*proto_key.mutable_key_value()), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

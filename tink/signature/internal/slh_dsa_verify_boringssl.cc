@@ -21,15 +21,20 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
+#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/slhdsa.h"
+#endif  // OPENSSL_IS_BORINGSSL
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/slh_dsa_public_key.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -37,6 +42,7 @@ namespace internal {
 
 namespace {
 
+#ifdef OPENSSL_IS_BORINGSSL
 // Public Key Verification using SLH-DSA-SHA2-128s implementation from
 // BoringSSL.
 class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
@@ -82,16 +88,22 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
  private:
   SlhDsaPublicKey public_key_;
 };
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
     const SlhDsaPublicKey &public_key) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "SLH-DSA is only supported in BoringSSL builds.");
+#else
   auto status = internal::CheckFipsCompatibility<SlhDsaVerifyBoringSsl>();
   if (!status.ok()) {
     return status;
   }
   return {std::make_unique<SlhDsaVerifyBoringSsl>(std::move(public_key))};
+#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

@@ -385,6 +385,9 @@ tink_cc_library(
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_sign_key_manager
     tink::signature::internal::ml_dsa_verify_key_manager
+    tink::signature::internal::slh_dsa_proto_serialization
+    tink::signature::internal::slh_dsa_sign_key_manager
+    tink::signature::internal::slh_dsa_verify_key_manager
     tink::util::status
     tink::proto::config_cc_proto
 )

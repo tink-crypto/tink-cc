@@ -34,6 +34,9 @@
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_key_manager.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_sign_key_manager.h"
+#include "tink/signature/internal/slh_dsa_verify_key_manager.h"
 #endif
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
@@ -115,6 +118,19 @@ absl::Status SignatureConfig::Register() {
   if (!status.ok()) return status;
 
   status = RegisterMlDsaProtoSerialization();
+  if (!status.ok()) return status;
+
+  // SLH-DSA
+  status =
+      Registry::RegisterKeyManager(internal::MakeSlhDsaSignKeyManager(), true);
+  if (!status.ok()) return status;
+
+  // Creating a new public key doesn't make sense and is therefore not allowed.
+  status = Registry::RegisterKeyManager(internal::MakeSlhDsaVerifyKeyManager(),
+                                        false);
+  if (!status.ok()) return status;
+
+  status = RegisterSlhDsaProtoSerialization();
   if (!status.ok()) return status;
 #endif
 

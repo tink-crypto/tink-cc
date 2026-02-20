@@ -499,8 +499,6 @@ tink_cc_library(
     tink::signature::internal::slh_dsa_proto_serialization_impl
     absl::status
     tink::internal::mutable_serialization_registry
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -554,8 +552,6 @@ tink_cc_library(
     tink::signature::slh_dsa_private_key
     tink::subtle::subtle_util
     tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -588,6 +584,7 @@ tink_cc_library(
     slh_dsa_verify_boringssl.h
   DEPS
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     crypto
@@ -595,10 +592,7 @@ tink_cc_library(
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::signature::slh_dsa_public_key
-    tink::util::status
     tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1096,8 +1090,6 @@ tink_cc_library(
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1331,6 +1323,89 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME slh_dsa_sign_key_manager
+  SRCS
+    slh_dsa_sign_key_manager.cc
+    slh_dsa_sign_key_manager.h
+  DEPS
+    tink::signature::internal::key_creators
+    tink::signature::internal::slh_dsa_sign_boringssl
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::key_manager
+    tink::core::parameters
+    tink::core::public_key_sign
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::signature::slh_dsa_parameters
+    tink::signature::slh_dsa_private_key
+    tink::util::constants
+    tink::util::protobuf_helper
+    tink::proto::slh_dsa_cc_proto
+)
+
+tink_cc_test(
+  NAME slh_dsa_sign_key_manager_test
+  SRCS
+    slh_dsa_sign_key_manager_test.cc
+  DEPS
+    tink::signature::internal::slh_dsa_sign_key_manager
+    tink::signature::internal::slh_dsa_verify_key_manager
+    gmock
+    absl::statusor
+    tink::core::key_manager
+    tink::core::public_key_sign
+    tink::signature::signature_config
+    tink::util::test_matchers
+    tink::proto::slh_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME slh_dsa_verify_key_manager
+  SRCS
+    slh_dsa_verify_key_manager.cc
+    slh_dsa_verify_key_manager.h
+  DEPS
+    tink::signature::internal::slh_dsa_verify_boringssl
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::key
+    tink::core::key_manager
+    tink::core::public_key_verify
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::signature::slh_dsa_public_key
+    tink::util::constants
+)
+
+tink_cc_test(
+  NAME slh_dsa_verify_key_manager_test
+  SRCS
+    slh_dsa_verify_key_manager_test.cc
+  DEPS
+    tink::signature::internal::slh_dsa_verify_key_manager
+    gmock
+    absl::string_view
+    tink::core::key_manager
+    tink::core::public_key_verify
+    tink::signature::signature_config
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::slh_dsa_cc_proto
   TAGS
     exclude_if_openssl
 )

@@ -31,7 +31,7 @@ absl::StatusOr<SlhDsaParameters> SlhDsaParameters::Create(
   if (hash_type != HashType::kSha2) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
-        "Cannot create Slh-DSA parameters with unknown HashType.");
+        "Invalid SLH-DSA HashType. Only SHA2 is currently supported.");
   }
 
   if (private_key_size_in_bytes != 64) {
@@ -44,7 +44,8 @@ absl::StatusOr<SlhDsaParameters> SlhDsaParameters::Create(
   if (signature_type != SignatureType::kSmallSignature) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
-        "Cannot create SLH-DSA parameters with unknown SignatureType.");
+        "Invalid SLH-DSA SignatureType. Only SMALL_SIGNATURE is currently "
+        "supported.");
   }
 
   // Validate Variant.

@@ -514,9 +514,9 @@ cc_library(
         "//tink:public_key_verify",
         "//tink/internal:fips_utils",
         "//tink/signature:slh_dsa_public_key",
-        "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@boringssl//:crypto",
@@ -1196,6 +1196,87 @@ cc_test(
     deps = [
         ":ml_dsa_verify_key_manager",
         "//proto:ml_dsa_cc_proto",
+        "//tink:key_manager",
+        "//tink:public_key_verify",
+        "//tink/signature:signature_config",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "slh_dsa_sign_key_manager",
+    srcs = ["slh_dsa_sign_key_manager.cc"],
+    hdrs = ["slh_dsa_sign_key_manager.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        ":key_creators",
+        ":slh_dsa_sign_boringssl",
+        "//proto:slh_dsa_cc_proto",
+        "//tink:key",
+        "//tink:key_manager",
+        "//tink:parameters",
+        "//tink:public_key_sign",
+        "//tink/internal:legacy_key_manager_impl",
+        "//tink/internal:tink_proto_structs",
+        "//tink/signature:slh_dsa_parameters",
+        "//tink/signature:slh_dsa_private_key",
+        "//tink/util:constants",
+        "//tink/util:protobuf_helper",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "slh_dsa_sign_key_manager_test",
+    srcs = ["slh_dsa_sign_key_manager_test.cc"],
+    deps = [
+        ":slh_dsa_sign_key_manager",
+        ":slh_dsa_verify_key_manager",
+        "//proto:slh_dsa_cc_proto",
+        "//tink:key_manager",
+        "//tink:public_key_sign",
+        "//tink/signature:signature_config",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "slh_dsa_verify_key_manager",
+    srcs = ["slh_dsa_verify_key_manager.cc"],
+    hdrs = ["slh_dsa_verify_key_manager.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        ":slh_dsa_verify_boringssl",
+        "//tink:key",
+        "//tink:key_manager",
+        "//tink:public_key_verify",
+        "//tink/internal:legacy_key_manager_impl",
+        "//tink/internal:tink_proto_structs",
+        "//tink/signature:slh_dsa_public_key",
+        "//tink/util:constants",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "slh_dsa_verify_key_manager_test",
+    srcs = ["slh_dsa_verify_key_manager_test.cc"],
+    deps = [
+        ":slh_dsa_verify_key_manager",
+        "//proto:slh_dsa_cc_proto",
         "//tink:key_manager",
         "//tink:public_key_verify",
         "//tink/signature:signature_config",

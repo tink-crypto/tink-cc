@@ -25,7 +25,13 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
+#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/slhdsa.h"
+#endif  // OPENSSL_IS_BORINGSSL
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -34,7 +40,6 @@
 #include "tink/public_key_sign.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -42,6 +47,7 @@ namespace internal {
 
 namespace {
 
+#ifdef OPENSSL_IS_BORINGSSL
 class SlhDsaSignBoringSsl : public PublicKeySign {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
@@ -83,16 +89,22 @@ absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
 
   return signature;
 }
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
     const SlhDsaPrivateKey &private_key) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "SLH-DSA is only supported in BoringSSL builds.");
+#else
   auto status = internal::CheckFipsCompatibility<SlhDsaSignBoringSsl>();
   if (!status.ok()) {
     return status;
   }
   return {std::make_unique<SlhDsaSignBoringSsl>(std::move(private_key))};
+#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

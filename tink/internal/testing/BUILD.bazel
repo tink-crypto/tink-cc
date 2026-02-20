@@ -13,7 +13,7 @@ cc_library(
     hdrs = ["equals_proto_key_serialization.h"],
     include_prefix = "tink/internal/testing",
     deps = [
-        "//tink:insecure_secret_key_access",
+        "//tink/internal:internal_insecure_secret_key_access",
         "//tink/internal:tink_proto_structs",
         "//tink/util:test_util",
         "@abseil-cpp//absl/strings",

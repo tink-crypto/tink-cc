@@ -25,7 +25,7 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/util/test_util.h"
 
@@ -47,10 +47,10 @@ MATCHER_P(EqualsProtoKeySerialization, expected, "") {
                                      expected.TypeUrl(), "', got '",
                                      arg.TypeUrl(), "'"));
   }
-  absl::string_view expected_key =
-      expected.SerializedKeyProto().GetSecret(InsecureSecretKeyAccess::Get());
+  absl::string_view expected_key = expected.SerializedKeyProto().GetSecret(
+      GetInsecureSecretKeyAccessInternal());
   absl::string_view arg_key =
-      arg.SerializedKeyProto().GetSecret(InsecureSecretKeyAccess::Get());
+      arg.SerializedKeyProto().GetSecret(GetInsecureSecretKeyAccessInternal());
   if (expected_key != arg_key) {
     equals = false;
     debug_str.push_back(absl::StrCat(

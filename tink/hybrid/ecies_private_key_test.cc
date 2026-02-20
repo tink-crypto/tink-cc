@@ -144,10 +144,14 @@ TEST_P(EciesPrivateKeyTest, CreateNistCurvePrivateKey) {
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
   EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
               Eq(private_key_value));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(
       private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
       Eq(RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                               InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),
               Eq(absl::nullopt));
 }
@@ -277,10 +281,14 @@ TEST_P(EciesPrivateKeyTest, CreateNistCurvePrivateKeyAllowNonConstantTime) {
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
   EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
               Eq(private_key_value));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(
       private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
       Eq(RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                               InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),
               Eq(absl::nullopt));
 }
@@ -455,8 +463,12 @@ TEST(EciesPublicKeyTest, CreateX25519PublicKey) {
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(absl::nullopt));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetOutputPrefix(), IsEmpty());
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
               Eq(absl::nullopt));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
               Eq(absl::nullopt));
   EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),
@@ -465,7 +477,6 @@ TEST(EciesPublicKeyTest, CreateX25519PublicKey) {
 
 TEST_P(EciesPrivateKeyTest, CreateMismatchedNistCurveKeyPairFails) {
   TestCase test_case = GetParam();
-
   absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(test_case.curve_type)

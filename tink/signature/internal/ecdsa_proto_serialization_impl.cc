@@ -508,7 +508,7 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
   }
   RestrictedData private_key_value =
       RestrictedData(*std::move(key_value), *token);
-  return EcdsaPrivateKey::Create(*public_key, private_key_value,
+  return EcdsaPrivateKey::Create(*public_key, std::move(private_key_value),
                                  GetPartialKeyAccess());
 }
 

@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_ECDSA_PRIVATE_KEY_H_
 
 #include <memory>
+#include <utility>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
@@ -71,7 +72,7 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
   // Returns an error if the input of private_key_value is not of length
   // public_key.GetParameters().GetPrivateKeyLength().
   static absl::StatusOr<EcdsaPrivateKey> Create(
-      const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
+      const EcdsaPublicKey& public_key, RestrictedData private_key_value,
       PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateKey(PartialKeyAccessToken token) const {
@@ -109,8 +110,9 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
 
  private:
   explicit EcdsaPrivateKey(const EcdsaPublicKey& public_key,
-                           const RestrictedData& private_key_value)
-      : public_key_(public_key), private_key_value_(private_key_value) {}
+                           RestrictedData private_key_value)
+      : public_key_(public_key),
+        private_key_value_(std::move(private_key_value)) {}
 
   EcdsaPublicKey public_key_;
   RestrictedData private_key_value_;

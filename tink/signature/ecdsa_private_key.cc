@@ -125,7 +125,7 @@ absl::Status ValidateKeyPair(const EcdsaPublicKey& public_key,
 }  // namespace
 
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
-    const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
+    const EcdsaPublicKey& public_key, RestrictedData private_key_value,
     PartialKeyAccessToken token) {
   size_t key_length = public_key.GetParameters().GetPrivateKeyLength();
   if (private_key_value.size() != key_length) {
@@ -141,7 +141,7 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
     return key_pair_validation;
   }
 
-  return EcdsaPrivateKey(public_key, private_key_value);
+  return EcdsaPrivateKey(public_key, std::move(private_key_value));
 }
 
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
@@ -177,7 +177,8 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
     return key_pair_validation;
   }
 
-  return EcdsaPrivateKey(public_key, private_key_value_restricted_data);
+  return EcdsaPrivateKey(public_key,
+                         std::move(private_key_value_restricted_data));
 }
 
 const RestrictedBigInteger& EcdsaPrivateKey::GetPrivateKeyValue(

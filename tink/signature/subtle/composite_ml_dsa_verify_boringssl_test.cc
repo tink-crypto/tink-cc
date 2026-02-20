@@ -37,7 +37,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
@@ -1982,24 +1981,22 @@ TEST(CompositeMlDsaVerifyTest, TestVectorSignVerifyMlDsa65Rsa3072Pkcs1) {
   absl::StatusOr<RsaSsaPkcs1PrivateKey> rsa_private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1P),
-                                   InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Q),
-                                   InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1P),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Q),
+                                    InsecureSecretKeyAccess::Get()))
           .SetPrimeExponentP(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Dp),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Dp),
+                             InsecureSecretKeyAccess::Get()))
           .SetPrimeExponentQ(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Dq),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Dq),
+                             InsecureSecretKeyAccess::Get()))
           .SetPrivateExponent(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1D),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1D),
+                             InsecureSecretKeyAccess::Get()))
           .SetCrtCoefficient(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Qinv),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Qinv),
+                             InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
@@ -2312,24 +2309,22 @@ TEST(CompositeMlDsaVerifyTest, TestVectorSignVerifyMlDsa65Rsa4096Pkcs1) {
   absl::StatusOr<RsaSsaPkcs1PrivateKey> rsa_private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1P),
-                                   InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Q),
-                                   InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1P),
+                                    InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Q),
+                                    InsecureSecretKeyAccess::Get()))
           .SetPrimeExponentP(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Dp),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Dp),
+                             InsecureSecretKeyAccess::Get()))
           .SetPrimeExponentQ(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Dq),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Dq),
+                             InsecureSecretKeyAccess::Get()))
           .SetPrivateExponent(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1D),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1D),
+                             InsecureSecretKeyAccess::Get()))
           .SetCrtCoefficient(
-              RestrictedBigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Qinv),
-                                   InsecureSecretKeyAccess::Get()))
+              RestrictedData(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Qinv),
+                             InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =

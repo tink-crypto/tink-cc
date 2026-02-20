@@ -101,7 +101,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::fips_utils
     tink::internal::secret_buffer

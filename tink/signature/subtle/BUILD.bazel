@@ -95,7 +95,6 @@ cc_test(
         "//tink:partial_key_access",
         "//tink:public_key_sign",
         "//tink:public_key_verify",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink/internal:fips_utils",
         "//tink/internal:secret_buffer",

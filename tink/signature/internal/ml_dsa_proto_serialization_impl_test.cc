@@ -39,7 +39,7 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"

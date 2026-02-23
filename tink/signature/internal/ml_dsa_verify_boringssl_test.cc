@@ -31,7 +31,7 @@
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/restricted_data.h"
-#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"

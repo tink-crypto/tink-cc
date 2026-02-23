@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/internal/ml_dsa_key_creator.h"
 
 #include <cstdint>
 #include <memory>
@@ -32,46 +32,20 @@
 #include "openssl/crypto.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
-#include "openssl/slhdsa.h"
 #endif
-#include "tink/big_integer.h"
-#include "tink/ec_point.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/signature/ecdsa_parameters.h"
-#include "tink/signature/ecdsa_private_key.h"
-#include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/signature/slh_dsa_parameters.h"
-#include "tink/signature/slh_dsa_private_key.h"
-#include "tink/signature/slh_dsa_public_key.h"
-#include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
-
-absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
-    EcdsaParameters::CurveType curve_type) {
-  switch (curve_type) {
-    case EcdsaParameters::CurveType::kNistP256:
-      return subtle::EllipticCurveType::NIST_P256;
-    case EcdsaParameters::CurveType::kNistP384:
-      return subtle::EllipticCurveType::NIST_P384;
-    case EcdsaParameters::CurveType::kNistP521:
-      return subtle::EllipticCurveType::NIST_P521;
-    default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Invalid ECDSA curve type.");
-  }
-}
 
 #ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa65Key(
@@ -90,6 +64,9 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa65Key(
 
   absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
       params, public_key_bytes, id_requirement, GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
 
   absl::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
       *public_key,
@@ -119,6 +96,9 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa87Key(
 
   absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
       params, public_key_bytes, id_requirement, GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
 
   absl::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
       *public_key,
@@ -151,75 +131,6 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
           "Only ML-DSA-65 and ML-DSA-87 are supported");
   }
 #endif  // OPENSSL_IS_BORINGSSL
-}
-
-absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
-    const SlhDsaParameters& params, absl::optional<int> id_requirement) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
-  uint8_t public_key_bytes[SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES];
-  uint8_t private_key_bytes[SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES];
-
-  SLHDSA_SHA2_128S_generate_key(public_key_bytes, private_key_bytes);
-
-  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
-      params,
-      absl::string_view(reinterpret_cast<const char*>(public_key_bytes),
-                        SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
-      id_requirement, GetPartialKeyAccess());
-  if (!public_key.ok()) {
-    return public_key.status();
-  }
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(
-          absl::string_view(reinterpret_cast<const char*>(private_key_bytes),
-                            SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES),
-          GetInsecureSecretKeyAccessInternal()),
-      GetPartialKeyAccess());
-  if (!private_key.ok()) {
-    return private_key.status();
-  }
-
-  return absl::make_unique<SlhDsaPrivateKey>(*private_key);
-#endif  // OPENSSL_IS_BORINGSSL
-}
-
-absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
-    const EcdsaParameters& params, absl::optional<int> id_requirement) {
-  absl::StatusOr<subtle::EllipticCurveType> curve_type =
-      ToSubtleEllipticCurve(params.GetCurveType());
-  if (!curve_type.ok()) {
-    return curve_type.status();
-  }
-
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(*curve_type);
-  if (!ec_key.ok()) {
-    return ec_key.status();
-  }
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      params, public_point, id_requirement, GetPartialKeyAccess());
-  if (!public_key.ok()) {
-    return public_key.status();
-  }
-
-  RestrictedData private_key_value =
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
-                     GetInsecureSecretKeyAccessInternal());
-
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, private_key_value, GetPartialKeyAccess());
-  if (!private_key.ok()) {
-    return private_key.status();
-  }
-
-  return absl::make_unique<EcdsaPrivateKey>(*private_key);
 }
 
 }  // namespace internal

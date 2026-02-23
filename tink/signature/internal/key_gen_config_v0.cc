@@ -17,6 +17,7 @@
 #include "tink/signature/internal/key_gen_config_v0.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
@@ -25,10 +26,11 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "tink/signature/internal/ml_dsa_key_creator.h"
+#include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #ifdef OPENSSL_IS_BORINGSSL
-#include "tink/signature/internal/key_creators.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
@@ -38,7 +40,6 @@
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {

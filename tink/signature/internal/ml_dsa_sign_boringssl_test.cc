@@ -28,7 +28,7 @@
 #include "openssl/mldsa.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
-#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/util/test_matchers.h"

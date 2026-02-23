@@ -95,8 +95,9 @@ cc_library(
     hdrs = ["key_gen_config_v0.h"],
     include_prefix = "tink/signature/internal",
     deps = [
-        ":key_creators",
+        ":ml_dsa_key_creator",
         ":ml_dsa_proto_serialization",
+        ":slh_dsa_key_creator",
         ":slh_dsa_proto_serialization",
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",
@@ -116,6 +117,7 @@ cc_library(
         "//tink/signature:slh_dsa_parameters",
         "//tink/util:status",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
     ],
 )
 
@@ -186,39 +188,6 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "key_creators",
-    srcs = ["key_creators.cc"],
-    hdrs = ["key_creators.h"],
-    include_prefix = "tink/signature/internal",
-    deps = [
-        "//tink:big_integer",
-        "//tink:ec_point",
-        "//tink:partial_key_access",
-        "//tink:restricted_data",
-        "//tink/internal:ec_util",
-        "//tink/internal:internal_insecure_secret_key_access",
-        "//tink/internal:secret_buffer",
-        "//tink/signature:ecdsa_parameters",
-        "//tink/signature:ecdsa_private_key",
-        "//tink/signature:ecdsa_public_key",
-        "//tink/signature:ml_dsa_parameters",
-        "//tink/signature:ml_dsa_private_key",
-        "//tink/signature:ml_dsa_public_key",
-        "//tink/signature:slh_dsa_parameters",
-        "//tink/signature:slh_dsa_private_key",
-        "//tink/signature:slh_dsa_public_key",
-        "//tink/subtle:common_enums",
-        "//tink/util:secret_data",
-        "@abseil-cpp//absl/memory",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -308,35 +277,10 @@ cc_test(
 )
 
 cc_test(
-    name = "key_creators_test",
-    srcs = ["key_creators_test.cc"],
-    deps = [
-        ":key_creators",
-        ":ml_dsa_proto_serialization",
-        ":slh_dsa_proto_serialization",
-        "//tink:key_gen_configuration",
-        "//tink:key_status",
-        "//tink:keyset_handle",
-        "//tink/internal:key_gen_configuration_impl",
-        "//tink/signature:ecdsa_parameters",
-        "//tink/signature:ecdsa_private_key",
-        "//tink/signature:ecdsa_proto_serialization",
-        "//tink/signature:ml_dsa_parameters",
-        "//tink/signature:ml_dsa_private_key",
-        "//tink/signature:slh_dsa_parameters",
-        "//tink/signature:slh_dsa_private_key",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/types:optional",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "ml_dsa_sign_boringssl_test",
     srcs = ["ml_dsa_sign_boringssl_test.cc"],
     deps = [
-        ":key_creators",
+        ":ml_dsa_key_creator",
         ":ml_dsa_sign_boringssl",
         "//tink:public_key_sign",
         "//tink/internal:fips_utils",
@@ -356,7 +300,7 @@ cc_test(
     name = "ml_dsa_verify_boringssl_test",
     srcs = ["ml_dsa_verify_boringssl_test.cc"],
     deps = [
-        ":key_creators",
+        ":ml_dsa_key_creator",
         ":ml_dsa_sign_boringssl",
         ":ml_dsa_verify_boringssl",
         "//tink:insecure_secret_key_access",
@@ -393,7 +337,7 @@ cc_test(
     name = "ml_dsa_proto_serialization_test",
     srcs = ["ml_dsa_proto_serialization_test.cc"],
     deps = [
-        ":key_creators",
+        ":ml_dsa_key_creator",
         ":ml_dsa_proto_serialization",
         "//proto:ml_dsa_cc_proto",
         "//tink:insecure_secret_key_access",
@@ -414,6 +358,7 @@ cc_test(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
@@ -487,14 +432,12 @@ cc_test(
     name = "slh_dsa_sign_boringssl_test",
     srcs = ["slh_dsa_sign_boringssl_test.cc"],
     deps = [
-        ":key_creators",
+        ":slh_dsa_key_creator",
         ":slh_dsa_sign_boringssl",
         "//tink:public_key_sign",
         "//tink/internal:fips_utils",
         "//tink/signature:slh_dsa_parameters",
         "//tink/signature:slh_dsa_private_key",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -527,7 +470,7 @@ cc_test(
     name = "slh_dsa_verify_boringssl_test",
     srcs = ["slh_dsa_verify_boringssl_test.cc"],
     deps = [
-        ":key_creators",
+        ":slh_dsa_key_creator",
         ":slh_dsa_sign_boringssl",
         ":slh_dsa_verify_boringssl",
         "//tink:insecure_secret_key_access",
@@ -539,8 +482,6 @@ cc_test(
         "//tink/signature:slh_dsa_parameters",
         "//tink/signature:slh_dsa_private_key",
         "//tink/signature:slh_dsa_public_key",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
@@ -916,7 +857,7 @@ cc_test(
     name = "ml_dsa_proto_serialization_impl_test",
     srcs = ["ml_dsa_proto_serialization_impl_test.cc"],
     deps = [
-        ":key_creators",
+        ":ml_dsa_key_creator",
         ":ml_dsa_proto_serialization_impl",
         "//proto:ml_dsa_cc_proto",
         "//tink:insecure_secret_key_access_testonly",
@@ -1133,7 +1074,7 @@ cc_library(
     hdrs = ["ml_dsa_sign_key_manager.h"],
     include_prefix = "tink/signature/internal",
     deps = [
-        ":key_creators",
+        ":ml_dsa_key_creator",
         ":ml_dsa_sign_boringssl",
         "//proto:ml_dsa_cc_proto",
         "//tink:key",
@@ -1212,7 +1153,7 @@ cc_library(
     hdrs = ["slh_dsa_sign_key_manager.h"],
     include_prefix = "tink/signature/internal",
     deps = [
-        ":key_creators",
+        ":slh_dsa_key_creator",
         ":slh_dsa_sign_boringssl",
         "//proto:slh_dsa_cc_proto",
         "//tink:key",
@@ -1283,6 +1224,131 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ecdsa_key_creator",
+    srcs = ["ecdsa_key_creator.cc"],
+    hdrs = ["ecdsa_key_creator.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink:big_integer",
+        "//tink:ec_point",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:ec_util",
+        "//tink/internal:internal_insecure_secret_key_access",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature:ecdsa_public_key",
+        "//tink/subtle:common_enums",
+        "//tink/util:secret_data",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "ecdsa_key_creator_test",
+    srcs = ["ecdsa_key_creator_test.cc"],
+    deps = [
+        ":ecdsa_key_creator",
+        "//tink:key_gen_configuration",
+        "//tink:key_status",
+        "//tink:keyset_handle",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature:ecdsa_proto_serialization",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/types:optional",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ml_dsa_key_creator",
+    srcs = ["ml_dsa_key_creator.cc"],
+    hdrs = ["ml_dsa_key_creator.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:internal_insecure_secret_key_access",
+        "//tink/internal:secret_buffer",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature:ml_dsa_public_key",
+        "//tink/util:secret_data",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_key_creator_test",
+    srcs = ["ml_dsa_key_creator_test.cc"],
+    deps = [
+        ":ml_dsa_key_creator",
+        ":ml_dsa_proto_serialization",
+        "//tink:key_gen_configuration",
+        "//tink:key_status",
+        "//tink:keyset_handle",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/types:optional",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "slh_dsa_key_creator",
+    srcs = ["slh_dsa_key_creator.cc"],
+    hdrs = ["slh_dsa_key_creator.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:internal_insecure_secret_key_access",
+        "//tink/signature:slh_dsa_parameters",
+        "//tink/signature:slh_dsa_private_key",
+        "//tink/signature:slh_dsa_public_key",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "slh_dsa_key_creator_test",
+    srcs = ["slh_dsa_key_creator_test.cc"],
+    deps = [
+        ":slh_dsa_key_creator",
+        ":slh_dsa_proto_serialization",
+        "//tink:key_gen_configuration",
+        "//tink:key_status",
+        "//tink:keyset_handle",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/signature:slh_dsa_parameters",
+        "//tink/signature:slh_dsa_private_key",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

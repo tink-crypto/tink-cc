@@ -367,6 +367,8 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeySucceeds) {
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_values.p.Get(InsecureSecretKeyAccess::Get()),
@@ -391,6 +393,8 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeySucceeds) {
               Eq(RestrictedBigInteger(
                   private_values.d.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 }
 
 TEST(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
@@ -847,6 +851,8 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_values.p.Get(InsecureSecretKeyAccess::Get()),
@@ -871,6 +877,8 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
               Eq(RestrictedBigInteger(
                   private_values.d.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 }
 
 TEST(RsaSsaPkcs1PrivateKeyTest,
@@ -925,6 +933,8 @@ TEST(RsaSsaPkcs1PrivateKeyTest,
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_values.p.Get(InsecureSecretKeyAccess::Get()),
@@ -949,8 +959,12 @@ TEST(RsaSsaPkcs1PrivateKeyTest,
               Eq(RestrictedBigInteger(
                   private_values.d.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST(RsaSsaPkcs1PrivateKeyTest,
      BuildAllowNonConstantTimeWithRestrictedBigIntegerAndDataFails) {
   RsaSsaPkcs1PublicKey public_key = GetValidPublicKey();
@@ -1029,7 +1043,8 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildWithRestrictedBigIntegerSucceeds) {
               Eq(private_values.q));
   EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
-  EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
+  EXPECT_THAT(private_key->GetCrtCoefficientData(),
+  Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
 }
 
@@ -1052,7 +1067,6 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest,
                                    test_case.id_requirement,
                                    GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
-
   RestrictedBigInteger p_rb(Base64WebSafeDecode(kP2048Bit),
                             InsecureSecretKeyAccess::Get());
   RestrictedBigInteger dp_rb(Base64WebSafeDecode(kDp2048Bit),
@@ -1078,6 +1092,8 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest,
                        testing::AllOf(HasSubstr("RestrictedData"),
                                       HasSubstr("RestrictedBigInteger"))));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST_P(RsaSsaPkcs1PrivateKeyTest, PrivateKeyEquals) {
   TestCase test_case = GetParam();
@@ -1230,6 +1246,8 @@ TEST(RsaSsaPkcs1PrivateKeyTest, CopyAssignment) {
   EXPECT_THAT(*copy, Eq(*private_key));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST(RsaSsaPkcs1PrivateKeyTest,
      CopyAssignmentWithRestrictedBigIntegerFieldsInitialized) {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
@@ -1269,6 +1287,8 @@ TEST(RsaSsaPkcs1PrivateKeyTest,
 
   EXPECT_THAT(*copy, Eq(*private_key));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST(RsaSsaPkcs1PrivateKeyTest, MoveConstructor) {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =

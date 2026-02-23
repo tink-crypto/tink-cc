@@ -23,6 +23,7 @@
 #include <string_view>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
@@ -57,7 +58,7 @@ enum class KeyStatusTypeTP : int {
 
 // Enum representing the output prefix type of a key.
 // It represents the proto enum `google.crypto.tink.OutputPrefixType`.
-enum class OutputPrefixTypeEnum : uint32_t {
+enum class OutputPrefixTypeTP : uint32_t {
   kUnknownPrefix = 0,
   kTink,
   kLegacy,
@@ -66,19 +67,23 @@ enum class OutputPrefixTypeEnum : uint32_t {
   kWithIdRequirement,
 };
 
+using  OutputPrefixTypeEnum ABSL_DEPRECATE_AND_INLINE() = OutputPrefixTypeTP;
+
 std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeEnum type);
 
 inline bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
 
 // Enum representing the key material type of a key.
 // It represents the proto enum `google.crypto.tink.KeyData.KeyMaterialType`.
-enum class KeyMaterialTypeEnum : uint32_t {
+enum class KeyMaterialTypeTP : uint32_t {
   kUnknownKeyMaterial = 0,
   kSymmetric,
   kAsymmetricPrivate,
   kAsymmetricPublic,
   kRemote,
 };
+
+using  KeyMaterialTypeEnum ABSL_DEPRECATE_AND_INLINE() = KeyMaterialTypeTP;
 
 std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type);
 

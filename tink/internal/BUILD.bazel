@@ -1767,6 +1767,7 @@ cc_library(
         ":proto_parser_secret_data_field",
         "//tink:secret_data",
         "//tink/util:secret_data",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/strings:string_view",
     ],

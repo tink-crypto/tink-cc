@@ -1763,6 +1763,7 @@ cc_library(
         ":proto_parser_enum_field",
         ":proto_parser_fields",
         ":proto_parser_message",
+        ":proto_parser_options",
         ":proto_parser_secret_data_field",
         "//tink:secret_data",
         "//tink/util:secret_data",

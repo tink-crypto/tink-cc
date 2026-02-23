@@ -17,14 +17,17 @@
 #define TINK_INTERNAL_TINK_PROTO_STRUCTS_H_
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -32,6 +35,25 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+
+inline bool KeyStatusTypeTP_IsValid(int value) {
+  switch (value) {
+    case 0:  // kUnknownStatus
+    case 1:  // kEnabled
+    case 2:  // kDisabled
+    case 3:  // kDestroyed
+      return true;
+    default:
+      return false;
+  }
+}
+
+enum class KeyStatusTypeTP : int {
+  kUnknownStatus = 0,
+  kEnabled = 1,
+  kDisabled = 2,
+  kDestroyed = 3,
+};
 
 // Enum representing the output prefix type of a key.
 // It represents the proto enum `google.crypto.tink.OutputPrefixType`.
@@ -143,6 +165,81 @@ class KeyDataTP : public proto_parsing::Message {
   proto_parsing::SecretDataField value_{2};
   proto_parsing::EnumField<KeyMaterialTypeEnum> key_material_type_{
       3, &KeyMaterialTypeValid};
+};
+
+class KeysetTP : public proto_parsing::Message {
+ public:
+  class KeyTP : public proto_parsing::Message {
+   public:
+    KeyTP() = default;
+
+    KeyTP(KeyTP&&) = default;
+    KeyTP& operator=(KeyTP&&) = default;
+    KeyTP(const KeyTP&) = default;
+    KeyTP& operator=(const KeyTP&) = default;
+
+    bool has_key_data() const { return key_data_.has_value(); }
+    void clear_key_data() { key_data_.Clear(); }
+    KeyDataTP* mutable_key_data() { return key_data_.mutable_value(); }
+    const KeyDataTP& key_data() const { return key_data_.value(); }
+
+    void clear_status() { status_.Clear(); }
+    KeyStatusTypeTP status() const { return status_.value(); }
+    void set_status(KeyStatusTypeTP value) { status_.set_value(value); }
+
+    void clear_key_id() { key_id_.Clear(); }
+    uint32_t key_id() const { return key_id_.value(); }
+    void set_key_id(uint32_t value) { key_id_.set_value(value); }
+
+    void clear_output_prefix_type() { output_prefix_type_.Clear(); }
+    OutputPrefixTypeEnum output_prefix_type() const {
+      return output_prefix_type_.value();
+    }
+    void set_output_prefix_type(OutputPrefixTypeEnum value) {
+      output_prefix_type_.set_value(value);
+    }
+
+   private:
+    size_t num_fields() const override { return 4; }
+    const proto_parsing::Field* field(int i) const override {
+      return std::array<const proto_parsing::Field*, 4>{
+          &key_data_, &status_, &key_id_, &output_prefix_type_}[i];
+    }
+
+    proto_parsing::MessageField<KeyDataTP> key_data_{
+        1, ProtoFieldOptions::kExplicit};
+    proto_parsing::EnumField<KeyStatusTypeTP> status_{
+        2, &KeyStatusTypeTP_IsValid, {}, ProtoFieldOptions::kImplicit};
+    proto_parsing::Uint32Field key_id_{3, ProtoFieldOptions::kImplicit};
+    proto_parsing::EnumField<OutputPrefixTypeEnum> output_prefix_type_{
+        4, &OutputPrefixTypeValid, {}, ProtoFieldOptions::kImplicit};
+  };
+  KeysetTP() = default;
+
+  KeysetTP(KeysetTP&&) = default;
+  KeysetTP& operator=(KeysetTP&&) = default;
+  KeysetTP(const KeysetTP&) = default;
+  KeysetTP& operator=(const KeysetTP&) = default;
+
+  void clear_primary_key_id() { primary_key_id_.Clear(); }
+  uint32_t primary_key_id() const { return primary_key_id_.value(); }
+  void set_primary_key_id(uint32_t value) { primary_key_id_.set_value(value); }
+
+  int key_size() const { return key_.values_size(); }
+  void clear_key() { key_.Clear(); }
+  KeysetTP::KeyTP* add_key() { return key_.add_values(); }
+  std::vector<KeysetTP::KeyTP>* mutable_key() { return key_.mutable_values(); }
+  const KeysetTP::KeyTP& key(int index) const { return key_.values(index); }
+
+ private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&primary_key_id_,
+                                                      &key_}[i];
+  }
+
+  proto_parsing::Uint32Field primary_key_id_{1, ProtoFieldOptions::kImplicit};
+  proto_parsing::RepeatedMessageField<KeysetTP::KeyTP> key_{2};
 };
 
 }  // namespace internal

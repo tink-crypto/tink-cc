@@ -89,45 +89,20 @@ tink_cc_test(
     tink::signature::subtle::composite_ml_dsa_sign_boringssl
     tink::signature::subtle::composite_ml_dsa_verify_boringssl
     gmock
-    absl::absl_check
     absl::status
     absl::statusor
     absl::string_view
     absl::optional
-    tink::core::big_integer
-    tink::core::ec_point
-    tink::core::insecure_secret_key_access_testonly
     tink::core::low_level_crypto_access
-    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::core::restricted_data
     tink::internal::fips_utils
-    tink::internal::secret_buffer
-    tink::internal::util
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_private_key
-    tink::signature::ecdsa_parameters
-    tink::signature::ecdsa_private_key
-    tink::signature::ecdsa_public_key
-    tink::signature::ed25519_parameters
-    tink::signature::ed25519_private_key
-    tink::signature::ed25519_public_key
-    tink::signature::ml_dsa_parameters
-    tink::signature::ml_dsa_private_key
-    tink::signature::ml_dsa_public_key
-    tink::signature::rsa_ssa_pkcs1_parameters
-    tink::signature::rsa_ssa_pkcs1_private_key
-    tink::signature::rsa_ssa_pkcs1_public_key
-    tink::signature::rsa_ssa_pss_parameters
-    tink::signature::rsa_ssa_pss_private_key
-    tink::signature::rsa_ssa_pss_public_key
-    tink::signature::signature_private_key
-    tink::signature::signature_public_key
     tink::signature::internal::testing::composite_ml_dsa_test_util
-    tink::util::secret_data
+    tink::signature::internal::testing::composite_ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_matchers
-    tink::util::test_util
   TAGS
     exclude_if_openssl
 )

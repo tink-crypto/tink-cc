@@ -194,3 +194,46 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME composite_ml_dsa_test_vectors
+  SRCS
+    composite_ml_dsa_test_vectors.cc
+    composite_ml_dsa_test_vectors.h
+  DEPS
+    tink::signature::internal::testing::signature_test_vector
+    absl::absl_check
+    absl::memory
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::secret_buffer
+    tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_private_key
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_public_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
+    tink::signature::signature_private_key
+    tink::util::secret_data
+    tink::util::test_util
+  TESTONLY
+  TAGS
+    exclude_if_openssl
+)

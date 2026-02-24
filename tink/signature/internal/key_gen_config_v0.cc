@@ -31,6 +31,9 @@
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/composite_ml_dsa_parameters.h"
+#include "tink/signature/composite_ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/composite_ml_dsa_key_creator.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
@@ -106,6 +109,16 @@ absl::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
   }
   status = KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(
       CreateMlDsaKey, config);
+  if (!status.ok()) {
+    return status;
+  }
+  // Composite ML-DSA
+  status = RegisterCompositeMlDsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = KeyGenConfigurationImpl::AddKeyCreator<CompositeMlDsaParameters>(
+      CreateCompositeMlDsaKey, config);
   if (!status.ok()) {
     return status;
   }

@@ -21,12 +21,13 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -69,6 +70,28 @@ TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+}
+
+TEST(CompositeMlDsaSignatureKeyGenConfigV0Test,
+     CompositeMlDsaCreateKeysetHandleWorks) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+
+  absl::StatusOr<CompositeMlDsaParameters> composite_ml_dsa_parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+          CompositeMlDsaParameters::Variant::kTink);
+  ASSERT_THAT(composite_ml_dsa_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*composite_ml_dsa_parameters,
+                                              key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 }
 

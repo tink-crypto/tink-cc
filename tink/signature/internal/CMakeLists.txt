@@ -139,6 +139,7 @@ tink_cc_library(
     key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
+    tink::signature::internal::composite_ml_dsa_key_creator
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::slh_dsa_key_creator
@@ -147,6 +148,8 @@ tink_cc_library(
     absl::status
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_proto_serialization
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
@@ -637,12 +640,13 @@ tink_cc_test(
   DEPS
     tink::signature::internal::key_gen_config_v0
     gmock
+    absl::statusor
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::signature::composite_ml_dsa_parameters
     tink::signature::ml_dsa_parameters
     tink::signature::slh_dsa_parameters
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
   TAGS

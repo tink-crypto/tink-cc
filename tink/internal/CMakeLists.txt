@@ -2077,3 +2077,24 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME tink_proto_struct_conversions
+  SRCS
+    tink_proto_struct_conversions.cc
+    tink_proto_struct_conversions.h
+  DEPS
+    tink::internal::tink_proto_structs
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME tink_proto_struct_conversions_test
+  SRCS
+    tink_proto_struct_conversions_test.cc
+  DEPS
+    tink::internal::tink_proto_struct_conversions
+    tink::internal::tink_proto_structs
+    gmock
+    tink::proto::tink_cc_proto
+)

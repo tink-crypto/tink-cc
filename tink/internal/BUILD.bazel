@@ -2149,3 +2149,25 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "tink_proto_struct_conversions",
+    srcs = ["tink_proto_struct_conversions.cc"],
+    hdrs = ["tink_proto_struct_conversions.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":tink_proto_structs",
+        "//proto:tink_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "tink_proto_struct_conversions_test",
+    srcs = ["tink_proto_struct_conversions_test.cc"],
+    deps = [
+        ":tink_proto_struct_conversions",
+        ":tink_proto_structs",
+        "//proto:tink_cc_proto",
+        "@googletest//:gtest_main",
+    ],
+)

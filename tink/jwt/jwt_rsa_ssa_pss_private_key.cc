@@ -105,6 +105,8 @@ JwtRsaSsaPssPrivateKey::Builder::SetCrtCoefficient(
   return *this;
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 JwtRsaSsaPssPrivateKey::Builder& JwtRsaSsaPssPrivateKey::Builder::SetPrimeP(
     const RestrictedBigInteger& p) {
   p_big_integer_ = p;
@@ -144,6 +146,8 @@ JwtRsaSsaPssPrivateKey::Builder::SetCrtCoefficient(
   q_inv_big_integer_ = q_inv;
   return *this;
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
     PartialKeyAccessToken token) {
@@ -151,7 +155,12 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the public key");
   }
+  bool all_restricted_data = p_.has_value() && q_.has_value() &&
+                             d_.has_value() && dp_.has_value() &&
+                             dq_.has_value() && q_inv_.has_value();
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   bool at_least_one_big_integer =
       p_big_integer_.has_value() || q_big_integer_.has_value() ||
       d_big_integer_.has_value() || dp_big_integer_.has_value() ||
@@ -163,9 +172,6 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
       p_big_integer_.has_value() && q_big_integer_.has_value() &&
       d_big_integer_.has_value() && dp_big_integer_.has_value() &&
       dq_big_integer_.has_value() && q_inv_big_integer_.has_value();
-  bool all_restricted_data = p_.has_value() && q_.has_value() &&
-                             d_.has_value() && dp_.has_value() &&
-                             dq_.has_value() && q_inv_.has_value();
 
   if (at_least_one_big_integer && at_least_one_restricted_data) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -187,17 +193,19 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
         dp_big_integer_->EncodeWithFixedSize(p_data.size());
     if (!dp_data.ok()) {
       return absl::InvalidArgumentError(
-          absl::StrCat("Prime exponent d is too large, expected", p_data.size(),
+          absl::StrCat("Prime exponent d is too large, expected",
+          p_data.size(),
                        " , got ", dp_big_integer_->SizeInBytes()));
     }
     absl::StatusOr<RestrictedData> dq_data =
         dq_big_integer_->EncodeWithFixedSize(q_data.size());
     if (!dq_data.ok()) {
       return absl::InvalidArgumentError(absl::StrCat(
-          "Prime exponent dq is too large, expected", q_data.size(), " , got ",
-          dq_big_integer_->SizeInBytes()));
+          "Prime exponent dq is too large, expected", q_data.size(), " , got"
+          , dq_big_integer_->SizeInBytes()));
     }
-    absl::StatusOr<RestrictedData> d_data = d_big_integer_->EncodeWithFixedSize(
+    absl::StatusOr<RestrictedData> d_data =
+    d_big_integer_->EncodeWithFixedSize(
         public_key_->GetModulus(token).SizeInBytes());
     if (!d_data.ok()) {
       return absl::InvalidArgumentError(
@@ -216,14 +224,16 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
 
     absl::Status key_pair_validation =
         ValidateKeyPair(public_key_->GetParameters().GetPublicExponent(),
-                        public_key_->GetModulus(token), p_data, q_data, *d_data,
-                        *dp_data, *dq_data, *q_inv_data);
+                        public_key_->GetModulus(token), p_data, q_data,
+                        *d_data, *dp_data, *dq_data, *q_inv_data);
     if (!key_pair_validation.ok()) {
       return key_pair_validation;
     }
     return JwtRsaSsaPssPrivateKey(*public_key_, p_data, q_data, *dp_data,
                                   *dq_data, *d_data, *q_inv_data);
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   if (all_restricted_data) {
     absl::Status key_pair_validation = ValidateKeyPair(
@@ -236,9 +246,10 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
                                   *q_inv_);
   }
 
-  return absl::Status(absl::StatusCode::kInvalidArgument,
-                      "Cannot build without setting all parameters (either "
-                      "RestrictedData or RestrictedBigInteger).");
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "Cannot build without setting all parameters (either "
+      "RestrictedData or RestrictedBigInteger for version < 3.0).");
 }
 
 absl::StatusOr<JwtRsaSsaPssPrivateKey>
@@ -249,13 +260,17 @@ JwtRsaSsaPssPrivateKey::Builder::BuildAllowNonConstantTime(
                         "Cannot build without setting the public key");
   }
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   if (p_big_integer_.has_value() || q_big_integer_.has_value() ||
       d_big_integer_.has_value() || dp_big_integer_.has_value() ||
       dq_big_integer_.has_value() || q_inv_big_integer_.has_value()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "BuildAllowNonConstantTime method can only be used by "
-                        "setting RestrictedData fields.");
+                       "BuildAllowNonConstantTime method can only be used by"
+                        " setting RestrictedData fields.");
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   if (!p_.has_value() || !q_.has_value() || !d_.has_value() ||
       !dp_.has_value() || !dq_.has_value() || !q_inv_.has_value()) {
@@ -294,6 +309,8 @@ JwtRsaSsaPssPrivateKey::Builder::BuildAllowNonConstantTime(
   return Build(token);
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeP(
     PartialKeyAccessToken token) const {
   absl::MutexLock lock(mutex_);
@@ -316,7 +333,8 @@ const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeQ(
   return *q_big_integer_;
 }
 
-const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrivateExponent() const {
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrivateExponent()
+const {
   absl::MutexLock lock(mutex_);
   if (!d_big_integer_.has_value()) {
     d_big_integer_ =
@@ -326,7 +344,8 @@ const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrivateExponent() const {
   return *d_big_integer_;
 }
 
-const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentP() const {
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentP() const
+{
   absl::MutexLock lock(mutex_);
   if (!dp_big_integer_.has_value()) {
     dp_big_integer_ =
@@ -336,7 +355,8 @@ const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentP() const {
   return *dp_big_integer_;
 }
 
-const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentQ() const {
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentQ() const
+{
   absl::MutexLock lock(mutex_);
   if (!dq_big_integer_.has_value()) {
     dq_big_integer_ =
@@ -346,7 +366,8 @@ const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetPrimeExponentQ() const {
   return *dq_big_integer_;
 }
 
-const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetCrtCoefficient() const {
+const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetCrtCoefficient() const
+{
   absl::MutexLock lock(mutex_);
   if (!q_inv_big_integer_.has_value()) {
     q_inv_big_integer_ =
@@ -355,6 +376,8 @@ const RestrictedBigInteger& JwtRsaSsaPssPrivateKey::GetCrtCoefficient() const {
   }
   return *q_inv_big_integer_;
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 JwtRsaSsaPssPrivateKey& JwtRsaSsaPssPrivateKey::operator=(
     const JwtRsaSsaPssPrivateKey& other) {
@@ -362,6 +385,8 @@ JwtRsaSsaPssPrivateKey& JwtRsaSsaPssPrivateKey::operator=(
     return *this;
   }
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   absl::optional<RestrictedBigInteger> p_big_integer;
   absl::optional<RestrictedBigInteger> q_big_integer;
   absl::optional<RestrictedBigInteger> dp_big_integer;
@@ -377,6 +402,8 @@ JwtRsaSsaPssPrivateKey& JwtRsaSsaPssPrivateKey::operator=(
     d_big_integer = other.d_big_integer_;
     q_inv_big_integer = other.q_inv_big_integer_;
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   public_key_ = other.public_key_;
   p_ = other.p_;
@@ -386,6 +413,8 @@ JwtRsaSsaPssPrivateKey& JwtRsaSsaPssPrivateKey::operator=(
   d_ = other.d_;
   q_inv_ = other.q_inv_;
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   absl::MutexLock lock(mutex_);
   p_big_integer_ = p_big_integer;
   q_big_integer_ = q_big_integer;
@@ -393,6 +422,8 @@ JwtRsaSsaPssPrivateKey& JwtRsaSsaPssPrivateKey::operator=(
   dq_big_integer_ = dq_big_integer;
   d_big_integer_ = d_big_integer;
   q_inv_big_integer_ = q_inv_big_integer;
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   return *this;
 }
 

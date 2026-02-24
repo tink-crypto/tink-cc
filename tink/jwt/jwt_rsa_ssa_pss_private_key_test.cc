@@ -341,6 +341,8 @@ TEST(JwtRsaSsaPssPrivateKeyTest,
               Eq(private_values.d));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST(JwtRsaSsaPssPrivateKeyTest,
      BuildAllowNonConstantTimeWithRestrictedBigIntegerAndDataFails) {
   JwtRsaSsaPssPublicKey public_key = GetValidPublicKey(
@@ -366,6 +368,8 @@ TEST(JwtRsaSsaPssPrivateKeyTest,
                StrEq("BuildAllowNonConstantTime method can only be used by "
                      "setting RestrictedData fields.")));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   internal::SslUniquePtr<RSA> rsa(RSA_new());
@@ -460,10 +464,14 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   EXPECT_THAT(private_key->GetPrivateExponentData(GetPartialKeyAccess())
                   .GetSecret(InsecureSecretKeyAccess::Get()),
               Eq(*d_str));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(*p_str, InsecureSecretKeyAccess::Get())));
+              Eq(RestrictedBigInteger(*p_str,
+              InsecureSecretKeyAccess::Get())));
   EXPECT_THAT(private_key->GetPrimeQ(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(*q_str, InsecureSecretKeyAccess::Get())));
+              Eq(RestrictedBigInteger(*q_str,
+              InsecureSecretKeyAccess::Get())));
   EXPECT_THAT(
       private_key->GetPrimeExponentP(),
       Eq(RestrictedBigInteger(*dp_str, InsecureSecretKeyAccess::Get())));
@@ -474,7 +482,10 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
       private_key->GetCrtCoefficient(),
       Eq(RestrictedBigInteger(*q_inv_str, InsecureSecretKeyAccess::Get())));
   EXPECT_THAT(private_key->GetPrivateExponent(),
-              Eq(RestrictedBigInteger(*d_str, InsecureSecretKeyAccess::Get())));
+              Eq(RestrictedBigInteger(*d_str,
+              InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(absl::nullopt));
   EXPECT_THAT(private_key->GetKid(), Eq(absl::nullopt));
 }
@@ -848,6 +859,8 @@ TEST(JwtRsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
                        HasSubstr("Could not load RSA key")));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_P(JwtRsaSsaPssPrivateKeyTest, BuildWithRestrictedBigInteger) {
   TestCase test_case = GetParam();
 
@@ -932,6 +945,8 @@ TEST_P(JwtRsaSsaPssPrivateKeyTest,
                        HasSubstr("mix of RestrictedData and "
                                  "RestrictedBigInteger")));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST_P(JwtRsaSsaPssPrivateKeyTest, PrivateKeyEquals) {
   TestCase test_case = GetParam();

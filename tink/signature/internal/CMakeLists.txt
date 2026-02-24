@@ -1475,3 +1475,121 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME ed25519_key_creator
+  SRCS
+    ed25519_key_creator.cc
+    ed25519_key_creator.h
+  DEPS
+    absl::statusor
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::ec_util
+    tink::internal::internal_insecure_secret_key_access
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_public_key
+)
+
+tink_cc_test(
+  NAME ed25519_key_creator_test
+  SRCS
+    ed25519_key_creator_test.cc
+  DEPS
+    tink::signature::internal::ed25519_key_creator
+    gmock
+    absl::statusor
+    absl::optional
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::internal::key_gen_configuration_impl
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_proto_serialization
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME rsa_ssa_pkcs1_key_creator
+  SRCS
+    rsa_ssa_pkcs1_key_creator.cc
+    rsa_ssa_pkcs1_key_creator.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::optional
+    crypto
+    tink::core::big_integer
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::bn_util
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::rsa_util
+    tink::internal::ssl_unique_ptr
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pkcs1_key_creator_test
+  SRCS
+    rsa_ssa_pkcs1_key_creator_test.cc
+  DEPS
+    tink::signature::internal::rsa_ssa_pkcs1_key_creator
+    gmock
+    absl::statusor
+    absl::optional
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::internal::key_gen_configuration_impl
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_proto_serialization
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME rsa_ssa_pss_key_creator
+  SRCS
+    rsa_ssa_pss_key_creator.cc
+    rsa_ssa_pss_key_creator.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::optional
+    crypto
+    tink::core::big_integer
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::bn_util
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::rsa_util
+    tink::internal::ssl_unique_ptr
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pss_key_creator_test
+  SRCS
+    rsa_ssa_pss_key_creator_test.cc
+  DEPS
+    tink::signature::internal::rsa_ssa_pss_key_creator
+    gmock
+    absl::statusor
+    absl::optional
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::internal::key_gen_configuration_impl
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_proto_serialization
+    tink::util::test_matchers
+)

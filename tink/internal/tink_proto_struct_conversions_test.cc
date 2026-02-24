@@ -19,6 +19,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/util/secret_data.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -26,6 +27,7 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
@@ -83,6 +85,61 @@ TEST(KeyTemplateTPConversionTest, RoundTrip) {
   EXPECT_THAT(produced_template.value(), Eq(key_template.value()));
   EXPECT_THAT(produced_template.output_prefix_type(),
               Eq(key_template.output_prefix_type()));
+}
+
+TEST(ToKeyDataTPTest, Works) {
+  KeyData key_data;
+  key_data.set_type_url("type_url");
+  key_data.set_value("value");
+  key_data.set_key_material_type(KeyData::SYMMETRIC);
+
+  KeyDataTP key_data_tp = ToKeyDataTP(key_data);
+
+  EXPECT_THAT(key_data_tp.type_url(), Eq("type_url"));
+  EXPECT_THAT(util::SecretDataAsStringView(key_data_tp.value()), Eq("value"));
+  EXPECT_THAT(key_data_tp.key_material_type(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+}
+
+TEST(ToKeyDataTPTest, WorksWithAsymmetric) {
+  KeyData key_data;
+  key_data.set_type_url("type_url_asymmetric");
+  key_data.set_value("value_asymmetric");
+  key_data.set_key_material_type(KeyData::ASYMMETRIC_PRIVATE);
+
+  KeyDataTP key_data_tp = ToKeyDataTP(key_data);
+
+  EXPECT_THAT(key_data_tp.type_url(), Eq("type_url_asymmetric"));
+  EXPECT_THAT(util::SecretDataAsStringView(key_data_tp.value()),
+              Eq("value_asymmetric"));
+  EXPECT_THAT(key_data_tp.key_material_type(),
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+}
+
+TEST(FromKeyDataTPTest, Works) {
+  KeyDataTP key_data_tp;
+  key_data_tp.set_type_url("type_url");
+  key_data_tp.set_value("value");
+  key_data_tp.set_key_material_type(KeyMaterialTypeTP::kSymmetric);
+
+  KeyData key_data = ToProtoKeyData(key_data_tp);
+
+  EXPECT_THAT(key_data.type_url(), Eq("type_url"));
+  EXPECT_THAT(key_data.value(), Eq("value"));
+  EXPECT_THAT(key_data.key_material_type(), Eq(KeyData::SYMMETRIC));
+}
+
+TEST(KeyDataTPConversionTest, RoundTrip) {
+  KeyData key_data;
+  key_data.set_type_url("some arbitrary type url");
+  key_data.set_value("some arbitrary value");
+  key_data.set_key_material_type(KeyData::REMOTE);
+
+  KeyData produced_data = ToProtoKeyData(ToKeyDataTP(key_data));
+  EXPECT_THAT(produced_data.type_url(), Eq(key_data.type_url()));
+  EXPECT_THAT(produced_data.value(), Eq(key_data.value()));
+  EXPECT_THAT(produced_data.key_material_type(),
+              Eq(key_data.key_material_type()));
 }
 
 }  // namespace

@@ -31,6 +31,12 @@ KeyTemplateTP ToKeyTemplateTP(::google::crypto::tink::KeyTemplate key_template);
 ::google::crypto::tink::KeyTemplate ToProtoKeyTemplate(
     KeyTemplateTP key_template);
 
+// Converts a proto library KeyData to a TinkPB KeyData.
+KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data);
+
+// Converts a TinkPB KeyData to a proto library KeyData.
+::google::crypto::tink::KeyData ToProtoKeyData(KeyDataTP key_data);
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

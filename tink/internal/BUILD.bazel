@@ -2158,6 +2158,7 @@ cc_library(
     deps = [
         ":tink_proto_structs",
         "//proto:tink_cc_proto",
+        "//tink/util:secret_data",
     ],
 )
 
@@ -2168,6 +2169,7 @@ cc_test(
         ":tink_proto_struct_conversions",
         ":tink_proto_structs",
         "//proto:tink_cc_proto",
+        "//tink/util:secret_data",
         "@googletest//:gtest_main",
     ],
 )

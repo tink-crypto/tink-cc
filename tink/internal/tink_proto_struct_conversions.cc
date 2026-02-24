@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/util/secret_data.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -44,6 +45,26 @@ KeyTemplateTP ToKeyTemplateTP(
       static_cast<::google::crypto::tink::OutputPrefixType>(
           key_template.output_prefix_type()));
   return key_template_proto;
+}
+
+KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data) {
+  KeyDataTP key_data_tp;
+  key_data_tp.set_type_url(std::move(*key_data.mutable_type_url()));
+  key_data_tp.set_value(key_data.value());
+  key_data_tp.set_key_material_type(
+      static_cast<KeyMaterialTypeTP>(key_data.key_material_type()));
+  return key_data_tp;
+}
+
+::google::crypto::tink::KeyData ToProtoKeyData(KeyDataTP key_data) {
+  ::google::crypto::tink::KeyData key_data_proto;
+  key_data_proto.set_type_url(key_data.type_url());
+  key_data_proto.set_value(
+      crypto::tink::util::SecretDataAsStringView(key_data.value()));
+  key_data_proto.set_key_material_type(
+      static_cast<::google::crypto::tink::KeyData::KeyMaterialType>(
+          key_data.key_material_type()));
+  return key_data_proto;
 }
 
 }  // namespace internal

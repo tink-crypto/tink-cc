@@ -2085,6 +2085,7 @@ tink_cc_library(
     tink_proto_struct_conversions.h
   DEPS
     tink::internal::tink_proto_structs
+    tink::util::secret_data
     tink::proto::tink_cc_proto
 )
 
@@ -2096,5 +2097,6 @@ tink_cc_test(
     tink::internal::tink_proto_struct_conversions
     tink::internal::tink_proto_structs
     gmock
+    tink::util::secret_data
     tink::proto::tink_cc_proto
 )

@@ -259,6 +259,8 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_values.p.Get(InsecureSecretKeyAccess::Get()),
@@ -283,6 +285,8 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
               Eq(RestrictedBigInteger(
                   private_values.d.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 }
 
 TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
@@ -327,6 +331,8 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_values.p.Get(InsecureSecretKeyAccess::Get()),
@@ -351,6 +357,8 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
               Eq(RestrictedBigInteger(
                   private_values.d.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 }
 
 TEST(RsaSsaPssPrivateKeyTest,
@@ -417,6 +425,8 @@ TEST(RsaSsaPssPrivateKeyTest,
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_values.p.Get(InsecureSecretKeyAccess::Get()),
@@ -441,6 +451,8 @@ TEST(RsaSsaPssPrivateKeyTest,
               Eq(RestrictedBigInteger(
                   private_values.d.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 }
 
 TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
@@ -873,6 +885,8 @@ TEST(RsaSsaPssPrivateKeyTest, BuildCrtCoefficientNotSetFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_P(RsaSsaPssPrivateKeyTest, BuildWithRestrictedBigInteger) {
   TestCase test_case = GetParam();
 
@@ -926,7 +940,8 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildWithRestrictedBigInteger) {
   EXPECT_THAT(private_key->GetPrimeQData(), Eq(private_values.q));
   EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
-  EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
+  EXPECT_THAT(private_key->GetCrtCoefficientData(),
+  Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
 }
 
@@ -1013,6 +1028,8 @@ TEST(RsaSsaPssPrivateKeyTest,
                StrEq("BuildAllowNonConstantTime method can only be used by "
                      "setting RestrictedData fields.")));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST(RsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
   absl::StatusOr<RsaSsaPssParameters> parameters =

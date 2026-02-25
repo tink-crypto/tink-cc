@@ -1,6 +1,7 @@
 tink_module(signature)
 
 add_subdirectory(internal)
+add_subdirectory(subtle)
 
 tink_cc_library(
   NAME public_key_verify_wrapper

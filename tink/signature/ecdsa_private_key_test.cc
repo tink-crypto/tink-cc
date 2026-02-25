@@ -701,10 +701,13 @@ TEST(EcdsaPrivateKeyTest, MoveAssignment) {
   EXPECT_THAT(*moved, Eq(expected));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_P(EcdsaPrivateKeyTest, CreatePrivateKeyWithRestrictedBigIntegerWorks) {
   TestCase test_case = GetParam();
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key =
+  internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
 
   RestrictedBigInteger private_key_value =
@@ -723,7 +726,8 @@ TEST_P(EcdsaPrivateKeyTest, CreatePrivateKeyWithRestrictedBigIntegerWorks) {
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
-                             test_case.id_requirement, GetPartialKeyAccess());
+                             test_case.id_requirement,
+                             GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
@@ -752,18 +756,21 @@ TEST_P(EcdsaPrivateKeyTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key1 = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key1 =
+  internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key1, IsOk());
 
-  EcPoint public_point(BigInteger(ec_key1->pub_x), BigInteger(ec_key1->pub_y));
+  EcPoint public_point(BigInteger(ec_key1->pub_x),
+  BigInteger(ec_key1->pub_y));
 
   absl::StatusOr<EcdsaPublicKey> public_key1 =
       EcdsaPublicKey::Create(*parameters, public_point,
-                             test_case.id_requirement, GetPartialKeyAccess());
+                             test_case.id_requirement,
+                             GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key2 = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key2, IsOk());
+  absl::StatusOr<internal::EcKey> ec_key2 =
+  internal::NewEcKey(test_case.curve); ASSERT_THAT(ec_key2, IsOk());
 
   RestrictedBigInteger private_key_value2 =
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key2->priv),
@@ -776,7 +783,8 @@ TEST_P(EcdsaPrivateKeyTest,
                        HasSubstr("Invalid EC key pair")));
 }
 
-TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithLeadingZerosWorks) {
+TEST(EcdsaPrivateKeyTest,
+CreateWithRestrictedBigIntegerWithLeadingZerosWorks) {
   std::string public_x = HexDecodeOrDie(
       "bc95b9d6e70821a0bc477d7032085c780e2cae8fdf3d08508989f154b4c327d0");
   std::string public_y = HexDecodeOrDie(
@@ -801,14 +809,16 @@ TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithLeadingZerosWorks) {
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(private_key_bytes, InsecureSecretKeyAccess::Get());
+      RestrictedBigInteger(private_key_bytes,
+      InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(EcdsaPrivateKey::Create(*public_key, private_key_value,
                                       GetPartialKeyAccess()),
               IsOk());
 }
 
-TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithOneTooManyBytes) {
+TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithOneTooManyBytes)
+{
   std::string public_x = HexDecodeOrDie(
       "bc95b9d6e70821a0bc477d7032085c780e2cae8fdf3d08508989f154b4c327d0");
   std::string public_y = HexDecodeOrDie(
@@ -834,7 +844,8 @@ TEST(EcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerWithOneTooManyBytes) {
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(private_key_bytes, InsecureSecretKeyAccess::Get());
+      RestrictedBigInteger(private_key_bytes,
+      InsecureSecretKeyAccess::Get());
 
   // This fails at key pair validation.
   EXPECT_THAT(
@@ -871,12 +882,15 @@ TEST(EcdsaPrivateKeyTest,
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(private_key_bytes, InsecureSecretKeyAccess::Get());
+      RestrictedBigInteger(private_key_bytes,
+      InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(EcdsaPrivateKey::Create(*public_key, private_key_value,
                                       GetPartialKeyAccess()),
               IsOk());
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 }  // namespace
 }  // namespace tink

@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -35,6 +36,9 @@
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_v0.h"
+#ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
+#endif
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
@@ -46,7 +50,6 @@
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -515,6 +518,10 @@ INSTANTIATE_TEST_SUITE_P(EcdsaTest, RandomizedSignaturesTest,
 #ifdef OPENSSL_IS_BORINGSSL
 INSTANTIATE_TEST_SUITE_P(MlDsaTest, RandomizedSignaturesTest,
                          testing::ValuesIn(internal::CreateMlDsaTestVectors()));
+
+INSTANTIATE_TEST_SUITE_P(
+    CompositeMlDsaTest, RandomizedSignaturesTest,
+    testing::ValuesIn(internal::CreateCompositeMlDsaTestVectors()));
 #endif
 
 }  // namespace

@@ -19,8 +19,11 @@
 #include <memory>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/low_level_crypto_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -34,6 +37,9 @@
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/composite_ml_dsa_private_key.h"
+#include "tink/signature/composite_ml_dsa_proto_serialization.h"
+#include "tink/signature/composite_ml_dsa_public_key.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
@@ -44,6 +50,8 @@
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
+#include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
+#include "tink/signature/subtle/composite_ml_dsa_verify_boringssl.h"
 #endif
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
@@ -65,8 +73,6 @@
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -113,6 +119,21 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEd25519VerifyBoringSsl(
     const Ed25519PublicKey& key) {
   return crypto::tink::subtle::Ed25519VerifyBoringSsl::New(key);
 }
+
+// Tink implements PQC signatures with BoringSSL, not OpenSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewCompositeMlDsaSignBoringSsl(
+    const CompositeMlDsaPrivateKey& key) {
+  return crypto::tink::subtle::NewCompositeMlDsaSign(key,
+                                                     GetLowLevelCryptoAccess());
+}
+
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
+NewCompositeMlDsaVerifyBoringSsl(const CompositeMlDsaPublicKey& key) {
+  return crypto::tink::subtle::NewCompositeMlDsaVerify(
+      key, GetLowLevelCryptoAccess());
+}
+#endif
 
 }  // namespace
 
@@ -257,6 +278,24 @@ absl::Status AddSignatureV0(Configuration& config) {
   status =
       ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify, MlDsaPublicKey>(
           NewMlDsaVerifyBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+
+  // Composite ML-DSA
+  status = RegisterCompositeMlDsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeySign,
+                                                 CompositeMlDsaPrivateKey>(
+      NewCompositeMlDsaSignBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
+                                                 CompositeMlDsaPublicKey>(
+      NewCompositeMlDsaVerifyBoringSsl, config);
   if (!status.ok()) {
     return status;
   }

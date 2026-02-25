@@ -42,10 +42,16 @@ tink_cc_library(
     tink::signature::internal::slh_dsa_sign_boringssl
     tink::signature::internal::slh_dsa_verify_boringssl
     absl::memory
+    absl::status
+    absl::statusor
     tink::core::configuration
+    tink::core::low_level_crypto_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl
+    tink::signature::composite_ml_dsa_private_key
+    tink::signature::composite_ml_dsa_proto_serialization
+    tink::signature::composite_ml_dsa_public_key
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_public_key
@@ -72,6 +78,8 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
+    tink::signature::subtle::composite_ml_dsa_sign_boringssl
+    tink::signature::subtle::composite_ml_dsa_verify_boringssl
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
     tink::subtle::ed25519_sign_boringssl
@@ -81,7 +89,6 @@ tink_cc_library(
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::status
-    tink::util::statusor
   TAGS
     exclude_if_openssl
 )
@@ -93,7 +100,10 @@ tink_cc_library(
     config_v0.h
   DEPS
     absl::memory
+    absl::status
+    absl::statusor
     tink::core::configuration
+    tink::core::low_level_crypto_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl
@@ -128,7 +138,6 @@ tink_cc_library(
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::status
-    tink::util::statusor
   TAGS
     exclude_if_boringssl
 )
@@ -244,6 +253,7 @@ tink_cc_test(
     tink::signature::internal::key_gen_config_v0_openssl
     gmock
     absl::check
+    absl::statusor
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -266,7 +276,6 @@ tink_cc_test(
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
   TAGS
@@ -662,6 +671,7 @@ tink_cc_test(
     tink::signature::internal::key_gen_config_v0
     gmock
     absl::absl_check
+    absl::statusor
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -679,13 +689,13 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::signature_key_templates
     tink::signature::slh_dsa_parameters
+    tink::signature::internal::testing::composite_ml_dsa_test_vectors
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
   TAGS

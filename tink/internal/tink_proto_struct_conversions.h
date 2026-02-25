@@ -37,6 +37,12 @@ KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data);
 // Converts a TinkPB KeyData to a proto library KeyData.
 ::google::crypto::tink::KeyData ToProtoKeyData(KeyDataTP key_data);
 
+// Converts a proto library Keyset::Key to a TinkPB KeysetTP::KeyTP.
+KeysetTP::KeyTP ToKeyTP(::google::crypto::tink::Keyset::Key key);
+
+// Converts a TinkPB KeyData to a proto library KeyData.
+::google::crypto::tink::Keyset::Key ToProtoKey(KeysetTP::KeyTP key);
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

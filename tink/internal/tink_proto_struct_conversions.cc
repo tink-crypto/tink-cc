@@ -67,6 +67,34 @@ KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data) {
   return key_data_proto;
 }
 
+KeysetTP::KeyTP ToKeyTP(::google::crypto::tink::Keyset::Key key) {
+  KeysetTP::KeyTP key_tp;
+  if (key.has_key_data()) {
+    *key_tp.mutable_key_data() =
+        ToKeyDataTP(std::move(*key.mutable_key_data()));
+  }
+  key_tp.set_status(static_cast<KeyStatusTypeTP>(key.status()));
+  key_tp.set_key_id(key.key_id());
+  key_tp.set_output_prefix_type(
+      static_cast<OutputPrefixTypeTP>(key.output_prefix_type()));
+  return key_tp;
+}
+
+::google::crypto::tink::Keyset::Key ToProtoKey(KeysetTP::KeyTP key) {
+  ::google::crypto::tink::Keyset::Key key_proto;
+  if (key.has_key_data()) {
+    *key_proto.mutable_key_data() =
+        ToProtoKeyData(std::move(*key.mutable_key_data()));
+  }
+  key_proto.set_status(
+      static_cast<::google::crypto::tink::KeyStatusType>(key.status()));
+  key_proto.set_key_id(key.key_id());
+  key_proto.set_output_prefix_type(
+      static_cast<::google::crypto::tink::OutputPrefixType>(
+          key.output_prefix_type()));
+  return key_proto;
+}
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

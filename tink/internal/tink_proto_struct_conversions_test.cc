@@ -28,6 +28,8 @@ namespace internal {
 namespace {
 
 using ::google::crypto::tink::KeyData;
+using ::google::crypto::tink::Keyset;
+using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
@@ -140,6 +142,84 @@ TEST(KeyDataTPConversionTest, RoundTrip) {
   EXPECT_THAT(produced_data.value(), Eq(key_data.value()));
   EXPECT_THAT(produced_data.key_material_type(),
               Eq(key_data.key_material_type()));
+}
+
+TEST(ToKeyTPTest, Works) {
+  Keyset::Key key;
+  key.mutable_key_data()->set_type_url("type_url");
+  key.mutable_key_data()->set_value("value");
+  key.mutable_key_data()->set_key_material_type(KeyData::SYMMETRIC);
+  key.set_status(KeyStatusType::ENABLED);
+  key.set_key_id(123);
+  key.set_output_prefix_type(OutputPrefixType::TINK);
+
+  KeysetTP::KeyTP key_tp = ToKeyTP(key);
+
+  EXPECT_THAT(key_tp.key_data().type_url(), Eq("type_url"));
+  EXPECT_THAT(util::SecretDataAsStringView(key_tp.key_data().value()),
+              Eq("value"));
+  EXPECT_THAT(key_tp.key_data().key_material_type(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(key_tp.status(), Eq(KeyStatusTypeTP::kEnabled));
+  EXPECT_THAT(key_tp.key_id(), Eq(123));
+  EXPECT_THAT(key_tp.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
+}
+
+TEST(ToProtoKeyTest, Works) {
+  KeysetTP::KeyTP key_tp;
+  key_tp.mutable_key_data()->set_type_url("type_url");
+  key_tp.mutable_key_data()->set_value("value");
+  key_tp.mutable_key_data()->set_key_material_type(
+      KeyMaterialTypeTP::kSymmetric);
+  key_tp.set_status(KeyStatusTypeTP::kEnabled);
+  key_tp.set_key_id(123);
+  key_tp.set_output_prefix_type(OutputPrefixTypeTP::kTink);
+
+  Keyset::Key key = ToProtoKey(key_tp);
+
+  EXPECT_THAT(key.key_data().type_url(), Eq("type_url"));
+  EXPECT_THAT(key.key_data().value(), Eq("value"));
+  EXPECT_THAT(key.key_data().key_material_type(), Eq(KeyData::SYMMETRIC));
+  EXPECT_THAT(key.status(), Eq(KeyStatusType::ENABLED));
+  EXPECT_THAT(key.key_id(), Eq(123));
+  EXPECT_THAT(key.output_prefix_type(), Eq(OutputPrefixType::TINK));
+}
+
+TEST(KeyTPConversionTest, RoundTrip) {
+  Keyset::Key key;
+  key.mutable_key_data()->set_type_url("type_url");
+  key.mutable_key_data()->set_value("value");
+  key.mutable_key_data()->set_key_material_type(KeyData::ASYMMETRIC_PRIVATE);
+  key.set_status(KeyStatusType::DISABLED);
+  key.set_key_id(456);
+  key.set_output_prefix_type(OutputPrefixType::RAW);
+
+  Keyset::Key produced_key = ToProtoKey(ToKeyTP(key));
+  EXPECT_THAT(produced_key.key_data().type_url(),
+              Eq(key.key_data().type_url()));
+  EXPECT_THAT(produced_key.key_data().value(), Eq(key.key_data().value()));
+  EXPECT_THAT(produced_key.key_data().key_material_type(),
+              Eq(key.key_data().key_material_type()));
+  EXPECT_THAT(produced_key.status(), Eq(key.status()));
+  EXPECT_THAT(produced_key.key_id(), Eq(key.key_id()));
+  EXPECT_THAT(produced_key.output_prefix_type(), Eq(key.output_prefix_type()));
+}
+
+TEST(KeyTPConversionTest, KeyDataNotSetRoundTrip) {
+  Keyset::Key key;
+  key.set_status(KeyStatusType::DESTROYED);
+  key.set_key_id(789);
+  key.set_output_prefix_type(OutputPrefixType::LEGACY);
+
+  Keyset::Key produced_key = ToProtoKey(ToKeyTP(key));
+  EXPECT_THAT(produced_key.key_data().type_url(),
+              Eq(key.key_data().type_url()));
+  EXPECT_THAT(produced_key.key_data().value(), Eq(key.key_data().value()));
+  EXPECT_THAT(produced_key.key_data().key_material_type(),
+              Eq(key.key_data().key_material_type()));
+  EXPECT_THAT(produced_key.status(), Eq(key.status()));
+  EXPECT_THAT(produced_key.key_id(), Eq(key.key_id()));
+  EXPECT_THAT(produced_key.output_prefix_type(), Eq(key.output_prefix_type()));
 }
 
 }  // namespace

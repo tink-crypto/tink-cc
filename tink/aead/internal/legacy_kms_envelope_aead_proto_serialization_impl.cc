@@ -124,11 +124,11 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.KmsEnvelopeAeadKey";
 
 absl::StatusOr<LegacyKmsEnvelopeAeadParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return LegacyKmsEnvelopeAeadParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -136,13 +136,13 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     LegacyKmsEnvelopeAeadParameters::Variant variant) {
   switch (variant) {
     case LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case LegacyKmsEnvelopeAeadParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -178,7 +178,7 @@ absl::StatusOr<KeyTemplateTP> ParametersToKeyTemplate(
 
 absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
     const KmsEnvelopeAeadKeyFormatTP& proto_key_format,
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -186,7 +186,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
   }
 
   KeyTemplateTP raw_dek_template = proto_key_format.dek_template();
-  raw_dek_template.set_output_prefix_type(OutputPrefixTypeEnum::kRaw);
+  raw_dek_template.set_output_prefix_type(OutputPrefixTypeTP::kRaw);
 
   absl::StatusOr<std::unique_ptr<Parameters>> dek_parameters =
       ParametersFromKeyTemplate(raw_dek_template);
@@ -249,7 +249,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const LegacyKmsEnvelopeAeadParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -325,14 +325,14 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output = RestrictedData(
       std::move(serialized_key), GetInsecureSecretKeyAccessInternal());
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kRemote,
+      kTypeUrl, restricted_output, KeyMaterialTypeTP::kRemote,
       *output_prefix_type, key.GetIdRequirement());
 }
 

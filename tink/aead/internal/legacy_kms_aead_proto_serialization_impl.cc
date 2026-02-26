@@ -107,11 +107,11 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.KmsAeadKey";
 
 absl::StatusOr<LegacyKmsAeadParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return LegacyKmsAeadParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return LegacyKmsAeadParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -119,13 +119,13 @@ absl::StatusOr<LegacyKmsAeadParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     LegacyKmsAeadParameters::Variant variant) {
   switch (variant) {
     case LegacyKmsAeadParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case LegacyKmsAeadParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -153,7 +153,7 @@ absl::StatusOr<LegacyKmsAeadParameters> ParseParameters(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const LegacyKmsAeadParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -203,7 +203,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.mutable_params()->set_key_uri(key.GetParameters().GetKeyUri());
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -215,7 +215,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
       std::move(serialized_key), GetInsecureSecretKeyAccessInternal());
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kRemote,
+      kTypeUrl, restricted_output, KeyMaterialTypeTP::kRemote,
       *output_prefix_type, key.GetIdRequirement());
 }
 

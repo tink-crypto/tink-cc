@@ -135,15 +135,15 @@ class AesEaxKeyTP : public Message {
 };
 
 absl::StatusOr<AesEaxParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return AesEaxParameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return AesEaxParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return AesEaxParameters::Variant::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -151,15 +151,15 @@ absl::StatusOr<AesEaxParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     AesEaxParameters::Variant variant) {
   switch (variant) {
     case AesEaxParameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case AesEaxParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case AesEaxParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
@@ -215,7 +215,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return params.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -290,7 +290,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.mutable_params()->set_iv_size(params->iv_size());
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -298,7 +298,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   SecretData serialized_proto = proto_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(std::move(serialized_proto), *token),
-      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
+      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }
 

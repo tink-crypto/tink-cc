@@ -91,15 +91,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesSivKey";
 
 absl::StatusOr<AesSivParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return AesSivParameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return AesSivParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return AesSivParameters::Variant::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -107,15 +107,15 @@ absl::StatusOr<AesSivParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     AesSivParameters::Variant variant) {
   switch (variant) {
     case AesSivParameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case AesSivParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case AesSivParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
@@ -148,7 +148,7 @@ absl::StatusOr<AesSivParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesSivParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
@@ -207,14 +207,14 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->Get(*token));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
+      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }
 

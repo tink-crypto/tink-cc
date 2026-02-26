@@ -95,15 +95,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key";
 
 absl::StatusOr<XChaCha20Poly1305Parameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return XChaCha20Poly1305Parameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return XChaCha20Poly1305Parameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return XChaCha20Poly1305Parameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -111,15 +111,15 @@ absl::StatusOr<XChaCha20Poly1305Parameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     XChaCha20Poly1305Parameters::Variant variant) {
   switch (variant) {
     case XChaCha20Poly1305Parameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case XChaCha20Poly1305Parameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case XChaCha20Poly1305Parameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -151,7 +151,7 @@ absl::StatusOr<XChaCha20Poly1305Parameters> ParseParameters(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const XChaCha20Poly1305Parameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
@@ -215,14 +215,14 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(std::move(serialized_key), *token);
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
+      kTypeUrl, restricted_output, KeyMaterialTypeTP::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

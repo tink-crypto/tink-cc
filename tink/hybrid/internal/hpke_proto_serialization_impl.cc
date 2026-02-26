@@ -210,15 +210,15 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.HpkePrivateKey";
 
 absl::StatusOr<HpkeParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return HpkeParameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return HpkeParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return HpkeParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -226,15 +226,15 @@ absl::StatusOr<HpkeParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     HpkeParameters::Variant variant) {
   switch (variant) {
     case HpkeParameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case HpkeParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case HpkeParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type.");
@@ -336,7 +336,7 @@ absl::StatusOr<HpkeAeadEnum> FromAeadId(HpkeParameters::AeadId aead_id) {
 }
 
 absl::StatusOr<HpkeParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type, const HpkeParamsTP& params) {
+    OutputPrefixTypeTP output_prefix_type, const HpkeParamsTP& params) {
   absl::StatusOr<HpkeParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -486,7 +486,7 @@ absl::StatusOr<HpkePrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HpkeParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -516,7 +516,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   *proto_key.mutable_params() = *params;
   proto_key.set_public_key(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -525,7 +525,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyMaterialTypeEnum::kAsymmetricPublic,
+      kPublicTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -553,7 +553,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   proto_key.set_version(0);
   proto_key.set_private_key(restricted_input->Get(*token));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -562,7 +562,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl,
       RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 

@@ -259,15 +259,15 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey";
 
 absl::StatusOr<EciesParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return EciesParameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return EciesParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return EciesParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -275,15 +275,15 @@ absl::StatusOr<EciesParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     EciesParameters::Variant variant) {
   switch (variant) {
     case EciesParameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case EciesParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case EciesParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type.");
@@ -490,7 +490,7 @@ ProtoEciesAeadDemParams CreateEciesAeadDemParamsStruct(
   ProtoEciesAeadDemParams dem_params;
   dem_params.mutable_aead_dem()->set_type_url(type_url);
   dem_params.mutable_aead_dem()->set_output_prefix_type(
-      OutputPrefixTypeEnum::kTink);
+      OutputPrefixTypeTP::kTink);
   dem_params.mutable_aead_dem()->set_value(serialized_key_format);
   return dem_params;
 }
@@ -547,7 +547,7 @@ absl::StatusOr<ProtoEciesAeadDemParams> ToProtoDemParams(
 }
 
 absl::StatusOr<EciesParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type,
+    OutputPrefixTypeTP output_prefix_type,
     const ProtoEciesAeadHkdfParams& params) {
   absl::StatusOr<EciesParameters::Variant> variant =
       ToVariant(output_prefix_type);
@@ -777,7 +777,7 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
         "EciesAeadHkdfPrivateKey proto.");
   }
 
-  const OutputPrefixTypeEnum output_prefix_type =
+  const OutputPrefixTypeTP output_prefix_type =
       serialization.GetOutputPrefixTypeEnum();
 
   absl::StatusOr<EciesParameters::Variant> variant =
@@ -820,7 +820,7 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const EciesParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -857,7 +857,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   if (!serialized_proto_key.ok()) {
     return serialized_proto_key.status();
   }
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -866,7 +866,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto_key, InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyMaterialTypeEnum::kAsymmetricPublic,
+      kPublicTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -922,7 +922,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
         secret->Get(InsecureSecretKeyAccess::Get()));
   }
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -935,10 +935,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   }
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto_private_key, *token);
-  return ProtoKeySerialization::Create(kPrivateTypeUrl, restricted_output,
-                                       KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                       *output_prefix_type,
-                                       key.GetIdRequirement());
+  return ProtoKeySerialization::Create(
+      kPrivateTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPrivate,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 EciesProtoParametersParserImpl* EciesProtoParametersParser() {

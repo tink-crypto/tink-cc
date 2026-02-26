@@ -78,9 +78,9 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
               proto_key.key_data().type_url(),
               RestrictedData(proto_key.key_data().value(),
                              internal::GetInsecureSecretKeyAccessInternal()),
-              static_cast<KeyMaterialTypeEnum>(
+              static_cast<KeyMaterialTypeTP>(
                   proto_key.key_data().key_material_type()),
-              OutputPrefixTypeEnum::kRaw,
+              OutputPrefixTypeTP::kRaw,
               /*id_requirement=*/absl::nullopt);
       if (!serialization.ok()) {
         return serialization.status();

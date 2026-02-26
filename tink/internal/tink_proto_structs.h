@@ -69,7 +69,7 @@ enum class OutputPrefixTypeTP : uint32_t {
 
 using  OutputPrefixTypeEnum ABSL_DEPRECATE_AND_INLINE() = OutputPrefixTypeTP;
 
-std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeEnum type);
+std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeTP type);
 
 inline bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
 
@@ -85,7 +85,7 @@ enum class KeyMaterialTypeTP : uint32_t {
 
 using  KeyMaterialTypeEnum ABSL_DEPRECATE_AND_INLINE() = KeyMaterialTypeTP;
 
-std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type);
+std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeTP type);
 
 inline bool KeyMaterialTypeValid(int c) { return c >= 0 && c <= 4; }
 
@@ -110,10 +110,10 @@ class KeyTemplateTP : public proto_parsing::Message {
   const std::string& value() const { return value_.value(); }
   void set_value(absl::string_view value) { value_.set_value(value); }
 
-  OutputPrefixTypeEnum output_prefix_type() const {
+  OutputPrefixTypeTP output_prefix_type() const {
     return output_prefix_type_.value();
   }
-  void set_output_prefix_type(OutputPrefixTypeEnum output_prefix_type) {
+  void set_output_prefix_type(OutputPrefixTypeTP output_prefix_type) {
     output_prefix_type_.set_value(output_prefix_type);
   }
 
@@ -126,7 +126,7 @@ class KeyTemplateTP : public proto_parsing::Message {
 
   proto_parsing::BytesField type_url_{1};
   proto_parsing::BytesField value_{2};
-  proto_parsing::EnumField<OutputPrefixTypeEnum> output_prefix_type_{
+  proto_parsing::EnumField<OutputPrefixTypeTP> output_prefix_type_{
       3, &OutputPrefixTypeValid};
 };
 
@@ -152,10 +152,10 @@ class KeyDataTP : public proto_parsing::Message {
     *value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  KeyMaterialTypeEnum key_material_type() const {
+  KeyMaterialTypeTP key_material_type() const {
     return key_material_type_.value();
   }
-  void set_key_material_type(KeyMaterialTypeEnum key_material_type) {
+  void set_key_material_type(KeyMaterialTypeTP key_material_type) {
     key_material_type_.set_value(key_material_type);
   }
 
@@ -168,7 +168,7 @@ class KeyDataTP : public proto_parsing::Message {
 
   proto_parsing::BytesField type_url_{1};
   proto_parsing::SecretDataField value_{2};
-  proto_parsing::EnumField<KeyMaterialTypeEnum> key_material_type_{
+  proto_parsing::EnumField<KeyMaterialTypeTP> key_material_type_{
       3, &KeyMaterialTypeValid};
 };
 
@@ -197,10 +197,10 @@ class KeysetTP : public proto_parsing::Message {
     void set_key_id(uint32_t value) { key_id_.set_value(value); }
 
     void clear_output_prefix_type() { output_prefix_type_.Clear(); }
-    OutputPrefixTypeEnum output_prefix_type() const {
+    OutputPrefixTypeTP output_prefix_type() const {
       return output_prefix_type_.value();
     }
-    void set_output_prefix_type(OutputPrefixTypeEnum value) {
+    void set_output_prefix_type(OutputPrefixTypeTP value) {
       output_prefix_type_.set_value(value);
     }
 
@@ -216,7 +216,7 @@ class KeysetTP : public proto_parsing::Message {
     proto_parsing::EnumField<KeyStatusTypeTP> status_{
         2, &KeyStatusTypeTP_IsValid, {}, ProtoFieldOptions::kImplicit};
     proto_parsing::Uint32Field key_id_{3, ProtoFieldOptions::kImplicit};
-    proto_parsing::EnumField<OutputPrefixTypeEnum> output_prefix_type_{
+    proto_parsing::EnumField<OutputPrefixTypeTP> output_prefix_type_{
         4, &OutputPrefixTypeValid, {}, ProtoFieldOptions::kImplicit};
   };
   KeysetTP() = default;

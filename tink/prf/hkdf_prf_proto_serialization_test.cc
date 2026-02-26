@@ -256,7 +256,7 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeParameters) {
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(internal::OutputPrefixTypeEnum::kRaw));
+              Eq(internal::OutputPrefixTypeTP::kRaw));
 
   HkdfPrfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());

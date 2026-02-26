@@ -35,7 +35,7 @@ using ::google::crypto::tink::KeyTemplate;
 
 absl::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(absl::string_view type_url,
-                                     OutputPrefixTypeEnum output_prefix_type,
+                                     OutputPrefixTypeTP output_prefix_type,
                                      absl::string_view serialized_proto) {
   if (!IsPrintableAscii(type_url)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -57,7 +57,7 @@ ProtoParametersSerialization::Create(KeyTemplate key_template) {
   KeyTemplateTP proto_key_template;
   proto_key_template.set_type_url(key_template.type_url());
   proto_key_template.set_output_prefix_type(
-      static_cast<OutputPrefixTypeEnum>(key_template.output_prefix_type()));
+      static_cast<OutputPrefixTypeTP>(key_template.output_prefix_type()));
   proto_key_template.set_value(key_template.value());
   return ProtoParametersSerialization(std::move(proto_key_template));
 }

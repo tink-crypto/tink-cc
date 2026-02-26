@@ -30,10 +30,10 @@ namespace tink {
 namespace internal {
 namespace {
 
-absl::Status CheckKeyAccess(KeyMaterialTypeEnum key_material_type,
+absl::Status CheckKeyAccess(KeyMaterialTypeTP key_material_type,
                             absl::optional<SecretKeyAccessToken> token) {
-  if (key_material_type == KeyMaterialTypeEnum::kSymmetric ||
-      key_material_type == KeyMaterialTypeEnum::kAsymmetricPrivate) {
+  if (key_material_type == KeyMaterialTypeTP::kSymmetric ||
+      key_material_type == KeyMaterialTypeTP::kAsymmetricPrivate) {
     if (!token.has_value()) {
       return absl::Status(
           absl::StatusCode::kPermissionDenied,

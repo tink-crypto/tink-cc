@@ -38,15 +38,14 @@ TEST(KeyTemplateTPTest, ParseKeyTemplateTP) {
       absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
                    proto_testing::FieldWithNumber(2).IsString("value"),
                    proto_testing::FieldWithNumber(3).IsVarint(
-                       static_cast<int>(OutputPrefixTypeEnum::kTink)));
+                       static_cast<int>(OutputPrefixTypeTP::kTink)));
 
   KeyTemplateTP key_template;
   ASSERT_THAT(key_template.ParseFromString(serialized_hmac_key_template),
               IsTrue());
   EXPECT_THAT(key_template.type_url(), Eq("type_url"));
   EXPECT_THAT(key_template.value(), Eq("value"));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(OutputPrefixTypeEnum::kTink));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
 }
 
 TEST(KeyTemplateTPTest, ParseKeyTemplateTPInvalid) {
@@ -62,12 +61,12 @@ TEST(KeyTemplateTPTest, ParseKeyTemplateTPInvalidOutputPrefixType) {
   KeyTemplateTP params;
   EXPECT_THAT(params.ParseFromString(serialized_hmac_key_template), IsTrue());
   EXPECT_THAT(params.output_prefix_type(),
-              Eq(OutputPrefixTypeEnum::kUnknownPrefix));
+              Eq(OutputPrefixTypeTP::kUnknownPrefix));
 }
 
 TEST(KeyTemplateTPTest, SerializeKeyTemplateTP) {
   KeyTemplateTP key_template;
-  key_template.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
+  key_template.set_output_prefix_type(OutputPrefixTypeTP::kTink);
   key_template.set_type_url("type_url");
   key_template.set_value("value");
 
@@ -77,7 +76,7 @@ TEST(KeyTemplateTPTest, SerializeKeyTemplateTP) {
       Eq(absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
                       proto_testing::FieldWithNumber(2).IsString("value"),
                       proto_testing::FieldWithNumber(3).IsVarint(
-                          static_cast<int>(OutputPrefixTypeEnum::kTink)))));
+                          static_cast<int>(OutputPrefixTypeTP::kTink)))));
 }
 
 TEST(KeyDataTPTest, ParseKeyDataTP) {
@@ -85,7 +84,7 @@ TEST(KeyDataTPTest, ParseKeyDataTP) {
       proto_testing::FieldWithNumber(1).IsString("type_url"),
       proto_testing::FieldWithNumber(2).IsString("key_material"),
       proto_testing::FieldWithNumber(3).IsVarint(
-          static_cast<int>(KeyMaterialTypeEnum::kAsymmetricPrivate)));
+          static_cast<int>(KeyMaterialTypeTP::kAsymmetricPrivate)));
 
   KeyDataTP key_data;
   ASSERT_THAT(key_data.ParseFromString(serialized_hmac_key_data), IsTrue());
@@ -93,7 +92,7 @@ TEST(KeyDataTPTest, ParseKeyDataTP) {
   EXPECT_THAT(util::SecretDataAsStringView(key_data.value()),
               Eq("key_material"));
   EXPECT_THAT(key_data.key_material_type(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
 }
 
 TEST(KeyDataTPTest, ParseKeyDataTPInvalid) {
@@ -109,14 +108,14 @@ TEST(KeyDataTPTest, ParseKeyDataTPInvalidKeyMaterialType) {
   KeyDataTP params;
   EXPECT_THAT(params.ParseFromString(serialized_hmac_key_data), IsTrue());
   EXPECT_THAT(params.key_material_type(),
-              Eq(KeyMaterialTypeEnum::kUnknownKeyMaterial));
+              Eq(KeyMaterialTypeTP::kUnknownKeyMaterial));
 }
 
 TEST(KeyDataTPTest, SerializeKeyDataTP) {
   KeyDataTP key_data;
   key_data.set_type_url("type_url");
   key_data.set_value("value");
-  key_data.set_key_material_type(KeyMaterialTypeEnum::kAsymmetricPrivate);
+  key_data.set_key_material_type(KeyMaterialTypeTP::kAsymmetricPrivate);
 
   auto serialized_hmac_key_data = key_data.SerializeAsSecretData();
   EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_key_data),
@@ -124,23 +123,23 @@ TEST(KeyDataTPTest, SerializeKeyDataTP) {
                   proto_testing::FieldWithNumber(1).IsString("type_url"),
                   proto_testing::FieldWithNumber(2).IsString("value"),
                   proto_testing::FieldWithNumber(3).IsVarint(static_cast<int>(
-                      KeyMaterialTypeEnum::kAsymmetricPrivate)))));
+                      KeyMaterialTypeTP::kAsymmetricPrivate)))));
 }
 
 TEST(KeyTPTest, ParseKeyData) {
   const std::string serialized_key =
-      absl::StrCat(proto_testing::FieldWithNumber(1).IsString(absl::StrCat(
-          proto_testing::FieldWithNumber(1).IsString("type_url"),
-          proto_testing::FieldWithNumber(2).IsString("value"),
-          proto_testing::FieldWithNumber(3).IsVarint(
-              static_cast<int>(KeyMaterialTypeEnum::kSymmetric)))));
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsString(
+          absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
+                       proto_testing::FieldWithNumber(2).IsString("value"),
+                       proto_testing::FieldWithNumber(3).IsVarint(
+                           static_cast<int>(KeyMaterialTypeTP::kSymmetric)))));
   KeysetTP::KeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_key), IsTrue());
   EXPECT_THAT(key.key_data().type_url(), Eq("type_url"));
   EXPECT_THAT(util::SecretDataAsStringView(key.key_data().value()),
               Eq("value"));
   EXPECT_THAT(key.key_data().key_material_type(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
+              Eq(KeyMaterialTypeTP::kSymmetric));
 }
 
 TEST(KeyTPTest, ParseStatus) {
@@ -161,21 +160,20 @@ TEST(KeyTPTest, ParseKeyId) {
 
 TEST(KeyTPTest, ParseOutputPrefixType) {
   const std::string serialized_key = proto_testing::FieldWithNumber(4).IsVarint(
-      static_cast<int>(OutputPrefixTypeEnum::kTink));
+      static_cast<int>(OutputPrefixTypeTP::kTink));
   KeysetTP::KeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_key), IsTrue());
-  EXPECT_THAT(key.output_prefix_type(), Eq(OutputPrefixTypeEnum::kTink));
+  EXPECT_THAT(key.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
 }
 
 TEST(KeyTPTest, RoundTrip) {
   KeysetTP::KeyTP key;
   key.mutable_key_data()->set_type_url("type_url");
   key.mutable_key_data()->set_value("value");
-  key.mutable_key_data()->set_key_material_type(
-      KeyMaterialTypeEnum::kSymmetric);
+  key.mutable_key_data()->set_key_material_type(KeyMaterialTypeTP::kSymmetric);
   key.set_status(KeyStatusTypeTP::kEnabled);
   key.set_key_id(12345);
-  key.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
+  key.set_output_prefix_type(OutputPrefixTypeTP::kTink);
 
   auto serialized = key.SerializeAsSecretData();
   KeysetTP::KeyTP key2;
@@ -186,10 +184,10 @@ TEST(KeyTPTest, RoundTrip) {
   EXPECT_THAT(util::SecretDataAsStringView(key2.key_data().value()),
               Eq("value"));
   EXPECT_THAT(key2.key_data().key_material_type(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
+              Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(key2.status(), Eq(KeyStatusTypeTP::kEnabled));
   EXPECT_THAT(key2.key_id(), Eq(12345));
-  EXPECT_THAT(key2.output_prefix_type(), Eq(OutputPrefixTypeEnum::kTink));
+  EXPECT_THAT(key2.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
 }
 
 TEST(KeysetTPTest, ParsePrimaryKeyId) {

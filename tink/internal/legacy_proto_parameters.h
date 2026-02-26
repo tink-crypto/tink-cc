@@ -43,7 +43,7 @@ class LegacyProtoParameters : public Parameters {
 
   bool HasIdRequirement() const override {
     return serialization_.GetKeyTemplate().output_prefix_type() !=
-           OutputPrefixTypeEnum::kRaw;
+           OutputPrefixTypeTP::kRaw;
   }
 
   bool operator==(const Parameters& other) const override;

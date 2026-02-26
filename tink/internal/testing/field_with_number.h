@@ -64,11 +64,11 @@ class FieldWithNumber {
   int field_number_;
 };
 
-ProtoKeySerialization SerializeMessage(
-    absl::string_view type_url, const std::vector<std::string>& v,
-    crypto::tink::internal::KeyMaterialTypeEnum key_material_type,
-    crypto::tink::internal::OutputPrefixTypeEnum output_prefix_type,
-    absl::optional<int> id_requirement);
+ProtoKeySerialization SerializeMessage(absl::string_view type_url,
+                                       const std::vector<std::string>& v,
+                                       KeyMaterialTypeTP key_material_type,
+                                       OutputPrefixTypeTP output_prefix_type,
+                                       absl::optional<int> id_requirement);
 
 }  // namespace proto_testing
 }  // namespace internal

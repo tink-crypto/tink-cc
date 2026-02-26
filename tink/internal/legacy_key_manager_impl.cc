@@ -56,7 +56,7 @@ LegacyPrivateKeyFactoryImpl::NewKey(
   absl::StatusOr<internal::ProtoParametersSerialization>
       parameters_serialization = internal::ProtoParametersSerialization::Create(
           absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPrivateKeyTypeName()),
-          OutputPrefixTypeEnum::kRaw, key_format.SerializeAsString());
+          OutputPrefixTypeTP::kRaw, key_format.SerializeAsString());
   if (!parameters_serialization.ok()) {
     return parameters_serialization.status();
   }
@@ -143,8 +143,8 @@ LegacyPrivateKeyFactoryImpl::GetPublicKeyData(
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPrivateKeyTypeName()),
-          serialized_key, KeyMaterialTypeEnum::kAsymmetricPrivate,
-          OutputPrefixTypeEnum::kRaw,
+          serialized_key, KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
@@ -203,7 +203,7 @@ absl::StatusOr<std::unique_ptr<Key>> LegacyKeyManagerBaseAdaptor::GetKey(
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(GetKeyType(), serialized_key,
                                               GetKeyMaterialType(),
-                                              OutputPrefixTypeEnum::kRaw,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
@@ -229,7 +229,7 @@ absl::StatusOr<std::unique_ptr<Key>> LegacyKeyManagerBaseAdaptor::GetKey(
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(GetKeyType(), serialized_key,
                                               GetKeyMaterialType(),
-                                              OutputPrefixTypeEnum::kRaw,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   if (!serialization.ok()) {
     return serialization.status();

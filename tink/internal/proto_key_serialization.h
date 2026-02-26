@@ -45,8 +45,8 @@ class ProtoKeySerialization : public Serialization {
   // Creates a `ProtoKeySerialization` object from individual components.
   static absl::StatusOr<ProtoKeySerialization> Create(
       absl::string_view type_url, RestrictedData serialized_key,
-      KeyMaterialTypeEnum key_material_type,
-      OutputPrefixTypeEnum output_prefix_type,
+      KeyMaterialTypeTP key_material_type,
+      OutputPrefixTypeTP output_prefix_type,
       absl::optional<int> id_requirement);
 
   // Returned value is only valid for the lifetime of this object.
@@ -60,11 +60,11 @@ class ProtoKeySerialization : public Serialization {
   // Returned value is only valid for the lifetime of this object.
   const RestrictedData& SerializedKeyProto() const { return serialized_key_; }
 
-  KeyMaterialTypeEnum GetKeyMaterialTypeEnum() const {
+  KeyMaterialTypeTP GetKeyMaterialTypeEnum() const {
     return key_material_type_;
   }
 
-  OutputPrefixTypeEnum GetOutputPrefixTypeEnum() const {
+  OutputPrefixTypeTP GetOutputPrefixTypeEnum() const {
     return output_prefix_type_;
   }
 
@@ -78,8 +78,8 @@ class ProtoKeySerialization : public Serialization {
   ProtoKeySerialization(absl::string_view type_url,
                         absl::string_view object_identifier,
                         RestrictedData serialized_key,
-                        KeyMaterialTypeEnum key_material_type,
-                        OutputPrefixTypeEnum output_prefix_type,
+                        KeyMaterialTypeTP key_material_type,
+                        OutputPrefixTypeTP output_prefix_type,
                         absl::optional<int> id_requirement)
       : type_url_(type_url),
         object_identifier_(object_identifier),
@@ -98,8 +98,8 @@ class ProtoKeySerialization : public Serialization {
   std::string type_url_;
   std::string object_identifier_;
   RestrictedData serialized_key_;
-  KeyMaterialTypeEnum key_material_type_;
-  OutputPrefixTypeEnum output_prefix_type_;
+  KeyMaterialTypeTP key_material_type_;
+  OutputPrefixTypeTP output_prefix_type_;
   absl::optional<int> id_requirement_;
 };
 

@@ -124,7 +124,7 @@ class LegacyKeyManagerBaseAdaptor {
   virtual const std::string& GetKeyType() const = 0;
 
   // Returns the key material type of that this manager supports.
-  virtual KeyMaterialTypeEnum GetKeyMaterialType() const = 0;
+  virtual KeyMaterialTypeTP GetKeyMaterialType() const = 0;
 
   // Returns the key factory to create keys of the type supported by this
   // manager.

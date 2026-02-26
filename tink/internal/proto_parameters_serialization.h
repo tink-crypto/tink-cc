@@ -44,7 +44,7 @@ class ProtoParametersSerialization : public Serialization {
 
   // Creates a `ProtoParametersSerialization` object from individual components.
   static absl::StatusOr<ProtoParametersSerialization> Create(
-      absl::string_view type_url, OutputPrefixTypeEnum output_prefix_type,
+      absl::string_view type_url, OutputPrefixTypeTP output_prefix_type,
       absl::string_view serialized_proto);
 
   // Creates a `ProtoParametersSerialization` object from a key template.

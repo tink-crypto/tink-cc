@@ -243,8 +243,7 @@ TEST_P(AesCmacPrfProtoSerializationTest,
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(internal::OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
 
   AesCmacPrfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -277,8 +276,7 @@ TEST_P(AesCmacPrfProtoSerializationTest,
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(internal::OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
 
   AesCmacPrfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());

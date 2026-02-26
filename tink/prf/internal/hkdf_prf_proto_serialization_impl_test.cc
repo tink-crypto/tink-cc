@@ -308,8 +308,7 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(internal::OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
 
   HkdfPrfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -344,8 +343,7 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(internal::OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
 
   HkdfPrfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());

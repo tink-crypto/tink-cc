@@ -184,7 +184,7 @@ absl::StatusOr<HkdfPrfParameters> ParseParameters(
         "Wrong type URL when parsing HkdfPrfParameters.");
   }
   if (serialization.GetKeyTemplate().output_prefix_type() !=
-      OutputPrefixTypeEnum::kRaw) {
+      OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HkdfPrfParameters.");
   }
@@ -232,8 +232,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   }
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeEnum::kRaw,
-      proto_key_format.SerializeAsString());
+      kTypeUrl, OutputPrefixTypeTP::kRaw, proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<HkdfPrfKey> ParseKey(
@@ -246,7 +245,7 @@ absl::StatusOr<HkdfPrfKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  if (serialization.GetOutputPrefixTypeEnum() != OutputPrefixTypeEnum::kRaw) {
+  if (serialization.GetOutputPrefixTypeEnum() != OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HkdfPrfKey.");
   }
@@ -310,7 +309,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
       key.GetIdRequirement());
 }
 

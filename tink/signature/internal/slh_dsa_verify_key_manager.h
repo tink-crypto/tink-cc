@@ -32,4 +32,4 @@ std::unique_ptr<KeyManager<PublicKeyVerify>> MakeSlhDsaVerifyKeyManager();
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SIGNATURE_SLH_DSA_VERIFY_KEY_MANAGER_H_
+#endif  // TINK_SIGNATURE_INTERNAL_SLH_DSA_VERIFY_KEY_MANAGER_H_

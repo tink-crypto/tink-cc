@@ -303,7 +303,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest, SerializeParametersSucceeds) {
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+              Eq(static_cast<internal::OutputPrefixTypeTP>(
                   test_case.output_prefix_type)));
   RsaSsaPkcs1KeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());

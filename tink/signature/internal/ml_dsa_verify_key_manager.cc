@@ -47,8 +47,8 @@ class MlDsaVerifyKeyManagerAdaptor
 
   const std::string& GetKeyType() const final { return key_type_; }
 
-  KeyMaterialTypeEnum GetKeyMaterialType() const final {
-    return KeyMaterialTypeEnum::kAsymmetricPublic;
+  KeyMaterialTypeTP GetKeyMaterialType() const final {
+    return KeyMaterialTypeTP::kAsymmetricPublic;
   }
 
   const KeyFactory& GetKeyFactory() const final { return *key_factory_; }

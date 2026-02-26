@@ -207,17 +207,17 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.EcdsaPrivateKey";
 
 absl::StatusOr<EcdsaParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       return EcdsaParameters::Variant::kLegacy;
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return EcdsaParameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return EcdsaParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return EcdsaParameters::Variant::kTink;
-    case OutputPrefixTypeEnum::kWithIdRequirement:
+    case OutputPrefixTypeTP::kWithIdRequirement:
       return EcdsaParameters::Variant::kNoPrefixWithPrehashId;
     default:
       return absl::InvalidArgumentError(
@@ -225,19 +225,19 @@ absl::StatusOr<EcdsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     EcdsaParameters::Variant variant) {
   switch (variant) {
     case EcdsaParameters::Variant::kLegacy:
-      return OutputPrefixTypeEnum::kLegacy;
+      return OutputPrefixTypeTP::kLegacy;
     case EcdsaParameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case EcdsaParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case EcdsaParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     case EcdsaParameters::Variant::kNoPrefixWithPrehashId:
-      return OutputPrefixTypeEnum::kWithIdRequirement;
+      return OutputPrefixTypeTP::kWithIdRequirement;
     default:
       return absl::InvalidArgumentError(
           "Could not determine EcdsaParameters::Variant");
@@ -344,7 +344,7 @@ absl::StatusOr<int> getEncodingLength(EcdsaParameters::CurveType curveType) {
 }
 
 absl::StatusOr<EcdsaParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type, const EcdsaParamsTP& params) {
+    OutputPrefixTypeTP output_prefix_type, const EcdsaParamsTP& params) {
   absl::StatusOr<EcdsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -477,7 +477,7 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
         "Only version 0 public keys are accepted.");
   }
 
-  OutputPrefixTypeEnum output_prefix_type =
+  OutputPrefixTypeTP output_prefix_type =
       serialization.GetOutputPrefixTypeEnum();
 
   absl::StatusOr<EcdsaParameters::Variant> variant =
@@ -514,7 +514,7 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const EcdsaParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -567,7 +567,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   proto_key.set_x(*x);
   proto_key.set_y(*y);
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -578,7 +578,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
                                           InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
       kPublicTypeUrl, std::move(restricted_output),
-      KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
       key.GetIdRequirement());
 }
 
@@ -638,7 +638,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   }
   proto_private_key.set_key_value(SecretDataAsStringView(*fixed_length_key));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -647,7 +647,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   SecretData serialized_proto = proto_private_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(std::move(serialized_proto), *token),
-      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 

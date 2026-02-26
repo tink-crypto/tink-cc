@@ -88,8 +88,8 @@ class SlhDsaSignKeyManagerAdaptor
 
   const std::string& GetKeyType() const final { return key_type_; }
 
-  KeyMaterialTypeEnum GetKeyMaterialType() const final {
-    return KeyMaterialTypeEnum::kAsymmetricPrivate;
+  KeyMaterialTypeTP GetKeyMaterialType() const final {
+    return KeyMaterialTypeTP::kAsymmetricPrivate;
   }
 
   const KeyFactory& GetKeyFactory() const final { return *key_factory_; }

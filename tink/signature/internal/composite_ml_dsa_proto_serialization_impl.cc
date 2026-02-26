@@ -269,11 +269,11 @@ constexpr absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.CompositeMlDsaPublicKey";
 
 absl::StatusOr<CompositeMlDsaParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return CompositeMlDsaParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return CompositeMlDsaParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -281,13 +281,13 @@ absl::StatusOr<CompositeMlDsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     CompositeMlDsaParameters::Variant variant) {
   switch (variant) {
     case CompositeMlDsaParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case CompositeMlDsaParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -372,7 +372,7 @@ ToProtoClassicalAlgorithm(
 }
 
 absl::StatusOr<CompositeMlDsaParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type,
+    OutputPrefixTypeTP output_prefix_type,
     MlDsaInstanceEnumTP ml_dsa_instance_enum,
     CompositeMlDsaClassicalAlgorithmEnumTP classical_algorithm_enum) {
   absl::StatusOr<CompositeMlDsaParameters::Variant> variant =
@@ -440,7 +440,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
         "Wrong type URL when parsing CompositeMlDsaPublicKey.");
   }
   if (serialization.GetKeyMaterialTypeEnum() !=
-      KeyMaterialTypeEnum::kAsymmetricPublic) {
+      KeyMaterialTypeTP::kAsymmetricPublic) {
     return absl::InvalidArgumentError(
         "Wrong key material type when parsing CompositeMlDsaPublicKey.");
   }
@@ -478,7 +478,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
           proto_key.ml_dsa_public_key().type_url(),
           std::move(ml_dsa_serialized_key),
           proto_key.ml_dsa_public_key().key_material_type(),
-          OutputPrefixTypeEnum::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
   if (!ml_dsa_serialization.ok()) {
     return ml_dsa_serialization.status();
   }
@@ -503,7 +503,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
           proto_key.classical_public_key().type_url(),
           std::move(classical_serialized_key),
           proto_key.classical_public_key().key_material_type(),
-          OutputPrefixTypeEnum::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
   if (!classical_serialization.ok()) {
     return classical_serialization.status();
   }
@@ -532,7 +532,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
         "Wrong type URL when parsing CompositeMlDsaPrivateKey.");
   }
   if (serialization.GetKeyMaterialTypeEnum() !=
-      KeyMaterialTypeEnum::kAsymmetricPrivate) {
+      KeyMaterialTypeTP::kAsymmetricPrivate) {
     return absl::InvalidArgumentError(
         "Wrong key material type when parsing CompositeMlDsaPrivateKey.");
   }
@@ -573,7 +573,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
           proto_key.ml_dsa_private_key().type_url(),
           std::move(ml_dsa_serialized_key),
           proto_key.ml_dsa_private_key().key_material_type(),
-          OutputPrefixTypeEnum::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
   if (!ml_dsa_serialization.ok()) {
     return ml_dsa_serialization.status();
   }
@@ -598,7 +598,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
           proto_key.classical_private_key().type_url(),
           std::move(classical_serialized_key),
           proto_key.classical_private_key().key_material_type(),
-          OutputPrefixTypeEnum::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
   if (!classical_serialization.ok()) {
     return classical_serialization.status();
   }
@@ -621,7 +621,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const CompositeMlDsaParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -667,7 +667,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return ml_dsa_proto_key_serialization.status();
   }
   if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
-      OutputPrefixTypeEnum::kRaw) {
+      OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for ML-DSA public key.");
   }
@@ -698,7 +698,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return classical_proto_key_serialization.status();
   }
   if ((*classical_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
-      OutputPrefixTypeEnum::kRaw) {
+      OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for classical public key.");
   }
@@ -721,7 +721,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   *proto_key.mutable_ml_dsa_public_key() = ml_dsa_key_data;
   *proto_key.mutable_classical_public_key() = classical_key_data;
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -731,7 +731,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       proto_key.SerializeAsSecretData(), InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
       kPublicTypeUrl, std::move(restricted_output),
-      KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
       key.GetIdRequirement());
 }
 
@@ -769,7 +769,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return ml_dsa_proto_key_serialization.status();
   }
   if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
-      OutputPrefixTypeEnum::kRaw) {
+      OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for ML-DSA private key.");
   }
@@ -800,7 +800,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return classical_proto_key_serialization.status();
   }
   if ((*classical_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
-      OutputPrefixTypeEnum::kRaw) {
+      OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for classical private key.");
   }
@@ -823,7 +823,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   *proto_key.mutable_ml_dsa_private_key() = ml_dsa_key_data;
   *proto_key.mutable_classical_private_key() = classical_key_data;
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -833,7 +833,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       RestrictedData(proto_key.SerializeAsSecretData(), *token);
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, std::move(restricted_output),
-      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 

@@ -82,7 +82,7 @@ struct TestCase {
   CompositeMlDsaParameters::MlDsaInstance ml_dsa_instance;
   CompositeMlDsaParameters::ClassicalAlgorithm classical_algorithm;
   CompositeMlDsaParameters::Variant variant;
-  OutputPrefixTypeEnum output_prefix_type;
+  OutputPrefixTypeTP output_prefix_type;
   absl::optional<int> id_requirement;
   std::string output_prefix;
 };
@@ -95,101 +95,101 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)}));
 
 MlDsaInstance ToProtoInstance(
@@ -231,15 +231,15 @@ CompositeMlDsaClassicalAlgorithm ToProtoAlgorithm(
 }
 
 KeyData::KeyMaterialType ToProtoKeyMaterialType(
-    KeyMaterialTypeEnum key_material_type) {
+    KeyMaterialTypeTP key_material_type) {
   switch (key_material_type) {
-    case KeyMaterialTypeEnum::kSymmetric:
+    case KeyMaterialTypeTP::kSymmetric:
       return KeyData::SYMMETRIC;
-    case KeyMaterialTypeEnum::kAsymmetricPrivate:
+    case KeyMaterialTypeTP::kAsymmetricPrivate:
       return KeyData::ASYMMETRIC_PRIVATE;
-    case KeyMaterialTypeEnum::kAsymmetricPublic:
+    case KeyMaterialTypeTP::kAsymmetricPublic:
       return KeyData::ASYMMETRIC_PUBLIC;
-    case KeyMaterialTypeEnum::kRemote:
+    case KeyMaterialTypeTP::kRemote:
       return KeyData::REMOTE;
     default:
       return KeyData::UNKNOWN_KEYMATERIAL;
@@ -389,7 +389,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid serialization");
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw, "invalid serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(registry.ParseParameters(*serialization).status(),
@@ -415,7 +415,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -436,7 +436,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaKeyFormat key_format_proto;
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -465,7 +465,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -494,7 +494,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -517,7 +517,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -540,7 +540,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -571,7 +571,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -594,7 +594,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -617,7 +617,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -659,7 +659,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeEnum>(test_case.output_prefix_type)));
+      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
 
   CompositeMlDsaKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -698,7 +698,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeEnum>(test_case.output_prefix_type)));
+      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
 
   CompositeMlDsaKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -776,10 +776,9 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -843,10 +842,9 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -901,7 +899,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   absl::StatusOr<ProtoKeySerialization> proto_serialization =
       ProtoKeySerialization::Create(
           kPublicTypeUrl, public_key_serialization->SerializedKeyProto(),
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_serialization, IsOk());
 
@@ -927,10 +925,9 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -980,10 +977,9 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1037,7 +1033,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -1101,7 +1097,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -1210,7 +1206,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1277,7 +1273,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1333,7 +1329,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   absl::StatusOr<ProtoKeySerialization> proto_serialization =
       ProtoKeySerialization::Create(
           kPrivateTypeUrl, private_key_serialization->SerializedKeyProto(),
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_serialization, IsOk());
 
@@ -1358,7 +1354,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1412,7 +1408,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1465,7 +1461,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1519,8 +1515,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1573,8 +1569,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1626,8 +1622,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1681,8 +1677,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1723,7 +1719,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -1774,7 +1770,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),

@@ -238,9 +238,9 @@ TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateKeyTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+  EXPECT_THAT(
+      key_template.output_prefix_type(),
+      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
 
   Ed25519KeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -271,9 +271,9 @@ TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateKeyTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+  EXPECT_THAT(
+      key_template.output_prefix_type(),
+      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
   Ed25519KeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
   EXPECT_THAT(key_format.version(), Eq(0));

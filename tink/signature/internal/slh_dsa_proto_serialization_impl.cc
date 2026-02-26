@@ -201,11 +201,11 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.SlhDsaPublicKey";
 
 absl::StatusOr<SlhDsaParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return SlhDsaParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return SlhDsaParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -213,13 +213,13 @@ absl::StatusOr<SlhDsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     SlhDsaParameters::Variant variant) {
   switch (variant) {
     case SlhDsaParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case SlhDsaParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -278,7 +278,7 @@ absl::StatusOr<SlhDsaSignatureTypeEnum> ToProtoSignatureType(
 }
 
 absl::StatusOr<SlhDsaParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type, const SlhDsaParamsTP& params) {
+    OutputPrefixTypeTP output_prefix_type, const SlhDsaParamsTP& params) {
   absl::StatusOr<SlhDsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -412,7 +412,7 @@ absl::StatusOr<SlhDsaPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const SlhDsaParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -448,7 +448,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   *proto_key.mutable_params() = *params;
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -457,7 +457,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsSecretData(), InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyMaterialTypeEnum::kAsymmetricPublic,
+      kPublicTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -492,7 +492,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return serialized_proto.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -500,7 +500,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
 
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
-      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 

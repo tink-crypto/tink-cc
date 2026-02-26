@@ -72,7 +72,7 @@ const absl::string_view kPublicTypeUrl =
 struct TestCase {
   MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
-  OutputPrefixTypeEnum output_prefix_type;
+  OutputPrefixTypeTP output_prefix_type;
   absl::optional<int> id_requirement;
   std::string output_prefix;
 };
@@ -81,25 +81,24 @@ using MlDsaProtoSerializationTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaProtoSerializationTestSuite, MlDsaProtoSerializationTest,
-    Values(
-        TestCase{MlDsaParameters::Instance::kMlDsa65,
-                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
-                 0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
-        TestCase{MlDsaParameters::Instance::kMlDsa65,
-                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
-                 0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
-        TestCase{MlDsaParameters::Instance::kMlDsa65,
-                 MlDsaParameters::Variant::kNoPrefix,
-                 OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
-        TestCase{MlDsaParameters::Instance::kMlDsa87,
-                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
-                 0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
-        TestCase{MlDsaParameters::Instance::kMlDsa87,
-                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
-                 0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
-        TestCase{MlDsaParameters::Instance::kMlDsa87,
-                 MlDsaParameters::Variant::kNoPrefix,
-                 OutputPrefixTypeEnum::kRaw, absl::nullopt, ""}));
+    Values(TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
+                    0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
+                    0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""}));
 
 MlDsaPrivateKey GenerateMlDsaPrivateKey(MlDsaParameters::Instance instance,
                                         MlDsaParameters::Variant variant,
@@ -209,7 +208,7 @@ TEST_F(MlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(registry.ParseParameters(*serialization).status(),
@@ -230,7 +229,7 @@ TEST_P(MlDsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -250,7 +249,7 @@ TEST_F(MlDsaProtoSerializationTest,
   MlDsaKeyFormat key_format_proto;
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -276,7 +275,7 @@ TEST_P(MlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -301,7 +300,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -320,7 +319,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -338,7 +337,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -373,7 +372,7 @@ TEST_P(MlDsaProtoSerializationTest,
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeEnum>(test_case.output_prefix_type)));
+      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
 
   MlDsaKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -406,7 +405,7 @@ TEST_P(MlDsaProtoSerializationTest,
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeEnum>(test_case.output_prefix_type)));
+      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
 
   MlDsaKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -462,10 +461,9 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithMutableRegistry) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -511,10 +509,9 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithRegistryBuilder) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -547,10 +544,9 @@ TEST_P(MlDsaProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -583,10 +579,9 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPublic,
-                                    test_case.output_prefix_type,
-                                    test_case.id_requirement);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -629,7 +624,7 @@ TEST_P(MlDsaProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -681,7 +676,7 @@ TEST_P(MlDsaProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -768,7 +763,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorksWithMutableRegistry) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -834,7 +829,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorksWithRegistryBuilder) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -877,7 +872,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -922,7 +917,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -967,7 +962,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1018,7 +1013,7 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -1081,7 +1076,7 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -1311,8 +1306,8 @@ TEST_F(MlDsaProtoSerializationTest, ParseGoldenPrivateKey65Works) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kTink, 0x03050709);
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kTink, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> private_key =

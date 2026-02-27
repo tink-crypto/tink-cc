@@ -297,7 +297,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   *format.mutable_params() = *params_proto;
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
+      kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
 }
 
 absl::StatusOr<AesCtrHmacStreamingKey> ParseKey(
@@ -358,7 +358,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(key_proto.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
       key.GetIdRequirement());
 }
 

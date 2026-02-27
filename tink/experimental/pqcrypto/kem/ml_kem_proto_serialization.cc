@@ -416,7 +416,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
   return internal::ProtoKeySerialization::Create(
       kPrivateTypeUrl,
       RestrictedData(proto_private_key.SerializeAsSecretData(), *token),
-      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      internal::KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 

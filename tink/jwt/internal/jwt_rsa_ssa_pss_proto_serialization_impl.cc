@@ -242,14 +242,14 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPublicKey";
 
 absl::StatusOr<JwtRsaSsaPssParameters::KidStrategy> ToKidStrategy(
-    OutputPrefixTypeEnum output_prefix_type, bool has_custom_kid) {
+    OutputPrefixTypeTP output_prefix_type, bool has_custom_kid) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       if (has_custom_kid) {
         return JwtRsaSsaPssParameters::KidStrategy::kCustom;
       }
       return JwtRsaSsaPssParameters::KidStrategy::kIgnored;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId;
     default:
       return absl::InvalidArgumentError(
@@ -257,14 +257,14 @@ absl::StatusOr<JwtRsaSsaPssParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     JwtRsaSsaPssParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtRsaSsaPssParameters::KidStrategy::kCustom:
     case JwtRsaSsaPssParameters::KidStrategy::kIgnored:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine JwtRsaSsaPssParameters::KidStrategy.");
@@ -302,7 +302,7 @@ absl::StatusOr<JwtRsaSsaPssAlgorithmEnum> ToProtoAlgorithm(
 }
 
 absl::StatusOr<JwtRsaSsaPssParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type,
+    OutputPrefixTypeTP output_prefix_type,
     JwtRsaSsaPssAlgorithmEnum proto_algorithm, int modulus_size_in_bits,
     const BigInteger& public_exponent, bool has_custom_kid) {
   absl::StatusOr<JwtRsaSsaPssParameters::KidStrategy> kid_strategy =
@@ -327,8 +327,7 @@ absl::StatusOr<JwtRsaSsaPssParameters> ToParameters(
 
 absl::StatusOr<JwtRsaSsaPssPublicKey> ToPublicKey(
     const JwtRsaSsaPssPublicKeyTP& public_key_tp,
-    OutputPrefixTypeEnum output_prefix_type,
-    absl::optional<int> id_requirement) {
+    OutputPrefixTypeTP output_prefix_type, absl::optional<int> id_requirement) {
   BigInteger modulus(public_key_tp.n());
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
@@ -497,7 +496,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return absl::InvalidArgumentError(
         "Unable to serialize JwtRsaSsaPssParameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -551,7 +550,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return public_key_tp.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(public_key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -561,7 +560,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       kPublicTypeUrl,
       RestrictedData(public_key_tp->SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
       public_key.GetIdRequirement());
 }
 
@@ -594,7 +593,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   *private_key_tp.mutable_crt() =
       private_key.GetCrtCoefficientData(GetPartialKeyAccess()).Get(*token);
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type = ToOutputPrefixType(
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type = ToOutputPrefixType(
       private_key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -603,7 +602,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl,
       RestrictedData(private_key_tp.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       private_key.GetIdRequirement());
 }
 

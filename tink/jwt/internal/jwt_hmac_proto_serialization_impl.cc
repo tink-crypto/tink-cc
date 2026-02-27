@@ -165,14 +165,14 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtHmacKey";
 
 absl::StatusOr<JwtHmacParameters::KidStrategy> ToKidStrategy(
-    OutputPrefixTypeEnum output_prefix_type, bool has_custom_kid) {
+    OutputPrefixTypeTP output_prefix_type, bool has_custom_kid) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       if (has_custom_kid) {
         return JwtHmacParameters::KidStrategy::kCustom;
       }
       return JwtHmacParameters::KidStrategy::kIgnored;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return JwtHmacParameters::KidStrategy::kBase64EncodedKeyId;
     default:
       return absl::InvalidArgumentError(
@@ -180,15 +180,15 @@ absl::StatusOr<JwtHmacParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     JwtHmacParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtHmacParameters::KidStrategy::kCustom:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case JwtHmacParameters::KidStrategy::kIgnored:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case JwtHmacParameters::KidStrategy::kBase64EncodedKeyId:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine JwtHmacParameters::KidStrategy.");
@@ -226,7 +226,7 @@ absl::StatusOr<JwtHmacAlgorithmEnum> ToProtoAlgorithm(
 }
 
 absl::StatusOr<JwtHmacParameters> ToParameters(
-    int key_size_in_bytes, OutputPrefixTypeEnum output_prefix_type,
+    int key_size_in_bytes, OutputPrefixTypeTP output_prefix_type,
     JwtHmacAlgorithmEnum proto_algorithm, bool has_custom_kid) {
   absl::StatusOr<JwtHmacParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
@@ -270,7 +270,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return absl::InvalidArgumentError(
         "Unable to serialize JwtHmacParameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -356,7 +356,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     proto_key.mutable_custom_kid()->set_value(*key.GetKid());
   }
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -364,7 +364,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
+      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }
 

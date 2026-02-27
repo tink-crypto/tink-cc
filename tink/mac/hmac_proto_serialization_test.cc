@@ -246,7 +246,7 @@ TEST_P(HmacProtoSerializationTest, SerializeParameters) {
   EXPECT_THAT(key_template.type_url(),
               Eq("type.googleapis.com/google.crypto.tink.HmacKey"));
   EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+              Eq(static_cast<internal::OutputPrefixTypeTP>(
                   test_case.output_prefix_type)));
 
   HmacKeyFormat key_format;

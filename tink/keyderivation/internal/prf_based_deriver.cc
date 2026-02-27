@@ -93,7 +93,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
   // http://google3/third_party/tink/cc/keyderivation/keyset_deriver_wrapper.cc;l=88-91;rcl=592310815
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(key_template.type_url(),
-                                           OutputPrefixTypeEnum::kRaw,
+                                           OutputPrefixTypeTP::kRaw,
                                            key_template.value());
   if (!serialization.ok()) {
     return serialization.status();

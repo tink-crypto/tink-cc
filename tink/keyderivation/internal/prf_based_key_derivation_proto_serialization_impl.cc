@@ -182,7 +182,7 @@ absl::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
   absl::StatusOr<ProtoKeySerialization> proto_key_serialization =
       ProtoKeySerialization::Create(
           key_data.type_url(), RestrictedData(key_data.value(), token),
-          key_data.key_material_type(), OutputPrefixTypeEnum::kRaw,
+          key_data.key_material_type(), OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   if (!proto_key_serialization.ok()) {
     return proto_key_serialization.status();
@@ -386,8 +386,8 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeEnum::kSymmetric,
-      derived_key_template->output_prefix_type(), key.GetIdRequirement());
+      KeyMaterialTypeTP::kSymmetric, derived_key_template->output_prefix_type(),
+      key.GetIdRequirement());
 }
 
 PrfBasedKeyDerivationProtoParametersParserImpl*

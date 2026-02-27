@@ -57,15 +57,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HmacKey";
 
 absl::StatusOr<HmacParameters::Variant> ToVariant(
-    OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kCrunchy:
+    case OutputPrefixTypeTP::kCrunchy:
       return HmacParameters::Variant::kCrunchy;
-    case OutputPrefixTypeEnum::kLegacy:
+    case OutputPrefixTypeTP::kLegacy:
       return HmacParameters::Variant::kLegacy;
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       return HmacParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return HmacParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -73,17 +73,17 @@ absl::StatusOr<HmacParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     HmacParameters::Variant variant) {
   switch (variant) {
     case HmacParameters::Variant::kCrunchy:
-      return OutputPrefixTypeEnum::kCrunchy;
+      return OutputPrefixTypeTP::kCrunchy;
     case HmacParameters::Variant::kLegacy:
-      return OutputPrefixTypeEnum::kLegacy;
+      return OutputPrefixTypeTP::kLegacy;
     case HmacParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case HmacParameters::Variant::kTink:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -161,7 +161,7 @@ absl::StatusOr<HmacParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HmacParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
   absl::StatusOr<HashTypeEnum> proto_hash_type =
@@ -234,7 +234,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
@@ -242,7 +242,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, std::move(restricted_output), KeyMaterialTypeEnum::kSymmetric,
+      kTypeUrl, std::move(restricted_output), KeyMaterialTypeTP::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

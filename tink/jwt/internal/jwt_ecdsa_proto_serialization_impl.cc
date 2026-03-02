@@ -207,14 +207,14 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtEcdsaPrivateKey";
 
 absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
-    OutputPrefixTypeEnum output_prefix_type, bool has_custom_kid) {
+    OutputPrefixTypeTP output_prefix_type, bool has_custom_kid) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeTP::kRaw:
       if (has_custom_kid) {
         return JwtEcdsaParameters::KidStrategy::kCustom;
       }
       return JwtEcdsaParameters::KidStrategy::kIgnored;
-    case OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeTP::kTink:
       return JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId;
     default:
       return absl::InvalidArgumentError(
@@ -222,15 +222,15 @@ absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
     JwtEcdsaParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtEcdsaParameters::KidStrategy::kCustom:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case JwtEcdsaParameters::KidStrategy::kIgnored:
-      return OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeTP::kRaw;
     case JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId:
-      return OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine JwtEcdsaParameters::KidStrategy.");
@@ -268,7 +268,7 @@ absl::StatusOr<JwtEcdsaAlgorithmEnum> ToProtoAlgorithm(
 }
 
 absl::StatusOr<JwtEcdsaParameters> ToParameters(
-    OutputPrefixTypeEnum output_prefix_type,
+    OutputPrefixTypeTP output_prefix_type,
     JwtEcdsaAlgorithmEnum proto_algorithm, bool has_custom_kid) {
   absl::StatusOr<JwtEcdsaParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
@@ -386,7 +386,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return absl::InvalidArgumentError(
         "Unable to serialize JwtEcdsaParameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -443,7 +443,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return proto_public_key.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -452,7 +452,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       kPublicTypeUrl,
       RestrictedData(proto_public_key->SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
       key.GetIdRequirement());
 }
 
@@ -536,7 +536,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   proto_private_key.set_key_value(
       *GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token));
 
-  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -546,7 +546,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       kPrivateTypeUrl,
       RestrictedData(proto_private_key.SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 

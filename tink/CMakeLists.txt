@@ -452,7 +452,6 @@ tink_cc_library(
     absl::core_headers
     absl::flat_hash_map
     absl::absl_check
-    absl::check
     absl::memory
     absl::status
     absl::statusor

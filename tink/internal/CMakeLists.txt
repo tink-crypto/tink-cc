@@ -637,6 +637,7 @@ tink_cc_library(
   DEPS
     tink::internal::proto_key_serialization
     tink::internal::tink_proto_structs
+    absl::core_headers
     absl::status
     absl::statusor
     absl::strings

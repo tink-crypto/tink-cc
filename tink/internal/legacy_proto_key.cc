@@ -74,14 +74,14 @@ bool LegacyProtoKey::operator==(const Key& other) const {
   return serialization_.EqualsWithPotentialFalseNegatives(that->serialization_);
 }
 
-absl::StatusOr<const ProtoKeySerialization*> LegacyProtoKey::Serialization(
+absl::StatusOr<const ProtoKeySerialization&> LegacyProtoKey::Serialization(
     absl::optional<SecretKeyAccessToken> token) const {
   absl::Status access_check_status =
       CheckKeyAccess(serialization_.GetKeyMaterialTypeEnum(), token);
   if (!access_check_status.ok()) {
     return access_check_status;
   }
-  return &serialization_;
+  return serialization_;
 }
 
 }  // namespace internal

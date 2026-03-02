@@ -196,11 +196,11 @@ absl::StatusOr<ProtoKeySerialization> SerializeLegacyKey(const Key* key) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to serialize legacy proto key.");
   }
-  absl::StatusOr<const ProtoKeySerialization *> serialized_key =
+  absl::StatusOr<const ProtoKeySerialization&> serialized_key =
       proto_key->Serialization(InsecureSecretKeyAccess::Get());
   if (!serialized_key.ok()) return serialized_key.status();
 
-  return **serialized_key;
+  return *serialized_key;
 }
 
 absl::StatusOr<ProtoKeySerialization> GetProtoKeySerialization(const Key& key) {

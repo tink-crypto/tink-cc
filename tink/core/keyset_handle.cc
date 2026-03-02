@@ -125,7 +125,7 @@ absl::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
       RestrictedData(key.key_data().value(), InsecureSecretKeyAccess::Get()),
       static_cast<internal::KeyMaterialTypeTP>(
           key.key_data().key_material_type()),
-      static_cast<internal::OutputPrefixTypeEnum>(key.output_prefix_type()),
+      static_cast<internal::OutputPrefixTypeTP>(key.output_prefix_type()),
       id_requirement);
 }
 
@@ -138,13 +138,13 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeLegacyKey(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to serialize legacy proto key.");
   }
-  absl::StatusOr<const internal::ProtoKeySerialization*> serialized_key =
+  absl::StatusOr<const internal::ProtoKeySerialization&> serialized_key =
       proto_key->Serialization(InsecureSecretKeyAccess::Get());
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }
 
-  return **serialized_key;
+  return *serialized_key;
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(const Key& key) {

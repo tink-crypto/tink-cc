@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -99,8 +100,9 @@ class LegacyProtoKey final : public Key {
 
   // Returns `ProtoKeySerialization` pointer for this object.  Requires `token`
   // if the key material type is either SYMMETRIC or ASYMMETRIC_PRIVATE.
-  absl::StatusOr<const ProtoKeySerialization*> Serialization(
-      absl::optional<SecretKeyAccessToken> token) const;
+  absl::StatusOr<const ProtoKeySerialization&> Serialization(
+      absl::optional<SecretKeyAccessToken> token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
  private:
   explicit LegacyProtoKey(const ProtoKeySerialization& serialization)

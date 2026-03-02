@@ -676,6 +676,7 @@ cc_library(
         "//tink:key",
         "//tink:parameters",
         "//tink:secret_key_access_token",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

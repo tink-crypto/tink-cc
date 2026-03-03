@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -35,11 +36,12 @@ namespace internal {
 
 absl::StatusOr<std::string> GetValueOfFixedLength(
     absl::string_view big_integer_encoding, int length) {
-  if (big_integer_encoding.size() == length) {
+  ABSL_CHECK_GE(length, 0);
+  if (big_integer_encoding.size() == static_cast<size_t>(length)) {
     return std::string(big_integer_encoding);
   }
 
-  if (big_integer_encoding.size() > length) {
+  if (big_integer_encoding.size() > static_cast<size_t>(length)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat(

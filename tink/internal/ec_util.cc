@@ -15,16 +15,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/ec_util.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
-#include "absl/base/config.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -33,10 +30,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
-#include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/dfsan_forwarders.h"
-#include "tink/internal/safe_stringops.h"
-#include "tink/internal/secret_buffer.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -47,9 +40,12 @@
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
 #include "tink/internal/bn_util.h"
-#include "tink/internal/err_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/subtle_util.h"
@@ -132,7 +128,8 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromEncoded(
   if (!encoding_size.ok()) {
     return encoding_size.status();
   }
-  if (encoded.size() != *encoding_size) {
+  ABSL_CHECK_GE(*encoding_size, 0);
+  if (encoded.size() != static_cast<size_t>(*encoding_size)) {
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Encoded point's size is ", encoded.size(),
                                      " bytes; expected ", *encoding_size));
@@ -476,7 +473,7 @@ absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key() {
 
 absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
     const SecretData& secret_seed) {
-  if (secret_seed.size() != Ed25519KeyPrivKeySize()) {
+  if (secret_seed.size() != static_cast<size_t>(Ed25519KeyPrivKeySize())) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid seed of length ", secret_seed.size(),
@@ -547,7 +544,7 @@ absl::StatusOr<SecretData> ComputeX25519SharedSecret(
 
 absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
     const SecretData& private_key) {
-  if (private_key.size() != X25519KeyPrivKeySize()) {
+  if (private_key.size() != static_cast<size_t>(X25519KeyPrivKeySize())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid length for private key");
   }
@@ -633,7 +630,7 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
       if (!group.ok()) {
         return group.status();
       }
-      const int kCurveSizeInBytes = SslEcFieldSizeInBytes(group->get());
+      const size_t kCurveSizeInBytes = SslEcFieldSizeInBytes(group->get());
       if (encoded.size() != 2 * kCurveSizeInBytes) {
         return absl::Status(
             absl::StatusCode::kInternal,

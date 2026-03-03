@@ -159,13 +159,11 @@ tink_cc_library(
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
-    tink::internal::err_util
     tink::internal::fips_utils
-    tink::internal::safe_stringops
     tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
-    absl::config
     absl::log
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor
@@ -1370,6 +1368,7 @@ tink_cc_library(
     tink::internal::safe_stringops
     tink::internal::secret_buffer
     absl::core_headers
+    absl::absl_check
     absl::status
     absl::statusor
     absl::strings

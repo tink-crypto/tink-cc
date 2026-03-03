@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -25,7 +26,6 @@
 #include "absl/status/status.h"
 #include "tink/random_access_stream.h"
 #include "tink/util/buffer.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -48,7 +48,8 @@ absl::Status TestRandomAccessStream::PRead(int64_t position, int count,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "position cannot be negative");
   }
-  if (position >= content_.size()) {
+  size_t pos = static_cast<size_t>(position);
+  if (pos >= content_.size()) {
     dest_buffer->set_size(0).IgnoreError();
     return absl::Status(absl::StatusCode::kOutOfRange, "EOF");
   }
@@ -56,8 +57,8 @@ absl::Status TestRandomAccessStream::PRead(int64_t position, int count,
   if (!status.ok()) {
     return status;
   }
-  int read_count =
-      std::min(count, static_cast<int>(content_.size() - position));
+  size_t read_count =
+      std::min(static_cast<size_t>(count), content_.size() - pos);
   std::copy(content_.begin() + position,
             content_.begin() + position + read_count,
             dest_buffer->get_mem_block());
@@ -65,7 +66,7 @@ absl::Status TestRandomAccessStream::PRead(int64_t position, int count,
   if (!status.ok()) {
     return status;
   }
-  if (position + read_count == content_.size()) {
+  if (pos + read_count == content_.size()) {
     // We reached EOF.
     return absl::Status(absl::StatusCode::kOutOfRange, "EOF");
   }

@@ -17,6 +17,7 @@
 #define TINK_PRF_AES_CMAC_PRF_KEY_MANAGER_H_
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -130,7 +131,7 @@ class AesCmacPrfKeyManager
  private:
   // Due to https://www.math.uwaterloo.ca/~ajmeneze/publications/tightness.pdf,
   // we only allow key sizes of 256 bit.
-  const int kKeySizeInBytes = 32;
+  const size_t kKeySizeInBytes = 32;
 
   const std::string key_type_ = absl::StrCat(
       kTypeGoogleapisCom, google::crypto::tink::AesCmacPrfKey().GetTypeName());

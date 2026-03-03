@@ -16,21 +16,15 @@
 
 #include "tink/mac/hmac_parameters.h"
 
-#include <cstdint>
-#include <cstdlib>
-#include <iostream>
 #include <map>
-#include <memory>
-#include <ostream>
 #include <set>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/crypto_format.h"
 #include "tink/internal/util.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -44,7 +38,7 @@ absl::Status ValidateTagSizeBytes(int cryptographic_tag_size_in_bytes,
         absl::StrCat("Tag size should be at least 10 bytes, got ",
                      cryptographic_tag_size_in_bytes, " bytes."));
   }
-  std::map<HmacParameters::HashType, uint32_t> max_tag_size = {
+  std::map<HmacParameters::HashType, int> max_tag_size = {
       {HmacParameters::HashType::kSha1, 20},
       {HmacParameters::HashType::kSha224, 28},
       {HmacParameters::HashType::kSha256, 32},

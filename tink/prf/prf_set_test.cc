@@ -27,6 +27,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
@@ -34,7 +35,6 @@
 #include "tink/keyset_manager.h"
 #include "tink/prf/prf_config.h"
 #include "tink/prf/prf_key_templates.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -157,11 +157,11 @@ TEST(PrfSetWrapperTest, TestPrimitivesEndToEnd) {
         EXPECT_THAT(output_result.value(), StrEq(output));
       }
     }
-    for (int i = 0; i < results.size(); i++) {
+    for (size_t i = 0; i < results.size(); i++) {
       EXPECT_THAT(results[i], SizeIs(output_length));
       EXPECT_THAT(test::ZTestUniformString(results[i]), IsOk());
       EXPECT_THAT(test::ZTestAutocorrelationUniformString(results[i]), IsOk());
-      for (int j = i + 1; j < results.size(); j++) {
+      for (size_t j = i + 1; j < results.size(); j++) {
         EXPECT_THAT(
             test::ZTestCrosscorrelationUniformStrings(results[i], results[j]),
             IsOk());

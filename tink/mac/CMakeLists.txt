@@ -80,21 +80,17 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::chunked_mac
     tink::core::key_type_manager
     tink::core::template_util
-    tink::core::key_manager
     tink::core::mac
     tink::mac::internal::chunked_mac_impl
     tink::subtle::aes_cmac_boringssl
     tink::subtle::random
     tink::util::constants
-    tink::util::errors
-    tink::util::protobuf_helper
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::aes_cmac_cc_proto
     tink::proto::tink_cc_proto
@@ -222,11 +218,11 @@ tink_cc_library(
   DEPS
     tink::mac::mac_parameters
     absl::status
+    absl::statusor
     absl::strings
     tink::core::crypto_format
     tink::core::parameters
     tink::internal::util
-    tink::util::status
     tink::util::statusor
 )
 

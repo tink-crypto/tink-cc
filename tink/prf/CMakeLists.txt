@@ -411,11 +411,11 @@ tink_cc_test(
     tink::prf::prf_set
     gmock
     absl::memory
+    absl::statusor
     absl::strings
     tink::core::keyset_handle
     tink::core::keyset_manager
     tink::config::global_registry
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

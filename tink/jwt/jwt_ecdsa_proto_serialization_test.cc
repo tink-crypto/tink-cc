@@ -41,7 +41,6 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
@@ -607,8 +606,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKey) {
   absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
       JwtEcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
+          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                         InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
@@ -830,8 +829,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKey) {
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -900,8 +899,8 @@ TEST_F(JwtEcdsaProtoSerializationTest,
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

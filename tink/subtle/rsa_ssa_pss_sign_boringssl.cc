@@ -70,7 +70,7 @@ absl::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
                                              const EVP_MD* sig_md,
                                              const EVP_MD* mgf1_md,
                                              int32_t salt_length) {
-  const int kHashSize = EVP_MD_size(sig_md);
+  const size_t kHashSize = EVP_MD_size(sig_md);
   // Make sure the size of the digest is correct.
   if (digest.size() != kHashSize) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

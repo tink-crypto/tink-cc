@@ -16,6 +16,7 @@
 
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -24,8 +25,10 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
@@ -124,7 +127,9 @@ AesGcmHkdfStreamSegmentEncrypter::New(Params params) {
 absl::Status AesGcmHkdfStreamSegmentEncrypter::EncryptSegment(
     const std::vector<uint8_t>& plaintext, bool is_last_segment,
     std::vector<uint8_t>* ciphertext_buffer) {
-  if (plaintext.size() > get_plaintext_segment_size()) {
+  int plaintext_segment_size = get_plaintext_segment_size();
+  ABSL_CHECK_GE(plaintext_segment_size, 0);
+  if (plaintext.size() > static_cast<size_t>(plaintext_segment_size)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "plaintext too long");
   }

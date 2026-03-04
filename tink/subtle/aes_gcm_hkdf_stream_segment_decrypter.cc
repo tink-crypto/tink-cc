@@ -16,6 +16,7 @@
 
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_decrypter.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -23,6 +24,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -53,7 +55,8 @@ absl::Status Validate(const AesGcmHkdfStreamSegmentDecrypter::Params& params) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "derived_key_size must be 16 or 32");
   }
-  if (params.ikm.size() < 16 || params.ikm.size() < params.derived_key_size) {
+  if (params.ikm.size() < 16 ||
+      params.ikm.size() < static_cast<size_t>(params.derived_key_size)) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "ikm too small");
   }
   if (params.ciphertext_offset < 0) {
@@ -101,7 +104,8 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::Init(
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "decrypter already initialized");
   }
-  if (header.size() != header_size_) {
+  ABSL_CHECK_GE(header_size_, 0);
+  if (header.size() != static_cast<size_t>(header_size_)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("wrong header size, expected ", header_size_, " bytes"));
@@ -153,7 +157,7 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::DecryptSegment(
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "decrypter not initialized");
   }
-  if (ciphertext.size() > get_ciphertext_segment_size()) {
+  if (ciphertext.size() > static_cast<size_t>(get_ciphertext_segment_size())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too long");
   }

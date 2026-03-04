@@ -426,6 +426,7 @@ tink_cc_library(
     tink::subtle::hkdf
     tink::subtle::stream_segment_decrypter
     absl::algorithm_container
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor
@@ -434,9 +435,6 @@ tink_cc_library(
     tink::core::secret_data
     tink::aead::internal::ssl_aead
     tink::internal::endian
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -449,8 +447,10 @@ tink_cc_library(
     tink::subtle::stream_segment_encrypter
     tink::subtle::subtle_util
     absl::algorithm_container
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     tink::aead::internal::ssl_aead
@@ -498,12 +498,15 @@ tink_cc_library(
     tink::subtle::stream_segment_decrypter
     tink::subtle::stream_segment_encrypter
     tink::subtle::subtle_util
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto
     tink::core::mac
+    tink::core::secret_data
     tink::internal::aes_util
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
@@ -1032,12 +1035,10 @@ tink_cc_test(
     tink::subtle::stream_segment_encrypter
     gmock
     absl::status
+    absl::statusor
     absl::strings
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
+    tink::core::secret_data
     tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_test(

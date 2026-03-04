@@ -25,8 +25,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -36,6 +38,7 @@
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
 #include "tink/subtle/hmac_boringssl.h"
@@ -44,8 +47,6 @@
 #include "tink/subtle/stream_segment_encrypter.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -85,7 +86,11 @@ static absl::Status DeriveKeys(const SecretData& ikm, HashType hkdf_algo,
 }
 
 static absl::Status Validate(const AesCtrHmacStreaming::Params& params) {
-  if (params.ikm.size() < std::max(16, params.key_size)) {
+  if (params.key_size != 16 && params.key_size != 32) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "key_size must be 16 or 32");
+  }
+  if (params.ikm.size() < static_cast<size_t>(params.key_size)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "input key material too small");
   }
@@ -93,10 +98,6 @@ static absl::Status Validate(const AesCtrHmacStreaming::Params& params) {
         params.hkdf_algo == SHA512)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "unsupported hkdf_algo");
-  }
-  if (params.key_size != 16 && params.key_size != 32) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "key_size must be 16 or 32");
   }
   int header_size =
       1 + params.key_size + AesCtrHmacStreaming::kNoncePrefixSizeInBytes;
@@ -222,7 +223,8 @@ absl::Status EncryptSensitive(const SecretData& key, const EVP_CIPHER& cipher,
                         plaintext.size()) != 1) {
     return absl::Status(absl::StatusCode::kInternal, "encryption failed");
   }
-  if (out_len != plaintext.size()) {
+  ABSL_CHECK_GE(out_len, 0);
+  if (static_cast<size_t>(out_len) != plaintext.size()) {
     return absl::Status(absl::StatusCode::kInternal,
                         "incorrect ciphertext size");
   }
@@ -259,7 +261,9 @@ absl::Status Encrypt(const SecretData& key, const EVP_CIPHER& cipher,
 absl::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
     const std::vector<uint8_t>& plaintext, bool is_last_segment,
     std::vector<uint8_t>* ciphertext_buffer) {
-  if (plaintext.size() > get_plaintext_segment_size()) {
+  int plaintext_segment_size = get_plaintext_segment_size();
+  ABSL_CHECK_GE(plaintext_segment_size, 0);
+  if (plaintext.size() > static_cast<size_t>(plaintext_segment_size)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "plaintext too long");
   }
@@ -325,10 +329,12 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "decrypter alreday initialized");
   }
-  if (header.size() != get_header_size()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        absl::StrCat("wrong header size, expected ",
-                                     get_header_size(), " bytes"));
+  int header_size = get_header_size();
+  ABSL_CHECK_GE(header_size, 0);
+  if (header.size() != static_cast<size_t>(header_size)) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("wrong header size, expected ", header_size, " bytes"));
   }
   if (header[0] != header.size()) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "corrupted header");
@@ -388,7 +394,8 @@ absl::Status DecryptSensitive(const SecretData& key, const EVP_CIPHER& cipher,
                         ciphertext.size()) != 1) {
     return absl::Status(absl::StatusCode::kInternal, "decryption failed");
   }
-  if (out_len != plaintext.size()) {
+  ABSL_CHECK_GE(out_len, 0);
+  if (static_cast<size_t>(out_len) != plaintext.size()) {
     return absl::Status(absl::StatusCode::kInternal,
                         "incorrect plaintext size");
   }
@@ -404,11 +411,14 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "decrypter not initialized");
   }
-  if (ciphertext.size() > get_ciphertext_segment_size()) {
+  int ciphertext_segment_size = get_ciphertext_segment_size();
+  ABSL_CHECK_GE(ciphertext_segment_size, 0);
+  if (ciphertext.size() > static_cast<size_t>(ciphertext_segment_size)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too long");
   }
-  if (ciphertext.size() < tag_size_) {
+  ABSL_CHECK_GE(tag_size_, 0);
+  if (ciphertext.size() < static_cast<size_t>(tag_size_)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }

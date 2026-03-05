@@ -477,6 +477,17 @@ const KeyValues& Get2048BitKeyValues() {
   return *values;
 }
 
+const KeyValues& Get3072BitKeyValues() {
+  static absl::NoDestructor<KeyValues> values(GenerateKeyValues(3072));
+  return *values;
+}
+
+KeyValues GetKeyValues(int modulus_size_in_bits) {
+  ABSL_CHECK(modulus_size_in_bits == 2048 || modulus_size_in_bits == 3072);
+  return modulus_size_in_bits == 2048 ? Get2048BitKeyValues()
+                                      : Get3072BitKeyValues();
+}
+
 TEST_P(RsaSsaPkcs1ProtoSerializationTest,
        ParsePublicKeySucceedsWithMutableRegistry) {
   TestCase test_case = GetParam();
@@ -488,7 +499,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(test_case.proto_hash_type);
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(0);
@@ -540,7 +551,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(test_case.proto_hash_type);
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(0);
@@ -613,7 +624,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(HashType::SHA256);
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = GetKeyValues(2048);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(1);
@@ -643,7 +654,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
       IsOk());
 
   TestCase test_case = GetParam();
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
@@ -697,7 +708,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
   SerializationRegistry registry = std::move(builder).Build();
 
   TestCase test_case = GetParam();
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
@@ -754,7 +765,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(test_case.proto_hash_type);
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -834,7 +845,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(test_case.proto_hash_type);
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -931,7 +942,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
       RegisterRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = GetKeyValues(2048);
 
   google::crypto::tink::RsaSsaPkcs1PrivateKey private_key_proto;
   private_key_proto.set_version(0);
@@ -967,7 +978,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(HashType::SHA256);
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = GetKeyValues(2048);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1010,7 +1021,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(HashType::SHA256);
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = GetKeyValues(2048);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(1);
@@ -1053,7 +1064,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
   RsaSsaPkcs1Params params;
   params.set_hash_type(HashType::SHA256);
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = GetKeyValues(2048);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1094,7 +1105,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
       RegisterRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
@@ -1174,7 +1185,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest,
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
@@ -1253,7 +1264,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
       RegisterRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = GetKeyValues(2048);
 
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()

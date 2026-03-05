@@ -16,8 +16,8 @@
 
 #include "tink/keyset_handle_builder.h"
 
+#include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <set>
 #include <string>
@@ -28,6 +28,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -40,8 +41,6 @@
 #include "tink/parameters.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -136,7 +135,7 @@ KeysetHandleBuilder& KeysetHandleBuilder::AddEntry(
 }
 
 KeysetHandleBuilder& KeysetHandleBuilder::RemoveEntry(int index) {
-  ABSL_CHECK(index >= 0 && index < entries_.size())
+  ABSL_CHECK(index >= 0 && static_cast<size_t>(index) < entries_.size())
       << "Keyset handle builder entry removal index out of range.";
   entries_.erase(entries_.begin() + index);
   return *this;
@@ -149,7 +148,7 @@ absl::Status KeysetHandleBuilder::CheckIdAssignments() {
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "Cannot build empty keyset.");
   }
-  for (int i = 0; i < entries_.size() - 1; ++i) {
+  for (size_t i = 0; i < entries_.size() - 1; ++i) {
     if (entries_[i].HasRandomId() && !entries_[i + 1].HasRandomId()) {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "Entries with random ids may only be followed "

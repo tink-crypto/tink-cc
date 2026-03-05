@@ -16,6 +16,7 @@
 
 #include "tink/keyset_handle.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -296,7 +297,7 @@ KeysetHandle::Entry KeysetHandle::operator[](int index) const {
   ABSL_CHECK(index >= 0 && index < size())
       << "Invalid index " << index << " for keyset of size " << size();
 
-  if (!entries_.empty() && entries_.size() > index) {
+  if (!entries_.empty() && entries_.size() > static_cast<size_t>(index)) {
     return *entries_[index];
   }
   // Since `entries_` has not been populated, the entry must be created on
@@ -382,7 +383,9 @@ KeysetHandle::ReadWithAssociatedData(
   if (!entries.ok()) {
     return entries.status();
   }
-  if (entries->size() != (*keyset_result)->key_size()) {
+  int key_size = (*keyset_result)->key_size();
+  ABSL_CHECK_GE(key_size, 0);
+  if (entries->size() != static_cast<size_t>(key_size)) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
@@ -408,7 +411,8 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
   if (!entries.ok()) {
     return entries.status();
   }
-  if (entries->size() != keyset->key_size()) {
+  ABSL_CHECK_GE(keyset->key_size(), 0);
+  if (entries->size() != static_cast<size_t>(keyset->key_size())) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
@@ -560,7 +564,8 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
   }
 
   public_keyset->set_primary_key_id(keyset_->primary_key_id());
-  if (public_entries.size() != public_keyset->key_size()) {
+  ABSL_CHECK_GE(public_keyset->key_size(), 0);
+  if (public_entries.size() != static_cast<size_t>(public_keyset->key_size())) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }

@@ -16,6 +16,7 @@
 
 #include "tink/proto_keyset_format.h"
 
+#include <cstddef>
 #include <ios>
 #include <iostream>
 #include <memory>
@@ -25,8 +26,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/binary_keyset_reader.h"
@@ -36,6 +39,7 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
@@ -61,7 +65,9 @@ absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
   if (!entries.ok()) {
     return entries.status();
   }
-  if (entries->size() != keyset_proto->key_size()) {
+  int key_size = keyset_proto->key_size();
+  ABSL_CHECK_GE(key_size, 0);
+  if (entries->size() != static_cast<size_t>(key_size)) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }

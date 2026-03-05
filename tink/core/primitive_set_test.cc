@@ -16,6 +16,7 @@
 
 #include "tink/primitive_set.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -487,7 +488,7 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
       pset->get_all_in_keyset_order();
   ASSERT_THAT(entries, SizeIs(key_infos.size()));
 
-  for (int i = 0; i < entries.size(); i++) {
+  for (size_t i = 0; i < entries.size(); i++) {
     EXPECT_THAT(entries[i]->get_identifier(),
                 Eq(*CryptoFormat::GetOutputPrefix(key_infos[i])));
     EXPECT_THAT(entries[i]->get_status(), Eq(KeyStatusType::ENABLED));

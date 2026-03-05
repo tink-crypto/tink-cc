@@ -31,8 +31,8 @@
 #include <string>
 #include <vector>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -40,17 +40,12 @@
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
-#include "tink/cleartext_keyset_handle.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/internal/ec_util.h"
-#include "tink/keyset_handle.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/random.h"
 #include "tink/util/enums.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -343,7 +338,7 @@ absl::Status ZTestUniformString(absl::string_view bytes) {
 
 std::string Rotate(absl::string_view bytes) {
   std::string result(bytes.size(), '\0');
-  for (int i = 0; i < bytes.size(); i++) {
+  for (size_t i = 0; i < bytes.size(); i++) {
     result[i] = (static_cast<uint8_t>(bytes[i]) >> 1) |
                 (bytes[(i == 0 ? bytes.size() : i) - 1] << 7);
   }
@@ -357,7 +352,7 @@ absl::Status ZTestCrosscorrelationUniformStrings(absl::string_view bytes1,
                         "Strings are not of equal length");
   }
   std::string crossed(bytes1.size(), '\0');
-  for (int i = 0; i < bytes1.size(); i++) {
+  for (size_t i = 0; i < bytes1.size(); i++) {
     crossed[i] = bytes1[i] ^ bytes2[i];
   }
   return ZTestUniformString(crossed);
@@ -366,7 +361,7 @@ absl::Status ZTestCrosscorrelationUniformStrings(absl::string_view bytes1,
 absl::Status ZTestAutocorrelationUniformString(absl::string_view bytes) {
   std::string rotated(bytes);
   std::vector<int> violations;
-  for (int i = 1; i < bytes.size() * 8; i++) {
+  for (size_t i = 1; i < bytes.size() * 8; i++) {
     rotated = Rotate(rotated);
     auto status = ZTestCrosscorrelationUniformStrings(bytes, rotated);
     if (!status.ok()) {

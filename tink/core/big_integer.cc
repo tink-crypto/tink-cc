@@ -16,6 +16,7 @@
 
 #include "tink/big_integer.h"
 
+#include <cstddef>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -25,7 +26,7 @@ namespace crypto {
 namespace tink {
 
 BigInteger::BigInteger(absl::string_view big_integer) {
-  int padding_pos = big_integer.find_first_not_of('\0');
+  size_t padding_pos = big_integer.find_first_not_of('\0');
   if (padding_pos != std::string::npos) {
     value_ = std::string(big_integer.substr(padding_pos));
   } else {

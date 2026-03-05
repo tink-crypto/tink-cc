@@ -166,8 +166,6 @@ tink_cc_library(
     tink::util::enums
     tink::util::protobuf_helper
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     absl::core_headers
     absl::absl_check
     absl::memory
@@ -200,7 +198,6 @@ tink_cc_library(
     tink::keyderivation::keyset_deriver
     tink::mac::internal::stateful_mac
     tink::subtle::common_enums
-    tink::subtle::random
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto

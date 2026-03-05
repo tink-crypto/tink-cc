@@ -124,7 +124,7 @@ class AesSivKeyManager
 
   const std::string key_type_ = absl::StrCat(
       kTypeGoogleapisCom, google::crypto::tink::AesSivKey().GetTypeName());
-  const int kKeySizeInBytes = 64;
+  const size_t kKeySizeInBytes = 64;
 };
 
 }  // namespace tink

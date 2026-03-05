@@ -16,6 +16,7 @@
 
 #include "tink/keyderivation/keyset_deriver.h"
 
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
@@ -669,7 +670,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
       (*deriver)->DeriveKeyset(SaltFromRfc());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
-  for (int i = 0; i < derived_keys.size(); i++) {
+  for (size_t i = 0; i < derived_keys.size(); i++) {
     EXPECT_THAT(*(**derived_handle)[i].GetKey(),
                 Eq(std::ref(*derived_keys[i])));
   }
@@ -711,7 +712,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
       (*deriver)->DeriveKeyset(SaltFromRfc());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
-  for (int i = 0; i < derived_keys.size(); i++) {
+  for (size_t i = 0; i < derived_keys.size(); i++) {
     EXPECT_THAT(*(**derived_handle)[i].GetKey(),
                 Eq(std::ref(*derived_keys[i])));
   }

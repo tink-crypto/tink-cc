@@ -16,22 +16,22 @@
 
 #include "tink/cleartext_keyset_handle.h"
 
-#include <istream>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
 #include "tink/util/errors.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 using google::crypto::tink::Keyset;
@@ -54,7 +54,9 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
   if (!entries.ok()) {
     return entries.status();
   }
-  if (entries->size() != (*keyset_result)->key_size()) {
+  int key_size = (*keyset_result)->key_size();
+  ABSL_CHECK_GE(key_size, 0);
+  if (entries->size() != static_cast<size_t>(key_size)) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }

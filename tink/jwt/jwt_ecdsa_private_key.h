@@ -40,8 +40,12 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
   JwtEcdsaPrivateKey(const JwtEcdsaPrivateKey& other)
       : public_key_(other.public_key_),
         private_key_value_(other.private_key_value_) {
+    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+    // TINK-PENDING-REMOVAL-IN-3.0.0-START
     absl::MutexLock lock(other.mutex_);
     private_key_value_big_integer_ = other.private_key_value_big_integer_;
+    // TINK-PENDING-REMOVAL-IN-3.0.0-END
+    // NOLINTEND(whitespace/line_length)
   }
 
   JwtEcdsaPrivateKey& operator=(const JwtEcdsaPrivateKey& other) {
@@ -49,17 +53,20 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
       return *this;
     }
 
+    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+    // TINK-PENDING-REMOVAL-IN-3.0.0-START
     absl::optional<RestrictedBigInteger> tmp_private_key_value_big_integer;
     {
       absl::MutexLock lock(other.mutex_);
-      tmp_private_key_value_big_integer = other.private_key_value_big_integer_;
+      tmp_private_key_value_big_integer =
+      other.private_key_value_big_integer_;
     }
-
-    public_key_ = other.public_key_;
-    private_key_value_ = other.private_key_value_;
     absl::MutexLock lock(mutex_);
     private_key_value_big_integer_ = tmp_private_key_value_big_integer;
-
+    // TINK-PENDING-REMOVAL-IN-3.0.0-END
+    // NOLINTEND(whitespace/line_length)
+    public_key_ = other.public_key_;
+    private_key_value_ = other.private_key_value_;
     return *this;
   }
 
@@ -76,19 +83,27 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
       const JwtEcdsaPublicKey& public_key,
       const RestrictedData& private_key_value, PartialKeyAccessToken token);
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Deprecated. Will be removed in Tink 3.0.0. Please use the version taking
   // a `RestrictedData` object instead.
   static absl::StatusOr<JwtEcdsaPrivateKey> Create(
       const JwtEcdsaPublicKey& public_key,
       const RestrictedBigInteger& private_key_value,
       PartialKeyAccessToken token);
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   const RestrictedData& GetPrivateKey(PartialKeyAccessToken token) const {
     return private_key_value_;
   }
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   const RestrictedBigInteger& GetPrivateKeyValue(
       PartialKeyAccessToken token) const;
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   const JwtEcdsaPublicKey& GetPublicKey() const override { return public_key_; }
 
@@ -106,9 +121,13 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
   JwtEcdsaPublicKey public_key_;
   RestrictedData private_key_value_;
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   mutable absl::Mutex mutex_;
   mutable absl::optional<RestrictedBigInteger> private_key_value_big_integer_
       ABSL_GUARDED_BY(mutex_);
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 };
 
 }  // namespace tink

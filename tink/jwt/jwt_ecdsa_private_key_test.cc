@@ -122,22 +122,31 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreateSucceeds) {
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
               Eq(private_key_value));
+
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_key_value.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()).size(),
               Eq(parameters->GetPrivateKeyLength()));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_P(JwtEcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerSucceeds) {
   TestCase test_case = GetParam();
 
   absl::StatusOr<JwtEcdsaParameters> parameters =
-      JwtEcdsaParameters::Create(test_case.kid_strategy, test_case.algorithm);
+      JwtEcdsaParameters::Create(test_case.kid_strategy,
+      test_case.algorithm);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key =
+  internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
@@ -163,7 +172,8 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerSucceeds) {
       private_key_value.EncodeWithFixedSize(parameters->GetPrivateKeyLength());
 
   ASSERT_THAT(expected_private_key_data, IsOk());
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key =
+  JwtEcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -176,6 +186,8 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerSucceeds) {
   EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
               Eq(private_key_value));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST_P(JwtEcdsaPrivateKeyTest, CreatePrivateKeyAllowNonConstantTimeWorks) {
   TestCase test_case = GetParam();
@@ -217,10 +229,14 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreatePrivateKeyAllowNonConstantTimeWorks) {
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
               Eq(private_key_value));
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
               Eq(RestrictedBigInteger(
                   private_key_value.Get(InsecureSecretKeyAccess::Get()),
                   InsecureSecretKeyAccess::Get())));
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()).size(),
               Eq(parameters->GetPrivateKeyLength()));
 }

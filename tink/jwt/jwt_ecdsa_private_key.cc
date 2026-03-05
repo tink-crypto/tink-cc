@@ -162,6 +162,8 @@ JwtEcdsaPrivateKey::CreateAllowNonConstantTime(
                 token);
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
     const JwtEcdsaPublicKey& public_key,
     const RestrictedBigInteger& private_key_value,
@@ -177,7 +179,8 @@ absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
                      public_key.GetParameters().GetPrivateKeyLength()));
   }
 
-  return JwtEcdsaPrivateKey::Create(public_key, *private_key_data, token);
+  return JwtEcdsaPrivateKey::Create(public_key, *std::move(private_key_data),
+  token);
 }
 
 const RestrictedBigInteger& JwtEcdsaPrivateKey::GetPrivateKeyValue(
@@ -190,6 +193,8 @@ const RestrictedBigInteger& JwtEcdsaPrivateKey::GetPrivateKeyValue(
   }
   return *private_key_value_big_integer_;
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 bool JwtEcdsaPrivateKey::operator==(const Key& other) const {
   const JwtEcdsaPrivateKey* that =

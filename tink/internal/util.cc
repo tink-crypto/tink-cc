@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -74,7 +75,10 @@ void LogFatal(absl::string_view msg) { ABSL_LOG(FATAL) << msg; }
 
 absl::StatusOr<SecretData> ParseBigIntToFixedLength(absl::string_view val,
                                                     int length) {
-  if (length >= val.size()) {
+  if (length < 0) {
+    return absl::InvalidArgumentError("Length must be non-negative");
+  }
+  if (static_cast<size_t>(length) >= val.size()) {
     int start = length - val.size();
     SecretBuffer buffer(length, 0);
     SafeMemCopy(buffer.data() + start, val.data(), val.size());

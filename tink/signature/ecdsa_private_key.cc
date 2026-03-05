@@ -16,7 +16,6 @@
 
 #include "tink/signature/ecdsa_private_key.h"
 
-#include <cstddef>
 #include <memory>
 #include <utility>
 
@@ -41,7 +40,6 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
@@ -127,7 +125,7 @@ absl::Status ValidateKeyPair(const EcdsaPublicKey& public_key,
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
     const EcdsaPublicKey& public_key, RestrictedData private_key_value,
     PartialKeyAccessToken token) {
-  size_t key_length = public_key.GetParameters().GetPrivateKeyLength();
+  int key_length = public_key.GetParameters().GetPrivateKeyLength();
   if (private_key_value.size() != key_length) {
     return absl::InvalidArgumentError(
         absl::StrCat("Private key length ", private_key_value.size(),

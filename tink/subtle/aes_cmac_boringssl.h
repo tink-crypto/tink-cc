@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,13 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/mac.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/mac/aes_cmac_key.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -37,6 +38,8 @@ class AesCmacBoringSsl : public Mac {
  public:
   static absl::StatusOr<std::unique_ptr<Mac>> New(SecretData key,
                                                   uint32_t tag_size);
+
+  static absl::StatusOr<std::unique_ptr<Mac>> New(const AesCmacKey& key);
 
   // Computes and returns the CMAC for 'data'.
   absl::StatusOr<std::string> ComputeMac(absl::string_view data) const override;
@@ -50,11 +53,27 @@ class AesCmacBoringSsl : public Mac {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  AesCmacBoringSsl(SecretData key, uint32_t tag_size)
-      : key_(std::move(key)), tag_size_(tag_size) {}
+  // Computes and returns the CMAC for 'data'.
+  absl::StatusOr<std::string> ComputeMacNoPrefix(
+      absl::string_view data) const;
+
+  // Verifies if 'mac' is a correct CMAC for 'data'.
+  // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.
+  absl::Status VerifyMacNoPrefix(absl::string_view mac,
+                             absl::string_view data) const;
+
+  AesCmacBoringSsl(SecretData key, uint32_t tag_size,
+                   absl::string_view output_prefix,
+                   absl::string_view message_suffix)
+      : key_(std::move(key)),
+        tag_size_(tag_size),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
 
   const SecretData key_;
   const uint32_t tag_size_;
+  std::string output_prefix_;
+  std::string message_suffix_;
 };
 
 }  // namespace subtle

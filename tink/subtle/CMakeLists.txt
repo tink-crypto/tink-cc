@@ -189,9 +189,14 @@ tink_cc_library(
     tink::subtle::subtle_util
     absl::memory
     absl::status
+    absl::statusor
+    absl::strings
     absl::string_view
     crypto
+    tink::core::insecure_secret_key_access
     tink::core::mac
+    tink::core::partial_key_access
+    tink::core::secret_data
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
@@ -200,10 +205,9 @@ tink_cc_library(
     tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
     tink::util::errors
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -966,15 +970,22 @@ tink_cc_test(
     aes_cmac_boringssl_test.cc
   DEPS
     tink::subtle::aes_cmac_boringssl
-    tink::subtle::common_enums
     gmock
     absl::status
+    absl::statusor
     absl::strings
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
     tink::core::mac
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::core::secret_key_access_token
     tink::config::tink_fips
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

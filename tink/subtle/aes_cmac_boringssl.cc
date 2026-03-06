@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,13 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/cmac.h"
 #include "openssl/evp.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -36,11 +40,12 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/mac.h"
+#include "tink/mac/aes_cmac_key.h"
+#include "tink/mac/aes_cmac_parameters.h"
+#include "tink/partial_key_access.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/errors.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -97,10 +102,40 @@ absl::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(SecretData key,
                      "Invalid tag size: expected lower than %d, found %d",
                      kMaxTagSize, tag_size);
   }
-  return {absl::WrapUnique(new AesCmacBoringSsl(std::move(key), tag_size))};
+  return {
+      absl::WrapUnique(new AesCmacBoringSsl(std::move(key), tag_size, "", ""))};
 }
 
-absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
+// static
+absl::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(
+    const AesCmacKey& key) {
+  auto status = internal::CheckFipsCompatibility<AesCmacBoringSsl>();
+  if (!status.ok()) return status;
+
+  if (key.GetParameters().KeySizeInBytes() != kSmallKeySize &&
+      key.GetParameters().KeySizeInBytes() != kBigKeySize) {
+    return ToStatusF(absl::StatusCode::kInvalidArgument,
+                     "Invalid key size: expected %d or %d, found %d",
+                     kSmallKeySize, kBigKeySize,
+                     key.GetParameters().KeySizeInBytes());
+  }
+  if (static_cast<size_t>(key.GetParameters().CryptographicTagSizeInBytes()) >
+      kMaxTagSize) {
+    return ToStatusF(absl::StatusCode::kInvalidArgument,
+                     "Invalid tag size: expected at most %d, found %d",
+                     kMaxTagSize,
+                     key.GetParameters().CryptographicTagSizeInBytes());
+  }
+  return {absl::WrapUnique(new AesCmacBoringSsl(
+      key.GetKeyBytes(GetPartialKeyAccess())
+          .Get(InsecureSecretKeyAccess::Get()),
+      key.GetParameters().CryptographicTagSizeInBytes(), key.GetOutputPrefix(),
+      key.GetParameters().GetVariant() == AesCmacParameters::Variant::kLegacy
+          ? absl::string_view("\0", 1)
+          : ""))};
+}
+
+absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMacNoPrefix(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -121,8 +156,8 @@ absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
   return result;
 }
 
-absl::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
-                                         absl::string_view data) const {
+absl::Status AesCmacBoringSsl::VerifyMacNoPrefix(
+    absl::string_view mac, absl::string_view data) const {
   if (mac.size() != tag_size_) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Incorrect tag size: expected %d, found %d", tag_size_,
@@ -141,6 +176,37 @@ absl::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
                         "CMAC verification failed");
   }
   return absl::OkStatus();
+}
+
+absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
+    absl::string_view data) const {
+  absl::StatusOr<std::string> raw_sig;
+  if (!message_suffix_.empty()) {
+    std::string message = absl::StrCat(data, message_suffix_);
+    raw_sig = ComputeMacNoPrefix(message);
+  } else {
+    raw_sig = ComputeMacNoPrefix(data);
+  }
+  if (output_prefix_.empty()) {
+    return raw_sig;
+  }
+  if (!raw_sig.ok()) {
+    return raw_sig;
+  }
+  return absl::StrCat(output_prefix_, *raw_sig);
+}
+
+absl::Status AesCmacBoringSsl::VerifyMac(
+    absl::string_view mac, absl::string_view data) const {
+  if (!absl::StartsWith(mac, output_prefix_)) {
+    return absl::InvalidArgumentError("Prefix mismatch");
+  }
+  mac.remove_prefix(output_prefix_.size());
+  if (message_suffix_.empty()) {
+    return VerifyMacNoPrefix(mac, data);
+  } else {
+    return VerifyMacNoPrefix(mac, absl::StrCat(data, message_suffix_));
+  }
 }
 
 }  // namespace subtle

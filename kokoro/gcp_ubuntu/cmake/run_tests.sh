@@ -68,17 +68,17 @@ if [[ "${IS_KOKORO}" == "true" ]]; then
   gcloud config set project tink-test-infrastructure
 
   # Try to use the config cache.
-  if gsutil stat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"; then
+  if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"; then
     echo "Using config cache: ${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"
-    gsutil cat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" \
+    gcloud storage cat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" \
       | tar -C out -xzf - --strip-components=1
   fi
 
   # Try to use the ccache.
-  if gsutil stat "${REMOTE_CACHE_URL}/ccache/ccache.tgz"; then
+  if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/ccache/ccache.tgz"; then
     echo "Using ccache: ${REMOTE_CACHE_URL}/ccache/ccache.tgz"
     mkdir -p ccache
-    gsutil cat "${REMOTE_CACHE_URL}/ccache/ccache.tgz" \
+    gcloud storage cat "${REMOTE_CACHE_URL}/ccache/ccache.tgz" \
       | tar -C ccache -xzf - --strip-components=1
     # Tell CMake to use CCache.
     EXTRA_CMAKE_ARGS+=( -DCMAKE_CXX_COMPILER_LAUNCHER=ccache )

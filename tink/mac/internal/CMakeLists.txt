@@ -420,3 +420,21 @@ tink_cc_test(
     tink::internal::testing::field_with_number
     tink::util::secret_data
 )
+
+tink_cc_library(
+  NAME aes_cmac_test_vectors
+  SRCS
+    aes_cmac_test_vectors.cc
+    aes_cmac_test_vectors.h
+  DEPS
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+    tink::util::test_util
+  TESTONLY
+)

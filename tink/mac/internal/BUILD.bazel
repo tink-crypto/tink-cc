@@ -436,3 +436,22 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "aes_cmac_test_vectors",
+    testonly = 1,
+    srcs = ["aes_cmac_test_vectors.cc"],
+    hdrs = ["aes_cmac_test_vectors.h"],
+    include_prefix = "tink/mac/internal",
+    deps = [
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:partial_key_access",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink:secret_key_access_token",
+        "//tink/mac:aes_cmac_key",
+        "//tink/mac:aes_cmac_parameters",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)

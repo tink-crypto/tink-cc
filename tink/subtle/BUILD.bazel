@@ -1035,6 +1035,7 @@ cc_test(
         "//tink/config:tink_fips",
         "//tink/mac:aes_cmac_key",
         "//tink/mac:aes_cmac_parameters",
+        "//tink/mac/internal:aes_cmac_test_vectors",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",

@@ -45,6 +45,8 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
         dq_(other.dq_),
         d_(other.d_),
         q_inv_(other.q_inv_) {
+    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+    // TINK-PENDING-REMOVAL-IN-3.0.0-START
     absl::MutexLock lock(other.mutex_);
     p_big_integer_ = other.p_big_integer_;
     q_big_integer_ = other.q_big_integer_;
@@ -52,6 +54,8 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
     dq_big_integer_ = other.dq_big_integer_;
     d_big_integer_ = other.d_big_integer_;
     q_inv_big_integer_ = other.q_inv_big_integer_;
+    // TINK-PENDING-REMOVAL-IN-3.0.0-END
+    // NOLINTEND(whitespace/line_length)
   }
 
   JwtRsaSsaPkcs1PrivateKey& operator=(const JwtRsaSsaPkcs1PrivateKey& other);
@@ -79,14 +83,17 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
     Builder& SetPrivateExponent(const RestrictedData& d);
     Builder& SetCrtCoefficient(const RestrictedData& q_inv);
 
+    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+    // TINK-PENDING-REMOVAL-IN-3.0.0-START
     // Deprecated: will be removed in Tink 3.0.0
-
     Builder& SetPrimeP(const RestrictedBigInteger& p);
     Builder& SetPrimeQ(const RestrictedBigInteger& q);
     Builder& SetPrimeExponentP(const RestrictedBigInteger& dp);
     Builder& SetPrimeExponentQ(const RestrictedBigInteger& dq);
     Builder& SetPrivateExponent(const RestrictedBigInteger& d);
     Builder& SetCrtCoefficient(const RestrictedBigInteger& q_inv);
+    // TINK-PENDING-REMOVAL-IN-3.0.0-END
+    // NOLINTEND(whitespace/line_length)
 
     // Creates JwtRsaSsaPkcs1 private key object from this builder.
     absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> Build(PartialKeyAccessToken token);
@@ -108,12 +115,16 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
     absl::optional<RestrictedData> dq_;
     absl::optional<RestrictedData> d_;
     absl::optional<RestrictedData> q_inv_;
+    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+    // TINK-PENDING-REMOVAL-IN-3.0.0-START
     absl::optional<RestrictedBigInteger> p_big_integer_;
     absl::optional<RestrictedBigInteger> q_big_integer_;
     absl::optional<RestrictedBigInteger> dp_big_integer_;
     absl::optional<RestrictedBigInteger> dq_big_integer_;
     absl::optional<RestrictedBigInteger> d_big_integer_;
     absl::optional<RestrictedBigInteger> q_inv_big_integer_;
+    // TINK-PENDING-REMOVAL-IN-3.0.0-END
+    // NOLINTEND(whitespace/line_length)
   };
 
   const RestrictedData& GetPrimePData(PartialKeyAccessToken token) const {
@@ -127,14 +138,17 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
   const RestrictedData& GetPrimeExponentQData() const { return dq_; }
   const RestrictedData& GetCrtCoefficientData() const { return q_inv_; }
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Deprecated: will be removed in Tink 3.0.0
-
   const RestrictedBigInteger& GetPrimeP(PartialKeyAccessToken token) const;
   const RestrictedBigInteger& GetPrimeQ(PartialKeyAccessToken token) const;
   const RestrictedBigInteger& GetPrivateExponent() const;
   const RestrictedBigInteger& GetPrimeExponentP() const;
   const RestrictedBigInteger& GetPrimeExponentQ() const;
   const RestrictedBigInteger& GetCrtCoefficient() const;
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   const JwtRsaSsaPkcs1PublicKey& GetPublicKey() const override {
     return public_key_;
@@ -170,6 +184,8 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
   RestrictedData d_;
   RestrictedData q_inv_;
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   mutable absl::Mutex mutex_;
   mutable absl::optional<RestrictedBigInteger> p_big_integer_
       ABSL_GUARDED_BY(mutex_);
@@ -183,6 +199,8 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
       ABSL_GUARDED_BY(mutex_);
   mutable absl::optional<RestrictedBigInteger> q_inv_big_integer_
       ABSL_GUARDED_BY(mutex_);
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 };
 
 }  // namespace tink

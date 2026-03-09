@@ -70,6 +70,8 @@ JwtRsaSsaPkcs1PrivateKey& JwtRsaSsaPkcs1PrivateKey::operator=(
     return *this;
   }
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   absl::optional<RestrictedBigInteger> p_big_integer;
   absl::optional<RestrictedBigInteger> q_big_integer;
   absl::optional<RestrictedBigInteger> dp_big_integer;
@@ -85,6 +87,8 @@ JwtRsaSsaPkcs1PrivateKey& JwtRsaSsaPkcs1PrivateKey::operator=(
     d_big_integer = other.d_big_integer_;
     q_inv_big_integer = other.q_inv_big_integer_;
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   public_key_ = other.public_key_;
   p_ = other.p_;
@@ -94,6 +98,8 @@ JwtRsaSsaPkcs1PrivateKey& JwtRsaSsaPkcs1PrivateKey::operator=(
   d_ = other.d_;
   q_inv_ = other.q_inv_;
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   absl::MutexLock lock(mutex_);
   p_big_integer_ = p_big_integer;
   q_big_integer_ = q_big_integer;
@@ -101,6 +107,8 @@ JwtRsaSsaPkcs1PrivateKey& JwtRsaSsaPkcs1PrivateKey::operator=(
   dq_big_integer_ = dq_big_integer;
   d_big_integer_ = d_big_integer;
   q_inv_big_integer_ = q_inv_big_integer;
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
   return *this;
 }
 
@@ -148,13 +156,17 @@ JwtRsaSsaPkcs1PrivateKey::Builder::SetCrtCoefficient(
   return *this;
 }
 
-JwtRsaSsaPkcs1PrivateKey::Builder& JwtRsaSsaPkcs1PrivateKey::Builder::SetPrimeP(
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
+JwtRsaSsaPkcs1PrivateKey::Builder&
+JwtRsaSsaPkcs1PrivateKey::Builder::SetPrimeP(
     const RestrictedBigInteger& p) {
   p_big_integer_ = p;
   return *this;
 }
 
-JwtRsaSsaPkcs1PrivateKey::Builder& JwtRsaSsaPkcs1PrivateKey::Builder::SetPrimeQ(
+JwtRsaSsaPkcs1PrivateKey::Builder&
+JwtRsaSsaPkcs1PrivateKey::Builder::SetPrimeQ(
     const RestrictedBigInteger& q) {
   q_big_integer_ = q;
   return *this;
@@ -187,6 +199,8 @@ JwtRsaSsaPkcs1PrivateKey::Builder::SetCrtCoefficient(
   q_inv_big_integer_ = q_inv;
   return *this;
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
 JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
@@ -195,6 +209,12 @@ JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
                         "Cannot build without setting the public key");
   }
 
+  bool all_restricted_data = p_.has_value() && q_.has_value() &&
+                             d_.has_value() && dp_.has_value() &&
+                             dq_.has_value() && q_inv_.has_value();
+
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   bool at_least_one_big_integer =
       p_big_integer_.has_value() || q_big_integer_.has_value() ||
       d_big_integer_.has_value() || dp_big_integer_.has_value() ||
@@ -206,9 +226,6 @@ JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
       p_big_integer_.has_value() && q_big_integer_.has_value() &&
       d_big_integer_.has_value() && dp_big_integer_.has_value() &&
       dq_big_integer_.has_value() && q_inv_big_integer_.has_value();
-  bool all_restricted_data = p_.has_value() && q_.has_value() &&
-                             d_.has_value() && dp_.has_value() &&
-                             dq_.has_value() && q_inv_.has_value();
 
   if (at_least_one_big_integer && at_least_one_restricted_data) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -230,17 +247,19 @@ JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
         dp_big_integer_->EncodeWithFixedSize(p_data.size());
     if (!dp_data.ok()) {
       return absl::InvalidArgumentError(
-          absl::StrCat("Prime exponent d is too large, expected", p_data.size(),
+          absl::StrCat("Prime exponent d is too large, expected",
+          p_data.size(),
                        " , got ", dp_big_integer_->SizeInBytes()));
     }
     absl::StatusOr<RestrictedData> dq_data =
         dq_big_integer_->EncodeWithFixedSize(q_data.size());
     if (!dq_data.ok()) {
       return absl::InvalidArgumentError(absl::StrCat(
-          "Prime exponent dq is too large, expected", q_data.size(), " , got ",
-          dq_big_integer_->SizeInBytes()));
+          "Prime exponent dq is too large, expected", q_data.size(),
+           " , got", dq_big_integer_->SizeInBytes()));
     }
-    absl::StatusOr<RestrictedData> d_data = d_big_integer_->EncodeWithFixedSize(
+    absl::StatusOr<RestrictedData> d_data =
+    d_big_integer_->EncodeWithFixedSize(
         public_key_->GetModulus(token).GetValue().size());
     if (!d_data.ok()) {
       return absl::InvalidArgumentError(
@@ -259,14 +278,16 @@ JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
 
     absl::Status key_pair_validation =
         ValidateKeyPair(public_key_->GetParameters().GetPublicExponent(),
-                        public_key_->GetModulus(token), p_data, q_data, *d_data,
-                        *dp_data, *dq_data, *q_inv_data, token);
+                        public_key_->GetModulus(token), p_data, q_data,
+                        *d_data, *dp_data, *dq_data, *q_inv_data, token);
     if (!key_pair_validation.ok()) {
       return key_pair_validation;
     }
     return JwtRsaSsaPkcs1PrivateKey(*public_key_, p_data, q_data, *dp_data,
                                     *dq_data, *d_data, *q_inv_data);
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   if (all_restricted_data) {
     absl::Status key_pair_validation =
@@ -293,13 +314,17 @@ JwtRsaSsaPkcs1PrivateKey::Builder::BuildAllowNonConstantTime(
                         "Cannot build without setting the public key");
   }
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   if (p_big_integer_.has_value() || q_big_integer_.has_value() ||
       d_big_integer_.has_value() || dp_big_integer_.has_value() ||
       dq_big_integer_.has_value() || q_inv_big_integer_.has_value()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "BuildAllowNonConstantTime method can only be used by "
-                        "setting RestrictedData fields.");
+                        "BuildAllowNonConstantTime method can only be used"
+                        " by setting RestrictedData fields.");
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   if (!p_.has_value() || !q_.has_value() || !d_.has_value() ||
       !dp_.has_value() || !dq_.has_value() || !q_inv_.has_value()) {
@@ -338,6 +363,8 @@ JwtRsaSsaPkcs1PrivateKey::Builder::BuildAllowNonConstantTime(
   return Build(token);
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 const RestrictedBigInteger& JwtRsaSsaPkcs1PrivateKey::GetPrimeP(
     PartialKeyAccessToken token) const {
   absl::MutexLock lock(mutex_);
@@ -403,6 +430,8 @@ const RestrictedBigInteger& JwtRsaSsaPkcs1PrivateKey::GetCrtCoefficient()
   }
   return *q_inv_big_integer_;
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 bool JwtRsaSsaPkcs1PrivateKey::operator==(const Key& other) const {
   const JwtRsaSsaPkcs1PrivateKey* that =

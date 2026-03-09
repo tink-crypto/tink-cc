@@ -333,6 +333,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest,
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST(JwtRsaSsaPkcs1PrivateKeyTest,
      BuildAllowNonConstantTimeWithRestrictedBigIntegerAndDataFails) {
   JwtRsaSsaPkcs1PublicKey public_key = GetValidPublicKey(
@@ -402,7 +404,8 @@ TEST_P(JwtRsaSsaPkcs1PrivateKeyTest, BuildWithRestrictedBigInteger) {
               Eq(private_values.q));
   EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
-  EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
+  EXPECT_THAT(private_key->GetCrtCoefficientData(),
+  Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
 }
 
@@ -439,6 +442,8 @@ TEST_P(JwtRsaSsaPkcs1PrivateKeyTest,
                        testing::AllOf(HasSubstr("RestrictedData"),
                                       HasSubstr("RestrictedBigInteger"))));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   internal::SslUniquePtr<RSA> rsa(RSA_new());

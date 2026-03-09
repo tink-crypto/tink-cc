@@ -576,6 +576,7 @@ tink_cc_library(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::internal::util
+    absl::core_headers
     absl::status
     absl::statusor
     absl::strings

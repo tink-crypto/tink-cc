@@ -183,7 +183,7 @@ absl::StatusOr<LegacyKmsAeadKey> ParseKey(
   }
 
   absl::StatusOr<LegacyKmsAeadParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

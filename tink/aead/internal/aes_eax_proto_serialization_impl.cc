@@ -250,7 +250,7 @@ absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
   }
 
   absl::StatusOr<AesEaxParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

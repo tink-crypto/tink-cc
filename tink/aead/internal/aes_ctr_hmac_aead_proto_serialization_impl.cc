@@ -239,7 +239,7 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
   }
 
   absl::StatusOr<AesCtrHmacAeadParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

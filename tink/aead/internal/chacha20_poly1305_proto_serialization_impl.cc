@@ -195,7 +195,7 @@ absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
   absl::StatusOr<ChaCha20Poly1305Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

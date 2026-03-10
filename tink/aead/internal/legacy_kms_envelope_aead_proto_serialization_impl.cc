@@ -292,7 +292,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadKey> ParseKey(
 
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       GetParametersFromKeyFormat(key.params(),
-                                 serialization.GetOutputPrefixTypeEnum());
+                                 serialization.GetOutputPrefixTypeTP());
   if (!parameters.ok()) {
     return parameters.status();
   }

@@ -209,7 +209,7 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
   }
 
   absl::StatusOr<AesGcmParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

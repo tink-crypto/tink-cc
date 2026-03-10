@@ -183,7 +183,7 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
   }
 
   absl::StatusOr<XChaCha20Poly1305Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

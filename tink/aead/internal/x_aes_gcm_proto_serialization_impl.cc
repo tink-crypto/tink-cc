@@ -219,7 +219,7 @@ absl::StatusOr<XAesGcmKey> ParseKey(
   }
 
   absl::StatusOr<XAesGcmParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

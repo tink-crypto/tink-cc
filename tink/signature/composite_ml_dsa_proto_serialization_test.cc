@@ -283,7 +283,7 @@ absl::StatusOr<KeyData> SerializeKey(const Key& key) {
   KeyData key_data;
   key_data.set_type_url((*proto_key_serialization)->TypeUrl());
   key_data.set_key_material_type(ToProtoKeyMaterialType(
-      (*proto_key_serialization)->GetKeyMaterialTypeEnum()));
+      (*proto_key_serialization)->GetKeyMaterialTypeTP()));
   key_data.set_value((*proto_key_serialization)
                          ->SerializedKeyProto()
                          .GetSecret(InsecureSecretKeyAccess::Get()));
@@ -853,9 +853,9 @@ TEST_P(CompositeMlDsaProtoSerializationTest, SerializePublicKeyWorks) {
   const ProtoKeySerialization* proto_serialization =
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
               Eq(KeyMaterialTypeTP::kAsymmetricPublic));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
               Eq(test_case.id_requirement));
@@ -1386,9 +1386,9 @@ TEST_P(CompositeMlDsaProtoSerializationTest, SerializePrivateKeyWorks) {
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
               Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
               Eq(test_case.id_requirement));

@@ -86,8 +86,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyPublicKeySign;
 using ::crypto::tink::test::DummyPublicKeyVerify;
 using ::crypto::tink::test::IsOk;
@@ -379,7 +379,7 @@ TEST_F(SignatureConfigTest, RsaSsaPkcs1ProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -451,7 +451,7 @@ TEST_F(SignatureConfigTest, RsaSsaPkcs1ProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -582,7 +582,7 @@ TEST_F(SignatureConfigTest, RsaSsaPssProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -661,7 +661,7 @@ TEST_F(SignatureConfigTest, RsaSsaPssProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.RsaSsaPssPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -792,8 +792,8 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.EcdsaPublicKey",
-          serialized_key, KeyMaterialTypeEnum::kAsymmetricPublic,
-          OutputPrefixTypeEnum::kTink,
+          serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
@@ -874,8 +874,8 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.EcdsaPrivateKey",
-          serialized_key, KeyMaterialTypeEnum::kAsymmetricPrivate,
-          OutputPrefixTypeEnum::kTink,
+          serialized_key, KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
@@ -987,7 +987,7 @@ TEST_F(SignatureConfigTest, Ed25519ProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.Ed25519PublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -1049,7 +1049,7 @@ TEST_F(SignatureConfigTest, Ed25519ProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

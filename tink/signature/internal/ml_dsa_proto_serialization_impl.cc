@@ -300,7 +300,7 @@ absl::StatusOr<MlDsaPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<MlDsaParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
+      ToParameters(serialization.GetOutputPrefixTypeTP(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -330,7 +330,7 @@ absl::StatusOr<MlDsaPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<MlDsaParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixTypeEnum(), proto_key.public_key().params());
+      serialization.GetOutputPrefixTypeTP(), proto_key.public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }

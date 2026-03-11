@@ -218,7 +218,7 @@ absl::StatusOr<Ed25519PublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<Ed25519Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }
@@ -259,7 +259,7 @@ absl::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<Ed25519Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }

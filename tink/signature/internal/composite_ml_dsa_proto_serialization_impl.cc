@@ -439,7 +439,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing CompositeMlDsaPublicKey.");
   }
-  if (serialization.GetKeyMaterialTypeEnum() !=
+  if (serialization.GetKeyMaterialTypeTP() !=
       KeyMaterialTypeTP::kAsymmetricPublic) {
     return absl::InvalidArgumentError(
         "Wrong key material type when parsing CompositeMlDsaPublicKey.");
@@ -456,7 +456,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(),
+      ToParameters(serialization.GetOutputPrefixTypeTP(),
                    proto_key.params().ml_dsa_instance(),
                    proto_key.params().classical_algorithm());
   if (!parameters.ok()) {
@@ -531,7 +531,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing CompositeMlDsaPrivateKey.");
   }
-  if (serialization.GetKeyMaterialTypeEnum() !=
+  if (serialization.GetKeyMaterialTypeTP() !=
       KeyMaterialTypeTP::kAsymmetricPrivate) {
     return absl::InvalidArgumentError(
         "Wrong key material type when parsing CompositeMlDsaPrivateKey.");
@@ -551,7 +551,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(),
+      ToParameters(serialization.GetOutputPrefixTypeTP(),
                    proto_key.params().ml_dsa_instance(),
                    proto_key.params().classical_algorithm());
   if (!parameters.ok()) {
@@ -666,7 +666,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   if (!ml_dsa_proto_key_serialization.ok()) {
     return ml_dsa_proto_key_serialization.status();
   }
-  if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
+  if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeTP() !=
       OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for ML-DSA public key.");
@@ -678,7 +678,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   KeyDataTP ml_dsa_key_data;
   ml_dsa_key_data.set_type_url((*ml_dsa_proto_key_serialization)->TypeUrl());
   ml_dsa_key_data.set_key_material_type(
-      (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeEnum());
+      (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeTP());
   ml_dsa_key_data.set_value((*ml_dsa_proto_key_serialization)
                                 ->SerializedKeyProto()
                                 .GetSecret(InsecureSecretKeyAccess::Get()));
@@ -697,7 +697,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   if (!classical_proto_key_serialization.ok()) {
     return classical_proto_key_serialization.status();
   }
-  if ((*classical_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
+  if ((*classical_proto_key_serialization)->GetOutputPrefixTypeTP() !=
       OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for classical public key.");
@@ -710,7 +710,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   classical_key_data.set_type_url(
       (*classical_proto_key_serialization)->TypeUrl());
   classical_key_data.set_key_material_type(
-      (*classical_proto_key_serialization)->GetKeyMaterialTypeEnum());
+      (*classical_proto_key_serialization)->GetKeyMaterialTypeTP());
   classical_key_data.set_value((*classical_proto_key_serialization)
                                    ->SerializedKeyProto()
                                    .GetSecret(InsecureSecretKeyAccess::Get()));
@@ -768,7 +768,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   if (!ml_dsa_proto_key_serialization.ok()) {
     return ml_dsa_proto_key_serialization.status();
   }
-  if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
+  if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeTP() !=
       OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for ML-DSA private key.");
@@ -780,7 +780,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   KeyDataTP ml_dsa_key_data;
   ml_dsa_key_data.set_type_url((*ml_dsa_proto_key_serialization)->TypeUrl());
   ml_dsa_key_data.set_key_material_type(
-      (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeEnum());
+      (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeTP());
   ml_dsa_key_data.set_value((*ml_dsa_proto_key_serialization)
                                 ->SerializedKeyProto()
                                 .GetSecret(*token));
@@ -799,7 +799,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   if (!classical_proto_key_serialization.ok()) {
     return classical_proto_key_serialization.status();
   }
-  if ((*classical_proto_key_serialization)->GetOutputPrefixTypeEnum() !=
+  if ((*classical_proto_key_serialization)->GetOutputPrefixTypeTP() !=
       OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for classical private key.");
@@ -812,7 +812,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   classical_key_data.set_type_url(
       (*classical_proto_key_serialization)->TypeUrl());
   classical_key_data.set_key_material_type(
-      (*classical_proto_key_serialization)->GetKeyMaterialTypeEnum());
+      (*classical_proto_key_serialization)->GetKeyMaterialTypeTP());
   classical_key_data.set_value((*classical_proto_key_serialization)
                                    ->SerializedKeyProto()
                                    .GetSecret(*token));

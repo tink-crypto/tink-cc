@@ -57,8 +57,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HpkeAead;
@@ -164,7 +164,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -237,7 +237,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

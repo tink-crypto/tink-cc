@@ -426,7 +426,7 @@ absl::StatusOr<HpkePublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<HpkeParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
+      ToParameters(serialization.GetOutputPrefixTypeTP(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -461,13 +461,13 @@ absl::StatusOr<HpkePrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<HpkeParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) {
     return variant.status();
   }
 
   absl::StatusOr<HpkeParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixTypeEnum(), proto_key.public_key().params());
+      serialization.GetOutputPrefixTypeTP(), proto_key.public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }

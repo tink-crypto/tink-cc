@@ -60,8 +60,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using ::google::crypto::tink::AesCtrKeyFormat;
@@ -212,7 +212,7 @@ AesEaxParameters GetAesEaxParameters() {
 
 struct TestCase {
   LegacyKmsEnvelopeAeadParameters::Variant variant;
-  OutputPrefixTypeEnum output_prefix_type;
+  OutputPrefixTypeTP output_prefix_type;
   absl::optional<int> id;
   std::string output_prefix;
   LegacyKmsEnvelopeAeadParameters::DekParsingStrategy dek_parsing_strategy;
@@ -238,7 +238,7 @@ INSTANTIATE_TEST_SUITE_P(
     LegacyKmsEnvelopeAeadProtoSerializationTest,
     Values(
         TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kTink,
-                 OutputPrefixTypeEnum::kTink,
+                 OutputPrefixTypeTP::kTink,
                  /*id=*/0x02030400,
                  /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
                  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -248,7 +248,7 @@ INSTANTIATE_TEST_SUITE_P(
                  GetXChaCha20Poly1305KeyTemplate()},
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
-            OutputPrefixTypeEnum::kRaw,
+            OutputPrefixTypeTP::kRaw,
             /*id=*/absl::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm,
@@ -256,7 +256,7 @@ INSTANTIATE_TEST_SUITE_P(
             GetAesGcmKeyTemplate()},
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kTink,
-            OutputPrefixTypeEnum::kTink,
+            OutputPrefixTypeTP::kTink,
             /*id=*/0x01030005,
             /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5),
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -264,7 +264,7 @@ INSTANTIATE_TEST_SUITE_P(
             absl::make_unique<AesGcmSivParameters>(GetAesGcmSivParameters()),
             GetAesGcmSivKeyTemplate()},
         TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
-                 OutputPrefixTypeEnum::kRaw,
+                 OutputPrefixTypeTP::kRaw,
                  /*id=*/absl::nullopt,
                  /*output_prefix=*/"",
                  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -274,7 +274,7 @@ INSTANTIATE_TEST_SUITE_P(
                  GetAesCtrHmacAeadKeyTemplate()},
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
-            OutputPrefixTypeEnum::kRaw,
+            OutputPrefixTypeTP::kRaw,
             /*id=*/absl::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax,
@@ -358,7 +358,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kRemote,
+                                    KeyMaterialTypeTP::kRemote,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -407,9 +407,9 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest, SerializeKey) {
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kRemote));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kRemote));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

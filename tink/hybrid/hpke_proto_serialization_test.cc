@@ -60,8 +60,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::internal::ProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
@@ -313,7 +313,7 @@ struct TestCase {
   HpkeParameters::KemId kem_id;
   HpkeParameters::KdfId kdf_id;
   HpkeParameters::AeadId aead_id;
-  OutputPrefixTypeEnum output_prefix_type;
+  OutputPrefixTypeTP output_prefix_type;
   HpkeKem kem;
   HpkeKdf kdf;
   HpkeAead aead;
@@ -340,7 +340,7 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemP256HkdfSha256,
                     HpkeParameters::KdfId::kHkdfSha256,
                     HpkeParameters::AeadId::kAesGcm128,
-                    OutputPrefixTypeEnum::kTink,
+                    OutputPrefixTypeTP::kTink,
                     HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                     HpkeAead::AES_128_GCM, /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
@@ -349,7 +349,7 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemP384HkdfSha384,
                     HpkeParameters::KdfId::kHkdfSha384,
                     HpkeParameters::AeadId::kAesGcm256,
-                    OutputPrefixTypeEnum::kCrunchy,
+                    OutputPrefixTypeTP::kCrunchy,
                     HpkeKem::DHKEM_P384_HKDF_SHA384, HpkeKdf::HKDF_SHA384,
                     HpkeAead::AES_256_GCM,
                     /*id=*/0x01030005,
@@ -359,7 +359,7 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemP521HkdfSha512,
                     HpkeParameters::KdfId::kHkdfSha512,
                     HpkeParameters::AeadId::kAesGcm256,
-                    OutputPrefixTypeEnum::kCrunchy,
+                    OutputPrefixTypeTP::kCrunchy,
                     HpkeKem::DHKEM_P521_HKDF_SHA512, HpkeKdf::HKDF_SHA512,
                     HpkeAead::AES_256_GCM,
                     /*id=*/0x07080910,
@@ -369,7 +369,7 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemX25519HkdfSha256,
                     HpkeParameters::KdfId::kHkdfSha256,
                     HpkeParameters::AeadId::kChaCha20Poly1305,
-                    OutputPrefixTypeEnum::kRaw,
+                    OutputPrefixTypeTP::kRaw,
                     HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                     HpkeAead::CHACHA20_POLY1305,
                     /*id=*/absl::nullopt, /*output_prefix=*/"",
@@ -419,7 +419,7 @@ TEST_F(HpkeProtoSerializationTest, ParseLegacyAsCrunchy) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kLegacy,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kLegacy,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -447,7 +447,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithInvalidSerialization) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -468,7 +468,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -491,7 +491,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKem) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -514,7 +514,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKdf) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -537,7 +537,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownAead) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
+          kPrivateTypeUrl, OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -641,7 +641,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPublic, test_case.output_prefix_type,
+          KeyMaterialTypeTP::kAsymmetricPublic, test_case.output_prefix_type,
           test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -679,7 +679,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -711,7 +711,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -752,9 +752,9 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -799,7 +799,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, test_case.output_prefix_type,
+          KeyMaterialTypeTP::kAsymmetricPrivate, test_case.output_prefix_type,
           test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -842,7 +842,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -869,7 +869,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -907,7 +907,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -948,7 +948,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidPublicKeyVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -989,7 +989,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1036,9 +1036,9 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -1166,7 +1166,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyP256",
@@ -1204,7 +1204,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
             FieldWithNumber(3).IsString(P384PointAsString())}),
        FieldWithNumber(3).IsString(
            P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyP384",
@@ -1242,7 +1242,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
             FieldWithNumber(3).IsString(P521PointAsString())}),
        FieldWithNumber(3).IsString(
            P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyP521",
@@ -1280,7 +1280,7 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
             FieldWithNumber(3).IsString(X25519PublicValue())}),
        FieldWithNumber(3).IsString(
            X25519SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyX25519",
@@ -1316,7 +1316,7 @@ KeyAndSerialization PrivateKeyAndSerializationXWing() {
             FieldWithNumber(3).IsString(XWingPublicValue())}),
        FieldWithNumber(3).IsString(
            XWingSecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyXWing",
@@ -1352,7 +1352,7 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem768() {
             FieldWithNumber(3).IsString(MlKem768PublicValue())}),
        FieldWithNumber(3).IsString(
            MlKem768SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyMlKem768",
@@ -1388,7 +1388,7 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem1024() {
             FieldWithNumber(3).IsString(MlKem1024PublicValue())}),
        FieldWithNumber(3).IsString(
            MlKem1024SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/absl::nullopt);
 
   return KeyAndSerialization("PrivateKeyMlKem1024",
@@ -1426,7 +1426,7 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
       0x12341234);
 
   return KeyAndSerialization("PrivateKeyTink",
@@ -1464,7 +1464,7 @@ KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kCrunchy,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kCrunchy,
       0x12341234);
 
   return KeyAndSerialization("PrivateKeyCrunchy",
@@ -1494,7 +1494,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PublicKeyP256",
@@ -1524,7 +1524,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(P384PointAsString())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PublicKeyP384",
@@ -1554,7 +1554,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA512),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P521PointAsString())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PublicKeyP521",
@@ -1584,7 +1584,7 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(X25519PublicValue())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("PublicKeyX25519",
@@ -1613,7 +1613,7 @@ KeyAndSerialization PublicKeyAndSerializationXWing() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(XWingPublicValue())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/absl::nullopt);
 
   return KeyAndSerialization("PublicKeyXWing",
@@ -1642,7 +1642,7 @@ KeyAndSerialization PublicKeyAndSerializationMlKem768() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(MlKem768PublicValue())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/absl::nullopt);
 
   return KeyAndSerialization("PublicKeyMlKem768",
@@ -1671,7 +1671,7 @@ KeyAndSerialization PublicKeyAndSerializationMlKem1024() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(MlKem1024PublicValue())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/absl::nullopt);
 
   return KeyAndSerialization("PublicKeyMlKem1024",
@@ -1701,7 +1701,7 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
       0x12341234);
 
   return KeyAndSerialization("PublicKeyTink",
@@ -1731,7 +1731,7 @@ KeyAndSerialization PublicKeyAndSerializationCrunchy() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kCrunchy,
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kCrunchy,
       0x12341234);
 
   return KeyAndSerialization("PublicKeyCrunchy",
@@ -1777,7 +1777,7 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
       absl::nullopt);
 
   return KeyAndSerialization("NonCanonicalSerialization",

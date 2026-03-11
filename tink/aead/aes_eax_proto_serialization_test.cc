@@ -45,8 +45,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -64,7 +64,7 @@ struct TestCase {
   int key_size;
   int iv_size;
   AesEaxParameters::Variant variant;
-  OutputPrefixTypeEnum output_prefix_type;
+  OutputPrefixTypeTP output_prefix_type;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -85,16 +85,16 @@ INSTANTIATE_TEST_SUITE_P(
     AesEaxProtoSerializationTestSuite, AesEaxProtoSerializationTest,
     Values(TestCase{/*key_size=*/16, /*iv_size=*/12,
                     AesEaxParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink,
+                    OutputPrefixTypeTP::kTink,
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{/*key_size=*/24, /*iv_size=*/12,
                     AesEaxParameters::Variant::kCrunchy,
-                    OutputPrefixTypeEnum::kCrunchy, /*id=*/0x01030005,
+                    OutputPrefixTypeTP::kCrunchy, /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{/*key_size=*/32, /*iv_size=*/16,
                     AesEaxParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw,
+                    OutputPrefixTypeTP::kRaw,
                     /*id=*/absl::nullopt, /*output_prefix=*/""}));
 
 TEST_P(AesEaxProtoSerializationTest, ParseParameters) {
@@ -139,7 +139,7 @@ TEST_F(AesEaxProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kAesEaxTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kAesEaxTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
@@ -158,7 +158,7 @@ TEST_F(AesEaxProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kAesEaxTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
+          kAesEaxTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -242,7 +242,7 @@ TEST_P(AesEaxProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kAesEaxTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
+          kAesEaxTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -286,8 +286,8 @@ TEST_F(AesEaxProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kAesEaxTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          OutputPrefixTypeEnum::kLegacy, /*id_requirement=*/123);
+          kAesEaxTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kLegacy, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -309,8 +309,8 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kAesEaxTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kTink,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kTink,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -334,8 +334,8 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kAesEaxTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kTink,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kTink,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -358,8 +358,8 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kAesEaxTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kTink,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kTink,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -402,9 +402,9 @@ TEST_P(AesEaxProtoSerializationTest, SerializeKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kAesEaxTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

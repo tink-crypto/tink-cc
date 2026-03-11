@@ -742,7 +742,7 @@ absl::StatusOr<EciesPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<EciesParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
+      ToParameters(serialization.GetOutputPrefixTypeTP(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -778,7 +778,7 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
   }
 
   const OutputPrefixTypeTP output_prefix_type =
-      serialization.GetOutputPrefixTypeEnum();
+      serialization.GetOutputPrefixTypeTP();
 
   absl::StatusOr<EciesParameters::Variant> variant =
       ToVariant(output_prefix_type);

@@ -66,8 +66,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyHybridDecrypt;
 using ::crypto::tink::test::DummyHybridEncrypt;
 using ::crypto::tink::test::IsOk;
@@ -269,7 +269,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -343,7 +343,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

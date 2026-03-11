@@ -312,7 +312,7 @@ absl::StatusOr<JwtHmacKey> ParseKey(
   }
 
   absl::StatusOr<JwtHmacParameters> parameters = ToParameters(
-      proto_key.key_value().size(), serialization.GetOutputPrefixTypeEnum(),
+      proto_key.key_value().size(), serialization.GetOutputPrefixTypeTP(),
       proto_key.algorithm(), proto_key.has_custom_kid());
   if (!parameters.ok()) {
     return parameters.status();

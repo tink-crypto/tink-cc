@@ -49,8 +49,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtHmacAlgorithm;
@@ -145,7 +145,7 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.JwtHmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

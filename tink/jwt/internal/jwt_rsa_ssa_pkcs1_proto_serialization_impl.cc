@@ -397,7 +397,7 @@ absl::StatusOr<JwtRsaSsaPkcs1PublicKey> ParsePublicKey(
     return absl::InvalidArgumentError(
         "Parsing JwtRsaSsaPkcs1PublicKey failed: only version 0 is accepted.");
   }
-  return ToPublicKey(public_key, serialization.GetOutputPrefixTypeEnum(),
+  return ToPublicKey(public_key, serialization.GetOutputPrefixTypeTP(),
                      serialization.IdRequirement());
 }
 
@@ -427,7 +427,7 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key = ToPublicKey(
-      private_key.public_key(), serialization.GetOutputPrefixTypeEnum(),
+      private_key.public_key(), serialization.GetOutputPrefixTypeTP(),
       serialization.IdRequirement());
   if (!public_key.ok()) {
     return public_key.status();

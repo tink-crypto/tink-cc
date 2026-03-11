@@ -426,7 +426,7 @@ absl::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<JwtEcdsaParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixTypeEnum(), proto_public_key.algorithm(),
+      serialization.GetOutputPrefixTypeTP(), proto_public_key.algorithm(),
       proto_public_key.has_custom_kid());
   if (!parameters.ok()) {
     return parameters.status();
@@ -479,7 +479,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<JwtEcdsaParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(),
+      ToParameters(serialization.GetOutputPrefixTypeTP(),
                    proto_private_key.public_key().algorithm(),
                    proto_private_key.public_key().has_custom_kid());
   if (!parameters.ok()) {

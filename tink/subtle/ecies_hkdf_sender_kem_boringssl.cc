@@ -24,17 +24,16 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/evp.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -181,6 +180,9 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
   // Generate an ephemeral key pair; the public key is the KEM key to use.
   absl::StatusOr<std::unique_ptr<internal::X25519Key>> ephemeral_key =
       internal::NewX25519Key();
+  if (!ephemeral_key.ok()) {
+    return ephemeral_key.status();
+  }
 
   internal::SslUniquePtr<EVP_PKEY> ssl_priv_key(EVP_PKEY_new_raw_private_key(
       /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
@@ -194,6 +196,9 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
   absl::StatusOr<SecretData> shared_secret =
       internal::ComputeX25519SharedSecret(ssl_priv_key.get(),
                                           peer_public_key_.get());
+  if (!shared_secret.ok()) {
+    return shared_secret.status();
+  }
 
   auto public_key = absl::string_view(
       reinterpret_cast<const char*>((*ephemeral_key)->public_value),

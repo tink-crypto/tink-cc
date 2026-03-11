@@ -83,13 +83,14 @@ tink_cc_library(
     tink::subtle::hkdf
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
+    tink::core::secret_data
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 

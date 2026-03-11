@@ -631,9 +631,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":subtle_util",
+        "//tink:secret_data",
         "//tink/internal:secret_buffer",
         "//tink/util:secret_data",
-        "//tink/util:status",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",

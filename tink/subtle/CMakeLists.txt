@@ -597,13 +597,14 @@ tink_cc_library(
     random.h
   DEPS
     tink::subtle::subtle_util
+    absl::absl_check
     absl::status
     absl::strings
     absl::span
     crypto
+    tink::core::secret_data
     tink::internal::secret_buffer
     tink::util::secret_data
-    tink::util::status
 )
 
 tink_cc_library(

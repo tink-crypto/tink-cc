@@ -21,14 +21,15 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "openssl/rand.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -39,27 +40,15 @@ namespace {
 template <typename UintType>
 UintType GetRandomUint() {
   UintType result;
-  Random::GetRandomBytes(
-      absl::MakeSpan(reinterpret_cast<char *>(&result), sizeof(result)))
-      .IgnoreError();
+  ABSL_CHECK_OK(Random::GetRandomBytes(
+      absl::MakeSpan(reinterpret_cast<char*>(&result), sizeof(result))));
   return result;
 }
 
 }  // namespace
 
-// BoringSSL documentation says that it always returns 1; while
-// OpenSSL documentation says that it returns "1 on success, -1 if not supported
-// by the current RAND method, or 0 on other failure"
-// (https://www.openssl.org/docs/man1.1.1/man3/RAND_bytes.html).
-//
-// In case of insufficient entropy at the time of the call, BoringSSL's
-// RAND_bytes will behave in different ways depending on the operating system,
-// version, and FIPS mode. For Linux with a semi-recent kernel, it will block
-// until the system has collected at least 128 bits since boot. For old
-// kernels without getrandom support (and not in FIPS mode), it will resort to
-// /dev/urandom.
 absl::Status Random::GetRandomBytes(absl::Span<char> buffer) {
-  auto buffer_ptr = reinterpret_cast<uint8_t *>(buffer.data());
+  auto buffer_ptr = reinterpret_cast<uint8_t*>(buffer.data());
   if (RAND_bytes(buffer_ptr, buffer.size()) <= 0) {
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("RAND_bytes failed to generate ",
@@ -71,9 +60,7 @@ absl::Status Random::GetRandomBytes(absl::Span<char> buffer) {
 std::string Random::GetRandomBytes(size_t length) {
   std::string buffer;
   ResizeStringUninitialized(&buffer, length);
-  // TODO(b/207466225): Modify the return to be a StatusOr<std::string> as
-  // OpenSSL can return an error.
-  GetRandomBytes(absl::MakeSpan(buffer)).IgnoreError();
+  ABSL_CHECK_OK(GetRandomBytes(absl::MakeSpan(buffer)));
   return buffer;
 }
 
@@ -83,9 +70,8 @@ uint8_t Random::GetRandomUInt8() { return GetRandomUint<uint8_t>(); }
 
 SecretData Random::GetRandomKeyBytes(size_t length) {
   internal::SecretBuffer buf(length, 0);
-  GetRandomBytes(
-      absl::MakeSpan(reinterpret_cast<char *>(buf.data()), buf.size()))
-      .IgnoreError();
+  ABSL_CHECK_OK(GetRandomBytes(
+      absl::MakeSpan(reinterpret_cast<char*>(buf.data()), buf.size())));
   return util::internal::AsSecretData(std::move(buf));
 }
 

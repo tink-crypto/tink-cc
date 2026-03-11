@@ -19,22 +19,40 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <string>
 
+#include "absl/status/status.h"
 #include "absl/types/span.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 
+// Utility class for generating random numbers.
 class Random {
  public:
   // Fills the given `buffer` with random bytes.
+  //
+  // Random bytes generation uses the `RAND_bytes` function from
+  // BoringSSL/OpenSSL. Returns an error if the underlying random number
+  // generator fails.
+  //
+  // BoringSSL RAND_bytes always returns 1. In case of insufficient entropy at
+  // the time of the call, BoringSSL's RAND_bytes will behave in different ways
+  // depending on the operating system, version, and FIPS mode. For Linux with a
+  // semi-recent kernel, it will block until the system has collected at least
+  // 128 bits since boot. For old kernels without getrandom support (and not in
+  // FIPS mode), it will resort to /dev/urandom.
+  //
+  // OpenSSL RAND_bytes may fail as documented in
+  // https://www.openssl.org/docs/man1.1.1/man3/RAND_bytes.html ("1 on success,
+  // -1 if not supported by the current RAND method, or 0 on other failure").
   static absl::Status GetRandomBytes(absl::Span<char> buffer);
   // Returns a random string of desired length.
+  //
+  // This and the methods below crash if the underlying random number generator
+  // fails.
   static std::string GetRandomBytes(size_t length);
   static uint32_t GetRandomUInt32();
   static uint16_t GetRandomUInt16();

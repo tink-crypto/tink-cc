@@ -184,6 +184,20 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
+  // Verify signature works.
+  ASSERT_THAT((*verifier)->Verify(*signature, message), IsOk());
+
+  // Signature too short.
+  std::string too_short_signature = signature->substr(0, signature->size() - 1);
+  EXPECT_THAT((*verifier)->Verify(too_short_signature, message),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("invalid signature length")));
+
+  // Signature too big.
+  std::string too_big_signature = *signature + "00";
+  EXPECT_THAT((*verifier)->Verify(too_big_signature, message),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("invalid signature length")));
 
   // Invalidate one byte of the output prefix.
   (*signature)[10] ^= 1;

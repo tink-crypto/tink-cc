@@ -23,6 +23,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 // Every header in BoringSSL includes base.h, which in turn defines
 // OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
@@ -50,7 +51,7 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  explicit SlhDsaVerifyBoringSsl(const SlhDsaPublicKey &public_key)
+  explicit SlhDsaVerifyBoringSsl(const SlhDsaPublicKey& public_key)
       : public_key_(public_key) {}
 
   ~SlhDsaVerifyBoringSsl() override = default;
@@ -58,10 +59,15 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override {
-    if (signature.size() < SLHDSA_SHA2_128S_SIGNATURE_BYTES +
-                               public_key_.GetOutputPrefix().size()) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Verification failed: invalid signature length");
+    if (signature.size() != SLHDSA_SHA2_128S_SIGNATURE_BYTES +
+                                public_key_.GetOutputPrefix().size()) {
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrFormat("Verification failed: invalid signature length; got "
+                          "%d, expected %d",
+                          signature.size(),
+                          SLHDSA_SHA2_128S_SIGNATURE_BYTES +
+                              public_key_.GetOutputPrefix().size()));
     }
 
     if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
@@ -71,12 +77,12 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
 
     if (1 !=
         SLHDSA_SHA2_128S_verify(
-            reinterpret_cast<const uint8_t *>(
+            reinterpret_cast<const uint8_t*>(
                 signature.data() + public_key_.GetOutputPrefix().size()),
             SLHDSA_SHA2_128S_SIGNATURE_BYTES,
-            reinterpret_cast<const uint8_t *>(
+            reinterpret_cast<const uint8_t*>(
                 public_key_.GetPublicKeyBytes(GetPartialKeyAccess()).data()),
-            reinterpret_cast<const uint8_t *>(data.data()), data.size(),
+            reinterpret_cast<const uint8_t*>(data.data()), data.size(),
             /* context = */ nullptr, /* context_len = */ 0)) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Signature is not valid");
@@ -93,7 +99,7 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
-    const SlhDsaPublicKey &public_key) {
+    const SlhDsaPublicKey& public_key) {
 #ifndef OPENSSL_IS_BORINGSSL
   return absl::UnimplementedError(
       "SLH-DSA is only supported in BoringSSL builds.");

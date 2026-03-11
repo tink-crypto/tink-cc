@@ -20,6 +20,7 @@ tink_cc_library(
     absl::absl_check
     absl::statusor
     absl::strings
+    absl::optional
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data

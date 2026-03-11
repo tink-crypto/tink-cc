@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -341,6 +342,20 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithModifiedSignatureFails) {
       NewMlDsaVerifyWithContextBoringSsl((*private_key)->GetPublicKey(),
                                          "some context");
   ASSERT_THAT(verifier, IsOk());
+
+  // Verify signature works.
+  ASSERT_THAT((*verifier)->Verify(*signature, message), IsOk());
+
+  std::string signature_too_big =
+      absl::StrCat(*signature, std::string(10, '\0'));
+  EXPECT_THAT((*verifier)->Verify(signature_too_big, message),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("incorrect signature length")));
+
+  std::string signature_too_small = signature->substr(0, signature->size() - 1);
+  EXPECT_THAT((*verifier)->Verify(signature_too_small, message),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("incorrect signature length")));
 
   // Invalidate one byte of the signature.
   (*signature)[10] ^= 1;

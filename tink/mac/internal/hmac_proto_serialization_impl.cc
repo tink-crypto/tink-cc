@@ -198,7 +198,7 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
   }
 
   absl::StatusOr<HmacParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) return variant.status();
   absl::StatusOr<HmacParameters::HashType> hash_type =
       ToHashType(proto_key.params().hash());

@@ -228,7 +228,7 @@ absl::StatusOr<AesCmacKey> ParseKey(
   }
 
   absl::StatusOr<AesCmacParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeEnum());
+      ToVariant(serialization.GetOutputPrefixTypeTP());
   if (!variant.ok()) return variant.status();
 
   absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(

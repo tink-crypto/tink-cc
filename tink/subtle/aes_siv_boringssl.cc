@@ -24,6 +24,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -135,7 +136,7 @@ void AesSivBoringSsl::Cmac(absl::Span<const uint8_t> data,
   const size_t last_block_idx = kBlockSize * (blocks - 1);
   const size_t last_block_size = data.size() - last_block_idx;
   uint8_t block[kBlockSize];
-  std::fill(std::begin(block), std::end(block), 0);
+  absl::c_fill(block, 0);
   for (size_t idx = 0; idx < last_block_idx; idx += kBlockSize) {
     XorBlock(block, &data[idx], block);
     EncryptBlock(block, block);
@@ -157,7 +158,7 @@ void AesSivBoringSsl::CmacLong(absl::Span<const uint8_t> data,
                                const uint8_t last[kBlockSize],
                                uint8_t mac[kBlockSize]) const {
   uint8_t block[kBlockSize];
-  std::copy_n(data.begin(), kBlockSize, block);
+  absl::c_copy_n(data, kBlockSize, block);
   size_t idx = kBlockSize;
   while (kBlockSize <= data.size() - idx) {
     EncryptBlock(block, block);
@@ -187,7 +188,7 @@ void AesSivBoringSsl::S2v(absl::Span<const uint8_t> aad,
                           uint8_t* siv) const {
   // This stuff could be precomputed.
   uint8_t block[kBlockSize];
-  std::fill(std::begin(block), std::end(block), 0);
+  absl::c_fill(block, 0);
   Cmac(block, block);
   MultiplyByX(block);
 

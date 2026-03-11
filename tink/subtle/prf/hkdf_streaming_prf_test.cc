@@ -25,6 +25,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
@@ -96,7 +97,7 @@ TEST(HkdfStreamingPrf, EmptySalt) {
   }
   {
     uint8_t zeroedSalt[hash_length];
-    std::fill(std::begin(zeroedSalt), std::end(zeroedSalt), 0);
+    absl::c_fill(zeroedSalt, 0);
     auto streaming_prf =
         HkdfStreamingPrf::New(hash_type, secret, (char*)zeroedSalt);
     ASSERT_THAT(streaming_prf, IsOk());

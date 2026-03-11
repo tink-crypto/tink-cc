@@ -235,7 +235,7 @@ absl::Status AesEaxBoringSsl::CtrCrypt(const Block& N, absl::string_view in,
                                        absl::Span<char> out) const {
   // Make a copy of N, since BoringSsl changes ctr.
   uint8_t ctr[kBlockSize];
-  std::copy_n(N.begin(), kBlockSize, ctr);
+  absl::c_copy_n(N, kBlockSize, ctr);
   return internal::AesCtr128Crypt(in, ctr, aeskey_.get(), out);
 }
 
@@ -269,8 +269,7 @@ absl::StatusOr<std::string> AesEaxBoringSsl::Encrypt(
         XorBlock(N.data(), &mac);
         XorBlock(H.data(), &mac);
         absl::c_copy(nonce, ciphertext.begin());
-        std::copy_n(mac.begin(), kTagSize,
-                    &ciphertext[ciphertext_size - kTagSize]);
+        absl::c_copy_n(mac, kTagSize, &ciphertext[ciphertext_size - kTagSize]);
         // Declassify the ciphertext: this is now safe to give to the adversary.
         // (Note: we currently do not propagate labels of the associated data).
         crypto::tink::internal::DfsanClearLabel(ciphertext.data(),

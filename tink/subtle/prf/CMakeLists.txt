@@ -80,6 +80,7 @@ tink_cc_test(
   DEPS
     tink::subtle::prf::hkdf_streaming_prf
     gmock
+    absl::algorithm_container
     absl::status
     absl::string_view
     tink::core::input_stream

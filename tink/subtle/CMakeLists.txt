@@ -635,6 +635,7 @@ tink_cc_library(
     aes_siv_boringssl.h
   DEPS
     tink::subtle::subtle_util
+    absl::algorithm_container
     absl::memory
     absl::status
     absl::strings

@@ -58,8 +58,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyData;
@@ -250,8 +250,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromKey) {
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -281,8 +281,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -305,8 +305,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization.status(), IsOk());
 

@@ -31,7 +31,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::TestProto;
 using ::testing::IsFalse;
@@ -53,7 +53,7 @@ TEST_F(LegacyProtoParametersTest, CreateWithIdRequirement) {
   test_proto.set_num(12345);
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kTink,
+                                           OutputPrefixTypeTP::kTink,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -67,8 +67,7 @@ TEST_F(LegacyProtoParametersTest, CreateWithoutIdRequirement) {
   TestProto test_proto;
   test_proto.set_num(12345);
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -83,14 +82,12 @@ TEST_F(LegacyProtoParametersTest, Equals) {
   test_proto.set_num(12345);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -108,14 +105,13 @@ TEST_F(LegacyProtoParametersTest, TypeUrlNotEqual) {
   test_proto.set_num(12345);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
       ProtoParametersSerialization::Create("other_type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+                                           OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -133,14 +129,13 @@ TEST_F(LegacyProtoParametersTest, OutputPrefixTypeNotEqual) {
   test_proto.set_num(12345);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
       ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kTink,
+                                           OutputPrefixTypeTP::kTink,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -160,14 +155,12 @@ TEST_F(LegacyProtoParametersTest, DifferentValueNotEqual) {
   other_proto.set_num(67890);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            other_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -187,8 +180,7 @@ TEST_F(LegacyProtoParametersTest, Clone) {
   other_proto.set_num(67890);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
   LegacyProtoParameters parameters(*serialization);

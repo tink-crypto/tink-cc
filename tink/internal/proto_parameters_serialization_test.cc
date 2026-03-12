@@ -29,7 +29,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyTemplate;
@@ -52,15 +52,14 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   TestProto test_proto;
   test_proto.set_num(12345);
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   EXPECT_THAT(serialization->ObjectIdentifier(), "type_url");
   const KeyTemplateTP& key_template = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), "type_url");
-  EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeEnum::kRaw);
+  EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeTP::kRaw);
   EXPECT_THAT(key_template.value(), test_proto.SerializeAsString());
   TestProto parsed_proto;
   parsed_proto.ParseFromString(key_template.value());
@@ -69,7 +68,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   const KeyTemplateTP& proto_key_template = serialization->GetKeyTemplate();
   EXPECT_THAT(proto_key_template.type_url(), "type_url");
   EXPECT_THAT(proto_key_template.output_prefix_type(),
-              OutputPrefixTypeEnum::kRaw);
+              OutputPrefixTypeTP::kRaw);
   EXPECT_THAT(proto_key_template.value(), test_proto.SerializeAsString());
 }
 
@@ -79,7 +78,7 @@ TEST_F(ProtoParametersSerializationTest,
   test_proto.set_num(12345);
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create("type_url\x01",
-                                           OutputPrefixTypeEnum::kRaw,
+                                           OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
 
   EXPECT_THAT(
@@ -103,7 +102,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplate) {
   const KeyTemplateTP& key_template_struct = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template_struct.type_url(), "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type(),
-              OutputPrefixTypeEnum::kTink);
+              OutputPrefixTypeTP::kTink);
   EXPECT_THAT(key_template_struct.value(), test_proto.SerializeAsString());
   TestProto parsed_proto;
   parsed_proto.ParseFromString(key_template_struct.value());
@@ -132,7 +131,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateTP) {
   test_proto.set_num(12345);
   KeyTemplateTP proto_key_template;
   proto_key_template.set_value(test_proto.SerializeAsString());
-  proto_key_template.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
+  proto_key_template.set_output_prefix_type(OutputPrefixTypeTP::kTink);
   proto_key_template.set_type_url("type_url");
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(proto_key_template);
@@ -140,7 +139,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateTP) {
 
   const KeyTemplateTP& key_template = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), "type_url");
-  EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeEnum::kTink);
+  EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeTP::kTink);
   EXPECT_THAT(key_template.value(), test_proto.SerializeAsString());
   TestProto parsed_proto;
   parsed_proto.ParseFromString(key_template.value());
@@ -153,7 +152,7 @@ TEST_F(ProtoParametersSerializationTest,
   test_proto.set_num(12345);
   KeyTemplateTP proto_key_template;
   proto_key_template.set_value(test_proto.SerializeAsString());
-  proto_key_template.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
+  proto_key_template.set_output_prefix_type(OutputPrefixTypeTP::kTink);
   proto_key_template.set_type_url("type_url\x01");
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(proto_key_template);
@@ -178,7 +177,7 @@ TEST_F(ProtoParametersSerializationTest, GetKeyTemplate) {
   const KeyTemplateTP& key_template_struct = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template_struct.type_url(), "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type(),
-              OutputPrefixTypeEnum::kTink);
+              OutputPrefixTypeTP::kTink);
   EXPECT_THAT(key_template_struct.value(), test_proto.SerializeAsString());
   TestProto parsed_proto;
   parsed_proto.ParseFromString(key_template_struct.value());
@@ -190,14 +189,12 @@ TEST_F(ProtoParametersSerializationTest, Equals) {
   test_proto.set_num(12345);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -209,14 +206,13 @@ TEST_F(ProtoParametersSerializationTest, TypeUrlNotEqual) {
   test_proto.set_num(12345);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
       ProtoParametersSerialization::Create("other_url",
-                                           OutputPrefixTypeEnum::kRaw,
+                                           OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -228,14 +224,13 @@ TEST_F(ProtoParametersSerializationTest, OutputPrefixTypeNotEqual) {
   test_proto.set_num(12345);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
       ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kTink,
+                                           OutputPrefixTypeTP::kTink,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 
@@ -249,14 +244,12 @@ TEST_F(ProtoParametersSerializationTest, DifferentValueNotEqual) {
   other_proto.set_num(67890);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> other_serialization =
-      ProtoParametersSerialization::Create("type_url",
-                                           OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
                                            other_proto.SerializeAsString());
   ASSERT_THAT(other_serialization.status(), IsOk());
 

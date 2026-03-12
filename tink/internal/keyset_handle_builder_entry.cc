@@ -62,7 +62,7 @@ SecretProto<Keyset::Key> ToKeysetKey(
   key->set_key_id(id);
   key->set_output_prefix_type(
       static_cast<google::crypto::tink::OutputPrefixType>(
-          serialization.GetOutputPrefixTypeEnum()));
+          serialization.GetOutputPrefixTypeTP()));
   KeyData* key_data = key->mutable_key_data();
   key_data->set_type_url(serialization.TypeUrl());
   internal::CallWithCoreDumpProtection([&]() {
@@ -70,7 +70,7 @@ SecretProto<Keyset::Key> ToKeysetKey(
         InsecureSecretKeyAccess::Get()));
   });
   key_data->set_key_material_type(static_cast<KeyData::KeyMaterialType>(
-      serialization.GetKeyMaterialTypeEnum()));
+      serialization.GetKeyMaterialTypeTP()));
   return key;
 }
 

@@ -110,7 +110,7 @@ class LegacyProtoKey final : public Key {
         unusable_proto_parameters_(
             serialization.TypeUrl(),
             static_cast<google::crypto::tink::OutputPrefixType>(
-                serialization.GetOutputPrefixTypeEnum())) {}
+                serialization.GetOutputPrefixTypeTP())) {}
 
   ProtoKeySerialization serialization_;
   UnusableLegacyProtoParameters unusable_proto_parameters_;

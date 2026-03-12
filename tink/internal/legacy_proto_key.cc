@@ -59,7 +59,7 @@ absl::StatusOr<LegacyProtoKey> LegacyProtoKey::Create(
     ProtoKeySerialization serialization,
     absl::optional<SecretKeyAccessToken> token) {
   absl::Status access_check_status =
-      CheckKeyAccess(serialization.GetKeyMaterialTypeEnum(), token);
+      CheckKeyAccess(serialization.GetKeyMaterialTypeTP(), token);
   if (!access_check_status.ok()) {
     return access_check_status;
   }
@@ -77,7 +77,7 @@ bool LegacyProtoKey::operator==(const Key& other) const {
 absl::StatusOr<const ProtoKeySerialization&> LegacyProtoKey::Serialization(
     absl::optional<SecretKeyAccessToken> token) const {
   absl::Status access_check_status =
-      CheckKeyAccess(serialization_.GetKeyMaterialTypeEnum(), token);
+      CheckKeyAccess(serialization_.GetKeyMaterialTypeTP(), token);
   if (!access_check_status.ok()) {
     return access_check_status;
   }

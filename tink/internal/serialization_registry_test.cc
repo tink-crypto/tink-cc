@@ -46,8 +46,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
@@ -99,7 +99,7 @@ TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
   // Parse parameters without registered parameters parser.
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          "type_url", OutputPrefixTypeEnum::kTink, "serialized_proto");
+          "type_url", OutputPrefixTypeTP::kTink, "serialized_proto");
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT(registry.ParseParameters(*serialization).status(),
               StatusIs(absl::StatusCode::kNotFound));
@@ -236,8 +236,8 @@ TEST(SerializationRegistryTest, ParseKeyWithLegacyFallback) {
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/456);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT(registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get())

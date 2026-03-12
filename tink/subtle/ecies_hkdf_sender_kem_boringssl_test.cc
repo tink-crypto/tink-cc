@@ -18,7 +18,7 @@
 
 #include <cstdint>
 #include <iostream>
-#include <ostream>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -26,13 +26,12 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/ec_util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecies_hkdf_recipient_kem_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -277,6 +276,24 @@ TEST_F(EciesHkdfX25519SendKemBoringSslTest, TestGenerateKeyUncompressed) {
                               EcPointFormat::UNCOMPRESSED);
   EXPECT_EQ(status_or_kem_key.status().code(),
             absl::StatusCode::kInvalidArgument);
+}
+
+TEST_F(EciesHkdfX25519SendKemBoringSslTest, BadPublicKeyFails) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const std::string pub_x(32, '\0');
+  const std::string pub_y;  // Must be empty for X25519.
+  absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+      sender_kem = EciesHkdfX25519SendKemBoringSsl::New(
+          EllipticCurveType::CURVE25519, pub_x, pub_y);
+  ASSERT_THAT(sender_kem, IsOk());
+
+  EXPECT_THAT((*sender_kem)
+                  ->GenerateKey(HashType::SHA256, "hkdf_salt", "hkdf_info", 32,
+                                EcPointFormat::COMPRESSED),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 // Tests for FIPS only mode

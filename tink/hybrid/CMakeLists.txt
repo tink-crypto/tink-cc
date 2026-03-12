@@ -729,13 +729,11 @@ tink_cc_test(
   DEPS
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
     gmock
-    absl::memory
     absl::status
+    absl::statusor
     tink::core::hybrid_encrypt
-    tink::aead::aes_gcm_key_manager
     tink::internal::ec_util
     tink::util::enums
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto

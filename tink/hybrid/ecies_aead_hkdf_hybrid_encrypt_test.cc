@@ -21,14 +21,13 @@
 #include <string>
 #include <utility>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
-#include "tink/aead/aes_gcm_key_manager.h"
+#include "absl/status/statusor.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/internal/ec_util.h"
 #include "tink/util/enums.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/common.pb.h"
@@ -39,6 +38,8 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;
 using ::google::crypto::tink::EcPointFormat;
 using ::google::crypto::tink::EllipticCurveType;
@@ -137,6 +138,22 @@ TEST_F(EciesAeadHkdfHybridEncryptTest, testBasic) {
       }
     }
   }
+}
+
+TEST_F(EciesAeadHkdfHybridEncryptTest, EncryptWithBadX25519PublicKey) {
+  EciesAeadHkdfPrivateKey ecies_key = test::GetEciesAesGcmHkdfTestKey(
+      EllipticCurveType::CURVE25519, EcPointFormat::COMPRESSED,
+      HashType::SHA256, 32);
+  // Set a bad X25519 public key value.
+  ecies_key.mutable_public_key()->set_x(std::string(32, '\0'));
+  ecies_key.mutable_public_key()->set_y("");
+
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
+      EciesAeadHkdfHybridEncrypt::New(ecies_key.public_key());
+  ASSERT_THAT(hybrid_encrypt, IsOk());
+
+  EXPECT_THAT((*hybrid_encrypt)->Encrypt("plaintext", "context"),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

@@ -53,8 +53,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCmacPrfKeyFormat;
@@ -179,7 +179,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl,
-          static_cast<OutputPrefixTypeEnum>(
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
@@ -220,7 +220,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl,
-          static_cast<OutputPrefixTypeEnum>(
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
@@ -250,7 +250,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -278,7 +278,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -310,7 +310,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
+          kTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -342,7 +342,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kTink,
+          kTypeUrl, OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -383,8 +383,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(OutputPrefixTypeEnum::kTink));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
 
   PrfBasedDeriverKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -422,8 +421,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(OutputPrefixTypeEnum::kTink));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
 
   PrfBasedDeriverKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -451,8 +449,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithMutableRegistry) {
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          static_cast<OutputPrefixTypeEnum>(
+          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -501,8 +499,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithRegistryBuilder) {
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          static_cast<OutputPrefixTypeEnum>(
+          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -544,8 +542,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kTink,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kTink,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
@@ -576,8 +574,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -607,8 +605,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          static_cast<OutputPrefixTypeEnum>(
+          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -646,8 +644,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          static_cast<OutputPrefixTypeEnum>(
+          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -678,8 +676,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          static_cast<OutputPrefixTypeEnum>(
+          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          static_cast<OutputPrefixTypeTP>(
               derived_key_template.output_prefix_type()),
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -722,10 +720,10 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(static_cast<OutputPrefixTypeEnum>(
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(static_cast<OutputPrefixTypeTP>(
                   GetXChaCha20Poly1305KeyTemplate().output_prefix_type())));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(123));
 
@@ -780,10 +778,10 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(static_cast<OutputPrefixTypeEnum>(
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(static_cast<OutputPrefixTypeTP>(
                   GetXChaCha20Poly1305KeyTemplate().output_prefix_type())));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(123));
 

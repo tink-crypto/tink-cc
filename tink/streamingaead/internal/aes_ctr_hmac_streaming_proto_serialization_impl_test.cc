@@ -49,8 +49,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -160,7 +160,7 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest,
   *format.mutable_params() = proto_params;
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -203,7 +203,7 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest,
   *format.mutable_params() = proto_params;
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -232,7 +232,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
               IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
@@ -241,17 +241,15 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-using AesCtrHmacStreamingParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
+using AesCtrHmacStreamingParsePrefixTest = TestWithParam<OutputPrefixTypeTP>;
 
-INSTANTIATE_TEST_SUITE_P(AesCtrHmacStreamingParsePrefixTestSuite,
-                         AesCtrHmacStreamingParsePrefixTest,
-                         Values(OutputPrefixTypeEnum::kTink,
-                                OutputPrefixTypeEnum::kCrunchy,
-                                OutputPrefixTypeEnum::kLegacy,
-                                OutputPrefixTypeEnum::kUnknownPrefix));
+INSTANTIATE_TEST_SUITE_P(
+    AesCtrHmacStreamingParsePrefixTestSuite, AesCtrHmacStreamingParsePrefixTest,
+    Values(OutputPrefixTypeTP::kTink, OutputPrefixTypeTP::kCrunchy,
+           OutputPrefixTypeTP::kLegacy, OutputPrefixTypeTP::kUnknownPrefix));
 
 TEST_P(AesCtrHmacStreamingParsePrefixTest, ParseParametersWithIgnoredPrefix) {
-  OutputPrefixTypeEnum ignored_output_prefix_type = GetParam();
+  OutputPrefixTypeTP ignored_output_prefix_type = GetParam();
   MutableSerializationRegistry registry;
   ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerializationWithMutableRegistry(
                   registry),
@@ -292,7 +290,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   format.set_key_size(19);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -316,7 +314,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   format.set_key_size(19);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -346,7 +344,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   *format.mutable_params() = proto_params;
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -376,7 +374,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   *format.mutable_params() = proto_params;
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -413,8 +411,7 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeParameters) {
   ASSERT_THAT(proto_serialization, NotNull());
   const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
 
   AesCtrHmacStreamingKeyFormat format;
   ASSERT_THAT(format.ParseFromString(key_template.value()), IsTrue());
@@ -461,8 +458,8 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKeyWithMutableRegistry) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -517,8 +514,8 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKeyWithRegistryBuilder) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -558,8 +555,8 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -584,8 +581,8 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -613,8 +610,8 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -625,7 +622,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
 
 TEST_P(AesCtrHmacStreamingParsePrefixTest,
        ParseKeyWithNonRawPrefixIgnoresPrefix) {
-  OutputPrefixTypeEnum ignored_output_prefix_type = GetParam();
+  OutputPrefixTypeTP ignored_output_prefix_type = GetParam();
   MutableSerializationRegistry registry;
   ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerializationWithMutableRegistry(
                   registry),
@@ -650,7 +647,7 @@ TEST_P(AesCtrHmacStreamingParsePrefixTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
+                                    KeyMaterialTypeTP::kSymmetric,
                                     ignored_output_prefix_type,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -676,8 +673,8 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kRaw,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kRaw,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -723,10 +720,10 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest,
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(OutputPrefixTypeTP::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::AesCtrHmacStreamingKey proto_key;
@@ -789,10 +786,10 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest,
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(OutputPrefixTypeTP::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::AesCtrHmacStreamingKey proto_key;

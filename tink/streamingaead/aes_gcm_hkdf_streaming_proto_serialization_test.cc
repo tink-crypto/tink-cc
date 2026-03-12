@@ -46,8 +46,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -120,7 +120,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseParameters) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
+          kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> parsed =
@@ -145,7 +145,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -154,17 +154,15 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-using AesGcmHkdfStreamingParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
+using AesGcmHkdfStreamingParsePrefixTest = TestWithParam<OutputPrefixTypeTP>;
 
-INSTANTIATE_TEST_SUITE_P(AesGcmHkdfStreamingParsePrefixTestSuite,
-                         AesGcmHkdfStreamingParsePrefixTest,
-                         Values(OutputPrefixTypeEnum::kTink,
-                                OutputPrefixTypeEnum::kCrunchy,
-                                OutputPrefixTypeEnum::kLegacy,
-                                OutputPrefixTypeEnum::kUnknownPrefix));
+INSTANTIATE_TEST_SUITE_P(
+    AesGcmHkdfStreamingParsePrefixTestSuite, AesGcmHkdfStreamingParsePrefixTest,
+    Values(OutputPrefixTypeTP::kTink, OutputPrefixTypeTP::kCrunchy,
+           OutputPrefixTypeTP::kLegacy, OutputPrefixTypeTP::kUnknownPrefix));
 
 TEST_P(AesGcmHkdfStreamingParsePrefixTest, ParseParametersWithIgnoredPrefix) {
-  OutputPrefixTypeEnum ignored_output_prefix_type = GetParam();
+  OutputPrefixTypeTP ignored_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
@@ -198,7 +196,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
+          kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -220,7 +218,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
+          kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -244,7 +242,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
+          kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -280,8 +278,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeParameters) {
   const internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
 
   AesGcmHkdfStreamingKeyFormat format;
   ASSERT_THAT(format.ParseFromString(key_template.value()), IsTrue());
@@ -315,8 +312,8 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -352,8 +349,8 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -376,8 +373,8 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -403,8 +400,8 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -416,7 +413,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
 TEST_P(AesGcmHkdfStreamingParsePrefixTest,
        ParseKeyWithNonRawPrefixIgnoresPrefix) {
-  OutputPrefixTypeEnum ignored_output_prefix_type = GetParam();
+  OutputPrefixTypeTP ignored_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
@@ -435,7 +432,7 @@ TEST_P(AesGcmHkdfStreamingParsePrefixTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
+                                              KeyMaterialTypeTP::kSymmetric,
                                               ignored_output_prefix_type,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -459,8 +456,8 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -503,10 +500,10 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(OutputPrefixTypeTP::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::AesGcmHkdfStreamingKey proto_key;

@@ -33,8 +33,8 @@ namespace proto_testing {
 
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::IsOk;
 using ::testing::Not;
 
@@ -45,8 +45,8 @@ TEST(EqualsProtoKeySerialization, Equals) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization1.status(), IsOk());
 
@@ -54,8 +54,8 @@ TEST(EqualsProtoKeySerialization, Equals) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization2.status(), IsOk());
   EXPECT_THAT(*serialization1, EqualsProtoKeySerialization(*serialization2));
@@ -66,8 +66,8 @@ TEST(EqualsProtoKeySerialization, TypeUrlDiffers) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization1.status(), IsOk());
 
@@ -75,8 +75,8 @@ TEST(EqualsProtoKeySerialization, TypeUrlDiffers) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create("somedifferenttypeurl", serialized_key2,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization2.status(), IsOk());
   EXPECT_THAT(*serialization1,
@@ -88,8 +88,8 @@ TEST(EqualsProtoKeySerialization, DifferentKey) {
       RestrictedData("some key data1", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization1.status(), IsOk());
 
@@ -97,8 +97,8 @@ TEST(EqualsProtoKeySerialization, DifferentKey) {
       RestrictedData("some key data2", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization2.status(), IsOk());
   EXPECT_THAT(*serialization1,
@@ -110,8 +110,8 @@ TEST(EqualsProtoKeySerialization, KeyMaterialTypeDiffer) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization1.status(), IsOk());
 
@@ -119,8 +119,8 @@ TEST(EqualsProtoKeySerialization, KeyMaterialTypeDiffer) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kLegacy,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kLegacy,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization2.status(), IsOk());
   EXPECT_THAT(*serialization1,
@@ -132,8 +132,8 @@ TEST(EqualsProtoKeySerialization, DifferentOutputPrefix) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization1.status(), IsOk());
 
@@ -141,8 +141,8 @@ TEST(EqualsProtoKeySerialization, DifferentOutputPrefix) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kLegacy,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kLegacy,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization2.status(), IsOk());
   EXPECT_THAT(*serialization1,
@@ -154,8 +154,8 @@ TEST(EqualsProtoKeySerialization, DifferentIdRequirement) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization1.status(), IsOk());
 
@@ -163,8 +163,8 @@ TEST(EqualsProtoKeySerialization, DifferentIdRequirement) {
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kLegacy,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kLegacy,
                                     /*id_requirement=*/445566);
   ASSERT_THAT(serialization2.status(), IsOk());
   EXPECT_THAT(*serialization1,
@@ -176,8 +176,8 @@ TEST(EqualsProtoKeySerialization, EverythingDiffersToTestTheMessage) {
       RestrictedData("a", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("typeUrl1", serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -185,8 +185,8 @@ TEST(EqualsProtoKeySerialization, EverythingDiffersToTestTheMessage) {
       RestrictedData("b", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> expected =
       ProtoKeySerialization::Create("typeUrl2", expected_key,
-                                    KeyMaterialTypeEnum::kAsymmetricPrivate,
-                                    OutputPrefixTypeEnum::kLegacy,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kLegacy,
                                     /*id_requirement=*/445566);
   ASSERT_THAT(expected.status(), IsOk());
   // If I remove the Not, this creates currently a string with the following

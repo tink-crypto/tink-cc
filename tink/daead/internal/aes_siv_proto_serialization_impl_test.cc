@@ -48,8 +48,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -65,7 +65,7 @@ const absl::string_view kTypeUrl =
 
 struct TestCase {
   AesSivParameters::Variant variant;
-  OutputPrefixTypeEnum output_prefix_type;
+  OutputPrefixTypeTP output_prefix_type;
   int key_size;
   absl::optional<int> id;
   std::string output_prefix;
@@ -92,16 +92,15 @@ TEST_F(AesSivProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
 
 INSTANTIATE_TEST_SUITE_P(
     AesSivProtoSerializationTestSuite, AesSivProtoSerializationTest,
-    Values(TestCase{AesSivParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink,
+    Values(TestCase{AesSivParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     /*key_size=*/32, /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{AesSivParameters::Variant::kCrunchy,
-                    OutputPrefixTypeEnum::kCrunchy, /*key_size=*/48,
+                    OutputPrefixTypeTP::kCrunchy, /*key_size=*/48,
                     /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{AesSivParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw,
+                    OutputPrefixTypeTP::kRaw,
                     /*key_size=*/64, /*id=*/absl::nullopt,
                     /*output_prefix=*/""}));
 
@@ -172,7 +171,7 @@ TEST_F(AesSivProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   key_format_proto.set_key_size(64);
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
                                            "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
@@ -192,7 +191,7 @@ TEST_F(AesSivProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
+          kTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -212,7 +211,7 @@ TEST_F(AesSivProtoSerializationTest, ParseParametersWithInvalidVersion) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -295,7 +294,7 @@ TEST_P(AesSivProtoSerializationTest, ParseKeyWithMutableRegistry) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
+                                    KeyMaterialTypeTP::kSymmetric,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -335,7 +334,7 @@ TEST_P(AesSivProtoSerializationTest, ParseKeyWithRegistryBuilder) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
+                                    KeyMaterialTypeTP::kSymmetric,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -373,8 +372,8 @@ TEST_F(AesSivProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
-          OutputPrefixTypeEnum::kLegacy, /*id_requirement=*/123);
+          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kLegacy, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -397,8 +396,8 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyWithInvalidSerialization) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -421,8 +420,8 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -445,8 +444,8 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyWithInvalidVersion) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -482,9 +481,9 @@ TEST_P(AesSivProtoSerializationTest, SerializeKeyWithMutableRegistry) {
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -524,9 +523,9 @@ TEST_P(AesSivProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

@@ -58,19 +58,19 @@ MATCHER_P(EqualsProtoKeySerialization, expected, "") {
         crypto::tink::test::HexEncode(expected_key), "), got '", arg_key,
         "' (hex ", crypto::tink::test::HexEncode(arg_key), ")"));
   }
-  if (expected.GetKeyMaterialTypeEnum() != arg.GetKeyMaterialTypeEnum()) {
+  if (expected.GetKeyMaterialTypeTP() != arg.GetKeyMaterialTypeTP()) {
     equals = false;
     debug_str.push_back(absl::StrCat(
         "KeyMaterialTypes differ, expected ",
-        KeyMaterialTypeEnumName(expected.GetKeyMaterialTypeEnum()), ", got ",
-        KeyMaterialTypeEnumName(arg.GetKeyMaterialTypeEnum())));
+        KeyMaterialTypeEnumName(expected.GetKeyMaterialTypeTP()), ", got ",
+        KeyMaterialTypeEnumName(arg.GetKeyMaterialTypeTP())));
   }
-  if (expected.GetOutputPrefixTypeEnum() != arg.GetOutputPrefixTypeEnum()) {
+  if (expected.GetOutputPrefixTypeTP() != arg.GetOutputPrefixTypeTP()) {
     equals = false;
     debug_str.push_back(absl::StrCat(
         "OutputPrefixType differ, expected ",
-        OutputPrefixTypeEnumName(expected.GetOutputPrefixTypeEnum()), ", got ",
-        OutputPrefixTypeEnumName(arg.GetOutputPrefixTypeEnum())));
+        OutputPrefixTypeEnumName(expected.GetOutputPrefixTypeTP()), ", got ",
+        OutputPrefixTypeEnumName(arg.GetOutputPrefixTypeTP())));
   }
   if (expected.IdRequirement() != arg.IdRequirement()) {
     equals = false;

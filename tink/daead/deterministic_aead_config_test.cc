@@ -54,8 +54,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyDeterministicAead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -198,7 +198,7 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesSivKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

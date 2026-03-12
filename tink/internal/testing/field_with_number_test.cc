@@ -34,8 +34,8 @@ namespace tink {
 namespace internal {
 namespace proto_testing {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 
@@ -50,7 +50,7 @@ TEST(FieldWithNumberTest, Example) {
            {FieldWithNumber(1).IsVarint(7),
             FieldWithNumber(2).IsString(HexDecodeOrDie("889988998899"))}),
        FieldWithNumber(5).IsVarint(5)},
-      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
       /*id_requirement=*/12345);
 
   RestrictedData expected_key = RestrictedData(
@@ -63,8 +63,8 @@ TEST(FieldWithNumberTest, Example) {
       InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> expected =
       ProtoKeySerialization::Create(kTypeUrl, expected_key,
-                                    KeyMaterialTypeEnum::kSymmetric,
-                                    OutputPrefixTypeEnum::kTink,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(expected.status(), IsOk());
   EXPECT_THAT(serialization, EqualsProtoKeySerialization(*expected));

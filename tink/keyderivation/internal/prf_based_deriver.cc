@@ -85,7 +85,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
 
 absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
     const KeyTemplate& key_template, InputStream& randomness) {
-  // Fill placeholders OutputPrefixTypeEnum::kRaw and KeyStatus::kEnabled.
+  // Fill placeholders OutputPrefixTypeTP::kRaw and KeyStatus::kEnabled.
   // Tink users interact with this keyset only after it has been processed by
   // KeysetDeriverSetWrapper::DeriveKeyset, which uses
   // google::crypto::tink::KeyData's value field (the serialized *Key proto) and

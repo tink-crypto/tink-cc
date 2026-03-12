@@ -46,8 +46,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -107,7 +107,7 @@ TEST_P(HmacPrfProtoSerializationTest, ParseParameters) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           proto_key_format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -129,7 +129,7 @@ TEST_F(HmacPrfProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -140,16 +140,16 @@ TEST_F(HmacPrfProtoSerializationTest,
                        HasSubstr("Failed to parse HmacPrfKeyFormat proto")));
 }
 
-using HmacPrfParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
+using HmacPrfParsePrefixTest = TestWithParam<OutputPrefixTypeTP>;
 
 INSTANTIATE_TEST_SUITE_P(HmacPrfParsePrefixTestSuite, HmacPrfParsePrefixTest,
-                         Values(OutputPrefixTypeEnum::kTink,
-                                OutputPrefixTypeEnum::kCrunchy,
-                                OutputPrefixTypeEnum::kLegacy,
-                                OutputPrefixTypeEnum::kUnknownPrefix));
+                         Values(OutputPrefixTypeTP::kTink,
+                                OutputPrefixTypeTP::kCrunchy,
+                                OutputPrefixTypeTP::kLegacy,
+                                OutputPrefixTypeTP::kUnknownPrefix));
 
 TEST_P(HmacPrfParsePrefixTest, ParseParametersWithInvalidPrefixFails) {
-  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
 
   HmacPrfKeyFormat proto_key_format;
@@ -183,7 +183,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           proto_key_format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -205,7 +205,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseParametersWithUnknownHashTypeFails) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -264,8 +264,8 @@ TEST_P(HmacPrfProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -297,8 +297,8 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -313,7 +313,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
 TEST_P(HmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
 
-  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
 
   std::string raw_key_bytes = Random::GetRandomBytes(16);
   google::crypto::tink::HmacPrfKey key_proto;
@@ -325,7 +325,7 @@ TEST_P(HmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
+                                              KeyMaterialTypeTP::kSymmetric,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -351,8 +351,8 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -376,8 +376,8 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -416,10 +416,10 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(OutputPrefixTypeTP::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::HmacPrfKey proto_key;

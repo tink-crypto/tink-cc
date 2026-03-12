@@ -73,8 +73,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
@@ -818,8 +818,8 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromLegacyKey) {
           key.key_data().type_url(),
           RestrictedData(key.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          static_cast<KeyMaterialTypeEnum>(key.key_data().key_material_type()),
-          static_cast<OutputPrefixTypeEnum>(key.output_prefix_type()),
+          static_cast<KeyMaterialTypeTP>(key.key_data().key_material_type()),
+          static_cast<OutputPrefixTypeTP>(key.output_prefix_type()),
           key.key_id());
 
   absl::StatusOr<internal::LegacyProtoKey> proto_key =
@@ -906,8 +906,8 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableKey) {
           key.key_data().type_url(),
           RestrictedData(key.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          static_cast<KeyMaterialTypeEnum>(key.key_data().key_material_type()),
-          static_cast<OutputPrefixTypeEnum>(key.output_prefix_type()),
+          static_cast<KeyMaterialTypeTP>(key.key_data().key_material_type()),
+          static_cast<OutputPrefixTypeTP>(key.output_prefix_type()),
           key.key_id());
 
   absl::StatusOr<internal::LegacyProtoKey> proto_key =
@@ -1012,7 +1012,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoKey) {
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
           RestrictedData(key.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 

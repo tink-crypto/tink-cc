@@ -152,7 +152,7 @@ absl::StatusOr<AesCmacPrfKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  if (serialization.GetOutputPrefixTypeEnum() != OutputPrefixTypeTP::kRaw) {
+  if (serialization.GetOutputPrefixTypeTP() != OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for AesCmacPrfKey.");
   }

@@ -287,7 +287,7 @@ absl::StatusOr<MlKemPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<MlKemParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
+      ToParameters(serialization.GetOutputPrefixTypeTP(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -318,7 +318,7 @@ absl::StatusOr<MlKemPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<MlKemParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixTypeEnum(), proto_key.public_key().params());
+      serialization.GetOutputPrefixTypeTP(), proto_key.public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }

@@ -45,8 +45,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::KeyMaterialTypeEnum;
-using ::crypto::tink::internal::OutputPrefixTypeEnum;
+using ::crypto::tink::internal::KeyMaterialTypeTP;
+using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -87,7 +87,7 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseParameters) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -109,7 +109,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -120,17 +120,17 @@ TEST_F(AesCmacPrfProtoSerializationTest,
                        HasSubstr("Failed to parse AesCmacPrfKeyFormat proto")));
 }
 
-using AesCmacPrfParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
+using AesCmacPrfParsePrefixTest = TestWithParam<OutputPrefixTypeTP>;
 
 INSTANTIATE_TEST_SUITE_P(AesCmacPrfParsePrefixTestSuite,
                          AesCmacPrfParsePrefixTest,
-                         Values(OutputPrefixTypeEnum::kTink,
-                                OutputPrefixTypeEnum::kCrunchy,
-                                OutputPrefixTypeEnum::kLegacy,
-                                OutputPrefixTypeEnum::kUnknownPrefix));
+                         Values(OutputPrefixTypeTP::kTink,
+                                OutputPrefixTypeTP::kCrunchy,
+                                OutputPrefixTypeTP::kLegacy,
+                                OutputPrefixTypeTP::kUnknownPrefix));
 
 TEST_P(AesCmacPrfParsePrefixTest, ParseParametersWithInvalidPrefixFails) {
-  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
 
   AesCmacPrfKeyFormat key_format_proto;
@@ -163,7 +163,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeEnum::kRaw,
+          kTypeUrl, OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -219,8 +219,8 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -248,8 +248,8 @@ TEST_F(AesCmacPrfProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -262,7 +262,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
 }
 
 TEST_P(AesCmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {
-  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(16);
@@ -274,7 +274,7 @@ TEST_P(AesCmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
+                                              KeyMaterialTypeTP::kSymmetric,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
@@ -299,8 +299,8 @@ TEST_F(AesCmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -323,8 +323,8 @@ TEST_F(AesCmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
+                                              KeyMaterialTypeTP::kSymmetric,
+                                              OutputPrefixTypeTP::kRaw,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
@@ -358,10 +358,10 @@ TEST_P(AesCmacPrfProtoSerializationTest, SerializeKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(OutputPrefixTypeTP::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::AesCmacPrfKey proto_key;

@@ -97,4 +97,4 @@ class CompositeMlDsaPublicKey final : public SignaturePublicKey {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SIGNATURE_COMPOSITE_MLDSA_PUBLIC_KEY_H_
+#endif  // TINK_SIGNATURE_COMPOSITE_ML_DSA_PUBLIC_KEY_H_

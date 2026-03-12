@@ -67,8 +67,6 @@ enum class OutputPrefixTypeTP : uint32_t {
   kWithIdRequirement,
 };
 
-using  OutputPrefixTypeEnum ABSL_DEPRECATE_AND_INLINE() = OutputPrefixTypeTP;
-
 std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeTP type);
 
 inline bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
@@ -82,8 +80,6 @@ enum class KeyMaterialTypeTP : uint32_t {
   kAsymmetricPublic,
   kRemote,
 };
-
-using  KeyMaterialTypeEnum ABSL_DEPRECATE_AND_INLINE() = KeyMaterialTypeTP;
 
 std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeTP type);
 

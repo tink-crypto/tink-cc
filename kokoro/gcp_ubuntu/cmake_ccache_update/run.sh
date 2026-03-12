@@ -96,7 +96,7 @@ if [[ "${IS_KOKORO}" == "true" ]]; then
     --key-file="${TINK_REMOTE_CACHE_SERVICE_KEY}"
   gcloud config set project tink-test-infrastructure
 
-  gsutil cp "${CCACHE_TAR}" "${REMOTE_CACHE_URL}/ccache/${CCACHE_TAR}"
-  gsutil cp "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" \
+  gcloud storage cp "${CCACHE_TAR}" "${REMOTE_CACHE_URL}/ccache/${CCACHE_TAR}"
+  gcloud storage cp "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" \
     "${REMOTE_CACHE_URL}/${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}"
 fi

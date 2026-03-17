@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef TINK_INTERNAL_PROTO_PARSER_OWNING_FIELDS_H_
-#define TINK_INTERNAL_PROTO_PARSER_OWNING_FIELDS_H_
+#ifndef TINK_INTERNAL_PROTO_PARSER_FIELDS_H_
+#define TINK_INTERNAL_PROTO_PARSER_FIELDS_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -22,7 +22,6 @@
 #include <string>
 
 #include "absl/base/attributes.h"
-#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
@@ -204,4 +203,4 @@ class BytesField final : public Field {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_INTERNAL_PROTO_PARSER_OWNING_FIELDS_H_
+#endif  // TINK_INTERNAL_PROTO_PARSER_FIELDS_H_

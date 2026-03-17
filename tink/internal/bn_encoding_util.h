@@ -41,14 +41,16 @@ absl::StatusOr<std::string> GetValueOfFixedLength(
 absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedData& big_integer, int length, SecretKeyAccessToken token);
 
-ABSL_DEPRECATE_AND_INLINE()
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 inline absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedBigInteger& big_integer, int length,
     SecretKeyAccessToken token) {
   return GetSecretValueOfFixedLength(
       RestrictedData(big_integer.GetSecret(token), token), length, token);
 }
-
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

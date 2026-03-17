@@ -162,6 +162,8 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthSameLength) {
       IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST(BnEncodingUtilTest, GetSecretRestrictedBigIntegerValueOfFixedLength) {
   std::vector<std::string> bn_str = {"0000000000000000", "0000000000000001",
                                      "1000000000000000", "ffffffffffffffff",
@@ -221,6 +223,8 @@ TEST(BnEncodingUtilTest,
       bn_bytes_fixed_length,
       IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 }  // namespace
 }  // namespace internal

@@ -211,22 +211,28 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
   RestrictedData p_data(p, InsecureSecretKeyAccess::Get());
   RestrictedData q_data(q, InsecureSecretKeyAccess::Get());
 
-  absl::StatusOr<RestrictedData> d_data =
-      RestrictedBigInteger(d, InsecureSecretKeyAccess::Get())
-          .EncodeWithFixedSize((parameters.GetModulusSizeInBits() + 7) / 8);
-  ABSL_CHECK_OK(d_data.status());
-  absl::StatusOr<RestrictedData> prime_exponent_p_data =
-      RestrictedBigInteger(prime_exponent_p, InsecureSecretKeyAccess::Get())
-          .EncodeWithFixedSize(p.size());
-  ABSL_CHECK_OK(prime_exponent_p_data.status());
-  absl::StatusOr<RestrictedData> prime_exponent_q_data =
-      RestrictedBigInteger(prime_exponent_q, InsecureSecretKeyAccess::Get())
-          .EncodeWithFixedSize(q.size());
-  ABSL_CHECK_OK(prime_exponent_q_data.status());
-  absl::StatusOr<RestrictedData> q_inverse_data =
-      RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get())
-          .EncodeWithFixedSize(p.size());
-  ABSL_CHECK_OK(q_inverse_data.status());
+  absl::StatusOr<SecretData> d_sd =
+      ParseBigIntToFixedLength(d, (parameters.GetModulusSizeInBits() + 7) / 8);
+  ABSL_CHECK_OK(d_sd);
+  RestrictedData d_data = RestrictedData(*d_sd, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<SecretData> prime_exponent_p_sd =
+      ParseBigIntToFixedLength(prime_exponent_p, p.size());
+  ABSL_CHECK_OK(prime_exponent_p_sd);
+  RestrictedData prime_exponent_p_data =
+      RestrictedData(*prime_exponent_p_sd, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<SecretData> prime_exponent_q_sd =
+      ParseBigIntToFixedLength(prime_exponent_q, q.size());
+  ABSL_CHECK_OK(prime_exponent_q_sd);
+  RestrictedData prime_exponent_q_data =
+      RestrictedData(*prime_exponent_q_sd, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<SecretData> q_inverse_sd =
+      ParseBigIntToFixedLength(q_inverse, p.size());
+  ABSL_CHECK_OK(q_inverse_sd);
+  RestrictedData q_inverse_data =
+      RestrictedData(*q_inverse_sd, InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<RsaSsaPssPublicKey> public_key =
       RsaSsaPssPublicKey::Create(parameters, BigInteger(public_modulus),
@@ -237,10 +243,10 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
           .SetPublicKey(*public_key)
           .SetPrimeP(p_data)
           .SetPrimeQ(q_data)
-          .SetPrimeExponentP(*prime_exponent_p_data)
-          .SetPrimeExponentQ(*prime_exponent_q_data)
-          .SetPrivateExponent(*d_data)
-          .SetCrtCoefficient(*q_inverse_data)
+          .SetPrimeExponentP(prime_exponent_p_data)
+          .SetPrimeExponentQ(prime_exponent_q_data)
+          .SetPrivateExponent(d_data)
+          .SetCrtCoefficient(q_inverse_data)
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
   return *private_key;

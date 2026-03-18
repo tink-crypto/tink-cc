@@ -14,6 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 #include "tink/restricted_big_integer.h"
 
 #include <string>
@@ -149,10 +151,12 @@ TEST(RestrictedBigIntegerTest, Equals) {
 }
 
 TEST(RestricteddBigIntegerTest, EqualsPadded) {
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger padded_restricted_big_integer(
-      test::HexDecodeOrDie(kHexBigIntPadded), InsecureSecretKeyAccess::Get());
+      test::HexDecodeOrDie(kHexBigIntPadded),
+      InsecureSecretKeyAccess::Get());
 
   EXPECT_TRUE(restricted_big_integer == padded_restricted_big_integer);
   EXPECT_TRUE(padded_restricted_big_integer == restricted_big_integer);
@@ -171,7 +175,8 @@ TEST(RestrictedRestrictedBigIntegerTest, NotEquals) {
       "5b0b15db09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af3"
       "8e43cad84d");
 
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger diff_restricted_big_integer(
       other_big_integer_256, InsecureSecretKeyAccess::Get());
@@ -196,7 +201,8 @@ TEST(RestrictedRestrictedBigIntegerTest, NotEqualsDifferentSize) {
       "0b15db09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af38e"
       "43cad84dbfff");
 
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger diff_restricted_big_integer(
       other_big_integer_258, InsecureSecretKeyAccess::Get());
@@ -211,7 +217,8 @@ TEST(RestrictedRestrictedBigIntegerTest, NotEqualsDifferentSize) {
 }
 
 TEST(RestrictedRestrictedBigIntegerTest, CopyConstructor) {
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger copy(restricted_big_integer);
 
@@ -222,7 +229,8 @@ TEST(RestrictedRestrictedBigIntegerTest, CopyConstructor) {
 }
 
 TEST(RestrictedRestrictedBigIntegerTest, CopyAssignment) {
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger copy = restricted_big_integer;
 
@@ -232,7 +240,8 @@ TEST(RestrictedRestrictedBigIntegerTest, CopyAssignment) {
 }
 
 TEST(RestrictedRestrictedBigIntegerTest, MoveConstructor) {
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger move(std::move(restricted_big_integer));
 
@@ -242,7 +251,8 @@ TEST(RestrictedRestrictedBigIntegerTest, MoveConstructor) {
 }
 
 TEST(RestrictedRestrictedBigIntegerTest, MoveAssignment) {
-  RestrictedBigInteger restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
+  RestrictedBigInteger
+  restricted_big_integer(test::HexDecodeOrDie(kHexBigInt),
                                               InsecureSecretKeyAccess::Get());
   RestrictedBigInteger moved_to;
   moved_to = std::move(restricted_big_integer);
@@ -254,7 +264,8 @@ TEST(RestrictedRestrictedBigIntegerTest, MoveAssignment) {
 
 TEST(RestrictedRestrictedBigIntegerTest, EncodeWithFixedSizeShortInput) {
   RestrictedBigInteger unpadded_big_integer(
-      test::HexDecodeOrDie(kHexBigIntPadded), InsecureSecretKeyAccess::Get());
+      test::HexDecodeOrDie(kHexBigIntPadded),
+      InsecureSecretKeyAccess::Get());
   absl::StatusOr<RestrictedData> padded_data =
       unpadded_big_integer.EncodeWithFixedSize(
           test::HexDecodeOrDie(kHexBigInt).size());
@@ -273,3 +284,5 @@ TEST(RestrictedRestrictedBigIntegerTest,
 
 }  // namespace tink
 }  // namespace crypto
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)

@@ -14,6 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 #include "tink/restricted_big_integer.h"
 
 #include <cstddef>
@@ -37,7 +39,8 @@
 namespace crypto {
 namespace tink {
 
-RestrictedBigInteger::RestrictedBigInteger(absl::string_view secret_big_integer,
+RestrictedBigInteger::RestrictedBigInteger(absl::string_view
+secret_big_integer,
                                            SecretKeyAccessToken token) {
   internal::CallWithCoreDumpProtection([&] {
     size_t padding_pos = secret_big_integer.find_first_not_of('\0');
@@ -57,7 +60,8 @@ RestrictedBigInteger::RestrictedBigInteger(SecretData secret_big_integer,
         util::SecretDataAsStringView(secret_big_integer);
     size_t padding_pos = big_integer.find_first_not_of('\0');
     if (padding_pos != std::string::npos) {
-      secret_ = util::SecretDataFromStringView(big_integer.substr(padding_pos));
+      secret_ =
+      util::SecretDataFromStringView(big_integer.substr(padding_pos));
     } else {
       secret_ = util::SecretDataFromStringView("");
     }
@@ -78,8 +82,8 @@ absl::StatusOr<RestrictedData> RestrictedBigInteger::EncodeWithFixedSize(
         internal::SecretBuffer padded_key(encoding_size, '\0');
 
         internal::SafeMemCopy(
-            padded_key.data() + encoding_size - secret_.size(), secret_.data(),
-            secret_.size());
+            padded_key.data() + encoding_size - secret_.size(),
+            secret_.data(), secret_.size());
 
         return RestrictedData(
             util::internal::AsSecretData(std::move(padded_key)),
@@ -87,14 +91,18 @@ absl::StatusOr<RestrictedData> RestrictedBigInteger::EncodeWithFixedSize(
       });
 }
 
-bool RestrictedBigInteger::operator==(const RestrictedBigInteger& other) const {
+bool RestrictedBigInteger::operator==(const RestrictedBigInteger& other)
+const {
   if (secret_.size() != other.secret_.size()) {
     return false;
   }
 
-  return CRYPTO_memcmp(secret_.data(), other.secret_.data(), secret_.size()) ==
+  return CRYPTO_memcmp(secret_.data(), other.secret_.data(), secret_.size())
+  ==
          0;
 }
 
 }  // namespace tink
 }  // namespace crypto
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)

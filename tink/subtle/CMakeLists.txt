@@ -974,6 +974,7 @@ tink_cc_test(
     tink::subtle::aes_cmac_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::optional

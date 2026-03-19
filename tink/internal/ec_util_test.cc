@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
@@ -55,6 +56,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::
     GetEllipticCurveTypeFromValue;
@@ -62,8 +65,6 @@ using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::test::EqualsSecretData;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::testing::AllOf;
 using ::testing::ElementsAreArray;
@@ -337,9 +338,10 @@ TEST_P(X25519SharedSecretTest, ComputeX25519SharedSecret) {
       /*len=*/Ed25519KeyPrivKeySize()));
   ASSERT_THAT(ssl_pub_key, Not(IsNull()));
 
-  EXPECT_THAT(ComputeX25519SharedSecret(ssl_priv_key.get(), ssl_pub_key.get()),
-              IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
-                  test_vector.expected_shared_secret))));
+  EXPECT_THAT(
+      ComputeX25519SharedSecret(ssl_priv_key.get(), ssl_pub_key.get()),
+      absl_testing::IsOkAndHolds(EqualsSecretData(
+          util::SecretDataFromStringView(test_vector.expected_shared_secret))));
 }
 
 INSTANTIATE_TEST_SUITE_P(X25519SharedSecretTests, X25519SharedSecretTest,
@@ -857,9 +859,10 @@ TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
   if (params.result == "invalid") {
     EXPECT_THAT(shared_secret, Not(IsOk()));
   } else {
-    EXPECT_THAT(shared_secret,
-                IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
-                    params.expected_shared_bytes))));
+    EXPECT_THAT(
+        shared_secret,
+        absl_testing::IsOkAndHolds(EqualsSecretData(
+            util::SecretDataFromStringView(params.expected_shared_bytes))));
   }
 }
 

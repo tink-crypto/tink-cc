@@ -21,6 +21,7 @@ tink_cc_test(
   DEPS
     tink::internal::testing::equals_proto_key_serialization
     gmock
+    absl::status_matchers
     absl::statusor
     absl::string_view
     tink::core::insecure_secret_key_access
@@ -58,6 +59,7 @@ tink_cc_test(
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     gmock
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -97,6 +99,7 @@ tink_cc_test(
   DEPS
     tink::internal::testing::wycheproof_util
     gmock
+    absl::status_matchers
     tink::subtle::common_enums
     tink::util::test_matchers
 )

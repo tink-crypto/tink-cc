@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/subtle/common_enums.h"
@@ -33,9 +34,9 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::subtle::HashType;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;

@@ -33,6 +33,7 @@ cc_test(
         "//tink/internal:proto_key_serialization",
         "//tink/internal:tink_proto_structs",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
@@ -72,6 +73,7 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
@@ -107,6 +109,7 @@ cc_test(
         ":wycheproof_util",
         "//tink/subtle:common_enums",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )

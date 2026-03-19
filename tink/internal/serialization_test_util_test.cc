@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
@@ -33,7 +34,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;

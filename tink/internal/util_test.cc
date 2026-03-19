@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -37,10 +38,10 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::IsFalse;
@@ -221,22 +222,22 @@ TEST(UtilTest, IsNotPrintableAscii) {
 
 TEST(UtilTest, ParseBigIntToFixedLengthSuccessesWithZeros) {
   EXPECT_THAT(ParseBigIntToFixedLength("", 0),
-              IsOkAndHolds(EqualsSecretData(SecretData())));
+              absl_testing::IsOkAndHolds(EqualsSecretData(SecretData())));
 
   EXPECT_THAT(ParseBigIntToFixedLength("", 1),
-              IsOkAndHolds(EqualsSecretData(SecretData(1, 0))));
+              absl_testing::IsOkAndHolds(EqualsSecretData(SecretData(1, 0))));
 
   EXPECT_THAT(ParseBigIntToFixedLength("", 10),
-              IsOkAndHolds(EqualsSecretData(SecretData(10, 0))));
+              absl_testing::IsOkAndHolds(EqualsSecretData(SecretData(10, 0))));
 
   EXPECT_THAT(ParseBigIntToFixedLength(HexDecodeOrDie("0000"), 0),
-              IsOkAndHolds(EqualsSecretData(SecretData())));
+              absl_testing::IsOkAndHolds(EqualsSecretData(SecretData())));
 
   EXPECT_THAT(ParseBigIntToFixedLength(HexDecodeOrDie("0000"), 2),
-              IsOkAndHolds(EqualsSecretData(SecretData(2, 0))));
+              absl_testing::IsOkAndHolds(EqualsSecretData(SecretData(2, 0))));
 
   EXPECT_THAT(ParseBigIntToFixedLength(HexDecodeOrDie("0000"), 10),
-              IsOkAndHolds(EqualsSecretData(SecretData(10, 0))));
+              absl_testing::IsOkAndHolds(EqualsSecretData(SecretData(10, 0))));
 }
 
 TEST(UtilTest, ParseBigIntToFixedLengthSuccesses) {
@@ -250,14 +251,14 @@ TEST(UtilTest, ParseBigIntToFixedLengthSuccesses) {
       util::SecretDataAsStringView(non_padded_data);
 
   EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data_view, 4),
-              IsOkAndHolds(EqualsSecretData(non_padded_data)));
+              absl_testing::IsOkAndHolds(EqualsSecretData(non_padded_data)));
   EXPECT_THAT(ParseBigIntToFixedLength(padded_data_view, 4),
-              IsOkAndHolds(EqualsSecretData(non_padded_data)));
+              absl_testing::IsOkAndHolds(EqualsSecretData(non_padded_data)));
 
   EXPECT_THAT(ParseBigIntToFixedLength(non_padded_data_view, 6),
-              IsOkAndHolds(EqualsSecretData(padded_data)));
+              absl_testing::IsOkAndHolds(EqualsSecretData(padded_data)));
   EXPECT_THAT(ParseBigIntToFixedLength(padded_data_view, 6),
-              IsOkAndHolds(EqualsSecretData(padded_data)));
+              absl_testing::IsOkAndHolds(EqualsSecretData(padded_data)));
 }
 
 TEST(UtilTest, ParseBigIntToFixedLengthFailures) {

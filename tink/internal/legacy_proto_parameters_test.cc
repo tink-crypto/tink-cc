@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -31,8 +32,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
-using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::TestProto;
 using ::testing::IsFalse;
 using ::testing::IsTrue;

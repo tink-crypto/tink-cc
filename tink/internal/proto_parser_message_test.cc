@@ -27,6 +27,7 @@
 #include "absl/crc/crc32c.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -53,9 +54,9 @@ namespace proto_parsing {
 
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::IsOk;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::HasSubstr;

@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -40,8 +41,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::EqualsSecretData;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
@@ -130,9 +131,10 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLength) {
         GetSecretValueOfFixedLength(bn_bytes_restricted, 10,
                                     InsecureSecretKeyAccess::Get());
 
-    EXPECT_THAT(bn_bytes_fixed_length,
-                IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
-                    test::HexDecodeOrDie(absl::StrCat("0000", s))))));
+    EXPECT_THAT(
+        bn_bytes_fixed_length,
+        absl_testing::IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
+            test::HexDecodeOrDie(absl::StrCat("0000", s))))));
   }
 }
 
@@ -157,9 +159,9 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthSameLength) {
       GetSecretValueOfFixedLength(bn_bytes_restricted, 8,
                                   InsecureSecretKeyAccess::Get());
 
-  EXPECT_THAT(
-      bn_bytes_fixed_length,
-      IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
+  EXPECT_THAT(bn_bytes_fixed_length,
+              absl_testing::IsOkAndHolds(
+                  EqualsSecretData(SecretDataFromStringView(bn_bytes))));
 }
 
 // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
@@ -181,7 +183,7 @@ TEST(BnEncodingUtilTest, GetSecretRestrictedBigIntegerValueOfFixedLength) {
             10, InsecureSecretKeyAccess::Get());
 
     EXPECT_THAT(bn_bytes_fixed_length,
-                IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
+                absl_testing::IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
                     test::HexDecodeOrDie(absl::StrCat("0000", s))))));
   }
 }
@@ -221,7 +223,7 @@ TEST(BnEncodingUtilTest,
 
   EXPECT_THAT(
       bn_bytes_fixed_length,
-      IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
+      absl_testing::IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
 }
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)

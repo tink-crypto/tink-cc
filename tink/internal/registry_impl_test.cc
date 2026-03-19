@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
@@ -74,11 +75,11 @@ namespace internal {
 
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::AddLegacyKey;
 using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::DummyAead;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCtrHmacAeadKey;
 using ::google::crypto::tink::AesGcmKey;

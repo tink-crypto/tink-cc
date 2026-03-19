@@ -114,8 +114,20 @@ if (NOT TARGET crypto)
       "$<BUILD_INTERFACE:${boringssl_SOURCE_DIR}/src/include>")
   else()
     # Support for ED25519 was added from 1.1.1.
-    find_package(OpenSSL 1.1.1 REQUIRED)
-    _create_interface_target(crypto OpenSSL::Crypto)
+    # Try CONFIG mode first (finds installed BoringSSL), then fall back to
+    # module mode (finds system OpenSSL).
+    find_package(OpenSSL CONFIG QUIET)
+    if(NOT OpenSSL_FOUND)
+      find_package(OpenSSL 1.1.1 REQUIRED)
+    endif()
+    if(TINK_INSTALL)
+      # Use IMPORTED so the crypto target is not required in the export set.
+      add_library(crypto INTERFACE IMPORTED)
+      set_target_properties(crypto PROPERTIES
+        INTERFACE_LINK_LIBRARIES "OpenSSL::Crypto")
+    else()
+      _create_interface_target(crypto OpenSSL::Crypto)
+    endif()
   endif()
 else()
   message(STATUS "Using an already declared `crypto` target")

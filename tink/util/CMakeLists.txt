@@ -498,10 +498,10 @@ tink_cc_library(
     secret_proto.h
   DEPS
     tink::util::secret_data
-    protobuf::libprotobuf
     absl::memory
     absl::status
     absl::statusor
+    protobuf::libprotobuf
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::secret_buffer

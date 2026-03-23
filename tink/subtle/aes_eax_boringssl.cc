@@ -219,7 +219,7 @@ AesEaxBoringSsl::Block AesEaxBoringSsl::Omac(absl::Span<const uint8_t> data,
     return mac;
   }
   EncryptBlock(&mac);
-  int idx = 0;
+  size_t idx = 0;
   while (data.size() - idx > kBlockSize) {
     XorBlock(&data[idx], &mac);
     EncryptBlock(&mac);

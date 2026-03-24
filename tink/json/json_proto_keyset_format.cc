@@ -38,6 +38,7 @@
 namespace crypto {
 namespace tink {
 
+using ::google::protobuf::json::BinaryToJsonString;
 using ::google::protobuf::json::JsonToBinaryString;
 using ::google::protobuf::json::ParseOptions;
 using ::google::protobuf::json::PrintOptions;

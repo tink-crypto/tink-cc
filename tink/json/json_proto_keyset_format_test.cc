@@ -45,6 +45,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretDataAsStringView;
+using ::google::protobuf::json::BinaryToJsonString;
 using ::google::protobuf::json::PrintOptions;
 using ::testing::Eq;
 using ::testing::Not;

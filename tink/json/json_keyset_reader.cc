@@ -38,6 +38,7 @@ namespace tink {
 
 using google::crypto::tink::EncryptedKeyset;
 using google::crypto::tink::Keyset;
+using ::google::protobuf::json::JsonToBinaryString;
 using ::google::protobuf::json::ParseOptions;
 
 namespace {

@@ -216,6 +216,19 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithModifiedSignatureFails) {
                               GetLowLevelCryptoAccess());
   ASSERT_THAT(verifier, IsOk());
 
+  // Verify the valid signature works.
+  ASSERT_THAT((*verifier)->Verify(*signature, message), IsOk());
+
+  // Signature too short.
+  std::string too_short_signature =
+      signature->substr(0, signature->size() - 1);
+  EXPECT_THAT((*verifier)->Verify(too_short_signature, message),
+              Not(IsOk()));
+
+  // Signature with trailing bytes appended must be rejected.
+  std::string too_big_signature = *signature + "00";
+  EXPECT_THAT((*verifier)->Verify(too_big_signature, message), Not(IsOk()));
+
   // Invalidate one byte of the signature.
   (*signature)[10] ^= 1;
   EXPECT_THAT((*verifier)->Verify(*signature, message), Not(IsOk()));

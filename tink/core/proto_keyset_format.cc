@@ -90,9 +90,8 @@ absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
 
 absl::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(
     absl::string_view serialized_keyset) {
-  std::string keyset_copy = std::string(serialized_keyset);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> result =
-      KeysetHandle::ReadNoSecret(keyset_copy);
+      KeysetHandle::ReadNoSecret(serialized_keyset);
   if (!result.ok()) {
     return result.status();
   }

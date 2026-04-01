@@ -155,7 +155,7 @@ class KeysetHandle {
   // `monitoring_annotations` is empty. This can be used to load public keysets
   // or envelope encryption keysets.
   static absl::StatusOr<std::unique_ptr<KeysetHandle>> ReadNoSecret(
-      const std::string& serialized_keyset,
+      absl::string_view serialized_keyset,
       absl::flat_hash_map<std::string, std::string> monitoring_annotations =
           {});
 

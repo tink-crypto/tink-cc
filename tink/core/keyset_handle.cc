@@ -395,7 +395,7 @@ KeysetHandle::ReadWithAssociatedData(
 }
 
 absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
-    const std::string& serialized_keyset,
+    absl::string_view serialized_keyset,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   util::SecretProto<Keyset> keyset;
   if (!keyset->ParseFromString(serialized_keyset)) {

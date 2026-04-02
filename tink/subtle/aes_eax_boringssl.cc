@@ -246,9 +246,14 @@ absl::StatusOr<std::string> AesEaxBoringSsl::Encrypt(
   plaintext = internal::EnsureStringNonNull(plaintext);
   associated_data = internal::EnsureStringNonNull(associated_data);
 
-  size_t ciphertext_size = plaintext.size() + nonce_size_ + kTagSize;
+  int64_t ciphertext_size =
+      static_cast<int64_t>(plaintext.size()) + nonce_size_ + kTagSize;
+  if (ciphertext_size < 0 ||
+      ciphertext_size > static_cast<int64_t>(std::string().max_size())) {
+    return absl::InvalidArgumentError("Plaintext too long");
+  }
   std::string ciphertext;
-  ResizeStringUninitialized(&ciphertext, ciphertext_size);
+  ResizeStringUninitialized(&ciphertext, static_cast<size_t>(ciphertext_size));
   return internal::CallWithCoreDumpProtection(
       [&]() -> absl::StatusOr<std::string> {
         // The ciphertext region is allowed to leak: this never fails and

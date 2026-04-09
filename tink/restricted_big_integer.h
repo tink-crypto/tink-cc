@@ -14,11 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
 #ifndef TINK_RESTRICTED_BIG_INTEGER_H_
 #define TINK_RESTRICTED_BIG_INTEGER_H_
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 #include <cstddef>
 #include <cstdint>
 
@@ -93,6 +93,7 @@ class RestrictedBigInteger {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_RESTRICTED_BIG_INTEGER_H_
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)
+
+#endif  // TINK_RESTRICTED_BIG_INTEGER_H_

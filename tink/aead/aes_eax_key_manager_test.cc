@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/aead.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_eax_boringssl.h"
@@ -36,7 +37,7 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using AesEaxKeyProto = ::google::crypto::tink::AesEaxKey;
 using ::google::crypto::tink::AesEaxKeyFormat;
 using ::testing::Eq;

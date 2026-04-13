@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aead_key_templates.h"
@@ -48,10 +49,10 @@
 namespace crypto {
 namespace tink {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::DummyAead;
 using ::crypto::tink::test::DummyKmsClient;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::KmsEnvelopeAeadKey;

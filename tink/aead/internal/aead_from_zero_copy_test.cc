@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -41,7 +42,7 @@ constexpr absl::string_view kPlaintext = "Some data to encrypt.";
 constexpr absl::string_view kAssociatedData = "Some associated data.";
 constexpr absl::string_view kCiphertext = "37ajhgdahjsdg8653821218236182631";
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::_;
 using ::testing::Invoke;

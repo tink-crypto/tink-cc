@@ -241,6 +241,8 @@ tink_cc_test(
   DEPS
     tink::aead::internal::aead_util
     gmock
+    absl::status_matchers
+    absl::statusor
     crypto
     tink::util::statusor
     tink::util::test_matchers
@@ -258,6 +260,7 @@ tink_cc_test(
     gmock
     absl::flat_hash_set
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::span
@@ -280,6 +283,7 @@ tink_cc_test(
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::wycheproof_aead
     gmock
+    absl::status_matchers
     absl::strings
     absl::cord
     crypto
@@ -302,6 +306,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::span
@@ -323,6 +328,7 @@ tink_cc_test(
     gmock
     absl::algorithm_container
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::span
@@ -342,6 +348,7 @@ tink_cc_test(
     tink::aead::internal::ssl_aead
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     absl::span
     tink::internal::ssl_util
@@ -365,6 +372,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::span
@@ -384,6 +392,7 @@ tink_cc_test(
     tink::aead::internal::config_v0
     tink::aead::internal::key_gen_config_v0
     gmock
+    absl::status_matchers
     absl::cord
     tink::core::aead
     tink::core::configuration
@@ -466,6 +475,7 @@ tink_cc_test(
     tink::aead::internal::cord_x_aes_gcm_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     absl::cord
     absl::string_view
@@ -514,6 +524,7 @@ tink_cc_test(
     tink::aead::internal::base_x_aes_gcm
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -560,6 +571,7 @@ tink_cc_test(
     tink::aead::internal::zero_copy_x_aes_gcm_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -618,6 +630,7 @@ tink_cc_test(
     tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -678,6 +691,7 @@ tink_cc_test(
     tink::aead::internal::chacha20_poly1305_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -737,6 +751,7 @@ tink_cc_test(
     tink::aead::internal::x_aes_gcm_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -795,6 +810,7 @@ tink_cc_test(
     tink::aead::internal::legacy_kms_aead_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -856,6 +872,7 @@ tink_cc_test(
     tink::aead::internal::aes_gcm_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -917,6 +934,7 @@ tink_cc_test(
     tink::aead::internal::aes_gcm_siv_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -977,6 +995,7 @@ tink_cc_test(
     tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -1043,6 +1062,7 @@ tink_cc_test(
     tink::aead::internal::aes_eax_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -1086,6 +1106,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_matchers
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access

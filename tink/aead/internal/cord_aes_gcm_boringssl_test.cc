@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_test_helpers.h"
 #include "absl/strings/str_split.h"
@@ -49,7 +50,7 @@ constexpr absl::string_view kLongMessage =
     "This is some long message which will be fragmented.";
 constexpr absl::string_view kAssociatedData = "Some associated data.";
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;

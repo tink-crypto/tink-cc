@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
@@ -42,7 +43,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 
 // Opens test file `filename` and returns a file descriptor to it.
 absl::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {

@@ -32,6 +32,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
@@ -48,7 +49,7 @@ namespace tink {
 namespace util {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 
 // Opens test file `filename` and returns a file descriptor to it.

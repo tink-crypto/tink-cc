@@ -19,6 +19,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
@@ -32,7 +33,7 @@ namespace pb = google::crypto::tink;
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::util::Enums;
 using ::testing::Not;
 

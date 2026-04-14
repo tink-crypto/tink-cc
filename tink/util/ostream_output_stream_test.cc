@@ -27,6 +27,7 @@
 
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
@@ -39,7 +40,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 
 // Creates a new test ostream which will write to the file 'filename'.
 std::unique_ptr<std::ostream> GetTestOstream(absl::string_view filename) {

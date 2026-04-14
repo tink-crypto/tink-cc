@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -34,8 +35,8 @@ namespace util {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::SecretBuffer;
-using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::Lt;
 using ::testing::Not;

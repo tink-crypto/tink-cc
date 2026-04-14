@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aead_key_templates.h"
@@ -41,11 +42,11 @@ namespace tink {
 namespace test {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::KmsAeadKeyFormat;
 using ::google::crypto::tink::KmsEnvelopeAeadKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
-using ::crypto::tink::test::IsOk;
 using ::testing::Not;
 
 // TODO(b/174740983) Add this function to aead_key_templates.

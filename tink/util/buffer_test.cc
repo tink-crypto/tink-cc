@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "tink/subtle/random.h"
 #include "tink/util/status.h"
@@ -33,7 +34,7 @@ namespace tink {
 namespace util {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using testing::HasSubstr;
 

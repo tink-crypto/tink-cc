@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
@@ -42,8 +43,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 
 constexpr int kDefaultTestStreamSize = 100 * 1024;  // 100 KB.

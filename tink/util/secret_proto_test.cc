@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
@@ -36,8 +37,8 @@ namespace tink {
 namespace util {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::SecretBuffer;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::internal::AsSecretData;
 using ::google::crypto::tink::NestedTestProto;
 using ::google::crypto::tink::TestProto;

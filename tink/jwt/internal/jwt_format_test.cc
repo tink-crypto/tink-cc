@@ -23,6 +23,7 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
@@ -36,8 +37,8 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::Not;

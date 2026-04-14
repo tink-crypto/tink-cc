@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_key_templates.h"
 #include "tink/jwt/jwt_public_key_sign.h"
@@ -35,7 +36,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::TestWithParam;
 using ::testing::Values;

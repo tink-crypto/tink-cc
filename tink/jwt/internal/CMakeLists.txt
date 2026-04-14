@@ -45,6 +45,7 @@ tink_cc_test(
     tink::jwt::internal::json_util
     protobuf::libprotobuf
     gmock
+    absl::status_matchers
     absl::statusor
     tink::util::test_matchers
 )
@@ -75,6 +76,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_format
     protobuf::libprotobuf
     gmock
+    absl::status_matchers
     absl::statusor
     absl::time
     absl::optional
@@ -92,6 +94,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::keyset_handle
     tink::core::mac
@@ -138,6 +141,7 @@ tink_cc_test(
     protobuf::libprotobuf
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::time
@@ -195,6 +199,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::time
@@ -249,6 +254,7 @@ tink_cc_test(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::cleartext_keyset_handle
@@ -305,6 +311,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
     tink::internal::ec_util
@@ -353,6 +360,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::public_key_verify
     tink::internal::ec_util
@@ -405,6 +413,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_sign_key_manager
     gmock
     absl::flat_hash_set
+    absl::status_matchers
     absl::statusor
     crypto
     tink::core::public_key_sign
@@ -454,6 +463,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     crypto
     tink::core::public_key_sign
@@ -509,6 +519,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_sign_key_manager
     gmock
     absl::flat_hash_set
+    absl::status_matchers
     absl::statusor
     crypto
     tink::core::public_key_sign
@@ -558,6 +569,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     crypto
     tink::core::public_key_sign
@@ -625,6 +637,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_impl
     protobuf::libprotobuf
     gmock
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::time
@@ -697,6 +710,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_internal
     protobuf::libprotobuf
     gmock
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::optional
@@ -773,6 +787,7 @@ tink_cc_test(
     gmock
     absl::flat_hash_map
     absl::memory
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::cleartext_keyset_handle
@@ -853,6 +868,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     protobuf::libprotobuf
     gmock
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::optional
@@ -925,6 +941,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     protobuf::libprotobuf
     gmock
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::optional
@@ -1023,6 +1040,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_key_gen_config_v0
     gmock
     absl::absl_check
+    absl::status_matchers
     absl::strings
     absl::string_view
     absl::time
@@ -1122,6 +1140,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_signature_key_gen_config_v0
     gmock
     absl::absl_check
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -1230,6 +1249,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -1305,6 +1325,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -1381,6 +1402,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_ecdsa_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -1449,6 +1471,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_hmac_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

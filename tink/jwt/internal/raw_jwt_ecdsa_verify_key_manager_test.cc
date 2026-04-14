@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/internal/ec_util.h"
 #include "tink/jwt/internal/raw_jwt_ecdsa_sign_key_manager.h"
@@ -39,15 +40,15 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::Enums;
+using ::google::crypto::tink::EllipticCurveType;
+using ::google::crypto::tink::HashType;
+using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtEcdsaKeyFormat;
 using ::google::crypto::tink::JwtEcdsaPrivateKey;
 using ::google::crypto::tink::JwtEcdsaPublicKey;
-using ::google::crypto::tink::EllipticCurveType;
-using ::google::crypto::tink::JwtEcdsaAlgorithm;
-using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::Not;

@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
@@ -58,7 +59,7 @@
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/tink.pb.h"
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtEcdsaKeyFormat;
 using ::google::crypto::tink::Keyset;
@@ -73,9 +74,9 @@ namespace tink {
 namespace jwt_internal {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::DummyPublicKeySign;
 using ::crypto::tink::test::DummyPublicKeyVerify;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;

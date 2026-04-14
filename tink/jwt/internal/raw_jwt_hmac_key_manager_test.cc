@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/config/global_registry.h"
 #include "tink/keyset_handle.h"
@@ -39,7 +40,7 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::JwtHmacAlgorithm;

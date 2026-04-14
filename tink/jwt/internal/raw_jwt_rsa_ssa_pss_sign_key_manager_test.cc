@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
@@ -39,8 +40,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::subtle::RsaSsaPssVerifyBoringSsl;
-using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using ::google::crypto::tink::JwtRsaSsaPssKeyFormat;
 using ::google::crypto::tink::JwtRsaSsaPssPrivateKey;

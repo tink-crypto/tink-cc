@@ -25,14 +25,15 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream_with_result.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/test_util.h"
-#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 
@@ -41,7 +42,7 @@ namespace tink {
 namespace subtle {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::HasSubstr;

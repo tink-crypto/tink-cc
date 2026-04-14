@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/bn.h"
 #include "tink/internal/err_util.h"
@@ -46,11 +47,11 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
 using ::testing::NotNull;

@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -46,7 +47,7 @@ constexpr absl::string_view kKey128 = "000102030405060708090a0b0c0d0e0f";
 constexpr absl::string_view kKey256 =
     "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f";
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::AllOf;
 using ::testing::Eq;

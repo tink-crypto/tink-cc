@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
+
 #include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
@@ -45,7 +47,7 @@ namespace tink {
 namespace subtle {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::IsEmpty;
 using ::testing::Not;

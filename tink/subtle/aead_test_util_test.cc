@@ -17,13 +17,14 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::testing::Not;
 
 namespace {

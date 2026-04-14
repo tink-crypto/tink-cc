@@ -923,6 +923,7 @@ tink_cc_test(
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
     gmock
     absl::status
+    absl::status_matchers
     tink::config::tink_fips
     tink::internal::secret_buffer
     tink::util::secret_data
@@ -942,6 +943,7 @@ tink_cc_test(
     tink::subtle::ecies_hkdf_sender_kem_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::config::tink_fips
     tink::internal::ec_util
@@ -958,6 +960,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::hkdf
     gmock
+    absl::status_matchers
     absl::strings
     tink::util::secret_data
     tink::util::status
@@ -1005,6 +1008,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     benchmark::benchmark_main
@@ -1027,6 +1031,7 @@ tink_cc_test(
     tink::subtle::aes_gcm_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::aead
     tink::aead::internal::wycheproof_aead
@@ -1050,6 +1055,7 @@ tink_cc_test(
     tink::subtle::stream_segment_encrypter
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::secret_data
@@ -1065,6 +1071,7 @@ tink_cc_test(
     tink::subtle::random
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     tink::util::status
     tink::util::statusor
@@ -1084,6 +1091,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::random_access_stream
@@ -1107,6 +1115,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::random_access_stream
@@ -1128,6 +1137,7 @@ tink_cc_test(
     tink::subtle::aes_eax_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::config::tink_fips
@@ -1149,6 +1159,7 @@ tink_cc_test(
     tink::subtle::hmac_boringssl
     tink::subtle::random
     gmock
+    absl::status_matchers
     absl::strings
     tink::core::aead
     tink::util::secret_data
@@ -1166,6 +1177,7 @@ tink_cc_test(
     tink::subtle::random
     gmock
     absl::status
+    absl::status_matchers
     tink::internal::fips_utils
     tink::util::secret_data
     tink::util::status
@@ -1184,6 +1196,7 @@ tink_cc_test(
     tink::subtle::aes_siv_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::string_view
     tink::core::secret_data
     tink::config::tink_fips
@@ -1205,6 +1218,7 @@ tink_cc_test(
     tink::subtle::subtle_util_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     absl::string_view
     tink::core::public_key_sign
@@ -1233,6 +1247,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::public_key_verify
     tink::internal::fips_utils
@@ -1254,6 +1269,7 @@ tink_cc_test(
     tink::subtle::random
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::core::public_key_sign
@@ -1282,6 +1298,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::core::public_key_verify
@@ -1309,6 +1326,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::core::public_key_verify
@@ -1336,6 +1354,7 @@ tink_cc_test(
     tink::subtle::rsa_ssa_pss_verify_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::core::public_key_sign
@@ -1365,6 +1384,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::core::public_key_verify
@@ -1390,6 +1410,7 @@ tink_cc_test(
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     gmock
     absl::status
+    absl::status_matchers
     crypto
     tink::internal::fips_utils
     tink::internal::rsa_util
@@ -1414,6 +1435,7 @@ tink_cc_test(
     tink::subtle::subtle_util
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::aead
     tink::aead::internal::wycheproof_aead
@@ -1433,6 +1455,7 @@ tink_cc_test(
     tink::subtle::random
     gmock
     absl::flat_hash_set
+    absl::status_matchers
     absl::span
     tink::util::secret_data
     tink::util::test_matchers
@@ -1467,6 +1490,7 @@ tink_cc_test(
     tink::subtle::xchacha20_poly1305_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::aead
     tink::aead::internal::wycheproof_aead
@@ -1491,6 +1515,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::util::istream_input_stream
@@ -1511,6 +1536,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::output_stream
     tink::util::ostream_output_stream
@@ -1526,6 +1552,7 @@ tink_cc_test(
   DEPS
     tink::subtle::aead_test_util
     gmock
+    absl::status_matchers
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -1538,6 +1565,7 @@ tink_cc_test(
     tink::subtle::streaming_aead_test_util
     gmock
     absl::status
+    absl::status_matchers
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -1549,6 +1577,7 @@ tink_cc_test(
   DEPS
     tink::subtle::hybrid_test_util
     gmock
+    absl::status_matchers
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -1587,6 +1616,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -1607,6 +1637,7 @@ tink_cc_test(
     tink::subtle::subtle_util_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::internal::bn_util

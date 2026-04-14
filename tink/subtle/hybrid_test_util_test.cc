@@ -17,6 +17,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -25,9 +26,9 @@ namespace tink {
 
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::DummyHybridDecrypt;
 using ::crypto::tink::test::DummyHybridEncrypt;
-using ::crypto::tink::test::IsOk;
 using ::testing::Not;
 
 TEST(EncryptThenDecrypt, Basic) {

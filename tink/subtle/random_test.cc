@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status_matchers.h"
 #include "absl/types/span.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -36,10 +37,10 @@ namespace {
 // Iterations for statistic tests.
 constexpr int kTests = 10000;
 
+using ::absl_testing::IsOk;
 using ::testing::Gt;
 using ::testing::Lt;
 using ::testing::SizeIs;
-using ::crypto::tink::test::IsOk;
 
 TEST(RandomTest, MultipleFilledBuffersAreUnique) {
   constexpr int kNumRandomItems = 32;

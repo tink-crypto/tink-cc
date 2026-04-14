@@ -26,22 +26,23 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/prf/prf_set.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
-#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::DefaultValue;

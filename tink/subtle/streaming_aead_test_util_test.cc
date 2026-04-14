@@ -18,14 +18,15 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::DummyStreamingAead;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
 namespace {

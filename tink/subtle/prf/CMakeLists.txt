@@ -82,6 +82,7 @@ tink_cc_test(
     gmock
     absl::algorithm_container
     absl::status
+    absl::status_matchers
     absl::string_view
     tink::core::input_stream
     tink::config::tink_fips
@@ -103,6 +104,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::core::primitive_set
@@ -123,6 +125,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::core::secret_data

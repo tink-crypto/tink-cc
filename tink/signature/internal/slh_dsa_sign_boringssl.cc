@@ -73,19 +73,25 @@ absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
       SLHDSA_SHA2_128S_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size();
   subtle::ResizeStringUninitialized(&signature, signature_buffer_size);
 
-  internal::CallWithCoreDumpProtection([&]() {
+  absl::Status status = internal::CallWithCoreDumpProtection([&]() {
     internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
                                                    signature_buffer_size);
-    SLHDSA_SHA2_128S_sign(
-        reinterpret_cast<uint8_t *>(&signature[0] +
-                                    private_key_.GetOutputPrefix().size()),
-        private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
-            .Get(InsecureSecretKeyAccess::Get())
-            .data(),
-        reinterpret_cast<const uint8_t *>(data.data()), data.size(),
-        /* context = */ nullptr, /* context_len = */ 0);
+    if (!SLHDSA_SHA2_128S_sign(
+            reinterpret_cast<uint8_t *>(&signature[0] +
+                                        private_key_.GetOutputPrefix().size()),
+            private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
+                .Get(InsecureSecretKeyAccess::Get())
+                .data(),
+            reinterpret_cast<const uint8_t *>(data.data()), data.size(),
+            /* context = */ nullptr, /* context_len = */ 0)) {
+      return absl::InternalError("Failed to generate SLH-DSA signature.");
+    }
     internal::DfsanClearLabel(&signature[0], signature_buffer_size);
+    return absl::OkStatus();
   });
+  if (!status.ok()) {
+    return status;
+  }
 
   return signature;
 }

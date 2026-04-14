@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
@@ -47,9 +48,9 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::MlKemKeyFormat;
 using ::google::crypto::tink::MlKemKeySize;

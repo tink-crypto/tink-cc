@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mlkem.h"
@@ -37,7 +38,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;

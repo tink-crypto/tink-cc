@@ -18,6 +18,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/util/statusor.h"
@@ -28,7 +29,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 
 TEST(MlKemTestUtilTest, GenerateMlKemPrivateKeyWorks) {
   absl::StatusOr<MlKemParameters> key_parameters =

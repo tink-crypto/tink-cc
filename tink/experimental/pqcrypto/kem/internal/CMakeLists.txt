@@ -32,6 +32,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     absl::string_view
     crypto
@@ -81,6 +82,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
     absl::status
+    absl::status_matchers
     crypto
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
@@ -119,6 +121,7 @@ tink_cc_test(
   DEPS
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
+    absl::status_matchers
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::util::statusor
@@ -164,6 +167,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::strings
     crypto
     tink::core::aead
@@ -221,6 +225,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     tink::core::aead
     tink::core::keyset_handle
     tink::aead::aead_config

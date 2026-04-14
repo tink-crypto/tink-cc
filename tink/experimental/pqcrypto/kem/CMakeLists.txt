@@ -19,6 +19,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     gmock
     absl::status
+    absl::status_matchers
     tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
@@ -58,6 +59,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_public_key
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     absl::optional
     crypto
@@ -102,6 +104,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_public_key
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     absl::optional
     crypto
@@ -158,6 +161,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly

@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/mlkem.h"
@@ -51,8 +52,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
 

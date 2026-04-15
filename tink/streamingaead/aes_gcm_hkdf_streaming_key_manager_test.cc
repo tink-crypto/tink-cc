@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
@@ -50,8 +51,8 @@
 namespace crypto {
 namespace tink {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::StreamingAeadTestVector;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::AesGcmHkdfStreamingKey;

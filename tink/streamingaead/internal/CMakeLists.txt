@@ -26,6 +26,7 @@ tink_cc_test(
     tink::streamingaead::internal::key_gen_config_v0
     gmock
     absl::memory
+    absl::status_matchers
     tink::core::configuration
     tink::core::input_stream
     tink::core::key_gen_configuration
@@ -103,6 +104,7 @@ tink_cc_test(
     tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -166,6 +168,7 @@ tink_cc_test(
     tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

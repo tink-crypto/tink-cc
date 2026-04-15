@@ -47,6 +47,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -124,6 +125,7 @@ cc_test(
         "//tink/subtle:random",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
@@ -189,6 +191,7 @@ cc_test(
         "//tink/subtle:random",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",

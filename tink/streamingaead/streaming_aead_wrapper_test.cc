@@ -28,6 +28,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
@@ -60,11 +61,11 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::ReadAllFromRandomAccessStream;
 using ::crypto::tink::subtle::test::ReadFromStream;
 using ::crypto::tink::subtle::test::WriteToStream;
 using ::crypto::tink::test::DummyStreamingAead;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::KeysetInfo;

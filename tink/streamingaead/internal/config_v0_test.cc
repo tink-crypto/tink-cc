@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "tink/configuration.h"
 #include "tink/input_stream.h"
 #include "tink/internal/configuration_impl.h"
@@ -50,9 +51,9 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::subtle::test::ReadFromStream;
 using ::crypto::tink::subtle::test::WriteToStream;
-using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::KeyTemplate;
 
 TEST(StreamingAeadV0Test, PrimitiveWrappers) {

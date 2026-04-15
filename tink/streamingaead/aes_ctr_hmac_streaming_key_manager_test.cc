@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
@@ -32,9 +33,9 @@
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/streaming_aead.h"
-#include "tink/streamingaead/streaming_aead_config.h"
 #include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
+#include "tink/streamingaead/streaming_aead_config.h"
 #include "tink/subtle/aes_ctr_hmac_streaming.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
@@ -55,8 +56,8 @@
 namespace crypto {
 namespace tink {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::StreamingAeadTestVector;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCtrHmacStreamingKey;
 using ::google::crypto::tink::AesCtrHmacStreamingKeyFormat;

@@ -338,6 +338,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::core::insecure_secret_key_access
@@ -374,6 +375,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::core::keyset_handle
@@ -406,6 +408,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::core::key_status
@@ -441,6 +444,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::streaming_aead_key_templates
     gmock
+    absl::status_matchers
     tink::util::test_matchers
     tink::proto::aes_ctr_hmac_streaming_cc_proto
     tink::proto::aes_gcm_hkdf_streaming_cc_proto
@@ -465,6 +469,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
@@ -600,6 +605,7 @@ tink_cc_test(
     tink::streamingaead::streaming_aead_key_templates
     gmock
     absl::memory
+    absl::status_matchers
     tink::core::input_stream
     tink::core::keyset_handle
     tink::core::output_stream
@@ -620,6 +626,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::parameters
     tink::util::statusor
@@ -635,6 +642,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key
@@ -654,6 +662,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -682,6 +691,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::parameters
     tink::util::statusor
@@ -697,6 +707,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key
@@ -716,6 +727,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

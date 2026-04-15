@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/keyset_handle.h"
 #include "tink/prf/key_gen_config_v0.h"
 #include "tink/prf/prf_key_templates.h"
@@ -34,7 +35,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Eq;
 using ::testing::TestWithParam;

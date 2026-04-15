@@ -346,6 +346,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     tink::core::input_stream
     tink::subtle::subtle
     tink::subtle::prf::hkdf_streaming_prf
@@ -371,6 +372,7 @@ tink_cc_test(
     tink::prf::prf_key_templates
     gmock
     absl::memory
+    absl::status_matchers
     tink::util::test_matchers
     tink::proto::aes_cmac_prf_cc_proto
     tink::proto::hkdf_prf_cc_proto
@@ -389,6 +391,7 @@ tink_cc_test(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::primitive_set
     tink::core::registry
@@ -411,6 +414,7 @@ tink_cc_test(
     tink::prf::prf_set
     gmock
     absl::memory
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::keyset_handle
@@ -429,6 +433,7 @@ tink_cc_test(
     tink::prf::prf_set
     gmock
     absl::memory
+    absl::status_matchers
     tink::core::input_stream
     tink::subtle::aes_cmac_boringssl
     tink::util::istream_input_stream
@@ -450,6 +455,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::key_manager_impl
     tink::subtle::hmac_boringssl
@@ -479,6 +485,7 @@ tink_cc_test(
     tink::prf::prf_set
     gmock
     absl::status
+    absl::status_matchers
     absl::optional
     crypto
     tink::core::insecure_secret_key_access_testonly
@@ -521,6 +528,7 @@ tink_cc_test(
     tink::prf::prf_key_templates
     tink::prf::prf_set
     gmock
+    absl::status_matchers
     tink::core::keyset_handle
     tink::util::statusor
     tink::util::test_matchers
@@ -535,6 +543,7 @@ tink_cc_test(
     tink::prf::aes_cmac_prf_parameters
     gmock
     absl::status
+    absl::status_matchers
     tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
@@ -549,6 +558,7 @@ tink_cc_test(
     tink::prf::aes_cmac_prf_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::optional
     tink::core::key
     tink::core::partial_key_access
@@ -567,6 +577,7 @@ tink_cc_test(
     tink::prf::aes_cmac_prf_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -593,6 +604,7 @@ tink_cc_test(
     tink::prf::hmac_prf_parameters
     gmock
     absl::status
+    absl::status_matchers
     tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
@@ -607,6 +619,7 @@ tink_cc_test(
     tink::prf::hmac_prf_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::optional
     tink::core::key
     tink::core::partial_key_access
@@ -625,6 +638,7 @@ tink_cc_test(
     tink::prf::hmac_prf_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -652,6 +666,7 @@ tink_cc_test(
     tink::prf::hkdf_prf_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::string_view
     absl::optional
     tink::core::parameters
@@ -669,6 +684,7 @@ tink_cc_test(
     tink::prf::hkdf_prf_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::optional
     tink::core::key
     tink::core::partial_key_access
@@ -688,6 +704,7 @@ tink_cc_test(
     tink::prf::hkdf_prf_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

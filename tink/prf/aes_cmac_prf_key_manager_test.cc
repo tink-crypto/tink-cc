@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "tink/input_stream.h"
 #include "tink/prf/prf_set.h"
 #include "tink/subtle/aes_cmac_boringssl.h"
@@ -38,7 +39,7 @@ namespace tink {
 
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using AesCmacPrfKeyProto = ::google::crypto::tink::AesCmacPrfKey;
 using ::google::crypto::tink::AesCmacPrfKeyFormat;
 using ::testing::Eq;

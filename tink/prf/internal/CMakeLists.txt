@@ -135,6 +135,7 @@ tink_cc_test(
     tink::prf::internal::config_v0
     tink::prf::internal::key_gen_config_v0
     gmock
+    absl::status_matchers
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::keyset_handle
@@ -160,6 +161,7 @@ tink_cc_test(
     tink::prf::internal::aes_cmac_prf_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -189,6 +191,7 @@ tink_cc_test(
     tink::prf::internal::hkdf_prf_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -220,6 +223,7 @@ tink_cc_test(
     tink::prf::internal::hmac_prf_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

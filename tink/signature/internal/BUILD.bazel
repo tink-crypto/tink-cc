@@ -1563,3 +1563,30 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "slh_dsa_parameter_set",
+    srcs = ["slh_dsa_parameter_set.cc"],
+    hdrs = ["slh_dsa_parameter_set.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink/signature:slh_dsa_parameters",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "slh_dsa_parameter_set_test",
+    srcs = ["slh_dsa_parameter_set_test.cc"],
+    deps = [
+        ":slh_dsa_parameter_set",
+        "//tink/signature:slh_dsa_parameters",
+        "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

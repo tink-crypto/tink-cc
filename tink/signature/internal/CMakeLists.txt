@@ -1688,3 +1688,29 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_proto_serialization
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME slh_dsa_parameter_set
+  SRCS
+    slh_dsa_parameter_set.cc
+    slh_dsa_parameter_set.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::flat_hash_set
+    absl::status
+    absl::statusor
+    tink::signature::slh_dsa_parameters
+)
+
+tink_cc_test(
+  NAME slh_dsa_parameter_set_test
+  SRCS
+    slh_dsa_parameter_set_test.cc
+  DEPS
+    tink::signature::internal::slh_dsa_parameter_set
+    gmock
+    absl::statusor
+    tink::signature::slh_dsa_parameters
+    tink::util::test_matchers
+)

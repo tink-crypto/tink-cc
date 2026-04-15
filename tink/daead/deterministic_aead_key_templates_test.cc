@@ -19,6 +19,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/deterministic_aead.h"
@@ -32,7 +33,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::AesSivKeyFormat;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;

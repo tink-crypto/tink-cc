@@ -70,6 +70,7 @@ tink_cc_test(
     tink::daead::internal::config_v0
     tink::daead::internal::key_gen_config_v0
     gmock
+    absl::status_matchers
     tink::core::configuration
     tink::core::deterministic_aead
     tink::core::key_gen_configuration
@@ -93,6 +94,7 @@ tink_cc_test(
     tink::daead::internal::aes_siv_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

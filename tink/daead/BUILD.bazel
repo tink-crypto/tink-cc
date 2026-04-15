@@ -233,6 +233,7 @@ cc_test(
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -257,6 +258,7 @@ cc_test(
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
@@ -296,6 +298,7 @@ cc_test(
         "//tink/util:test_util",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
@@ -335,6 +338,7 @@ cc_test(
         "//tink:core/key_manager_impl",
         "//tink:deterministic_aead",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -360,6 +364,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -376,6 +381,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
@@ -403,6 +409,7 @@ cc_test(
         "//tink/subtle:random",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
@@ -422,6 +429,7 @@ cc_test(
         "//tink:keyset_handle",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )

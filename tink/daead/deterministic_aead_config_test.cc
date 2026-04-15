@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_fips.h"
@@ -54,10 +55,10 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyDeterministicAead;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::Not;

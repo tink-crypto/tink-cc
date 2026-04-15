@@ -23,6 +23,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     tink::core::aead

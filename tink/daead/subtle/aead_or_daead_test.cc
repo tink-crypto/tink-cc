@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/daead/subtle/aead_or_daead.h"
@@ -36,7 +37,7 @@ namespace tink {
 namespace subtle {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 
 // Checks whether Decrypt(Encrypt(message)) == message with the given
 // aead_or_daead.

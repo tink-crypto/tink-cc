@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/daead/deterministic_aead_key_templates.h"
 #include "tink/daead/key_gen_config_v0.h"
 #include "tink/deterministic_aead.h"
@@ -33,8 +34,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 
 TEST(ConfigV0Test, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =

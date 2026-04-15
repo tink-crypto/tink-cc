@@ -204,6 +204,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     tink::core::deterministic_aead
     tink::subtle::aes_siv_boringssl
     tink::util::istream_input_stream
@@ -226,6 +227,7 @@ tink_cc_test(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     tink::core::crypto_format
@@ -253,6 +255,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::deterministic_aead
     tink::core::insecure_secret_key_access
@@ -304,6 +307,7 @@ tink_cc_test(
     tink::daead::aes_siv_key_manager
     tink::daead::deterministic_aead_key_templates
     gmock
+    absl::status_matchers
     tink::core::key_manager_impl
     tink::core::deterministic_aead
     tink::util::test_matchers
@@ -332,6 +336,7 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     gmock
     absl::status
+    absl::status_matchers
     tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
@@ -346,6 +351,7 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::optional
     tink::core::key
     tink::core::partial_key_access
@@ -364,6 +370,7 @@ tink_cc_test(
     tink::daead::aes_siv_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -391,6 +398,7 @@ tink_cc_test(
     tink::daead::deterministic_aead_key_templates
     tink::daead::key_gen_config_v0
     gmock
+    absl::status_matchers
     tink::core::deterministic_aead
     tink::core::keyset_handle
     tink::util::statusor

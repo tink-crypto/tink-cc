@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/configuration.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/daead/deterministic_aead_key_templates.h"
@@ -41,8 +42,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 
 TEST(DeterministicAeadV0Test, PrimitiveWrapper) {
   Configuration config;

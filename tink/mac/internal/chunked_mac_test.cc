@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/config/global_registry.h"
 #include "tink/keyset_handle.h"
@@ -39,13 +40,13 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::MacKeyTemplates;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
-using ::testing::Eq;
 using ::testing::Combine;
+using ::testing::Eq;
 using ::testing::Values;
 
 class ChunkedMacCompatibilityTest

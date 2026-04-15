@@ -178,6 +178,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     tink::core::chunked_mac
@@ -200,6 +201,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::chunked_mac
@@ -217,6 +219,7 @@ tink_cc_test(
   DEPS
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::chunked_mac
     tink::core::keyset_handle
@@ -238,6 +241,7 @@ tink_cc_test(
     tink::mac::internal::config_v0
     tink::mac::internal::key_gen_config_v0
     gmock
+    absl::status_matchers
     tink::core::chunked_mac
     tink::core::configuration
     tink::core::key_gen_configuration
@@ -269,6 +273,7 @@ tink_cc_test(
     absl::absl_log
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     absl::string_view
     tink::core::secret_data
@@ -293,6 +298,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::memory
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -313,6 +319,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_matchers
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -372,6 +379,7 @@ tink_cc_test(
     tink::mac::internal::hmac_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access_testonly

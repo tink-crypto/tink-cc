@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/mac.h"
 #include "tink/mac/aes_cmac_key_manager.h"
@@ -34,7 +35,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::AesCmacKeyFormat;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::HmacKeyFormat;

@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -53,11 +54,11 @@ constexpr absl::string_view kCmacOnDataRegularTagSizeHex =
     "c856e183e8dee9bb99402d54c34f3222";
 constexpr absl::string_view kCmacOnDataSmallTagSizeHex = "c856e183e8dee9bb9940";
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::StatefulMac;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::testing::Eq;
 using ::testing::Not;

@@ -158,6 +158,7 @@ tink_cc_test(
     tink::config::tink_config
     gmock
     absl::status
+    absl::status_matchers
     tink::core::aead
     tink::core::deterministic_aead
     tink::core::hybrid_decrypt
@@ -190,6 +191,7 @@ tink_cc_test(
     tink::config::tink_fips
     gmock
     absl::status
+    absl::status_matchers
     crypto
     tink::core::registry
     tink::aead::aead_config
@@ -207,6 +209,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::string_view
     tink::core::key_type_manager
     tink::core::template_util
@@ -231,6 +234,7 @@ tink_cc_test(
     tink::config::key_gen_fips_140_2
     gmock
     absl::status
+    absl::status_matchers
     tink::core::aead
     tink::core::chunked_mac
     tink::core::keyset_handle
@@ -263,6 +267,7 @@ tink_cc_test(
     tink::config::key_gen_fips_140_2
     gmock
     absl::status
+    absl::status_matchers
     tink::core::keyset_handle
     tink::aead::aead_key_templates
     tink::aead::aes_ctr_hmac_aead_key_manager
@@ -288,6 +293,7 @@ tink_cc_test(
     tink::config::key_gen_v0
     tink::config::v0
     gmock
+    absl::status_matchers
     tink::core::aead
     tink::core::chunked_mac
     tink::core::configuration

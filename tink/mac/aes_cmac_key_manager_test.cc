@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/chunked_mac.h"
 #include "tink/mac.h"
 #include "tink/subtle/aes_cmac_boringssl.h"
@@ -35,7 +36,7 @@ namespace tink {
 
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using ::google::crypto::tink::AesCmacKeyFormat;
 using ::google::crypto::tink::AesCmacParams;

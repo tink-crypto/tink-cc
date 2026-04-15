@@ -183,6 +183,7 @@ cc_test(
         "//tink/util:status",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -211,6 +212,7 @@ cc_test(
         "//tink/util:status",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
@@ -235,6 +237,7 @@ cc_test(
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
@@ -269,6 +272,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -294,6 +298,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -343,6 +348,7 @@ cc_test(
         "//tink/streamingaead:aes_gcm_hkdf_streaming_key_manager",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )

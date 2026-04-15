@@ -18,6 +18,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "openssl/crypto.h"
 #include "tink/aead/aead_config.h"
 #include "tink/internal/fips_utils.h"
@@ -30,9 +31,9 @@ namespace tink {
 
 namespace {
 
-using testing::Eq;
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
+using testing::Eq;
 
 class FipsIncompatible {
  public:

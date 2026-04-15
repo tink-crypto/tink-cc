@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "tink/key_manager.h"
 #include "tink/public_key_verify.h"
@@ -34,8 +35,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 
 class MlDsaVerifyKeyManagerTest : public ::testing::Test {

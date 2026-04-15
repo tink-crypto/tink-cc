@@ -230,6 +230,7 @@ tink_cc_test(
     tink::signature::internal::ecdsa_raw_sign_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::string_view
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -290,6 +291,7 @@ tink_cc_test(
     tink::signature::internal::config_fips_140_2
     tink::signature::internal::key_gen_config_v0
     gmock
+    absl::status_matchers
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::keyset_handle
@@ -344,6 +346,7 @@ tink_cc_test(
     gmock
     absl::absl_log
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     crypto
@@ -385,6 +388,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_verify_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -425,6 +429,7 @@ tink_cc_test(
     absl::absl_check
     absl::absl_log
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -466,6 +471,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_proto_serialization
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -520,6 +526,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_sign_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     crypto
@@ -561,6 +568,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_verify_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -620,6 +628,7 @@ tink_cc_test(
     tink::signature::internal::ed25519_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -651,6 +660,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::key_gen_config_v0
     gmock
+    absl::status_matchers
     absl::statusor
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -673,6 +683,7 @@ tink_cc_test(
     tink::signature::internal::key_gen_config_v0
     gmock
     absl::absl_check
+    absl::status_matchers
     absl::statusor
     tink::core::configuration
     tink::core::key_gen_configuration
@@ -752,6 +763,7 @@ tink_cc_test(
     tink::signature::internal::ecdsa_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -832,6 +844,7 @@ tink_cc_test(
     absl::no_destructor
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -913,6 +926,7 @@ tink_cc_test(
     absl::no_destructor
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::string_view
@@ -989,6 +1003,7 @@ tink_cc_test(
     absl::absl_check
     absl::absl_log
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -1056,6 +1071,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -1141,6 +1157,7 @@ tink_cc_test(
     tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -1194,6 +1211,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::composite_ml_dsa_util_boringssl
     gmock
+    absl::status_matchers
     absl::statusor
     tink::signature::composite_ml_dsa_parameters
     tink::util::test_matchers
@@ -1255,6 +1273,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_sign_key_manager
     tink::signature::internal::ml_dsa_verify_key_manager
     gmock
+    absl::status_matchers
     absl::statusor
     tink::core::key_manager
     tink::core::public_key_sign
@@ -1272,6 +1291,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_verify_key_manager
     gmock
+    absl::status_matchers
     absl::string_view
     tink::core::key_manager
     tink::core::public_key_verify
@@ -1318,6 +1338,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_sign_key_manager
     tink::signature::internal::slh_dsa_verify_key_manager
     gmock
+    absl::status_matchers
     absl::statusor
     tink::core::key_manager
     tink::core::public_key_sign
@@ -1355,6 +1376,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::slh_dsa_verify_key_manager
     gmock
+    absl::status_matchers
     absl::string_view
     tink::core::key_manager
     tink::core::public_key_verify
@@ -1397,6 +1419,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ecdsa_key_creator
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
@@ -1439,6 +1462,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
@@ -1479,6 +1503,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_proto_serialization
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
@@ -1528,6 +1553,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::composite_ml_dsa_key_creator
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
@@ -1566,6 +1592,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ed25519_key_creator
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
@@ -1607,6 +1634,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::rsa_ssa_pkcs1_key_creator
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
@@ -1648,6 +1676,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::rsa_ssa_pss_key_creator
     gmock
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration

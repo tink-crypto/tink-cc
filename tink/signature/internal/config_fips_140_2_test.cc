@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
@@ -45,7 +46,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Not;
 using ::testing::TestWithParam;

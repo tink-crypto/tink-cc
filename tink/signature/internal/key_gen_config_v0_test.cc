@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -36,7 +37,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 
 TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
   KeyGenConfiguration key_gen_config;

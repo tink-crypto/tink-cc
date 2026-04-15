@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
@@ -58,7 +59,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Eq;
 using ::testing::Not;

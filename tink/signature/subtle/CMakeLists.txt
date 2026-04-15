@@ -37,6 +37,7 @@ tink_cc_test(
     tink::signature::subtle::composite_ml_dsa_sign_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -90,6 +91,7 @@ tink_cc_test(
     tink::signature::subtle::composite_ml_dsa_verify_boringssl
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

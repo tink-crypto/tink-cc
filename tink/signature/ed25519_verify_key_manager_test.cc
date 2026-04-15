@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
@@ -38,7 +39,7 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::Ed25519KeyFormat;
 using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;

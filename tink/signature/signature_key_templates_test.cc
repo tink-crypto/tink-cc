@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/core/key_manager_impl.h"
@@ -46,7 +47,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using google::crypto::tink::EcdsaKeyFormat;
 using google::crypto::tink::EcdsaSignatureEncoding;
 using google::crypto::tink::Ed25519KeyFormat;

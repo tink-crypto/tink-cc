@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/internal/util.h"
@@ -37,9 +38,9 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::GenerateClassicalPrivateKeyForTestOrDie;
 using ::crypto::tink::internal::GenerateMlDsaPrivateKeyForTestOrDie;
-using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;

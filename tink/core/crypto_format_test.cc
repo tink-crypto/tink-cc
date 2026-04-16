@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -29,7 +30,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::OutputPrefixType;

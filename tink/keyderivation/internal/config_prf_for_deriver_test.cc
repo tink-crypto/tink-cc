@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
@@ -35,7 +36,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::HkdfPrfKey;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::SHA256;

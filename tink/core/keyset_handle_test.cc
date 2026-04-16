@@ -29,6 +29,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -85,13 +86,13 @@
 namespace crypto {
 namespace tink {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::TestKeysetHandle;
 using ::crypto::tink::test::AddKeyData;
 using ::crypto::tink::test::AddLegacyKey;
 using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::DummyAead;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;

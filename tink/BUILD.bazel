@@ -942,6 +942,7 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -966,6 +967,7 @@ cc_test(
         "//tink/util:test_util",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -979,6 +981,7 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -1043,6 +1046,7 @@ cc_test(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
@@ -1095,6 +1099,7 @@ cc_test(
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
@@ -1130,6 +1135,7 @@ cc_test(
         "//tink/util:test_keyset_handle",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -1148,6 +1154,7 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )
@@ -1166,6 +1173,7 @@ cc_test(
         "//tink/util:test_util",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
@@ -1237,6 +1245,7 @@ cc_test(
         "//tink/util:test_util",
         "//tink/util:validation",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
@@ -1323,6 +1332,7 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
@@ -1382,6 +1392,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )

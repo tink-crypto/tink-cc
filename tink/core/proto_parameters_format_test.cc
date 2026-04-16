@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/mac/aes_cmac_parameters.h"
@@ -36,7 +37,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCmacKeyFormat;
 using ::google::crypto::tink::KeyTemplate;

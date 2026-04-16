@@ -43,6 +43,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::string_view
     absl::optional
     tink::core::cleartext_keyset_handle
@@ -101,6 +102,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
@@ -198,6 +200,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::input_stream
@@ -298,6 +301,7 @@ tink_cc_test(
   DEPS
     tink::keyderivation::internal::config_prf_for_deriver
     gmock
+    absl::status_matchers
     tink::internal::configuration_impl
     tink::internal::key_type_info_store
     tink::prf::hkdf_prf_key_manager
@@ -357,6 +361,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::status_matchers
     absl::string_view
     absl::optional
     tink::core::key

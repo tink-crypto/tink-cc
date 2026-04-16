@@ -143,6 +143,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     absl::string_view
     tink::core::cleartext_keyset_handle
@@ -168,6 +169,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::string_view
     tink::core::aead
@@ -210,6 +212,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     tink::core::registry
     tink::aead::aead_key_templates
     tink::aead::aes_gcm_key_manager
@@ -234,6 +237,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_proto_serialization
     gmock
     absl::memory
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional
@@ -305,6 +309,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_parameters
     gmock
     absl::status
+    absl::status_matchers
     tink::core::parameters
     tink::aead::chacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_parameters
@@ -323,6 +328,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_parameters
     gmock
     absl::status
+    absl::status_matchers
     absl::optional
     tink::core::key
     tink::core::partial_key_access
@@ -345,6 +351,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_proto_serialization
     gmock
     absl::absl_check
+    absl::status_matchers
     absl::statusor
     absl::string_view
     absl::optional

@@ -873,6 +873,7 @@ tink_cc_test(
     tink::core::binary_keyset_reader
     gmock
     absl::status
+    absl::status_matchers
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
@@ -891,6 +892,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     tink::aead::aead_config
     tink::aead::aead_key_templates
     tink::config::global_registry
@@ -909,6 +911,7 @@ tink_cc_test(
     tink::core::crypto_format
     gmock
     absl::status
+    absl::status_matchers
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
@@ -942,6 +945,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     absl::optional
     tink::aead::aead_config
@@ -1002,6 +1006,7 @@ tink_cc_test(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     absl::optional
@@ -1053,6 +1058,7 @@ tink_cc_test(
     tink::core::keyset_manager
     gmock
     absl::status
+    absl::status_matchers
     tink::aead::aead_config
     tink::aead::aes_gcm_key_manager
     tink::util::test_keyset_handle
@@ -1071,6 +1077,7 @@ tink_cc_test(
     tink::core::keyset_handle
     gmock
     absl::status
+    absl::status_matchers
     tink::util::status
     tink::util::test_keyset_handle
     tink::util::test_matchers
@@ -1089,6 +1096,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     absl::string_view
     tink::keyderivation::keyset_deriver
@@ -1153,6 +1161,7 @@ tink_cc_test(
     tink::core::key_manager_impl
     gmock
     absl::status
+    absl::status_matchers
     absl::string_view
     tink::subtle::subtle
     tink::util::input_stream_util
@@ -1241,6 +1250,7 @@ tink_cc_test(
     tink::core::secret_data
     gmock
     absl::memory
+    absl::status_matchers
     absl::statusor
     tink::aead::aes_gcm_parameters
     tink::config::global_registry
@@ -1300,6 +1310,7 @@ tink_cc_test(
     tink::core::proto_parameters_format
     gmock
     absl::status
+    absl::status_matchers
     tink::internal::legacy_proto_parameters
     tink::internal::proto_parameters_serialization
     tink::mac::aes_cmac_parameters

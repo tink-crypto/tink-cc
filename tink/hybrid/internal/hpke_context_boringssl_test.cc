@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/hybrid/internal/hpke_test_util.h"
 #include "tink/hybrid/internal/hpke_util.h"
@@ -36,9 +37,9 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::EqualsSecretData;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Values;
 
@@ -104,9 +105,10 @@ TEST_P(HpkeContextBoringSslTest, SenderExport) {
   for (size_t i = 0; i < params->exported_contexts.size(); ++i) {
     absl::StatusOr<SecretData> sender_secret =
         sender_hpke_context->context->Export(params->exported_contexts[i], 32);
-    ASSERT_THAT(sender_secret,
-                IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
-                    params->exported_values[i]))));
+    ASSERT_THAT(
+        sender_secret,
+        absl_testing::IsOkAndHolds(EqualsSecretData(
+            util::SecretDataFromStringView(params->exported_values[i]))));
   }
 }
 
@@ -125,9 +127,10 @@ TEST_P(HpkeContextBoringSslTest, RecipientExport) {
   for (size_t i = 0; i < params->exported_contexts.size(); ++i) {
     absl::StatusOr<SecretData> recipient_secret =
         (*recipient_hpke_context)->Export(params->exported_contexts[i], 32);
-    ASSERT_THAT(recipient_secret,
-                IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
-                    params->exported_values[i]))));
+    ASSERT_THAT(
+        recipient_secret,
+        absl_testing::IsOkAndHolds(EqualsSecretData(
+            util::SecretDataFromStringView(params->exported_values[i]))));
   }
 }
 

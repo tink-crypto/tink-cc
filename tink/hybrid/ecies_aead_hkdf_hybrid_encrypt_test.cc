@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/internal/ec_util.h"
@@ -37,7 +38,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;

@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/configuration.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/hybrid_key_templates.h"
@@ -49,12 +50,12 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::google::crypto::tink::KeyTemplate;
+using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;
-using ::testing::Eq;
 
 TEST(HybridV0Test, PrimitiveWrappers) {
   Configuration config;

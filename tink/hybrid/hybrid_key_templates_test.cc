@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/daead/deterministic_aead_key_templates.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
@@ -35,8 +36,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::internal::HpkePrivateKeyManager;
-using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::EciesAeadHkdfKeyFormat;
 using ::google::crypto::tink::EcPointFormat;
 using ::google::crypto::tink::EllipticCurveType;

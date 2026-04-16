@@ -39,6 +39,7 @@ cc_test(
     deps = [
         ":create_keyset",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
@@ -66,6 +67,7 @@ cc_test(
     deps = [
         ":load_cleartext_keyset",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
@@ -94,6 +96,7 @@ cc_test(
         ":test_util",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
@@ -125,6 +128,7 @@ cc_test(
         ":write_keyset",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
@@ -150,6 +154,7 @@ cc_test(
     deps = [
         ":load_cleartext_keyset",
         ":obtain_and_use_a_primitive",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
@@ -175,6 +180,7 @@ cc_test(
     deps = [
         ":load_cleartext_keyset",
         ":write_cleartext_keyset",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",

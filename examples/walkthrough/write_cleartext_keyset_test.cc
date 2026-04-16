@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -36,10 +37,10 @@
 namespace tink_walkthrough {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::Aead;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 
 constexpr absl::string_view kSerializedKeyset = R"string({
   "key": [

@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aead_config.h"
@@ -49,9 +50,9 @@ constexpr absl::string_view kSerializedKeyset = R"string({
   "primaryKeyId": 294406504
 })string";
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 
 TEST(LoadKeysetTest, EncryptDecrypt) {
   ASSERT_THAT(crypto::tink::AeadConfig::Register(), IsOk());

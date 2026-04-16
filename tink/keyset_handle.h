@@ -23,17 +23,22 @@
 #include <set>
 #include <string>
 #include <type_traits>
+#include <typeindex>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
 #include "absl/base/macros.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
+#include "tink/annotations.h"
 #include "tink/config/global_registry.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
@@ -109,9 +114,27 @@ class KeysetHandle {
   };
 
   KeysetHandle() = default;
-  KeysetHandle(const KeysetHandle&) = default;
+  KeysetHandle(const KeysetHandle& other)
+      : keyset_(other.keyset_),
+        entries_(other.entries_),
+        monitoring_annotations_(other.monitoring_annotations_) {
+    for (const auto& pair : other.annotations_) {
+      annotations_[pair.first] =
+          std::unique_ptr<Annotations>(pair.second->Clone());
+    }
+  }
   KeysetHandle(KeysetHandle&&) = default;
-  KeysetHandle& operator=(const KeysetHandle&) = default;
+  KeysetHandle& operator=(const KeysetHandle& other) {
+    keyset_ = other.keyset_;
+    entries_ = other.entries_;
+    monitoring_annotations_ = other.monitoring_annotations_;
+    annotations_.clear();
+    for (const auto& pair : other.annotations_) {
+      annotations_[pair.first] =
+          std::unique_ptr<Annotations>(pair.second->Clone());
+    }
+    return *this;
+  }
   KeysetHandle& operator=(KeysetHandle&&) = default;
 
   // Returns the number of entries in this keyset.
@@ -203,7 +226,8 @@ class KeysetHandle {
   static absl::StatusOr<std::unique_ptr<KeysetHandle>> GenerateNew(
       const google::crypto::tink::KeyTemplate& key_template,
       absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
-    return GenerateNew(key_template, crypto::tink::KeyGenConfigGlobalRegistry(),
+    return GenerateNew(key_template,
+    crypto::tink::KeyGenConfigGlobalRegistry(),
                        std::move(monitoring_annotations));
   }
   ABSL_DEPRECATE_AND_INLINE()
@@ -252,7 +276,8 @@ class KeysetHandle {
   // global registry to do so. Returns an error if this handle contains keys
   // that are not private keys.
   ABSL_DEPRECATE_AND_INLINE()
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> GetPublicKeysetHandle() const {
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> GetPublicKeysetHandle() const
+  {
     return GetPublicKeysetHandle(crypto::tink::KeyGenConfigGlobalRegistry());
   }
   // TINK-PENDING-REMOVAL-IN-3.0.0-END
@@ -287,6 +312,17 @@ class KeysetHandle {
       const KeyManager<P>* custom_manager) const;
   // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
+  // Returns the annotations of this keyset handle or `NOT_FOUND` if no
+  // annotations of type `T` are present.
+  template <typename T>
+  absl::StatusOr<const T&> GetAnnotations() const {
+    auto it = annotations_.find(typeid(T));
+    if (it == annotations_.end()) {
+      return absl::NotFoundError("Annotations not found.");
+    }
+    return static_cast<const T&>(*(it->second));
+  }
+
  private:
   // The classes below need access to get_keyset();
   friend class CleartextKeysetHandle;
@@ -312,18 +348,24 @@ class KeysetHandle {
   // `monitoring_annotations`.
   KeysetHandle(
       util::SecretProto<google::crypto::tink::Keyset> keyset,
-      absl::flat_hash_map<std::string, std::string> monitoring_annotations)
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations,
+      absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+          annotations = {})
       : keyset_(std::move(*keyset)),
-        monitoring_annotations_(std::move(monitoring_annotations)) {}
+        monitoring_annotations_(std::move(monitoring_annotations)),
+        annotations_(std::move(annotations)) {}
   // Creates a handle that contains the given `keyset`, `entries`, and
   // `monitoring_annotations`.
   KeysetHandle(
       util::SecretProto<google::crypto::tink::Keyset> keyset,
       std::vector<std::shared_ptr<const Entry>> entries,
-      absl::flat_hash_map<std::string, std::string> monitoring_annotations)
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations,
+      absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+          annotations = {})
       : keyset_(std::move(keyset)),
         entries_(std::move(entries)),
-        monitoring_annotations_(std::move(monitoring_annotations)) {}
+        monitoring_annotations_(std::move(monitoring_annotations)),
+        annotations_(std::move(annotations)) {}
 
   // Generates a key from `key_template` and adds it `keyset`.
   static absl::StatusOr<uint32_t> AddToKeyset(
@@ -374,6 +416,9 @@ class KeysetHandle {
   // for each key proto in `keyset_`.
   std::vector<std::shared_ptr<const Entry>> entries_;
   absl::flat_hash_map<std::string, std::string> monitoring_annotations_;
+  absl::flat_hash_map<std::type_index,
+                      /*absl_nonnull - not yet supported*/ std::unique_ptr<Annotations>>
+      annotations_;
 };
 
 // Creates new `KeysetHandle` objects.
@@ -490,6 +535,26 @@ class KeysetHandleBuilder {
       const absl::flat_hash_map<std::string, std::string>&
           monitoring_annotations);
 
+  // Adds the given annotations to be included in the built keyset handle.
+  // `T` must be a subclass of `Annotations`.
+  // Annotations for a given type can only be added once. Otherwise, the next
+  // call to `Build` will return an error.
+  template <typename T>
+  KeysetHandleBuilder& AddAnnotations(std::unique_ptr<T> annotations) {
+    static_assert(std::is_convertible_v<T*, Annotations*>,
+                  "T must be a subclass of Annotations.");
+
+    if (annotations_.contains(typeid(T))) {
+      annotations_status_ = absl::InvalidArgumentError(
+          absl::StrCat("Annotations for type ", typeid(T).name(),
+                       " have already been added."));
+    } else {
+      annotations_[typeid(T)] = std::move(annotations);
+    }
+
+    return *this;
+  }
+
   // Creates a new `KeysetHandle` object.
   //
   // Note: Since KeysetHandleBuilder::Entry objects might have randomly
@@ -521,7 +586,9 @@ class KeysetHandleBuilder {
 
   std::vector<KeysetHandleBuilder::Entry> entries_;
   absl::flat_hash_map<std::string, std::string> monitoring_annotations_;
-
+  absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+      annotations_;
+  absl::Status annotations_status_ = absl::OkStatus();
   bool build_called_ = false;
 };
 
@@ -580,8 +647,8 @@ absl::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
   if (!wrapper_store.ok()) {
     return wrapper_store.status();
   }
-  absl::StatusOr<const crypto::tink::internal::KeysetWrapper<P>*>
-      wrapper = (*wrapper_store)->Get<P>();
+  absl::StatusOr<const crypto::tink::internal::KeysetWrapper<P>*> wrapper =
+      (*wrapper_store)->Get<P>();
   if (!wrapper.ok()) {
     return wrapper.status();
   }

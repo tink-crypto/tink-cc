@@ -30,6 +30,7 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -42,6 +43,7 @@
 #include "tink/aead/internal/key_gen_config_v0.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/annotations.h"
 #include "tink/binary_keyset_reader.h"
 #include "tink/binary_keyset_writer.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -73,8 +75,6 @@
 #include "tink/signature/signature_key_templates.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_keyset_handle.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -125,6 +125,18 @@ class KeysetHandleTest : public ::testing::Test {
     ASSERT_THAT(status, IsOk());
 
     internal::UnSetFipsRestricted();
+  }
+
+  template <typename T>
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> AddAnnotations(
+      std::unique_ptr<KeysetHandle> handle, T annotations) {
+    KeysetHandleBuilder builder(*std::move(handle));
+    builder.AddAnnotations(std::make_unique<T>(std::move(annotations)));
+    auto new_handle = builder.Build(KeyGenConfiguration{});
+    if (!new_handle.ok()) {
+      return new_handle.status();
+    }
+    return std::make_unique<KeysetHandle>(*std::move(new_handle));
   }
 };
 
@@ -189,6 +201,44 @@ class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
   MOCK_METHOD(absl::StatusOr<std::unique_ptr<Aead>>, Wrap,
               (std::unique_ptr<PrimitiveSet<Aead>> primitive_set),
               (const, override));
+};
+
+class FakeAnnotations : public Annotations {
+ public:
+  FakeAnnotations() = default;
+  explicit FakeAnnotations(int32_t value) : value_(value) {}
+  FakeAnnotations(const FakeAnnotations&) = default;
+  FakeAnnotations(FakeAnnotations&&) = default;
+  FakeAnnotations& operator=(const FakeAnnotations&) = default;
+  FakeAnnotations& operator=(FakeAnnotations&&) = default;
+
+  FakeAnnotations* Clone() const override {
+    return new FakeAnnotations(value_);
+  }
+
+  int32_t value() const { return value_; }
+
+ private:
+  int32_t value_ = 0;
+};
+
+class OtherFakeAnnotations : public Annotations {
+ public:
+  OtherFakeAnnotations() = default;
+  explicit OtherFakeAnnotations(int32_t value) : value_(value) {}
+  OtherFakeAnnotations(const OtherFakeAnnotations&) = default;
+  OtherFakeAnnotations(OtherFakeAnnotations&&) = default;
+  OtherFakeAnnotations& operator=(const OtherFakeAnnotations&) = default;
+  OtherFakeAnnotations& operator=(OtherFakeAnnotations&&) = default;
+
+  OtherFakeAnnotations* Clone() const override {
+    return new OtherFakeAnnotations(value_);
+  }
+
+  int32_t value() const { return value_; }
+
+ private:
+  int32_t value_;
 };
 
 // Generates a keyset for testing.
@@ -264,7 +314,14 @@ TEST_F(KeysetHandleTest, CopyCtorAndAssignment) {
       KeysetHandle::ReadNoSecret(GetPublicTestKeyset().SerializeAsString());
   ASSERT_THAT(keyset_handle, IsOk());
   ASSERT_THAT(*keyset_handle, NotNull());
+  keyset_handle = AddAnnotations(std::move(*keyset_handle), FakeAnnotations(1));
+  ASSERT_THAT(keyset_handle, IsOk());
   ASSERT_THAT((*keyset_handle)->Validate(), IsOk());
+  auto fake_annotations = (*keyset_handle)->GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations, IsOk());
+  EXPECT_EQ(fake_annotations->value(), 1);
+  EXPECT_THAT((*keyset_handle)->GetAnnotations<OtherFakeAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
   EXPECT_THAT((*keyset_handle)->size(), Eq(2));
   EXPECT_THAT((*keyset_handle)->GetPrimary().GetId(), Eq(42));
   KeysetHandle keyset_handle_copy = **keyset_handle;
@@ -272,14 +329,23 @@ TEST_F(KeysetHandleTest, CopyCtorAndAssignment) {
   EXPECT_EQ(keyset_handle_copy.size(), (*keyset_handle)->size());
   EXPECT_THAT(keyset_handle_copy.GetPrimary().GetId(),
               Eq((*keyset_handle)->GetPrimary().GetId()));
+  auto fake_annotations2 = keyset_handle_copy.GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations2, IsOk());
+  EXPECT_EQ(fake_annotations2->value(), 1);
   KeysetHandle keyset_handle_copy2;
   EXPECT_THAT(keyset_handle_copy2.Validate(), Not(IsOk()));
   EXPECT_THAT(keyset_handle_copy2.size(), Eq(0));
+  EXPECT_THAT(keyset_handle_copy2.GetAnnotations<FakeAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
   keyset_handle_copy2 = keyset_handle_copy;
   EXPECT_THAT(keyset_handle_copy2.Validate(), IsOk());
   EXPECT_EQ(keyset_handle_copy2.size(), (*keyset_handle)->size());
   EXPECT_THAT(keyset_handle_copy2.GetPrimary().GetId(),
               Eq((*keyset_handle)->GetPrimary().GetId()));
+  auto fake_annotations3 =
+      keyset_handle_copy2.GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations3, IsOk());
+  EXPECT_EQ(fake_annotations3->value(), 1);
 }
 
 TEST_F(KeysetHandleTest, MoveCtorAndAssignment) {
@@ -287,9 +353,15 @@ TEST_F(KeysetHandleTest, MoveCtorAndAssignment) {
       KeysetHandle::ReadNoSecret(GetPublicTestKeyset().SerializeAsString());
   ASSERT_THAT(keyset_handle, IsOk());
   ASSERT_THAT(*keyset_handle, NotNull());
+  keyset_handle = AddAnnotations(std::move(*keyset_handle), FakeAnnotations(1));
+  ASSERT_THAT(keyset_handle, IsOk());
+  ASSERT_THAT(*keyset_handle, NotNull());
   ASSERT_THAT((*keyset_handle)->Validate(), IsOk());
   EXPECT_THAT((*keyset_handle)->size(), Eq(2));
   EXPECT_THAT((*keyset_handle)->GetPrimary().GetId(), Eq(42));
+  auto fake_annotations = (*keyset_handle)->GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations, IsOk());
+  EXPECT_EQ(fake_annotations->value(), 1);
   KeysetHandle keyset_handle_moved = std::move(**keyset_handle);
   // Moved out handle becomes empty
   EXPECT_THAT((*keyset_handle)->Validate(), Not(IsOk()));
@@ -297,10 +369,16 @@ TEST_F(KeysetHandleTest, MoveCtorAndAssignment) {
   // Moved to handle is valid and contains expected values
   EXPECT_THAT(keyset_handle_moved.Validate(), IsOk());
   EXPECT_THAT(keyset_handle_moved.size(), Eq(2));
+  auto fake_annotations2 =
+      keyset_handle_moved.GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations2, IsOk());
+  EXPECT_EQ(fake_annotations2->value(), 1);
   EXPECT_THAT(keyset_handle_moved.GetPrimary().GetId(), Eq(42));
   KeysetHandle keyset_handle_moved2;
   EXPECT_THAT(keyset_handle_moved2.Validate(), Not(IsOk()));
   EXPECT_THAT(keyset_handle_moved2.size(), Eq(0));
+  EXPECT_THAT(keyset_handle_moved2.GetAnnotations<FakeAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
   keyset_handle_moved2 = std::move(keyset_handle_moved);
   // Moved out handle becomes empty
   EXPECT_THAT(keyset_handle_moved.Validate(), Not(IsOk()));
@@ -309,6 +387,40 @@ TEST_F(KeysetHandleTest, MoveCtorAndAssignment) {
   EXPECT_THAT(keyset_handle_moved2.Validate(), IsOk());
   EXPECT_THAT(keyset_handle_moved2.size(), Eq(2));
   EXPECT_THAT(keyset_handle_moved2.GetPrimary().GetId(), Eq(42));
+  auto fake_annotations3 =
+      keyset_handle_moved2.GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations3, IsOk());
+  EXPECT_EQ(fake_annotations3->value(), 1);
+}
+
+TEST_F(KeysetHandleTest, MultipleAnnotations) {
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+      KeysetHandle::ReadNoSecret(GetPublicTestKeyset().SerializeAsString());
+  ASSERT_THAT(keyset_handle, IsOk());
+  ASSERT_THAT(*keyset_handle, NotNull());
+  keyset_handle = AddAnnotations(std::move(*keyset_handle), FakeAnnotations(1));
+  ASSERT_THAT(keyset_handle, IsOk());
+  keyset_handle =
+      AddAnnotations(std::move(*keyset_handle), OtherFakeAnnotations(2));
+  ASSERT_THAT(keyset_handle, IsOk());
+
+  auto fake_annotations = (*keyset_handle)->GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations, IsOk());
+  EXPECT_EQ(fake_annotations->value(), 1);
+  auto other_fake_annotations =
+      (*keyset_handle)->GetAnnotations<OtherFakeAnnotations>();
+  ASSERT_THAT(other_fake_annotations, IsOk());
+  EXPECT_EQ(other_fake_annotations->value(), 2);
+
+  KeysetHandle keyset_handle_copy = **keyset_handle;
+
+  auto fake_annotations2 = keyset_handle_copy.GetAnnotations<FakeAnnotations>();
+  ASSERT_THAT(fake_annotations2, IsOk());
+  EXPECT_EQ(fake_annotations2->value(), 1);
+  auto other_fake_annotations2 =
+      keyset_handle_copy.GetAnnotations<OtherFakeAnnotations>();
+  ASSERT_THAT(other_fake_annotations2, IsOk());
+  EXPECT_EQ(other_fake_annotations2->value(), 2);
 }
 
 TEST_F(KeysetHandleTest, ReadEncryptedKeysetBinary) {
@@ -391,7 +503,7 @@ TEST_F(KeysetHandleTest, ReadEncryptedWithAnnotations) {
       KeysetHandle::Read(*std::move(reader), aead, kAnnotations);
   ASSERT_THAT(keyset_handle, IsOk());
 
-  // In order to validate annotations are set correctly, we need acceess to the
+  // In order to validate annotations are set correctly, we need access to the
   // generated primitive set, which is populated by KeysetWrapperImpl and passed
   // to the primitive wrapper. We thus register a mock primitive wrapper for
   // Aead so that we can copy the annotations and later check them.
@@ -962,9 +1074,8 @@ TEST_F(KeysetHandleTest,
   }
 }
 
-TEST_F(
-    KeysetHandleTest,
-    GetPublicKeysetHandleWithBespokeConfigEmptySerializationRegistryFails) {
+TEST_F(KeysetHandleTest,
+       GetPublicKeysetHandleWithBespokeConfigEmptySerializationRegistryFails) {
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   absl::StatusOr<const Keyset> keyset = CreateEcdsaMultiKeyset();
   ASSERT_THAT(keyset, IsOk());

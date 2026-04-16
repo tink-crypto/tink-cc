@@ -37,6 +37,7 @@ tink_cc_library(
     aead_config.h
     aead_factory.h
     aead_key_templates.h
+    annotations.h
     binary_keyset_reader.h
     binary_keyset_writer.h
     cleartext_keyset_handle.h
@@ -81,6 +82,7 @@ tink_cc_library(
     "${TINK_VERSION_H}"
   DEPS
     tink::core::aead
+    tink::core::annotations
     tink::core::binary_keyset_reader
     tink::core::binary_keyset_writer
     tink::core::cleartext_keyset_handle
@@ -154,6 +156,14 @@ tink_cc_library(
 )
 
 add_library(tink::static ALIAS tink_core_cc)
+
+tink_cc_library(
+  NAME annotations
+  SRCS
+    annotations.h
+  DEPS
+    absl::nullability
+)
 
 tink_cc_library(
   NAME input_stream
@@ -435,6 +445,7 @@ tink_cc_library(
     keyset_handle_builder.h
   DEPS
     tink::core::aead
+    tink::core::annotations
     tink::core::configuration
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -450,6 +461,7 @@ tink_cc_library(
     tink::core::restricted_data
     tink::core::secret_key_access_token
     absl::core_headers
+    absl::nullability
     absl::flat_hash_map
     absl::absl_check
     absl::memory
@@ -922,6 +934,7 @@ tink_cc_test(
     core/keyset_handle_test.cc
   DEPS
     tink::core::aead
+    tink::core::annotations
     tink::core::binary_keyset_reader
     tink::core::binary_keyset_writer
     tink::core::cleartext_keyset_handle_testonly
@@ -946,6 +959,7 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::strings
     absl::optional
     tink::aead::aead_config
@@ -971,8 +985,6 @@ tink_cc_test(
     tink::signature::signature_key_templates
     tink::subtle::random
     tink::subtle::xchacha20_poly1305_boringssl
-    tink::util::status
-    tink::util::statusor
     tink::util::test_keyset_handle
     tink::util::test_matchers
     tink::util::test_util
@@ -988,6 +1000,7 @@ tink_cc_test(
     core/keyset_handle_builder_test.cc
   DEPS
     tink::core::aead
+    tink::core::annotations
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream

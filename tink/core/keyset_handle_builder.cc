@@ -75,6 +75,9 @@ KeysetHandleBuilder::KeysetHandleBuilder(const KeysetHandle& handle) {
             std::move(entry.key_), entry.GetStatus(), entry.IsPrimary());
     AddEntry(std::move(builder_entry));
   }
+  for (const auto& [id, annotation] : handle.annotations_) {
+    annotations_[id] = absl::WrapUnique(annotation->Clone());
+  }
 }
 
 KeysetHandleBuilder::Entry KeysetHandleBuilder::Entry::CreateFromKey(
@@ -171,6 +174,10 @@ absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "KeysetHandleBuilder::Build may only be called once");
   }
+  if (!annotations_status_.ok()) {
+    return annotations_status_;
+  }
+
   build_called_ = true;
   util::SecretProto<Keyset> keyset;
   absl::optional<int> primary_id = absl::nullopt;
@@ -218,7 +225,7 @@ absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
     return entries.status();
   }
   return KeysetHandle(std::move(keyset), *std::move(entries),
-                      monitoring_annotations_);
+                      monitoring_annotations_, std::move(annotations_));
 }
 
 }  // namespace tink

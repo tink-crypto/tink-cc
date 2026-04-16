@@ -39,6 +39,7 @@
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/annotations.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_config.h"
 #include "tink/core/key_type_manager.h"
@@ -1254,6 +1255,55 @@ TEST_F(KeysetHandleBuilderTest, BuildWithAnnotations) {
   EXPECT_EQ(generated_annotations, kAnnotations);
   // This is needed to cleanup mocks.
   Registry::Reset();
+}
+
+class FakeAnnotations : public Annotations {
+ public:
+  FakeAnnotations() = default;
+  ~FakeAnnotations() override = default;
+  FakeAnnotations* Clone() const override { return new FakeAnnotations(); }
+};
+
+TEST_F(KeysetHandleBuilderTest, AddAnnotations) {
+  absl::StatusOr<AesGcmParameters> aes_128_gcm =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(aes_128_gcm, IsOk());
+
+  KeysetHandleBuilder builder;
+  builder
+      .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *aes_128_gcm, crypto::tink::KeyStatus::kEnabled,
+          /*is_primary=*/true))
+      .AddAnnotations(std::make_unique<FakeAnnotations>());
+
+  EXPECT_THAT(builder.Build().status(), IsOk());
+}
+
+TEST_F(KeysetHandleBuilderTest, AddAnnotationsFailsIfAlreadyAdded) {
+  absl::StatusOr<AesGcmParameters> aes_128_gcm =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(aes_128_gcm, IsOk());
+
+  KeysetHandleBuilder builder;
+  builder
+      .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *aes_128_gcm, crypto::tink::KeyStatus::kEnabled,
+          /*is_primary=*/true))
+      .AddAnnotations(std::make_unique<FakeAnnotations>())
+      .AddAnnotations(std::make_unique<FakeAnnotations>());
+
+  EXPECT_THAT(builder.Build().status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

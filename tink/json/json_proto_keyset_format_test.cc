@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "google/protobuf/json/json.h"
 #include "tink/config/global_registry.h"
@@ -43,7 +44,7 @@ namespace tink {
 
 namespace {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::google::protobuf::json::BinaryToJsonString;
 using ::google::protobuf::json::PrintOptions;

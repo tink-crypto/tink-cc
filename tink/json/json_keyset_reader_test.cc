@@ -27,6 +27,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/substitute.h"
 #include "tink/keyset_reader.h"
@@ -39,9 +40,9 @@
 namespace crypto {
 namespace tink {
 
+using ::absl_testing::IsOk;
 using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
-using ::crypto::tink::test::IsOk;
 
 using AesEaxKeyProto = ::google::crypto::tink::AesEaxKey;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;

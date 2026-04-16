@@ -1710,6 +1710,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::slh_dsa_parameter_set
     gmock
+    absl::status_matchers
     absl::statusor
     tink::signature::slh_dsa_parameters
     tink::util::test_matchers

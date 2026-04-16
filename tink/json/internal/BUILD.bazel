@@ -26,6 +26,7 @@ cc_test(
         ":tink_type_resolver",
         "//proto:tink_cc_proto",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
         "@protobuf",
     ],

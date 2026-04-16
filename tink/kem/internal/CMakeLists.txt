@@ -52,6 +52,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     absl::optional
     crypto
@@ -108,6 +109,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_matchers
     absl::optional
     crypto
     tink::core::primitive_set

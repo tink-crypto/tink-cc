@@ -1586,6 +1586,7 @@ cc_test(
         ":slh_dsa_parameter_set",
         "//tink/signature:slh_dsa_parameters",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],

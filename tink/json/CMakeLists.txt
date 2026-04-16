@@ -66,6 +66,7 @@ tink_cc_test(
     tink::json::json_keyset_reader
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::core::keyset_reader
@@ -85,6 +86,7 @@ tink_cc_test(
     tink::json::json_keyset_writer
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::binary_keyset_reader
     tink::core::cleartext_keyset_handle
@@ -111,6 +113,7 @@ tink_cc_test(
     tink::json::json_proto_keyset_format
     gmock
     absl::status
+    absl::status_matchers
     absl::statusor
     protobuf::libprotobuf
     tink::core::insecure_secret_key_access

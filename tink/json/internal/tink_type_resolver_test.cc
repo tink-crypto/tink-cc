@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "google/protobuf/json/json.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "tink/util/test_matchers.h"
@@ -29,7 +30,7 @@ namespace crypto {
 namespace tink {
 
 namespace {
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::Keyset;
 using ::google::protobuf::json::JsonToBinaryString;

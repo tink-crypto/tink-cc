@@ -431,6 +431,7 @@ cc_library(
     hdrs = ["slh_dsa_sign_boringssl.h"],
     include_prefix = "tink/signature/internal",
     deps = [
+        ":slh_dsa_parameter_set",
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
         "//tink:public_key_sign",
@@ -473,6 +474,7 @@ cc_library(
     hdrs = ["slh_dsa_verify_boringssl.h"],
     include_prefix = "tink/signature/internal",
     deps = [
+        ":slh_dsa_parameter_set",
         "//tink:partial_key_access",
         "//tink:public_key_verify",
         "//tink/internal:fips_utils",

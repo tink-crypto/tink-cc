@@ -38,6 +38,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/internal/slh_dsa_parameter_set.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/subtle/subtle_util.h"
 
@@ -48,12 +49,40 @@ namespace internal {
 namespace {
 
 #ifdef OPENSSL_IS_BORINGSSL
+using SignFunc = int (*)(uint8_t*, const uint8_t*, const uint8_t*, size_t,
+                         const uint8_t*, size_t);
+
+absl::StatusOr<SignFunc> GetSignFunc(const SlhDsaParameterSet& parameter_set) {
+  if (parameter_set == SlhDsaParameterSet::Sha2_128s()) {
+    return SLHDSA_SHA2_128S_sign;
+  }
+  if (parameter_set == SlhDsaParameterSet::Shake_256f()) {
+    return SLHDSA_SHAKE_256F_sign;
+  }
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "SLH-DSA parameter combination is not supported by BoringSSL.");
+}
+
+absl::StatusOr<size_t> GetSignatureSize(
+    const SlhDsaParameterSet& parameter_set) {
+  if (parameter_set == SlhDsaParameterSet::Sha2_128s()) {
+    return SLHDSA_SHA2_128S_SIGNATURE_BYTES;
+  }
+  if (parameter_set == SlhDsaParameterSet::Shake_256f()) {
+    return SLHDSA_SHAKE_256F_SIGNATURE_BYTES;
+  }
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "SLH-DSA parameter combination is not supported by BoringSSL.");
+}
+
 class SlhDsaSignBoringSsl : public PublicKeySign {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  explicit SlhDsaSignBoringSsl(const SlhDsaPrivateKey &private_key)
+  explicit SlhDsaSignBoringSsl(const SlhDsaPrivateKey& private_key)
       : private_key_(private_key) {}
 
   ~SlhDsaSignBoringSsl() override = default;
@@ -67,23 +96,38 @@ class SlhDsaSignBoringSsl : public PublicKeySign {
 
 absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
     absl::string_view data) const {
+  absl::StatusOr<SlhDsaParameterSet> parameter_set =
+      GetSlhDsaParameterSet(private_key_.GetPublicKey().GetParameters());
+  if (!parameter_set.ok()) {
+    return parameter_set.status();
+  }
+
+  absl::StatusOr<SignFunc> sign_func = GetSignFunc(*parameter_set);
+  if (!sign_func.ok()) {
+    return sign_func.status();
+  }
+
+  absl::StatusOr<size_t> signature_size = GetSignatureSize(*parameter_set);
+  if (!signature_size.ok()) {
+    return signature_size.status();
+  }
+
   // The signature will be prepended with the output prefix for TINK keys.
   std::string signature(private_key_.GetOutputPrefix());
   size_t signature_buffer_size =
-      SLHDSA_SHA2_128S_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size();
+      *signature_size + private_key_.GetOutputPrefix().size();
   subtle::ResizeStringUninitialized(&signature, signature_buffer_size);
 
-  internal::CallWithCoreDumpProtection([&]() {
+  internal::CallWithCoreDumpProtection([&, sign_func_val = *sign_func]() {
     internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
                                                    signature_buffer_size);
-    SLHDSA_SHA2_128S_sign(
-        reinterpret_cast<uint8_t *>(&signature[0] +
-                                    private_key_.GetOutputPrefix().size()),
-        private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
-            .Get(InsecureSecretKeyAccess::Get())
-            .data(),
-        reinterpret_cast<const uint8_t *>(data.data()), data.size(),
-        /* context = */ nullptr, /* context_len = */ 0);
+    sign_func_val(reinterpret_cast<uint8_t*>(
+                      &signature[0] + private_key_.GetOutputPrefix().size()),
+                  private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get())
+                      .data(),
+                  reinterpret_cast<const uint8_t*>(data.data()), data.size(),
+                  /* context = */ nullptr, /* context_len = */ 0);
     internal::DfsanClearLabel(&signature[0], signature_buffer_size);
   });
 
@@ -94,7 +138,7 @@ absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
-    const SlhDsaPrivateKey &private_key) {
+    const SlhDsaPrivateKey& private_key) {
 #ifndef OPENSSL_IS_BORINGSSL
   return absl::UnimplementedError(
       "SLH-DSA is only supported in BoringSSL builds.");
@@ -103,6 +147,12 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
   if (!status.ok()) {
     return status;
   }
+  absl::StatusOr<SlhDsaParameterSet> parameter_set =
+      GetSlhDsaParameterSet(private_key.GetPublicKey().GetParameters());
+  if (!parameter_set.ok()) {
+    return parameter_set.status();
+  }
+
   return {std::make_unique<SlhDsaSignBoringSsl>(std::move(private_key))};
 #endif  // OPENSSL_IS_BORINGSSL
 }

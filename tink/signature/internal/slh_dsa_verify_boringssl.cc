@@ -16,6 +16,7 @@
 
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -35,6 +36,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/internal/slh_dsa_parameter_set.h"
 #include "tink/signature/slh_dsa_public_key.h"
 
 namespace crypto {
@@ -46,6 +48,37 @@ namespace {
 #ifdef OPENSSL_IS_BORINGSSL
 // Public Key Verification using SLH-DSA-SHA2-128s implementation from
 // BoringSSL.
+namespace {
+using VerifyFunc = int (*)(const uint8_t*, size_t, const uint8_t*,
+                           const uint8_t*, size_t, const uint8_t*, size_t);
+
+absl::StatusOr<VerifyFunc> GetVerifyFunc(
+    const SlhDsaParameterSet& parameter_set) {
+  if (parameter_set == SlhDsaParameterSet::Sha2_128s()) {
+    return SLHDSA_SHA2_128S_verify;
+  }
+  if (parameter_set == SlhDsaParameterSet::Shake_256f()) {
+    return SLHDSA_SHAKE_256F_verify;
+  }
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "SLH-DSA parameter combination is not supported by BoringSSL.");
+}
+
+absl::StatusOr<size_t> GetSignatureSize(
+    const SlhDsaParameterSet& parameter_set) {
+  if (parameter_set == SlhDsaParameterSet::Sha2_128s()) {
+    return SLHDSA_SHA2_128S_SIGNATURE_BYTES;
+  }
+  if (parameter_set == SlhDsaParameterSet::Shake_256f()) {
+    return SLHDSA_SHAKE_256F_SIGNATURE_BYTES;
+  }
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "SLH-DSA parameter combination is not supported by BoringSSL.");
+}
+}  // namespace
+
 class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
@@ -59,15 +92,31 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override {
-    if (signature.size() != SLHDSA_SHA2_128S_SIGNATURE_BYTES +
-                                public_key_.GetOutputPrefix().size()) {
+    absl::StatusOr<SlhDsaParameterSet> parameter_set =
+        GetSlhDsaParameterSet(public_key_.GetParameters());
+    if (!parameter_set.ok()) {
+      return parameter_set.status();
+    }
+
+    absl::StatusOr<VerifyFunc> verify_func = GetVerifyFunc(*parameter_set);
+    if (!verify_func.ok()) {
+      return verify_func.status();
+    }
+
+    absl::StatusOr<size_t> signature_size = GetSignatureSize(*parameter_set);
+    if (!signature_size.ok()) {
+      return signature_size.status();
+    }
+
+    if (signature.size() !=
+        *signature_size + public_key_.GetOutputPrefix().size()) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
-          absl::StrFormat("Verification failed: invalid signature length; got "
-                          "%d, expected %d",
-                          signature.size(),
-                          SLHDSA_SHA2_128S_SIGNATURE_BYTES +
-                              public_key_.GetOutputPrefix().size()));
+          absl::StrFormat(
+              "Verification failed: invalid signature length; got "
+              "%d, expected %d",
+              signature.size(),
+              *signature_size + public_key_.GetOutputPrefix().size()));
     }
 
     if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
@@ -76,10 +125,10 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
     }
 
     if (1 !=
-        SLHDSA_SHA2_128S_verify(
+        (*verify_func)(
             reinterpret_cast<const uint8_t*>(
                 signature.data() + public_key_.GetOutputPrefix().size()),
-            SLHDSA_SHA2_128S_SIGNATURE_BYTES,
+            *signature_size,
             reinterpret_cast<const uint8_t*>(
                 public_key_.GetPublicKeyBytes(GetPartialKeyAccess()).data()),
             reinterpret_cast<const uint8_t*>(data.data()), data.size(),
@@ -108,6 +157,9 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
   if (!status.ok()) {
     return status;
   }
+  absl::StatusOr<SlhDsaParameterSet> parameter_set =
+      GetSlhDsaParameterSet(public_key.GetParameters());
+
   return {std::make_unique<SlhDsaVerifyBoringSsl>(std::move(public_key))};
 #endif  // OPENSSL_IS_BORINGSSL
 }

@@ -502,6 +502,7 @@ tink_cc_library(
     slh_dsa_sign_boringssl.cc
     slh_dsa_sign_boringssl.h
   DEPS
+    tink::signature::internal::slh_dsa_parameter_set
     absl::status
     absl::statusor
     absl::string_view
@@ -545,6 +546,7 @@ tink_cc_library(
     slh_dsa_verify_boringssl.cc
     slh_dsa_verify_boringssl.h
   DEPS
+    tink::signature::internal::slh_dsa_parameter_set
     absl::status
     absl::statusor
     absl::strings

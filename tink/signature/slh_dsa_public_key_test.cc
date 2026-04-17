@@ -26,6 +26,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
+#include "openssl/slhdsa.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/slh_dsa_parameters.h"
@@ -47,6 +48,10 @@ struct TestCase {
   SlhDsaParameters::Variant variant;
   absl::optional<int> id_requirement;
   std::string output_prefix;
+  SlhDsaParameters::HashType hash_type;
+  int private_key_size_in_bytes;
+  int public_key_size_in_bytes;
+  SlhDsaParameters::SignatureType signature_type;
 };
 
 using SlhDsaPublicKeyTest = TestWithParam<TestCase>;
@@ -54,20 +59,44 @@ using SlhDsaPublicKeyTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     SlhDsaPublicKeyTestSuite, SlhDsaPublicKeyTest,
     Values(TestCase{SlhDsaParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    std::string("\x01\x02\x03\x04\x00", 5),
+                    SlhDsaParameters::HashType::kSha2,
+                    SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
+                    SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
+                    SlhDsaParameters::SignatureType::kSmallSignature},
            TestCase{SlhDsaParameters::Variant::kTink, 0x03050709,
-                    std::string("\x01\x03\x05\x07\x09", 5)},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+                    std::string("\x01\x03\x05\x07\x09", 5),
+                    SlhDsaParameters::HashType::kSha2,
+                    SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
+                    SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
+                    SlhDsaParameters::SignatureType::kSmallSignature},
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, "",
+                    SlhDsaParameters::HashType::kSha2,
+                    SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
+                    SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
+                    SlhDsaParameters::SignatureType::kSmallSignature},
+           TestCase{SlhDsaParameters::Variant::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5),
+                    SlhDsaParameters::HashType::kShake,
+                    SLHDSA_SHAKE_256F_PRIVATE_KEY_BYTES,
+                    SLHDSA_SHAKE_256F_PUBLIC_KEY_BYTES,
+                    SlhDsaParameters::SignatureType::kFastSigning},
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, "",
+                    SlhDsaParameters::HashType::kShake,
+                    SLHDSA_SHAKE_256F_PRIVATE_KEY_BYTES,
+                    SLHDSA_SHAKE_256F_PUBLIC_KEY_BYTES,
+                    SlhDsaParameters::SignatureType::kFastSigning}));
 
 TEST_P(SlhDsaPublicKeyTest, CreatePublicKeyWorks) {
   TestCase test_case = GetParam();
 
   absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
-      SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  std::string public_key_bytes =
+      subtle::Random::GetRandomBytes(test_case.public_key_size_in_bytes);
   absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*params, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
@@ -138,11 +167,12 @@ TEST_P(SlhDsaPublicKeyTest, PublicKeyEquals) {
   TestCase test_case = GetParam();
 
   absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
-      SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  std::string public_key_bytes =
+      subtle::Random::GetRandomBytes(test_case.public_key_size_in_bytes);
 
   absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*params, public_key_bytes,

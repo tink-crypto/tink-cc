@@ -21,7 +21,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -86,9 +85,6 @@ TEST(SlhDsaParameterSetTest, OperatorNotEquals) {
 // We don't support other configurations for the moment.
 TEST_P(SlhDsaParameterSetTest, GetSlhDsaParameterSet) {
   const TestCase& test_case = GetParam();
-  if (test_case.hash_type != SlhDsaParameters::HashType::kSha2) {
-    GTEST_SKIP() << "We don't support other configurations for the moment";
-  }
 
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       test_case.hash_type, test_case.private_key_size_in_bytes,

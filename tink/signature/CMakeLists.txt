@@ -1895,10 +1895,11 @@ tink_cc_library(
     slh_dsa_parameters.h
   DEPS
     tink::signature::signature_parameters
+    absl::no_destructor
+    absl::flat_hash_set
     absl::status
+    absl::statusor
     tink::core::parameters
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -1908,6 +1909,8 @@ tink_cc_test(
   DEPS
     tink::signature::slh_dsa_parameters
     gmock
+    absl::no_destructor
+    absl::flat_hash_set
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1933,6 +1936,7 @@ tink_cc_library(
     tink::core::restricted_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
+    tink::signature::internal::slh_dsa_parameter_set
 )
 
 tink_cc_test(
@@ -1991,6 +1995,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
+    crypto
     tink::core::key
     tink::core::partial_key_access
     tink::subtle::random

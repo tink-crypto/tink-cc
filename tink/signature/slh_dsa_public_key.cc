@@ -16,6 +16,7 @@
 
 #include "tink/signature/slh_dsa_public_key.h"
 
+#include <cstddef>
 #include <string>
 
 #include "absl/status/status.h"
@@ -67,11 +68,12 @@ absl::StatusOr<SlhDsaPublicKey> SlhDsaPublicKey::Create(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  // Only 32-byte public keys are supported at the moment.
-  if (public_key_bytes.size() != 32) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid public key size. Only 32-byte keys are "
-                        "currently supported.");
+  if (public_key_bytes.size() !=
+      static_cast<size_t>(parameters.GetPrivateKeySizeInBytes() / 2)) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Invalid public key size. Only 32-byte, 48-byte and 64-byte keys are "
+        "supported.");
   }
   absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);

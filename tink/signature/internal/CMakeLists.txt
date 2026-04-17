@@ -1484,7 +1484,9 @@ tink_cc_library(
     slh_dsa_key_creator.cc
     slh_dsa_key_creator.h
   DEPS
+    tink::signature::internal::slh_dsa_parameter_set
     absl::memory
+    absl::status
     absl::statusor
     absl::string_view
     absl::optional
@@ -1715,5 +1717,4 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::signature::slh_dsa_parameters
-    tink::util::test_matchers
 )

@@ -1360,6 +1360,7 @@ cc_library(
     hdrs = ["slh_dsa_key_creator.h"],
     include_prefix = "tink/signature/internal",
     deps = [
+        ":slh_dsa_parameter_set",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/internal:internal_insecure_secret_key_access",
@@ -1367,6 +1368,7 @@ cc_library(
         "//tink/signature:slh_dsa_private_key",
         "//tink/signature:slh_dsa_public_key",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
@@ -1587,7 +1589,6 @@ cc_test(
     deps = [
         ":slh_dsa_parameter_set",
         "//tink/signature:slh_dsa_parameters",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",

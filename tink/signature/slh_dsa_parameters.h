@@ -19,9 +19,9 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

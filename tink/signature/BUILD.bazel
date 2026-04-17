@@ -926,9 +926,10 @@ cc_library(
     deps = [
         ":signature_parameters",
         "//tink:parameters",
-        "//tink/util:status",
-        "//tink/util:statusor",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 
@@ -947,6 +948,7 @@ cc_library(
         "//tink:restricted_data",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:dfsan_forwarders",
+        "//tink/signature/internal:slh_dsa_parameter_set",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
@@ -1947,6 +1949,8 @@ cc_test(
         ":slh_dsa_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
@@ -2012,6 +2016,7 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/types:optional",
+        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

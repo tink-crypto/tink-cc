@@ -16,36 +16,45 @@
 
 #include "tink/signature/slh_dsa_parameters.h"
 
+#include <tuple>
+
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 
+namespace {
+const absl::flat_hash_set<std::tuple<SlhDsaParameters::HashType, int,
+                                     SlhDsaParameters::SignatureType>>&
+GetSupportedParameterSets() {
+  static const absl::NoDestructor<absl::flat_hash_set<std::tuple<
+      SlhDsaParameters::HashType, int, SlhDsaParameters::SignatureType>>>
+      kSupportedParameterSets({
+          // SLH-DSA-SHA2-128s
+          {SlhDsaParameters::HashType::kSha2, 64,
+           SlhDsaParameters::SignatureType::kSmallSignature},
+          // SLH-DSA-SHAKE-256f
+          {SlhDsaParameters::HashType::kShake, 128,
+           SlhDsaParameters::SignatureType::kFastSigning},
+      });
+  return *kSupportedParameterSets;
+}
+}  // namespace
+
 absl::StatusOr<SlhDsaParameters> SlhDsaParameters::Create(
     HashType hash_type, int private_key_size_in_bytes,
     SignatureType signature_type, Variant variant) {
-  // Validate HashType - only SHA2 is currently supported.
-  if (hash_type != HashType::kSha2) {
+  if (GetSupportedParameterSets().find(
+          {hash_type, private_key_size_in_bytes, signature_type}) ==
+      GetSupportedParameterSets().end()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
-        "Invalid SLH-DSA HashType. Only SHA2 is currently supported.");
-  }
-
-  if (private_key_size_in_bytes != 64) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid private key size. Only 64-bytes keys are "
-                        "currently supported.");
-  }
-
-  // Validate SignatureType - only SmallSignature is currently supported.
-  if (signature_type != SignatureType::kSmallSignature) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Invalid SLH-DSA SignatureType. Only SMALL_SIGNATURE is currently "
-        "supported.");
+        "Invalid SLH-DSA parameter combination. Only SLH-DSA-SHA2-128s and "
+        "SLH-DSA-SHAKE-256f are supported.");
   }
 
   // Validate Variant.

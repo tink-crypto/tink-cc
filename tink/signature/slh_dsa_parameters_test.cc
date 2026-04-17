@@ -17,10 +17,13 @@
 #include "tink/signature/slh_dsa_parameters.h"
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -36,6 +39,21 @@ using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;
+
+const absl::flat_hash_set<std::tuple<SlhDsaParameters::HashType, int,
+                                     SlhDsaParameters::SignatureType>>&
+GetSupportedParameterSets() {
+  static const absl::NoDestructor<
+      absl::flat_hash_set<std::tuple<SlhDsaParameters::HashType, int,
+                                     SlhDsaParameters::SignatureType>>>
+      kSupportedConfigs({// SLH-DSA-SHA2-128s
+                         {SlhDsaParameters::HashType::kSha2, 64,
+                          SlhDsaParameters::SignatureType::kSmallSignature},
+                         // SLH-DSA-SHAKE-256f
+                         {SlhDsaParameters::HashType::kShake, 128,
+                          SlhDsaParameters::SignatureType::kFastSigning}});
+  return *kSupportedConfigs;
+}
 
 struct VariantTestCase {
   SlhDsaParameters::Variant variant;
@@ -89,14 +107,54 @@ TEST(SlhDsaParametersTest, CreateWithInvalidHashTypeFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(SlhDsaParametersTest, CreateWithUnsupportedHashTypeFails) {
-  EXPECT_THAT(
-      SlhDsaParameters::Create(SlhDsaParameters::HashType::kShake,
-                               /*private_key_size_in_bytes=*/64,
-                               SlhDsaParameters::SignatureType::kSmallSignature,
-                               SlhDsaParameters::Variant::kTink)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument));
+TEST(SlhDsaParametersTest, CreateWithValidCombinationsSucceeds) {
+  for (const auto& config : GetSupportedParameterSets()) {
+    SlhDsaParameters::HashType hash_type = std::get<0>(config);
+    int private_key_size_in_bytes = std::get<1>(config);
+    SlhDsaParameters::SignatureType signature_type = std::get<2>(config);
+
+    for (auto variant : {SlhDsaParameters::Variant::kTink,
+                         SlhDsaParameters::Variant::kNoPrefix}) {
+      absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+          hash_type, private_key_size_in_bytes, signature_type, variant);
+
+      ASSERT_THAT(parameters, IsOk());
+      EXPECT_THAT(parameters->GetHashType(), Eq(hash_type));
+      EXPECT_THAT(parameters->GetPrivateKeySizeInBytes(),
+                  Eq(private_key_size_in_bytes));
+      EXPECT_THAT(parameters->GetSignatureType(), Eq(signature_type));
+      EXPECT_THAT(parameters->GetVariant(), Eq(variant));
+      EXPECT_THAT(parameters->HasIdRequirement(),
+                  Eq(variant != SlhDsaParameters::Variant::kNoPrefix));
+    }
+  }
+}
+
+TEST(SlhDsaParametersTest, CreateWithInvalidCombinationsFails) {
+  for (auto hash_type : {SlhDsaParameters::HashType::kSha2,
+                         SlhDsaParameters::HashType::kShake}) {
+    for (int private_key_size_in_bytes : {64, 96, 128}) {
+      for (auto signature_type :
+           {SlhDsaParameters::SignatureType::kSmallSignature,
+            SlhDsaParameters::SignatureType::kFastSigning}) {
+        auto current_config = std::make_tuple(
+            hash_type, private_key_size_in_bytes, signature_type);
+
+        if (GetSupportedParameterSets().contains(current_config)) {
+          continue;
+        }
+
+        for (auto variant : {SlhDsaParameters::Variant::kTink,
+                             SlhDsaParameters::Variant::kNoPrefix}) {
+          EXPECT_THAT(
+              SlhDsaParameters::Create(hash_type, private_key_size_in_bytes,
+                                       signature_type, variant)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+        }
+      }
+    }
+  }
 }
 
 TEST(SlhDsaParametersTest, CreateWithInvalidSignatureTypeFails) {
@@ -110,32 +168,12 @@ TEST(SlhDsaParametersTest, CreateWithInvalidSignatureTypeFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(SlhDsaParametersTest, CreateWithUnsupportedSignatureTypeFails) {
-  EXPECT_THAT(
-      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
-                               /*private_key_size_in_bytes=*/64,
-                               SlhDsaParameters::SignatureType::kFastSigning,
-                               SlhDsaParameters::Variant::kTink)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
 TEST(SlhDsaParametersTest, CreateWithInvalidKeySizeFails) {
   EXPECT_THAT(
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/31,
                                SlhDsaParameters::SignatureType::kSmallSignature,
                                SlhDsaParameters::Variant::kTink)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
-TEST(SlhDsaParametersTest, CreateWithUnsupportedKeySizeFails) {
-  EXPECT_THAT(
-      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
-                               /*private_key_size_in_bytes=*/128,
-                               SlhDsaParameters::SignatureType::kSmallSignature,
-                               SlhDsaParameters::Variant::kNoPrefix)
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
 }

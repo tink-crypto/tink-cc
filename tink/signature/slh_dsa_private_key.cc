@@ -38,8 +38,33 @@
 #include "tink/restricted_data.h"
 #include "tink/signature/slh_dsa_public_key.h"
 
+#ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/internal/slh_dsa_parameter_set.h"
+#endif
+
 namespace crypto {
 namespace tink {
+
+namespace {
+
+#ifdef OPENSSL_IS_BORINGSSL
+using PublicFromPrivateFunc = void (*)(uint8_t*, const uint8_t*);
+
+absl::StatusOr<PublicFromPrivateFunc> GetPublicFromPrivateFunc(
+    const internal::SlhDsaParameterSet& parameter_set) {
+  if (parameter_set == internal::SlhDsaParameterSet::Sha2_128s()) {
+    return SLHDSA_SHA2_128S_public_from_private;
+  }
+  if (parameter_set == internal::SlhDsaParameterSet::Shake_256f()) {
+    return SLHDSA_SHAKE_256F_public_from_private;
+  }
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "SLH-DSA parameter combination is not supported by BoringSSL.");
+}
+#endif
+
+}  // namespace
 
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
@@ -48,10 +73,12 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   return absl::UnimplementedError(
       "SLH-DSA is only supported in BoringSSL builds.");
 #else
-  // Only 64-byte private keys are currently supported.
-  if (private_key_bytes.size() != SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "SLH-DSA private key length must be 64 bytes.");
+  // Only 64-byte, 96-byte and 128-byte private keys are supported.
+  if (private_key_bytes.size() != 64 && private_key_bytes.size() != 96 &&
+      private_key_bytes.size() != 128) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "SLH-DSA private key length must be 64, 96, or 128 bytes.");
   }
 
   if (public_key.GetParameters().GetPrivateKeySizeInBytes() !=
@@ -59,30 +86,42 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Private key size does not match parameters");
   }
+
+  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
+      internal::GetSlhDsaParameterSet(public_key.GetParameters());
+  if (!parameter_set.ok()) {
+    return parameter_set.status();
+  }
+
+  int public_key_size = parameter_set->GetPublicKeySizeInBytes();
+
+  absl::StatusOr<PublicFromPrivateFunc> public_from_private_func =
+      GetPublicFromPrivateFunc(*parameter_set);
+  if (!public_from_private_func.ok()) {
+    return public_from_private_func.status();
+  }
+
   // Confirm that the private key and public key are a valid SLH-DSA key pair.
   std::string public_key_bytes_regen;
-  public_key_bytes_regen.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
+  public_key_bytes_regen.resize(public_key_size);
 
   internal::CallWithCoreDumpProtection([&]() {
-    internal::ScopedAssumeRegionCoreDumpSafe scope(
-        &public_key_bytes_regen[0], SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes_regen[0],
+                                                   public_key_size);
 
-    SLHDSA_SHA2_128S_public_from_private(
+    (*public_from_private_func)(
         reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
         reinterpret_cast<const uint8_t*>(
             private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())
                 .data()));
-
-    internal::DfsanClearLabel(&public_key_bytes_regen[0],
-                              SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
+    internal::DfsanClearLabel(&public_key_bytes_regen[0], public_key_size);
   });
 
   absl::string_view expected_public_key_bytes =
       public_key.GetPublicKeyBytes(token);
 
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
-                    public_key_bytes_regen.data(),
-                    SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES) != 0) {
+                    public_key_bytes_regen.data(), public_key_size) != 0) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid SLH-DSA key pair");
   }

@@ -543,6 +543,8 @@ class KeysetHandleBuilder {
   KeysetHandleBuilder& AddAnnotations(std::unique_ptr<T> annotations) {
     static_assert(std::is_convertible_v<T*, Annotations*>,
                   "T must be a subclass of Annotations.");
+    static_assert(!std::is_same_v<T, Annotations>,
+                  "T must be a subclass of Annotations.");
 
     if (annotations_.contains(typeid(T))) {
       annotations_status_ = absl::InvalidArgumentError(

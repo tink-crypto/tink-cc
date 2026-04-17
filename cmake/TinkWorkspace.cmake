@@ -103,12 +103,18 @@ endif()
 # defined.
 if (NOT TARGET crypto)
   if (NOT TINK_USE_SYSTEM_OPENSSL)
-    # Release from 2024-10-03.
+    # Disable BoringSSL benchmarks and tests.
+    # We save the old value to restore it later
+    set(INITIAL_BUILD_TESTING ${BUILD_TESTING})
+    set(BUILD_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
+    # Release from 2026-04-13.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/releases/download/0.20251002.0/boringssl-0.20251002.0.tar.gz
-      SHA256 f96733fc3df03d4195db656d1b7b8c174c33f95d052f811f0ecc8f4e4e3db332
+      URL https://github.com/google/boringssl/releases/download/0.20260413.0/boringssl-0.20260413.0.tar.gz
+      SHA256 3560f7dd3f08e16b9f84d877a5be21ec62071564783009571af5fcc6fad734d2
     )
+    # Restore the previous value of BUILD_TESTING
+    set(BUILD_TESTING ${INITIAL_BUILD_TESTING} CACHE BOOL "Tink dependency override" FORCE)
     # BoringSSL targets do not carry include directory info, this fixes it.
     target_include_directories(crypto PUBLIC
       "$<BUILD_INTERFACE:${boringssl_SOURCE_DIR}/src/include>")

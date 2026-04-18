@@ -94,7 +94,8 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa65VerifyBoringSsl::New(
   CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
            public_key_bytes.size());
   auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
-  if (!MLDSA65_parse_public_key(boringssl_public_key.get(), &cbs)) {
+  if (!MLDSA65_parse_public_key(boringssl_public_key.get(), &cbs) ||
+      CBS_len(&cbs) != 0) {
     return absl::InternalError("Invalid ML-DSA public key");
   }
 
@@ -177,7 +178,8 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa87VerifyBoringSsl::New(
   CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
            public_key_bytes.size());
   auto boringssl_public_key = std::make_unique<MLDSA87_public_key>();
-  if (!MLDSA87_parse_public_key(boringssl_public_key.get(), &cbs)) {
+  if (!MLDSA87_parse_public_key(boringssl_public_key.get(), &cbs) ||
+      CBS_len(&cbs) != 0) {
     return absl::InternalError("Invalid ML-DSA public key");
   }
 

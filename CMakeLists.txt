@@ -10,6 +10,7 @@ option(TINK_USE_INSTALLED_ABSEIL "Build Tink linking to Abseil installed in the 
 option(TINK_USE_INSTALLED_GOOGLETEST "Build Tink linking to GTest installed in the system" OFF)
 option(TINK_USE_INSTALLED_PROTOBUF "Build Tink linking to Protobuf installed in the system" OFF)
 option(USE_ONLY_FIPS "Enables the FIPS only mode in Tink" OFF)
+option(TINK_INSTALL "Generate install rules for Tink" OFF)
 
 set(CPACK_GENERATOR TGZ)
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
@@ -62,3 +63,89 @@ list(APPEND TINK_INCLUDE_DIRS "${TINK_INCLUDE_ALIAS_DIR}")
 
 add_subdirectory(tink)
 add_subdirectory(proto)
+
+if(TINK_INSTALL)
+  include(GNUInstallDirs)
+  include(CMakePackageConfigHelpers)
+
+  if(NOT TINK_USE_SYSTEM_OPENSSL)
+    message(FATAL_ERROR "TINK_INSTALL=ON requires TINK_USE_SYSTEM_OPENSSL=ON")
+  endif()
+  if(NOT TINK_USE_INSTALLED_ABSEIL)
+    message(FATAL_ERROR "TINK_INSTALL=ON requires TINK_USE_INSTALLED_ABSEIL=ON")
+  endif()
+  if(NOT TINK_USE_INSTALLED_PROTOBUF)
+    message(FATAL_ERROR "TINK_INSTALL=ON requires TINK_USE_INSTALLED_PROTOBUF=ON")
+  endif()
+
+  get_property(_tink_all_targets GLOBAL PROPERTY TINK_ALL_TARGETS)
+
+  install(
+    TARGETS ${_tink_all_targets}
+    EXPORT tinkTargets
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  )
+
+  # Install source headers preserving directory structure.
+  install(DIRECTORY tink/
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tink"
+    FILES_MATCHING PATTERN "*.h"
+  )
+
+  # Install generated proto headers.
+  install(DIRECTORY "${TINK_GENFILE_DIR}/proto/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/proto"
+    FILES_MATCHING PATTERN "*.pb.h"
+  )
+
+  # Install generated version.h.
+  install(FILES "${TINK_GENFILE_DIR}/tink/version.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tink"
+  )
+
+  # Export set.
+  install(EXPORT tinkTargets
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tink"
+  )
+
+  # Generate aliases file that recreates tink::module::name aliases
+  # and the tink::static convenience alias.
+  get_property(_tink_alias_map GLOBAL PROPERTY TINK_ALIAS_MAP)
+  set(_aliases_content "# Auto-generated alias targets for tink-cc.\n")
+  foreach(_pair IN LISTS _tink_alias_map)
+    string(REPLACE "=" ";" _kv "${_pair}")
+    list(GET _kv 0 _alias)
+    list(GET _kv 1 _real)
+    string(APPEND _aliases_content
+      "if(TARGET ${_real} AND NOT TARGET ${_alias})\n"
+      "  add_library(${_alias} ALIAS ${_real})\n"
+      "endif()\n")
+  endforeach()
+  string(APPEND _aliases_content
+    "if(TARGET tink_core_cc AND NOT TARGET tink::static)\n"
+    "  add_library(tink::static ALIAS tink_core_cc)\n"
+    "endif()\n")
+  file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tinkAliases.cmake"
+    CONTENT "${_aliases_content}")
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/tinkAliases.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tink")
+
+  # Package version file.
+  write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/tinkConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+  # Package config file.
+  configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/tinkConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/tinkConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tink")
+
+  install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/tinkConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/tinkConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tink")
+endif()

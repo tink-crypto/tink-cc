@@ -52,6 +52,7 @@ tink_cc_library(
   SRCS
     status.h
   DEPS
+    absl::core_headers
     absl::status
   PUBLIC
 )
@@ -62,6 +63,7 @@ tink_cc_library(
     statusor.h
   DEPS
     tink::util::status
+    absl::core_headers
     absl::statusor
   PUBLIC
 )

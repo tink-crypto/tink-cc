@@ -97,7 +97,10 @@ cc_library(
     hdrs = ["status.h"],
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],
-    deps = ["@abseil-cpp//absl/status"],
+    deps = [
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/status",
+    ],
 )
 
 cc_library(
@@ -107,6 +110,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":status",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status:statusor",
     ],
 )

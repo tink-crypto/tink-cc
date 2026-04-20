@@ -17,6 +17,7 @@
 #ifndef TINK_UTIL_STATUSOR_H_
 #define TINK_UTIL_STATUSOR_H_
 
+#include "absl/base/macros.h"
 #include "absl/status/statusor.h"
 #include "tink/util/status.h"
 
@@ -29,7 +30,7 @@ namespace util {
 // A legacy alias for absl::StatusOr<T>. StatusOr can be inlined to make user
 // code cleaner. We currently do not plan to remove it.
 template <typename T>
-using StatusOr = absl::StatusOr<T>;
+using StatusOr ABSL_DEPRECATE_AND_INLINE() = absl::StatusOr<T>;
 
 }  // namespace util
 }  // namespace tink

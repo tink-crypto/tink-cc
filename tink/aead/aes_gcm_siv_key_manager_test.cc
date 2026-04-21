@@ -40,7 +40,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using AesGcmSivKeyProto = ::google::crypto::tink::AesGcmSivKey;
 using ::google::crypto::tink::AesGcmSivKeyFormat;
 using ::testing::Eq;

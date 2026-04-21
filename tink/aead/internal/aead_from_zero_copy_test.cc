@@ -43,7 +43,7 @@ constexpr absl::string_view kAssociatedData = "Some associated data.";
 constexpr absl::string_view kCiphertext = "37ajhgdahjsdg8653821218236182631";
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::_;
 using ::testing::Invoke;
 using ::testing::Return;

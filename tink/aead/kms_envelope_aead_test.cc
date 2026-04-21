@@ -52,9 +52,9 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::Aead;
 using ::crypto::tink::test::DummyAead;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Eq;
 using ::testing::HasSubstr;

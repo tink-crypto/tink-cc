@@ -47,6 +47,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::InsecureSecretKeyAccess;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::MutableSerializationRegistry;
@@ -54,7 +55,6 @@ using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::internal::ProtoKeySerialization;
 using ::crypto::tink::internal::ProtoParametersSerialization;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;

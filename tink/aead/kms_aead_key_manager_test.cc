@@ -41,9 +41,9 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::test::DummyAead;
 using ::crypto::tink::test::DummyKmsClient;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KmsAeadKey;
 using ::google::crypto::tink::KmsAeadKeyFormat;
 using ::testing::Eq;

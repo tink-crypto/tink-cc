@@ -1202,6 +1202,7 @@ tink_cc_test(
     tink::aead::failing_aead
     gmock
     absl::status
+    absl::status_matchers
     tink::core::aead
     tink::util::test_matchers
 )

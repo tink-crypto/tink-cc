@@ -44,8 +44,8 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::CordAesGcmBoringSsl;
-using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;

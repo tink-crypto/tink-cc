@@ -442,6 +442,7 @@ tink_cc_test(
     tink::mac::failing_mac
     gmock
     absl::status
+    absl::status_matchers
     tink::core::mac
     tink::util::test_matchers
 )

@@ -41,7 +41,7 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::HashType;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;

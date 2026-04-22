@@ -2135,3 +2135,22 @@ tink_cc_test(
     tink::util::secret_data
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME legacy_annotations
+  SRCS
+    legacy_annotations.h
+  DEPS
+    absl::flat_hash_map
+    tink::core::annotations
+)
+
+tink_cc_test(
+  NAME legacy_annotations_test
+  SRCS
+    legacy_annotations_test.cc
+  DEPS
+    tink::internal::legacy_annotations
+    gmock
+    absl::flat_hash_map
+)

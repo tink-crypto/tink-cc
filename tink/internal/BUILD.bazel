@@ -2208,3 +2208,23 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "legacy_annotations",
+    hdrs = ["legacy_annotations.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "//tink:annotations",
+        "@abseil-cpp//absl/container:flat_hash_map",
+    ],
+)
+
+cc_test(
+    name = "legacy_annotations_test",
+    srcs = ["legacy_annotations_test.cc"],
+    deps = [
+        ":legacy_annotations",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@googletest//:gtest_main",
+    ],
+)

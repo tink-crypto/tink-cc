@@ -503,13 +503,12 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::subtle::random
     tink::subtle::test_util
     tink::util::istream_input_stream
-    tink::util::status
-    tink::util::test_matchers
 )
 
 tink_cc_test(
@@ -521,6 +520,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::core::output_stream
@@ -530,7 +530,6 @@ tink_cc_test(
     tink::subtle::test_util
     tink::util::istream_input_stream
     tink::util::ostream_output_stream
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
@@ -544,6 +543,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::output_stream
     tink::core::primitive_set
@@ -554,9 +554,6 @@ tink_cc_test(
     tink::subtle::test_util
     tink::util::buffer
     tink::util::ostream_output_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
@@ -571,13 +568,12 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::strings
     tink::core::input_stream
     tink::subtle::random
     tink::subtle::test_util
     tink::util::istream_input_stream
-    tink::util::status
-    tink::util::test_matchers
 )
 
 tink_cc_test(

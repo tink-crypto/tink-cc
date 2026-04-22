@@ -27,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
@@ -37,7 +38,6 @@
 #include "tink/subtle/test_util.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/ostream_output_stream.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
@@ -46,16 +46,16 @@ namespace tink {
 namespace streamingaead {
 namespace {
 
-using crypto::tink::test::DummyStreamingAead;
-using crypto::tink::test::IsOk;
-using crypto::tink::test::StatusIs;
-using crypto::tink::util::IstreamInputStream;
-using crypto::tink::util::OstreamOutputStream;
-using google::crypto::tink::KeysetInfo;
-using google::crypto::tink::KeyStatusType;
-using google::crypto::tink::OutputPrefixType;
-using subtle::test::ReadFromStream;
-using subtle::test::WriteToStream;
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
+using ::crypto::tink::subtle::test::ReadFromStream;
+using ::crypto::tink::subtle::test::WriteToStream;
+using ::crypto::tink::test::DummyStreamingAead;
+using ::crypto::tink::util::IstreamInputStream;
+using ::crypto::tink::util::OstreamOutputStream;
+using ::google::crypto::tink::KeysetInfo;
+using ::google::crypto::tink::KeyStatusType;
+using ::google::crypto::tink::OutputPrefixType;
 
 static int kBufferSize = 128;
 

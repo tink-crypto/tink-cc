@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,12 +24,13 @@
 #include <sstream>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_random_access_stream.h"
@@ -40,22 +41,19 @@
 #include "tink/subtle/test_util.h"
 #include "tink/util/buffer.h"
 #include "tink/util/ostream_output_stream.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::TestRandomAccessStream;
-using crypto::tink::subtle::test::DummyStreamingAead;
-using crypto::tink::subtle::test::DummyStreamSegmentDecrypter;
-using crypto::tink::test::IsOk;
-using crypto::tink::test::StatusIs;
-using subtle::test::WriteToStream;
-using testing::HasSubstr;
+using ::crypto::tink::subtle::test::DummyStreamingAead;
+using ::crypto::tink::subtle::test::DummyStreamSegmentDecrypter;
+using ::crypto::tink::subtle::test::WriteToStream;
+using ::testing::HasSubstr;
 
 // A dummy RandomAccessStream that fakes its size.
 class DummyRandomAccessStream : public RandomAccessStream {

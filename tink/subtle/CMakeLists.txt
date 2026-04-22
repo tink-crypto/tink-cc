@@ -1593,6 +1593,8 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
+    absl::statusor
     absl::strings
     tink::core::output_stream
     tink::core::random_access_stream
@@ -1600,9 +1602,6 @@ tink_cc_test(
     tink::internal::test_random_access_stream
     tink::util::buffer
     tink::util::ostream_output_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(

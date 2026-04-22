@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_random_access_stream.h"
@@ -40,9 +41,6 @@
 #include "tink/subtle/test_util.h"
 #include "tink/util/buffer.h"
 #include "tink/util/ostream_output_stream.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
@@ -51,15 +49,15 @@ namespace tink {
 namespace streamingaead {
 namespace {
 
-using crypto::tink::test::DummyStreamingAead;
-using crypto::tink::test::IsOk;
-using crypto::tink::test::IsOkAndHolds;
-using crypto::tink::test::StatusIs;
-using google::crypto::tink::KeysetInfo;
-using google::crypto::tink::KeyStatusType;
-using google::crypto::tink::OutputPrefixType;
-using subtle::test::WriteToStream;
-using testing::HasSubstr;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
+using ::crypto::tink::subtle::test::WriteToStream;
+using ::crypto::tink::test::DummyStreamingAead;
+using ::google::crypto::tink::KeysetInfo;
+using ::google::crypto::tink::KeyStatusType;
+using ::google::crypto::tink::OutputPrefixType;
+using ::testing::HasSubstr;
 
 // Creates an RandomAccessStream that contains ciphertext resulting
 // from encryption of 'pt' with 'aad' as associated data, using 'saead'.

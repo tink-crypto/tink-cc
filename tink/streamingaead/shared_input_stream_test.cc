@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
@@ -33,17 +34,15 @@
 #include "tink/subtle/random.h"
 #include "tink/subtle/test_util.h"
 #include "tink/util/istream_input_stream.h"
-#include "tink/util/status.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
 namespace streamingaead {
 namespace {
 
-using crypto::tink::test::IsOk;
-using crypto::tink::test::StatusIs;
-using subtle::test::ReadFromStream;
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
+using ::crypto::tink::subtle::test::ReadFromStream;
 
 static int kBufferSize = 4096;
 

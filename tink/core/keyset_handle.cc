@@ -20,9 +20,11 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <typeindex>
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
@@ -31,6 +33,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
+#include "tink/annotations.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -389,9 +392,15 @@ KeysetHandle::ReadWithAssociatedData(
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
+  absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+      annotations_map;
+  annotations_map[typeid(internal::LegacyAnnotations)] =
+      absl::make_unique<internal::LegacyAnnotations>(
+          std::move(monitoring_annotations));
+
   return absl::WrapUnique(new KeysetHandle(*std::move(keyset_result),
                                            *std::move(entries),
-                                           std::move(monitoring_annotations)));
+                                           std::move(annotations_map)));
 }
 
 absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
@@ -416,9 +425,15 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
+  absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+      annotations_map;
+  annotations_map[typeid(internal::LegacyAnnotations)] =
+      absl::make_unique<internal::LegacyAnnotations>(
+          std::move(monitoring_annotations));
+
   return absl::WrapUnique(new KeysetHandle(std::move(keyset),
                                            *std::move(entries),
-                                           std::move(monitoring_annotations)));
+                                           std::move(annotations_map)));
 }
 
 absl::Status KeysetHandle::Write(KeysetWriter* writer,
@@ -457,8 +472,13 @@ absl::Status KeysetHandle::WriteNoSecret(KeysetWriter* writer) const {
 absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
     const KeyTemplate& key_template, const KeyGenConfiguration& config,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
+  absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+      annotations_map;
+  annotations_map[typeid(internal::LegacyAnnotations)] =
+      absl::make_unique<internal::LegacyAnnotations>(
+          std::move(monitoring_annotations));
   auto handle = absl::WrapUnique(new KeysetHandle(
-      util::SecretProto<Keyset>(), std::move(monitoring_annotations)));
+      util::SecretProto<Keyset>(), std::move(annotations_map)));
   const absl::StatusOr<uint32_t> result =
       handle->AddKey(key_template, /*as_primary=*/true, config);
   if (!result.ok()) {
@@ -655,6 +675,18 @@ KeysetHandle::GetEntriesFromKeyset(const Keyset& keyset) {
     entries.push_back(std::make_shared<const Entry>(*entry));
   }
   return entries;
+}
+
+const absl::flat_hash_map<std::string, std::string>&
+KeysetHandle::GetLegacyAnnotations() const {
+  static absl::NoDestructor<absl::flat_hash_map<std::string, std::string>>
+      empty_annotations;
+  absl::StatusOr<const internal::LegacyAnnotations&> monitoring_annotations =
+      GetAnnotations<internal::LegacyAnnotations>();
+  if (monitoring_annotations.ok()) {
+    return monitoring_annotations->GetMap();
+  }
+  return *empty_annotations;
 }
 
 }  // namespace tink

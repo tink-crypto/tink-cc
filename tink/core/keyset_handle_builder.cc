@@ -34,6 +34,7 @@
 #include "absl/types/optional.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/keyset_handle_builder_entry.h"
+#include "tink/internal/legacy_annotations.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -164,8 +165,9 @@ absl::Status KeysetHandleBuilder::CheckIdAssignments() {
 KeysetHandleBuilder& KeysetHandleBuilder::SetMonitoringAnnotations(
     const absl::flat_hash_map<std::string, std::string>&
         monitoring_annotations) {
-  monitoring_annotations_ = monitoring_annotations;
-  return *this;
+  return AddAnnotations(
+      absl::make_unique<crypto::tink::internal::LegacyAnnotations>(
+          monitoring_annotations));
 }
 
 absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
@@ -225,7 +227,7 @@ absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
     return entries.status();
   }
   return KeysetHandle(std::move(keyset), *std::move(entries),
-                      monitoring_annotations_, std::move(annotations_));
+                      std::move(annotations_));
 }
 
 }  // namespace tink

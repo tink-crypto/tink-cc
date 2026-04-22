@@ -461,6 +461,7 @@ tink_cc_library(
     tink::core::restricted_data
     tink::core::secret_key_access_token
     absl::core_headers
+    absl::no_destructor
     absl::nullability
     absl::flat_hash_map
     absl::absl_check
@@ -480,6 +481,7 @@ tink_cc_library(
     tink::internal::keyset_handle_builder_entry
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
+    tink::internal::legacy_annotations
     tink::internal::legacy_proto_key
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
@@ -504,6 +506,7 @@ tink_cc_library(
     core/cleartext_keyset_handle.cc
     cleartext_keyset_handle.h
   DEPS
+    tink::core::annotations
     tink::core::keyset_handle
     tink::core::keyset_reader
     tink::core::keyset_writer
@@ -514,8 +517,6 @@ tink_cc_library(
     absl::statusor
     tink::util::errors
     tink::util::secret_proto
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 

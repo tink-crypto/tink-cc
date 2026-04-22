@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <typeindex>
 #include <utility>
 #include <vector>
 
@@ -27,6 +28,7 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "tink/annotations.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
@@ -60,9 +62,15 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
+  absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
+      annotations_map;
+  annotations_map[typeid(internal::LegacyAnnotations)] =
+      absl::make_unique<internal::LegacyAnnotations>(
+          std::move(monitoring_annotations));
+
   std::unique_ptr<KeysetHandle> handle(
       new KeysetHandle(util::SecretProto<Keyset>(**keyset_result), *entries,
-                       std::move(monitoring_annotations)));
+                       std::move(annotations_map)));
   return std::move(handle);
 }
 

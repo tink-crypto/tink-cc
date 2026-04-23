@@ -39,7 +39,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::EciesAeadHkdfKeyFormat;
 using ::google::crypto::tink::EciesAeadHkdfParams;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;

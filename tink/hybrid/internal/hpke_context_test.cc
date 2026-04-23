@@ -38,11 +38,11 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::CreateHpkeTestParams;
 using ::crypto::tink::internal::DefaultHpkeTestParams;
 using ::crypto::tink::internal::HpkeTestParams;
 using ::crypto::tink::test::EqualsSecretData;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;

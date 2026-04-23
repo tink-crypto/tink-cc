@@ -816,6 +816,7 @@ tink_cc_test(
     tink::hybrid::failing_hybrid
     gmock
     absl::status
+    absl::status_matchers
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
     tink::util::test_matchers

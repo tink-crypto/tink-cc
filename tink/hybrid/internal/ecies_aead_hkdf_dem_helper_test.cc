@@ -42,8 +42,8 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::AeadOrDaead;
-using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
 
 // Checks whether Decrypt(Encrypt(message)) == message with the given dem.

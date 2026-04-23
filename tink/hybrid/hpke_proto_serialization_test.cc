@@ -62,6 +62,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::internal::ProtoKeySerialization;
@@ -69,7 +70,6 @@ using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::internal::proto_testing::SerializeMessage;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;

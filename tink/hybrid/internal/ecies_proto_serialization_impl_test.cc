@@ -69,10 +69,10 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::AesSivKeyFormat;
 using ::google::crypto::tink::EciesAeadDemParams;

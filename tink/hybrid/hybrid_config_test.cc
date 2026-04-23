@@ -68,11 +68,11 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyHybridDecrypt;
 using ::crypto::tink::test::DummyHybridEncrypt;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::EciesAeadDemParams;
 using ::google::crypto::tink::EciesAeadHkdfParams;

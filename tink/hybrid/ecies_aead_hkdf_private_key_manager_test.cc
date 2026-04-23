@@ -55,8 +55,8 @@ namespace tink {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::HybridTestVector;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::EciesAeadHkdfKeyFormat;
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;

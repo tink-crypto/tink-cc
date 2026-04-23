@@ -59,9 +59,9 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;

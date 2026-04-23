@@ -53,8 +53,8 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;

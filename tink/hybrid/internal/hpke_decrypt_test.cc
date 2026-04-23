@@ -52,6 +52,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::CreateHpkeParams;
 using ::crypto::tink::internal::CreateHpkePrivateKey;
 using ::crypto::tink::internal::CreateHpkePublicKey;
@@ -59,7 +60,6 @@ using ::crypto::tink::internal::CreateHpkeTestParams;
 using ::crypto::tink::internal::DefaultHpkeTestParams;
 using ::crypto::tink::internal::HpkeTestParams;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;

@@ -39,8 +39,8 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::test::EqualsSecretData;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Values;
 
 class HpkeContextBoringSslTest : public testing::TestWithParam<HpkeParams> {};

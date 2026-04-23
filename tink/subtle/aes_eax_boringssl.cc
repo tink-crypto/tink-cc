@@ -38,6 +38,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/random.h"
@@ -122,13 +123,6 @@ void AesEaxBoringSsl::MultiplyByX(const uint8_t in[kBlockSize],
   uint64_t out_low = (in_low << 1) ^ (0x87 & -(in_high >> 63));
   BigEndianStore64(out_high, out);
   BigEndianStore64(out_low, out + 8);
-}
-
-bool AesEaxBoringSsl::EqualBlocks(const uint8_t x[kBlockSize],
-                                  const uint8_t y[kBlockSize]) {
-  uint64_t res = Load64(x) ^ Load64(y);
-  res |= Load64(x + 8) ^ Load64(y + 8);
-  return res == 0;
 }
 
 bool AesEaxBoringSsl::IsValidKeySize(size_t key_size_in_bytes) {
@@ -301,7 +295,7 @@ absl::StatusOr<std::string> AesEaxBoringSsl::Decrypt(
         XorBlock(N.data(), &mac);
         XorBlock(H.data(), &mac);
         const uint8_t* sig = reinterpret_cast<const uint8_t*>(tag.data());
-        if (!EqualBlocks(mac.data(), sig)) {
+        if (!internal::SafeCryptoMemEquals(mac.data(), sig, kBlockSize)) {
           return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Tag mismatch");
         }

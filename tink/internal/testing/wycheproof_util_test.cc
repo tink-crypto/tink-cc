@@ -32,9 +32,9 @@ namespace wycheproof_testing {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::subtle::HashType;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 
 TEST(WycheproofUtilTest, GetBytesFromHexValue) {

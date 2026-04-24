@@ -31,7 +31,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::KeyStatusType;
 
 TEST(KeyStatusUtilTest, FromKeyStatusType) {

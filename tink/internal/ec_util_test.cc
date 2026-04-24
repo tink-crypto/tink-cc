@@ -58,6 +58,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::
     GetEllipticCurveTypeFromValue;
@@ -65,7 +66,6 @@ using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::test::EqualsSecretData;
-using ::crypto::tink::test::StatusIs;
 using ::testing::AllOf;
 using ::testing::ElementsAreArray;
 using ::testing::Eq;

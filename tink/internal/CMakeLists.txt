@@ -1128,6 +1128,7 @@ tink_cc_test(
     tink::internal::test_random_access_stream
     gmock
     absl::status
+    absl::status_matchers
     tink::subtle::random
     tink::util::buffer
     tink::util::status

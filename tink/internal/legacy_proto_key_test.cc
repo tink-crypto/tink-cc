@@ -39,9 +39,9 @@ namespace tink {
 namespace internal {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::TestWithParam;

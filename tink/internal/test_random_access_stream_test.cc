@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "tink/subtle/random.h"
 #include "tink/util/buffer.h"
 #include "tink/util/status.h"
@@ -32,7 +33,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 TEST(TestRandomAccessStreamTest, ReadAllSucceeds) {
   const int buffer_size = 4 * 1024;

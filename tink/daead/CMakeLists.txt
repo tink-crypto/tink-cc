@@ -324,6 +324,7 @@ tink_cc_test(
     tink::daead::failing_daead
     gmock
     absl::status
+    absl::status_matchers
     tink::core::deterministic_aead
     tink::util::test_matchers
 )

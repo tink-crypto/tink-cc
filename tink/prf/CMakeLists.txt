@@ -515,6 +515,7 @@ tink_cc_test(
     tink::prf::prf_set
     gmock
     absl::status
+    absl::status_matchers
     tink::util::test_matchers
 )
 

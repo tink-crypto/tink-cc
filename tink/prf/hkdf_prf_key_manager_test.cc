@@ -46,7 +46,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using HkdfPrfKeyProto = ::google::crypto::tink::HkdfPrfKey;
 using ::google::crypto::tink::HkdfPrfKeyFormat;
 using ::testing::Eq;

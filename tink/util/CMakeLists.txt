@@ -427,12 +427,11 @@ tink_cc_test(
   DEPS
     tink::util::buffer
     tink::util::ostream_output_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     gmock
     absl::status
+    absl::status_matchers
+    absl::statusor
     absl::strings
     absl::cord
     tink::core::keyset_handle
@@ -450,10 +449,10 @@ tink_cc_test(
   SRCS
     validation_test.cc
   DEPS
-    tink::util::test_matchers
     tink::util::validation
     gmock
     absl::status
+    absl::status_matchers
     tink::proto::tink_cc_proto
 )
 

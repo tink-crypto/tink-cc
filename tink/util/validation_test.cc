@@ -22,7 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "tink/util/test_matchers.h"
+#include "absl/status/status_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -30,10 +30,10 @@ namespace tink {
 
 namespace {
 
-using crypto::tink::test::IsOk;
-using crypto::tink::test::StatusIs;
-using google::crypto::tink::KeyData;
-using testing::Not;
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
+using ::google::crypto::tink::KeyData;
+using ::testing::Not;
 
 TEST(ValidateKey, ValidKey) {
   google::crypto::tink::Keyset::Key key;

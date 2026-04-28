@@ -562,9 +562,6 @@ cc_test(
     deps = [
         ":buffer",
         ":ostream_output_stream",
-        ":status",
-        ":statusor",
-        ":test_matchers",
         ":test_util",
         "//proto:aes_gcm_cc_proto",
         "//proto:tink_cc_proto",
@@ -575,6 +572,8 @@ cc_test(
         "//tink/subtle",
         "//tink/subtle:test_util",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:cord",
         "@googletest//:gtest_main",
@@ -585,10 +584,10 @@ cc_test(
     name = "validation_test",
     srcs = ["validation_test.cc"],
     deps = [
-        ":test_matchers",
         ":validation",
         "//proto:tink_cc_proto",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
     ],
 )

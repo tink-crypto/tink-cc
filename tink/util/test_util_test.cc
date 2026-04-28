@@ -24,6 +24,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_random_access_stream.h"
@@ -34,9 +36,6 @@
 #include "tink/subtle/test_util.h"
 #include "tink/util/buffer.h"
 #include "tink/util/ostream_output_stream.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
 
@@ -45,8 +44,9 @@ namespace tink {
 namespace test {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::TestRandomAccessStream;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::KeyData;
 using ::testing::Eq;

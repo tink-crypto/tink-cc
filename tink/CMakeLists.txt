@@ -978,6 +978,7 @@ tink_cc_test(
     tink::internal::configuration_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
+    tink::internal::legacy_annotations
     tink::internal::mutable_serialization_registry
     tink::internal::ssl_util
     tink::signature::ecdsa_proto_serialization

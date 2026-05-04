@@ -394,9 +394,11 @@ KeysetHandle::ReadWithAssociatedData(
   }
   absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
       annotations_map;
-  annotations_map[typeid(internal::LegacyAnnotations)] =
-      absl::make_unique<internal::LegacyAnnotations>(
-          std::move(monitoring_annotations));
+  if (!monitoring_annotations.empty()) {
+    annotations_map[typeid(internal::LegacyAnnotations)] =
+        absl::make_unique<internal::LegacyAnnotations>(
+            std::move(monitoring_annotations));
+  }
 
   return absl::WrapUnique(new KeysetHandle(*std::move(keyset_result),
                                            *std::move(entries),
@@ -427,10 +429,11 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
   }
   absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
       annotations_map;
-  annotations_map[typeid(internal::LegacyAnnotations)] =
-      absl::make_unique<internal::LegacyAnnotations>(
-          std::move(monitoring_annotations));
-
+  if (!monitoring_annotations.empty()) {
+    annotations_map[typeid(internal::LegacyAnnotations)] =
+        absl::make_unique<internal::LegacyAnnotations>(
+            std::move(monitoring_annotations));
+  }
   return absl::WrapUnique(new KeysetHandle(std::move(keyset),
                                            *std::move(entries),
                                            std::move(annotations_map)));
@@ -474,9 +477,11 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
       annotations_map;
-  annotations_map[typeid(internal::LegacyAnnotations)] =
-      absl::make_unique<internal::LegacyAnnotations>(
-          std::move(monitoring_annotations));
+  if (!monitoring_annotations.empty()) {
+    annotations_map[typeid(internal::LegacyAnnotations)] =
+        absl::make_unique<internal::LegacyAnnotations>(
+            std::move(monitoring_annotations));
+  }
   auto handle = absl::WrapUnique(new KeysetHandle(
       util::SecretProto<Keyset>(), std::move(annotations_map)));
   const absl::StatusOr<uint32_t> result =

@@ -59,6 +59,7 @@
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/legacy_annotations.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
@@ -609,6 +610,29 @@ TEST_F(KeysetHandleTest, ReadEncryptedWithAssociatedDataAndAnnotations) {
   Registry::Reset();
 }
 
+TEST_F(KeysetHandleTest, ReadWithAssociatedDataWithNoAnnotations) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  DummyAead aead("dummy aead 42");
+  std::string keyset_ciphertext =
+      aead.Encrypt(keyset.SerializeAsString(), "aad").value();
+  EncryptedKeyset encrypted_keyset;
+  encrypted_keyset.set_encrypted_keyset(keyset_ciphertext);
+  std::unique_ptr<KeysetReader> reader = std::move(
+      BinaryKeysetReader::New(encrypted_keyset.SerializeAsString()).value());
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> result =
+      KeysetHandle::ReadWithAssociatedData(std::move(reader), aead, "aad");
+  ASSERT_THAT(result, IsOk());
+  EXPECT_THAT((*result)->GetAnnotations<internal::LegacyAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
+}
+
 TEST_F(KeysetHandleTest, ReadEncryptedKeysetWithAssociatedDataWrongAad) {
   Keyset keyset;
   Keyset::Key key;
@@ -770,6 +794,15 @@ TEST_F(KeysetHandleTest, GenerateNewWithAnnotations) {
     // This is needed to cleanup mocks.
     Registry::Reset();
   }
+}
+
+TEST_F(KeysetHandleTest, GenerateNewWithNoAnnotations) {
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
+                                KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(handle, IsOk());
+  EXPECT_THAT((*handle)->GetAnnotations<internal::LegacyAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST_F(KeysetHandleTest, GenerateNewInvalidKeyTemplateFails) {
@@ -1571,6 +1604,15 @@ TEST_F(KeysetHandleTest, ReadNoSecretWithAnnotations) {
   EXPECT_EQ(generated_annotations, kAnnotations);
   // This is needed to cleanup mocks.
   Registry::Reset();
+}
+
+TEST_F(KeysetHandleTest, ReadNoSecretWithNoAnnotations) {
+  Keyset keyset = GetPublicTestKeyset();
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+      KeysetHandle::ReadNoSecret(keyset.SerializeAsString());
+  ASSERT_THAT(keyset_handle, IsOk());
+  EXPECT_THAT((*keyset_handle)->GetAnnotations<internal::LegacyAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST_F(KeysetHandleTest, ReadNoSecretFailForTypeUnknown) {

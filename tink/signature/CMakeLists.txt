@@ -1316,6 +1316,7 @@ tink_cc_test(
     tink::signature::failing_signature
     gmock
     absl::status
+    absl::status_matchers
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::util::test_matchers

@@ -42,9 +42,9 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::GenerateClassicalPrivateKeyForTestOrDie;
 using ::crypto::tink::internal::GenerateMlDsaPrivateKeyForTestOrDie;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;

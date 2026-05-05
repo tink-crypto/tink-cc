@@ -44,11 +44,11 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::CompositeMlDsaParameters;
 using ::crypto::tink::PublicKeyVerify;
 using ::crypto::tink::internal::GenerateCompositeMlDsaPrivateKeyForTestOrDie;
 using ::crypto::tink::internal::IsFipsModeEnabled;
-using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::Not;
 using ::testing::NotNull;

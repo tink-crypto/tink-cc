@@ -58,8 +58,8 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::test::EqualsKey;
-using ::crypto::tink::test::StatusIs;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;

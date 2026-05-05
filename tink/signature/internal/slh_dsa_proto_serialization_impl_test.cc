@@ -53,8 +53,8 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::SlhDsaHashType;
 using ::google::crypto::tink::SlhDsaKeyFormat;
 using ::google::crypto::tink::SlhDsaParams;

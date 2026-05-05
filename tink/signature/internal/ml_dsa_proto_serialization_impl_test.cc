@@ -54,7 +54,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::MlDsaInstance;
 using ::google::crypto::tink::MlDsaKeyFormat;
 using ::google::crypto::tink::MlDsaParams;

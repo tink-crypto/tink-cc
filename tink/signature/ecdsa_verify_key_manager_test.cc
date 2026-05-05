@@ -40,7 +40,7 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;

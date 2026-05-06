@@ -73,7 +73,7 @@ class BinaryKeysetReaderTest : public ::testing::Test {
   std::string good_serialized_encrypted_keyset_;
 };
 
-TEST_F(BinaryKeysetReaderTest, testReaderCreation) {
+TEST_F(BinaryKeysetReaderTest, ReaderCreation) {
   {  // Input stream is null.
     std::unique_ptr<std::istream> null_stream(nullptr);
     auto reader_result = BinaryKeysetReader::New(std::move(null_stream));

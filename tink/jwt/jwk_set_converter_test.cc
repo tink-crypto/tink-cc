@@ -55,7 +55,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::google::protobuf::Struct;
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::Eq;

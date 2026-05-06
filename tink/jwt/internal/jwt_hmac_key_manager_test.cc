@@ -50,7 +50,7 @@ namespace jwt_internal {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::JwtHmacAlgorithm;
 using ::google::crypto::tink::JwtHmacKey;

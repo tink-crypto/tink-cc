@@ -44,7 +44,7 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
 using ::google::crypto::tink::JwtRsaSsaPkcs1KeyFormat;
 using ::google::crypto::tink::JwtRsaSsaPkcs1PrivateKey;

@@ -51,8 +51,8 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtHmacAlgorithm;
 using ::google::crypto::tink::JwtHmacKeyFormat;
 using ::testing::Eq;

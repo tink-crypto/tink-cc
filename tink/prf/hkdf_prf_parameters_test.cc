@@ -151,7 +151,7 @@ TEST(HkdfPrfParametersTest, CopyAssignment) {
 }
 
 TEST(HkdfPrfParametersTest, MoveConstructor) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
@@ -163,12 +163,12 @@ TEST(HkdfPrfParametersTest, MoveConstructor) {
 }
 
 TEST(HkdfPrfParametersTest, MoveAssignment) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HkdfPrfParameters> moved = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> moved = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
       /*salt=*/test::HexDecodeOrDie(kSalt));
   ASSERT_THAT(moved, IsOk());

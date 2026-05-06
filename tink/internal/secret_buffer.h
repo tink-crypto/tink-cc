@@ -124,6 +124,9 @@ class SecretBuffer {
     }
     // Add 4 extra bytes to store the CRC32C of the data. This is going to be
     // populated in SecretDataInternalClass.
+    ABSL_CHECK_LE(new_cap,
+                  std::numeric_limits<size_t>::max() - sizeof(uint32_t))
+        << "SecretBuffer::reserve new_cap out of bounds";
     uint8_t* new_data =
         crypto::tink::util::internal::SanitizingAllocator<uint8_t>().allocate(
             new_cap + sizeof(uint32_t));

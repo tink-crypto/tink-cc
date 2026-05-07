@@ -168,14 +168,6 @@ TEST_F(LegacyKeyManagerImplTest, Factory_NewKey_WrongKeyFormat) {
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "Key format proto 'google.crypto.tink.EcdsaKeyFormat' "
                        "is not supported by this key manager."));
-
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> key2 =
-      ml_dsa_factory.NewKey(key_format.SerializeAsString());
-  EXPECT_THAT(key2, StatusIs(absl::StatusCode::kInvalidArgument));
-
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> key3 =
-      ml_dsa_factory.NewKeyData(key_format.SerializeAsString());
-  EXPECT_THAT(key3, StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(LegacyKeyManagerImplTest, Factory_GetPublicKeyData) {

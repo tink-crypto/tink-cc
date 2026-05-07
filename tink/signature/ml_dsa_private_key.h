@@ -79,6 +79,13 @@ class MlDsaPrivateKey final : public SignaturePrivateKey {
                            const RestrictedData& private_seed_bytes)
       : public_key_(public_key), private_seed_bytes_(private_seed_bytes) {}
 
+  // Creates a new ML-DSA-44 private key from `private_seed_bytes`. Returns an
+  // error if `public_key` does not belong to the same key pair as
+  // `private_seed_bytes`.
+  static absl::StatusOr<MlDsaPrivateKey> Create44(
+      const MlDsaPublicKey& public_key,
+      const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
+
   // Creates a new ML-DSA-65 private key from `private_seed_bytes`. Returns an
   // error if `public_key` does not belong to the same key pair as
   // `private_seed_bytes`.

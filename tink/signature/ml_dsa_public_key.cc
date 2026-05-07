@@ -33,6 +33,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+static constexpr size_t kMlDsa44PublicKeyBytes = 1312;
 static constexpr size_t kMlDsa65PublicKeyBytes = 1952;
 static constexpr size_t kMlDsa87PublicKeyBytes = 2592;
 
@@ -73,6 +74,14 @@ absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
   }
 
   switch (parameters.GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa44: {
+      if (public_key_bytes.size() != kMlDsa44PublicKeyBytes) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Invalid ML-DSA public key size. Only ", kMlDsa44PublicKeyBytes,
+            "-byte keys are currently supported for ML-DSA-44."));
+      }
+      break;
+    }
     case MlDsaParameters::Instance::kMlDsa65: {
       if (public_key_bytes.size() != kMlDsa65PublicKeyBytes) {
         return absl::InvalidArgumentError(absl::StrCat(
@@ -91,8 +100,8 @@ absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
     }
     default:
       return absl::InvalidArgumentError(
-          "Invalid ML-DSA instance. Only ML-DSA-65 and ML-DSA-87 are"
-          "currently supported.");
+          "Invalid ML-DSA instance. Only ML-DSA-44, ML-DSA-65 and ML-DSA-87 "
+          "are currently supported.");
   }
 
   absl::StatusOr<std::string> output_prefix =

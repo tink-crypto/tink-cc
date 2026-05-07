@@ -47,6 +47,89 @@ namespace internal {
 namespace {
 
 #ifdef OPENSSL_IS_BORINGSSL
+class MlDsa44VerifyBoringSsl : public PublicKeyVerify {
+ public:
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
+      crypto::tink::internal::FipsCompatibility::kNotFips;
+
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+      MlDsaPublicKey public_key, absl::string_view context);
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
+
+  explicit MlDsa44VerifyBoringSsl(
+      MlDsaPublicKey public_key,
+      std::unique_ptr<MLDSA44_public_key> boringssl_public_key,
+      absl::string_view context)
+      : public_key_(std::move(public_key)),
+        boringssl_public_key_(std::move(boringssl_public_key)),
+        context_(context) {}
+
+  MlDsaPublicKey public_key_;
+  std::unique_ptr<MLDSA44_public_key> boringssl_public_key_;
+  std::string context_;
+};
+
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa44VerifyBoringSsl::New(
+    MlDsaPublicKey public_key, absl::string_view context) {
+  auto status = CheckFipsCompatibility<MlDsa44VerifyBoringSsl>();
+  if (!status.ok()) {
+    return status;
+  }
+
+  if (public_key.GetParameters().GetInstance() !=
+      MlDsaParameters::Instance::kMlDsa44) {
+    return absl::InternalError("Expected ML-DSA-44");
+  }
+
+  if (context.size() > 255) {
+    return absl::InternalError("Context is too long");
+  }
+
+  absl::string_view public_key_bytes =
+      public_key.GetPublicKeyBytes(GetPartialKeyAccess());
+
+  CBS cbs;
+  CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
+           public_key_bytes.size());
+  auto boringssl_public_key = std::make_unique<MLDSA44_public_key>();
+  if (!MLDSA44_parse_public_key(boringssl_public_key.get(), &cbs)) {
+    return absl::InternalError("Invalid ML-DSA public key");
+  }
+
+  return absl::make_unique<MlDsa44VerifyBoringSsl>(
+      std::move(public_key), std::move(boringssl_public_key), context);
+}
+
+absl::Status MlDsa44VerifyBoringSsl::Verify(absl::string_view signature,
+                                            absl::string_view data) const {
+  size_t output_prefix_size = public_key_.GetOutputPrefix().size();
+
+  if (signature.size() != MLDSA44_SIGNATURE_BYTES + output_prefix_size) {
+    return absl::InvalidArgumentError(
+        "Verification failed: incorrect signature length for ML-DSA");
+  }
+
+  if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
+    return absl::InvalidArgumentError(
+        "Verification failed: invalid output prefix");
+  }
+
+  if (1 != MLDSA44_verify(boringssl_public_key_.get(),
+                          reinterpret_cast<const uint8_t*>(signature.data() +
+                                                           output_prefix_size),
+                          MLDSA44_SIGNATURE_BYTES,
+                          reinterpret_cast<const uint8_t*>(data.data()),
+                          data.size(),
+                          reinterpret_cast<const uint8_t*>(context_.data()),
+                          context_.size())) {
+    return absl::InvalidArgumentError("Signature is not valid");
+  }
+
+  return absl::OkStatus();
+}
+
 class MlDsa65VerifyBoringSsl : public PublicKeyVerify {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
@@ -224,13 +307,15 @@ NewMlDsaVerifyWithContextBoringSsl(MlDsaPublicKey public_key,
       "ML-DSA is only supported in BoringSSL builds.");
 #else
   switch (public_key.GetParameters().GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa44:
+      return MlDsa44VerifyBoringSsl::New(std::move(public_key), context);
     case MlDsaParameters::Instance::kMlDsa65:
       return MlDsa65VerifyBoringSsl::New(std::move(public_key), context);
     case MlDsaParameters::Instance::kMlDsa87:
       return MlDsa87VerifyBoringSsl::New(std::move(public_key), context);
     default:
       return absl::InvalidArgumentError(
-          "Only ML-DSA-65 and ML-DSA-87 are supported");
+          "Only ML-DSA-44, ML-DSA-65 and ML-DSA-87 are supported");
   }
 #endif  // OPENSSL_IS_BORINGSSL
 }

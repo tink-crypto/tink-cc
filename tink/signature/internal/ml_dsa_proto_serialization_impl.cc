@@ -64,12 +64,13 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-bool MlDsaInstanceEnumValid(int c) { return c >= 0 && c <= 2; }
+bool MlDsaInstanceEnumValid(int c) { return c >= 0 && c <= 3; }
 
 enum class MlDsaInstanceEnum : uint32_t {
   kUnknownInstance = 0,
   kMlDsa65,
   kMlDsa87,
+  kMlDsa44,
 };
 
 class MlDsaParamsTP final : public Message {
@@ -210,6 +211,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 absl::StatusOr<MlDsaParameters::Instance> ToInstance(
     MlDsaInstanceEnum proto_instance) {
   switch (proto_instance) {
+    case MlDsaInstanceEnum::kMlDsa44:
+      return MlDsaParameters::Instance::kMlDsa44;
     case MlDsaInstanceEnum::kMlDsa65:
       return MlDsaParameters::Instance::kMlDsa65;
     case MlDsaInstanceEnum::kMlDsa87:
@@ -223,6 +226,8 @@ absl::StatusOr<MlDsaParameters::Instance> ToInstance(
 absl::StatusOr<MlDsaInstanceEnum> ToProtoInstance(
     MlDsaParameters::Instance instance) {
   switch (instance) {
+    case MlDsaParameters::Instance::kMlDsa44:
+      return MlDsaInstanceEnum::kMlDsa44;
     case MlDsaParameters::Instance::kMlDsa65:
       return MlDsaInstanceEnum::kMlDsa65;
     case MlDsaParameters::Instance::kMlDsa87:
@@ -251,7 +256,7 @@ absl::StatusOr<MlDsaParameters> ToParameters(
 
 absl::StatusOr<MlDsaParamsTP> FromParameters(
     const MlDsaParameters& parameters) {
-  /* Only ML-DSA-65 and ML-DSA-87 are currently supported*/
+  /* Only ML-DSA-44, ML-DSA-65 and ML-DSA-87 are currently supported*/
   absl::StatusOr<MlDsaInstanceEnum> instance =
       ToProtoInstance(parameters.GetInstance());
   if (!instance.ok()) {

@@ -25,10 +25,12 @@ namespace tink {
 
 absl::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
                                                         Variant variant) {
-  if (instance != Instance::kMlDsa65 && instance != Instance::kMlDsa87) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid ML-DSA instance. Only ML-DSA-65 and "
-                        "ML-DSA-87 keys are currently supported.");
+  if (instance != Instance::kMlDsa65 && instance != Instance::kMlDsa87 &&
+      instance != Instance::kMlDsa44) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Invalid ML-DSA instance. Only ML-DSA-44, ML-DSA-65 and "
+        "ML-DSA-87 keys are currently supported.");
   }
 
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {

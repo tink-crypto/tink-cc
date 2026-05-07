@@ -62,7 +62,10 @@ using MlDsaPrivateKeyTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
-    Values(TestCase{MlDsaParameters::Instance::kMlDsa65,
+    Values(TestCase{MlDsaParameters::Instance::kMlDsa44,
+                    MlDsaParameters::Variant::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
@@ -85,7 +88,23 @@ struct KeyPair {
 };
 
 absl::StatusOr<KeyPair> GenerateKeyPair(MlDsaParameters::Instance instance) {
-  if (instance == MlDsaParameters::Instance::kMlDsa65) {
+  if (instance == MlDsaParameters::Instance::kMlDsa44) {
+    std::string public_key_bytes;
+    public_key_bytes.resize(MLDSA44_PUBLIC_KEY_BYTES);
+    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
+    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA44_private_key>();
+
+    ABSL_CHECK_EQ(1, MLDSA44_generate_key(
+                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                         private_seed_bytes.data(), bssl_private_key.get()));
+
+    return KeyPair{
+        public_key_bytes,
+        RestrictedData(
+            util::internal::AsSecretData(std::move(private_seed_bytes)),
+            InsecureSecretKeyAccess::Get()),
+    };
+  } else if (instance == MlDsaParameters::Instance::kMlDsa65) {
     std::string public_key_bytes;
     public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
     internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);

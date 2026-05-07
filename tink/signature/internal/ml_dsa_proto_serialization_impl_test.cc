@@ -82,7 +82,10 @@ using MlDsaProtoSerializationTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaProtoSerializationTestSuite, MlDsaProtoSerializationTest,
-    Values(TestCase{MlDsaParameters::Instance::kMlDsa65,
+    Values(TestCase{MlDsaParameters::Instance::kMlDsa44,
+                    MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
@@ -117,6 +120,8 @@ MlDsaPrivateKey GenerateMlDsaPrivateKey(MlDsaParameters::Instance instance,
 
 MlDsaInstance ToProtoInstance(MlDsaParameters::Instance instance) {
   switch (instance) {
+    case MlDsaParameters::Instance::kMlDsa44:
+      return MlDsaInstance::ML_DSA_44;
     case MlDsaParameters::Instance::kMlDsa65:
       return MlDsaInstance::ML_DSA_65;
     case MlDsaParameters::Instance::kMlDsa87:
@@ -316,7 +321,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
     // Out of range instance - too large.
     MlDsaKeyFormat key_format_proto;
     MlDsaParams& params = *key_format_proto.mutable_params();
-    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(3));
+    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(4));
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(

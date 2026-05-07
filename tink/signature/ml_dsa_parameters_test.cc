@@ -49,7 +49,13 @@ using MlDsaParametersTest = TestWithParam<VariantTestCase>;
 // be extended if other variants (e.g. no-prefix) are added in the future.
 INSTANTIATE_TEST_SUITE_P(
     MlDsaParametersTestSuite, MlDsaParametersTest,
-    Values(VariantTestCase{MlDsaParameters::Instance::kMlDsa65,
+    Values(VariantTestCase{MlDsaParameters::Instance::kMlDsa44,
+                           MlDsaParameters::Variant::kNoPrefix,
+                           /*has_id_requirement=*/false},
+           VariantTestCase{MlDsaParameters::Instance::kMlDsa44,
+                           MlDsaParameters::Variant::kTink,
+                           /*has_id_requirement=*/true},
+           VariantTestCase{MlDsaParameters::Instance::kMlDsa65,
                            MlDsaParameters::Variant::kNoPrefix,
                            /*has_id_requirement=*/false},
            VariantTestCase{MlDsaParameters::Instance::kMlDsa65,

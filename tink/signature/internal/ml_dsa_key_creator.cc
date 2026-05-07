@@ -48,6 +48,38 @@ namespace internal {
 namespace {
 
 #ifdef OPENSSL_IS_BORINGSSL
+absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa44Key(
+    const MlDsaParameters& params, absl::optional<int> id_requirement) {
+  if (params.GetInstance() != MlDsaParameters::Instance::kMlDsa44) {
+    return absl::InternalError("Expected ML-DSA-44 instance");
+  }
+
+  std::string public_key_bytes(MLDSA44_PUBLIC_KEY_BYTES, '\0');
+  internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
+  auto private_key = util::MakeSecretUniquePtr<MLDSA44_private_key>();
+  if (!MLDSA44_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                            private_seed_bytes.data(), private_key.get())) {
+    return absl::InternalError("Failed to generate ML-DSA-44 key");
+  }
+
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+      params, public_key_bytes, id_requirement, GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  absl::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
+      *public_key,
+      RestrictedData(
+          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          GetInsecureSecretKeyAccessInternal()),
+      GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<MlDsaPrivateKey>(*key);
+}
+
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsa65Key(
     const MlDsaParameters& params, absl::optional<int> id_requirement) {
   if (params.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
@@ -122,13 +154,15 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
       "ML-DSA is only supported in BoringSSL builds.");
 #else
   switch (params.GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa44:
+      return CreateMlDsa44Key(params, id_requirement);
     case MlDsaParameters::Instance::kMlDsa65:
       return CreateMlDsa65Key(params, id_requirement);
     case MlDsaParameters::Instance::kMlDsa87:
       return CreateMlDsa87Key(params, id_requirement);
     default:
       return absl::InvalidArgumentError(
-          "Only ML-DSA-65 and ML-DSA-87 are supported");
+          "Only ML-DSA-44, ML-DSA-65 and ML-DSA-87 are supported");
   }
 #endif  // OPENSSL_IS_BORINGSSL
 }

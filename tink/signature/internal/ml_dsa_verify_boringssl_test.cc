@@ -57,7 +57,8 @@ using MlDsaVerifyBoringSslTest = TestWithParam<MlDsaParameters::Instance>;
 
 INSTANTIATE_TEST_SUITE_P(MlDsaVerifyBoringSslTestSuite,
                          MlDsaVerifyBoringSslTest,
-                         Values(MlDsaParameters::Instance::kMlDsa65,
+                         Values(MlDsaParameters::Instance::kMlDsa44,
+                                MlDsaParameters::Instance::kMlDsa65,
                                 MlDsaParameters::Instance::kMlDsa87));
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextTooLongFails) {
@@ -552,6 +553,197 @@ TEST_P(MlDsaVerifyBoringSslTest, FipsModeWithContext) {
                                                  "some context")
                   .status(),
               StatusIs(absl::StatusCode::kInternal));
+}
+
+// Test vector based on the ML-DSA-44 standard.
+// Generated using BoringSSL's FIPS-204 compliant MLDSA44_generate_key and
+// MLDSA44_sign APIs, and verified with MLDSA44_verify.
+constexpr absl::string_view kHexPublicKey44 =
+    "eb5a38b7e69babfab2311800c23d1418fc3b066e47b314219cdae916a461"
+    "d38ed51e98e48189bc32dc67bb64fd8303fe3d5dcd39f1f7c63eed0473d6"
+    "7e635b7b6e007e2eb1cae6d99b74ca33170f2328f6a19f9c59781b452fa2"
+    "ac7b52a6a4713f929c96729fb95857e1494425b37d9763235d0d7463fbe7"
+    "469e084827c143b2a5fbb7895c09095171c358b4cedae73679f6d72417f4"
+    "de8229db086c8f7037c9e9dec0e5c5e1a861bca251173afa1b919ff32822"
+    "fd21a1d26e33ffe5a20a421f7e418142dcacd9db67847d7fae2c3dd61db0"
+    "c4bc64da1de7c89de00bd024f9fd1d69517efffab2a4f9c799bb03d8e6cd"
+    "e37112e45f8edaa83c0b54aaec6fc704ef3a7f7af67e98f8332037f94b8f"
+    "dd69b9688caef929808fa463497c5af69f8b294014754ff4b9defa7e769e"
+    "23dcfe067183f77e6c01cd190e78eb38a1f000c97e1af907fec9e0c0b4cf"
+    "a59242d9582447f67cc6f50afba6e7fbdf07278b2bdc79164a6e1aafa074"
+    "37c02164da8f181d96ebafee9d92283aeb0fd2dbaa734d86c6d515ca0235"
+    "307cb5152385adad9994973adccf02e3f77a233971c72fa92bfea74a458f"
+    "4b2c70d69f2f959c3201e31140ce862039ecbd34ec2bb197f6d7d699b0dd"
+    "f9f6f0484802876b73946dcd320b00a57df4fd60b492723013fb55237e04"
+    "71535c865cd6d8dda57d27d00486d8b497775d3a59fba6235860a87821c1"
+    "6a09468bb338fe13266aea6bf2033ae40939fa755616edc9e75c37353c17"
+    "c4627d54206ebe021e659f35149059e8cbc3c58bd6c9261f1d33fc246a32"
+    "d4d3a5af148a1edd8c3ba6c48a8465b99b11be8625bd4a3ce31dcd2addf4"
+    "5f3f26813c2b15f070d55071e0a1d28d3b5d8a53004ffedcf9f8f5faf331"
+    "81f20dcba93d6e0458cb543606b434a24ab9c566dbae5f5c0e0c38da5083"
+    "65528e0f7623394741b8a069d5a00d1a1d7e015f85361bf59f2c22d1c995"
+    "f6c77e59250e4228958f54e56b343cd31ec5e47bb931a606cfd517187089"
+    "9687c529f0bb56ea7c14ae302c8b001074b0c702d470c9182b75bd662417"
+    "4ec1aace979bb1fc5c2b1e1885da28e73c66bbb71ae21ded9d3e3674bfbd"
+    "7225ca687b49d5f8bfe07e9aeb9fabbc040d38a8b9948d24c9b0b9f5029b"
+    "be5e40c46bdff23558f20329a1c50fe6450ea9f7dd3ae9f0e7deb202950e"
+    "c834fdf3ad4e5bc56a1cef4df3d6c8c6c3103911cba029f9bf99fa25fb8e"
+    "778f2aeacfbc7618d3e52a775d787abdbf03989bb0a068b0daff1a08b9ed"
+    "8a755c3d889d3cb7271d4d59d9daa779edbcd1fa8f51f5239730f93e164d"
+    "1431fe19b77114f15c50b008933a1c90d315d571647aaeece67a944a1163"
+    "6b6a98d58c73e38eb0036014966a3377fc5abb2a64dec677712df9795db0"
+    "f12a043a1ef8690e0ed68fff2a1bb35bf0c84a527d633a8621eac005d34c"
+    "ece958586478124c5d3945bb4f8c365e9e758bfa453dff370cc9fcbeb265"
+    "80551aed4dcad2d07c4f6e5e5833cb014fbb3fe8ea31cdad74f5d9140e0e"
+    "5ca9d7f3ab2efcb8e1d093a6787bba0ff8dac6b08de0faa28ea05c63b55c"
+    "a40e3abace60b99697e19a1359038a0f8864a1bdab26dbe25234742af1f4"
+    "5c2e2373d6cdc97b0194ffa7fe3ff5190c6e23cb7013440fe9b1ff11eae8"
+    "8c0c1827ad8f3ce284e893114f7d933a47845b71e01d9d6244761e7820bb"
+    "da074b8d1d4e662fee0f3f59a70ba458c4b672f2f8d8d93e82fe345f51cc"
+    "78d4b940049368149071c3b20861d858542e91cdc0c1508e286e81a7fc09"
+    "25e1e84334f192978a1056f0eb40a50fb6e12ea03f3cddf08b506f9567fe"
+    "fda0035268a30687a3b73fd40801b6f2565f6ccde4ef";
+constexpr absl::string_view kHexPrivateSeed44 =
+    "4bde5f22d2e6c83e15a3c4e19b8a7fc31126f969118d6818ece37eab03e5847e";
+constexpr absl::string_view kHexMessage44 =
+    "6d65737361676520746f206265207369676e6564";
+constexpr absl::string_view kHexSignatureWithTinkPrefix44 =
+    "0141424344d034fd3bacb7fdc5c07c7079fe53538450534c421551778333"
+    "0426526723bde615139de9d62acfa292ea5244ba9881e4d6527c51fd8b71"
+    "808870a9e65612dda54b859e36fc401140f00475ce02333839cddb43c6a5"
+    "643c8712d8f3b1202c17254fa4a435776a0a2a6d98b209c5987c632bde64"
+    "c27258b10731f9a23d459ee3a324a0e3950137b3181b9f9ee342635b8aa3"
+    "9bbc053e977d231861dc74e422f04bc7126d5a6c13b81da6a6791fd25f77"
+    "2aa9ccb79219a91a5f3d95ea631da1641b2e4a97d38fbea2e58a8721d5f4"
+    "067d23db1f7a2a36cf985d781ed2fa9ba955e6e35df9140adc5482c566c1"
+    "35c80254f47a2a98cf8517abbc496f66d0e7bddc5947f67ee99666758ee4"
+    "ccc2e3aa72321f32e42d115e3ba2dde2b501b7cff1a189f8947f866a9220"
+    "5b6f94b589be5cbdb8fe4b18fe9c62a223d29f30b1f4655014ed8dd1ad51"
+    "97e15b5354c6c1f317ebeb876e639052efbb53729726b4517aa51b6a11c3"
+    "f7372ad3ac9a48d7da9698e58529a07e5d27a5f010f14993619c193ca580"
+    "20700e9a6291f033e6322bb9318bd85c1cef40db0ff144bf261b59a2875a"
+    "1db81faebba4e37214fdb1b27ee89713340d068a47b85949c5fff21664cd"
+    "bdf897174e2c2a4598b9118974f04798d7ac5ad6ae0eaf72de7126c69a6a"
+    "12dcf0b18c1146790a2f263a2edfb2d4ae4d40149308e3b44d1a2c55df28"
+    "52167d9678ee38c92162536b9c50364b8579086e4b847cc3a8a0e4263d74"
+    "e2df96a03f2698be29b7adb036aec8defc71cba83d42cd5b5e01d9d7e96e"
+    "e7b968a250e0a2796ba5ef5d395a1bef639b679319ba2eac8194d1cd1a8f"
+    "746058849f5c1d6069b7712543211ac640d43ac9084d5f077fc84bfe7621"
+    "660a24d0f9250fdc1655fd3797b1a3b431f8d9a16311ec0894e1a52e19e0"
+    "47f0d63d8bcdc674756d646861a7031084f2e76b859e0af9faebc490e90d"
+    "189d9c5747524080a9591ae6bf73b108d7af9329be944876952517969c46"
+    "3828dfa12e097fe06995ccf161b3ddcc89d0ba3080fa50dde45accc762a3"
+    "60f858092ff8a5e0f75da4d081ff0917a216f84eb04736e7332563f085fb"
+    "a96c1c111b2e8e648a116629e217b5bf1de2d32fbd00e964da2762869ac1"
+    "eac182772d04290bf3c934a42c3bd10934d85acfa534329de5cc8de10303"
+    "3c5c620cac78e3cc8f4d18c09333ebaf7ef33f93f70a8e5e9f840fa0b40e"
+    "7cafdc831f16892c5ef65742f178343f93857da5330e27a170a6aedb9f2a"
+    "5be54e5b776fc72448fd7d7f6afcbe79b29f9dccefa71e16a6e726652c56"
+    "ee400cdc435f91fa54c13a494d08ab9955582dc30beff5e1373bcad50a72"
+    "27bff15a7c44db56c3cd2dcb9b92172c67108b632ef63999a9111ff7cce7"
+    "f7659951c0308f66a6134dba72ee338276b409cf38f08ddcaaee4b0c430d"
+    "29ac9b012fcc492f21cb5188b020136c3d93b57677a473ab8156b6c68a61"
+    "7e11995221614a80e97ca2b561f55cf92d301fba317057665fd24313d2c5"
+    "a5547df56864dbefef61d0bc1046173d16001c8da8c8392088db0ad504fe"
+    "c1de11676dbba2a682851642f83bd014c7e2b2948f152389e38228c4fc16"
+    "c8f73ec1d5f12efa3ec1a6161fdfb5e2908794b8c19a6c1ec585cff88c85"
+    "4d7de4081233bfa151c45e26347425bf02c11c4a95969f804cc68ba5d9a5"
+    "d4f0ed447da0758325fd47d94dc0e1a087ad9a37a35aedc5f971e3b63a23"
+    "4c90985007eba1279098afdbdabc30eaf61438b81267e2dbdc3a2080ecc4"
+    "1a02ce3d5993ef009a6b4282355f05688c08bbddd23492bc9350a2fff3b4"
+    "336d26344290c6397fb46f4e97003c6535c0d0111aa600d78d1d02006b2d"
+    "6d076655233d54f080352b67acb05c0d76d2eb05b44e6ce3797b5087f12d"
+    "af120ad5d9457c2b59af5164a8c522ff9430294f3e38aa2cc9d369231e5f"
+    "1cde96f7a59658fb4cf112d10a27d60e07cb022e7e887905814234f91c3d"
+    "41e2bb51ac15d1146f089429a1c67334ea19f66a9af7faf7d86ba7956868"
+    "5e3530888b9f7c363a06b4aa0b925101347a96500a807feb370d089c0db7"
+    "085f78094721465a106ecad252c0d553417c86d2d2897645951bd62cd087"
+    "1b6695a33bfbe9b92025736dacd14dc3a7e5b05e7890c58ff7c1a9cb3fb4"
+    "ad466e3e6324184aa3ad4e302763b550e446b9d6518acb0c87b339b78e29"
+    "89be4c12ef7d67ed7bd61bb22288568b6a4115e6db8668025bb6401395c2"
+    "c474e1bf6c9cc93e9c2f3a26ed20750ef6138762998257e5adebf75451d6"
+    "8d8e265ac0d4775c961166a3bf2696b59802555faa659aa8492f4dcab30b"
+    "7c116047157af5bb2f7a566b96f4af6fc8d065e94a8ff13a6aef216e50fc"
+    "9f61025e2709c3938b7f145c80659cad24be04082686306bbc4f5454b4f6"
+    "3827abb4752eea9774e8c6f8775e2c9131fc635d20ff7b526167074e429b"
+    "23ff94be0aca3f39d492a5786bde8b2cb0f9b18ec69ed3e54b3d64cfd63c"
+    "13e29e02097af97f78b8ae98caeb3b1c7fd16a4374c2b1a4edbe546b3aa0"
+    "c56a82566eff2bae54b566ad6ecf1cc839653e6f015e604a97ae43f4303c"
+    "f54143f8fa8dd34a4f8dd2f28f0c27ee6f1ea9849b2c6b77ed851f2b9967"
+    "2674d1905a761361e7fbd9144373e61125777a9f56532886cc19bdd6c877"
+    "4c2b8f7faab01e6155ee9d6c69d03ff303417cb6eb9d431e3a7ae4c3b0ff"
+    "f9090d503fd3497171785f84683f3a9527122790b1ce9a8dcb4325e638f8"
+    "ffab15657ff2c50d538895e2b42960f155e46154b9a0d3f737e5d1a2ecbf"
+    "dcf2ec0c0e34a44a5fdc8fd7168b7899574ab94be4a41c4483e830925ddb"
+    "b3e0b2039e0eaadeb94ba6c1fd06b4214330867229245a12d9b652c05d6c"
+    "d7fc48a1f801eb254c57bd8fa4091b2ba38c6914c565acfac383bf57747b"
+    "de32061c73152d71eee2cb0626bc503f228b76642f96dec25f1d86ba2347"
+    "db6d50f450022c7b5ef1b81dd84df5951c0929d7529c55ac29e70bd64f45"
+    "6fc1832c9b1a551d09bafe2205f67f105e7f99056f8e05e945232b6f9b93"
+    "376ea77f0ab9fd7e107c974a3eb82a3958ab43680e16d652de5b83c9f949"
+    "7af55219c4780472e2f853a6592204b60478ef44b4253428ed6f9a71e474"
+    "f847e64b81b97098ddaed9aff1afdf0f6f3fa04393ff4820f2980cd4b1ab"
+    "54b9f7c80e16bde6597b3f412e0a21e8cdc022073a129b9138338becaaae"
+    "1fe6b557e15b23eb64a37488ed94161dedc6f113c52cc98c41079018a65a"
+    "54be9e3300dbdbfbb41d4a1ce4b9bb01f406f4eaa5e30c17777c7f4374f8"
+    "8c344647494f505e6671757ba8acc2d9ec304c525b6c6e848aaaacb8cbe7"
+    "132a3b477993a1acc1f5ff0e14186069758d8fa4a8b8cbd0000000000000"
+    "000000000000000000000000000000000000000000101d2835";
+
+TEST(MlDsaVerifyBoringSslTest, TestVectorSignVerify44) {
+  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa44, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  std::string public_key_bytes = HexDecodeOrDie(kHexPublicKey44);
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+      *key_parameters, public_key_bytes, /*id_requirement=*/0x41424344,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  std::string private_seed_bytes = HexDecodeOrDie(kHexPrivateSeed44);
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *public_key,
+      RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewMlDsaSignBoringSsl(*private_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+
+  std::string message_bytes = HexDecodeOrDie(kHexMessage44);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message_bytes);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, message_bytes), IsOk());
+
+  std::string signature_bytes = HexDecodeOrDie(kHexSignatureWithTinkPrefix44);
+  EXPECT_THAT((*verifier)->Verify(signature_bytes, message_bytes), IsOk());
+
+  // Test with NoPrefix variant
+  absl::StatusOr<MlDsaParameters> no_prefix_parameters =
+      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
+                              MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(no_prefix_parameters, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> no_prefix_public_key =
+      MlDsaPublicKey::Create(*no_prefix_parameters, public_key_bytes,
+                             /*id_requirement=*/absl::nullopt,
+                             GetPartialKeyAccess());
+  ASSERT_THAT(no_prefix_public_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> no_prefix_verifier =
+      NewMlDsaVerifyBoringSsl(*no_prefix_public_key);
+  ASSERT_THAT(no_prefix_verifier, IsOk());
+
+  absl::string_view raw_signature =
+      absl::string_view(signature_bytes).substr(5);
+  EXPECT_THAT((*no_prefix_verifier)->Verify(raw_signature, message_bytes),
+              IsOk());
 }
 
 // Test vector based on the ML-DSA-65 standard.

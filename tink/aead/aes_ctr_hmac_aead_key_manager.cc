@@ -196,7 +196,7 @@ absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
   if (!status.ok()) {
     return status;
   }
-  absl::StatusOr<std::string> aes_ctr_randomness = ReadBytesFromStream(
+  absl::StatusOr<SecretData> aes_ctr_randomness = ReadSecretBytesFromStream(
       key_format.aes_ctr_key_format().key_size(), input_stream);
   if (!aes_ctr_randomness.ok()) {
     if (absl::IsOutOfRange(aes_ctr_randomness.status())) {
@@ -218,7 +218,7 @@ absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
 
   AesCtrKeyProto* aes_ctr_key = key.mutable_aes_ctr_key();
   aes_ctr_key->set_version(get_version());
-  aes_ctr_key->set_key_value(aes_ctr_randomness.value());
+  aes_ctr_key->set_key_value(util::SecretDataAsStringView(*aes_ctr_randomness));
   *aes_ctr_key->mutable_params() = key_format.aes_ctr_key_format().params();
 
   status = ValidateKey(key);

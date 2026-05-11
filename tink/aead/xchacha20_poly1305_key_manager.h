@@ -102,8 +102,8 @@ class XChaCha20Poly1305KeyManager
     absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
 
-    absl::StatusOr<std::string> randomness =
-        ReadBytesFromStream(kKeySizeInBytes, input_stream);
+    absl::StatusOr<SecretData> randomness =
+        ReadSecretBytesFromStream(kKeySizeInBytes, input_stream);
     if (!randomness.ok()) {
       if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
         return absl::Status(
@@ -114,7 +114,7 @@ class XChaCha20Poly1305KeyManager
     }
     google::crypto::tink::XChaCha20Poly1305Key key;
     key.set_version(get_version());
-    key.set_key_value(randomness.value());
+    key.set_key_value(util::SecretDataAsStringView(*randomness));
     return key;
   }
 

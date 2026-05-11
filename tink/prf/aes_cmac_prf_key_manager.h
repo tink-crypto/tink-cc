@@ -117,14 +117,14 @@ class AesCmacPrfKeyManager
     if (!status.ok()) {
       return status;
     }
-    absl::StatusOr<std::string> randomness =
-        ReadBytesFromStream(key_format.key_size(), input_stream);
+    absl::StatusOr<SecretData> randomness =
+        ReadSecretBytesFromStream(key_format.key_size(), input_stream);
     if (!randomness.status().ok()) {
       return randomness.status();
     }
     google::crypto::tink::AesCmacPrfKey key;
     key.set_version(get_version());
-    key.set_key_value(randomness.value());
+    key.set_key_value(util::SecretDataAsStringView(*randomness));
     return key;
   }
 

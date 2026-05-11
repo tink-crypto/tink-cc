@@ -122,15 +122,15 @@ class HkdfPrfKeyManager
     if (!status.ok()) {
       return status;
     }
-    absl::StatusOr<std::string> randomness =
-        ReadBytesFromStream(key_format.key_size(), input_stream);
+    absl::StatusOr<SecretData> randomness =
+        ReadSecretBytesFromStream(key_format.key_size(), input_stream);
     if (!randomness.ok()) {
       return randomness.status();
     }
     google::crypto::tink::HkdfPrfKey key;
     key.set_version(get_version());
     *key.mutable_params() = key_format.params();
-    key.set_key_value(randomness.value());
+    key.set_key_value(util::SecretDataAsStringView(*randomness));
     return key;
   }
 

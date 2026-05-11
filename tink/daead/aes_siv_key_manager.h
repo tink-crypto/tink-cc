@@ -94,8 +94,8 @@ class AesSivKeyManager
     absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
 
-    absl::StatusOr<std::string> randomness =
-        ReadBytesFromStream(key_format.key_size(), input_stream);
+    absl::StatusOr<SecretData> randomness =
+        ReadSecretBytesFromStream(key_format.key_size(), input_stream);
 
     if (!randomness.ok()) {
       if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
@@ -107,7 +107,7 @@ class AesSivKeyManager
     }
     google::crypto::tink::AesSivKey key;
     key.set_version(get_version());
-    key.set_key_value(randomness.value());
+    key.set_key_value(util::SecretDataAsStringView(*randomness));
     return key;
   }
 

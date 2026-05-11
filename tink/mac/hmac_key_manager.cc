@@ -31,6 +31,7 @@
 #include "tink/util/errors.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/protobuf_helper.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/validation.h"
@@ -70,8 +71,8 @@ absl::StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
       ValidateVersion(hmac_key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  absl::StatusOr<std::string> randomness =
-      ReadBytesFromStream(hmac_key_format.key_size(), input_stream);
+  absl::StatusOr<SecretData> randomness =
+      ReadSecretBytesFromStream(hmac_key_format.key_size(), input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
       return absl::Status(
@@ -84,7 +85,7 @@ absl::StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
   HmacKeyProto hmac_key;
   hmac_key.set_version(get_version());
   *(hmac_key.mutable_params()) = hmac_key_format.params();
-  hmac_key.set_key_value(randomness.value());
+  hmac_key.set_key_value(util::SecretDataAsStringView(*randomness));
   return hmac_key;
 }
 

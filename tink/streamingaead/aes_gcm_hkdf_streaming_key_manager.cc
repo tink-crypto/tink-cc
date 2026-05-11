@@ -25,6 +25,7 @@
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/validation.h"
@@ -79,14 +80,14 @@ AesGcmHkdfStreamingKeyManager::DeriveKey(
   absl::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  absl::StatusOr<std::string> randomness_or =
-      ReadBytesFromStream(key_format.key_size(), input_stream);
+  absl::StatusOr<SecretData> randomness_or =
+      ReadSecretBytesFromStream(key_format.key_size(), input_stream);
   if (!randomness_or.ok()) {
     return randomness_or.status();
   }
   AesGcmHkdfStreamingKey key;
   key.set_version(get_version());
-  key.set_key_value(randomness_or.value());
+  key.set_key_value(util::SecretDataAsStringView(*randomness_or));
   *key.mutable_params() = key_format.params();
   return key;
 }

@@ -29,6 +29,7 @@
 #include "tink/util/enums.h"
 #include "tink/util/errors.h"
 #include "tink/util/input_stream_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/validation.h"
 #include "proto/hmac_prf.pb.h"
 
@@ -80,8 +81,8 @@ absl::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
   absl::Status status = ValidateKeyFormat(hmac_prf_key_format);
   if (!status.ok()) return status;
 
-  absl::StatusOr<std::string> randomness =
-      ReadBytesFromStream(hmac_prf_key_format.key_size(), input_stream);
+  absl::StatusOr<SecretData> randomness =
+      ReadSecretBytesFromStream(hmac_prf_key_format.key_size(), input_stream);
   if (!randomness.status().ok()) {
     return randomness.status();
   }
@@ -89,7 +90,7 @@ absl::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
   HmacPrfKeyProto key;
   key.set_version(get_version());
   *(key.mutable_params()) = hmac_prf_key_format.params();
-  key.set_key_value(randomness.value());
+  key.set_key_value(util::SecretDataAsStringView(*randomness));
   return key;
 }
 

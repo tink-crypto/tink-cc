@@ -31,6 +31,7 @@
 #include "tink/hybrid/internal/hpke_util_boringssl.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
@@ -177,16 +178,14 @@ absl::StatusOr<std::string> HpkeContextBoringSsl::Open(
 
 absl::StatusOr<SecretData> HpkeContextBoringSsl::Export(
     absl::string_view exporter_context, int64_t secret_length) {
-  std::string secret;
-  subtle::ResizeStringUninitialized(&secret, secret_length);
+  internal::SecretBuffer secret(secret_length);
   if (!EVP_HPKE_CTX_export(
-          context_.get(), reinterpret_cast<uint8_t *>(&secret[0]),
-          secret_length,
+          context_.get(), secret.data(), secret_length,
           reinterpret_cast<const uint8_t *>(exporter_context.data()),
           exporter_context.size())) {
     return absl::Status(absl::StatusCode::kUnknown, "Unable to export secret.");
   }
-  return util::SecretDataFromStringView(secret);
+  return util::internal::AsSecretData(std::move(secret));
 }
 
 }  // namespace internal

@@ -33,6 +33,7 @@ tink_cc_library(
     crypto
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::subtle::subtle_util
     tink::util::secret_data

@@ -64,6 +64,10 @@ absl::StatusOr<int64_t> UpdateCipher(EVP_CIPHER_CTX *context,
   int64_t total_written_bytes = 0;
   // In practical cases data.size() is assumed to fit into a int64_t.
   int64_t left_to_update = data.size();
+  if (out.size() < data.size()) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "UpdateCipher: output buffer too small");
+  }
   while (left_to_update > 0) {
     const int chunk_size = std::min(kMaxChunkSize, left_to_update);
     auto *buffer_ptr =
@@ -257,7 +261,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
     auto out_buffer = absl::Span<char>(&buffer_if_size_is_zero, /*length=*/1);
     if (!out.empty()) {
       const int64_t min_out_buff_size = PlaintextSize(ciphertext.size());
-      out_buffer = out.subspan(0, min_out_buff_size - tag_size_);
+      out_buffer = out.subspan(0, min_out_buff_size);
     }
 
     // Zero the plaintext buffer in case decryption fails before returning an

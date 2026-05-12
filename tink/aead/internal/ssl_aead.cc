@@ -60,32 +60,28 @@ absl::StatusOr<int64_t> UpdateCipher(EVP_CIPHER_CTX *context,
                                      absl::Span<char> out) {
   // We encrypt/decrypt in chunks of at most MAX int.
   const int64_t kMaxChunkSize = std::numeric_limits<int>::max();
-  // Keep track of the bytes written to out.
-  int64_t total_written_bytes = 0;
-  // In practical cases data.size() is assumed to fit into a int64_t.
-  int64_t left_to_update = data.size();
   if (out.size() < data.size()) {
     return absl::Status(absl::StatusCode::kInternal,
                         "UpdateCipher: output buffer too small");
   }
-  while (left_to_update > 0) {
-    const int chunk_size = std::min(kMaxChunkSize, left_to_update);
-    auto *buffer_ptr =
-        reinterpret_cast<uint8_t *>(out.data() + total_written_bytes);
-    absl::string_view data_chunk = data.substr(total_written_bytes, chunk_size);
+  const int64_t original_out_size = out.size();
+  while (!data.empty()) {
+    const int chunk_size =
+        std::min(kMaxChunkSize, static_cast<int64_t>(data.size()));
+    auto* buffer_ptr = reinterpret_cast<uint8_t*>(out.data());
     int written_bytes = 0;
     if (EVP_CipherUpdate(context, buffer_ptr, &written_bytes,
-                         reinterpret_cast<const uint8_t *>(data_chunk.data()),
-                         data_chunk.size()) <= 0) {
+                         reinterpret_cast<const uint8_t*>(data.data()),
+                         chunk_size) <= 0) {
       const bool is_encrypting = EVP_CIPHER_CTX_encrypting(context) == 1;
       return absl::Status(
           absl::StatusCode::kInternal,
           absl::StrCat(is_encrypting ? "Encryption" : "Decryption", " failed"));
     }
-    left_to_update -= written_bytes;
-    total_written_bytes += written_bytes;
+    data = data.substr(chunk_size);
+    out = out.subspan(written_bytes);
   }
-  return total_written_bytes;
+  return original_out_size - out.size();
 }
 
 class OpenSslOneShotAeadImpl : public SslOneShotAead {

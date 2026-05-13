@@ -1180,3 +1180,30 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "jwt_ml_dsa_parameters",
+    srcs = ["jwt_ml_dsa_parameters.cc"],
+    hdrs = ["jwt_ml_dsa_parameters.h"],
+    include_prefix = "tink/jwt",
+    deps = [
+        ":jwt_signature_parameters",
+        "//tink:parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "jwt_ml_dsa_parameters_test",
+    srcs = ["jwt_ml_dsa_parameters_test.cc"],
+    deps = [
+        ":jwt_ml_dsa_parameters",
+        "//tink:parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

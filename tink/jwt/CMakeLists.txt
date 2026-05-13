@@ -1122,3 +1122,29 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_parameters
+  SRCS
+    jwt_ml_dsa_parameters.cc
+    jwt_ml_dsa_parameters.h
+  DEPS
+    tink::jwt::jwt_signature_parameters
+    absl::status
+    absl::statusor
+    crypto
+    tink::core::parameters
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_parameters_test
+  SRCS
+    jwt_ml_dsa_parameters_test.cc
+  DEPS
+    tink::jwt::jwt_ml_dsa_parameters
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::parameters
+)

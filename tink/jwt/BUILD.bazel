@@ -1207,3 +1207,43 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "jwt_ml_dsa_public_key",
+    srcs = ["jwt_ml_dsa_public_key.cc"],
+    hdrs = ["jwt_ml_dsa_public_key.h"],
+    include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jwt_ml_dsa_parameters",
+        ":jwt_signature_public_key",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink/internal:endian",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "jwt_ml_dsa_public_key_test",
+    srcs = ["jwt_ml_dsa_public_key_test.cc"],
+    deps = [
+        ":jwt_ml_dsa_parameters",
+        ":jwt_ml_dsa_public_key",
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)

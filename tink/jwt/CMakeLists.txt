@@ -1148,3 +1148,43 @@ tink_cc_test(
     absl::statusor
     tink::core::parameters
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_public_key
+  SRCS
+    jwt_ml_dsa_public_key.cc
+    jwt_ml_dsa_public_key.h
+  DEPS
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_signature_public_key
+    absl::core_headers
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::internal::endian
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_public_key_test
+  SRCS
+    jwt_ml_dsa_public_key_test.cc
+  DEPS
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

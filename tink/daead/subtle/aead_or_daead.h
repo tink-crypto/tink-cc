@@ -54,8 +54,8 @@ class AeadOrDaead {
                                       absl::string_view associated_data) const;
 
  private:
-  absl::variant<std::unique_ptr<const Aead>,
-                std::unique_ptr<const DeterministicAead>>
+  std::variant<std::unique_ptr<const Aead>,
+               std::unique_ptr<const DeterministicAead>>
       primitive_variant_;
 };
 

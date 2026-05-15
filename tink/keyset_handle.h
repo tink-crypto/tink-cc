@@ -292,13 +292,16 @@ class KeysetHandle {
   absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const Configuration& config) const;
 
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Creates a wrapped primitive using this keyset handle and the global
-  // registry, which stores necessary primitive wrappers and key type managers.
+  // registry, which stores necessary primitive wrappers and key
+  // type managers.
   template <class P>
   ABSL_DEPRECATE_AND_INLINE()
   absl::StatusOr<std::unique_ptr<P>> GetPrimitive() const {
     return GetPrimitive<P>(crypto::tink::ConfigGlobalRegistry());
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
   // Creates a wrapped primitive corresponding to this keyset. Uses the given
   // KeyManager, as well as the KeyManager and PrimitiveWrapper objects in the

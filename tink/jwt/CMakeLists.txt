@@ -1188,3 +1188,52 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_private_key
+  SRCS
+    jwt_ml_dsa_private_key.cc
+    jwt_ml_dsa_private_key.h
+  DEPS
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::jwt::jwt_signature_private_key
+    absl::log
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_private_key_test
+  SRCS
+    jwt_ml_dsa_private_key_test.cc
+  DEPS
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_public_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

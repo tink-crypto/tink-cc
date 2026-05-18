@@ -74,6 +74,7 @@ KeysetHandleBuilder::KeysetHandleBuilder(const KeysetHandle& handle) {
     KeysetHandleBuilder::Entry builder_entry =
         KeysetHandleBuilder::Entry::CreateFromKey(
             std::move(entry.key_), entry.GetStatus(), entry.IsPrimary());
+    builder_entry.SetFixedId(entry.GetId());
     AddEntry(std::move(builder_entry));
   }
   for (const auto& [id, annotation] : handle.annotations_) {

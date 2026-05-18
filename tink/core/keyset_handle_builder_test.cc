@@ -463,6 +463,27 @@ TEST_F(KeysetHandleBuilderTest, BuildCopy) {
               IsTrue());
 }
 
+TEST_F(KeysetHandleBuilderTest, BuildCopyPreservesIdOfKeyWithoutIdRequirement) {
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      AesCmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  KeysetHandleBuilder::Entry entry =
+      KeysetHandleBuilder::Entry::CreateFromParams(
+          absl::make_unique<AesCmacParameters>(std::move(*params)),
+          KeyStatus::kEnabled, /*is_primary=*/true);
+  entry.SetFixedId(987);
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
+  ASSERT_THAT(handle.status(), IsOk());
+
+  absl::StatusOr<KeysetHandle> copy = KeysetHandleBuilder(*handle).Build();
+  ASSERT_THAT(copy.status(), IsOk());
+  EXPECT_THAT(copy->size(), Eq(1));
+  EXPECT_THAT((*copy)[0].GetId(), Eq(987));
+}
+
 TEST_F(KeysetHandleBuilderTest, IsPrimary) {
   absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());

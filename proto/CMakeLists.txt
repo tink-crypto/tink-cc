@@ -212,6 +212,11 @@ tink_cc_proto(
   SRCS test_proto.proto
 )
 
+tink_cc_proto(
+  NAME jwt_ml_dsa_cc_proto
+  SRCS jwt_ml_dsa.proto
+)
+
 tink_target_group(
   NAME public_protos_cc_proto
   DEPS

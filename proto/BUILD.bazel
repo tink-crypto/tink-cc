@@ -257,6 +257,12 @@ proto_library(
     visibility = ["//visibility:public"],
 )
 
+proto_library(
+    name = "jwt_ml_dsa_proto",
+    srcs = ["jwt_ml_dsa.proto"],
+    visibility = ["//visibility:public"],
+)
+
 # ----------------------------------------
 # cc_proto_library rules.
 # ----------------------------------------
@@ -460,6 +466,12 @@ cc_proto_library(
     name = "composite_ml_dsa_cc_proto",
     visibility = ["//visibility:public"],
     deps = ["//proto:composite_ml_dsa_proto"],
+)
+
+cc_proto_library(
+    name = "jwt_ml_dsa_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//proto:jwt_ml_dsa_proto"],
 )
 
 filegroup(

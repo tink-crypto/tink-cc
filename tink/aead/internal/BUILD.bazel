@@ -1242,3 +1242,68 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "kms_aead_config_v0",
+    srcs = ["kms_aead_config_v0.cc"],
+    hdrs = ["kms_aead_config_v0.h"],
+    include_prefix = "tink/aead/internal",
+    deps = [
+        "//tink:configuration",
+        "//tink/aead:kms_aead_key_manager",
+        "//tink/aead:kms_envelope_aead_key_manager",
+        "//tink/internal:configuration_impl",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+    ],
+)
+
+cc_library(
+    name = "kms_aead_key_gen_config_v0",
+    srcs = ["kms_aead_key_gen_config_v0.cc"],
+    hdrs = ["kms_aead_key_gen_config_v0.h"],
+    include_prefix = "tink/aead/internal",
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/aead:kms_aead_key_manager",
+        "//tink/aead:kms_envelope_aead_key_manager",
+        "//tink/internal:key_gen_configuration_impl",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+    ],
+)
+
+cc_test(
+    name = "kms_aead_config_v0_test",
+    srcs = ["kms_aead_config_v0_test.cc"],
+    deps = [
+        ":kms_aead_config_v0",
+        ":kms_aead_key_gen_config_v0",
+        "//tink:configuration",
+        "//tink:key_gen_configuration",
+        "//tink/aead:kms_aead_key_manager",
+        "//tink/aead:kms_envelope_aead_key_manager",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "kms_aead_key_gen_config_v0_test",
+    srcs = ["kms_aead_key_gen_config_v0_test.cc"],
+    deps = [
+        ":kms_aead_key_gen_config_v0",
+        "//tink:key_gen_configuration",
+        "//tink/aead:kms_aead_key_manager",
+        "//tink/aead:kms_envelope_aead_key_manager",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

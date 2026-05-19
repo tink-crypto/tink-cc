@@ -1209,3 +1209,66 @@ tink_cc_test(
     tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
 )
+
+tink_cc_library(
+  NAME kms_aead_config_v0
+  SRCS
+    kms_aead_config_v0.cc
+    kms_aead_config_v0.h
+  DEPS
+    absl::memory
+    absl::status
+    tink::core::configuration
+    tink::aead::kms_aead_key_manager
+    tink::aead::kms_envelope_aead_key_manager
+    tink::internal::configuration_impl
+)
+
+tink_cc_library(
+  NAME kms_aead_key_gen_config_v0
+  SRCS
+    kms_aead_key_gen_config_v0.cc
+    kms_aead_key_gen_config_v0.h
+  DEPS
+    absl::memory
+    absl::status
+    tink::core::key_gen_configuration
+    tink::aead::kms_aead_key_manager
+    tink::aead::kms_envelope_aead_key_manager
+    tink::internal::key_gen_configuration_impl
+)
+
+tink_cc_test(
+  NAME kms_aead_config_v0_test
+  SRCS
+    kms_aead_config_v0_test.cc
+  DEPS
+    tink::aead::internal::kms_aead_config_v0
+    tink::aead::internal::kms_aead_key_gen_config_v0
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::configuration
+    tink::core::key_gen_configuration
+    tink::aead::kms_aead_key_manager
+    tink::aead::kms_envelope_aead_key_manager
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+)
+
+tink_cc_test(
+  NAME kms_aead_key_gen_config_v0_test
+  SRCS
+    kms_aead_key_gen_config_v0_test.cc
+  DEPS
+    tink::aead::internal::kms_aead_key_gen_config_v0
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::key_gen_configuration
+    tink::aead::kms_aead_key_manager
+    tink::aead::kms_envelope_aead_key_manager
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+)

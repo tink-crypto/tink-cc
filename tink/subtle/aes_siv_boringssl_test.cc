@@ -43,9 +43,9 @@ namespace {
 using ::testing::Not;
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
-using ::crypto::tink::test::StatusIs;
 
 TEST(AesSivBoringSslTest, testCarryComputation) {
   if (IsFipsModeEnabled()) {

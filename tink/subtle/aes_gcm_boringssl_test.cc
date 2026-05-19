@@ -48,7 +48,7 @@ constexpr absl::string_view kKey256 =
     "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f";
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Not;

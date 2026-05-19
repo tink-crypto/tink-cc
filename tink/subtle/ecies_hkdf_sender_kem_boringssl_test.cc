@@ -44,7 +44,7 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 class EciesHkdfSenderKemBoringSslTest : public ::testing::Test {};
 

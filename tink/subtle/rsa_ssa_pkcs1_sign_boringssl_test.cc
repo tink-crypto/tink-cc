@@ -45,7 +45,7 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::Not;

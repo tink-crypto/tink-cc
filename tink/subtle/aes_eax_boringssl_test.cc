@@ -42,9 +42,9 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
 
 TEST(AesEaxBoringSslTest, TestBasic) {

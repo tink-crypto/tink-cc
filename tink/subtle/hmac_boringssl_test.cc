@@ -46,8 +46,8 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
 
 class HmacBoringSslTest : public ::testing::Test {

@@ -51,7 +51,7 @@ constexpr absl::string_view kMessage = "Some data to encrypt.";
 constexpr absl::string_view kAssociatedData = "Some data to authenticate.";
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Not;

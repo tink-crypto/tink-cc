@@ -51,11 +51,11 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::AesCmacTestVectors;
 using ::crypto::tink::internal::TinkAesCmacTestVector;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
-using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;

@@ -26,8 +26,8 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::test::DummyStreamingAead;
-using ::crypto::tink::test::StatusIs;
 
 namespace {
 

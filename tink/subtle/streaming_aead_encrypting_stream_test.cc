@@ -45,9 +45,9 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using crypto::tink::OutputStream;
 using crypto::tink::subtle::test::DummyStreamSegmentEncrypter;
-using ::crypto::tink::test::StatusIs;
 using crypto::tink::util::OstreamOutputStream;
 using ::testing::Not;
 

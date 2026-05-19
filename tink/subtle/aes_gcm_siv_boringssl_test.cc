@@ -50,7 +50,7 @@ constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Not;

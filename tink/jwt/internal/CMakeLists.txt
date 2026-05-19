@@ -1493,3 +1493,48 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_proto_serialization_impl
+  SRCS
+    jwt_ml_dsa_proto_serialization_impl.cc
+    jwt_ml_dsa_proto_serialization_impl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::jwt::jwt_ml_dsa_parameters
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_proto_serialization_impl_test
+  SRCS
+    jwt_ml_dsa_proto_serialization_impl_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_proto_serialization_impl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::proto::common_cc_proto
+    tink::proto::jwt_ml_dsa_cc_proto
+)

@@ -66,7 +66,7 @@ struct TestCase {
   int key_size;
   int iv_size;
   int tag_size;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

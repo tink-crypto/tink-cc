@@ -191,7 +191,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 }
 
 absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
-                                   absl::optional<SecretKeyAccessToken> token) {
+                                   std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::InvalidArgumentError("Wrong type URL when parsing AesGcmKey.");
   }
@@ -232,7 +232,7 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
-    const AesGcmKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const AesGcmKey& key, std::optional<SecretKeyAccessToken> token) {
   absl::Status valid_params = ValidateParamsForProto(key.GetParameters());
   if (!valid_params.ok()) return valid_params;
 

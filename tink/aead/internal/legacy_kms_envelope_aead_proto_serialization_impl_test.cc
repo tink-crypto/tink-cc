@@ -222,7 +222,7 @@ AesEaxParameters GetAesEaxParameters() {
 struct TestCase {
   LegacyKmsEnvelopeAeadParameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
   LegacyKmsEnvelopeAeadParameters::DekParsingStrategy dek_parsing_strategy;
   std::shared_ptr<AeadParameters> dek_parameters;

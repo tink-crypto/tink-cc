@@ -87,7 +87,7 @@ struct TestCase {
   HashType proto_hash_type;
   AesCtrHmacAeadParameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string output_prefix;
 };
 

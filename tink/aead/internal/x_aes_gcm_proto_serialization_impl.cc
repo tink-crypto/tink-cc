@@ -199,9 +199,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
       kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
-absl::StatusOr<XAesGcmKey> ParseKey(
-    const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+absl::StatusOr<XAesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
+                                    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing XAesGcmKey.");
@@ -235,7 +234,7 @@ absl::StatusOr<XAesGcmKey> ParseKey(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
-    const XAesGcmKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const XAesGcmKey& key, std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {

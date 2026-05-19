@@ -183,7 +183,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<AesGcmSivKey> ParseKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
@@ -220,7 +220,7 @@ absl::StatusOr<AesGcmSivKey> ParseKey(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
-    const AesGcmSivKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const AesGcmSivKey& key, std::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }

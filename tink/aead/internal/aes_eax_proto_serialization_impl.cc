@@ -230,7 +230,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 }
 
 absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
-                                   absl::optional<SecretKeyAccessToken> token) {
+                                   std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesEaxKey.");
@@ -271,7 +271,7 @@ absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
-    const AesEaxKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const AesEaxKey& key, std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<AesEaxParamsTP> params = GetProtoParams(key.GetParameters());
   if (!params.ok()) {
     return params.status();

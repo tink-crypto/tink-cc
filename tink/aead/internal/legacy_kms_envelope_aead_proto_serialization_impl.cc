@@ -275,7 +275,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<LegacyKmsEnvelopeAeadKey> ParseKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsEnvelopeAeadKey.");
@@ -303,7 +303,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadKey> ParseKey(
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const LegacyKmsEnvelopeAeadKey& key,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<KeyTemplateTP> dek_key_template =
       ParametersToKeyTemplate(key.GetParameters().GetDekParameters());
   if (!dek_key_template.ok()) {

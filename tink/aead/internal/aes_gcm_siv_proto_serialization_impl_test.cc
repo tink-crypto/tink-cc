@@ -64,7 +64,7 @@ struct TestCase {
   AesGcmSivParameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
   int key_size;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

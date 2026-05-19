@@ -68,7 +68,7 @@ const absl::string_view kKeyUri = "some://arbitrary.key.uri?q=123#xyz";
 struct TestCase {
   LegacyKmsAeadParameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

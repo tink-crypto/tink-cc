@@ -67,7 +67,7 @@ struct XAesGcmTestCase {
   XAesGcmParameters::Variant variant;
   int salt_size;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

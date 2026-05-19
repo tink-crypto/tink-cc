@@ -168,7 +168,7 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<LegacyKmsAeadKey> ParseKey(
     const internal::ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsAeadKey.");
@@ -198,7 +198,7 @@ absl::StatusOr<LegacyKmsAeadKey> ParseKey(
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
-    const LegacyKmsAeadKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const LegacyKmsAeadKey& key, std::optional<SecretKeyAccessToken> token) {
   KmsAeadKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.mutable_params()->set_key_uri(key.GetParameters().GetKeyUri());

@@ -210,7 +210,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesCtrHmacAeadKey.");
@@ -274,7 +274,7 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
-    const AesCtrHmacAeadKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const AesCtrHmacAeadKey& key, std::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");

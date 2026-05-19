@@ -69,7 +69,7 @@ struct TestCase {
   int iv_size;
   AesEaxParameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

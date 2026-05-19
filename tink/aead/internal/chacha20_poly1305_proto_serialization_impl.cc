@@ -176,7 +176,7 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
     const internal::ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing ChaCha20Poly1305Key.");
@@ -211,8 +211,7 @@ absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
-    const ChaCha20Poly1305Key& key,
-    absl::optional<SecretKeyAccessToken> token) {
+    const ChaCha20Poly1305Key& key, std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();

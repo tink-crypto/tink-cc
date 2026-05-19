@@ -386,3 +386,65 @@ tink_cc_test(
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
+
+tink_cc_library(
+  NAME config_v0
+  SRCS
+    config_v0.cc
+    config_v0.h
+  DEPS
+    tink::keyderivation::internal::prf_based_deriver_key_manager
+    absl::memory
+    absl::status
+    tink::core::configuration
+    tink::internal::configuration_impl
+    tink::keyderivation::keyset_deriver_wrapper
+)
+
+tink_cc_library(
+  NAME key_gen_config_v0
+  SRCS
+    key_gen_config_v0.cc
+    key_gen_config_v0.h
+  DEPS
+    tink::keyderivation::internal::prf_based_deriver_key_manager
+    absl::memory
+    absl::status
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+)
+
+tink_cc_test(
+  NAME config_v0_test
+  SRCS
+    config_v0_test.cc
+  DEPS
+    tink::keyderivation::internal::config_v0
+    tink::keyderivation::internal::key_gen_config_v0
+    tink::keyderivation::internal::prf_based_deriver_key_manager
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::configuration
+    tink::core::key_gen_configuration
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+    tink::internal::keyset_wrapper_store
+    tink::keyderivation::keyset_deriver
+)
+
+tink_cc_test(
+  NAME key_gen_config_v0_test
+  SRCS
+    key_gen_config_v0_test.cc
+  DEPS
+    tink::keyderivation::internal::key_gen_config_v0
+    tink::keyderivation::internal::prf_based_deriver_key_manager
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+)

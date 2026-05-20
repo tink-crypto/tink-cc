@@ -62,11 +62,11 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::ReadAllFromRandomAccessStream;
 using ::crypto::tink::subtle::test::ReadFromStream;
 using ::crypto::tink::subtle::test::WriteToStream;
 using ::crypto::tink::test::DummyStreamingAead;
-using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;

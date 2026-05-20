@@ -52,8 +52,8 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::StreamingAeadTestVector;
-using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::google::crypto::tink::AesGcmHkdfStreamingKey;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;

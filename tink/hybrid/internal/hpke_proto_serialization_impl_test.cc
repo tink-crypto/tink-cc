@@ -318,7 +318,7 @@ struct TestCase {
   HpkeKem kem;
   HpkeKdf kdf;
   HpkeAead aead;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
   subtle::EllipticCurveType curve;
 };

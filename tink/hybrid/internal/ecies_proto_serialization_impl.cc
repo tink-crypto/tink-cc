@@ -640,7 +640,7 @@ absl::StatusOr<ProtoEciesAeadHkdfParams> FromParameters(
 absl::StatusOr<EciesPublicKey> ToPublicKey(
     const EciesParameters& parameters,
     const ProtoEciesAeadHkdfPublicKey& proto_key,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   if (IsNistCurve(parameters.GetCurveType())) {
     EcPoint point(BigInteger(proto_key.x()), BigInteger(proto_key.y()));
     return EciesPublicKey::CreateForNistCurve(parameters, point, id_requirement,
@@ -723,7 +723,7 @@ absl::StatusOr<EciesParameters> ParseParameters(
 
 absl::StatusOr<EciesPublicKey> ParsePublicKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EciesAeadHkdfPublicKey.");
@@ -752,7 +752,7 @@ absl::StatusOr<EciesPublicKey> ParsePublicKey(
 
 absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
@@ -839,7 +839,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
-    const EciesPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const EciesPublicKey& key, std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<ProtoEciesAeadHkdfParams> params =
       FromParameters(key.GetParameters());
   if (!params.ok()) {
@@ -871,7 +871,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
-    const EciesPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const EciesPrivateKey& key, std::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
@@ -897,7 +897,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     if (!encoding_length.ok()) {
       return encoding_length.status();
     }
-    absl::optional<RestrictedData> secret =
+    std::optional<RestrictedData> secret =
         key.GetNistPrivateKeyBytes(GetPartialKeyAccess());
     if (!secret.has_value()) {
       return absl::InternalError(
@@ -912,7 +912,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     }
     proto_private_key.set_key_value(*key_value);
   } else {
-    absl::optional<RestrictedData> secret =
+    std::optional<RestrictedData> secret =
         key.GetX25519PrivateKeyBytes(GetPartialKeyAccess());
     if (!secret.has_value()) {
       return absl::InternalError(

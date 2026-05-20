@@ -409,7 +409,7 @@ absl::StatusOr<HpkeParameters> ParseParameters(
 
 absl::StatusOr<HpkePublicKey> ParsePublicKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HpkePublicKey.");
@@ -438,7 +438,7 @@ absl::StatusOr<HpkePublicKey> ParsePublicKey(
 
 absl::StatusOr<HpkePrivateKey> ParsePrivateKey(
     const ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+    std::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HpkePrivateKey.");
@@ -505,7 +505,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
-    const HpkePublicKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const HpkePublicKey& key, std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<HpkeParamsTP> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
@@ -530,7 +530,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
-    const HpkePrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
+    const HpkePrivateKey& key, std::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<RestrictedData> restricted_input =
       key.GetPrivateKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {

@@ -1503,9 +1503,17 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_fields
@@ -1514,6 +1522,7 @@ tink_cc_library(
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
 )
 
 tink_cc_test(
@@ -1528,13 +1537,20 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::jwt_ml_dsa_cc_proto
 )

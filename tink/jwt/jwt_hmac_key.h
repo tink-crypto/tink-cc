@@ -57,12 +57,12 @@ class JwtHmacKey final : public JwtMacKey {
     absl::StatusOr<JwtHmacKey> Build(PartialKeyAccessToken token);
 
    private:
-    absl::StatusOr<absl::optional<std::string>> ComputeKid();
+    absl::StatusOr<std::optional<std::string>> ComputeKid();
 
-    absl::optional<JwtHmacParameters> parameters_;
-    absl::optional<RestrictedData> key_bytes_;
-    absl::optional<int> id_requirement_;
-    absl::optional<std::string> custom_kid_;
+    std::optional<JwtHmacParameters> parameters_;
+    std::optional<RestrictedData> key_bytes_;
+    std::optional<int> id_requirement_;
+    std::optional<std::string> custom_kid_;
   };
 
   // Copyable and movable.
@@ -79,11 +79,11 @@ class JwtHmacKey final : public JwtMacKey {
     return parameters_;
   }
 
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 
-  absl::optional<std::string> GetKid() const override { return kid_; }
+  std::optional<std::string> GetKid() const override { return kid_; }
 
   bool operator==(const Key& other) const override;
 
@@ -93,9 +93,8 @@ class JwtHmacKey final : public JwtMacKey {
 
  private:
   JwtHmacKey(const JwtHmacParameters& parameters,
-             const RestrictedData& key_bytes,
-             absl::optional<int> id_requirement,
-             absl::optional<std::string> kid)
+             const RestrictedData& key_bytes, std::optional<int> id_requirement,
+             std::optional<std::string> kid)
       : parameters_(parameters),
         key_bytes_(key_bytes),
         id_requirement_(id_requirement),
@@ -103,8 +102,8 @@ class JwtHmacKey final : public JwtMacKey {
 
   JwtHmacParameters parameters_;
   RestrictedData key_bytes_;
-  absl::optional<int> id_requirement_;
-  absl::optional<std::string> kid_;
+  std::optional<int> id_requirement_;
+  std::optional<std::string> kid_;
 };
 
 }  // namespace tink

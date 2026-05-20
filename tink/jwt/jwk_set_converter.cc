@@ -530,7 +530,7 @@ absl::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
   AddStringEntry(&output_key, "use", "sig");
   AddKeyOpsVerifyEntry(&output_key);
 
-  absl::optional<std::string> kid =
+  std::optional<std::string> kid =
       jwt_internal::GetKid(key.key_id(), key.output_prefix_type());
   if (kid.has_value()) {
     AddStringEntry(&output_key, "kid", kid.value());
@@ -570,7 +570,7 @@ absl::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
   AddStringEntry(&output_key, "use", "sig");
   AddKeyOpsVerifyEntry(&output_key);
 
-  absl::optional<std::string> kid =
+  std::optional<std::string> kid =
       jwt_internal::GetKid(key.key_id(), key.output_prefix_type());
   if (kid.has_value()) {
     AddStringEntry(&output_key, "kid", kid.value());
@@ -610,7 +610,7 @@ absl::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
   AddStringEntry(&output_key, "use", "sig");
   AddKeyOpsVerifyEntry(&output_key);
 
-  absl::optional<std::string> kid =
+  std::optional<std::string> kid =
       jwt_internal::GetKid(key.key_id(), key.output_prefix_type());
   if (kid.has_value()) {
     AddStringEntry(&output_key, "kid", kid.value());

@@ -53,9 +53,9 @@ struct TestCase {
   JwtEcdsaParameters::KidStrategy kid_strategy;
   JwtEcdsaParameters::Algorithm algorithm;
   subtle::EllipticCurveType curve;
-  absl::optional<std::string> custom_kid;
-  absl::optional<int> id_requirement;
-  absl::optional<std::string> expected_kid;
+  std::optional<std::string> custom_kid;
+  std::optional<int> id_requirement;
+  std::optional<std::string> expected_kid;
 };
 
 using JwtEcdsaPublicKeyTest = TestWithParam<TestCase>;

@@ -87,13 +87,13 @@ class RawJwt {
   RawJwt& operator=(RawJwt&& other) = default;
 
  private:
-  static absl::StatusOr<RawJwt> FromJson(
-      absl::optional<std::string> type_header, absl::string_view json_payload);
-  explicit RawJwt(absl::optional<std::string> type_header,
+  static absl::StatusOr<RawJwt> FromJson(std::optional<std::string> type_header,
+                                         absl::string_view json_payload);
+  explicit RawJwt(std::optional<std::string> type_header,
                   google::protobuf::Struct json_proto);
   friend class RawJwtBuilder;
   friend class jwt_internal::RawJwtParser;
-  absl::optional<std::string> type_header_;
+  std::optional<std::string> type_header_;
   google::protobuf::Struct json_proto_;
 };
 
@@ -131,8 +131,8 @@ class RawJwtBuilder {
   RawJwtBuilder& operator=(RawJwtBuilder&& other) = default;
 
  private:
-  absl::optional<absl::Status> error_;
-  absl::optional<std::string> type_header_;
+  std::optional<absl::Status> error_;
+  std::optional<std::string> type_header_;
   bool without_expiration_;
   google::protobuf::Struct json_proto_;
 };

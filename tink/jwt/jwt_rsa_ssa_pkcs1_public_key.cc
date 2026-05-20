@@ -59,7 +59,7 @@ JwtRsaSsaPkcs1PublicKey::Builder::SetCustomKid(absl::string_view custom_kid) {
   return *this;
 }
 
-absl::StatusOr<absl::optional<std::string>>
+absl::StatusOr<std::optional<std::string>>
 JwtRsaSsaPkcs1PublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId) {
@@ -127,7 +127,7 @@ absl::StatusOr<JwtRsaSsaPkcs1PublicKey> JwtRsaSsaPkcs1PublicKey::Builder::Build(
                         parameters_->GetModulusSizeInBits(),
                         modulus_->SizeInBytes() * 8));
   }
-  absl::StatusOr<absl::optional<std::string>> kid = ComputeKid();
+  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
   if (!kid.ok()) {
     return kid.status();
   }

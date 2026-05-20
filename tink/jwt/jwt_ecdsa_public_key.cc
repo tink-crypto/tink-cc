@@ -111,7 +111,7 @@ JwtEcdsaPublicKey::Builder& JwtEcdsaPublicKey::Builder::SetCustomKid(
   return *this;
 }
 
-absl::StatusOr<absl::optional<std::string>>
+absl::StatusOr<std::optional<std::string>>
 JwtEcdsaPublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId) {
@@ -175,7 +175,7 @@ absl::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  absl::StatusOr<absl::optional<std::string>> kid = ComputeKid();
+  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
   if (!kid.ok()) {
     return kid.status();
   }

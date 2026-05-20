@@ -57,12 +57,12 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
     absl::StatusOr<JwtRsaSsaPssPublicKey> Build(PartialKeyAccessToken token);
 
    private:
-    absl::StatusOr<absl::optional<std::string>> ComputeKid();
+    absl::StatusOr<std::optional<std::string>> ComputeKid();
 
-    absl::optional<JwtRsaSsaPssParameters> parameters_;
-    absl::optional<BigInteger> modulus_;
-    absl::optional<int> id_requirement_;
-    absl::optional<std::string> custom_kid_;
+    std::optional<JwtRsaSsaPssParameters> parameters_;
+    std::optional<BigInteger> modulus_;
+    std::optional<int> id_requirement_;
+    std::optional<std::string> custom_kid_;
   };
 
   // Copyable and movable.
@@ -80,11 +80,11 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
     return parameters_;
   }
 
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 
-  absl::optional<std::string> GetKid() const override { return kid_; }
+  std::optional<std::string> GetKid() const override { return kid_; }
 
   bool operator==(const Key& other) const override;
 
@@ -95,8 +95,8 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
  private:
   explicit JwtRsaSsaPssPublicKey(const JwtRsaSsaPssParameters& parameters,
                                  const BigInteger& modulus,
-                                 absl::optional<int> id_requirement,
-                                 absl::optional<std::string> kid)
+                                 std::optional<int> id_requirement,
+                                 std::optional<std::string> kid)
       : parameters_(parameters),
         modulus_(modulus),
         id_requirement_(id_requirement),
@@ -104,8 +104,8 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
 
   JwtRsaSsaPssParameters parameters_;
   BigInteger modulus_;
-  absl::optional<int> id_requirement_;
-  absl::optional<std::string> kid_;
+  std::optional<int> id_requirement_;
+  std::optional<std::string> kid_;
 };
 
 }  // namespace tink

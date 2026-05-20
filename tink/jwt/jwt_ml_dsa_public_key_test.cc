@@ -255,9 +255,9 @@ const absl::string_view kMlDsa87PublicKeyBytes =
 struct TestCase {
   JwtMlDsaParameters::KidStrategy kid_strategy;
   JwtMlDsaParameters::Algorithm algorithm;
-  absl::optional<std::string> custom_kid;
-  absl::optional<int> id_requirement;
-  absl::optional<std::string> expected_kid;
+  std::optional<std::string> custom_kid;
+  std::optional<int> id_requirement;
+  std::optional<std::string> expected_kid;
   std::string public_key_bytes;
 };
 

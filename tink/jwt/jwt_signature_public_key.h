@@ -46,7 +46,7 @@ class JwtSignaturePublicKey : public Key {
   // omitting the `kid` header is allowed. Of course, if
   // `GetParameters().AllowKidAbsent()` returns false, then `GetKid()` must
   // return a non-empty value.
-  virtual absl::optional<std::string> GetKid() const = 0;
+  virtual std::optional<std::string> GetKid() const = 0;
 
   const JwtSignatureParameters& GetParameters() const override = 0;
 

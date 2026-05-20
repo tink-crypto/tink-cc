@@ -48,9 +48,9 @@ using ::testing::Values;
 struct TestCase {
   JwtRsaSsaPssParameters::Algorithm algorithm;
   JwtRsaSsaPssParameters::KidStrategy kid_strategy;
-  absl::optional<int> id_requirement;
-  absl::optional<std::string> custom_kid;
-  absl::optional<std::string> expected_kid;
+  std::optional<int> id_requirement;
+  std::optional<std::string> custom_kid;
+  std::optional<std::string> expected_kid;
 };
 
 const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537

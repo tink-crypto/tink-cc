@@ -63,9 +63,9 @@ using ::testing::Values;
 struct TestCase {
   JwtRsaSsaPssParameters::Algorithm algorithm;
   JwtRsaSsaPssParameters::KidStrategy kid_strategy;
-  absl::optional<int> id_requirement;
-  absl::optional<std::string> custom_kid;
-  absl::optional<std::string> expected_kid;
+  std::optional<int> id_requirement;
+  std::optional<std::string> custom_kid;
+  std::optional<std::string> expected_kid;
 };
 
 struct PrivateValues {
@@ -152,8 +152,7 @@ PrivateValues GetValidPrivateValues() {
 JwtRsaSsaPssPublicKey GetValidPublicKey(
     JwtRsaSsaPssParameters::Algorithm algorithm,
     JwtRsaSsaPssParameters::KidStrategy kid_strategy,
-    absl::optional<int> id_requirement,
-    absl::optional<std::string> custom_kid) {
+    std::optional<int> id_requirement, std::optional<std::string> custom_kid) {
   absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(kModulusSizeInBits)

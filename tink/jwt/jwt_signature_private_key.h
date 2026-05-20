@@ -34,11 +34,9 @@ class JwtSignaturePrivateKey : public PrivateKey {
  public:
   const JwtSignaturePublicKey& GetPublicKey() const override = 0;
 
-  absl::optional<std::string> GetKid() const {
-    return GetPublicKey().GetKid();
-  }
+  std::optional<std::string> GetKid() const { return GetPublicKey().GetKid(); }
 
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return GetPublicKey().GetIdRequirement();
   }
 

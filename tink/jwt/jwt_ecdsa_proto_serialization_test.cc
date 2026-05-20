@@ -79,8 +79,8 @@ struct TestCase {
   JwtEcdsaParameters::Algorithm algorithm;
   JwtEcdsaAlgorithm proto_algorithm;
   subtle::EllipticCurveType curve;
-  absl::optional<std::string> kid;
-  absl::optional<int> id;
+  std::optional<std::string> kid;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

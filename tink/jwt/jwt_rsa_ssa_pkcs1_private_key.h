@@ -108,13 +108,13 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
         PartialKeyAccessToken token);
 
    private:
-    absl::optional<JwtRsaSsaPkcs1PublicKey> public_key_;
-    absl::optional<RestrictedData> p_;
-    absl::optional<RestrictedData> q_;
-    absl::optional<RestrictedData> dp_;
-    absl::optional<RestrictedData> dq_;
-    absl::optional<RestrictedData> d_;
-    absl::optional<RestrictedData> q_inv_;
+    std::optional<JwtRsaSsaPkcs1PublicKey> public_key_;
+    std::optional<RestrictedData> p_;
+    std::optional<RestrictedData> q_;
+    std::optional<RestrictedData> dp_;
+    std::optional<RestrictedData> dq_;
+    std::optional<RestrictedData> d_;
+    std::optional<RestrictedData> q_inv_;
     // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
     // TINK-PENDING-REMOVAL-IN-3.0.0-START
     absl::optional<RestrictedBigInteger> p_big_integer_;

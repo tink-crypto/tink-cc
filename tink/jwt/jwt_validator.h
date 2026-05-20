@@ -52,16 +52,16 @@ class JwtValidator {
   absl::Status ValidateAudiences(crypto::tink::RawJwt const& raw_jwt) const;
   explicit JwtValidator(const JwtValidatorBuilder& builder);
   friend class JwtValidatorBuilder;
-  absl::optional<std::string> expected_type_header_;
-  absl::optional<std::string> expected_issuer_;
-  absl::optional<std::string> expected_audience_;
+  std::optional<std::string> expected_type_header_;
+  std::optional<std::string> expected_issuer_;
+  std::optional<std::string> expected_audience_;
   bool ignore_type_header_;
   bool ignore_issuer_;
   bool ignore_audiences_;
   bool allow_missing_expiration_;
   bool expect_issued_in_the_past_;
   absl::Duration clock_skew_;
-  absl::optional<absl::Time> fixed_now_;
+  std::optional<absl::Time> fixed_now_;
 };
 
 class JwtValidatorBuilder {
@@ -92,16 +92,16 @@ class JwtValidatorBuilder {
 
  private:
   friend class JwtValidator;
-  absl::optional<std::string> expected_type_header_;
-  absl::optional<std::string> expected_issuer_;
-  absl::optional<std::string> expected_audience_;
+  std::optional<std::string> expected_type_header_;
+  std::optional<std::string> expected_issuer_;
+  std::optional<std::string> expected_audience_;
   bool ignore_type_header_;
   bool ignore_issuer_;
   bool ignore_audiences_;
   bool allow_missing_expiration_;
   bool expect_issued_in_the_past_;
   absl::Duration clock_skew_;
-  absl::optional<absl::Time> fixed_now_;
+  std::optional<absl::Time> fixed_now_;
 };
 
 }  // namespace tink

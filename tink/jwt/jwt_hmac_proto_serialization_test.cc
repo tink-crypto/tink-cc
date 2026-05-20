@@ -72,8 +72,8 @@ struct TestCase {
   JwtHmacParameters::Algorithm algorithm;
   JwtHmacAlgorithm proto_algorithm;
   int key_size;
-  absl::optional<std::string> kid;
-  absl::optional<int> id;
+  std::optional<std::string> kid;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

@@ -46,9 +46,9 @@ struct TestCase {
   int key_size_in_bytes;
   JwtHmacParameters::KidStrategy kid_strategy;
   JwtHmacParameters::Algorithm algorithm;
-  absl::optional<std::string> custom_kid;
-  absl::optional<int> id_requirement;
-  absl::optional<std::string> expected_kid;
+  std::optional<std::string> custom_kid;
+  std::optional<int> id_requirement;
+  std::optional<std::string> expected_kid;
 };
 
 using JwtHmacKeyTest = TestWithParam<TestCase>;

@@ -161,7 +161,7 @@ absl::Status ValidateAudienceClaim(const google::protobuf::Struct& json_proto) {
 
 }  // namespace
 
-absl::StatusOr<RawJwt> RawJwt::FromJson(absl::optional<std::string> type_header,
+absl::StatusOr<RawJwt> RawJwt::FromJson(std::optional<std::string> type_header,
                                         absl::string_view json_payload) {
   absl::StatusOr<google::protobuf::Struct> proto =
       jwt_internal::JsonStringToProtoStruct(json_payload);
@@ -190,7 +190,7 @@ absl::StatusOr<std::string> RawJwt::GetJsonPayload() const {
 
 RawJwt::RawJwt() = default;
 
-RawJwt::RawJwt(absl::optional<std::string> type_header,
+RawJwt::RawJwt(std::optional<std::string> type_header,
                google::protobuf::Struct json_proto) {
   type_header_ = type_header;
   json_proto_ = json_proto;

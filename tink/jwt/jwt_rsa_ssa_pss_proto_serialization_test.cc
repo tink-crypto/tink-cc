@@ -76,8 +76,8 @@ struct TestCase {
   JwtRsaSsaPssParameters::Algorithm algorithm;
   JwtRsaSsaPssAlgorithm proto_algorithm;
   int modulus_size_in_bits;
-  absl::optional<std::string> kid;
-  absl::optional<int> id;
+  std::optional<std::string> kid;
+  std::optional<int> id;
 };
 
 const std::string& kF4Str = *new std::string("\x1\0\x1", 3);  // 65537

@@ -56,7 +56,7 @@ JwtHmacKey::Builder& JwtHmacKey::Builder::SetCustomKid(
   return *this;
 }
 
-absl::StatusOr<absl::optional<std::string>> JwtHmacKey::Builder::ComputeKid() {
+absl::StatusOr<std::optional<std::string>> JwtHmacKey::Builder::ComputeKid() {
   switch (parameters_->GetKidStrategy()) {
     case JwtHmacParameters::KidStrategy::kBase64EncodedKeyId: {
       if (custom_kid_.has_value()) {
@@ -121,7 +121,7 @@ absl::StatusOr<JwtHmacKey> JwtHmacKey::Builder::Build(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  absl::StatusOr<absl::optional<std::string>> kid = ComputeKid();
+  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
   if (!kid.ok()) {
     return kid.status();
   }

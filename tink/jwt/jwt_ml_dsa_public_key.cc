@@ -66,7 +66,7 @@ JwtMlDsaPublicKey::Builder& JwtMlDsaPublicKey::Builder::SetCustomKid(
   return *this;
 }
 
-absl::StatusOr<absl::optional<std::string>>
+absl::StatusOr<std::optional<std::string>>
 JwtMlDsaPublicKey::Builder::ComputeKid() {
   switch (parameters_->GetKidStrategy()) {
     case JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId: {
@@ -155,7 +155,7 @@ absl::StatusOr<JwtMlDsaPublicKey> JwtMlDsaPublicKey::Builder::Build(
           "ML-DSA-87 are currently supported.");
   }
 
-  absl::StatusOr<absl::optional<std::string>> kid = ComputeKid();
+  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
   if (!kid.ok()) {
     return kid.status();
   }

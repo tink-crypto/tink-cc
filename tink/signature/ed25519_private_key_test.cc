@@ -50,7 +50,7 @@ using ::testing::Values;
 
 struct TestCase {
   Ed25519Parameters::Variant variant;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string output_prefix;
 };
 

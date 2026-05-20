@@ -84,7 +84,7 @@ struct TestCase {
   CompositeMlDsaParameters::ClassicalAlgorithm classical_algorithm;
   CompositeMlDsaParameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string output_prefix;
 };
 

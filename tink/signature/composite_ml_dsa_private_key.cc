@@ -63,7 +63,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> CompositeMlDsaPrivateKey::Create(
     const CompositeMlDsaParameters& parameters,
     const MlDsaPrivateKey& ml_dsa_private_key,
     std::unique_ptr<SignaturePrivateKey> classical_private_key,
-    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+    std::optional<int> id_requirement, PartialKeyAccessToken token) {
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
           classical_private_key->GetPublicKey());

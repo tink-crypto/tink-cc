@@ -35,7 +35,7 @@ namespace tink {
 namespace {
 
 absl::StatusOr<std::string> ComputeOutputPrefix(
-    const Ed25519Parameters& parameters, absl::optional<int> id_requirement) {
+    const Ed25519Parameters& parameters, std::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case Ed25519Parameters::Variant::kNoPrefix:
       return std::string("");  // Empty prefix.
@@ -65,7 +65,7 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
 
 absl::StatusOr<Ed25519PublicKey> Ed25519PublicKey::Create(
     const Ed25519Parameters& parameters, absl::string_view public_key_bytes,
-    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+    std::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

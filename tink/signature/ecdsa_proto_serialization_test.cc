@@ -90,7 +90,7 @@ struct TestCase {
   HashType hash = HashType::SHA256;
   EcdsaSignatureEncoding encoding = EcdsaSignatureEncoding::DER;
   subtle::EllipticCurveType subtle_curve = subtle::EllipticCurveType::NIST_P256;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

@@ -45,7 +45,7 @@ class EcdsaPublicKey final : public SignaturePublicKey {
 
   static absl::StatusOr<EcdsaPublicKey> Create(
       const EcdsaParameters& parameters, const EcPoint& public_point,
-      absl::optional<int> id_requirement, PartialKeyAccessToken token);
+      std::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const EcPoint& GetPublicPoint(PartialKeyAccessToken token) const {
     return public_point_;
@@ -55,7 +55,7 @@ class EcdsaPublicKey final : public SignaturePublicKey {
 
   const EcdsaParameters& GetParameters() const override { return parameters_; }
 
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 
@@ -68,7 +68,7 @@ class EcdsaPublicKey final : public SignaturePublicKey {
  private:
   explicit EcdsaPublicKey(const EcdsaParameters& parameters,
                           const EcPoint& public_point,
-                          absl::optional<int> id_requirement,
+                          std::optional<int> id_requirement,
                           absl::string_view output_prefix)
       : parameters_(parameters),
         public_point_(public_point),
@@ -77,7 +77,7 @@ class EcdsaPublicKey final : public SignaturePublicKey {
 
   EcdsaParameters parameters_;
   EcPoint public_point_;
-  absl::optional<int> id_requirement_;
+  std::optional<int> id_requirement_;
   std::string output_prefix_;
 };
 

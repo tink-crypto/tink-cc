@@ -84,7 +84,7 @@ absl::Status ValidatePublicPoint(EcdsaParameters::CurveType curve_type,
 }
 
 absl::StatusOr<std::string> ComputeOutputPrefix(
-    const EcdsaParameters& parameters, absl::optional<int> id_requirement) {
+    const EcdsaParameters& parameters, std::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case EcdsaParameters::Variant::kNoPrefix:
       ABSL_FALLTHROUGH_INTENDED;
@@ -113,7 +113,7 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
 }
 
 absl::Status ValidateIdRequirement(const EcdsaParameters& parameters,
-                                   absl::optional<int> id_requirement) {
+                                   std::optional<int> id_requirement) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -133,7 +133,7 @@ absl::Status ValidateIdRequirement(const EcdsaParameters& parameters,
 
 absl::StatusOr<EcdsaPublicKey> EcdsaPublicKey::Create(
     const EcdsaParameters& parameters, const EcPoint& public_point,
-    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+    std::optional<int> id_requirement, PartialKeyAccessToken token) {
   absl::Status id_requirement_validation =
       ValidateIdRequirement(parameters, id_requirement);
   if (!id_requirement_validation.ok()) {

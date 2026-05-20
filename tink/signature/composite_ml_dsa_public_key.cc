@@ -172,7 +172,7 @@ absl::StatusOr<const SignatureParameters*> GetParametersForClassicalAlgorithm(
 
 absl::StatusOr<std::string> ComputeOutputPrefix(
     const CompositeMlDsaParameters& parameters,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case CompositeMlDsaParameters::Variant::kNoPrefix:
       return std::string("");  // Empty prefix.
@@ -223,7 +223,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> CompositeMlDsaPublicKey::Create(
     const CompositeMlDsaParameters& parameters,
     const MlDsaPublicKey& ml_dsa_public_key,
     std::unique_ptr<SignaturePublicKey> classical_public_key,
-    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+    std::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

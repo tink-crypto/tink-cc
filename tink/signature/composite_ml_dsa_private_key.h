@@ -46,8 +46,7 @@ class CompositeMlDsaPrivateKey final : public SignaturePrivateKey {
       const CompositeMlDsaParameters& parameters,
       const MlDsaPrivateKey& ml_dsa_private_key,
       std::unique_ptr<SignaturePrivateKey> classical_private_key,
-      absl::optional<int> id_requirement,
-      PartialKeyAccessToken token);
+      std::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const CompositeMlDsaPublicKey& GetPublicKey() const
       ABSL_ATTRIBUTE_LIFETIME_BOUND override {

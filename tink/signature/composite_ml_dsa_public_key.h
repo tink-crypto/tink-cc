@@ -47,8 +47,7 @@ class CompositeMlDsaPublicKey final : public SignaturePublicKey {
       const CompositeMlDsaParameters& parameters,
       const MlDsaPublicKey& ml_dsa_public_key,
       std::unique_ptr<SignaturePublicKey> classical_public_key,
-      absl::optional<int> id_requirement,
-      PartialKeyAccessToken token);
+      std::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const CompositeMlDsaParameters& GetParameters() const
       ABSL_ATTRIBUTE_LIFETIME_BOUND override {
@@ -62,7 +61,7 @@ class CompositeMlDsaPublicKey final : public SignaturePublicKey {
       ABSL_ATTRIBUTE_LIFETIME_BOUND {
     return *classical_public_key_;
   }
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
   absl::string_view GetOutputPrefix() const
@@ -79,8 +78,7 @@ class CompositeMlDsaPublicKey final : public SignaturePublicKey {
       const CompositeMlDsaParameters& parameters,
       const MlDsaPublicKey& ml_dsa_public_key,
       std::unique_ptr<SignaturePublicKey> classical_public_key,
-      absl::optional<int> id_requirement,
-      absl::string_view output_prefix)
+      std::optional<int> id_requirement, absl::string_view output_prefix)
       : parameters_(parameters),
         ml_dsa_public_key_(ml_dsa_public_key),
         classical_public_key_(std::move(classical_public_key)),
@@ -90,7 +88,7 @@ class CompositeMlDsaPublicKey final : public SignaturePublicKey {
   CompositeMlDsaParameters parameters_;
   MlDsaPublicKey ml_dsa_public_key_;
   std::unique_ptr<SignaturePublicKey> classical_public_key_;
-  absl::optional<int> id_requirement_;
+  std::optional<int> id_requirement_;
   std::string output_prefix_;
 };
 

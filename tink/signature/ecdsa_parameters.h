@@ -88,10 +88,10 @@ class EcdsaParameters : public SignatureParameters {
     absl::StatusOr<EcdsaParameters> Build();
 
    private:
-    absl::optional<CurveType> curve_type_;
-    absl::optional<HashType> hash_type_;
-    absl::optional<SignatureEncoding> signature_encoding_;
-    absl::optional<Variant> variant_;
+    std::optional<EcdsaParameters::CurveType> curve_type_;
+    std::optional<EcdsaParameters::HashType> hash_type_;
+    std::optional<EcdsaParameters::SignatureEncoding> signature_encoding_;
+    std::optional<EcdsaParameters::Variant> variant_;
   };
 
   // Copyable and movable.

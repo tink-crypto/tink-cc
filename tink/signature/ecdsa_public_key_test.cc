@@ -65,7 +65,7 @@ struct TestCase {
   EcdsaParameters::HashType hash_type;
   EcdsaParameters::SignatureEncoding signature_encoding;
   EcdsaParameters::Variant variant;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string output_prefix;
 };
 

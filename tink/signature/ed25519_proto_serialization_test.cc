@@ -67,7 +67,7 @@ constexpr absl::string_view kPrivateKeyTypeUrl =
 struct TestCase {
   Ed25519Parameters::Variant variant;
   OutputPrefixTypeTP output_prefix_type;
-  absl::optional<int> id;
+  std::optional<int> id;
   std::string output_prefix;
 };
 

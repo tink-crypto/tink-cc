@@ -45,7 +45,7 @@ class Ed25519PublicKey final : public SignaturePublicKey {
   // compute this prefix.
   static absl::StatusOr<Ed25519PublicKey> Create(
       const Ed25519Parameters& parameters, absl::string_view public_key_bytes,
-      absl::optional<int> id_requirement, PartialKeyAccessToken token);
+      std::optional<int> id_requirement, PartialKeyAccessToken token);
 
   absl::string_view GetPublicKeyBytes(PartialKeyAccessToken token) const {
     return public_key_bytes_;
@@ -57,7 +57,7 @@ class Ed25519PublicKey final : public SignaturePublicKey {
     return parameters_;
   }
 
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 
@@ -70,7 +70,7 @@ class Ed25519PublicKey final : public SignaturePublicKey {
  private:
   explicit Ed25519PublicKey(const Ed25519Parameters& parameters,
                             absl::string_view public_key_bytes,
-                            absl::optional<int> id_requirement,
+                            std::optional<int> id_requirement,
                             absl::string_view output_prefix)
       : parameters_(parameters),
         public_key_bytes_(public_key_bytes),
@@ -79,7 +79,7 @@ class Ed25519PublicKey final : public SignaturePublicKey {
 
   Ed25519Parameters parameters_;
   std::string public_key_bytes_;
-  absl::optional<int> id_requirement_;
+  std::optional<int> id_requirement_;
   std::string output_prefix_;
 };
 

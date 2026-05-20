@@ -54,7 +54,7 @@ struct TestCase {
   CompositeMlDsaParameters::MlDsaInstance ml_dsa_instance;
   CompositeMlDsaParameters::ClassicalAlgorithm classical_algorithm;
   CompositeMlDsaParameters::Variant variant;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string output_prefix;
 };
 

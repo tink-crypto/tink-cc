@@ -399,21 +399,23 @@ TEST_F(KeysetHandleTest, MultipleAnnotations) {
       KeysetHandle::ReadNoSecret(GetPublicTestKeyset().SerializeAsString());
   ASSERT_THAT(keyset_handle, IsOk());
   ASSERT_THAT(*keyset_handle, NotNull());
-  keyset_handle = AddAnnotations(std::move(*keyset_handle), FakeAnnotations(1));
-  ASSERT_THAT(keyset_handle, IsOk());
-  keyset_handle =
-      AddAnnotations(std::move(*keyset_handle), OtherFakeAnnotations(2));
-  ASSERT_THAT(keyset_handle, IsOk());
 
-  auto fake_annotations = (*keyset_handle)->GetAnnotations<FakeAnnotations>();
+  KeysetHandleBuilder builder(*std::move(*keyset_handle));
+  builder.AddAnnotations(std::make_unique<FakeAnnotations>(1));
+  builder.AddAnnotations(std::make_unique<OtherFakeAnnotations>(2));
+  absl::StatusOr<KeysetHandle> new_handle =
+      builder.Build(KeyGenConfiguration{});
+  ASSERT_THAT(new_handle, IsOk());
+
+  auto fake_annotations = new_handle->GetAnnotations<FakeAnnotations>();
   ASSERT_THAT(fake_annotations, IsOk());
   EXPECT_EQ(fake_annotations->value(), 1);
   auto other_fake_annotations =
-      (*keyset_handle)->GetAnnotations<OtherFakeAnnotations>();
+      new_handle->GetAnnotations<OtherFakeAnnotations>();
   ASSERT_THAT(other_fake_annotations, IsOk());
   EXPECT_EQ(other_fake_annotations->value(), 2);
 
-  KeysetHandle keyset_handle_copy = **keyset_handle;
+  KeysetHandle keyset_handle_copy = *new_handle;
 
   auto fake_annotations2 = keyset_handle_copy.GetAnnotations<FakeAnnotations>();
   ASSERT_THAT(fake_annotations2, IsOk());

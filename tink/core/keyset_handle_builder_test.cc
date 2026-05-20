@@ -1305,6 +1305,35 @@ TEST_F(KeysetHandleBuilderTest, AddAnnotations) {
   EXPECT_THAT(builder.Build().status(), IsOk());
 }
 
+TEST_F(KeysetHandleBuilderTest, CopyDoesNotPreserveAnnotations) {
+  absl::StatusOr<AesGcmParameters> aes_128_gcm =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(aes_128_gcm, IsOk());
+
+  absl::StatusOr<KeysetHandle> keyset_handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+              *aes_128_gcm, crypto::tink::KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .AddAnnotations(std::make_unique<FakeAnnotations>())
+          .Build();
+  ASSERT_THAT(keyset_handle, IsOk());
+  ASSERT_THAT(keyset_handle->GetAnnotations<FakeAnnotations>(), IsOk());
+
+  // Creating a KeysetHandleBuilder from a keyset handle does not copy
+  // annotations.
+  absl::StatusOr<KeysetHandle> copy =
+      KeysetHandleBuilder(*keyset_handle).Build();
+  ASSERT_THAT(copy, IsOk());
+  EXPECT_THAT(copy->GetAnnotations<FakeAnnotations>(),
+              StatusIs(absl::StatusCode::kNotFound));
+}
+
 TEST_F(KeysetHandleBuilderTest, AddAnnotationsFailsIfAlreadyAdded) {
   absl::StatusOr<AesGcmParameters> aes_128_gcm =
       AesGcmParameters::Builder()

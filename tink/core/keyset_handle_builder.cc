@@ -77,9 +77,6 @@ KeysetHandleBuilder::KeysetHandleBuilder(const KeysetHandle& handle) {
     builder_entry.SetFixedId(entry.GetId());
     AddEntry(std::move(builder_entry));
   }
-  for (const auto& [id, annotation] : handle.annotations_) {
-    annotations_[id] = absl::WrapUnique(annotation->Clone());
-  }
 }
 
 KeysetHandleBuilder::Entry KeysetHandleBuilder::Entry::CreateFromKey(

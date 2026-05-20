@@ -146,7 +146,7 @@ std::string SaltFromRfc() {
 std::unique_ptr<AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey(
     int aes_key_size, int tag_size, AesCtrHmacAeadParameters::Variant variant,
     absl::string_view aes_secret, absl::string_view hmac_secret,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   AesCtrHmacAeadParameters params =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(aes_key_size)
@@ -172,7 +172,7 @@ std::unique_ptr<AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey(
 std::unique_ptr<AesGcmKey> CreateAesGcmKey(int key_size,
                                            AesGcmParameters::Variant variant,
                                            absl::string_view secret,
-                                           absl::optional<int> id_requirement) {
+                                           std::optional<int> id_requirement) {
   AesGcmParameters params = AesGcmParameters::Builder()
                                 .SetKeySizeInBytes(key_size)
                                 .SetIvSizeInBytes(12)
@@ -190,7 +190,7 @@ std::unique_ptr<AesGcmKey> CreateAesGcmKey(int key_size,
 
 std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
     XChaCha20Poly1305Parameters::Variant variant, absl::string_view secret,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   return std::make_unique<XChaCha20Poly1305Key>(
       XChaCha20Poly1305Key::Create(
           variant,
@@ -203,7 +203,7 @@ std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
 std::unique_ptr<AesSivKey> CreateAesSivKey(int key_size,
                                            AesSivParameters::Variant variant,
                                            absl::string_view secret,
-                                           absl::optional<int> id_requirement) {
+                                           std::optional<int> id_requirement) {
   return std::make_unique<AesSivKey>(
       AesSivKey::Create(AesSivParameters::Create(key_size, variant).value(),
                         RestrictedData(test::HexDecodeOrDie(secret),
@@ -216,7 +216,7 @@ std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
                                        HmacParameters::HashType hash_type,
                                        HmacParameters::Variant variant,
                                        absl::string_view secret,
-                                       absl::optional<int> id_requirement) {
+                                       std::optional<int> id_requirement) {
   HmacParameters params =
       HmacParameters::Create(key_size, cryptographic_tag_size, hash_type,
                              variant)
@@ -239,7 +239,7 @@ std::unique_ptr<AesCmacPrfKey> CreateAesCmacPrfKey(absl::string_view secret) {
 
 std::unique_ptr<HkdfPrfKey> CreateHkdfPrfKey(
     int key_size_in_bytes, HkdfPrfParameters::HashType hash_type,
-    absl::optional<absl::string_view> salt, absl::string_view secret) {
+    std::optional<absl::string_view> salt, absl::string_view secret) {
   HkdfPrfParameters params =
       HkdfPrfParameters::Create(key_size_in_bytes, hash_type, salt).value();
   return std::make_unique<HkdfPrfKey>(
@@ -268,7 +268,7 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
     EcdsaParameters::CurveType curve_type, EcdsaParameters::HashType hash_type,
     EcdsaParameters::SignatureEncoding signature_encoding,
     EcdsaParameters::Variant variant, absl::string_view secret_seed,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   internal::EcKey key_pair =
       internal::NewEcKey(
           proto_curve_type,
@@ -297,7 +297,7 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
 
 std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
     Ed25519Parameters::Variant variant, absl::string_view secret_seed,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   std::unique_ptr<internal::Ed25519Key> key_pair =
       internal::NewEd25519Key(
           util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))

@@ -34,7 +34,7 @@ namespace tink {
 
 absl::StatusOr<PrfBasedKeyDerivationKey> PrfBasedKeyDerivationKey::Create(
     const PrfBasedKeyDerivationParameters& parameters, const PrfKey& prf_key,
-    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+    std::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.GetPrfParameters() != prf_key.GetParameters()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

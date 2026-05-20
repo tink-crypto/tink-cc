@@ -45,7 +45,7 @@ class PrfBasedKeyDerivationKey final : public KeyDerivationKey {
 
   static absl::StatusOr<PrfBasedKeyDerivationKey> Create(
       const PrfBasedKeyDerivationParameters& parameters, const PrfKey& prf_key,
-      absl::optional<int> id_requirement, PartialKeyAccessToken token);
+      std::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const PrfKey& GetPrfKey() const { return *prf_key_; }
 
@@ -53,7 +53,7 @@ class PrfBasedKeyDerivationKey final : public KeyDerivationKey {
     return *parameters_;
   }
 
-  absl::optional<int32_t> GetIdRequirement() const override {
+  std::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 
@@ -66,14 +66,14 @@ class PrfBasedKeyDerivationKey final : public KeyDerivationKey {
  private:
   PrfBasedKeyDerivationKey(
       std::unique_ptr<const PrfBasedKeyDerivationParameters> parameters,
-      std::unique_ptr<const PrfKey> prf_key, absl::optional<int> id_requirement)
+      std::unique_ptr<const PrfKey> prf_key, std::optional<int> id_requirement)
       : parameters_(std::move(parameters)),
         prf_key_(std::move(prf_key)),
         id_requirement_(id_requirement) {}
 
   std::shared_ptr<const PrfBasedKeyDerivationParameters> parameters_;
   std::shared_ptr<const PrfKey> prf_key_;
-  absl::optional<int> id_requirement_;
+  std::optional<int> id_requirement_;
 };
 
 }  // namespace tink

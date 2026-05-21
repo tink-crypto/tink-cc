@@ -14,23 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/daead/key_gen_config_v0.h"
+#ifndef TINK_DAEAD_INTERNAL_KEY_GEN_CONFIG_2026_H_
+#define TINK_DAEAD_INTERNAL_KEY_GEN_CONFIG_2026_H_
 
-#include "absl/log/absl_check.h"
-#include "tink/daead/internal/key_gen_config_v0.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-const KeyGenConfiguration& KeyGenConfigDeterministicAeadV0() {
-  static const KeyGenConfiguration* instance = [] {
-    static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGenV0(*config));
-    return config;
-  }();
-  return *instance;
-}
+// Add recommended Deterministic AEAD key managers to `config`, used to generate
+// keys.
+absl::Status AddDeterministicAeadKeyGen2026(KeyGenConfiguration& config);
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
+
+#endif  // TINK_DAEAD_INTERNAL_KEY_GEN_CONFIG_2026_H_

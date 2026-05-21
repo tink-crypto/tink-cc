@@ -17,14 +17,17 @@
 #ifndef TINK_DAEAD_CONFIG_V0_H_
 #define TINK_DAEAD_CONFIG_V0_H_
 
+#include "absl/base/macros.h"
 #include "tink/configuration.h"
+#include "tink/daead/config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-// Configuration used to generate Deterministic AEAD primitives with recommended
-// key managers.
-const Configuration& ConfigDeterministicAeadV0();
+ABSL_DEPRECATE_AND_INLINE()
+inline const Configuration& ConfigDeterministicAeadV0() {
+  return ConfigDeterministicAead2026();
+}
 
 }  // namespace tink
 }  // namespace crypto

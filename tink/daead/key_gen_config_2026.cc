@@ -14,22 +14,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_DAEAD_KEY_GEN_CONFIG_V0_H_
-#define TINK_DAEAD_KEY_GEN_CONFIG_V0_H_
-
-#include "absl/base/macros.h"
 #include "tink/daead/key_gen_config_2026.h"
+
+#include "absl/log/absl_check.h"
+#include "tink/daead/internal/key_gen_config_2026.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
 
-ABSL_DEPRECATE_AND_INLINE()
-inline const KeyGenConfiguration& KeyGenConfigDeterministicAeadV0() {
-  return KeyGenConfigDeterministicAead2026();
+const KeyGenConfiguration& KeyGenConfigDeterministicAead2026() {
+  static const KeyGenConfiguration* instance = [] {
+    static KeyGenConfiguration* config = new KeyGenConfiguration();
+    ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGen2026(*config));
+    return config;
+  }();
+  return *instance;
 }
 
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_DAEAD_KEY_GEN_CONFIG_V0_H_

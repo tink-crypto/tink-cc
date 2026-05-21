@@ -174,23 +174,21 @@ tink_cc_library(
 tink_cc_library(
   NAME config_v0
   SRCS
-    config_v0.cc
     config_v0.h
   DEPS
-    absl::absl_check
+    tink::daead::config_2026
+    absl::core_headers
     tink::core::configuration
-    tink::daead::internal::config_v0
 )
 
 tink_cc_library(
   NAME key_gen_config_v0
   SRCS
-    key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::absl_check
+    tink::daead::key_gen_config_2026
+    absl::core_headers
     tink::core::key_gen_configuration
-    tink::daead::internal::key_gen_config_v0
 )
 
 # tests
@@ -405,4 +403,43 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME config_2026
+  SRCS
+    config_2026.cc
+    config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::configuration
+    tink::daead::internal::config_2026
+)
+
+tink_cc_test(
+  NAME config_2026_test
+  SRCS
+    config_2026_test.cc
+  DEPS
+    tink::daead::config_2026
+    tink::daead::deterministic_aead_key_templates
+    tink::daead::key_gen_config_2026
+    gmock
+    absl::status_matchers
+    tink::core::deterministic_aead
+    tink::core::keyset_handle
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME key_gen_config_2026
+  SRCS
+    key_gen_config_2026.cc
+    key_gen_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::key_gen_configuration
+    tink::daead::internal::key_gen_config_2026
 )

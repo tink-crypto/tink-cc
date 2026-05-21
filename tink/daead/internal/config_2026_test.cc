@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/daead/internal/config_v0.h"
+#include "tink/daead/internal/config_2026.h"
 
 #include <memory>
 #include <string>
@@ -25,7 +25,7 @@
 #include "tink/configuration.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/daead/deterministic_aead_key_templates.h"
-#include "tink/daead/internal/key_gen_config_v0.h"
+#include "tink/daead/internal/key_gen_config_2026.h"
 #include "tink/deterministic_aead.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -45,26 +45,26 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 
-TEST(DeterministicAeadV0Test, PrimitiveWrapper) {
+TEST(DeterministicAead2026Test, PrimitiveWrapper) {
   Configuration config;
-  ASSERT_THAT(AddDeterministicAeadV0(config), IsOk());
-  absl::StatusOr<const KeysetWrapperStore *> store =
+  ASSERT_THAT(AddDeterministicAead2026(config), IsOk());
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
   EXPECT_THAT((*store)->Get<DeterministicAead>(), IsOk());
 }
 
-TEST(DeterministicAeadV0Test, KeyManager) {
+TEST(DeterministicAead2026Test, KeyManager) {
   Configuration config;
-  ASSERT_THAT(AddDeterministicAeadV0(config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> store =
+  ASSERT_THAT(AddDeterministicAead2026(config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddDeterministicAeadKeyGenV0(key_gen_config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
+  ASSERT_THAT(AddDeterministicAeadKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -73,11 +73,11 @@ TEST(DeterministicAeadV0Test, KeyManager) {
   }
 }
 
-TEST(DeterministicAeadV0Test, GetPrimitive) {
+TEST(DeterministicAead2026Test, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddDeterministicAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddDeterministicAeadKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddDeterministicAeadV0(config), IsOk());
+  ASSERT_THAT(AddDeterministicAead2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(DeterministicAeadKeyTemplates::Aes256Siv(),

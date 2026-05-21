@@ -14,23 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/daead/config_v0.h"
+#ifndef TINK_DAEAD_CONFIG_2026_H_
+#define TINK_DAEAD_CONFIG_2026_H_
 
-#include "absl/log/absl_check.h"
 #include "tink/configuration.h"
-#include "tink/daead/internal/config_v0.h"
 
 namespace crypto {
 namespace tink {
 
-const Configuration& ConfigDeterministicAeadV0() {
-  static const Configuration* instance = [] {
-    static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(internal::AddDeterministicAeadV0(*config));
-    return config;
-  }();
-  return *instance;
-}
+// Configuration used to generate Deterministic AEAD primitives with 2026
+// recommended key managers.
+const Configuration& ConfigDeterministicAead2026();
 
 }  // namespace tink
 }  // namespace crypto
+
+#endif  // TINK_DAEAD_CONFIG_2026_H_

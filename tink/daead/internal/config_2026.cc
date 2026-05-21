@@ -14,22 +14,30 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_DAEAD_INTERNAL_KEY_GEN_CONFIG_V0_H_
-#define TINK_DAEAD_INTERNAL_KEY_GEN_CONFIG_V0_H_
+#include "tink/daead/internal/config_2026.h"
 
-#include "tink/key_gen_configuration.h"
+#include "absl/memory/memory.h"
+#include "tink/configuration.h"
+#include "tink/daead/aes_siv_key_manager.h"
+#include "tink/daead/deterministic_aead_wrapper.h"
+#include "tink/internal/configuration_impl.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-// Add recommended Deterministic AEAD key managers to `config`, used to generate
-// keys.
-absl::Status AddDeterministicAeadKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddDeterministicAead2026(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+      absl::make_unique<DeterministicAeadWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+
+  return ConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<AesSivKeyManager>(), config);
+}
 
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_DAEAD_INTERNAL_KEY_GEN_CONFIG_V0_H_

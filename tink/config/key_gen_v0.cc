@@ -21,7 +21,7 @@
 #include "tink/daead/internal/key_gen_config_v0.h"
 #include "tink/hybrid/internal/key_gen_config_v0.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/mac/internal/key_gen_config_v0.h"
+#include "tink/mac/internal/key_gen_config_2026.h"
 #include "tink/prf/internal/key_gen_config_v0.h"
 #include "tink/signature/internal/key_gen_config_v0.h"
 #include "tink/streamingaead/internal/key_gen_config_v0.h"
@@ -32,7 +32,7 @@ namespace tink {
 const KeyGenConfiguration& KeyGenConfigV0() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(internal::AddMacKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddMacKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddAeadKeyGenV0(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGenV0(*config));
     ABSL_CHECK_OK(internal::AddStreamingAeadKeyGenV0(*config));

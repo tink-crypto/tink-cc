@@ -21,8 +21,7 @@
 #include "tink/configuration.h"
 #include "tink/daead/internal/config_v0.h"
 #include "tink/hybrid/internal/config_v0.h"
-#include "tink/internal/configuration_impl.h"
-#include "tink/mac/internal/config_v0.h"
+#include "tink/mac/internal/config_2026.h"
 #include "tink/prf/internal/config_v0.h"
 #include "tink/signature/internal/config_v0.h"
 #include "tink/streamingaead/internal/config_v0.h"
@@ -33,7 +32,7 @@ namespace tink {
 const Configuration& ConfigV0() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(internal::AddMacV0(*config));
+    ABSL_CHECK_OK(internal::AddMac2026(*config));
     ABSL_CHECK_OK(internal::AddAeadV0(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAeadV0(*config));
     ABSL_CHECK_OK(internal::AddStreamingAeadV0(*config));

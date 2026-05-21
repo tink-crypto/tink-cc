@@ -14,22 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/mac/internal/config_v0.h"
+#include "tink/mac/internal/config_2026.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/mac/aes_cmac_key_manager.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/internal/chunked_mac_wrapper.h"
 #include "tink/mac/mac_wrapper.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddMacV0(Configuration& config) {
+absl::Status AddMac2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<MacWrapper>(), config);
   if (!status.ok()) {

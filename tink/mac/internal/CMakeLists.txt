@@ -47,36 +47,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME config_v0
-  SRCS
-    config_v0.cc
-    config_v0.h
-  DEPS
-    tink::mac::internal::chunked_mac_wrapper
-    absl::memory
-    tink::core::configuration
-    tink::internal::configuration_impl
-    tink::mac::aes_cmac_key_manager
-    tink::mac::hmac_key_manager
-    tink::mac::mac_wrapper
-    tink::util::status
-)
-
-tink_cc_library(
-  NAME key_gen_config_v0
-  SRCS
-    key_gen_config_v0.cc
-    key_gen_config_v0.h
-  DEPS
-    absl::memory
-    tink::core::key_gen_configuration
-    tink::internal::key_gen_configuration_impl
-    tink::mac::aes_cmac_key_manager
-    tink::mac::hmac_key_manager
-    tink::util::status
-)
-
-tink_cc_library(
   NAME stateful_hmac_boringssl
   SRCS
     stateful_hmac_boringssl.cc
@@ -228,32 +198,6 @@ tink_cc_test(
     tink::mac::mac_config
     tink::mac::mac_key_templates
     tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::mac::internal::config_v0
-    tink::mac::internal::key_gen_config_v0
-    gmock
-    absl::status_matchers
-    tink::core::chunked_mac
-    tink::core::configuration
-    tink::core::key_gen_configuration
-    tink::core::keyset_handle
-    tink::core::mac
-    tink::internal::configuration_impl
-    tink::internal::key_gen_configuration_impl
-    tink::internal::key_type_info_store
-    tink::internal::keyset_wrapper_store
-    tink::mac::aes_cmac_key_manager
-    tink::mac::hmac_key_manager
-    tink::mac::mac_key_templates
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
@@ -445,4 +389,59 @@ tink_cc_library(
     tink::mac::aes_cmac_parameters
     tink::util::test_util
   TESTONLY
+)
+
+tink_cc_library(
+  NAME config_2026
+  SRCS
+    config_2026.cc
+    config_2026.h
+  DEPS
+    tink::mac::internal::chunked_mac_wrapper
+    absl::memory
+    absl::status
+    tink::core::configuration
+    tink::internal::configuration_impl
+    tink::mac::aes_cmac_key_manager
+    tink::mac::hmac_key_manager
+    tink::mac::mac_wrapper
+)
+
+tink_cc_test(
+  NAME config_2026_test
+  SRCS
+    config_2026_test.cc
+  DEPS
+    tink::mac::internal::config_2026
+    tink::mac::internal::key_gen_config_2026
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::chunked_mac
+    tink::core::configuration
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::core::mac
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+    tink::internal::keyset_wrapper_store
+    tink::mac::aes_cmac_key_manager
+    tink::mac::hmac_key_manager
+    tink::mac::mac_key_templates
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME key_gen_config_2026
+  SRCS
+    key_gen_config_2026.cc
+    key_gen_config_2026.h
+  DEPS
+    absl::memory
+    absl::status
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::mac::aes_cmac_key_manager
+    tink::mac::hmac_key_manager
 )

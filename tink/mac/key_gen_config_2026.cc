@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/mac/config_v0.h"
+#include "tink/mac/key_gen_config_2026.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/configuration.h"
-#include "tink/mac/internal/config_v0.h"
+#include "tink/key_gen_configuration.h"
+#include "tink/mac/internal/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-const Configuration& ConfigMacV0() {
-  static const Configuration* instance = [] {
-    static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(internal::AddMacV0(*config));
+const KeyGenConfiguration& KeyGenConfigMac2026() {
+  static const KeyGenConfiguration* instance = [] {
+    static KeyGenConfiguration* config = new KeyGenConfiguration();
+    ABSL_CHECK_OK(internal::AddMacKeyGen2026(*config));
     return config;
   }();
   return *instance;

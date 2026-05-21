@@ -54,9 +54,9 @@ cc_library(
 )
 
 cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
     include_prefix = "tink/mac/internal",
     deps = [
         ":chunked_mac_wrapper",
@@ -65,23 +65,23 @@ cc_library(
         "//tink/mac:aes_cmac_key_manager",
         "//tink/mac:hmac_key_manager",
         "//tink/mac:mac_wrapper",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
     ],
 )
 
 cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/mac/internal",
     deps = [
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",
         "//tink/mac:aes_cmac_key_manager",
         "//tink/mac:hmac_key_manager",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
     ],
 )
 
@@ -250,11 +250,11 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
+    name = "config_2026_test",
+    srcs = ["config_2026_test.cc"],
     deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
+        ":config_2026",
+        ":key_gen_config_2026",
         "//proto:tink_cc_proto",
         "//tink:chunked_mac",
         "//tink:configuration",
@@ -268,9 +268,8 @@ cc_test(
         "//tink/mac:aes_cmac_key_manager",
         "//tink/mac:hmac_key_manager",
         "//tink/mac:mac_key_templates",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )

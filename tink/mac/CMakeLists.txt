@@ -259,23 +259,21 @@ tink_cc_library(
 tink_cc_library(
   NAME config_v0
   SRCS
-    config_v0.cc
     config_v0.h
   DEPS
-    absl::absl_check
+    tink::mac::config_2026
+    absl::core_headers
     tink::core::configuration
-    tink::mac::internal::config_v0
 )
 
 tink_cc_library(
   NAME key_gen_config_v0
   SRCS
-    key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::absl_check
+    tink::mac::key_gen_config_2026
+    absl::core_headers
     tink::core::key_gen_configuration
-    tink::mac::internal::key_gen_config_v0
 )
 
 # tests
@@ -589,4 +587,43 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME config_2026
+  SRCS
+    config_2026.cc
+    config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::configuration
+    tink::mac::internal::config_2026
+)
+
+tink_cc_test(
+  NAME config_2026_test
+  SRCS
+    config_2026_test.cc
+  DEPS
+    tink::mac::config_2026
+    tink::mac::key_gen_config_2026
+    tink::mac::mac_key_templates
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::chunked_mac
+    tink::core::keyset_handle
+    tink::core::mac
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME key_gen_config_2026
+  SRCS
+    key_gen_config_2026.cc
+    key_gen_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::key_gen_configuration
+    tink::mac::internal::key_gen_config_2026
 )

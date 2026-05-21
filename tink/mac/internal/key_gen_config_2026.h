@@ -14,22 +14,21 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_MAC_KEY_GEN_CONFIG_V0_H_
-#define TINK_MAC_KEY_GEN_CONFIG_V0_H_
+#ifndef TINK_MAC_INTERNAL_KEY_GEN_CONFIG_2026_H_
+#define TINK_MAC_INTERNAL_KEY_GEN_CONFIG_2026_H_
 
-#include "absl/base/macros.h"
+#include "absl/status/status.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/mac/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-ABSL_DEPRECATE_AND_INLINE()
-inline const KeyGenConfiguration& KeyGenConfigMacV0() {
-  return KeyGenConfigMac2026();
-}
+// Add recommended MAC key managers to `config`, used to generate keys.
+absl::Status AddMacKeyGen2026(KeyGenConfiguration& config);
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_MAC_KEY_GEN_CONFIG_V0_H_
+#endif  // TINK_MAC_INTERNAL_KEY_GEN_CONFIG_2026_H_

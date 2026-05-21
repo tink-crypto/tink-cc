@@ -14,22 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_MAC_KEY_GEN_CONFIG_V0_H_
-#define TINK_MAC_KEY_GEN_CONFIG_V0_H_
+#include "tink/mac/internal/key_gen_config_2026.h"
 
-#include "absl/base/macros.h"
+#include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/mac/key_gen_config_2026.h"
+#include "tink/mac/aes_cmac_key_manager.h"
+#include "tink/mac/hmac_key_manager.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-ABSL_DEPRECATE_AND_INLINE()
-inline const KeyGenConfiguration& KeyGenConfigMacV0() {
-  return KeyGenConfigMac2026();
+absl::Status AddMacKeyGen2026(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<AesCmacKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return KeyGenConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<HmacKeyManager>(), config);
 }
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_MAC_KEY_GEN_CONFIG_V0_H_

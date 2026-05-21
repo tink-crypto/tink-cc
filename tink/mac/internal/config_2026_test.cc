@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/mac/internal/config_v0.h"
+#include "tink/mac/internal/config_2026.h"
 
 #include <memory>
 #include <string>
@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "tink/chunked_mac.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
@@ -33,10 +34,8 @@
 #include "tink/mac.h"
 #include "tink/mac/aes_cmac_key_manager.h"
 #include "tink/mac/hmac_key_manager.h"
-#include "tink/mac/internal/key_gen_config_v0.h"
+#include "tink/mac/internal/key_gen_config_2026.h"
 #include "tink/mac/mac_key_templates.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -49,10 +48,10 @@ using ::google::crypto::tink::KeyTemplate;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-TEST(MacV0Test, PrimitiveWrappers) {
+TEST(Mac2026Test, PrimitiveWrappers) {
   Configuration config;
-  ASSERT_THAT(AddMacV0(config), IsOk());
-  absl::StatusOr<const KeysetWrapperStore *> store =
+  ASSERT_THAT(AddMac2026(config), IsOk());
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -60,16 +59,16 @@ TEST(MacV0Test, PrimitiveWrappers) {
   EXPECT_THAT((*store)->Get<ChunkedMac>(), IsOk());
 }
 
-TEST(MacV0Test, KeyManagers) {
+TEST(Mac2026Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddMacV0(config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> store =
+  ASSERT_THAT(AddMac2026(config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddMacKeyGenV0(key_gen_config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
+  ASSERT_THAT(AddMacKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -79,17 +78,17 @@ TEST(MacV0Test, KeyManagers) {
   }
 }
 
-using MacV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using Mac2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
-INSTANTIATE_TEST_SUITE_P(MacV0KeyTypesTestSuite, MacV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(Mac2026KeyTypesTestSuite, Mac2026KeyTypesTest,
                          Values(MacKeyTemplates::AesCmac(),
                                 MacKeyTemplates::HmacSha256()));
 
-TEST_P(MacV0KeyTypesTest, GetPrimitive) {
+TEST_P(Mac2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddMacKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddMacKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddMacV0(config), IsOk());
+  ASSERT_THAT(AddMac2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
@@ -105,11 +104,11 @@ TEST_P(MacV0KeyTypesTest, GetPrimitive) {
   EXPECT_THAT((*mac)->VerifyMac(*tag, data), IsOk());
 }
 
-TEST_P(MacV0KeyTypesTest, GetPrimitiveChunkedMac) {
+TEST_P(Mac2026KeyTypesTest, GetPrimitiveChunkedMac) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddMacKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddMacKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddMacV0(config), IsOk());
+  ASSERT_THAT(AddMac2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);

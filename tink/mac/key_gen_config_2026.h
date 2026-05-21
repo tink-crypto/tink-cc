@@ -14,22 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_MAC_INTERNAL_CONFIG_V0_H_
-#define TINK_MAC_INTERNAL_CONFIG_V0_H_
+#ifndef TINK_MAC_KEY_GEN_CONFIG_2026_H_
+#define TINK_MAC_KEY_GEN_CONFIG_2026_H_
 
-#include "tink/configuration.h"
-#include "tink/util/status.h"
+#include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended MAC primitive wrappers and key managers to `config`, used to
-// generate primitives.
-absl::Status AddMacV0(Configuration& config);
+// KeyGenConfiguration used to generate MAC keys with 2026 recommended key
+// managers.
+const KeyGenConfiguration& KeyGenConfigMac2026();
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_MAC_INTERNAL_CONFIG_V0_H_
+#endif  // TINK_MAC_KEY_GEN_CONFIG_2026_H_

@@ -120,8 +120,7 @@ tink_cc_library(
     tink::aead::internal::config_v0
     tink::daead::internal::config_v0
     tink::hybrid::internal::config_v0
-    tink::internal::configuration_impl
-    tink::mac::internal::config_v0
+    tink::mac::internal::config_2026
     tink::prf::internal::config_v0
     tink::signature::internal::config_v0
     tink::streamingaead::internal::config_v0
@@ -140,7 +139,7 @@ tink_cc_library(
     tink::aead::internal::key_gen_config_v0
     tink::daead::internal::key_gen_config_v0
     tink::hybrid::internal::key_gen_config_v0
-    tink::mac::internal::key_gen_config_v0
+    tink::mac::internal::key_gen_config_2026
     tink::prf::internal::key_gen_config_v0
     tink::signature::internal::key_gen_config_v0
     tink::streamingaead::internal::key_gen_config_v0

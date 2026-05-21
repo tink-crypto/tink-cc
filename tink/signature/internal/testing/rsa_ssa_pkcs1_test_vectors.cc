@@ -47,7 +47,7 @@ using ::crypto::tink::test::HexDecodeOrDie;
 
 RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
     const RsaSsaPkcs1Parameters& parameters,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   std::string public_modulus;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "t6Q8PWSi1dkJj9hTP8hNYFlvadM7DflW9mWepOJhJ66w7nyoK1gPNqFMSQRyO125Gp-TEkod"
@@ -134,7 +134,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
 
 RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
     const RsaSsaPkcs1Parameters& parameters,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   std::string d;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
       "QfFSeY4zl5LKG1MstcHg6IfBjyQ36inrbjSBMmk7_nPSnWo61B2LqOHr90EWgB"

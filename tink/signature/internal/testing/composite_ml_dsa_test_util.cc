@@ -618,7 +618,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
 
 CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
     const CompositeMlDsaParameters& parameters, bool force_random,
-    absl::optional<int> id_requirement) {
+    std::optional<int> id_requirement) {
   MlDsaPrivateKey ml_dsa_private_key =
       GenerateMlDsaPrivateKeyForTestOrDie(parameters.GetMlDsaInstance());
   std::unique_ptr<SignaturePrivateKey> classical_private_key =

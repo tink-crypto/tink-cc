@@ -42,7 +42,7 @@ namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 
 MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
-    const MlDsaParameters& parameters, absl::optional<int> id_requirement) {
+    const MlDsaParameters& parameters, std::optional<int> id_requirement) {
   std::string public_key_bytes;
   ABSL_CHECK(absl::HexStringToBytes(
       "1483236FC9F943D98417809E95405384530ED83E151E8465D34E4638F1F8D7058D62E1"

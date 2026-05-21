@@ -43,7 +43,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
 // fixed key or a random key will be returned.
 CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
     const CompositeMlDsaParameters& parameters, bool force_random,
-    absl::optional<int> id_requirement);
+    std::optional<int> id_requirement);
 
 }  // namespace internal
 }  // namespace tink

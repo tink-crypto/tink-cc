@@ -34,7 +34,7 @@ namespace tink {
 namespace internal {
 namespace proto_testing {
 
-inline std::string ConvertOptionalIntToString(absl::optional<int> s) {
+inline std::string ConvertOptionalIntToString(std::optional<int> s) {
   return s ? absl::StrCat(*s) : "nullopt";
 }
 

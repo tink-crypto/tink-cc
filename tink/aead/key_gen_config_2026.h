@@ -14,21 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_CONFIG_V0_H_
-#define TINK_AEAD_CONFIG_V0_H_
+#ifndef TINK_AEAD_KEY_GEN_CONFIG_2026_H_
+#define TINK_AEAD_KEY_GEN_CONFIG_2026_H_
 
-#include "absl/base/macros.h"
-#include "tink/aead/config_2026.h"
-#include "tink/configuration.h"
+#include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
 
-ABSL_DEPRECATE_AND_INLINE() inline const Configuration& ConfigAeadV0() {
-  return ConfigAead2026();
-}
+// KeyGenConfiguration used to generate AEAD keys with 2026 recommended key
+// managers.
+const KeyGenConfiguration& KeyGenConfigAead2026();
 
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_AEAD_CONFIG_V0_H_
+#endif  // TINK_AEAD_KEY_GEN_CONFIG_2026_H_

@@ -17,7 +17,7 @@
 #include "tink/config/key_gen_v0.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/aead/internal/key_gen_config_v0.h"
+#include "tink/aead/internal/key_gen_config_2026.h"
 #include "tink/daead/internal/key_gen_config_2026.h"
 #include "tink/hybrid/internal/key_gen_config_v0.h"
 #include "tink/key_gen_configuration.h"
@@ -33,7 +33,7 @@ const KeyGenConfiguration& KeyGenConfigV0() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
     ABSL_CHECK_OK(internal::AddMacKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddAeadKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddStreamingAeadKeyGenV0(*config));
     ABSL_CHECK_OK(internal::AddHybridKeyGenV0(*config));

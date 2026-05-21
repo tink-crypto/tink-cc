@@ -14,9 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/internal/key_gen_config_v0.h"
+#include "tink/aead/internal/key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_eax_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
@@ -25,13 +26,12 @@
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddAeadKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
   // TODO(b/296630956): Alphabetize in all AEAD config files.
   absl::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCtrHmacAeadKeyManager>(), config);

@@ -970,7 +970,7 @@ tink_cc_test(
     tink::aead::aes_gcm_parameters
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
-    tink::aead::internal::key_gen_config_v0
+    tink::aead::internal::key_gen_config_2026
     tink::config::fips_140_2
     tink::config::global_registry
     tink::config::key_gen_fips_140_2

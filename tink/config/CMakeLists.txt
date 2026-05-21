@@ -117,7 +117,7 @@ tink_cc_library(
   DEPS
     absl::absl_check
     tink::core::configuration
-    tink::aead::internal::config_v0
+    tink::aead::internal::config_2026
     tink::daead::internal::config_2026
     tink::hybrid::internal::config_v0
     tink::mac::internal::config_2026
@@ -136,7 +136,7 @@ tink_cc_library(
   DEPS
     absl::absl_check
     tink::core::key_gen_configuration
-    tink::aead::internal::key_gen_config_v0
+    tink::aead::internal::key_gen_config_2026
     tink::daead::internal::key_gen_config_2026
     tink::hybrid::internal::key_gen_config_v0
     tink::mac::internal::key_gen_config_2026

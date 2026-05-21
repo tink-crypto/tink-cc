@@ -40,7 +40,7 @@
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_parameters.h"
-#include "tink/aead/internal/key_gen_config_v0.h"
+#include "tink/aead/internal/key_gen_config_2026.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/annotations.h"
@@ -290,7 +290,7 @@ absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveForXChaCha20Poly1305Key(
 const KeyGenConfiguration& TestKeyGenConfig() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(internal::AddAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddAeadKeyGen2026(*config));
     ABSL_CHECK_OK(RegisterEcdsaProtoSerialization());
     ABSL_CHECK_OK(internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
         absl::make_unique<EcdsaSignKeyManager>(),

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/internal/config_v0.h"
+#include "tink/aead/internal/config_2026.h"
 
 #include <memory>
 #include <string>
@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_key_templates.h"
@@ -30,7 +31,7 @@
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
 #include "tink/aead/cord_aead.h"
-#include "tink/aead/internal/key_gen_config_v0.h"
+#include "tink/aead/internal/key_gen_config_2026.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/configuration.h"
@@ -41,8 +42,6 @@
 #include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -57,10 +56,10 @@ using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-TEST(AeadV0Test, PrimitiveWrappers) {
+TEST(Aead2026Test, PrimitiveWrappers) {
   Configuration config;
-  ASSERT_THAT(AddAeadV0(config), IsOk());
-  absl::StatusOr<const KeysetWrapperStore *> store =
+  ASSERT_THAT(AddAead2026(config), IsOk());
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -68,16 +67,16 @@ TEST(AeadV0Test, PrimitiveWrappers) {
   EXPECT_THAT((*store)->Get<CordAead>(), IsOk());
 }
 
-TEST(AeadV0Test, KeyManagers) {
+TEST(Aead2026Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddAeadV0(config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> store =
+  ASSERT_THAT(AddAead2026(config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddAeadKeyGenV0(key_gen_config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
+  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -91,30 +90,31 @@ TEST(AeadV0Test, KeyManagers) {
   }
 }
 
-using AeadV0KeyTypesTest = TestWithParam<KeyTemplate>;
-using AeadV0BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
-using CordAeadV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using Aead2026KeyTypesTest = TestWithParam<KeyTemplate>;
+using Aead2026BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
+using CordAead2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
 // For key type support when using BoringSSL or OpenSSL, see
 // https://developers.google.com/tink/supported-key-types#aead.
-INSTANTIATE_TEST_SUITE_P(AeadV0KeyTypesTestSuite, AeadV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(Aead2026KeyTypesTestSuite, Aead2026KeyTypesTest,
                          Values(AeadKeyTemplates::Aes128CtrHmacSha256(),
                                 AeadKeyTemplates::Aes128Eax(),
                                 AeadKeyTemplates::Aes128Gcm()));
-INSTANTIATE_TEST_SUITE_P(AeadV0BoringSslKeyTypesTestSuite,
-                         AeadV0BoringSslKeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(Aead2026BoringSslKeyTypesTestSuite,
+                         Aead2026BoringSslKeyTypesTest,
                          Values(AeadKeyTemplates::Aes128GcmSiv(),
                                 AeadKeyTemplates::XChaCha20Poly1305()));
-INSTANTIATE_TEST_SUITE_P(CordAeadV0KeyTypesTestSuite, CordAeadV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(CordAead2026KeyTypesTestSuite,
+                         CordAead2026KeyTypesTest,
                          Values(AeadKeyTemplates::Aes256Gcm(),
                                 AeadKeyTemplates::XAes256Gcm160BitNonce(),
                                 AeadKeyTemplates::XAes256Gcm192BitNonce()));
 
-TEST_P(AeadV0KeyTypesTest, GetPrimitive) {
+TEST_P(Aead2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddAeadV0(config), IsOk());
+  ASSERT_THAT(AddAead2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
@@ -130,11 +130,11 @@ TEST_P(AeadV0KeyTypesTest, GetPrimitive) {
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
 
-TEST_P(AeadV0BoringSslKeyTypesTest, GetPrimitive) {
+TEST_P(Aead2026BoringSslKeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddAeadV0(config), IsOk());
+  ASSERT_THAT(AddAead2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
@@ -156,11 +156,11 @@ TEST_P(AeadV0BoringSslKeyTypesTest, GetPrimitive) {
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
 
-TEST_P(CordAeadV0KeyTypesTest, GetPrimitive) {
+TEST_P(CordAead2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddAeadV0(config), IsOk());
+  ASSERT_THAT(AddAead2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);

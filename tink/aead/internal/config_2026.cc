@@ -14,9 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/internal/config_v0.h"
+#include "tink/aead/internal/config_2026.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_eax_key_manager.h"
@@ -27,13 +28,12 @@
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddAeadV0(Configuration& config) {
+absl::Status AddAead2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<AeadWrapper>(), config);
   if (!status.ok()) {

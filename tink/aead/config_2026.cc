@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/config_v0.h"
+#include "tink/aead/config_2026.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/aead/internal/config_v0.h"
+#include "tink/aead/internal/config_2026.h"
 #include "tink/configuration.h"
 
 namespace crypto {
 namespace tink {
 
-const Configuration& ConfigAeadV0() {
+const Configuration& ConfigAead2026() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(internal::AddAeadV0(*config));
+    ABSL_CHECK_OK(internal::AddAead2026(*config));
     return config;
   }();
   return *instance;

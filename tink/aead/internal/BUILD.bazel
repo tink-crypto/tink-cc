@@ -173,9 +173,9 @@ cc_library(
 )
 
 cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/aead/internal",
     deps = [
         "//tink:key_gen_configuration",
@@ -186,15 +186,15 @@ cc_library(
         "//tink/aead:x_aes_gcm_key_manager",
         "//tink/aead:xchacha20_poly1305_key_manager",
         "//tink/internal:key_gen_configuration_impl",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
     ],
 )
 
 cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
     include_prefix = "tink/aead/internal",
     deps = [
         "//tink:configuration",
@@ -207,8 +207,8 @@ cc_library(
         "//tink/aead:x_aes_gcm_key_manager",
         "//tink/aead:xchacha20_poly1305_key_manager",
         "//tink/internal:configuration_impl",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
     ],
 )
 
@@ -403,11 +403,11 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
+    name = "config_2026_test",
+    srcs = ["config_2026_test.cc"],
     deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
+        ":config_2026",
+        ":key_gen_config_2026",
         "//proto:tink_cc_proto",
         "//tink:aead",
         "//tink:configuration",
@@ -426,9 +426,8 @@ cc_test(
         "//tink/internal:key_type_info_store",
         "//tink/internal:keyset_wrapper_store",
         "//tink/internal:ssl_util",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:cord",
         "@googletest//:gtest_main",
     ],

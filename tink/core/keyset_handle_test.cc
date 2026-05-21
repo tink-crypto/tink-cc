@@ -88,13 +88,13 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::TestKeysetHandle;
 using ::crypto::tink::test::AddKeyData;
 using ::crypto::tink::test::AddLegacyKey;
 using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::DummyAead;
-using ::crypto::tink::test::StatusIs;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using AesGcmSivKeyProto = ::google::crypto::tink::AesGcmSivKey;

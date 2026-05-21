@@ -1059,6 +1059,7 @@ tink_cc_test(
     tink::core::key_manager
     gmock
     absl::status
+    absl::status_matchers
     tink::util::status
     tink::util::test_matchers
     tink::proto::empty_cc_proto
@@ -1130,6 +1131,7 @@ tink_cc_test(
     tink::core::kms_clients
     gmock
     absl::status
+    absl::status_matchers
     absl::strings
     tink::util::status
     tink::util::statusor
@@ -1205,6 +1207,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     tink::subtle::aes_gcm_boringssl
     tink::subtle::random
     tink::util::status

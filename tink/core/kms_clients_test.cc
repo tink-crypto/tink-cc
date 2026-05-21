@@ -21,6 +21,7 @@
 
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/kms_client.h"
@@ -33,9 +34,9 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using crypto::tink::test::IsOk;
-using crypto::tink::test::StatusIs;
+using absl_testing::StatusIs;
 using crypto::tink::test::DummyKmsClient;
+using crypto::tink::test::IsOk;
 
 TEST(KmsClientsTest, Empty) {
   auto client_result = KmsClients::Get("some uri");

@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "tink/util/status.h"
 #include "tink/util/test_matchers.h"
 #include "proto/empty.pb.h"
@@ -29,7 +30,7 @@ namespace tink {
 
 namespace {
 
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 TEST(AlwaysFailingFactoryTest, NewKeyFromProtoLite) {
   std::unique_ptr<KeyFactory> factory = KeyFactory::AlwaysFailingFactory(

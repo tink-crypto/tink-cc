@@ -35,6 +35,7 @@
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
+#include "tink/jwt/jwt_ml_dsa_private_key.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
@@ -104,6 +105,8 @@ const absl::string_view kMlDsa44PublicKeyBytes =
     "3aa84092c080e5f2902f90f5c59944d24ca0271d11d0d6734606d039550a37fca2b735850e"
     "63f540f2f06b79144b5c4ed2c700bb51c33d265b3d037389c99efd597642d829db1eb58643"
     "cfcd07f4dec60b8f727d97bd7c4b59bda1";
+const absl::string_view kMlDsa44PrivateSeedBytes =
+    "d71361c000f9a7bc99dfb425bcb6bb27c32c36ab444ff3708b2d93b4e66d5b5b";
 
 // Taken from
 // https://boringssl.googlesource.com/boringssl/+/refs/heads/main/crypto/mldsa/mldsa_nist_keygen_65_tests.txt
@@ -161,6 +164,8 @@ const absl::string_view kMlDsa65PublicKeyBytes =
     "ceac015219478e6b86c958cf86525b7485c1734c7ef00e90683fff5dbd0a7d413a85502102"
     "6a1b32013a4616cbcd3700acbc705be3efba625c69a025267bce9d135e3f5b5cc8c4395640"
     "7e84b6663103e29c242035551ae797f56c6374be0c798c0cf398f1ed";
+const absl::string_view kMlDsa65PrivateSeedBytes =
+    "70cefb9aed5b68e018b079da8284b9d5cad5499ed9c265ff73588005d85c225c";
 
 // Taken from
 // https://boringssl.googlesource.com/boringssl/+/refs/heads/main/crypto/mldsa/mldsa_nist_keygen_87_tests.txt
@@ -236,6 +241,8 @@ const absl::string_view kMlDsa87PublicKeyBytes =
     "ca36eccfc8c2ae3a2101d573df119231f3d5352b9794eeab14507a20447961c9025f53457d"
     "6e801f6e1bc34393d062f35e43d2134db0e08aa26bc1ae7d29da240c7d68610ad7882ffb2b"
     "5035";
+const absl::string_view kMlDsa87PrivateSeedBytes =
+    "19e9e5efe0c1549ddb1d72213636d16fe2faeb2428257004ae464094ca536a66";
 
 struct TestCase {
   JwtMlDsaParameters::KidStrategy strategy;
@@ -248,6 +255,7 @@ struct TestCase {
   absl::optional<int> id;
   std::string output_prefix;
   std::string public_key_bytes;
+  std::string private_seed_bytes;
 };
 
 using JwtMlDsaProtoSerializationTest = TestWithParam<TestCase>;
@@ -280,7 +288,8 @@ INSTANTIATE_TEST_SUITE_P(
             OutputPrefixTypeTP::kTink, JwtMlDsaParameters::Algorithm::kMlDsa44,
             JwtMlDsaAlgorithm::ML_DSA44, /*kid=*/"AgMEAA", /*id=*/0x02030400,
             /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
-            test::HexDecodeOrDie(kMlDsa44PublicKeyBytes)},
+            test::HexDecodeOrDie(kMlDsa44PublicKeyBytes),
+            test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes)},
         TestCase{/*strategy=*/JwtMlDsaParameters::KidStrategy::kIgnored,
                  /*expected_parameters_strategy=*/
                  JwtMlDsaParameters::KidStrategy::kIgnored,
@@ -288,7 +297,8 @@ INSTANTIATE_TEST_SUITE_P(
                  JwtMlDsaParameters::Algorithm::kMlDsa65,
                  JwtMlDsaAlgorithm::ML_DSA65, /*kid=*/absl::nullopt,
                  /*id=*/absl::nullopt, /*output_prefix=*/"",
-                 test::HexDecodeOrDie(kMlDsa65PublicKeyBytes)},
+                 test::HexDecodeOrDie(kMlDsa65PublicKeyBytes),
+                 test::HexDecodeOrDie(kMlDsa65PrivateSeedBytes)},
         TestCase{/*strategy=*/JwtMlDsaParameters::KidStrategy::kCustom,
                  /*expected_parameters_strategy=*/
                  JwtMlDsaParameters::KidStrategy::kIgnored,
@@ -296,7 +306,8 @@ INSTANTIATE_TEST_SUITE_P(
                  JwtMlDsaParameters::Algorithm::kMlDsa87,
                  JwtMlDsaAlgorithm::ML_DSA87, /*kid=*/"custom_kid",
                  /*id=*/absl::nullopt, /*output_prefix=*/"",
-                 test::HexDecodeOrDie(kMlDsa87PublicKeyBytes)}));
+                 test::HexDecodeOrDie(kMlDsa87PublicKeyBytes),
+                 test::HexDecodeOrDie(kMlDsa87PrivateSeedBytes)}));
 
 TEST_P(JwtMlDsaProtoSerializationTest, ParseParametersWithMutableRegistry) {
   TestCase test_case = GetParam();
@@ -863,6 +874,472 @@ TEST_P(JwtMlDsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
   if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
     EXPECT_THAT(proto_key.custom_kid().value(), Eq(*key->GetKid()));
   }
+}
+
+TEST_P(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(test_case.proto_algorithm);
+  public_key_proto.set_key_value(test_case.public_key_bytes);
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    public_key_proto.mutable_custom_kid()->set_value(*test_case.kid);
+  }
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(test_case.private_seed_bytes);
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    test_case.output_prefix_type, test_case.id);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key, IsOk());
+  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(),
+              test_case.id.has_value());
+  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(test_case.id));
+
+  absl::StatusOr<JwtMlDsaParameters> expected_parameters =
+      JwtMlDsaParameters::Create(test_case.strategy, test_case.algorithm);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  JwtMlDsaPublicKey::Builder builder =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*expected_parameters)
+          .SetPublicKeyBytes(test_case.public_key_bytes);
+  if (test_case.id.has_value()) {
+    builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
+  }
+  absl::StatusOr<JwtMlDsaPublicKey> expected_public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> expected_private_key =
+      JwtMlDsaPrivateKey::Create(*expected_public_key,
+                                 RestrictedData(test_case.private_seed_bytes,
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
+  EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
+}
+
+TEST_P(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
+              IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(test_case.proto_algorithm);
+  public_key_proto.set_key_value(test_case.public_key_bytes);
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    public_key_proto.mutable_custom_kid()->set_value(*test_case.kid);
+  }
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(test_case.private_seed_bytes);
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    test_case.output_prefix_type, test_case.id);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key, IsOk());
+  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(),
+              test_case.id.has_value());
+  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(test_case.id));
+
+  absl::StatusOr<JwtMlDsaParameters> expected_parameters =
+      JwtMlDsaParameters::Create(test_case.strategy, test_case.algorithm);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  JwtMlDsaPublicKey::Builder public_key_builder =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*expected_parameters)
+          .SetPublicKeyBytes(test_case.public_key_bytes);
+  if (test_case.id.has_value()) {
+    public_key_builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    public_key_builder.SetCustomKid(*test_case.kid);
+  }
+  absl::StatusOr<JwtMlDsaPublicKey> expected_public_key =
+      public_key_builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> expected_private_key =
+      JwtMlDsaPrivateKey::Create(*expected_public_key,
+                                 RestrictedData(test_case.private_seed_bytes,
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
+  EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
+}
+
+TEST_F(JwtMlDsaProtoSerializationTest,
+       ParsePrivateKeyWithInvalidSerialization) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  RestrictedData serialized_key =
+      RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtMlDsaAlgorithm::ML_DSA44);
+  public_key_proto.set_key_value(test::HexDecodeOrDie(kMlDsa44PublicKeyBytes));
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(1);  // Invalid version number.
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(
+      test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Parsing JwtMlDsaPrivateKey failed: only "
+                                 "version 0 is accepted")));
+}
+
+TEST_F(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithoutPublicKey) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_key_value(
+      test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_P(JwtMlDsaParsePrefixTest, ParsePrivateKeyWithInvalidPrefix) {
+  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtMlDsaAlgorithm::ML_DSA44);
+  public_key_proto.set_key_value(test::HexDecodeOrDie(kMlDsa44PublicKeyBytes));
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(
+      test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    invalid_output_prefix_type,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      key.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Invalid OutputPrefixType for JwtMlDsaKeyFormat")));
+}
+
+TEST_F(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithUnknownAlgorithm) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtMlDsaAlgorithm::ML_DSA_UNKNOWN);
+  public_key_proto.set_key_value(test::HexDecodeOrDie(kMlDsa44PublicKeyBytes));
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(
+      test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Could not determine JwtMlDsaAlgorithm")));
+}
+
+TEST_F(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithoutSecretKeyAccess) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtMlDsaAlgorithm::ML_DSA44);
+  public_key_proto.set_key_value(test::HexDecodeOrDie(kMlDsa44PublicKeyBytes));
+
+  google::crypto::tink::JwtMlDsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(
+      test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    OutputPrefixTypeTP::kRaw,
+                                    /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
+                                     HasSubstr("SecretKeyAccess is required")));
+}
+
+TEST_P(JwtMlDsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(test_case.strategy, test_case.algorithm);
+  ASSERT_THAT(parameters, IsOk());
+
+  JwtMlDsaPublicKey::Builder builder =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicKeyBytes(test_case.public_key_bytes);
+  if (test_case.id.has_value()) {
+    builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
+  }
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> private_key =
+      JwtMlDsaPrivateKey::Create(*public_key,
+                                 RestrictedData(test_case.private_seed_bytes,
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(
+          *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
+
+  google::crypto::tink::JwtMlDsaPrivateKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.key_value(), Eq(test_case.private_seed_bytes));
+  EXPECT_THAT(proto_key.public_key().key_value(),
+              Eq(test_case.public_key_bytes));
+  EXPECT_THAT(proto_key.public_key().algorithm(),
+              Eq(test_case.proto_algorithm));
+  ASSERT_THAT(
+      proto_key.public_key().has_custom_kid(),
+      Eq(test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom));
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    EXPECT_THAT(proto_key.public_key().custom_kid().value(),
+                Eq(*public_key->GetKid()));
+  }
+}
+
+TEST_P(JwtMlDsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
+              IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(test_case.strategy, test_case.algorithm);
+  ASSERT_THAT(parameters, IsOk());
+
+  JwtMlDsaPublicKey::Builder public_key_builder =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicKeyBytes(test_case.public_key_bytes);
+  if (test_case.id.has_value()) {
+    public_key_builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    public_key_builder.SetCustomKid(*test_case.kid);
+  }
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      public_key_builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> private_key =
+      JwtMlDsaPrivateKey::Create(*public_key,
+                                 RestrictedData(test_case.private_seed_bytes,
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(
+          *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
+              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
+
+  google::crypto::tink::JwtMlDsaPrivateKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.key_value(), Eq(test_case.private_seed_bytes));
+  EXPECT_THAT(proto_key.public_key().key_value(),
+              Eq(test_case.public_key_bytes));
+  EXPECT_THAT(proto_key.public_key().algorithm(),
+              Eq(test_case.proto_algorithm));
+  ASSERT_THAT(
+      proto_key.public_key().has_custom_kid(),
+      Eq(test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom));
+  if (test_case.strategy == JwtMlDsaParameters::KidStrategy::kCustom) {
+    EXPECT_THAT(proto_key.public_key().custom_kid().value(),
+                Eq(*public_key->GetKid()));
+  }
+}
+
+TEST_F(JwtMlDsaProtoSerializationTest,
+       SerializePrivateKeyWithoutSecretKeyAccess) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kIgnored,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa44);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicKeyBytes(test::HexDecodeOrDie(kMlDsa44PublicKeyBytes))
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> private_key = JwtMlDsaPrivateKey::Create(
+      *public_key,
+      RestrictedData(test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(*private_key,
+                                                   /*token=*/absl::nullopt);
+  ASSERT_THAT(serialization.status(),
+              StatusIs(absl::StatusCode::kPermissionDenied,
+                       HasSubstr("SecretKeyAccess is required")));
 }
 
 }  // namespace

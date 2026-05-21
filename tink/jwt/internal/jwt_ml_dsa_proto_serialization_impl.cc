@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -40,6 +41,7 @@
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
+#include "tink/jwt/jwt_ml_dsa_private_key.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -173,6 +175,43 @@ class JwtMlDsaPublicKeyTP : public Message {
       4, ProtoFieldOptions::kExplicit};
 };
 
+class JwtMlDsaPrivateKeyTP : public Message {
+ public:
+  JwtMlDsaPrivateKeyTP() = default;
+
+  JwtMlDsaPrivateKeyTP(JwtMlDsaPrivateKeyTP&&) = default;
+  JwtMlDsaPrivateKeyTP& operator=(JwtMlDsaPrivateKeyTP&&) = default;
+  JwtMlDsaPrivateKeyTP(const JwtMlDsaPrivateKeyTP&) = default;
+  JwtMlDsaPrivateKeyTP& operator=(const JwtMlDsaPrivateKeyTP&) = default;
+
+  void clear_version() { version_.Clear(); }
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  void clear_key_value() { key_value_.Clear(); }
+  std::string* mutable_key_value() { return key_value_.mutable_value(); }
+  const std::string& key_value() const { return key_value_.value(); }
+  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+
+  bool has_public_key() const { return public_key_.has_value(); }
+  void clear_public_key() { public_key_.Clear(); }
+  JwtMlDsaPublicKeyTP* mutable_public_key() {
+    return public_key_.mutable_value();
+  }
+  const JwtMlDsaPublicKeyTP& public_key() const { return public_key_.value(); }
+
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
+  }
+
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
+  BytesField key_value_{2, ProtoFieldOptions::kImplicit};
+  MessageField<JwtMlDsaPublicKeyTP> public_key_{3,
+                                                ProtoFieldOptions::kExplicit};
+};
+
 using JwtMlDsaProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, JwtMlDsaParameters>;
 using JwtMlDsaProtoParametersSerializerImpl =
@@ -181,6 +220,10 @@ using JwtMlDsaProtoPublicKeyParserImpl =
     KeyParserImpl<ProtoKeySerialization, JwtMlDsaPublicKey>;
 using JwtMlDsaProtoPublicKeySerializerImpl =
     KeySerializerImpl<JwtMlDsaPublicKey, ProtoKeySerialization>;
+using JwtMlDsaProtoPrivateKeyParserImpl =
+    KeyParserImpl<ProtoKeySerialization, JwtMlDsaPrivateKey>;
+using JwtMlDsaProtoPrivateKeySerializerImpl =
+    KeySerializerImpl<JwtMlDsaPrivateKey, ProtoKeySerialization>;
 
 const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtMlDsaPublicKey";
@@ -400,6 +443,87 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       key.GetIdRequirement());
 }
 
+absl::StatusOr<JwtMlDsaPrivateKey> ParsePrivateKey(
+    const ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
+  }
+  if (serialization.TypeUrl() != kPrivateTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing JwtMlDsaPrivateKey.");
+  }
+
+  JwtMlDsaPrivateKeyTP proto_private_key;
+  if (!proto_private_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse JwtMlDsaPrivateKey proto");
+  }
+  if (proto_private_key.version() != 0) {
+    return absl::InvalidArgumentError(
+        "Parsing JwtMlDsaPrivateKey failed: only version 0 is accepted.");
+  }
+
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      ToParameters(serialization.GetOutputPrefixTypeTP(),
+                   proto_private_key.public_key().algorithm(),
+                   proto_private_key.public_key().has_custom_kid());
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      ToPublicKey(*parameters, proto_private_key.public_key(),
+                  serialization.IdRequirement());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return JwtMlDsaPrivateKey::Create(
+      *public_key,
+      RestrictedData(proto_private_key.key_value(),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+}
+
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
+    const JwtMlDsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
+  }
+
+  absl::StatusOr<JwtMlDsaPublicKeyTP> proto_public_key =
+      ToProtoPublicKey(key.GetPublicKey());
+  if (!proto_public_key.ok()) {
+    return proto_public_key.status();
+  }
+
+  absl::StatusOr<RestrictedData> restricted_input =
+      key.GetPrivateSeedBytes(GetPartialKeyAccess());
+  if (!restricted_input.ok()) {
+    return restricted_input.status();
+  }
+
+  JwtMlDsaPrivateKeyTP proto_private_key;
+  proto_private_key.set_version(0);
+  *proto_private_key.mutable_public_key() = *std::move(proto_public_key);
+  proto_private_key.set_key_value(restricted_input->GetSecret(*token));
+
+  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
+      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
+
+  return ProtoKeySerialization::Create(
+      kPrivateTypeUrl,
+      RestrictedData(proto_private_key.SerializeAsSecretData(),
+                     InsecureSecretKeyAccess::Get()),
+      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
+}
+
 JwtMlDsaProtoParametersParserImpl& JwtMlDsaProtoParametersParser() {
   static auto* parser =
       new JwtMlDsaProtoParametersParserImpl(kPrivateTypeUrl, ParseParameters);
@@ -421,6 +545,18 @@ JwtMlDsaProtoPublicKeyParserImpl& JwtMlDsaProtoPublicKeyParser() {
 JwtMlDsaProtoPublicKeySerializerImpl& JwtMlDsaProtoPublicKeySerializer() {
   static auto* serializer =
       new JwtMlDsaProtoPublicKeySerializerImpl(SerializePublicKey);
+  return *serializer;
+}
+
+JwtMlDsaProtoPrivateKeyParserImpl& JwtMlDsaProtoPrivateKeyParser() {
+  static auto* parser =
+      new JwtMlDsaProtoPrivateKeyParserImpl(kPrivateTypeUrl, ParsePrivateKey);
+  return *parser;
+}
+
+JwtMlDsaProtoPrivateKeySerializerImpl& JwtMlDsaProtoPrivateKeySerializer() {
+  static auto* serializer =
+      new JwtMlDsaProtoPrivateKeySerializerImpl(SerializePrivateKey);
   return *serializer;
 }
 
@@ -446,7 +582,19 @@ absl::Status RegisterJwtMlDsaProtoSerializationWithMutableRegistry(
     return status;
   }
 
-  return registry.RegisterKeySerializer(&JwtMlDsaProtoPublicKeySerializer());
+  if (absl::Status status =
+          registry.RegisterKeySerializer(&JwtMlDsaProtoPublicKeySerializer());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          registry.RegisterKeyParser(&JwtMlDsaProtoPrivateKeyParser());
+      !status.ok()) {
+    return status;
+  }
+
+  return registry.RegisterKeySerializer(&JwtMlDsaProtoPrivateKeySerializer());
 }
 
 absl::Status RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(
@@ -469,7 +617,19 @@ absl::Status RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(
     return status;
   }
 
-  return builder.RegisterKeySerializer(&JwtMlDsaProtoPublicKeySerializer());
+  if (absl::Status status =
+          builder.RegisterKeySerializer(&JwtMlDsaProtoPublicKeySerializer());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeyParser(&JwtMlDsaProtoPrivateKeyParser());
+      !status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(&JwtMlDsaProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

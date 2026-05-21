@@ -1522,7 +1522,10 @@ tink_cc_library(
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
+  TAGS
+    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1549,8 +1552,11 @@ tink_cc_test(
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::jwt_ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
 )

@@ -14,23 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/prf/config_v0.h"
+#ifndef TINK_PRF_CONFIG_2026_H_
+#define TINK_PRF_CONFIG_2026_H_
 
-#include "absl/log/absl_check.h"
 #include "tink/configuration.h"
-#include "tink/prf/internal/config_v0.h"
 
 namespace crypto {
 namespace tink {
 
-const Configuration& ConfigPrfV0() {
-  static const Configuration* instance = [] {
-    static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(internal::AddPrfV0(*config));
-    return config;
-  }();
-  return *instance;
-}
+// Configuration used to generate PRF primitives with 2026 recommended key
+// managers.
+const Configuration& ConfigPrf2026();
 
 }  // namespace tink
 }  // namespace crypto
+
+#endif  // TINK_PRF_CONFIG_2026_H_

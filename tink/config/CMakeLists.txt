@@ -121,7 +121,7 @@ tink_cc_library(
     tink::daead::internal::config_2026
     tink::hybrid::internal::config_v0
     tink::mac::internal::config_2026
-    tink::prf::internal::config_v0
+    tink::prf::internal::config_2026
     tink::signature::internal::config_v0
     tink::streamingaead::internal::config_v0
   TAGS
@@ -140,7 +140,7 @@ tink_cc_library(
     tink::daead::internal::key_gen_config_2026
     tink::hybrid::internal::key_gen_config_v0
     tink::mac::internal::key_gen_config_2026
-    tink::prf::internal::key_gen_config_v0
+    tink::prf::internal::key_gen_config_2026
     tink::signature::internal::key_gen_config_v0
     tink::streamingaead::internal::key_gen_config_v0
   TAGS

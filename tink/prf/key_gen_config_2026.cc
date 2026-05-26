@@ -14,21 +14,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_PRF_CONFIG_V0_H_
-#define TINK_PRF_CONFIG_V0_H_
+#include "tink/prf/key_gen_config_2026.h"
 
-#include "absl/base/macros.h"
-#include "tink/configuration.h"
-#include "tink/prf/config_2026.h"
+#include "absl/log/absl_check.h"
+#include "tink/key_gen_configuration.h"
+#include "tink/prf/internal/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-ABSL_DEPRECATE_AND_INLINE() inline const Configuration& ConfigPrfV0() {
-  return ConfigPrf2026();
+const KeyGenConfiguration& KeyGenConfigPrf2026() {
+  static const KeyGenConfiguration* instance = [] {
+    static KeyGenConfiguration* config = new KeyGenConfiguration();
+    ABSL_CHECK_OK(internal::AddPrfKeyGen2026(*config));
+    return config;
+  }();
+  return *instance;
 }
 
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_PRF_CONFIG_V0_H_

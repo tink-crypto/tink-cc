@@ -14,21 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_PRF_INTERNAL_KEY_GEN_CONFIG_V0_H_
-#define TINK_PRF_INTERNAL_KEY_GEN_CONFIG_V0_H_
+#ifndef TINK_PRF_KEY_GEN_CONFIG_2026_H_
+#define TINK_PRF_KEY_GEN_CONFIG_2026_H_
 
 #include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended PRF key managers to `config`, used to generate keys.
-absl::Status AddPrfKeyGenV0(KeyGenConfiguration& config);
+// KeyGenConfiguration used to generate PRF keys with 2026 recommended key
+// managers.
+const KeyGenConfiguration& KeyGenConfigPrf2026();
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_PRF_INTERNAL_KEY_GEN_CONFIG_V0_H_
+#endif  // TINK_PRF_KEY_GEN_CONFIG_2026_H_

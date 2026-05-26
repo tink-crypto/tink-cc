@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/prf/internal/config_v0.h"
+#include "tink/prf/internal/config_2026.h"
 
 #include <cstddef>
 #include <memory>
@@ -33,7 +33,7 @@
 #include "tink/prf/aes_cmac_prf_key_manager.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/prf/hmac_prf_key_manager.h"
-#include "tink/prf/internal/key_gen_config_v0.h"
+#include "tink/prf/internal/key_gen_config_2026.h"
 #include "tink/prf/prf_key_templates.h"
 #include "tink/prf/prf_set.h"
 #include "tink/util/statusor.h"
@@ -51,26 +51,26 @@ using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-TEST(PrfV0Test, PrimitiveWrapper) {
+TEST(Prf2026Test, PrimitiveWrapper) {
   Configuration config;
-  ASSERT_THAT(AddPrfV0(config), IsOk());
-  absl::StatusOr<const KeysetWrapperStore *> store =
+  ASSERT_THAT(AddPrf2026(config), IsOk());
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
   EXPECT_THAT((*store)->Get<PrfSet>(), IsOk());
 }
 
-TEST(PrfV0Test, KeyManagers) {
+TEST(Prf2026Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddPrfV0(config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> store =
+  ASSERT_THAT(AddPrf2026(config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddPrfKeyGenV0(key_gen_config), IsOk());
-  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
+  ASSERT_THAT(AddPrfKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -81,18 +81,18 @@ TEST(PrfV0Test, KeyManagers) {
   }
 }
 
-using PrfV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using Prf2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
-INSTANTIATE_TEST_SUITE_P(PrfV0KeyTypesTestSuite, PrfV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(Prf2026KeyTypesTestSuite, Prf2026KeyTypesTest,
                          Values(PrfKeyTemplates::AesCmac(),
                                 PrfKeyTemplates::HkdfSha256(),
                                 PrfKeyTemplates::HmacSha256()));
 
-TEST_P(PrfV0KeyTypesTest, GetPrimitive) {
+TEST_P(Prf2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddPrfKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddPrfKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddPrfV0(config), IsOk());
+  ASSERT_THAT(AddPrf2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);

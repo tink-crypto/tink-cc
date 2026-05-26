@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/prf/internal/config_v0.h"
+#include "tink/prf/internal/config_2026.h"
 
 #include "absl/memory/memory.h"
 #include "tink/configuration.h"
@@ -29,7 +29,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddPrfV0(Configuration& config) {
+absl::Status AddPrf2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PrfSetWrapper>(), config);
   if (!status.ok()) {

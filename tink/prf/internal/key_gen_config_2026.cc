@@ -14,22 +14,35 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_PRF_INTERNAL_CONFIG_V0_H_
-#define TINK_PRF_INTERNAL_CONFIG_V0_H_
+#include "tink/prf/internal/key_gen_config_2026.h"
 
-#include "tink/configuration.h"
+#include "absl/memory/memory.h"
+#include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/key_gen_configuration.h"
+#include "tink/prf/aes_cmac_prf_key_manager.h"
+#include "tink/prf/hkdf_prf_key_manager.h"
+#include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-// Add recommended PRF primitive wrappers and key managers to `config`, used to
-// generate primitives.
-absl::Status AddPrfV0(Configuration& config);
+absl::Status AddPrfKeyGen2026(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<AesCmacPrfKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = KeyGenConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<HkdfPrfKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return KeyGenConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<HmacPrfKeyManager>(), config);
+}
 
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_PRF_INTERNAL_CONFIG_V0_H_

@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/prf/key_gen_config_v0.h"
+#include "tink/prf/config_2026.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/key_gen_configuration.h"
-#include "tink/prf/internal/key_gen_config_v0.h"
+#include "tink/configuration.h"
+#include "tink/prf/internal/config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-const KeyGenConfiguration& KeyGenConfigPrfV0() {
-  static const KeyGenConfiguration* instance = [] {
-    static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(internal::AddPrfKeyGenV0(*config));
+const Configuration& ConfigPrf2026() {
+  static const Configuration* instance = [] {
+    static Configuration* config = new Configuration();
+    ABSL_CHECK_OK(internal::AddPrf2026(*config));
     return config;
   }();
   return *instance;

@@ -17,14 +17,17 @@
 #ifndef TINK_STREAMINGAEAD_KEY_GEN_CONFIG_V0_H_
 #define TINK_STREAMINGAEAD_KEY_GEN_CONFIG_V0_H_
 
+#include "absl/base/macros.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/streamingaead/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-// KeyGenConfiguration used to generate Streaming AEAD keys with recommended key
-// managers.
-const KeyGenConfiguration& KeyGenConfigStreamingAeadV0();
+ABSL_DEPRECATE_AND_INLINE()
+inline const KeyGenConfiguration& KeyGenConfigStreamingAeadV0() {
+  return KeyGenConfigStreamingAead2026();
+}
 
 }  // namespace tink
 }  // namespace crypto

@@ -24,7 +24,7 @@
 #include "tink/mac/internal/config_2026.h"
 #include "tink/prf/internal/config_2026.h"
 #include "tink/signature/internal/config_v0.h"
-#include "tink/streamingaead/internal/config_v0.h"
+#include "tink/streamingaead/internal/config_2026.h"
 
 namespace crypto {
 namespace tink {
@@ -35,7 +35,7 @@ const Configuration& ConfigV0() {
     ABSL_CHECK_OK(internal::AddMac2026(*config));
     ABSL_CHECK_OK(internal::AddAead2026(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAead2026(*config));
-    ABSL_CHECK_OK(internal::AddStreamingAeadV0(*config));
+    ABSL_CHECK_OK(internal::AddStreamingAead2026(*config));
     ABSL_CHECK_OK(internal::AddHybridV0(*config));
     ABSL_CHECK_OK(internal::AddPrf2026(*config));
     ABSL_CHECK_OK(internal::AddSignatureV0(*config));

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/streamingaead/internal/config_v0.h"
+#include "tink/streamingaead/internal/config_2026.h"
 
 #include <memory>
 #include <sstream>
@@ -37,7 +37,7 @@
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
-#include "tink/streamingaead/internal/key_gen_config_v0.h"
+#include "tink/streamingaead/internal/key_gen_config_2026.h"
 #include "tink/streamingaead/streaming_aead_key_templates.h"
 #include "tink/subtle/test_util.h"
 #include "tink/util/istream_input_stream.h"
@@ -58,7 +58,7 @@ using ::google::crypto::tink::KeyTemplate;
 
 TEST(StreamingAeadV0Test, PrimitiveWrappers) {
   Configuration config;
-  ASSERT_THAT(AddStreamingAeadV0(config), IsOk());
+  ASSERT_THAT(AddStreamingAead2026(config), IsOk());
   absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
@@ -68,13 +68,13 @@ TEST(StreamingAeadV0Test, PrimitiveWrappers) {
 
 TEST(StreamingAeadV0Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddStreamingAeadV0(config), IsOk());
+  ASSERT_THAT(AddStreamingAead2026(config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddStreamingAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddStreamingAeadKeyGen2026(key_gen_config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
@@ -87,9 +87,9 @@ TEST(StreamingAeadV0Test, KeyManagers) {
 
 TEST(StreamingAeadV0Test, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddStreamingAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddStreamingAeadKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddStreamingAeadV0(config), IsOk());
+  ASSERT_THAT(AddStreamingAead2026(config), IsOk());
 
   for (const KeyTemplate& temp :
        {StreamingAeadKeyTemplates::Aes128CtrHmacSha256Segment4KB(),

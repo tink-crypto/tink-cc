@@ -14,22 +14,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_STREAMINGAEAD_INTERNAL_KEY_GEN_CONFIG_V0_H_
-#define TINK_STREAMINGAEAD_INTERNAL_KEY_GEN_CONFIG_V0_H_
+#include "tink/streamingaead/config_2026.h"
 
-#include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
+#include "absl/log/absl_check.h"
+#include "tink/configuration.h"
+#include "tink/streamingaead/internal/config_2026.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended Streaming AEAD key managers to `config`, used to generate
-// keys.
-absl::Status AddStreamingAeadKeyGenV0(KeyGenConfiguration& config);
+const Configuration& ConfigStreamingAead2026() {
+  static const Configuration* instance = [] {
+    static Configuration* config = new Configuration();
+    ABSL_CHECK_OK(internal::AddStreamingAead2026(*config));
+    return config;
+  }();
+  return *instance;
+}
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_STREAMINGAEAD_INTERNAL_KEY_GEN_CONFIG_V0_H_

@@ -14,22 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_STREAMINGAEAD_CONFIG_V0_H_
-#define TINK_STREAMINGAEAD_CONFIG_V0_H_
+#ifndef TINK_STREAMINGAEAD_INTERNAL_CONFIG_2026_H_
+#define TINK_STREAMINGAEAD_INTERNAL_CONFIG_2026_H_
 
-#include "absl/base/macros.h"
 #include "tink/configuration.h"
-#include "tink/streamingaead/config_2026.h"
+#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-ABSL_DEPRECATE_AND_INLINE()
-inline const Configuration& ConfigStreamingAeadV0() {
-  return ConfigStreamingAead2026();
-}
+// Add 2026 recommended Streaming AEAD primitive wrappers and key managers to
+// `config`, used to generate primitives.
+absl::Status AddStreamingAead2026(Configuration& config);
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_STREAMINGAEAD_CONFIG_V0_H_
+#endif  // TINK_STREAMINGAEAD_INTERNAL_CONFIG_2026_H_

@@ -24,7 +24,7 @@
 #include "tink/mac/internal/key_gen_config_2026.h"
 #include "tink/prf/internal/key_gen_config_2026.h"
 #include "tink/signature/internal/key_gen_config_v0.h"
-#include "tink/streamingaead/internal/key_gen_config_v0.h"
+#include "tink/streamingaead/internal/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
@@ -35,7 +35,7 @@ const KeyGenConfiguration& KeyGenConfigV0() {
     ABSL_CHECK_OK(internal::AddMacKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddAeadKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddStreamingAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddStreamingAeadKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddHybridKeyGenV0(*config));
     ABSL_CHECK_OK(internal::AddPrfKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddSignatureKeyGenV0(*config));

@@ -14,29 +14,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/streamingaead/internal/key_gen_config_v0.h"
+#include "tink/streamingaead/key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
-#include "tink/internal/key_gen_configuration_impl.h"
+#include "absl/log/absl_check.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
-#include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
-#include "tink/util/status.h"
+#include "tink/streamingaead/internal/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-absl::Status AddStreamingAeadKeyGenV0(KeyGenConfiguration& config) {
-  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCtrHmacStreamingKeyManager>(), config);
-  if (!status.ok()) {
-    return status;
-  }
-  return KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
+const KeyGenConfiguration& KeyGenConfigStreamingAead2026() {
+  static const KeyGenConfiguration* instance = [] {
+    static KeyGenConfiguration* config = new KeyGenConfiguration();
+    ABSL_CHECK_OK(internal::AddStreamingAeadKeyGen2026(*config));
+    return config;
+  }();
+  return *instance;
 }
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

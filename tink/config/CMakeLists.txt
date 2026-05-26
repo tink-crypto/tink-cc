@@ -123,7 +123,7 @@ tink_cc_library(
     tink::mac::internal::config_2026
     tink::prf::internal::config_2026
     tink::signature::internal::config_v0
-    tink::streamingaead::internal::config_v0
+    tink::streamingaead::internal::config_2026
   TAGS
     exclude_if_openssl
 )
@@ -142,7 +142,7 @@ tink_cc_library(
     tink::mac::internal::key_gen_config_2026
     tink::prf::internal::key_gen_config_2026
     tink::signature::internal::key_gen_config_v0
-    tink::streamingaead::internal::key_gen_config_v0
+    tink::streamingaead::internal::key_gen_config_2026
   TAGS
     exclude_if_openssl
 )

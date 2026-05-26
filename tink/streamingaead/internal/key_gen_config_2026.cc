@@ -14,33 +14,26 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/streamingaead/internal/config_v0.h"
+#include "tink/streamingaead/internal/key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
-#include "tink/configuration.h"
-#include "tink/internal/configuration_impl.h"
+#include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
-#include "tink/streamingaead/streaming_aead_wrapper.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddStreamingAeadV0(Configuration& config) {
-  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<StreamingAeadWrapper>(), config);
-  if (!status.ok()) {
-    return status;
-  }
-
-  status = ConfigurationImpl::AddKeyTypeManager(
+absl::Status AddStreamingAeadKeyGen2026(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCtrHmacStreamingKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
-  return ConfigurationImpl::AddKeyTypeManager(
+  return KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
 }
 

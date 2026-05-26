@@ -203,23 +203,21 @@ tink_cc_library(
 tink_cc_library(
   NAME config_v0
   SRCS
-    config_v0.cc
     config_v0.h
   DEPS
-    absl::absl_check
+    tink::streamingaead::config_2026
+    absl::core_headers
     tink::core::configuration
-    tink::streamingaead::internal::config_v0
 )
 
 tink_cc_library(
   NAME key_gen_config_v0
   SRCS
-    key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::absl_check
+    tink::streamingaead::key_gen_config_2026
+    absl::core_headers
     tink::core::key_gen_configuration
-    tink::streamingaead::internal::key_gen_config_v0
 )
 
 tink_cc_library(
@@ -741,4 +739,26 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::aes_gcm_hkdf_streaming_cc_proto
     tink::proto::common_cc_proto
+)
+
+tink_cc_library(
+  NAME config_2026
+  SRCS
+    config_2026.cc
+    config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::configuration
+    tink::streamingaead::internal::config_2026
+)
+
+tink_cc_library(
+  NAME key_gen_config_2026
+  SRCS
+    key_gen_config_2026.cc
+    key_gen_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::key_gen_configuration
+    tink::streamingaead::internal::key_gen_config_2026
 )

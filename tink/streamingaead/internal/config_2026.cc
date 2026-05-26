@@ -14,22 +14,36 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_STREAMINGAEAD_INTERNAL_CONFIG_V0_H_
-#define TINK_STREAMINGAEAD_INTERNAL_CONFIG_V0_H_
+#include "tink/streamingaead/internal/config_2026.h"
 
+#include "absl/memory/memory.h"
 #include "tink/configuration.h"
+#include "tink/internal/configuration_impl.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
+#include "tink/streamingaead/streaming_aead_wrapper.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-// Add recommended Streaming AEAD primitive wrappers and key managers to
-// `config`, used to generate primitives.
-absl::Status AddStreamingAeadV0(Configuration& config);
+absl::Status AddStreamingAead2026(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+      absl::make_unique<StreamingAeadWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = ConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<AesCtrHmacStreamingKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return ConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
+}
 
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_STREAMINGAEAD_INTERNAL_CONFIG_V0_H_

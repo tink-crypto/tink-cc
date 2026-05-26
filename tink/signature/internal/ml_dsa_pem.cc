@@ -94,6 +94,12 @@ absl::StatusOr<std::string> ParseMldsaPublicKey(
 
 }  // namespace
 
+absl::StatusOr<std::string> ParseMldsa44PublicKey(
+    absl::string_view pem_serialized_key) {
+  return ParseMldsaPublicKey(pem_serialized_key, EVP_PKEY_ML_DSA_44, 1312,
+                             "ML-DSA-44");
+}
+
 absl::StatusOr<std::string> ParseMldsa65PublicKey(
     absl::string_view pem_serialized_key) {
   return ParseMldsaPublicKey(pem_serialized_key, EVP_PKEY_ML_DSA_65, 1952,

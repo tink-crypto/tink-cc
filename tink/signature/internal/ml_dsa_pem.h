@@ -26,7 +26,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// TODO(b/470868281): Add support for ML-DSA-44.
+// Parses a given PEM serialized ML-DSA-44 public key `pem_serialized_key`
+// into raw key bytes string.
+absl::StatusOr<std::string> ParseMldsa44PublicKey(
+    absl::string_view pem_serialized_key);
 
 // Parses a given PEM serialized ML-DSA-65 public key `pem_serialized_key`
 // into raw key bytes string.

@@ -1718,3 +1718,36 @@ tink_cc_test(
     absl::statusor
     tink::signature::slh_dsa_parameters
 )
+
+tink_cc_library(
+  NAME ml_dsa_pem
+  SRCS
+    ml_dsa_pem.cc
+    ml_dsa_pem.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    crypto
+    tink::internal::ssl_unique_ptr
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME ml_dsa_pem_test
+  SRCS
+    ml_dsa_pem_test.cc
+  DEPS
+    tink::signature::internal::ml_dsa_pem
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    crypto
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

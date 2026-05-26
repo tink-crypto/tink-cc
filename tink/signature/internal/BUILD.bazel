@@ -1594,3 +1594,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ml_dsa_pem",
+    srcs = ["ml_dsa_pem.cc"],
+    hdrs = ["ml_dsa_pem.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink/internal:ssl_unique_ptr",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_pem_test",
+    srcs = ["ml_dsa_pem_test.cc"],
+    deps = [
+        ":ml_dsa_pem",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)

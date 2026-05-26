@@ -14,29 +14,36 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/keyderivation/internal/config_v0.h"
+#include "tink/keyderivation/internal/key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
-#include "absl/status/status.h"
-#include "tink/configuration.h"
-#include "tink/internal/configuration_impl.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
+#include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/key_type_info_store.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
-#include "tink/keyderivation/keyset_deriver_wrapper.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace {
 
-absl::Status AddKeyDerivationV0(Configuration& config) {
-  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<KeysetDeriverWrapper>(), config);
-  if (!status.ok()) {
-    return status;
-  }
-  return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<PrfBasedDeriverKeyManager>(), config);
+using ::absl_testing::IsOk;
+
+TEST(KeyDerivationKeyGenV0Test, KeyManagers) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddKeyDerivationKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+      KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
+  ASSERT_THAT(key_gen_store, IsOk());
+
+  EXPECT_THAT((*key_gen_store)->Get(PrfBasedDeriverKeyManager().get_key_type()),
+              IsOk());
 }
 
+}  // namespace
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

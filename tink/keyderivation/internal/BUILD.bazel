@@ -398,9 +398,9 @@ cc_test(
 )
 
 cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
     include_prefix = "tink/keyderivation/internal",
     deps = [
         ":prf_based_deriver_key_manager",
@@ -413,9 +413,9 @@ cc_library(
 )
 
 cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/keyderivation/internal",
     deps = [
         ":prf_based_deriver_key_manager",
@@ -427,11 +427,11 @@ cc_library(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
+    name = "config_2026_test",
+    srcs = ["config_2026_test.cc"],
     deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
+        ":config_2026",
+        ":key_gen_config_2026",
         ":prf_based_deriver_key_manager",
         "//tink:configuration",
         "//tink:key_gen_configuration",
@@ -447,10 +447,10 @@ cc_test(
 )
 
 cc_test(
-    name = "key_gen_config_v0_test",
-    srcs = ["key_gen_config_v0_test.cc"],
+    name = "key_gen_config_2026_test",
+    srcs = ["key_gen_config_2026_test.cc"],
     deps = [
-        ":key_gen_config_v0",
+        ":key_gen_config_2026",
         ":prf_based_deriver_key_manager",
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",

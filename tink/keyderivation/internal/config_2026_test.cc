@@ -14,16 +14,21 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/keyderivation/internal/key_gen_config_v0.h"
+#include "tink/keyderivation/internal/config_2026.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "tink/configuration.h"
+#include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/keyset_wrapper_store.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/keyderivation/internal/key_gen_config_2026.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
+#include "tink/keyderivation/keyset_deriver.h"
 
 namespace crypto {
 namespace tink {
@@ -32,15 +37,32 @@ namespace {
 
 using ::absl_testing::IsOk;
 
-TEST(KeyDerivationKeyGenV0Test, KeyManagers) {
+TEST(KeyDerivationV0Test, PrimitiveWrappers) {
+  Configuration config;
+  ASSERT_THAT(AddKeyDerivation2026(config), IsOk());
+  absl::StatusOr<const KeysetWrapperStore*> store =
+      ConfigurationImpl::GetKeysetWrapperStore(config);
+  ASSERT_THAT(store, IsOk());
+
+  EXPECT_THAT((*store)->Get<KeysetDeriver>(), IsOk());
+}
+
+TEST(KeyDerivationV0Test, KeyManagers) {
+  Configuration config;
+  ASSERT_THAT(AddKeyDerivation2026(config), IsOk());
+  absl::StatusOr<const KeyTypeInfoStore*> store =
+      ConfigurationImpl::GetKeyTypeInfoStore(config);
+  ASSERT_THAT(store, IsOk());
+
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddKeyDerivationKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddKeyDerivationKeyGen2026(key_gen_config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
-  EXPECT_THAT((*key_gen_store)->Get(PrfBasedDeriverKeyManager().get_key_type()),
-              IsOk());
+  for (const KeyTypeInfoStore* s : {*store, *key_gen_store}) {
+    EXPECT_THAT(s->Get(PrfBasedDeriverKeyManager().get_key_type()), IsOk());
+  }
 }
 
 }  // namespace

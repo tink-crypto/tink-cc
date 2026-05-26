@@ -14,20 +14,26 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/keyderivation/internal/key_gen_config_v0.h"
+#include "tink/keyderivation/internal/config_2026.h"
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
-#include "tink/internal/key_gen_configuration_impl.h"
-#include "tink/key_gen_configuration.h"
+#include "tink/configuration.h"
+#include "tink/internal/configuration_impl.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
+#include "tink/keyderivation/keyset_deriver_wrapper.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddKeyDerivationKeyGenV0(KeyGenConfiguration& config) {
-  return KeyGenConfigurationImpl::AddKeyTypeManager(
+absl::Status AddKeyDerivation2026(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+      absl::make_unique<KeysetDeriverWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return ConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<PrfBasedDeriverKeyManager>(), config);
 }
 

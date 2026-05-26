@@ -546,7 +546,7 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::XChaCha20Poly1305(),
-                                KeyGenConfigAeadV0());
+                                KeyGenConfigAead2026());
   ASSERT_THAT(handle, IsOk());
 
   // Fails to parse this key type, so falls back to legacy proto key.
@@ -639,7 +639,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256CtrHmacSha256(),
-                                KeyGenConfigAeadV0());
+                                KeyGenConfigAead2026());
   ASSERT_THAT(handle, IsOk());
 
   // Failed to parse this key type, so fell back to legacy proto key.
@@ -682,7 +682,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256CtrHmacSha256(),
-                                KeyGenConfigAeadV0());
+                                KeyGenConfigAead2026());
   ASSERT_THAT(handle2, IsOk());
 
   // Parsing now creates the right key type.

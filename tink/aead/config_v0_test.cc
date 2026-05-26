@@ -57,11 +57,11 @@ INSTANTIATE_TEST_SUITE_P(ConfigV0BoringSslTestSuite, ConfigV0BoringSslTest,
 
 TEST_P(ConfigV0Test, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigAeadV0());
+      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigAead2026());
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =
-      (*handle)->GetPrimitive<Aead>(ConfigAeadV0());
+      (*handle)->GetPrimitive<Aead>(ConfigAead2026());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
@@ -72,17 +72,17 @@ TEST_P(ConfigV0Test, GetPrimitive) {
 
 TEST_P(ConfigV0BoringSslTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigAeadV0());
+      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigAead2026());
   ASSERT_THAT(handle, IsOk());
 
   // Fails if using OpenSSL.
   if (!internal::IsBoringSsl()) {
-    EXPECT_THAT((*handle)->GetPrimitive<Aead>(ConfigAeadV0()), Not(IsOk()));
+    EXPECT_THAT((*handle)->GetPrimitive<Aead>(ConfigAead2026()), Not(IsOk()));
     return;
   }
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =
-      (*handle)->GetPrimitive<Aead>(ConfigAeadV0());
+      (*handle)->GetPrimitive<Aead>(ConfigAead2026());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/internal/key_gen_config_v0.h"
+#include "tink/signature/internal/key_gen_config_2026.h"
 
 #include <memory>
 #include <utility>
@@ -29,7 +29,6 @@
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -41,7 +40,7 @@ using ::absl_testing::IsOk;
 
 TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
   absl::StatusOr<SlhDsaParameters> slhdsa_parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
@@ -77,7 +76,7 @@ TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
 TEST(CompositeMlDsaSignatureKeyGenConfigV0Test,
      CompositeMlDsaCreateKeysetHandleWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> composite_ml_dsa_parameters =
       CompositeMlDsaParameters::Create(

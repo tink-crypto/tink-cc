@@ -14,23 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/config_v0.h"
+#ifndef TINK_SIGNATURE_INTERNAL_KEY_GEN_CONFIG_2026_H_
+#define TINK_SIGNATURE_INTERNAL_KEY_GEN_CONFIG_2026_H_
 
-#include "absl/log/absl_check.h"
-#include "tink/configuration.h"
-#include "tink/signature/internal/config_v0.h"
+#include "absl/status/status.h"
+#include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-const Configuration& ConfigSignatureV0() {
-  static const Configuration* instance = [] {
-    static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(internal::AddSignatureV0(*config));
-    return config;
-  }();
-  return *instance;
-}
+// Add 2026 recommended Signature key managers to `config`, used to generate
+// keys.
+absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config);
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
+
+#endif  // TINK_SIGNATURE_INTERNAL_KEY_GEN_CONFIG_2026_H_

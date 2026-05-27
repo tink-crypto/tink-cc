@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
@@ -33,12 +34,10 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
-#include "tink/signature/internal/key_gen_config_v0.h"
+#include "tink/signature/internal/key_gen_config_2026.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -110,7 +109,7 @@ TEST_P(SignatureV0Test, GetPrimitive) {
   }
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
 
@@ -140,7 +139,7 @@ TEST(SignatureV0Test, GetPrimitiveNonFips1402KeyTypeFails) {
   }
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
 

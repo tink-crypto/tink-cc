@@ -14,22 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SIGNATURE_KEY_GEN_CONFIG_V0_H_
-#define TINK_SIGNATURE_KEY_GEN_CONFIG_V0_H_
+#ifndef TINK_SIGNATURE_CONFIG_2026_H_
+#define TINK_SIGNATURE_CONFIG_2026_H_
 
-#include "absl/base/macros.h"
-#include "tink/key_gen_configuration.h"
-#include "tink/signature/key_gen_config_2026.h"
+#include "tink/configuration.h"
 
 namespace crypto {
 namespace tink {
 
-ABSL_DEPRECATE_AND_INLINE()
-inline const KeyGenConfiguration& KeyGenConfigSignatureV0() {
-  return KeyGenConfigSignature2026();
-}
+// Configuration used to generate Signature primitives with 2026 recommended key
+// managers.
+const Configuration& ConfigSignature2026();
 
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SIGNATURE_KEY_GEN_CONFIG_V0_H_
+#endif  // TINK_SIGNATURE_CONFIG_2026_H_

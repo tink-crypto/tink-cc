@@ -646,28 +646,52 @@ cc_library(
 )
 
 cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
     include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
-        "//tink/signature/internal:config_v0",
+        "//tink/signature/internal:config_2026",
         "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
 cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
-        "//tink/signature/internal:key_gen_config_v0",
+        "//tink/signature/internal:key_gen_config_2026",
         "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_library(
+    name = "config_v0",
+    hdrs = ["config_v0.h"],
+    include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":config_2026",
+        "//tink:configuration",
+        "@abseil-cpp//absl/base:core_headers",
+    ],
+)
+
+cc_library(
+    name = "key_gen_config_v0",
+    hdrs = ["key_gen_config_v0.h"],
+    include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":key_gen_config_2026",
+        "//tink:key_gen_configuration",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
@@ -746,7 +770,6 @@ cc_library(
         "//tink:secret_data",
         "//tink/internal:rsa_util",
         "//tink/internal:ssl_unique_ptr",
-        "//tink/util:secret_data",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

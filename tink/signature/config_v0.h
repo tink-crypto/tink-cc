@@ -17,14 +17,16 @@
 #ifndef TINK_SIGNATURE_CONFIG_V0_H_
 #define TINK_SIGNATURE_CONFIG_V0_H_
 
+#include "absl/base/macros.h"
 #include "tink/configuration.h"
+#include "tink/signature/config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-// Configuration used to generate Signature primitives with recommended key
-// managers.
-const Configuration& ConfigSignatureV0();
+ABSL_DEPRECATE_AND_INLINE() inline const Configuration& ConfigSignatureV0() {
+  return ConfigSignature2026();
+}
 
 }  // namespace tink
 }  // namespace crypto

@@ -14,30 +14,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/config/key_gen_v0.h"
+#include "tink/signature/key_gen_config_2026.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/aead/internal/key_gen_config_2026.h"
-#include "tink/daead/internal/key_gen_config_2026.h"
-#include "tink/hybrid/internal/key_gen_config_v0.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/mac/internal/key_gen_config_2026.h"
-#include "tink/prf/internal/key_gen_config_2026.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
-#include "tink/streamingaead/internal/key_gen_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-const KeyGenConfiguration& KeyGenConfigV0() {
+const KeyGenConfiguration& KeyGenConfigSignature2026() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(internal::AddMacKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddAeadKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddStreamingAeadKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddHybridKeyGenV0(*config));
-    ABSL_CHECK_OK(internal::AddPrfKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddSignatureKeyGen2026(*config));
     return config;
   }();

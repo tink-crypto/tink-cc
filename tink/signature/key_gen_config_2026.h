@@ -14,22 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SIGNATURE_INTERNAL_CONFIG_V0_H_
-#define TINK_SIGNATURE_INTERNAL_CONFIG_V0_H_
+#ifndef TINK_SIGNATURE_KEY_GEN_CONFIG_2026_H_
+#define TINK_SIGNATURE_KEY_GEN_CONFIG_2026_H_
 
-#include "tink/configuration.h"
-#include "tink/util/status.h"
+#include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended Signature primitive wrappers and key managers to `config`,
-// used to generate primitives.
-absl::Status AddSignatureV0(Configuration& config);
+// KeyGenConfiguration used to generate Signature keys with 2026 recommended key
+// managers.
+const KeyGenConfiguration& KeyGenConfigSignature2026();
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SIGNATURE_INTERNAL_CONFIG_V0_H_
+#endif  // TINK_SIGNATURE_KEY_GEN_CONFIG_2026_H_

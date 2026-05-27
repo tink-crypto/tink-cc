@@ -23,7 +23,7 @@
 #include "tink/hybrid/internal/config_v0.h"
 #include "tink/mac/internal/config_2026.h"
 #include "tink/prf/internal/config_2026.h"
-#include "tink/signature/internal/config_v0.h"
+#include "tink/signature/internal/config_2026.h"
 #include "tink/streamingaead/internal/config_2026.h"
 
 namespace crypto {
@@ -38,7 +38,7 @@ const Configuration& ConfigV0() {
     ABSL_CHECK_OK(internal::AddStreamingAead2026(*config));
     ABSL_CHECK_OK(internal::AddHybridV0(*config));
     ABSL_CHECK_OK(internal::AddPrf2026(*config));
-    ABSL_CHECK_OK(internal::AddSignatureV0(*config));
+    ABSL_CHECK_OK(internal::AddSignature2026(*config));
     return config;
   }();
   return *instance;

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/internal/config_v0.h"
+#include "tink/signature/internal/config_2026.h"
 
 #include <memory>
 
@@ -137,7 +137,7 @@ NewCompositeMlDsaVerifyBoringSsl(const CompositeMlDsaPublicKey& key) {
 
 }  // namespace
 
-absl::Status AddSignatureV0(Configuration& config) {
+absl::Status AddSignature2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {

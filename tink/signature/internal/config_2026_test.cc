@@ -14,10 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/internal/config_v0.h"
+#include "tink/signature/internal/config_2026.h"
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -36,7 +37,7 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
-#include "tink/signature/internal/key_gen_config_v0.h"
+#include "tink/signature/internal/key_gen_config_2026.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
 #endif
@@ -51,7 +52,6 @@
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -68,7 +68,7 @@ using ::testing::Values;
 
 TEST(SignatureV0Test, PrimitiveWrappers) {
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
   absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
@@ -79,13 +79,13 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
 
 TEST(SignatureV0Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
@@ -108,9 +108,9 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(SignatureV0KeyTypesTest, GetPrimitiveSignVerify) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
@@ -150,9 +150,9 @@ MlDsaParameters GetMlDsaParameters(MlDsaParameters::Variant variant) {
 
 TEST(SignatureConfigV0Test, SlhDsaGetPrimitiveSignVerifyWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<SlhDsaParameters> parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
@@ -179,9 +179,9 @@ TEST(SignatureConfigV0Test, SlhDsaGetPrimitiveSignVerifyWorks) {
 
 TEST(SignatureConfigV0Test, SlhDsaVerifyWithWrongMessageFails) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<SlhDsaParameters> parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
@@ -208,9 +208,9 @@ TEST(SignatureConfigV0Test, SlhDsaVerifyWithWrongMessageFails) {
 
 TEST(SignatureConfigV0Test, MlDsaGetPrimitiveSignVerifyWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<MlDsaParameters> parameters =
       GetMlDsaParameters(MlDsaParameters::Variant::kTink);
@@ -237,9 +237,9 @@ TEST(SignatureConfigV0Test, MlDsaGetPrimitiveSignVerifyWorks) {
 
 TEST(SignatureConfigV0Test, MlDsaVerifyWithWrongMessageFails) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<MlDsaParameters> parameters =
       GetMlDsaParameters(MlDsaParameters::Variant::kTink);
@@ -267,9 +267,9 @@ TEST(SignatureConfigV0Test, MlDsaVerifyWithWrongMessageFails) {
 TEST(SignatureConfigV0Test,
      MultipleEntriesKeysetHandleSignVerifyWithSlhDsaPrimaryWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<SlhDsaParameters> slhdsa_parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
@@ -315,9 +315,9 @@ TEST(SignatureConfigV0Test,
 TEST(SignatureConfigV0Test,
      MultipleEntriesKeysetHandleSignVerifyWithMlDsaPrimaryWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<SlhDsaParameters> slhdsa_parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
@@ -369,7 +369,7 @@ using DeterministicSignatureTests =
 TEST_P(DeterministicSignatureTests, ComputeSignatureInTestVector) {
   const internal::SignatureTestVector& param = GetParam();
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -389,9 +389,9 @@ TEST_P(DeterministicSignatureTests, ComputeSignatureInTestVector) {
 TEST_P(DeterministicSignatureTests, VerifySignatureInTestVector) {
   const internal::SignatureTestVector& param = GetParam();
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -417,9 +417,9 @@ using RandomizedSignaturesTest =
 TEST_P(RandomizedSignaturesTest, ComputeSignatureInTestVector) {
   const internal::SignatureTestVector& param = GetParam();
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -446,9 +446,9 @@ TEST_P(RandomizedSignaturesTest, ComputeSignatureInTestVector) {
 TEST_P(RandomizedSignaturesTest, VerifySignatureInTestVector) {
   const internal::SignatureTestVector& param = GetParam();
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -470,9 +470,9 @@ TEST_P(RandomizedSignaturesTest, VerifyWrongMessageInTestVectorFails) {
   const internal::SignatureTestVector test_vector = GetParam();
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  ASSERT_THAT(AddSignature2026(config), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/internal/key_gen_config_v0.h"
+#include "tink/signature/internal/key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -48,7 +48,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
   absl::Status status = RegisterEcdsaProtoSerialization();
   if (!status.ok()) {
     return status;

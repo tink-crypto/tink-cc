@@ -34,9 +34,9 @@ cc_library(
 )
 
 cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
     include_prefix = "tink/signature/internal",
     deps = [
         ":ml_dsa_proto_serialization",
@@ -89,7 +89,6 @@ cc_library(
         "//tink/subtle:rsa_ssa_pkcs1_verify_boringssl",
         "//tink/subtle:rsa_ssa_pss_sign_boringssl",
         "//tink/subtle:rsa_ssa_pss_verify_boringssl",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -97,9 +96,9 @@ cc_library(
 )
 
 cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/signature/internal",
     deps = [
         ":composite_ml_dsa_key_creator",
@@ -125,7 +124,6 @@ cc_library(
         "//tink/signature:rsa_ssa_pss_sign_key_manager",
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
         "//tink/signature:slh_dsa_parameters",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
     ],
@@ -179,7 +177,7 @@ cc_test(
     srcs = ["config_fips_140_2_test.cc"],
     deps = [
         ":config_fips_140_2",
-        ":key_gen_config_v0",
+        ":key_gen_config_2026",
         "//proto:tink_cc_proto",
         "//tink:configuration",
         "//tink:key_gen_configuration",
@@ -195,9 +193,8 @@ cc_test(
         "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
         "//tink/signature:signature_key_templates",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )
@@ -252,11 +249,11 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
+    name = "config_2026_test",
+    srcs = ["config_2026_test.cc"],
     deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
+        ":config_2026",
+        ":key_gen_config_2026",
         "//proto:tink_cc_proto",
         "//tink:configuration",
         "//tink:key_gen_configuration",
@@ -282,7 +279,6 @@ cc_test(
         "//tink/signature/internal/testing:rsa_ssa_pkcs1_test_vectors",
         "//tink/signature/internal/testing:rsa_ssa_pss_test_vectors",
         "//tink/signature/internal/testing:signature_test_vector",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
@@ -584,10 +580,10 @@ cc_test(
 )
 
 cc_test(
-    name = "key_gen_config_v0_test",
-    srcs = ["key_gen_config_v0_test.cc"],
+    name = "key_gen_config_2026_test",
+    srcs = ["key_gen_config_2026_test.cc"],
     deps = [
-        ":key_gen_config_v0",
+        ":key_gen_config_2026",
         "//proto:tink_cc_proto",
         "//tink:key_gen_configuration",
         "//tink:key_status",
@@ -595,7 +591,6 @@ cc_test(
         "//tink/signature:composite_ml_dsa_parameters",
         "//tink/signature:ml_dsa_parameters",
         "//tink/signature:slh_dsa_parameters",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",

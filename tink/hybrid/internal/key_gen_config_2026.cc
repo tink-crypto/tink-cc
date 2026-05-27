@@ -14,9 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/hybrid/internal/key_gen_config_v0.h"
+#include "tink/hybrid/internal/key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -25,13 +26,12 @@
 #endif
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddHybridKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddHybridKeyGen2026(KeyGenConfiguration& config) {
 #ifdef OPENSSL_IS_BORINGSSL
   absl::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<HpkePrivateKeyManager>(),

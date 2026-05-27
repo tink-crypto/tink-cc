@@ -14,22 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_HYBRID_KEY_GEN_CONFIG_V0_H_
-#define TINK_HYBRID_KEY_GEN_CONFIG_V0_H_
+#ifndef TINK_HYBRID_INTERNAL_CONFIG_2026_H_
+#define TINK_HYBRID_INTERNAL_CONFIG_2026_H_
 
-#include "absl/base/macros.h"
-#include "tink/hybrid/key_gen_config_2026.h"
-#include "tink/key_gen_configuration.h"
+#include "absl/status/status.h"
+#include "tink/configuration.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-ABSL_DEPRECATE_AND_INLINE()
-inline const KeyGenConfiguration& KeyGenConfigHybridV0() {
-  return KeyGenConfigHybrid2026();
-}
+// Add recommended Hybrid Encryption primitive wrappers and key managers to
+// `config`, used to generate primitives.
+absl::Status AddHybrid2026(Configuration& config);
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_HYBRID_KEY_GEN_CONFIG_V0_H_
+#endif  // TINK_HYBRID_INTERNAL_CONFIG_2026_H_

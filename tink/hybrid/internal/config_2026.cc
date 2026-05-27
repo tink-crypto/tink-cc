@@ -14,10 +14,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/hybrid/internal/config_v0.h"
+#include "tink/hybrid/internal/config_2026.h"
+
 #include <memory>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
@@ -25,7 +28,6 @@
 #include "tink/hybrid/hybrid_encrypt_wrapper.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
-#include "tink/util/statusor.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_proto_serialization.h"
@@ -36,7 +38,6 @@
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
 #endif
 #include "tink/internal/configuration_impl.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -58,7 +59,7 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> NewHpkeEncrypt(
 
 }  // namespace
 
-absl::Status AddHybridV0(Configuration& config) {
+absl::Status AddHybrid2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<HybridEncryptWrapper>(), config);
   if (!status.ok()) {

@@ -20,7 +20,7 @@
 #include "tink/aead/internal/config_2026.h"
 #include "tink/configuration.h"
 #include "tink/daead/internal/config_2026.h"
-#include "tink/hybrid/internal/config_v0.h"
+#include "tink/hybrid/internal/config_2026.h"
 #include "tink/mac/internal/config_2026.h"
 #include "tink/prf/internal/config_2026.h"
 #include "tink/signature/internal/config_2026.h"
@@ -36,7 +36,7 @@ const Configuration& ConfigV0() {
     ABSL_CHECK_OK(internal::AddAead2026(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAead2026(*config));
     ABSL_CHECK_OK(internal::AddStreamingAead2026(*config));
-    ABSL_CHECK_OK(internal::AddHybridV0(*config));
+    ABSL_CHECK_OK(internal::AddHybrid2026(*config));
     ABSL_CHECK_OK(internal::AddPrf2026(*config));
     ABSL_CHECK_OK(internal::AddSignature2026(*config));
     return config;

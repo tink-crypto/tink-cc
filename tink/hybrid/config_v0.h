@@ -17,14 +17,16 @@
 #ifndef TINK_HYBRID_CONFIG_V0_H_
 #define TINK_HYBRID_CONFIG_V0_H_
 
+#include "absl/base/macros.h"
 #include "tink/configuration.h"
+#include "tink/hybrid/config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-// Configuration used to generate Hybrid Encryption primitives with recommended
-// key managers.
-const Configuration& ConfigHybridV0();
+ABSL_DEPRECATE_AND_INLINE() inline const Configuration& ConfigHybridV0() {
+  return ConfigHybrid2026();
+}
 
 }  // namespace tink
 }  // namespace crypto

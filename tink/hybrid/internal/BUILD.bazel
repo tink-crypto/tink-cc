@@ -240,9 +240,9 @@ cc_library(
 )
 
 cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
     include_prefix = "tink/hybrid/internal",
     tags = ["requires_boringcrypto_update"],
     deps = [
@@ -261,16 +261,16 @@ cc_library(
         "//tink/hybrid:hybrid_decrypt_wrapper",
         "//tink/hybrid:hybrid_encrypt_wrapper",
         "//tink/internal:configuration_impl",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 
 cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/hybrid/internal",
     tags = ["requires_boringcrypto_update"],
     deps = [
@@ -280,8 +280,8 @@ cc_library(
         "//tink/hybrid:ecies_aead_hkdf_private_key_manager",
         "//tink/hybrid:ecies_aead_hkdf_public_key_manager",
         "//tink/internal:key_gen_configuration_impl",
-        "//tink/util:status",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
     ],
 )
 
@@ -488,14 +488,13 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
+    name = "config_2026_test",
+    srcs = ["config_2026_test.cc"],
     tags = ["requires_boringcrypto_update"],
     deps = [
-        ":config_v0",
+        ":config_2026",
         ":hpke_private_key_manager",
-        ":hpke_test_util",
-        ":key_gen_config_v0",
+        ":key_gen_config_2026",
         "//proto:tink_cc_proto",
         "//tink:configuration",
         "//tink:hybrid_decrypt",
@@ -511,9 +510,8 @@ cc_test(
         "//tink/internal:key_gen_configuration_impl",
         "//tink/internal:key_type_info_store",
         "//tink/internal:keyset_wrapper_store",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )

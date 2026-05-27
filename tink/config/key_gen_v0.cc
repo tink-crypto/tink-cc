@@ -19,7 +19,7 @@
 #include "absl/log/absl_check.h"
 #include "tink/aead/internal/key_gen_config_2026.h"
 #include "tink/daead/internal/key_gen_config_2026.h"
-#include "tink/hybrid/internal/key_gen_config_v0.h"
+#include "tink/hybrid/internal/key_gen_config_2026.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/mac/internal/key_gen_config_2026.h"
 #include "tink/prf/internal/key_gen_config_2026.h"
@@ -36,7 +36,7 @@ const KeyGenConfiguration& KeyGenConfigV0() {
     ABSL_CHECK_OK(internal::AddAeadKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddStreamingAeadKeyGen2026(*config));
-    ABSL_CHECK_OK(internal::AddHybridKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddHybridKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddPrfKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddSignatureKeyGen2026(*config));
     return config;

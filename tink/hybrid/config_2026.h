@@ -14,22 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_HYBRID_INTERNAL_CONFIG_V0_H_
-#define TINK_HYBRID_INTERNAL_CONFIG_V0_H_
+#ifndef TINK_HYBRID_CONFIG_2026_H_
+#define TINK_HYBRID_CONFIG_2026_H_
 
 #include "tink/configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended Hybrid Encryption primitive wrappers and key managers to
-// `config`, used to generate primitives.
-absl::Status AddHybridV0(Configuration& config);
+// Configuration used to generate Hybrid Encryption primitives with 2026
+// recommended key managers.
+const Configuration& ConfigHybrid2026();
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_HYBRID_INTERNAL_CONFIG_V0_H_
+#endif  // TINK_HYBRID_CONFIG_2026_H_

@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/hybrid/key_gen_config_v0.h"
+#include "tink/hybrid/config_2026.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/hybrid/internal/key_gen_config_v0.h"
-#include "tink/key_gen_configuration.h"
+#include "tink/configuration.h"
+#include "tink/hybrid/internal/config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-const KeyGenConfiguration& KeyGenConfigHybridV0() {
-  static const KeyGenConfiguration* instance = [] {
-    static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(internal::AddHybridKeyGenV0(*config));
+const Configuration& ConfigHybrid2026() {
+  static const Configuration* instance = [] {
+    static Configuration* config = new Configuration();
+    ABSL_CHECK_OK(internal::AddHybrid2026(*config));
     return config;
   }();
   return *instance;

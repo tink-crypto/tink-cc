@@ -14,22 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_HYBRID_INTERNAL_KEY_GEN_CONFIG_V0_H_
-#define TINK_HYBRID_INTERNAL_KEY_GEN_CONFIG_V0_H_
+#ifndef TINK_HYBRID_KEY_GEN_CONFIG_2026_H_
+#define TINK_HYBRID_KEY_GEN_CONFIG_2026_H_
 
 #include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended Hybrid Encryption key managers to `config`, used to generate
-// keys.
-absl::Status AddHybridKeyGenV0(KeyGenConfiguration& config);
+// KeyGenConfiguration used to generate Hybrid Encryption keys with 2026
+// recommended key managers.
+const KeyGenConfiguration& KeyGenConfigHybrid2026();
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_HYBRID_INTERNAL_KEY_GEN_CONFIG_V0_H_
+#endif  // TINK_HYBRID_KEY_GEN_CONFIG_2026_H_

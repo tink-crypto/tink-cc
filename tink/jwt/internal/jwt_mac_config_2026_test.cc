@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_mac_config_v0.h"
+#include "tink/jwt/internal/jwt_mac_config_2026.h"
 
 #include <memory>
 #include <string>
@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
@@ -36,7 +37,7 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
-#include "tink/jwt/internal/jwt_mac_key_gen_config_v0.h"
+#include "tink/jwt/internal/jwt_mac_key_gen_config_2026.h"
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/jwt/jwt_key_templates.h"
@@ -49,7 +50,6 @@
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -61,26 +61,26 @@ using ::google::crypto::tink::KeyTemplate;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-TEST(JwtMacV0Test, PrimitiveWrappers) {
+TEST(JwtMac2026Test, PrimitiveWrappers) {
   Configuration config;
-  ASSERT_THAT(AddJwtMacV0(config), IsOk());
-  absl::StatusOr<const internal::KeysetWrapperStore *> store =
+  ASSERT_THAT(AddJwtMac2026(config), IsOk());
+  absl::StatusOr<const internal::KeysetWrapperStore*> store =
       internal::ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
   EXPECT_THAT((*store)->Get<JwtMac>(), IsOk());
 }
 
-TEST(JwtMacV0Test, KeyManagers) {
+TEST(JwtMac2026Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddJwtMacV0(config), IsOk());
-  absl::StatusOr<const internal::KeyTypeInfoStore *> store =
+  ASSERT_THAT(AddJwtMac2026(config), IsOk());
+  absl::StatusOr<const internal::KeyTypeInfoStore*> store =
       internal::ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddJwtMacKeyGenV0(key_gen_config), IsOk());
-  absl::StatusOr<const internal::KeyTypeInfoStore *> key_gen_store =
+  ASSERT_THAT(AddJwtMacKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<const internal::KeyTypeInfoStore*> key_gen_store =
       internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -89,17 +89,17 @@ TEST(JwtMacV0Test, KeyManagers) {
   }
 }
 
-using JwtMacV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using JwtMac2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
-INSTANTIATE_TEST_SUITE_P(JwtMacV0KeyTypesTestSuite, JwtMacV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(JwtMac2026KeyTypesTestSuite, JwtMac2026KeyTypesTest,
                          Values(RawJwtHs256Template(), RawJwtHs384Template(),
                                 RawJwtHs512Template()));
 
-TEST_P(JwtMacV0KeyTypesTest, GetPrimitive) {
+TEST_P(JwtMac2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddJwtMacKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddJwtMacKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddJwtMacV0(config), IsOk());
+  ASSERT_THAT(AddJwtMac2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
@@ -261,9 +261,9 @@ using JwtMacTest = TestWithParam<JwtMacTestParam>;
 
 TEST_P(JwtMacTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddJwtMacKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddJwtMacKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddJwtMacV0(config), IsOk());
+  ASSERT_THAT(AddJwtMac2026(config), IsOk());
 
   JwtMacTestParam test_vector = GetParam();
 

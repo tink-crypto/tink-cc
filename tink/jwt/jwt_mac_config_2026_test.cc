@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/jwt_mac_config_v0.h"
+#include "tink/jwt/jwt_mac_config_2026.h"
 
 #include <memory>
 #include <string>
@@ -27,11 +27,10 @@
 #include "absl/time/time.h"
 #include "tink/jwt/jwt_key_templates.h"
 #include "tink/jwt/jwt_mac.h"
-#include "tink/jwt/jwt_mac_key_gen_config_v0.h"
+#include "tink/jwt/jwt_mac_key_gen_config_2026.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -42,19 +41,19 @@ using ::google::crypto::tink::KeyTemplate;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-using JwtMacV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using JwtMac2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
-INSTANTIATE_TEST_SUITE_P(JwtMacV0KeyTypesTestSuite, JwtMacV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(JwtMac2026KeyTypesTestSuite, JwtMac2026KeyTypesTest,
                          Values(RawJwtHs256Template(), RawJwtHs384Template(),
                                 RawJwtHs512Template()));
 
-TEST_P(JwtMacV0KeyTypesTest, GetPrimitive) {
+TEST_P(JwtMac2026KeyTypesTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigJwtMacV0());
+      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigJwtMac2026());
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
-      (*handle)->GetPrimitive<JwtMac>(ConfigJwtMacV0());
+      (*handle)->GetPrimitive<JwtMac>(ConfigJwtMac2026());
   ASSERT_THAT(jwt_mac, IsOk());
 
   absl::Time now = absl::Now();

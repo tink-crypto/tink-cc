@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,14 +17,16 @@
 #ifndef TINK_JWT_JWT_MAC_CONFIG_V0_H_
 #define TINK_JWT_JWT_MAC_CONFIG_V0_H_
 
+#include "absl/base/attributes.h"
 #include "tink/configuration.h"
+#include "tink/jwt/jwt_mac_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-// Configuration used to generate JWT MAC primitives with recommended key
-// managers.
-const Configuration& ConfigJwtMacV0();
+// Deprecated. Use ConfigJwtMac2026() instead.
+ABSL_DEPRECATED("Use ConfigJwtMac2026() instead.")
+inline const Configuration& ConfigJwtMacV0() { return ConfigJwtMac2026(); }
 
 }  // namespace tink
 }  // namespace crypto

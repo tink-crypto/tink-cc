@@ -993,79 +993,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME jwt_mac_config_v0
-  SRCS
-    jwt_mac_config_v0.cc
-    jwt_mac_config_v0.h
-  DEPS
-    tink::jwt::internal::jwt_hmac_key_manager
-    tink::jwt::internal::jwt_mac_impl
-    tink::jwt::internal::jwt_mac_internal
-    tink::jwt::internal::jwt_mac_wrapper
-    absl::memory
-    absl::status
-    absl::statusor
-    tink::core::configuration
-    tink::core::mac
-    tink::core::partial_key_access
-    tink::internal::configuration_impl
-    tink::internal::internal_insecure_secret_key_access
-    tink::jwt::jwt_hmac_key
-    tink::jwt::jwt_hmac_parameters
-    tink::jwt::jwt_hmac_proto_serialization
-    tink::subtle::common_enums
-    tink::subtle::hmac_boringssl
-)
-
-tink_cc_library(
-  NAME jwt_mac_key_gen_config_v0
-  SRCS
-    jwt_mac_key_gen_config_v0.cc
-    jwt_mac_key_gen_config_v0.h
-  DEPS
-    tink::jwt::internal::jwt_hmac_key_manager
-    absl::memory
-    absl::status
-    tink::core::key_gen_configuration
-    tink::internal::key_gen_configuration_impl
-)
-
-tink_cc_test(
-  NAME jwt_mac_config_v0_test
-  SRCS
-    jwt_mac_config_v0_test.cc
-  DEPS
-    tink::jwt::internal::jwt_hmac_key_manager
-    tink::jwt::internal::jwt_mac_config_v0
-    tink::jwt::internal::jwt_mac_key_gen_config_v0
-    gmock
-    absl::absl_check
-    absl::status_matchers
-    absl::strings
-    absl::string_view
-    absl::time
-    tink::core::configuration
-    tink::core::insecure_secret_key_access
-    tink::core::key
-    tink::core::key_gen_configuration
-    tink::core::key_status
-    tink::core::keyset_handle
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::internal::configuration_impl
-    tink::internal::key_gen_configuration_impl
-    tink::internal::key_type_info_store
-    tink::internal::keyset_wrapper_store
-    tink::jwt::jwt_hmac_key
-    tink::jwt::jwt_hmac_parameters
-    tink::jwt::jwt_key_templates
-    tink::jwt::jwt_mac
-    tink::jwt::jwt_validator
-    tink::jwt::raw_jwt
-    tink::util::test_matchers
-)
-
-tink_cc_library(
   NAME jwt_rsa_ssa_pkcs1_proto_serialization_impl
   SRCS
     jwt_rsa_ssa_pkcs1_proto_serialization_impl.cc
@@ -1356,6 +1283,79 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
+)
+
+tink_cc_library(
+  NAME jwt_mac_config_2026
+  SRCS
+    jwt_mac_config_2026.cc
+    jwt_mac_config_2026.h
+  DEPS
+    tink::jwt::internal::jwt_hmac_key_manager
+    tink::jwt::internal::jwt_mac_impl
+    tink::jwt::internal::jwt_mac_internal
+    tink::jwt::internal::jwt_mac_wrapper
+    absl::memory
+    absl::status
+    absl::statusor
+    tink::core::configuration
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::internal::configuration_impl
+    tink::internal::internal_insecure_secret_key_access
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+    tink::jwt::jwt_hmac_proto_serialization
+    tink::subtle::common_enums
+    tink::subtle::hmac_boringssl
+)
+
+tink_cc_test(
+  NAME jwt_mac_config_2026_test
+  SRCS
+    jwt_mac_config_2026_test.cc
+  DEPS
+    tink::jwt::internal::jwt_hmac_key_manager
+    tink::jwt::internal::jwt_mac_config_2026
+    tink::jwt::internal::jwt_mac_key_gen_config_2026
+    gmock
+    absl::absl_check
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::time
+    tink::core::configuration
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+    tink::internal::keyset_wrapper_store
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+    tink::jwt::jwt_key_templates
+    tink::jwt::jwt_mac
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+)
+
+tink_cc_library(
+  NAME jwt_mac_key_gen_config_2026
+  SRCS
+    jwt_mac_key_gen_config_2026.cc
+    jwt_mac_key_gen_config_2026.h
+  DEPS
+    tink::jwt::internal::jwt_hmac_key_manager
+    absl::memory
+    absl::status
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
 )
 
 tink_cc_library(

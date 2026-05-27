@@ -1,4 +1,4 @@
-// Copyright 2026 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_JWT_JWT_MAC_KEY_GEN_CONFIG_V0_H_
-#define TINK_JWT_JWT_MAC_KEY_GEN_CONFIG_V0_H_
+#include "tink/jwt/internal/jwt_mac_key_gen_config_2026.h"
 
-#include "absl/base/attributes.h"
-#include "tink/jwt/jwt_mac_key_gen_config_2026.h"
+#include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/jwt/internal/jwt_hmac_key_manager.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
+namespace jwt_internal {
 
-// Deprecated. Use KeyGenConfigJwtMac2026() instead.
-ABSL_DEPRECATED("Use KeyGenConfigJwtMac2026() instead.")
-inline const KeyGenConfiguration& KeyGenConfigJwtMacV0() {
-  return KeyGenConfigJwtMac2026();
+absl::Status AddJwtMacKeyGen2026(KeyGenConfiguration& config) {
+  return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+      absl::make_unique<JwtHmacKeyManager>(), config);
 }
 
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_JWT_JWT_MAC_KEY_GEN_CONFIG_V0_H_

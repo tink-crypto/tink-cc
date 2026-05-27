@@ -14,21 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_JWT_INTERNAL_JWT_MAC_KEY_GEN_CONFIG_V0_H_
-#define TINK_JWT_INTERNAL_JWT_MAC_KEY_GEN_CONFIG_V0_H_
+#ifndef TINK_JWT_JWT_MAC_CONFIG_2026_H_
+#define TINK_JWT_JWT_MAC_CONFIG_2026_H_
 
-#include "absl/status/status.h"
-#include "tink/key_gen_configuration.h"
+#include "tink/configuration.h"
 
 namespace crypto {
 namespace tink {
-namespace jwt_internal {
 
-// Add recommended JWT MAC key managers to `config`, used to generate keys.
-absl::Status AddJwtMacKeyGenV0(KeyGenConfiguration& config);
+// Configuration used to generate JWT MAC primitives with recommended key
+// managers.
+const Configuration& ConfigJwtMac2026();
 
-}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_JWT_INTERNAL_JWT_MAC_KEY_GEN_CONFIG_V0_H_
+#endif  // TINK_JWT_JWT_MAC_CONFIG_2026_H_

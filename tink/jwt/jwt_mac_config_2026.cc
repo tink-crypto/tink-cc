@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/jwt_mac_config_v0.h"
+#include "tink/jwt/jwt_mac_config_2026.h"
 
 #include "absl/log/absl_check.h"
 #include "tink/configuration.h"
-#include "tink/jwt/internal/jwt_mac_config_v0.h"
+#include "tink/jwt/internal/jwt_mac_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-const Configuration& ConfigJwtMacV0() {
+const Configuration& ConfigJwtMac2026() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(jwt_internal::AddJwtMacV0(*config));
+    ABSL_CHECK_OK(jwt_internal::AddJwtMac2026(*config));
     return config;
   }();
   return *instance;

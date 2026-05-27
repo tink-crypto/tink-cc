@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_mac_config_v0.h"
+#include "tink/jwt/internal/jwt_mac_config_2026.h"
 
 #include <memory>
 #include <string>
@@ -125,7 +125,7 @@ absl::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwtHmacInternal(
 
 }  // namespace
 
-absl::Status AddJwtMacV0(Configuration& config) {
+absl::Status AddJwtMac2026(Configuration& config) {
   absl::Status status = RegisterJwtHmacProtoSerialization();
   if (!status.ok()) {
     return status;

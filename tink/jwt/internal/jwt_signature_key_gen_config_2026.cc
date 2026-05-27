@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_signature_key_gen_config_v0.h"
+#include "tink/jwt/internal/jwt_signature_key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -31,7 +31,7 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-absl::Status AddJwtSignatureKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddJwtSignatureKeyGen2026(KeyGenConfiguration& config) {
   absl::Status status =
       internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
           absl::make_unique<JwtEcdsaSignKeyManager>(),

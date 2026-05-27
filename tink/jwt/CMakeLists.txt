@@ -508,23 +508,21 @@ tink_cc_library(
 tink_cc_library(
   NAME jwt_signature_config_v0
   SRCS
-    jwt_signature_config_v0.cc
     jwt_signature_config_v0.h
   DEPS
-    absl::absl_check
+    tink::jwt::jwt_signature_config_2026
+    absl::core_headers
     tink::core::configuration
-    tink::jwt::internal::jwt_signature_config_v0
 )
 
 tink_cc_library(
   NAME jwt_signature_key_gen_config_v0
   SRCS
-    jwt_signature_key_gen_config_v0.cc
     jwt_signature_key_gen_config_v0.h
   DEPS
-    absl::absl_check
+    tink::jwt::jwt_signature_key_gen_config_2026
+    absl::core_headers
     tink::core::key_gen_configuration
-    tink::jwt::internal::jwt_signature_key_gen_config_v0
 )
 
 # tests
@@ -1104,25 +1102,6 @@ tink_cc_test(
     tink::util::test_matchers
 )
 
-tink_cc_test(
-  NAME jwt_signature_config_v0_test
-  SRCS
-    jwt_signature_config_v0_test.cc
-  DEPS
-    tink::jwt::jwt_key_templates
-    tink::jwt::jwt_public_key_sign
-    tink::jwt::jwt_public_key_verify
-    tink::jwt::jwt_signature_config_v0
-    tink::jwt::jwt_signature_key_gen_config_v0
-    tink::jwt::jwt_validator
-    tink::jwt::raw_jwt
-    gmock
-    absl::status_matchers
-    absl::statusor
-    tink::core::keyset_handle
-    tink::util::test_matchers
-)
-
 tink_cc_library(
   NAME jwt_ml_dsa_parameters
   SRCS
@@ -1236,4 +1215,45 @@ tink_cc_test(
     tink::util::test_util
   TAGS
     exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME jwt_signature_config_2026
+  SRCS
+    jwt_signature_config_2026.cc
+    jwt_signature_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::configuration
+    tink::jwt::internal::jwt_signature_config_2026
+)
+
+tink_cc_test(
+  NAME jwt_signature_config_2026_test
+  SRCS
+    jwt_signature_config_2026_test.cc
+  DEPS
+    tink::jwt::jwt_key_templates
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_signature_config_2026
+    tink::jwt::jwt_signature_key_gen_config_2026
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::keyset_handle
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME jwt_signature_key_gen_config_2026
+  SRCS
+    jwt_signature_key_gen_config_2026.cc
+    jwt_signature_key_gen_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::key_gen_configuration
+    tink::jwt::internal::jwt_signature_key_gen_config_2026
 )

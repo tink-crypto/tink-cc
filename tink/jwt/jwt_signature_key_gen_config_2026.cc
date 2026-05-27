@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/jwt_signature_key_gen_config_v0.h"
+#include "tink/jwt/jwt_signature_key_gen_config_2026.h"
 
 #include "absl/log/absl_check.h"
-#include "tink/jwt/internal/jwt_signature_key_gen_config_v0.h"
+#include "tink/jwt/internal/jwt_signature_key_gen_config_2026.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
 
-const KeyGenConfiguration& KeyGenConfigJwtSignatureV0() {
+const KeyGenConfiguration& KeyGenConfigJwtSignature2026() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    ABSL_CHECK_OK(jwt_internal::AddJwtSignatureKeyGenV0(*config));
+    ABSL_CHECK_OK(jwt_internal::AddJwtSignatureKeyGen2026(*config));
     return config;
   }();
   return *instance;

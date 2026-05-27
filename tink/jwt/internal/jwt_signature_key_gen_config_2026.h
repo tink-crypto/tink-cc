@@ -14,23 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/jwt_signature_config_v0.h"
+#ifndef TINK_JWT_INTERNAL_JWT_SIGNATURE_KEY_GEN_CONFIG_2026_H_
+#define TINK_JWT_INTERNAL_JWT_SIGNATURE_KEY_GEN_CONFIG_2026_H_
 
-#include "absl/log/absl_check.h"
-#include "tink/configuration.h"
-#include "tink/jwt/internal/jwt_signature_config_v0.h"
+#include "absl/status/status.h"
+#include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
+namespace jwt_internal {
 
-const Configuration& ConfigJwtSignatureV0() {
-  static const Configuration* instance = [] {
-    static Configuration* config = new Configuration();
-    ABSL_CHECK_OK(jwt_internal::AddJwtSignatureV0(*config));
-    return config;
-  }();
-  return *instance;
-}
+// Add recommended JWT Signature key managers to `config`, used to generate
+// keys.
+absl::Status AddJwtSignatureKeyGen2026(KeyGenConfiguration& config);
 
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto
+
+#endif  // TINK_JWT_INTERNAL_JWT_SIGNATURE_KEY_GEN_CONFIG_2026_H_

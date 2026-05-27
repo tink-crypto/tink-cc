@@ -1,4 +1,4 @@
-// Copyright 2026 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_JWT_JWT_SIGNATURE_CONFIG_V0_H_
-#define TINK_JWT_JWT_SIGNATURE_CONFIG_V0_H_
+#ifndef TINK_JWT_JWT_SIGNATURE_CONFIG_2026_H_
+#define TINK_JWT_JWT_SIGNATURE_CONFIG_2026_H_
 
-#include "absl/base/macros.h"
 #include "tink/configuration.h"
-#include "tink/jwt/jwt_signature_config_2026.h"
 
 namespace crypto {
 namespace tink {
 
-// Deprecated. Use ConfigJwtSignature2026() instead.
-ABSL_DEPRECATED("Use ConfigJwtSignature2026() instead.")
-inline const Configuration& ConfigJwtSignatureV0() {
-  return ConfigJwtSignature2026();
-}
+// Configuration used to generate JWT Signature primitives with recommended key
+// managers.
+const Configuration& ConfigJwtSignature2026();
 
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_JWT_JWT_SIGNATURE_CONFIG_V0_H_
+#endif  // TINK_JWT_JWT_SIGNATURE_CONFIG_2026_H_

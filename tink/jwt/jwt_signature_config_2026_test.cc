@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/jwt_signature_config_v0.h"
+#include "tink/jwt/jwt_signature_config_2026.h"
 
 #include <memory>
 #include <string>
@@ -26,7 +26,7 @@
 #include "tink/jwt/jwt_key_templates.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_public_key_verify.h"
-#include "tink/jwt/jwt_signature_key_gen_config_v0.h"
+#include "tink/jwt/jwt_signature_key_gen_config_2026.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/keyset_handle.h"
@@ -41,28 +41,28 @@ using ::google::crypto::tink::KeyTemplate;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-using JwtSignatureV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using JwtSignature2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
-INSTANTIATE_TEST_SUITE_P(JwtSignatureV0KeyTypesTestSuite,
-                         JwtSignatureV0KeyTypesTest,
+INSTANTIATE_TEST_SUITE_P(JwtSignature2026KeyTypesTestSuite,
+                         JwtSignature2026KeyTypesTest,
                          Values(RawJwtEs256Template(),
                                 RawJwtRs256_2048_F4_Template(),
                                 RawJwtPs256_2048_F4_Template()));
 
-TEST_P(JwtSignatureV0KeyTypesTest, GetPrimitive) {
+TEST_P(JwtSignature2026KeyTypesTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigJwtSignatureV0());
+      KeysetHandle::GenerateNew(GetParam(), KeyGenConfigJwtSignature2026());
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(KeyGenConfigJwtSignatureV0());
+      (*handle)->GetPublicKeysetHandle(KeyGenConfigJwtSignature2026());
   ASSERT_THAT(public_handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
-      (*handle)->GetPrimitive<JwtPublicKeySign>(ConfigJwtSignatureV0());
+      (*handle)->GetPrimitive<JwtPublicKeySign>(ConfigJwtSignature2026());
   ASSERT_THAT(sign, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
       (*public_handle)
-          ->GetPrimitive<JwtPublicKeyVerify>(ConfigJwtSignatureV0());
+          ->GetPrimitive<JwtPublicKeyVerify>(ConfigJwtSignature2026());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =

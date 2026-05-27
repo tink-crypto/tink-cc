@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_signature_config_v0.h"
+#include "tink/jwt/internal/jwt_signature_config_2026.h"
 
 #include <cstddef>
 #include <memory>
@@ -48,7 +48,7 @@
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
-#include "tink/jwt/internal/jwt_signature_key_gen_config_v0.h"
+#include "tink/jwt/internal/jwt_signature_key_gen_config_2026.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_proto_serialization.h"
@@ -84,9 +84,9 @@ using ::google::crypto::tink::KeyTemplate;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-TEST(JwtSignatureV0Test, PrimitiveWrappers) {
+TEST(JwtSignature2026Test, PrimitiveWrappers) {
   Configuration config;
-  ASSERT_THAT(AddJwtSignatureV0(config), IsOk());
+  ASSERT_THAT(AddJwtSignature2026(config), IsOk());
   absl::StatusOr<const internal::KeysetWrapperStore*> store =
       internal::ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
@@ -95,15 +95,15 @@ TEST(JwtSignatureV0Test, PrimitiveWrappers) {
   EXPECT_THAT((*store)->Get<JwtPublicKeyVerify>(), IsOk());
 }
 
-TEST(JwtSignatureV0Test, KeyManagers) {
+TEST(JwtSignature2026Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddJwtSignatureV0(config), IsOk());
+  ASSERT_THAT(AddJwtSignature2026(config), IsOk());
   absl::StatusOr<const internal::KeyTypeInfoStore*> store =
       internal::ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddJwtSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
   absl::StatusOr<const internal::KeyTypeInfoStore*> key_gen_store =
       internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
@@ -119,19 +119,19 @@ TEST(JwtSignatureV0Test, KeyManagers) {
   }
 }
 
-using JwtSignatureV0KeyTypesTest = TestWithParam<KeyTemplate>;
+using JwtSignature2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
 INSTANTIATE_TEST_SUITE_P(
-    JwtSignatureV0KeyTypesTestSuite, JwtSignatureV0KeyTypesTest,
+    JwtSignature2026KeyTypesTestSuite, JwtSignature2026KeyTypesTest,
     Values(RawJwtEs256Template(), JwtEs256Template(),
            RawJwtRs256_2048_F4_Template(), JwtRs256_2048_F4_Template(),
            RawJwtPs256_2048_F4_Template(), JwtPs256_2048_F4_Template()));
 
-TEST_P(JwtSignatureV0KeyTypesTest, GetPrimitive) {
+TEST_P(JwtSignature2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddJwtSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddJwtSignatureV0(config), IsOk());
+  ASSERT_THAT(AddJwtSignature2026(config), IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
@@ -172,9 +172,9 @@ using JwtDeterministicSignatureTest = TestWithParam<JwtSignatureTestVector>;
 
 TEST_P(JwtDeterministicSignatureTest, SignAndVerify) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddJwtSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
-  ASSERT_THAT(AddJwtSignatureV0(config), IsOk());
+  ASSERT_THAT(AddJwtSignature2026(config), IsOk());
 
   JwtSignatureTestVector test_vector = GetParam();
 
@@ -440,20 +440,20 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetPublicKey(*std::move(public_key))
             .SetPrivateExponent(
                 RestrictedData(Base64WebSafeDecode(kD2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetPrimeP(RestrictedData(Base64WebSafeDecode(kP2048Base64),
-                                            InsecureSecretKeyAccess::Get()))
+                                      InsecureSecretKeyAccess::Get()))
             .SetPrimeQ(RestrictedData(Base64WebSafeDecode(kQ2048Base64),
-                                            InsecureSecretKeyAccess::Get()))
+                                      InsecureSecretKeyAccess::Get()))
             .SetPrimeExponentP(
                 RestrictedData(Base64WebSafeDecode(kDp2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetPrimeExponentQ(
                 RestrictedData(Base64WebSafeDecode(kDq2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetCrtCoefficient(
                 RestrictedData(Base64WebSafeDecode(kQInv2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
     ABSL_CHECK_OK(private_key);
 
@@ -506,20 +506,20 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetPublicKey(*std::move(public_key))
             .SetPrivateExponent(
                 RestrictedData(Base64WebSafeDecode(kD2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetPrimeP(RestrictedData(Base64WebSafeDecode(kP2048Base64),
-                                            InsecureSecretKeyAccess::Get()))
+                                      InsecureSecretKeyAccess::Get()))
             .SetPrimeQ(RestrictedData(Base64WebSafeDecode(kQ2048Base64),
-                                            InsecureSecretKeyAccess::Get()))
+                                      InsecureSecretKeyAccess::Get()))
             .SetPrimeExponentP(
                 RestrictedData(Base64WebSafeDecode(kDp2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetPrimeExponentQ(
                 RestrictedData(Base64WebSafeDecode(kDq2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetCrtCoefficient(
                 RestrictedData(Base64WebSafeDecode(kQInv2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
     ABSL_CHECK_OK(private_key);
 
@@ -568,20 +568,20 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetPublicKey(*std::move(public_key))
             .SetPrivateExponent(
                 RestrictedData(Base64WebSafeDecode(kD2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetPrimeP(RestrictedData(Base64WebSafeDecode(kP2048Base64),
-                                            InsecureSecretKeyAccess::Get()))
+                                      InsecureSecretKeyAccess::Get()))
             .SetPrimeQ(RestrictedData(Base64WebSafeDecode(kQ2048Base64),
-                                            InsecureSecretKeyAccess::Get()))
+                                      InsecureSecretKeyAccess::Get()))
             .SetPrimeExponentP(
                 RestrictedData(Base64WebSafeDecode(kDp2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetPrimeExponentQ(
                 RestrictedData(Base64WebSafeDecode(kDq2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .SetCrtCoefficient(
                 RestrictedData(Base64WebSafeDecode(kQInv2048Base64),
-                                     InsecureSecretKeyAccess::Get()))
+                               InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
     ABSL_CHECK_OK(private_key);
 

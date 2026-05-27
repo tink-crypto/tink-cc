@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_signature_config_v0.h"
+#include "tink/jwt/internal/jwt_signature_config_2026.h"
 
 #include <memory>
 #include <string>
@@ -639,7 +639,7 @@ NewJwtRsaSsaPssVerifyInternal(
 
 }  // namespace
 
-absl::Status AddJwtSignatureV0(Configuration& config) {
+absl::Status AddJwtSignature2026(Configuration& config) {
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<JwtPublicKeySignWrapper>(), config);
   if (!status.ok()) {

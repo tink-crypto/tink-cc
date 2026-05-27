@@ -1276,3 +1276,45 @@ tink_cc_library(
     tink::core::key_gen_configuration
     tink::jwt::internal::jwt_signature_key_gen_config_2026
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_proto_serialization
+  SRCS
+    jwt_ml_dsa_proto_serialization.h
+  DEPS
+    absl::status
+    tink::internal::mutable_serialization_registry
+    tink::jwt::internal::jwt_ml_dsa_proto_serialization_impl
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_proto_serialization_test
+  SRCS
+    jwt_ml_dsa_proto_serialization_test.cc
+  DEPS
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_proto_serialization
+    tink::jwt::jwt_ml_dsa_public_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::tink_proto_structs
+    tink::util::test_util
+    tink::proto::common_cc_proto
+    tink::proto::jwt_ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)

@@ -40,7 +40,7 @@ using ::absl_testing::IsOkAndHolds;
 TEST(ConfigV0Test, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(DeterministicAeadKeyTemplates::Aes256Siv(),
-                                KeyGenConfigDeterministicAeadV0());
+                                KeyGenConfigDeterministicAead2026());
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =

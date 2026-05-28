@@ -1243,9 +1243,9 @@ cc_test(
 )
 
 cc_library(
-    name = "kms_aead_config_v0",
-    srcs = ["kms_aead_config_v0.cc"],
-    hdrs = ["kms_aead_config_v0.h"],
+    name = "kms_aead_config_2026",
+    srcs = ["kms_aead_config_2026.cc"],
+    hdrs = ["kms_aead_config_2026.h"],
     include_prefix = "tink/aead/internal",
     deps = [
         "//tink:configuration",
@@ -1258,9 +1258,9 @@ cc_library(
 )
 
 cc_library(
-    name = "kms_aead_key_gen_config_v0",
-    srcs = ["kms_aead_key_gen_config_v0.cc"],
-    hdrs = ["kms_aead_key_gen_config_v0.h"],
+    name = "kms_aead_key_gen_config_2026",
+    srcs = ["kms_aead_key_gen_config_2026.cc"],
+    hdrs = ["kms_aead_key_gen_config_2026.h"],
     include_prefix = "tink/aead/internal",
     deps = [
         "//tink:key_gen_configuration",
@@ -1273,11 +1273,11 @@ cc_library(
 )
 
 cc_test(
-    name = "kms_aead_config_v0_test",
-    srcs = ["kms_aead_config_v0_test.cc"],
+    name = "kms_aead_config_2026_test",
+    srcs = ["kms_aead_config_2026_test.cc"],
     deps = [
-        ":kms_aead_config_v0",
-        ":kms_aead_key_gen_config_v0",
+        ":kms_aead_config_2026",
+        ":kms_aead_key_gen_config_2026",
         "//tink:configuration",
         "//tink:key_gen_configuration",
         "//tink/aead:kms_aead_key_manager",
@@ -1292,10 +1292,10 @@ cc_test(
 )
 
 cc_test(
-    name = "kms_aead_key_gen_config_v0_test",
-    srcs = ["kms_aead_key_gen_config_v0_test.cc"],
+    name = "kms_aead_key_gen_config_2026_test",
+    srcs = ["kms_aead_key_gen_config_2026_test.cc"],
     deps = [
-        ":kms_aead_key_gen_config_v0",
+        ":kms_aead_key_gen_config_2026",
         "//tink:key_gen_configuration",
         "//tink/aead:kms_aead_key_manager",
         "//tink/aead:kms_envelope_aead_key_manager",

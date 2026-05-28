@@ -14,22 +14,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_INTERNAL_KMS_AEAD_CONFIG_V0_H_
-#define TINK_AEAD_INTERNAL_KMS_AEAD_CONFIG_V0_H_
+#include "tink/aead/kms_aead_config_2026.h"
 
-#include "absl/status/status.h"
+#include "absl/log/absl_check.h"
+#include "tink/aead/internal/kms_aead_config_2026.h"
 #include "tink/configuration.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
 
-// Add recommended KMS AEAD key managers to `config`, used to generate
-// primitives.
-absl::Status AddKmsAeadV0(Configuration& config);
+const Configuration& KmsAeadConfig2026() {
+  static const Configuration* instance = [] {
+    static Configuration* config = new Configuration();
+    ABSL_CHECK_OK(internal::AddKmsAead2026(*config));
+    return config;
+  }();
+  return *instance;
+}
 
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_AEAD_INTERNAL_KMS_AEAD_CONFIG_V0_H_

@@ -1141,10 +1141,10 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME kms_aead_config_v0
+  NAME kms_aead_config_2026
   SRCS
-    kms_aead_config_v0.cc
-    kms_aead_config_v0.h
+    kms_aead_config_2026.cc
+    kms_aead_config_2026.h
   DEPS
     absl::memory
     absl::status
@@ -1154,27 +1154,13 @@ tink_cc_library(
     tink::internal::configuration_impl
 )
 
-tink_cc_library(
-  NAME kms_aead_key_gen_config_v0
-  SRCS
-    kms_aead_key_gen_config_v0.cc
-    kms_aead_key_gen_config_v0.h
-  DEPS
-    absl::memory
-    absl::status
-    tink::core::key_gen_configuration
-    tink::aead::kms_aead_key_manager
-    tink::aead::kms_envelope_aead_key_manager
-    tink::internal::key_gen_configuration_impl
-)
-
 tink_cc_test(
-  NAME kms_aead_config_v0_test
+  NAME kms_aead_config_2026_test
   SRCS
-    kms_aead_config_v0_test.cc
+    kms_aead_config_2026_test.cc
   DEPS
-    tink::aead::internal::kms_aead_config_v0
-    tink::aead::internal::kms_aead_key_gen_config_v0
+    tink::aead::internal::kms_aead_config_2026
+    tink::aead::internal::kms_aead_key_gen_config_2026
     gmock
     absl::status_matchers
     absl::statusor
@@ -1187,12 +1173,26 @@ tink_cc_test(
     tink::internal::key_type_info_store
 )
 
-tink_cc_test(
-  NAME kms_aead_key_gen_config_v0_test
+tink_cc_library(
+  NAME kms_aead_key_gen_config_2026
   SRCS
-    kms_aead_key_gen_config_v0_test.cc
+    kms_aead_key_gen_config_2026.cc
+    kms_aead_key_gen_config_2026.h
   DEPS
-    tink::aead::internal::kms_aead_key_gen_config_v0
+    absl::memory
+    absl::status
+    tink::core::key_gen_configuration
+    tink::aead::kms_aead_key_manager
+    tink::aead::kms_envelope_aead_key_manager
+    tink::internal::key_gen_configuration_impl
+)
+
+tink_cc_test(
+  NAME kms_aead_key_gen_config_2026_test
+  SRCS
+    kms_aead_key_gen_config_2026_test.cc
+  DEPS
+    tink::aead::internal::kms_aead_key_gen_config_2026
     gmock
     absl::status_matchers
     absl::statusor

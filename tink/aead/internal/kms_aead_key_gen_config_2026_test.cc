@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/internal/kms_aead_key_gen_config_v0.h"
+#include "tink/aead/internal/kms_aead_key_gen_config_2026.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -35,7 +35,7 @@ using ::absl_testing::IsOk;
 
 TEST(KmsAeadKeyGenV0Test, KeyManagers) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddKmsAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddKmsAeadKeyGen2026(key_gen_config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());

@@ -1832,6 +1832,28 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME kms_aead_config_2026
+  SRCS
+    kms_aead_config_2026.cc
+    kms_aead_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::configuration
+    tink::aead::internal::kms_aead_config_2026
+)
+
+tink_cc_library(
+  NAME kms_aead_key_gen_config_2026
+  SRCS
+    kms_aead_key_gen_config_2026.cc
+    kms_aead_key_gen_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::key_gen_configuration
+    tink::aead::internal::kms_aead_key_gen_config_2026
+)
+
+tink_cc_library(
   NAME config_2026
   SRCS
     config_2026.cc

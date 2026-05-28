@@ -57,6 +57,32 @@ cc_library(
 )
 
 cc_library(
+    name = "kms_aead_config_2026",
+    srcs = ["kms_aead_config_2026.cc"],
+    hdrs = ["kms_aead_config_2026.h"],
+    include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:configuration",
+        "//tink/aead/internal:kms_aead_config_2026",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_library(
+    name = "kms_aead_key_gen_config_2026",
+    srcs = ["kms_aead_key_gen_config_2026.cc"],
+    hdrs = ["kms_aead_key_gen_config_2026.h"],
+    include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/aead/internal:kms_aead_key_gen_config_2026",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_library(
     name = "aead_config",
     srcs = ["aead_config.cc"],
     hdrs = ["aead_config.h"],

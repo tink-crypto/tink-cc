@@ -14,26 +14,26 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/internal/kms_aead_config_v0.h"
+#include "tink/aead/internal/kms_aead_key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
-#include "tink/configuration.h"
-#include "tink/internal/configuration_impl.h"
+#include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::Status AddKmsAeadV0(Configuration& config) {
-  absl::Status status = ConfigurationImpl::AddKeyTypeManager(
+absl::Status AddKmsAeadKeyGen2026(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<KmsAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
-  return ConfigurationImpl::AddKeyTypeManager(
+  return KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<KmsEnvelopeAeadKeyManager>(), config);
 }
 

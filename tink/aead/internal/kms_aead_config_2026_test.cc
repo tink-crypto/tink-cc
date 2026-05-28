@@ -14,13 +14,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/internal/kms_aead_config_v0.h"
+#include "tink/aead/internal/kms_aead_config_2026.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "tink/aead/internal/kms_aead_key_gen_config_v0.h"
+#include "tink/aead/internal/kms_aead_key_gen_config_2026.h"
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
 #include "tink/configuration.h"
@@ -38,13 +38,13 @@ using ::absl_testing::IsOk;
 
 TEST(KmsAeadV0Test, KeyManagers) {
   Configuration config;
-  ASSERT_THAT(AddKmsAeadV0(config), IsOk());
+  ASSERT_THAT(AddKmsAead2026(config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddKmsAeadKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddKmsAeadKeyGen2026(key_gen_config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());

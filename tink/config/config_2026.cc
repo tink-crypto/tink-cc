@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/config/v0.h"
+#include "tink/config/config_2026.h"
 
 #include "absl/log/absl_check.h"
 #include "tink/aead/internal/config_2026.h"
 #include "tink/configuration.h"
 #include "tink/daead/internal/config_2026.h"
 #include "tink/hybrid/internal/config_2026.h"
+#include "tink/keyderivation/internal/config_2026.h"
 #include "tink/mac/internal/config_2026.h"
 #include "tink/prf/internal/config_2026.h"
 #include "tink/signature/internal/config_2026.h"
@@ -29,7 +30,7 @@
 namespace crypto {
 namespace tink {
 
-const Configuration& ConfigV0() {
+const Configuration& Config2026() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
     ABSL_CHECK_OK(internal::AddMac2026(*config));
@@ -39,6 +40,7 @@ const Configuration& ConfigV0() {
     ABSL_CHECK_OK(internal::AddHybrid2026(*config));
     ABSL_CHECK_OK(internal::AddPrf2026(*config));
     ABSL_CHECK_OK(internal::AddSignature2026(*config));
+    ABSL_CHECK_OK(internal::AddKeyDerivation2026(*config));
     return config;
   }();
   return *instance;

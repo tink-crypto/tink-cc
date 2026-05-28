@@ -125,39 +125,25 @@ cc_library(
 
 cc_library(
     name = "v0",
-    srcs = ["v0.cc"],
     hdrs = ["v0.h"],
     include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     deps = [
+        ":config_2026",
         "//tink:configuration",
-        "//tink/aead/internal:config_2026",
-        "//tink/daead/internal:config_2026",
-        "//tink/hybrid/internal:config_2026",
-        "//tink/mac/internal:config_2026",
-        "//tink/prf/internal:config_2026",
-        "//tink/signature/internal:config_2026",
-        "//tink/streamingaead/internal:config_2026",
-        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
 cc_library(
     name = "key_gen_v0",
-    srcs = ["key_gen_v0.cc"],
     hdrs = ["key_gen_v0.h"],
     include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     deps = [
+        ":key_gen_config_2026",
         "//tink:key_gen_configuration",
-        "//tink/aead/internal:key_gen_config_2026",
-        "//tink/daead/internal:key_gen_config_2026",
-        "//tink/hybrid/internal:key_gen_config_2026",
-        "//tink/mac/internal:key_gen_config_2026",
-        "//tink/prf/internal:key_gen_config_2026",
-        "//tink/signature/internal:key_gen_config_2026",
-        "//tink/streamingaead/internal:key_gen_config_2026",
-        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
@@ -302,13 +288,33 @@ cc_test(
     ],
 )
 
-cc_test(
-    name = "v0_test",
-    srcs = ["v0_test.cc"],
+cc_library(
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
+    include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     deps = [
-        ":key_gen_v0",
-        ":v0",
+        "//tink:configuration",
+        "//tink/aead/internal:config_2026",
+        "//tink/daead/internal:config_2026",
+        "//tink/hybrid/internal:config_2026",
+        "//tink/keyderivation/internal:config_2026",
+        "//tink/mac/internal:config_2026",
+        "//tink/prf/internal:config_2026",
+        "//tink/signature/internal:config_2026",
+        "//tink/streamingaead/internal:config_2026",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_test(
+    name = "config_2026_test",
+    srcs = ["config_2026_test.cc"],
+    tags = ["requires_boringcrypto_update"],
+    deps = [
+        ":config_2026",
+        ":key_gen_config_2026",
         "//tink:aead",
         "//tink:chunked_mac",
         "//tink:configuration",
@@ -330,7 +336,6 @@ cc_test(
         "//tink/hybrid:ecies_aead_hkdf_public_key_manager",
         "//tink/hybrid/internal:hpke_public_key_manager",
         "//tink/internal:configuration_impl",
-        "//tink/internal:key_gen_configuration_impl",
         "//tink/internal:key_type_info_store",
         "//tink/internal:keyset_wrapper_store",
         "//tink/mac:aes_cmac_key_manager",
@@ -345,9 +350,47 @@ cc_test(
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
         "//tink/streamingaead:aes_ctr_hmac_streaming_key_manager",
         "//tink/streamingaead:aes_gcm_hkdf_streaming_key_manager",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
+    include_prefix = "tink/config",
+    tags = ["requires_boringcrypto_update"],
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/aead/internal:key_gen_config_2026",
+        "//tink/daead/internal:key_gen_config_2026",
+        "//tink/hybrid/internal:key_gen_config_2026",
+        "//tink/keyderivation/internal:key_gen_config_2026",
+        "//tink/mac/internal:key_gen_config_2026",
+        "//tink/prf/internal:key_gen_config_2026",
+        "//tink/signature/internal:key_gen_config_2026",
+        "//tink/streamingaead/internal:key_gen_config_2026",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_test(
+    name = "key_gen_config_2026_test",
+    srcs = ["key_gen_config_2026_test.cc"],
+    tags = ["requires_boringcrypto_update"],
+    deps = [
+        ":key_gen_config_2026",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/daead:aes_siv_key_manager",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "//tink/mac:hmac_key_manager",
+        "//tink/prf:hmac_prf_key_manager",
+        "//tink/signature:ed25519_verify_key_manager",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )

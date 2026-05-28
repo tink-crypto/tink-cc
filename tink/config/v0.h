@@ -17,6 +17,8 @@
 #ifndef TINK_CONFIG_V0_H_
 #define TINK_CONFIG_V0_H_
 
+#include "absl/base/attributes.h"
+#include "tink/config/config_2026.h"
 #include "tink/configuration.h"
 
 namespace crypto {
@@ -24,7 +26,8 @@ namespace tink {
 
 // Configuration used to generate recommended primitives with recommended key
 // managers.
-const Configuration& ConfigV0();
+ABSL_DEPRECATED("Use Config2026() instead.")
+inline const Configuration& ConfigV0() { return Config2026(); }
 
 }  // namespace tink
 }  // namespace crypto

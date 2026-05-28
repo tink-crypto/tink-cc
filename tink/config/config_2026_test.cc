@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/config/v0.h"
+#include "tink/config/config_2026.h"
 
 #include <memory>
 #include <string>
@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
@@ -30,7 +31,7 @@
 #include "tink/aead/aes_gcm_siv_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/chunked_mac.h"
-#include "tink/config/key_gen_v0.h"
+#include "tink/config/key_gen_config_2026.h"
 #include "tink/configuration.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/deterministic_aead.h"
@@ -39,7 +40,6 @@
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/internal/configuration_impl.h"
-#include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/keyset_handle.h"
@@ -59,8 +59,6 @@
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -68,12 +66,10 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
-using ::testing::TestWithParam;
-using ::testing::Values;
 
-TEST(V0Test, PrimitiveWrappers) {
-  absl::StatusOr<const internal::KeysetWrapperStore *> store =
-      internal::ConfigurationImpl::GetKeysetWrapperStore(ConfigV0());
+TEST(Config2026Test, PrimitiveWrappers) {
+  absl::StatusOr<const internal::KeysetWrapperStore*> store =
+      internal::ConfigurationImpl::GetKeysetWrapperStore(Config2026());
   ASSERT_THAT(store, IsOk());
 
   EXPECT_THAT((*store)->Get<Mac>(), IsOk());
@@ -88,18 +84,11 @@ TEST(V0Test, PrimitiveWrappers) {
   EXPECT_THAT((*store)->Get<PublicKeyVerify>(), IsOk());
 }
 
-using V0KeyTypesTest =
-    TestWithParam<absl::StatusOr<const internal::KeyTypeInfoStore *>>;
-
-INSTANTIATE_TEST_SUITE_P(
-    V0KeyTypesTestSuite, V0KeyTypesTest,
-    Values(internal::ConfigurationImpl::GetKeyTypeInfoStore(ConfigV0()),
-           internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(
-               KeyGenConfigV0())));
-
-TEST_P(V0KeyTypesTest, KeyManagers) {
-  ASSERT_THAT(GetParam(), IsOk());
-  const crypto::tink::internal::KeyTypeInfoStore* store = GetParam().value();
+TEST(Config2026Test, KeyManagers) {
+  absl::StatusOr<const internal::KeyTypeInfoStore*> store_or =
+      internal::ConfigurationImpl::GetKeyTypeInfoStore(Config2026());
+  ASSERT_THAT(store_or, IsOk());
+  const crypto::tink::internal::KeyTypeInfoStore* store = *store_or;
 
   EXPECT_THAT(store->Get(HmacKeyManager().get_key_type()), IsOk());
   EXPECT_THAT(store->Get(AesCmacKeyManager().get_key_type()), IsOk());
@@ -132,14 +121,14 @@ TEST_P(V0KeyTypesTest, KeyManagers) {
   EXPECT_THAT(store->Get(Ed25519VerifyKeyManager().get_key_type()), IsOk());
 }
 
-TEST(V0Test, GetPrimitive) {
+TEST(Config2026Test, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
-                                KeyGenConfigV0());
+                                KeyGenConfig2026());
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =
-      (*handle)->GetPrimitive<Aead>(ConfigV0());
+      (*handle)->GetPrimitive<Aead>(Config2026());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";

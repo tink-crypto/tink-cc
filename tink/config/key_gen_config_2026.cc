@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/config/key_gen_v0.h"
+#include "tink/config/key_gen_config_2026.h"
 
 #include "absl/log/absl_check.h"
 #include "tink/aead/internal/key_gen_config_2026.h"
 #include "tink/daead/internal/key_gen_config_2026.h"
 #include "tink/hybrid/internal/key_gen_config_2026.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/keyderivation/internal/key_gen_config_2026.h"
 #include "tink/mac/internal/key_gen_config_2026.h"
 #include "tink/prf/internal/key_gen_config_2026.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
@@ -29,7 +30,7 @@
 namespace crypto {
 namespace tink {
 
-const KeyGenConfiguration& KeyGenConfigV0() {
+const KeyGenConfiguration& KeyGenConfig2026() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
     ABSL_CHECK_OK(internal::AddMacKeyGen2026(*config));
@@ -39,6 +40,7 @@ const KeyGenConfiguration& KeyGenConfigV0() {
     ABSL_CHECK_OK(internal::AddHybridKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddPrfKeyGen2026(*config));
     ABSL_CHECK_OK(internal::AddSignatureKeyGen2026(*config));
+    ABSL_CHECK_OK(internal::AddKeyDerivationKeyGen2026(*config));
     return config;
   }();
   return *instance;

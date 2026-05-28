@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_CONFIG_KEY_GEN_V0_H_
-#define TINK_CONFIG_KEY_GEN_V0_H_
+#ifndef TINK_CONFIG_KEY_GEN_CONFIG_2026_H_
+#define TINK_CONFIG_KEY_GEN_CONFIG_2026_H_
 
-#include "absl/base/attributes.h"
-#include "tink/config/key_gen_config_2026.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
 namespace tink {
 
-// KeyGenConfiguration used to generate keys with recommended key managers.
-ABSL_DEPRECATED("Use KeyGenConfig2026() instead.")
-inline const KeyGenConfiguration& KeyGenConfigV0() {
-  return KeyGenConfig2026();
-}
+// KeyGenConfiguration used to generate recommended keys for 2026.
+const KeyGenConfiguration& KeyGenConfig2026();
 
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_CONFIG_KEY_GEN_V0_H_
+#endif  // TINK_CONFIG_KEY_GEN_CONFIG_2026_H_

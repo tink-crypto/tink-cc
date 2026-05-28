@@ -112,14 +112,39 @@ tink_cc_library(
 tink_cc_library(
   NAME v0
   SRCS
-    v0.cc
     v0.h
+  DEPS
+    tink::config::config_2026
+    absl::core_headers
+    tink::core::configuration
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME key_gen_v0
+  SRCS
+    key_gen_v0.h
+  DEPS
+    tink::config::key_gen_config_2026
+    absl::core_headers
+    tink::core::key_gen_configuration
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME config_2026
+  SRCS
+    config_2026.cc
+    config_2026.h
   DEPS
     absl::absl_check
     tink::core::configuration
     tink::aead::internal::config_2026
     tink::daead::internal::config_2026
     tink::hybrid::internal::config_2026
+    tink::keyderivation::internal::config_2026
     tink::mac::internal::config_2026
     tink::prf::internal::config_2026
     tink::signature::internal::config_2026
@@ -129,16 +154,17 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME key_gen_v0
+  NAME key_gen_config_2026
   SRCS
-    key_gen_v0.cc
-    key_gen_v0.h
+    key_gen_config_2026.cc
+    key_gen_config_2026.h
   DEPS
     absl::absl_check
     tink::core::key_gen_configuration
     tink::aead::internal::key_gen_config_2026
     tink::daead::internal::key_gen_config_2026
     tink::hybrid::internal::key_gen_config_2026
+    tink::keyderivation::internal::key_gen_config_2026
     tink::mac::internal::key_gen_config_2026
     tink::prf::internal::key_gen_config_2026
     tink::signature::internal::key_gen_config_2026
@@ -285,14 +311,35 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME v0_test
+  NAME key_gen_config_2026_test
   SRCS
-    v0_test.cc
+    key_gen_config_2026_test.cc
   DEPS
-    tink::config::key_gen_v0
-    tink::config::v0
+    tink::config::key_gen_config_2026
     gmock
     absl::status_matchers
+    absl::statusor
+    tink::aead::aes_gcm_key_manager
+    tink::daead::aes_siv_key_manager
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+    tink::mac::hmac_key_manager
+    tink::prf::hmac_prf_key_manager
+    tink::signature::ed25519_verify_key_manager
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME config_2026_test
+  SRCS
+    config_2026_test.cc
+  DEPS
+    tink::config::config_2026
+    tink::config::key_gen_config_2026
+    gmock
+    absl::status_matchers
+    absl::statusor
     tink::core::aead
     tink::core::chunked_mac
     tink::core::configuration
@@ -314,7 +361,6 @@ tink_cc_test(
     tink::hybrid::ecies_aead_hkdf_public_key_manager
     tink::hybrid::internal::hpke_public_key_manager
     tink::internal::configuration_impl
-    tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::mac::aes_cmac_key_manager
@@ -329,8 +375,6 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
-    tink::util::statusor
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )

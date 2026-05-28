@@ -283,7 +283,7 @@ absl::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
   // serialization.
   if (!internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
     absl::optional<int> id_requirement = parameters_->HasIdRequirement()
-                                             ? absl::make_optional(id)
+                                             ? std::make_optional(id)
                                              : absl::nullopt;
     absl::StatusOr<std::unique_ptr<Key>> key =
         internal::KeyGenConfigurationImpl::CreateKey(*parameters_,

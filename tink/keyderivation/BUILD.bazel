@@ -386,3 +386,27 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "config_2026",
+    srcs = ["config_2026.cc"],
+    hdrs = ["config_2026.h"],
+    include_prefix = "tink/keyderivation",
+    deps = [
+        "//tink:configuration",
+        "//tink/keyderivation/internal:config_2026",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_library(
+    name = "key_gen_config_2026",
+    srcs = ["key_gen_config_2026.cc"],
+    hdrs = ["key_gen_config_2026.h"],
+    include_prefix = "tink/keyderivation",
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/keyderivation/internal:key_gen_config_2026",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)

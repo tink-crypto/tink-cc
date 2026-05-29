@@ -374,3 +374,25 @@ tink_cc_test(
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
+
+tink_cc_library(
+  NAME config_2026
+  SRCS
+    config_2026.cc
+    config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::configuration
+    tink::keyderivation::internal::config_2026
+)
+
+tink_cc_library(
+  NAME key_gen_config_2026
+  SRCS
+    key_gen_config_2026.cc
+    key_gen_config_2026.h
+  DEPS
+    absl::absl_check
+    tink::core::key_gen_configuration
+    tink::keyderivation::internal::key_gen_config_2026
+)

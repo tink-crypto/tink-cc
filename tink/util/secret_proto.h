@@ -91,14 +91,14 @@ class SecretProto {
     return *this;
   }
 
-  inline T* get() { return value_; }
+  T* get() { return value_; }
 
   // Accessors to the underlying message.
-  inline T* operator->() { return value_; }
-  inline const T* operator->() const { return value_; }
+  T* operator->() { return value_; }
+  const T* operator->() const { return value_; }
 
-  inline T& operator*() { return *value_; }
-  inline const T& operator*() const { return *value_; }
+  T& operator*() { return *value_; }
+  const T& operator*() const { return *value_; }
 
   // Frees all storage allocated by the underlying Arena and clears the proto.
   // It also returns the total space used by the arena which is the sums of the

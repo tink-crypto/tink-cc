@@ -449,8 +449,8 @@ class KeysetHandleBuilder {
                                bool is_primary);
 
     template <typename CopyableKey>
-    inline static Entry CreateFromCopyableKey(CopyableKey key, KeyStatus status,
-                                              bool is_primary) {
+    static Entry CreateFromCopyableKey(CopyableKey key, KeyStatus status,
+                                       bool is_primary) {
       auto copyable_key = absl::make_unique<CopyableKey>(std::move(key));
       return CreateFromKey(std::move(copyable_key), status, is_primary);
     }
@@ -463,7 +463,7 @@ class KeysetHandleBuilder {
                                   absl::optional<int> id = absl::nullopt);
 
     template <typename CopyableParameters>
-    inline static Entry CreateFromCopyableParams(
+    static Entry CreateFromCopyableParams(
         CopyableParameters parameters, KeyStatus status, bool is_primary,
         absl::optional<int> id = absl::nullopt) {
       auto copyable_params =

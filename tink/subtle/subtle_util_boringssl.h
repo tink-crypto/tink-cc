@@ -57,30 +57,28 @@ class SubtleUtilBoringSSL {
 
   // Returns BoringSSL's BIGNUM constructed from bigendian string
   // representation.
-  static inline absl::StatusOr<internal::SslUniquePtr<BIGNUM>> str2bn(
+  static absl::StatusOr<internal::SslUniquePtr<BIGNUM>> str2bn(
       absl::string_view s) {
     return internal::StringToBignum(s);
   }
 
   // Returns a string of size 'len' that holds BIGNUM 'bn'.
-  static inline absl::StatusOr<std::string> bn2str(const BIGNUM *bn,
-                                                   size_t len) {
+  static absl::StatusOr<std::string> bn2str(const BIGNUM* bn, size_t len) {
     return internal::BignumToString(bn, len);
   }
 
   // Returns a SecretData of size 'len' that holds BIGNUM 'bn'.
-  static inline absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM *bn,
-                                                              size_t len) {
+  static absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM* bn,
+                                                       size_t len) {
     return internal::BignumToSecretData(bn, len);
   }
 
   // Returns BoringSSL error strings accumulated in the error queue,
   // thus emptying the queue.
-  static inline std::string GetErrors() { return internal::GetSslErrors(); }
+  static std::string GetErrors() { return internal::GetSslErrors(); }
 
   // Returns BoringSSL's EC_GROUP constructed from the curve type.
-  static inline absl::StatusOr<EC_GROUP *> GetEcGroup(
-      EllipticCurveType curve_type) {
+  static absl::StatusOr<EC_GROUP*> GetEcGroup(EllipticCurveType curve_type) {
     absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> ec_group =
         internal::EcGroupFromCurveType(curve_type);
     if (!ec_group.ok()) {
@@ -90,16 +88,15 @@ class SubtleUtilBoringSSL {
   }
 
   // Returns the curve type associated with the EC_GROUP
-  static inline absl::StatusOr<EllipticCurveType> GetCurve(
-      const EC_GROUP *group) {
+  static absl::StatusOr<EllipticCurveType> GetCurve(const EC_GROUP* group) {
     return internal::CurveTypeFromEcGroup(group);
   }
 
   // Returns BoringSSL's EC_POINT constructed from the curve type, big-endian
   // representation of public key's x-coordinate and y-coordinate.
-  static inline absl::StatusOr<EC_POINT *> GetEcPoint(EllipticCurveType curve,
-                                                      absl::string_view pubx,
-                                                      absl::string_view puby) {
+  static absl::StatusOr<EC_POINT*> GetEcPoint(EllipticCurveType curve,
+                                              absl::string_view pubx,
+                                              absl::string_view puby) {
     absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
         internal::GetEcPoint(curve, pubx, puby);
     if (!ec_point.ok()) {
@@ -109,19 +106,18 @@ class SubtleUtilBoringSSL {
   }
 
   // Returns a new EC key for the specified curve.
-  static inline absl::StatusOr<EcKey> GetNewEcKey(
-      EllipticCurveType curve_type) {
+  static absl::StatusOr<EcKey> GetNewEcKey(EllipticCurveType curve_type) {
     return internal::NewEcKey(curve_type);
   }
 
   // Returns a new EC key for the specified curve derived from a seed.
-  static inline absl::StatusOr<EcKey> GetNewEcKeyFromSeed(
-      EllipticCurveType curve_type, const SecretData &secret_seed) {
+  static absl::StatusOr<EcKey> GetNewEcKeyFromSeed(
+      EllipticCurveType curve_type, const SecretData& secret_seed) {
     return internal::NewEcKey(curve_type, secret_seed);
   }
 
   // Returns a new ED25519 key.
-  static inline std::unique_ptr<Ed25519Key> GetNewEd25519Key() {
+  static std::unique_ptr<Ed25519Key> GetNewEd25519Key() {
     absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
         internal::NewEd25519Key();
     if (!key.ok()) {
@@ -135,8 +131,8 @@ class SubtleUtilBoringSSL {
   }
 
   // Returns a new ED25519 key generated from a 32-byte secret seed.
-  static inline std::unique_ptr<Ed25519Key> GetNewEd25519KeyFromSeed(
-      const SecretData &secret_seed) {
+  static std::unique_ptr<Ed25519Key> GetNewEd25519KeyFromSeed(
+      const SecretData& secret_seed) {
     absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
         internal::NewEd25519Key(secret_seed);
     if (!key.ok()) {
@@ -155,7 +151,7 @@ class SubtleUtilBoringSSL {
   // The compressed point is encoded as 1-byte || x where x is
   // curve_size_in_bytes big-endian byte array and if the least significant bit
   // of y is 1, the 1st byte is 0x03, otherwise it's 0x02.
-  static inline absl::StatusOr<internal::SslUniquePtr<EC_POINT>> EcPointDecode(
+  static absl::StatusOr<internal::SslUniquePtr<EC_POINT>> EcPointDecode(
       EllipticCurveType curve, EcPointFormat format,
       absl::string_view encoded) {
     return internal::EcPointDecode(curve, format, encoded);
@@ -167,16 +163,17 @@ class SubtleUtilBoringSSL {
   // The compressed point is encoded as 1-byte || x where x is
   // curve_size_in_bytes big-endian byte array and if the least significant bit
   // of y is 1, the 1st byte is 0x03, otherwise it's 0x02.
-  static inline absl::StatusOr<std::string> EcPointEncode(
-      EllipticCurveType curve, EcPointFormat format, const EC_POINT *point) {
+  static absl::StatusOr<std::string> EcPointEncode(EllipticCurveType curve,
+                                                   EcPointFormat format,
+                                                   const EC_POINT* point) {
     return internal::EcPointEncode(curve, format, point);
   }
 
   // Returns the ECDH's shared secret based on our private key and peer's public
   // key. Returns error if the public key is not on private key's curve.
-  static inline absl::StatusOr<SecretData> ComputeEcdhSharedSecret(
-      EllipticCurveType curve, const BIGNUM *priv_key,
-      const EC_POINT *pub_key) {
+  static absl::StatusOr<SecretData> ComputeEcdhSharedSecret(
+      EllipticCurveType curve, const BIGNUM* priv_key,
+      const EC_POINT* pub_key) {
     return internal::ComputeEcdhSharedSecret(curve, priv_key, pub_key);
   }
 
@@ -191,75 +188,72 @@ class SubtleUtilBoringSSL {
   //   ECDSA-Sig-Value :: = SEQUENCE { r INTEGER, s INTEGER }.
   // In particular, the encoding is:
   //   0x30 || totalLength || 0x02 || r's length || r || 0x02 || s's length || s
-  static inline absl::StatusOr<std::string> EcSignatureIeeeToDer(
-      const EC_GROUP *group, absl::string_view ieee_sig) {
+  static absl::StatusOr<std::string> EcSignatureIeeeToDer(
+      const EC_GROUP* group, absl::string_view ieee_sig) {
     return internal::EcSignatureIeeeToDer(group, ieee_sig);
   }
 
   // Returns an EVP structure for a hash function.
   // The EVP_MD instances are sigletons owned by BoringSSL.
-  static inline absl::StatusOr<const EVP_MD *> EvpHash(HashType hash_type) {
+  static absl::StatusOr<const EVP_MD*> EvpHash(HashType hash_type) {
     return internal::EvpHashFromHashType(hash_type);
   }
 
   // Validates whether 'sig_hash' is safe to use for digital signature.
-  static inline absl::Status ValidateSignatureHash(subtle::HashType sig_hash) {
+  static absl::Status ValidateSignatureHash(subtle::HashType sig_hash) {
     return internal::IsHashTypeSafeForSignature(sig_hash);
   }
 
   // Return an empty string if str.data() is nullptr; otherwise return str.
-  static inline absl::string_view EnsureNonNull(absl::string_view str) {
+  static absl::string_view EnsureNonNull(absl::string_view str) {
     return internal::EnsureStringNonNull(str);
   }
 
-  static inline absl::Status ValidateRsaModulusSize(size_t modulus_size) {
+  static absl::Status ValidateRsaModulusSize(size_t modulus_size) {
     return internal::ValidateRsaModulusSize(modulus_size);
   }
 
-  static inline absl::Status ValidateRsaPublicExponent(
-      absl::string_view exponent) {
+  static absl::Status ValidateRsaPublicExponent(absl::string_view exponent) {
     return internal::ValidateRsaPublicExponent(exponent);
   }
 
-  static inline absl::Status GetNewRsaKeyPair(int modulus_size_in_bits,
-                                              const BIGNUM *e,
-                                              RsaPrivateKey *private_key,
-                                              RsaPublicKey *public_key) {
+  static absl::Status GetNewRsaKeyPair(int modulus_size_in_bits,
+                                       const BIGNUM* e,
+                                       RsaPrivateKey* private_key,
+                                       RsaPublicKey* public_key) {
     return internal::NewRsaKeyPair(modulus_size_in_bits, e, private_key,
                                    public_key);
   }
 
   // Copies n, e and d into the RSA key.
-  static inline absl::Status CopyKey(const RsaPrivateKey &key, RSA *rsa) {
+  static absl::Status CopyKey(const RsaPrivateKey& key, RSA* rsa) {
     return internal::GetRsaModAndExponents(key, rsa);
   }
 
   // Copies the prime factors (p, q) into the RSA key.
-  static inline absl::Status CopyPrimeFactors(const RsaPrivateKey &key,
-                                              RSA *rsa) {
+  static absl::Status CopyPrimeFactors(const RsaPrivateKey& key, RSA* rsa) {
     return internal::GetRsaPrimeFactors(key, rsa);
   }
 
   // Copies the CRT params and dp, dq into the RSA key.
-  static inline absl::Status CopyCrtParams(const RsaPrivateKey &key, RSA *rsa) {
+  static absl::Status CopyCrtParams(const RsaPrivateKey& key, RSA* rsa) {
     return internal::GetRsaCrtParams(key, rsa);
   }
 
   // Creates a BoringSSL RSA key from an RsaPrivateKey.
-  static inline absl::StatusOr<internal::SslUniquePtr<RSA>>
-  BoringSslRsaFromRsaPrivateKey(const RsaPrivateKey &key) {
+  static absl::StatusOr<internal::SslUniquePtr<RSA>>
+  BoringSslRsaFromRsaPrivateKey(const RsaPrivateKey& key) {
     return internal::RsaPrivateKeyToRsa(key);
   }
 
   // Creates a BoringSSL RSA key from an RsaPublicKey.
-  static inline absl::StatusOr<internal::SslUniquePtr<RSA>>
-  BoringSslRsaFromRsaPublicKey(const RsaPublicKey &key) {
+  static absl::StatusOr<internal::SslUniquePtr<RSA>>
+  BoringSslRsaFromRsaPublicKey(const RsaPublicKey& key) {
     return internal::RsaPublicKeyToRsa(key);
   }
 
   // Returns BoringSSL's AES CTR EVP_CIPHER for the key size.
-  static inline const EVP_CIPHER *GetAesCtrCipherForKeySize(
-      uint32_t size_in_bytes) {
+  static const EVP_CIPHER* GetAesCtrCipherForKeySize(uint32_t size_in_bytes) {
     absl::StatusOr<const EVP_CIPHER *> res =
         internal::GetAesCtrCipherForKeySize(size_in_bytes);
     if (!res.ok()) {
@@ -269,8 +263,7 @@ class SubtleUtilBoringSSL {
   }
 
   // Returns BoringSSL's AES GCM EVP_CIPHER for the key size.
-  static inline const EVP_CIPHER *GetAesGcmCipherForKeySize(
-      uint32_t size_in_bytes) {
+  static const EVP_CIPHER* GetAesGcmCipherForKeySize(uint32_t size_in_bytes) {
     absl::StatusOr<const EVP_CIPHER *> res =
         internal::GetAesGcmCipherForKeySize(size_in_bytes);
     if (!res.ok()) {
@@ -281,8 +274,7 @@ class SubtleUtilBoringSSL {
 
 #ifdef OPENSSL_IS_BORINGSSL
   // Returns BoringSSL's AES GCM EVP_AEAD for the key size.
-  static inline const EVP_AEAD *GetAesGcmAeadForKeySize(
-      uint32_t size_in_bytes) {
+  static const EVP_AEAD* GetAesGcmAeadForKeySize(uint32_t size_in_bytes) {
     absl::StatusOr<const EVP_AEAD *> res =
         internal::GetAesGcmAeadForKeySize(size_in_bytes);
     if (!res.ok()) {

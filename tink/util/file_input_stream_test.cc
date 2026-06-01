@@ -45,7 +45,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 constexpr int kDefaultTestStreamSize = 100 * 1024;  // 100 KB.
 

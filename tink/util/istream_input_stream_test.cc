@@ -46,7 +46,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 // Creates a new test file with the specified 'filename', writes 'size' random
 // bytes to the file, and returns an istream for reading from the file.

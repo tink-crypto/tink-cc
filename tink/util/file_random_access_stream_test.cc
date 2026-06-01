@@ -50,7 +50,7 @@ namespace util {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 // Opens test file `filename` and returns a file descriptor to it.
 absl::StatusOr<int> OpenTestFileToRead(absl::string_view filename) {

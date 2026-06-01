@@ -410,7 +410,9 @@ NewJwtRsaSsaPkcs1VerifyInternal(
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
       rsa_ssa_pkcs1_verify_boringssl =
           subtle::RsaSsaPkcs1VerifyBoringSsl::New(*rsa_ssa_pkcs1_public_key);
-
+  if (!rsa_ssa_pkcs1_verify_boringssl.ok()) {
+    return rsa_ssa_pkcs1_verify_boringssl.status();
+  }
   absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_rsa_ssa_pkcs1_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
@@ -605,7 +607,9 @@ NewJwtRsaSsaPssVerifyInternal(
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
       rsa_ssa_pss_verify_boringssl =
           subtle::RsaSsaPssVerifyBoringSsl::New(*rsa_ssa_pss_public_key);
-
+  if (!rsa_ssa_pss_verify_boringssl.ok()) {
+    return rsa_ssa_pss_verify_boringssl.status();
+  }
   absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_rsa_ssa_pss_params->GetAlgorithm());
   if (!algorithm_name.ok()) {

@@ -1617,8 +1617,6 @@ tink_cc_library(
     absl::string_view
     crypto
     tink::internal::ssl_unique_ptr
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1634,6 +1632,4 @@ tink_cc_test(
     absl::string_view
     crypto
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )

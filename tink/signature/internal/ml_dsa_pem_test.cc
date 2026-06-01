@@ -24,6 +24,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "openssl/crypto.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -339,6 +340,7 @@ constexpr absl::string_view kMlDsa87ExpectedBytesHex =
     "c39dfc82d98eb1caa4a9cbe885f786fa86e55be062222f8ba90a974073326b31212aece0a3"
     "4a60";
 
+#ifdef OPENSSL_IS_BORINGSSL
 TEST(MlDsaPemTest, ParseMldsa44PublicKeySucceeds) {
   absl::StatusOr<std::string> raw_key =
       ParseMldsa44PublicKey(kMlDsa44PublicKeyPem);
@@ -385,6 +387,20 @@ TEST(MlDsaPemTest, ParseMldsaPublicKeyNotPublicKeyFails) {
   EXPECT_THAT(ParseMldsa87PublicKey(kPrivatePem).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
+#else   // !OPENSSL_IS_BORINGSSL
+TEST(MlDsaPemTest, ParseMldsa44PublicKeyUnimplemented) {
+  EXPECT_THAT(ParseMldsa44PublicKey(kMlDsa44PublicKeyPem).status(),
+              StatusIs(absl::StatusCode::kUnimplemented));
+}
+TEST(MlDsaPemTest, ParseMldsa65PublicKeyUnimplemented) {
+  EXPECT_THAT(ParseMldsa65PublicKey(kMlDsa65PublicKeyPem).status(),
+              StatusIs(absl::StatusCode::kUnimplemented));
+}
+TEST(MlDsaPemTest, ParseMldsa87PublicKeyUnimplemented) {
+  EXPECT_THAT(ParseMldsa87PublicKey(kMlDsa87PublicKeyPem).status(),
+              StatusIs(absl::StatusCode::kUnimplemented));
+}
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 }  // namespace internal

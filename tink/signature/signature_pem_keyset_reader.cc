@@ -19,13 +19,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <new>
-#include <random>
 #include <string>
 #include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/ec_util.h"
@@ -34,20 +33,20 @@
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "tink/signature/internal/ml_dsa_pem.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/subtle/pem_parser_boringssl.h"
-#include "tink/subtle/subtle_util_boringssl.h"
+#include "tink/util/constants.h"
 #include "tink/util/enums.h"
 #include "tink/util/keyset_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
 #include "proto/ed25519.pb.h"
+#include "proto/ml_dsa.pb.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/rsa_ssa_pss.pb.h"
 #include "proto/tink.pb.h"
@@ -72,6 +71,8 @@ using RsaSsaPkcs1PublicKeyProto = ::google::crypto::tink::RsaSsaPkcs1PublicKey;
 using ::google::crypto::tink::RsaSsaPssParams;
 using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
 using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
+using MlDsaPublicKeyProto = ::google::crypto::tink::MlDsaPublicKey;
+using ::google::crypto::tink::MlDsaInstance;
 
 namespace {
 
@@ -509,6 +510,53 @@ absl::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   return absl::OkStatus();
 }
 
+absl::Status AddMlDsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
+  if (pem_key.parameters.algorithm != PemAlgorithm::ML_DSA) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid algorithm for ML-DSA key type: ",
+                                     pem_key.parameters.algorithm));
+  }
+  if (pem_key.parameters.hash_type != HashType::UNKNOWN_HASH) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid ML-DSA hash type: ",
+                                     pem_key.parameters.hash_type));
+  }
+
+  MlDsaPublicKeyProto ml_dsa_key;
+  ml_dsa_key.set_version(0);
+
+  absl::StatusOr<std::string> key_bytes;
+  if (pem_key.parameters == kPemParamsMlDsa44) {
+    key_bytes = internal::ParseMldsa44PublicKey(pem_key.serialized_key);
+    if (!key_bytes.ok()) return key_bytes.status();
+    ml_dsa_key.mutable_params()->set_ml_dsa_instance(MlDsaInstance::ML_DSA_44);
+    ml_dsa_key.set_key_value(*key_bytes);
+  } else if (pem_key.parameters == kPemParamsMlDsa65) {
+    key_bytes = internal::ParseMldsa65PublicKey(pem_key.serialized_key);
+    if (!key_bytes.ok()) return key_bytes.status();
+    ml_dsa_key.mutable_params()->set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+    ml_dsa_key.set_key_value(*key_bytes);
+  } else if (pem_key.parameters == kPemParamsMlDsa87) {
+    key_bytes = internal::ParseMldsa87PublicKey(pem_key.serialized_key);
+    if (!key_bytes.ok()) return key_bytes.status();
+    ml_dsa_key.mutable_params()->set_ml_dsa_instance(MlDsaInstance::ML_DSA_87);
+    ml_dsa_key.set_key_value(*key_bytes);
+  } else {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid ML-DSA key size: ",
+                                     pem_key.parameters.key_size_in_bits));
+  }
+
+  std::string key_type =
+      absl::StrCat(kTypeGoogleapisCom, "google.crypto.tink.MlDsaPublicKey");
+
+  *keyset.add_key() =
+      NewKeysetKey(GenerateUnusedKeyId(keyset), key_type,
+                   KeyData::ASYMMETRIC_PUBLIC, ml_dsa_key.SerializeAsString());
+
+  return absl::OkStatus();
+}
+
 }  // namespace
 
 void SignaturePemKeysetReaderBuilder::Add(const PemKey& pem_serialized_key) {
@@ -556,6 +604,9 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
         if (!add_ecdsa_status.ok()) return add_ecdsa_status;
         break;
       }
+      case PemKeyType::PEM_ML_DSA:
+        return absl::Status(absl::StatusCode::kUnimplemented,
+                            "ML-DSA private keys are not supported");
     }
   }
 
@@ -598,6 +649,12 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
                                 absl::StrCat("Invalid ECC algorithm ",
                                              pem_key.parameters.algorithm));
         }
+        break;
+      case PemKeyType::PEM_ML_DSA: {
+        auto add_status = AddMlDsaPublicKey(pem_key, *keyset);
+        if (!add_status.ok()) return add_status;
+        break;
+      }
     }
   }
 

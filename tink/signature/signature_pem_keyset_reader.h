@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/status/statusor.h"
 #include "tink/keyset_reader.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -32,15 +33,16 @@ namespace crypto {
 namespace tink {
 
 // Type of key.
-enum PemKeyType { PEM_RSA, PEM_EC };
+enum PemKeyType { PEM_RSA, PEM_EC, PEM_ML_DSA };
 
 // Algorithm to use with this key.
 enum PemAlgorithm {
   RSASSA_PSS,
   RSASSA_PKCS1,
   ECDSA_IEEE,  // NIST curve (P256, P384, P521) with IEEE_P1363 encoding
-  ECDSA_DER,  // NIST curve (P256, P384, P521) with DER encoding
+  ECDSA_DER,   // NIST curve (P256, P384, P521) with DER encoding
   ED25519,
+  ML_DSA,
 };
 
 // Common set of parameters for the PEM key.
@@ -49,7 +51,31 @@ struct PemKeyParams {
   PemAlgorithm algorithm;
   size_t key_size_in_bits;
   ::google::crypto::tink::HashType hash_type;
+
+  bool operator==(const PemKeyParams& other) const {
+    return key_type == other.key_type && algorithm == other.algorithm &&
+           key_size_in_bits == other.key_size_in_bits &&
+           hash_type == other.hash_type;
+  }
 };
+
+// Pre-defined parameters for ML-DSA-44 keys.
+// Key size is 1312 * 8 = 10496 bits.
+constexpr PemKeyParams kPemParamsMlDsa44 = {
+    PemKeyType::PEM_ML_DSA, PemAlgorithm::ML_DSA, 10496,
+    google::crypto::tink::HashType::UNKNOWN_HASH};
+
+// Pre-defined parameters for ML-DSA-65 keys.
+// Key size is 1952 * 8 = 15616 bits.
+constexpr PemKeyParams kPemParamsMlDsa65 = {
+    PemKeyType::PEM_ML_DSA, PemAlgorithm::ML_DSA, 15616,
+    google::crypto::tink::HashType::UNKNOWN_HASH};
+
+// Pre-defined parameters for ML-DSA-87 keys.
+// Key size is 2592 * 8 = 20736 bits.
+constexpr PemKeyParams kPemParamsMlDsa87 = {
+    PemKeyType::PEM_ML_DSA, PemAlgorithm::ML_DSA, 20736,
+    google::crypto::tink::HashType::UNKNOWN_HASH};
 
 // A PEM key consists of its serialized data `serialized_key`, and parameters
 // `parameters`.

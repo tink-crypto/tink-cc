@@ -408,20 +408,22 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::keyset_reader
     tink::internal::ec_util
     tink::internal::rsa_util
+    tink::signature::internal::ml_dsa_pem
     tink::subtle::pem_parser_boringssl
-    tink::subtle::subtle_util_boringssl
+    tink::util::constants
     tink::util::enums
     tink::util::keyset_util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::ed25519_cc_proto
+    tink::proto::ml_dsa_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
@@ -1255,6 +1257,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
+    crypto
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
     tink::core::keyset_reader
@@ -1264,15 +1267,15 @@ tink_cc_test(
     tink::internal::rsa_util
     tink::internal::ssl_util
     tink::subtle::pem_parser_boringssl
+    tink::util::constants
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::ed25519_cc_proto
+    tink::proto::ml_dsa_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
   TAGS

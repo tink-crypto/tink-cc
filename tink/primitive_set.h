@@ -96,12 +96,15 @@ class PrimitiveSet {
     // `CryptoFormat::GetOutputPrefix()`.
     const std::string& get_identifier() const { return identifier_; }
 
-    google::crypto::tink::KeyStatusType get_status() const { return status_; }
+    google::crypto::tink::KeyStatusType get_status() const {
+      return static_cast<google::crypto::tink::KeyStatusType>(status_);
+    }
 
     uint32_t get_key_id() const { return key_id_; }
 
     google::crypto::tink::OutputPrefixType get_output_prefix_type() const {
-      return output_prefix_type_;
+      return static_cast<google::crypto::tink::OutputPrefixType>(
+          output_prefix_type_);
     }
 
     absl::string_view get_key_type_url() const { return key_type_url_; }
@@ -113,16 +116,16 @@ class PrimitiveSet {
           absl::string_view key_type_url)
         : primitive_(std::move(primitive)),
           identifier_(identifier),
-          status_(status),
           key_id_(key_id),
-          output_prefix_type_(output_prefix_type),
+          status_(static_cast<uint8_t>(status)),
+          output_prefix_type_(static_cast<uint8_t>(output_prefix_type)),
           key_type_url_(key_type_url) {}
 
     std::unique_ptr<P> primitive_;
     std::string identifier_;
-    google::crypto::tink::KeyStatusType status_;
     uint32_t key_id_;
-    google::crypto::tink::OutputPrefixType output_prefix_type_;
+    uint8_t status_;
+    uint8_t output_prefix_type_;
     const std::string key_type_url_;
   };
 

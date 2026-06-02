@@ -326,9 +326,6 @@ tink_cc_test(
     tink::util::istream_input_stream
     tink::util::protobuf_helper
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto

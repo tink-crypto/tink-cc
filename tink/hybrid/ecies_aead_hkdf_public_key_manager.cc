@@ -18,13 +18,7 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
-#include "tink/hybrid_encrypt.h"
-#include "tink/key_manager.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
@@ -60,6 +54,12 @@ absl::Status EciesAeadHkdfPublicKeyManager::ValidateParams(
   if (!params.dem_params().has_aead_dem()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid dem_params.");
+  }
+  absl::Status status = internal::EciesAeadHkdfDemHelper::GetKeyParams(
+                            params.dem_params().aead_dem())
+                            .status();
+  if (!status.ok()) {
+    return status;
   }
 
   // Validate EC point format.

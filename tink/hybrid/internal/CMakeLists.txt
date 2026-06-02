@@ -461,9 +461,8 @@ tink_cc_library(
     tink::subtle::aes_siv_boringssl
     tink::subtle::xchacha20_poly1305_boringssl
     tink::util::errors
-    tink::util::protobuf_helper
     tink::util::secret_data
-    tink::util::statusor
+    tink::util::validation
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
@@ -483,17 +482,21 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::string_view
+    tink::core::secret_data
     tink::aead::aes_gcm_key_manager
     tink::daead::aes_siv_key_manager
     tink::daead::subtle::aead_or_daead
     tink::util::secret_data
-    tink::util::status
-    tink::util::test_matchers
     tink::util::test_util
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::aes_siv_cc_proto
+    tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
 )
 
 tink_cc_library(

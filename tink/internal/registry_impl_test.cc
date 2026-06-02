@@ -32,7 +32,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "openssl/crypto.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_gcm_key_manager.h"
@@ -58,9 +57,6 @@
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -623,7 +619,7 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   // Get a test private key.
   auto ecies_key = test::GetEciesAesGcmHkdfTestKey(
       EllipticCurveType::NIST_P256, EcPointFormat::UNCOMPRESSED,
-      HashType::SHA256, /* aes_gcm_key_size= */ 24);
+      HashType::SHA256, /* aes_gcm_key_size= */ 32);
 
   // Extract public key data and check.
   auto public_key_data_result = Registry::GetPublicKeyData(

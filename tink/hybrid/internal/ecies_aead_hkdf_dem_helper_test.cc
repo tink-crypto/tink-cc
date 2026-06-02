@@ -24,17 +24,21 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/daead/subtle/aead_or_daead.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
+#include "proto/aes_ctr.pb.h"
+#include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/aes_siv.pb.h"
+#include "proto/hmac.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/xchacha20_poly1305.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -121,6 +125,65 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeDeterministicAeadKeyType) {
   auto aead_or_daead = std::move(aead_or_daead_result_or.value());
   EXPECT_THAT(EncryptThenDecrypt(*aead_or_daead, "test_plaintext", "test_ad"),
               IsOk());
+}
+
+TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesGcmInvalidKeySize) {
+  google::crypto::tink::AesGcmKeyFormat key_format;
+  key_format.set_key_size(15);  // Invalid key size (only 16 or 32 are valid)
+
+  google::crypto::tink::KeyTemplate dem_key_template;
+  dem_key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesGcmKey");
+  dem_key_template.set_value(key_format.SerializeAsString());
+
+  EXPECT_THAT(EciesAeadHkdfDemHelper::New(dem_key_template).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("key has 15 bytes")));
+}
+
+TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesCtrHmacInvalidAesKeySize) {
+  google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
+  key_format.mutable_aes_ctr_key_format()->set_key_size(15);  // Invalid
+  key_format.mutable_hmac_key_format()->set_key_size(16);
+
+  google::crypto::tink::KeyTemplate dem_key_template;
+  dem_key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey");
+  dem_key_template.set_value(key_format.SerializeAsString());
+
+  EXPECT_THAT(EciesAeadHkdfDemHelper::New(dem_key_template).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("key has 15 bytes")));
+}
+
+TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesCtrHmacKeySizeTooSmall) {
+  google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
+  key_format.mutable_aes_ctr_key_format()->set_key_size(16);
+  key_format.mutable_hmac_key_format()->set_key_size(15);  // Too small (min 16)
+
+  google::crypto::tink::KeyTemplate dem_key_template;
+  dem_key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey");
+  dem_key_template.set_value(key_format.SerializeAsString());
+
+  EXPECT_THAT(EciesAeadHkdfDemHelper::New(dem_key_template).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("HMAC key size is too small")));
+}
+
+TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesSivInvalidKeySize) {
+  google::crypto::tink::AesSivKeyFormat key_format;
+  key_format.set_key_size(
+      32);  // Invalid key size for AES SIV (must be exactly 64)
+
+  google::crypto::tink::KeyTemplate dem_key_template;
+  dem_key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesSivKey");
+  dem_key_template.set_value(key_format.SerializeAsString());
+
+  EXPECT_THAT(EciesAeadHkdfDemHelper::New(dem_key_template).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("AES-SIV key has invalid size")));
 }
 
 }  // namespace

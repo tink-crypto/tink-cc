@@ -36,6 +36,7 @@
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/errors.h"
 #include "tink/util/secret_data.h"
+#include "tink/util/validation.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -84,6 +85,10 @@ EciesAeadHkdfDemHelper::GetKeyParams(const KeyTemplate& key_template) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid AesGcmKeyFormat in DEM key template");
     }
+    absl::Status status = ValidateAesKeySize(key_format.key_size());
+    if (!status.ok()) {
+      return status;
+    }
     return {{AES_GCM_KEY, key_format.key_size()}};
   }
   if (type_url == "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey") {
@@ -91,6 +96,15 @@ EciesAeadHkdfDemHelper::GetKeyParams(const KeyTemplate& key_template) {
     if (!key_format.ParseFromString(key_template.value())) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid AesCtrHmacKeyFormat in DEM key template");
+    }
+    absl::Status status =
+        ValidateAesKeySize(key_format.aes_ctr_key_format().key_size());
+    if (!status.ok()) {
+      return status;
+    }
+    if (key_format.hmac_key_format().key_size() < 16) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "HMAC key size is too small.");
     }
     uint32_t dem_key_size = key_format.aes_ctr_key_format().key_size() +
                             key_format.hmac_key_format().key_size();
@@ -114,6 +128,10 @@ EciesAeadHkdfDemHelper::GetKeyParams(const KeyTemplate& key_template) {
     if (!key_format.ParseFromString(key_template.value())) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid AesSiveKeyFormat in DEM key template");
+    }
+    if (key_format.key_size() != 64) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "AES-SIV key has invalid size.");
     }
     return {{AES_SIV_KEY, key_format.key_size()}};
   }

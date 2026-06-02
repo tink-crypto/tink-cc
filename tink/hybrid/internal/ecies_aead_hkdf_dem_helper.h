@@ -21,11 +21,9 @@
 
 #include <memory>
 
-#include "tink/aead.h"
+#include "absl/status/statusor.h"
 #include "tink/daead/subtle/aead_or_daead.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 #include "proto/common.pb.h"
 #include "proto/tink.pb.h"
 
@@ -53,7 +51,6 @@ class EciesAeadHkdfDemHelper {
   virtual absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
   GetAeadOrDaead(const SecretData& symmetric_key_value) const;
 
- protected:
   enum DemKeyType {
     AES_GCM_KEY,
     AES_CTR_HMAC_AEAD_KEY,
@@ -70,12 +67,13 @@ class EciesAeadHkdfDemHelper {
     uint32_t hmac_key_tag_size_in_bytes;
   };
 
+  static absl::StatusOr<DemKeyParams> GetKeyParams(
+      const ::google::crypto::tink::KeyTemplate& key_template);
+
+ protected:
   EciesAeadHkdfDemHelper(const google::crypto::tink::KeyTemplate& key_template,
                          DemKeyParams key_params)
       : key_template_(key_template), key_params_(key_params) {}
-
-  static absl::StatusOr<DemKeyParams> GetKeyParams(
-      const ::google::crypto::tink::KeyTemplate& key_template);
 
   const google::crypto::tink::KeyTemplate key_template_;
   const DemKeyParams key_params_;

@@ -218,6 +218,7 @@ tink_cc_library(
     tink::core::template_util
     tink::core::hybrid_encrypt
     tink::core::key_manager
+    tink::hybrid::internal::ecies_aead_hkdf_dem_helper
     tink::util::constants
     tink::util::errors
     tink::util::protobuf_helper

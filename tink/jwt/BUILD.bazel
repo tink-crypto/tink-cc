@@ -834,7 +834,6 @@ cc_test(
     deps = [
         ":jwt_hmac_parameters",
         "//tink:parameters",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",

@@ -17,7 +17,9 @@
 #include "tink/jwt/jwt_hmac_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -29,7 +31,6 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -55,18 +56,18 @@ using JwtHmacKeyTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     JwtHmacKeyTestSuite, JwtHmacKeyTest,
-    Values(TestCase{/*key_size_in_bytes=*/16,
+    Values(TestCase{/*key_size_in_bytes=*/32,
                     JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
                     JwtHmacParameters::Algorithm::kHs256,
                     /*custom_kid=*/absl::nullopt, /*id_requirement=*/123,
                     /*expected_kid=*/"AAAAew"},
-           TestCase{/*key_size_in_bytes=*/32,
+           TestCase{/*key_size_in_bytes=*/48,
                     JwtHmacParameters::KidStrategy::kCustom,
                     JwtHmacParameters::Algorithm::kHs384,
                     /*custom_kid=*/"custom_kid",
                     /*id_requirement=*/absl::nullopt,
                     /*expected_kid=*/"custom_kid"},
-           TestCase{/*key_size_in_bytes=*/32,
+           TestCase{/*key_size_in_bytes=*/64,
                     JwtHmacParameters::KidStrategy::kIgnored,
                     JwtHmacParameters::Algorithm::kHs512,
                     /*custom_kid=*/absl::nullopt,
@@ -302,12 +303,13 @@ TEST(JwtHmacKeyTest, DifferentParametersNotEqual) {
   ASSERT_THAT(params, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_params = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/32,
+      /*key_size_in_bytes=*/48,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs384);
   ASSERT_THAT(other_params, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/48);
 
   absl::StatusOr<JwtHmacKey> key = JwtHmacKey::Builder()
                                        .SetParameters(*params)
@@ -318,7 +320,7 @@ TEST(JwtHmacKeyTest, DifferentParametersNotEqual) {
 
   absl::StatusOr<JwtHmacKey> other_key = JwtHmacKey::Builder()
                                              .SetParameters(*other_params)
-                                             .SetKeyBytes(secret)
+                                             .SetKeyBytes(other_secret)
                                              .SetIdRequirement(123)
                                              .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -473,12 +475,12 @@ TEST(JwtHmacKeyTest, CopyAssignment) {
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_params = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/32,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(other_params, IsOk());
 
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
 
   absl::StatusOr<JwtHmacKey> other_key = JwtHmacKey::Builder()
                                              .SetParameters(*other_params)
@@ -529,12 +531,12 @@ TEST(JwtHmacKeyTest, MoveAssignment) {
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_params = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/32,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(other_params, IsOk());
 
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
 
   absl::StatusOr<JwtHmacKey> other_key = JwtHmacKey::Builder()
                                              .SetParameters(*other_params)

@@ -725,7 +725,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::core::parameters
-    tink::util::test_matchers
 )
 
 tink_cc_test(

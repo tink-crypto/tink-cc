@@ -16,6 +16,7 @@
 
 #include "tink/jwt/jwt_hmac_parameters.h"
 
+#include <limits>
 #include <set>
 
 #include "absl/status/status.h"
@@ -26,13 +27,27 @@
 namespace crypto {
 namespace tink {
 
+int JwtHmacParameters::MinimumKeySize(Algorithm algorithm) {
+  switch (algorithm) {
+    case Algorithm::kHs256:
+      return 32;
+    case Algorithm::kHs384:
+      return 48;
+    case Algorithm::kHs512:
+      return 64;
+    default:
+      return std::numeric_limits<int>::max();
+  }
+}
+
 absl::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
     int key_size_in_bytes, KidStrategy kid_strategy, Algorithm algorithm) {
-  if (key_size_in_bytes < 16) {
+  int min_key_size = MinimumKeySize(algorithm);
+  if (key_size_in_bytes < min_key_size) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Key size should be at least 16 bytes, got ",
-                     key_size_in_bytes, " bytes."));
+        absl::StrCat("Key size should be at least ", min_key_size,
+                     " bytes, got ", key_size_in_bytes, " bytes."));
   }
   static const std::set<KidStrategy>* kSupportedKidStrategies =
       new std::set<KidStrategy>({KidStrategy::kBase64EncodedKeyId,

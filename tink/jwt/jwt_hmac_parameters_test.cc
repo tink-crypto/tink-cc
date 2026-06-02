@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -25,7 +26,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -49,8 +49,8 @@ using JwtHmacParametersTest = TestWithParam<
     std::tuple<int, KidStrategyTuple, JwtHmacParameters::Algorithm>>;
 
 INSTANTIATE_TEST_SUITE_P(
-    JwtHmacParametersTestSuite, JwtHmacParametersTest,
-    Combine(Values(16, 32),
+    JwtHmacParametersTestSuiteHs256, JwtHmacParametersTest,
+    Combine(Values(32, 48, 64),
             Values(
                 KidStrategyTuple{
                     JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
@@ -61,9 +61,37 @@ INSTANTIATE_TEST_SUITE_P(
                 KidStrategyTuple{JwtHmacParameters::KidStrategy::kIgnored,
                                  /*allowed_kid_absent=*/true,
                                  /*has_id_requirement=*/false}),
-            Values(JwtHmacParameters::Algorithm::kHs256,
-                   JwtHmacParameters::Algorithm::kHs384,
-                   JwtHmacParameters::Algorithm::kHs512)));
+            Values(JwtHmacParameters::Algorithm::kHs256)));
+
+INSTANTIATE_TEST_SUITE_P(
+    JwtHmacParametersTestSuiteHs384, JwtHmacParametersTest,
+    Combine(Values(48, 64),
+            Values(
+                KidStrategyTuple{
+                    JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+                    /*allowed_kid_absent=*/false, /*has_id_requirement=*/true},
+                KidStrategyTuple{JwtHmacParameters::KidStrategy::kCustom,
+                                 /*allowed_kid_absent=*/true,
+                                 /*has_id_requirement=*/false},
+                KidStrategyTuple{JwtHmacParameters::KidStrategy::kIgnored,
+                                 /*allowed_kid_absent=*/true,
+                                 /*has_id_requirement=*/false}),
+            Values(JwtHmacParameters::Algorithm::kHs384)));
+
+INSTANTIATE_TEST_SUITE_P(
+    JwtHmacParametersTestSuiteHs512, JwtHmacParametersTest,
+    Combine(Values(64),
+            Values(
+                KidStrategyTuple{
+                    JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+                    /*allowed_kid_absent=*/false, /*has_id_requirement=*/true},
+                KidStrategyTuple{JwtHmacParameters::KidStrategy::kCustom,
+                                 /*allowed_kid_absent=*/true,
+                                 /*has_id_requirement=*/false},
+                KidStrategyTuple{JwtHmacParameters::KidStrategy::kIgnored,
+                                 /*allowed_kid_absent=*/true,
+                                 /*has_id_requirement=*/false}),
+            Values(JwtHmacParameters::Algorithm::kHs512)));
 
 TEST_P(JwtHmacParametersTest, Create) {
   int key_size_in_bytes;
@@ -84,7 +112,7 @@ TEST_P(JwtHmacParametersTest, Create) {
 
 TEST(JwtHmacParametersTest, CreateWithInvalidKidStrategyFails) {
   EXPECT_THAT(JwtHmacParameters::Create(
-                  /*key_size_in_bytes=*/16,
+                  /*key_size_in_bytes=*/64,
                   JwtHmacParameters::KidStrategy::
                       kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements,
                   JwtHmacParameters::Algorithm::kHs512)
@@ -95,28 +123,47 @@ TEST(JwtHmacParametersTest, CreateWithInvalidKidStrategyFails) {
 
 TEST(JwtHmacParametersTest, CreateWithInvalidAlgorithmFails) {
   EXPECT_THAT(JwtHmacParameters::Create(
-                  /*key_size_in_bytes=*/16,
+                  /*key_size_in_bytes=*/64,
                   JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
                   JwtHmacParameters::Algorithm::
                       kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("unknown algorithm")));
+                       HasSubstr("Key size should be at least")));
 }
 
 TEST(JwtHmacParametersTest, CreateWithInvalidKeySizeFails) {
+  // HS256 requires at least 32 bytes
   EXPECT_THAT(JwtHmacParameters::Create(
-                  /*key_size_in_bytes=*/15,
+                  /*key_size_in_bytes=*/31,
+                  JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+                  JwtHmacParameters::Algorithm::kHs256)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Key size should be at least 32 bytes")));
+
+  // HS384 requires at least 48 bytes
+  EXPECT_THAT(JwtHmacParameters::Create(
+                  /*key_size_in_bytes=*/47,
+                  JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+                  JwtHmacParameters::Algorithm::kHs384)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Key size should be at least 48 bytes")));
+
+  // HS512 requires at least 64 bytes
+  EXPECT_THAT(JwtHmacParameters::Create(
+                  /*key_size_in_bytes=*/63,
                   JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
                   JwtHmacParameters::Algorithm::kHs512)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Key size should be at least 16 bytes")));
+                       HasSubstr("Key size should be at least 64 bytes")));
 }
 
 TEST(JwtHmacParametersTest, CopyConstructor) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/64,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(parameters, IsOk());
@@ -128,14 +175,14 @@ TEST(JwtHmacParametersTest, CopyConstructor) {
 
 TEST(JwtHmacParametersTest, CopyAssignment) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/64,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_parameters =
       JwtHmacParameters::Create(
-          /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+          /*key_size_in_bytes=*/64, JwtHmacParameters::KidStrategy::kCustom,
           JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -146,7 +193,7 @@ TEST(JwtHmacParametersTest, CopyAssignment) {
 
 TEST(JwtHmacParametersTest, MoveConstructor) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/64,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(parameters, IsOk());
@@ -159,14 +206,14 @@ TEST(JwtHmacParametersTest, MoveConstructor) {
 
 TEST(JwtHmacParametersTest, MoveAssignment) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/64,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_parameters =
       JwtHmacParameters::Create(
-          /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+          /*key_size_in_bytes=*/64, JwtHmacParameters::KidStrategy::kCustom,
           JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -199,14 +246,14 @@ TEST_P(JwtHmacParametersTest, ParametersEquals) {
 
 TEST(JwtHmacParametersTest, KeySizeNotEqual) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/32,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_parameters =
       JwtHmacParameters::Create(
-          /*key_size_in_bytes=*/32,
+          /*key_size_in_bytes=*/33,
           JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
           JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(other_parameters, IsOk());
@@ -217,14 +264,14 @@ TEST(JwtHmacParametersTest, KeySizeNotEqual) {
 
 TEST(JwtHmacParametersTest, KidStrategyNotEqual) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/32,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_parameters =
       JwtHmacParameters::Create(
-          /*key_size_in_bytes=*/16, JwtHmacParameters::KidStrategy::kCustom,
+          /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
           JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -234,16 +281,16 @@ TEST(JwtHmacParametersTest, KidStrategyNotEqual) {
 
 TEST(JwtHmacParametersTest, AlgorithmNotEqual) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/64,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
-      JwtHmacParameters::Algorithm::kHs256);
+      JwtHmacParameters::Algorithm::kHs384);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<JwtHmacParameters> other_parameters =
       JwtHmacParameters::Create(
-          /*key_size_in_bytes=*/16,
+          /*key_size_in_bytes=*/64,
           JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
-          JwtHmacParameters::Algorithm::kHs384);
+          JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(other_parameters, IsOk());
 
   EXPECT_TRUE(*parameters != *other_parameters);
@@ -252,7 +299,7 @@ TEST(JwtHmacParametersTest, AlgorithmNotEqual) {
 
 TEST(JwtHmacParametersTest, Clone) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/16,
+      /*key_size_in_bytes=*/32,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());

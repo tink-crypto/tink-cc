@@ -104,6 +104,8 @@ class JwtHmacParameters : public JwtMacParameters {
   }
 
  private:
+  static int MinimumKeySize(Algorithm algorithm);
+
   JwtHmacParameters(int key_size_in_bytes, KidStrategy kid_strategy,
                     Algorithm algorithm)
       : key_size_in_bytes_(key_size_in_bytes),

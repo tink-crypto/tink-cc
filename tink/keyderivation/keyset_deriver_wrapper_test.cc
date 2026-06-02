@@ -42,7 +42,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;

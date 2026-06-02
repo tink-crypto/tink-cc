@@ -134,8 +134,8 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSigner(
   absl::StatusOr<EcdsaPrivateKey> raw_ecdsa_private_key =
       EcdsaPrivateKey::Create(*ecdsa_public_key, private_key_value,
                               GetPartialKeyAccess());
-  if (!ecdsa_public_key.ok()) {
-    return ecdsa_public_key.status();
+  if (!raw_ecdsa_private_key.ok()) {
+    return raw_ecdsa_private_key.status();
   }
   return subtle::EcdsaSignBoringSsl::New(*raw_ecdsa_private_key);
 }
@@ -259,9 +259,9 @@ absl::StatusOr<std::string> AlgorithmName(
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs256:
       return std::string("RS256");
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs384:
-      return std::string("RS3072");
+      return std::string("RS384");
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs512:
-      return std::string("RS4096");
+      return std::string("RS512");
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported algorithm: ", algorithm));
@@ -296,8 +296,8 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1Signer(
           .SetCrtCoefficient(
               jwt_rsa_ssa_pkcs1_private_key.GetCrtCoefficientData())
           .Build(GetPartialKeyAccess());
-  if (!rsa_ssa_pkcs1_public_key.ok()) {
-    return rsa_ssa_pkcs1_public_key.status();
+  if (!raw_rsa_ssa_pkcs1_private_key.ok()) {
+    return raw_rsa_ssa_pkcs1_private_key.status();
   }
   return subtle::RsaSsaPkcs1SignBoringSsl::New(*raw_rsa_ssa_pkcs1_private_key);
 }
@@ -473,8 +473,8 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
           .SetCrtCoefficient(jwt_rsa_ssa_pss_private_key.GetCrtCoefficientData(
               GetPartialKeyAccess()))
           .Build(GetPartialKeyAccess());
-  if (!rsa_ssa_pss_public_key.ok()) {
-    return rsa_ssa_pss_public_key.status();
+  if (!raw_rsa_ssa_pss_private_key.ok()) {
+    return raw_rsa_ssa_pss_private_key.status();
   }
   return subtle::RsaSsaPssSignBoringSsl::New(*raw_rsa_ssa_pss_private_key);
 }
@@ -516,9 +516,9 @@ absl::StatusOr<std::string> AlgorithmName(
     case JwtRsaSsaPssParameters::Algorithm::kPs256:
       return std::string("PS256");
     case JwtRsaSsaPssParameters::Algorithm::kPs384:
-      return std::string("PS3072");
+      return std::string("PS384");
     case JwtRsaSsaPssParameters::Algorithm::kPs512:
-      return std::string("PS4096");
+      return std::string("PS512");
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported algorithm: ", algorithm));

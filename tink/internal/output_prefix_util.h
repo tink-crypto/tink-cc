@@ -24,13 +24,15 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+inline constexpr int kOutputPrefixSize = 5;
+
 // Returns the output prefix from the given `prefix_byte` and `id`.
 //
 // The result is encoded as a 5-byte string with `prefix_byte` as the first
 // byte, and the remaining bytes are the `id` encoded as a big endian.
 inline std::string ComputeOutputPrefix(uint8_t prefix_byte, int id) {
   std::string output_prefix;
-  output_prefix.resize(5);
+  output_prefix.resize(kOutputPrefixSize);
   output_prefix[0] = prefix_byte;
   output_prefix[1] = (id >> 24) & 0xff;
   output_prefix[2] = (id >> 16) & 0xff;

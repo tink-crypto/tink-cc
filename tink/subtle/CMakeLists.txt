@@ -352,6 +352,7 @@ tink_cc_library(
     rsa_ssa_pkcs1_verify_boringssl.h
   DEPS
     tink::subtle::common_enums
+    absl::algorithm_container
     absl::status
     absl::strings
     crypto
@@ -360,6 +361,7 @@ tink_cc_library(
     tink::internal::bn_util
     tink::internal::fips_utils
     tink::internal::md_util
+    tink::internal::output_prefix_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::internal::util

@@ -16,11 +16,13 @@
 
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
@@ -76,6 +78,18 @@ RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
                  : "");
 }
 
+RsaSsaPkcs1VerifyBoringSsl::RsaSsaPkcs1VerifyBoringSsl(
+    internal::SslUniquePtr<RSA> rsa, const EVP_MD* sig_hash,
+    absl::string_view output_prefix, absl::string_view message_suffix)
+    : rsa_(std::move(rsa)),
+      sig_hash_(sig_hash),
+      has_output_prefix_(!output_prefix.empty()),
+      has_legacy_message_suffix_(message_suffix == absl::string_view("\0", 1)) {
+  if (has_output_prefix_) {
+    absl::c_copy(output_prefix, output_prefix_data_.begin());
+  }
+}
+
 absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
 RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params) {
@@ -87,6 +101,16 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params,
                                 absl::string_view output_prefix,
                                 absl::string_view message_suffix) {
+  if (!output_prefix.empty() &&
+      output_prefix.size() != internal::kOutputPrefixSize) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Unsupported output prefix size.");
+  }
+  if (!message_suffix.empty() && message_suffix != absl::string_view("\0", 1)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Unsupported message suffix.");
+  }
+
   absl::Status status =
       internal::CheckFipsCompatibility<RsaSsaPkcs1VerifyBoringSsl>();
   if (!status.ok()) {
@@ -169,21 +193,26 @@ absl::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
 
 absl::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
                                                 absl::string_view data) const {
-  if (output_prefix_.empty() && message_suffix_.empty()) {
+  if (!has_output_prefix_ && !has_legacy_message_suffix_) {
     return VerifyWithoutPrefix(signature, data);
   }
-  if (!absl::StartsWith(signature, output_prefix_)) {
+  absl::string_view output_prefix(
+      output_prefix_data_.data(),
+      has_output_prefix_ ? output_prefix_data_.size() : 0);
+  if (has_output_prefix_ && !absl::StartsWith(signature, output_prefix)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
-  // Stores a copy of the data in case message_suffix_ is not empty.
+  // Stores a copy of the data in case has_legacy_message_suffix_ is true.
   // Needs to stay alive until this method is done.
   std::string data_copy_holder;
-  if (!message_suffix_.empty()) {
-    data_copy_holder = absl::StrCat(data, message_suffix_);
+  if (has_legacy_message_suffix_) {
+    data_copy_holder = absl::StrCat(data, absl::string_view("\0", 1));
     data = data_copy_holder;
   }
-  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
+  return VerifyWithoutPrefix(has_output_prefix_
+                                 ? absl::StripPrefix(signature, output_prefix)
+                                 : signature,
                              data);
 }
 

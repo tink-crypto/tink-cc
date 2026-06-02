@@ -17,6 +17,7 @@
 #ifndef TINK_SUBTLE_RSA_SSA_PKCS1_VERIFY_BORINGSSL_H_
 #define TINK_SUBTLE_RSA_SSA_PKCS1_VERIFY_BORINGSSL_H_
 
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -27,6 +28,7 @@
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/output_prefix_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_verify.h"
@@ -76,11 +78,7 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
   RsaSsaPkcs1VerifyBoringSsl(internal::SslUniquePtr<RSA> rsa,
                              const EVP_MD* sig_hash,
                              absl::string_view output_prefix,
-                             absl::string_view message_suffix)
-      : rsa_(std::move(rsa)),
-        sig_hash_(sig_hash),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
+                             absl::string_view message_suffix);
 
   absl::Status VerifyWithoutPrefix(absl::string_view signature,
                                    absl::string_view data) const;
@@ -89,8 +87,9 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
   internal::InlineBignum public_exponent_;
   const internal::SslUniquePtr<RSA> rsa_;
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
-  const std::string output_prefix_;
-  const std::string message_suffix_;
+  std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
+  bool has_output_prefix_;
+  bool has_legacy_message_suffix_;
 };
 
 }  // namespace subtle

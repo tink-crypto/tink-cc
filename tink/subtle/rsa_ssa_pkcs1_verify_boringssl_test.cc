@@ -45,6 +45,8 @@
 namespace crypto {
 namespace tink {
 namespace subtle {
+class RsaSsaPkcs1VerifyBoringSslTest : public ::testing::Test {};
+
 namespace {
 
 using ::absl_testing::IsOk;
@@ -55,8 +57,6 @@ using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::testing::Not;
 using ::testing::NotNull;
-
-class RsaSsaPkcs1VerifyBoringSslTest : public ::testing::Test {};
 
 // Test vector from
 // https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/Digital-Signatures
@@ -139,6 +139,10 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
                         "SHA1 is not safe for digital signature",
                         std::string(result.status().message()));
   }
+}
+
+TEST_F(RsaSsaPkcs1VerifyBoringSslTest, SizeIsWithinLimit) {
+  EXPECT_LE(sizeof(RsaSsaPkcs1VerifyBoringSsl), 112);
 }
 
 TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {

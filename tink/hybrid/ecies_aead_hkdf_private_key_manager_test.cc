@@ -24,15 +24,13 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/aead/aead_key_templates.h"
-#include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/config/global_registry.h"
 #include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
-#include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
 #include "tink/hybrid/hybrid_config.h"
-#include "tink/hybrid/hybrid_key_templates.h"
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
@@ -41,10 +39,6 @@
 #include "tink/keyset_handle.h"
 #include "tink/registry.h"
 #include "tink/subtle/hybrid_test_util.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
@@ -85,13 +79,14 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, ValidateEmptyKey) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-EciesAeadHkdfKeyFormat CreateValidKeyFormat() {
+EciesAeadHkdfKeyFormat CreateValidKeyFormat(
+    EllipticCurveType curve_type = EllipticCurveType::NIST_P256) {
   EciesAeadHkdfKeyFormat key_format;
   key_format.mutable_params()->set_ec_point_format(EcPointFormat::UNCOMPRESSED);
   auto dem_params = key_format.mutable_params()->mutable_dem_params();
   *(dem_params->mutable_aead_dem()) = AeadKeyTemplates::Aes128Gcm();
   auto kem_params = key_format.mutable_params()->mutable_kem_params();
-  kem_params->set_curve_type(EllipticCurveType::NIST_P256);
+  kem_params->set_curve_type(curve_type);
   kem_params->set_hkdf_hash_type(HashType::SHA256);
   kem_params->set_hkdf_salt("");
   return key_format;
@@ -157,10 +152,15 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, CreateKey) {
   EXPECT_THAT(key.key_value(), Not(IsEmpty()));
 }
 
-EciesAeadHkdfPrivateKey CreateValidKey() {
-  return EciesAeadHkdfPrivateKeyManager()
-      .CreateKey(CreateValidKeyFormat())
-      .value();
+EciesAeadHkdfPrivateKey CreateValidKey(
+    EllipticCurveType curve_type = EllipticCurveType::NIST_P256) {
+  auto key_or = EciesAeadHkdfPrivateKeyManager().CreateKey(
+      CreateValidKeyFormat(curve_type));
+  if (!key_or.ok()) {
+    ADD_FAILURE() << "Failed to create key: " << key_or.status();
+    return EciesAeadHkdfPrivateKey();
+  }
+  return *key_or;
 }
 
 TEST(EciesAeadHkdfPrivateKeyManagerTest, ValidateKeyEmpty) {
@@ -179,6 +179,84 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, ValidateKeyWrongVersion) {
   key.set_version(1);
   EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key),
               StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EciesAeadHkdfPrivateKeyManagerTest, ValidateKeyPrivateKeyLength) {
+  // NIST_P256 (expected 32 bytes)
+  {
+    EciesAeadHkdfPrivateKey key = CreateValidKey(EllipticCurveType::NIST_P256);
+    // Exact length (32 bytes)
+    key.set_key_value(std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+
+    // Short but padable (31 bytes)
+    key.set_key_value(std::string(31, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+
+    // Too long with leading non-zero (33 bytes starting with 'x')
+    key.set_key_value("x" + std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+
+    // Too long but with leading zero (33 bytes starting with '\0')
+    key.set_key_value(std::string(1, '\0') + std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+
+    // Way too long (34 bytes)
+    key.set_key_value(std::string(2, '\0') + std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+    // Wait, is 34 bytes OK if it has 2 leading zeros?
+    // ParseBigIntToFixedLength says:
+    //   int to_truncate = val.size() - length;
+    //   SecretBuffer zeros(to_truncate, 0);
+    //   if (!SafeCryptoMemEquals(zeros.data(), val.data(), zeros.size())) ...
+    // If val is 34, length is 32, to_truncate is 2.
+    // zeros is 2 bytes of 0.
+    // If val starts with 2 zeros, it will match and truncate 2 bytes, returning
+    // 32 bytes. So yes, it is technically OK.
+  }
+
+  // NIST_P384 (expected 48 bytes)
+  {
+    EciesAeadHkdfPrivateKey key = CreateValidKey(EllipticCurveType::NIST_P384);
+    key.set_key_value(std::string(48, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+
+    key.set_key_value("x" + std::string(48, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+
+    key.set_key_value(std::string(1, '\0') + std::string(48, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+  }
+
+  // NIST_P521 (expected 66 bytes)
+  {
+    EciesAeadHkdfPrivateKey key = CreateValidKey(EllipticCurveType::NIST_P521);
+    key.set_key_value(std::string(66, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+
+    key.set_key_value("x" + std::string(66, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+
+    key.set_key_value(std::string(1, '\0') + std::string(66, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+  }
+
+  // CURVE25519 (expected 32 bytes)
+  {
+    EciesAeadHkdfPrivateKey key = CreateValidKey(EllipticCurveType::CURVE25519);
+    key.set_key_value(std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+
+    key.set_key_value("x" + std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+
+    key.set_key_value(std::string(1, '\0') + std::string(32, 'a'));
+    EXPECT_THAT(EciesAeadHkdfPrivateKeyManager().ValidateKey(key), IsOk());
+  }
 }
 
 TEST(EciesAeadHkdfPrivateKeyManagerTest, ValidateKeyNoPoint) {

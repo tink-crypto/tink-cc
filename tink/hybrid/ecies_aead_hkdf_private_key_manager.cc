@@ -16,24 +16,19 @@
 
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 
-#include <string>
+#include <cstddef>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/hybrid/ecies_aead_hkdf_hybrid_decrypt.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
-#include "tink/hybrid_decrypt.h"
 #include "tink/internal/ec_util.h"
-#include "tink/key_manager.h"
+#include "tink/internal/util.h"
+#include "tink/secret_data.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
+#include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
 #include "proto/tink.pb.h"
 
@@ -44,6 +39,40 @@ using google::crypto::tink::EciesAeadHkdfKeyFormat;
 using google::crypto::tink::EciesAeadHkdfPrivateKey;
 using google::crypto::tink::EciesAeadHkdfPublicKey;
 using google::crypto::tink::EciesHkdfKemParams;
+
+namespace {
+
+absl::Status ValidatePrivateKeyLength(const EciesAeadHkdfPrivateKey& key) {
+  google::crypto::tink::EllipticCurveType curve =
+      key.public_key().params().kem_params().curve_type();
+  size_t expected_length;
+  switch (curve) {
+    case google::crypto::tink::EllipticCurveType::NIST_P256:
+      expected_length = 32;
+      break;
+    case google::crypto::tink::EllipticCurveType::NIST_P384:
+      expected_length = 48;
+      break;
+    case google::crypto::tink::EllipticCurveType::NIST_P521:
+      expected_length = 66;
+      break;
+    case google::crypto::tink::EllipticCurveType::CURVE25519:
+      expected_length = 32;
+      break;
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported elliptic curve");
+  }
+  absl::StatusOr<SecretData> status_or_bytes =
+      crypto::tink::internal::ParseBigIntToFixedLength(key.key_value(),
+                                                       expected_length);
+  if (!status_or_bytes.ok()) {
+    return status_or_bytes.status();
+  }
+  return absl::OkStatus();
+}
+
+}  // namespace
 
 absl::Status EciesAeadHkdfPrivateKeyManager::ValidateKeyFormat(
     const EciesAeadHkdfKeyFormat& key_format) const {
@@ -91,7 +120,9 @@ absl::Status EciesAeadHkdfPrivateKeyManager::ValidateKey(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Missing public_key.");
   }
-  return EciesAeadHkdfPublicKeyManager().ValidateKey(key.public_key());
+  status = EciesAeadHkdfPublicKeyManager().ValidateKey(key.public_key());
+  if (!status.ok()) return status;
+  return ValidatePrivateKeyLength(key);
 }
 
 }  // namespace tink

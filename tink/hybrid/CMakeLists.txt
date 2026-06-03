@@ -191,7 +191,9 @@ tink_cc_library(
     tink::core::template_util
     tink::core::hybrid_decrypt
     tink::core::key_manager
+    tink::core::secret_data
     tink::internal::ec_util
+    tink::internal::util
     tink::util::constants
     tink::util::enums
     tink::util::errors
@@ -200,6 +202,7 @@ tink_cc_library(
     tink::util::status
     tink::util::statusor
     tink::util::validation
+    tink::proto::common_cc_proto
     tink::proto::ecies_aead_hkdf_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -727,13 +730,12 @@ tink_cc_test(
   DEPS
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
     tink::hybrid::ecies_aead_hkdf_private_key_manager
-    tink::hybrid::ecies_aead_hkdf_public_key_manager
     tink::hybrid::hybrid_config
-    tink::hybrid::hybrid_key_templates
     gmock
     absl::memory
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::strings
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -741,16 +743,11 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::registry
     tink::aead::aead_key_templates
-    tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_gcm_key_manager
     tink::config::global_registry
     tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
     tink::subtle::hybrid_test_util
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
     tink::proto::aes_eax_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecies_aead_hkdf_cc_proto

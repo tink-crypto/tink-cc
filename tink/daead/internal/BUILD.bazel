@@ -10,6 +10,7 @@ cc_library(
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
     include_prefix = "tink/daead/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/daead:aes_siv_key_manager",
@@ -25,6 +26,7 @@ cc_library(
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/daead/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/daead:aes_siv_key_manager",

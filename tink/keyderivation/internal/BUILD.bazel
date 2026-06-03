@@ -402,6 +402,7 @@ cc_library(
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
     include_prefix = "tink/keyderivation/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":prf_based_deriver_key_manager",
         "//tink:configuration",
@@ -417,6 +418,7 @@ cc_library(
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/keyderivation/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":prf_based_deriver_key_manager",
         "//tink:key_gen_configuration",

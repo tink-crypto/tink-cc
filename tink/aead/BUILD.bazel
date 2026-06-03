@@ -844,6 +844,7 @@ cc_library(
     name = "x_aes_gcm_proto_serialization",
     hdrs = ["x_aes_gcm_proto_serialization.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink/aead/internal:x_aes_gcm_proto_serialization_impl",
         "//tink/internal:mutable_serialization_registry",

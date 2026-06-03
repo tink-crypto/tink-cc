@@ -1035,6 +1035,7 @@ cc_library(
     srcs = ["jwt_mac_config_2026.cc"],
     hdrs = ["jwt_mac_config_2026.h"],
     include_prefix = "tink/jwt/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_hmac_key_manager",
         ":jwt_mac_impl",
@@ -1061,6 +1062,7 @@ cc_library(
     srcs = ["jwt_mac_key_gen_config_2026.cc"],
     hdrs = ["jwt_mac_key_gen_config_2026.h"],
     include_prefix = "tink/jwt/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_hmac_key_manager",
         "//tink:key_gen_configuration",
@@ -1110,6 +1112,7 @@ cc_library(
     srcs = ["jwt_signature_config_2026.cc"],
     hdrs = ["jwt_signature_config_2026.h"],
     include_prefix = "tink/jwt/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_sign_key_manager",
         ":jwt_ecdsa_verify_key_manager",
@@ -1229,6 +1232,7 @@ cc_library(
     srcs = ["jwt_signature_key_gen_config_2026.cc"],
     hdrs = ["jwt_signature_key_gen_config_2026.h"],
     include_prefix = "tink/jwt/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_sign_key_manager",
         ":jwt_ecdsa_verify_key_manager",

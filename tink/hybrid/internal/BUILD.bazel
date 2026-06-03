@@ -245,6 +245,7 @@ cc_library(
     hdrs = ["config_2026.h"],
     include_prefix = "tink/hybrid/internal",
     tags = ["requires_boringcrypto_update"],
+    visibility = ["//visibility:public"],
     deps = [
         ":hpke_decrypt",
         ":hpke_encrypt",
@@ -273,6 +274,7 @@ cc_library(
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/hybrid/internal",
     tags = ["requires_boringcrypto_update"],
+    visibility = ["//visibility:public"],
     deps = [
         ":hpke_private_key_manager",
         ":hpke_public_key_manager",

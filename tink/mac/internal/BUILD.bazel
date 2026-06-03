@@ -58,6 +58,7 @@ cc_library(
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
     include_prefix = "tink/mac/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":chunked_mac_wrapper",
         "//tink:configuration",
@@ -75,6 +76,7 @@ cc_library(
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/mac/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",

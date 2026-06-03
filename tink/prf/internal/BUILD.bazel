@@ -10,6 +10,7 @@ cc_library(
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
     include_prefix = "tink/prf/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/internal:configuration_impl",
@@ -27,6 +28,7 @@ cc_library(
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/prf/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",

@@ -177,6 +177,7 @@ cc_library(
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/aead/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/aead:aes_ctr_hmac_aead_key_manager",
@@ -196,6 +197,7 @@ cc_library(
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
     include_prefix = "tink/aead/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/aead:aead_wrapper",
@@ -1247,6 +1249,7 @@ cc_library(
     srcs = ["kms_aead_config_2026.cc"],
     hdrs = ["kms_aead_config_2026.h"],
     include_prefix = "tink/aead/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/aead:kms_aead_key_manager",
@@ -1262,6 +1265,7 @@ cc_library(
     srcs = ["kms_aead_key_gen_config_2026.cc"],
     hdrs = ["kms_aead_key_gen_config_2026.h"],
     include_prefix = "tink/aead/internal",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/aead:kms_aead_key_manager",

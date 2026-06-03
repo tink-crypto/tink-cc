@@ -38,6 +38,7 @@ cc_library(
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
     include_prefix = "tink/signature/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":ml_dsa_proto_serialization",
         ":ml_dsa_sign_boringssl",
@@ -100,6 +101,7 @@ cc_library(
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/signature/internal",
+    visibility = ["//visibility:public"],
     deps = [
         ":composite_ml_dsa_key_creator",
         ":ml_dsa_key_creator",

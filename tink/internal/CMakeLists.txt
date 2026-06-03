@@ -2152,3 +2152,28 @@ tink_cc_test(
     gmock
     absl::flat_hash_map
 )
+
+tink_cc_library(
+  NAME call_with_core_dump_protection_oss
+  SRCS
+    call_with_core_dump_protection_oss.h
+)
+
+tink_cc_library(
+  NAME safe_stringops_oss
+  SRCS
+    safe_stringops_oss.h
+  DEPS
+    tink::internal::call_with_core_dump_protection
+    crypto
+)
+
+tink_cc_library(
+  NAME sanitizing_allocator_oss
+  SRCS
+    sanitizing_allocator_oss.h
+  DEPS
+    absl::config
+    absl::core_headers
+    crypto
+)

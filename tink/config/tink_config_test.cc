@@ -38,7 +38,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 TEST(TinkConfigTest, RegisterWorks) {
   EXPECT_THAT(Registry::get_key_manager<Aead>(AesGcmKeyManager().get_key_type())

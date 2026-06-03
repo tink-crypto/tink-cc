@@ -41,7 +41,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::test::StatusIs;
+using ::absl_testing::StatusIs;
 
 class KeyGenFips1402Test : public testing::Test {
  protected:

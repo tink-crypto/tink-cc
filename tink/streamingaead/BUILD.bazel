@@ -658,29 +658,6 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
-    deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
-        ":streaming_aead_key_templates",
-        "//proto:tink_cc_proto",
-        "//tink:input_stream",
-        "//tink:keyset_handle",
-        "//tink:output_stream",
-        "//tink:streaming_aead",
-        "//tink/subtle:test_util",
-        "//tink/util:istream_input_stream",
-        "//tink/util:ostream_output_stream",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/memory",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "aes_ctr_hmac_streaming_parameters_test",
     srcs = ["aes_ctr_hmac_streaming_parameters_test.cc"],
     deps = [

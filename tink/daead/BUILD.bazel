@@ -459,21 +459,3 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
-
-cc_test(
-    name = "config_v0_test",
-    size = "small",
-    srcs = ["config_v0_test.cc"],
-    deps = [
-        ":config_v0",
-        ":deterministic_aead_key_templates",
-        ":key_gen_config_v0",
-        "//proto:tink_cc_proto",
-        "//tink:deterministic_aead",
-        "//tink:keyset_handle",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)

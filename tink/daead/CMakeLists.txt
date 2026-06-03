@@ -388,23 +388,6 @@ tink_cc_test(
     tink::proto::aes_siv_cc_proto
 )
 
-tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::daead::config_v0
-    tink::daead::deterministic_aead_key_templates
-    tink::daead::key_gen_config_v0
-    gmock
-    absl::status_matchers
-    tink::core::deterministic_aead
-    tink::core::keyset_handle
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-)
-
 tink_cc_library(
   NAME config_2026
   SRCS

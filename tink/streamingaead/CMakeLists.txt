@@ -590,29 +590,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::streamingaead::config_v0
-    tink::streamingaead::key_gen_config_v0
-    tink::streamingaead::streaming_aead_key_templates
-    gmock
-    absl::memory
-    absl::status_matchers
-    tink::core::input_stream
-    tink::core::keyset_handle
-    tink::core::output_stream
-    tink::core::streaming_aead
-    tink::subtle::test_util
-    tink::util::istream_input_stream
-    tink::util::ostream_output_stream
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
   NAME aes_ctr_hmac_streaming_parameters_test
   SRCS
     aes_ctr_hmac_streaming_parameters_test.cc

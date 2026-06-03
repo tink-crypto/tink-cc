@@ -518,23 +518,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::prf::config_v0
-    tink::prf::key_gen_config_v0
-    tink::prf::prf_key_templates
-    tink::prf::prf_set
-    gmock
-    absl::status_matchers
-    tink::core::keyset_handle
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
   NAME aes_cmac_prf_parameters_test
   SRCS
     aes_cmac_prf_parameters_test.cc

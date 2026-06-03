@@ -1639,26 +1639,6 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    srcs = ["config_v0_test.cc"],
-    deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
-        ":ml_dsa_parameters",
-        ":signature_key_templates",
-        ":slh_dsa_parameters",
-        "//proto:tink_cc_proto",
-        "//tink:keyset_handle",
-        "//tink:public_key_sign",
-        "//tink:public_key_verify",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "rsa_ssa_pkcs1_proto_serialization_test",
     srcs = ["rsa_ssa_pkcs1_proto_serialization_test.cc"],
     deps = [

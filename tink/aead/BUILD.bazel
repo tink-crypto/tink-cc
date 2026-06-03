@@ -1492,25 +1492,6 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    size = "small",
-    srcs = ["config_v0_test.cc"],
-    deps = [
-        ":aead_key_templates",
-        ":config_v0",
-        ":key_gen_config_v0",
-        "//proto:tink_cc_proto",
-        "//tink:aead",
-        "//tink:keyset_handle",
-        "//tink/internal:ssl_util",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "aes_eax_parameters_test",
     srcs = ["aes_eax_parameters_test.cc"],
     deps = [

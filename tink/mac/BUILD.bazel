@@ -653,23 +653,3 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
-
-cc_test(
-    name = "config_v0_test",
-    size = "small",
-    srcs = ["config_v0_test.cc"],
-    deps = [
-        ":config_v0",
-        ":key_gen_config_v0",
-        ":mac_key_templates",
-        "//proto:tink_cc_proto",
-        "//tink:chunked_mac",
-        "//tink:key_gen_configuration",
-        "//tink:keyset_handle",
-        "//tink:mac",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)

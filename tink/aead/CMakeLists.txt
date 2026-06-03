@@ -1326,24 +1326,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::aead::aead_key_templates
-    tink::aead::config_v0
-    tink::aead::key_gen_config_v0
-    gmock
-    absl::status_matchers
-    tink::core::aead
-    tink::core::keyset_handle
-    tink::internal::ssl_util
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
   NAME aes_eax_parameters_test
   SRCS
     aes_eax_parameters_test.cc

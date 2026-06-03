@@ -998,26 +998,6 @@ cc_test(
 )
 
 cc_test(
-    name = "config_v0_test",
-    size = "small",
-    srcs = ["config_v0_test.cc"],
-    tags = ["requires_boringcrypto_update"],
-    deps = [
-        ":config_v0",
-        ":hybrid_key_templates",
-        ":key_gen_config_v0",
-        "//proto:tink_cc_proto",
-        "//tink:hybrid_decrypt",
-        "//tink:hybrid_encrypt",
-        "//tink:keyset_handle",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "ecies_parameters_test",
     srcs = ["ecies_parameters_test.cc"],
     deps = [

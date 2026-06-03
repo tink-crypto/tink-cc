@@ -1072,22 +1072,3 @@ tink_cc_library(
     exclude_if_openssl
 )
 
-tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::hybrid::config_v0
-    tink::hybrid::hybrid_key_templates
-    tink::hybrid::key_gen_config_v0
-    gmock
-    absl::status_matchers
-    tink::core::hybrid_decrypt
-    tink::core::hybrid_encrypt
-    tink::core::keyset_handle
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
-)

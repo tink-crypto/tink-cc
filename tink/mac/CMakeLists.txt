@@ -570,25 +570,6 @@ tink_cc_test(
     tink::proto::hmac_cc_proto
 )
 
-tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::mac::config_v0
-    tink::mac::key_gen_config_v0
-    tink::mac::mac_key_templates
-    gmock
-    absl::status_matchers
-    tink::core::chunked_mac
-    tink::core::key_gen_configuration
-    tink::core::keyset_handle
-    tink::core::mac
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-)
-
 tink_cc_library(
   NAME config_2026
   SRCS

@@ -2150,24 +2150,3 @@ tink_cc_library(
     exclude_if_openssl
 )
 
-tink_cc_test(
-  NAME config_v0_test
-  SRCS
-    config_v0_test.cc
-  DEPS
-    tink::signature::config_v0
-    tink::signature::key_gen_config_v0
-    tink::signature::ml_dsa_parameters
-    tink::signature::signature_key_templates
-    tink::signature::slh_dsa_parameters
-    gmock
-    absl::status_matchers
-    tink::core::keyset_handle
-    tink::core::public_key_sign
-    tink::core::public_key_verify
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
-)

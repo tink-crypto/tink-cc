@@ -1036,9 +1036,6 @@ tink_cc_test(
     tink::subtle::ecdsa_verify_boringssl
     tink::util::enums
     tink::util::istream_input_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
@@ -1061,18 +1058,11 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::core::registry
     tink::config::global_registry
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::subtle::ed25519_verify_boringssl
-    tink::util::enums
     tink::util::istream_input_stream
-    tink::util::protobuf_helper
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
     tink::proto::ed25519_cc_proto
     tink::proto::tink_cc_proto
 )

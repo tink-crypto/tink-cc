@@ -31,19 +31,12 @@
 #include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
-#include "tink/registry.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/signature_config.h"
 #include "tink/subtle/ed25519_verify_boringssl.h"
-#include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 #include "proto/ed25519.pb.h"
 #include "proto/tink.pb.h"
 
@@ -51,6 +44,7 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::Ed25519KeyFormat;
 using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
@@ -202,7 +196,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKeyNotEnoughRandomness) {
       absl::make_unique<std::stringstream>("tooshort")};
 
   ASSERT_THAT(Ed25519SignKeyManager().DeriveKey(format, &input_stream).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 

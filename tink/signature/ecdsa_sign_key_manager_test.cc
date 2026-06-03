@@ -42,9 +42,6 @@
 #include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/ecdsa.pb.h"
 #include "proto/tink.pb.h"
@@ -324,7 +321,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyNotEnoughRandomness) {
       absl::make_unique<std::stringstream>("tooshort")};
 
   ASSERT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(EcdsaSignKeyManagerTest, DeriveKeyWithInvalidKeyTemplateVersionFails) {
@@ -343,7 +340,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyWithInvalidKeyTemplateVersionFails) {
       absl::make_unique<std::stringstream>("tooshort")};
 
   ASSERT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(EcdsaSignKeyManagerTest, DeriveKeyInvalidCurve) {
@@ -359,7 +356,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyInvalidCurve) {
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   ASSERT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 // Test vectors have been manually generated based on BoringSSL

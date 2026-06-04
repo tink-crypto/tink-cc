@@ -59,7 +59,7 @@ namespace jwt_internal {
 
 namespace {
 
-absl::StatusOr<std::unique_ptr<JwtMacInternal>> CreateJwtMac() {
+absl::StatusOr<std::unique_ptr<Mac>> CreateTestMac() {
   std::string key_value;
   if (!absl::WebSafeBase64Unescape(
           "AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1"
@@ -74,6 +74,19 @@ absl::StatusOr<std::unique_ptr<JwtMacInternal>> CreateJwtMac() {
   if (!mac.ok()) {
     return mac.status();
   }
+  return *std::move(mac);
+}
+
+absl::StatusOr<std::unique_ptr<JwtMacInternal>> CreateJwtMac() {
+  std::string key_value;
+  if (!absl::WebSafeBase64Unescape(
+          "AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1"
+          "qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow",
+          &key_value)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "failed to parse key");
+  }
+  absl::StatusOr<std::unique_ptr<Mac>> mac = CreateTestMac();
   std::unique_ptr<JwtMacInternal> jwt_mac =
       JwtMacImpl::Raw(*std::move(mac), "HS256");
   return std::move(jwt_mac);
@@ -608,6 +621,44 @@ TEST(JwtMacImplRawWithCustomKidTest, Verify) {
         jwt_mac->VerifyMacAndDecodeWithKid(*compact, *validator, "wrong-kid"),
         Not(IsOk()));
   }
+}
+
+TEST(JwtMacImplTest, NonStringTypeHeaderIsRejectedWithDefaultValidator) {
+  absl::StatusOr<std::unique_ptr<JwtMacInternal>> jwt_mac = CreateJwtMac();
+  ASSERT_THAT(jwt_mac, IsOk());
+
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetIssuer("issuer")
+                                       .AddAudience("audience")
+                                       .SetJwtId("id123")
+                                       .WithoutExpiration()
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  absl::StatusOr<JwtValidator> default_validator =
+      JwtValidatorBuilder()
+          .ExpectIssuer("issuer")
+          .ExpectAudience("audience")
+          .AllowMissingExpiration()
+          .Build();
+  ASSERT_THAT(default_validator, IsOk());
+
+  absl::StatusOr<std::string> payload = raw_jwt->GetJsonPayload();
+  ASSERT_THAT(payload, IsOk());
+  std::string encoded_header = EncodeHeader(R"({"typ":123,"alg":"HS256"})");
+  std::string encoded_payload = EncodePayload(*payload);
+  std::string unsigned_token = encoded_header + "." + encoded_payload;
+
+  absl::StatusOr<std::unique_ptr<Mac>> mac = CreateTestMac();
+  ASSERT_THAT(mac, IsOk());
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac(unsigned_token);
+  ASSERT_THAT(tag, IsOk());
+  std::string compact = unsigned_token + "." + EncodeSignature(*tag);
+
+  absl::StatusOr<VerifiedJwt> numeric_type_result =
+      (*jwt_mac)->VerifyMacAndDecodeWithKid(compact, *default_validator,
+                                            /*kid=*/absl::nullopt);
+  EXPECT_THAT(numeric_type_result, Not(IsOk()));
 }
 
 }  // namespace

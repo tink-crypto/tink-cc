@@ -163,6 +163,15 @@ absl::Status ValidateHeader(const google::protobuf::Struct& header,
       return status;
     }
   }
+  auto typ_it = fields.find("typ");
+  if (typ_it != fields.end()) {
+    // "typ" header must be a string if present.
+    const google::protobuf::Value& typ = typ_it->second;
+    if (typ.kind_case() != google::protobuf::Value::kStringValue) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "typ is not a string");
+    }
+  }
   return absl::OkStatus();
 }
 

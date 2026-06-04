@@ -215,6 +215,15 @@ TEST(JwtFormat, ValidateHeaderWithInvalidAlgTypFails) {
               Not(IsOk()));
 }
 
+TEST(JwtFormat, ValidateHeaderRejectsNonStringTyp) {
+  std::string json_header = R"({"alg":"HS256", "typ":123})";
+  absl::StatusOr<google::protobuf::Struct> header =
+      JsonStringToProtoStruct(json_header);
+  ASSERT_THAT(header, IsOk());
+  EXPECT_THAT(ValidateHeader(*header, "HS256", absl::nullopt, absl::nullopt),
+              Not(IsOk()));
+}
+
 TEST(JwtFormat, ValidateHeaderWithTinkKid) {
   std::string json_header = R"({"alg":"HS256","kid":"tink_kid"})";
   absl::StatusOr<google::protobuf::Struct> header =

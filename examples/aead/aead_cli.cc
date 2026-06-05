@@ -76,7 +76,7 @@ absl::Status AeadCli(absl::string_view mode, const std::string& keyset_filename,
   // Get the primitive.
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*keyset_handle)
-          ->GetPrimitive<crypto::tink::Aead>(crypto::tink::ConfigAeadV0());
+          ->GetPrimitive<crypto::tink::Aead>(crypto::tink::ConfigAead2026());
   if (!aead.ok()) return aead.status();
 
   // Read the input.

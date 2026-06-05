@@ -165,7 +165,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::AesCmac(),
-                                KeyGenConfigPrfV0());
+                                KeyGenConfigPrf2026());
   ASSERT_THAT(before_handle, IsOk());
 
   // Fails to parse this key type, so falls back to legacy proto key.
@@ -191,7 +191,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::AesCmac(),
-                                KeyGenConfigPrfV0());
+                                KeyGenConfigPrf2026());
   ASSERT_THAT(after_handle, IsOk());
 
   EXPECT_THAT(dynamic_cast<const AesCmacPrfKey*>(
@@ -251,7 +251,7 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HmacSha256(),
-                                KeyGenConfigPrfV0());
+                                KeyGenConfigPrf2026());
   ASSERT_THAT(before_handle, IsOk());
 
   // Fails to parse this key type, so falls back to legacy proto key.
@@ -281,7 +281,7 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HmacSha256(),
-                                KeyGenConfigPrfV0());
+                                KeyGenConfigPrf2026());
   ASSERT_THAT(after_handle, IsOk());
 
   EXPECT_THAT(dynamic_cast<const HmacPrfKey*>(
@@ -342,7 +342,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HkdfSha256(),
-                                KeyGenConfigPrfV0());
+                                KeyGenConfigPrf2026());
   ASSERT_THAT(before_handle, IsOk());
 
   // Fails to parse this key type, so falls back to legacy proto key.
@@ -373,7 +373,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HkdfSha256(),
-                                KeyGenConfigPrfV0());
+                                KeyGenConfigPrf2026());
   ASSERT_THAT(after_handle, IsOk());
 
   EXPECT_THAT(dynamic_cast<const HkdfPrfKey*>(

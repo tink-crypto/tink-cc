@@ -208,7 +208,7 @@ TEST_F(StreamingAeadConfigTest,
   absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(
           StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB(),
-          KeyGenConfigStreamingAeadV0());
+          KeyGenConfigStreamingAead2026());
   ASSERT_THAT(before_handle, IsOk());
 
   // Fails to parse this key type, so falls back to legacy proto key.
@@ -247,7 +247,7 @@ TEST_F(StreamingAeadConfigTest,
   absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(
           StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB(),
-          KeyGenConfigStreamingAeadV0());
+          KeyGenConfigStreamingAead2026());
   ASSERT_THAT(after_handle, IsOk());
 
   EXPECT_THAT(dynamic_cast<const AesCtrHmacStreamingKey*>(
@@ -314,7 +314,7 @@ TEST_F(StreamingAeadConfigTest,
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(StreamingAeadKeyTemplates::Aes128GcmHkdf4KB(),
-                                KeyGenConfigStreamingAeadV0());
+                                KeyGenConfigStreamingAead2026());
   ASSERT_THAT(before_handle, IsOk());
 
   // Fails to parse this key type, so falls back to legacy proto key.
@@ -350,7 +350,7 @@ TEST_F(StreamingAeadConfigTest,
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(StreamingAeadKeyTemplates::Aes128GcmHkdf4KB(),
-                                KeyGenConfigStreamingAeadV0());
+                                KeyGenConfigStreamingAead2026());
   ASSERT_THAT(after_handle, IsOk());
 
   EXPECT_THAT(dynamic_cast<const AesGcmHkdfStreamingKey*>(

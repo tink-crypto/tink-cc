@@ -79,7 +79,7 @@ absl::Status DeterministicAeadCli(absl::string_view mode,
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::DeterministicAead>(
-              crypto::tink::ConfigDeterministicAeadV0());
+              crypto::tink::ConfigDeterministicAead2026());
   if (!daead.ok()) return daead.status();
 
   // Read the input.

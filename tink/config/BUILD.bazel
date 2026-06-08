@@ -362,6 +362,7 @@ cc_library(
     hdrs = ["key_gen_config_2026.h"],
     include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/aead/internal:key_gen_config_2026",

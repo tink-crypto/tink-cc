@@ -1560,3 +1560,50 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_key_creator
+  SRCS
+    jwt_ml_dsa_key_creator.cc
+    jwt_ml_dsa_key_creator.h
+  DEPS
+    absl::log
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::secret_buffer
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::util::secret_data
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_key_creator_test
+  SRCS
+    jwt_ml_dsa_key_creator_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_key_creator
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::optional
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::internal::key_gen_configuration_impl
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_proto_serialization
+  TAGS
+    exclude_if_openssl
+)

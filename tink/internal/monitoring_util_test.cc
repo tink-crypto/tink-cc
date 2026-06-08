@@ -33,7 +33,6 @@
 #include "tink/internal/monitoring_key_set_info.h"
 #include "tink/key_status.h"
 #include "tink/primitive_set.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -42,6 +41,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::MonitoringKeySetInfo;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
@@ -55,7 +55,7 @@ TEST(MonitoringUtilTest,
       PrimitiveSet<std::string>::Builder().Build();
   ASSERT_THAT(primitive_set, IsOk());
   EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(*primitive_set).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetNullPrimary) {
@@ -72,7 +72,7 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetNullPrimary) {
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
   EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(*primitive_set).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 // Utility struct to hold primitive and key info.

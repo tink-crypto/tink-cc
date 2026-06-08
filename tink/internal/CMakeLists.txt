@@ -533,7 +533,6 @@ tink_cc_test(
     absl::strings
     tink::core::key_status
     tink::core::primitive_set
-    tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
 

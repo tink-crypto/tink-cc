@@ -53,6 +53,7 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::strings
     absl::optional
     crypto
@@ -73,8 +74,6 @@ tink_cc_test(
     tink::internal::registry_impl
     tink::kem::kem_decapsulate
     tink::kem::kem_encapsulate
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

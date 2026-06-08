@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/core/template_util.h"
@@ -42,6 +43,7 @@ namespace tink {
 namespace {
 
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::testing::Eq;
 
@@ -140,7 +142,7 @@ TEST(KeyManagerTest, CreateFails) {
   auto failing =
       ExampleKeyTypeManager().GetPrimitive<NotRegistered>(AesGcmKeyProto());
   EXPECT_THAT(failing.status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 class ExampleKeyTypeManagerWithoutFactory
@@ -214,7 +216,7 @@ TEST(KeyManagerWithoutFactoryTest, CreateFails) {
       ExampleKeyTypeManagerWithoutFactory().GetPrimitive<NotRegistered>(
           AesGcmKeyProto());
   EXPECT_THAT(failing.status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

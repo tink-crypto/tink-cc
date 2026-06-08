@@ -1159,6 +1159,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::status_matchers
     absl::string_view
     tink::subtle::subtle
     tink::util::secret_data

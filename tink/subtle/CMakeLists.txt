@@ -642,20 +642,17 @@ tink_cc_library(
     absl::algorithm_container
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto
     tink::core::deterministic_aead
-    tink::aead::internal::aead_util
+    tink::core::secret_data
     tink::internal::aes_util
-    tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::secret_buffer
-    tink::util::errors
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

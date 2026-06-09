@@ -68,7 +68,7 @@ struct Deleter<EVP_CIPHER_CTX> {
 };
 template <>
 struct Deleter<BIGNUM> {
-  void operator()(BIGNUM* ptr) { BN_free(ptr); }
+  void operator()(BIGNUM* ptr) { BN_clear_free(ptr); }
 };
 template <>
 struct Deleter<BN_CTX> {

@@ -1193,16 +1193,19 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::subtle::aes_siv_boringssl
+    tink::subtle::random
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::string_view
+    benchmark::benchmark_main
+    tink::core::deterministic_aead
     tink::core::secret_data
     tink::config::tink_fips
     tink::internal::testing::wycheproof_util
     tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

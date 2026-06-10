@@ -1236,14 +1236,34 @@ cc_library(
     deps = [
         ":jwt_ecdsa_sign_key_manager",
         ":jwt_ecdsa_verify_key_manager",
+        ":jwt_ml_dsa_key_creator",
         ":jwt_rsa_ssa_pkcs1_sign_key_manager",
         ":jwt_rsa_ssa_pkcs1_verify_key_manager",
         ":jwt_rsa_ssa_pss_sign_key_manager",
         ":jwt_rsa_ssa_pss_verify_key_manager",
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",
+        "//tink/jwt:jwt_ml_dsa_parameters",
+        "//tink/jwt:jwt_ml_dsa_proto_serialization",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "jwt_signature_key_gen_config_2026_test",
+    srcs = ["jwt_signature_key_gen_config_2026_test.cc"],
+    deps = [
+        ":jwt_signature_key_gen_config_2026",
+        "//tink:key_gen_configuration",
+        "//tink:keyset_handle",
+        "//tink/internal:ssl_util",
+        "//tink/jwt:jwt_ml_dsa_parameters",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
     ],
 )
 

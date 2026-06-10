@@ -1484,14 +1484,34 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_ml_dsa_key_creator
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    crypto
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_proto_serialization
+)
+
+tink_cc_test(
+  NAME jwt_signature_key_gen_config_2026_test
+  SRCS
+    jwt_signature_key_gen_config_2026_test.cc
+  DEPS
+    tink::jwt::internal::jwt_signature_key_gen_config_2026
+    gmock
+    absl::status_matchers
+    absl::statusor
+    crypto
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::internal::ssl_util
+    tink::jwt::jwt_ml_dsa_parameters
 )
 
 tink_cc_library(
@@ -1524,8 +1544,6 @@ tink_cc_library(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1583,8 +1601,6 @@ tink_cc_library(
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(

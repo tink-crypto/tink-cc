@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -175,6 +175,11 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
       internal::CheckFipsCompatibility<RsaSsaPssSignBoringSsl>();
   if (!status.ok()) {
     return status;
+  }
+
+  if (params.salt_length < 0) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Salt length is negative");
   }
 
   // Check if the hash type is safe to use.

@@ -687,6 +687,7 @@ tink_cc_library(
   NAME parameters
   SRCS
     parameters.h
+  PUBLIC
 )
 
 tink_cc_library(

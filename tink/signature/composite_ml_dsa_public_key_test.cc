@@ -17,6 +17,7 @@
 #include "tink/signature/composite_ml_dsa_public_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -35,7 +36,6 @@
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/signature/signature_public_key.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -125,9 +125,10 @@ MlDsaPublicKey GenerateMlDsaPublicKeyOrDie(
 }
 
 std::unique_ptr<SignaturePublicKey> GenerateClassicalPublicKeyOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool random) {
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool random,
+    int key_index = 0) {
   std::unique_ptr<SignaturePrivateKey> private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(algorithm, random);
+      GenerateClassicalPrivateKeyForTestOrDie(algorithm, random, key_index);
   return crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
       private_key->GetPublicKey());
 }
@@ -356,7 +357,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentClassicalPublicKeyNotEqual) {
                                       /*random=*/false);
   std::unique_ptr<SignaturePublicKey> classical_public_key2 =
       GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/true);
+                                      /*random=*/false, /*key_index=*/1);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(

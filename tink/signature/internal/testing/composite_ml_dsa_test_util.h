@@ -18,7 +18,8 @@
 #define TINK_SIGNATURE_INTERNAL_TESTING_COMPOSITE_ML_DSA_TEST_UTIL_H_
 
 #include <memory>
-#include "absl/types/optional.h"
+#include <optional>
+
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_private_key.h"
@@ -36,14 +37,15 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
 // force_random is true, the key is randomly generated. Otherwise, either a
 // fixed key or a random key will be returned.
 std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool force_random);
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool force_random,
+    int key_index = 0);
 
 // Generates a new composite ML-DSA private key with the given parameters. If
 // force_random is true, the key is randomly generated. Otherwise, either a
 // fixed key or a random key will be returned.
 CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
     const CompositeMlDsaParameters& parameters, bool force_random,
-    std::optional<int> id_requirement);
+    std::optional<int> id_requirement, int key_index = 0);
 
 }  // namespace internal
 }  // namespace tink

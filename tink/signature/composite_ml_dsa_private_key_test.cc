@@ -17,6 +17,7 @@
 #include "tink/signature/composite_ml_dsa_private_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -32,7 +33,6 @@
 #include "tink/signature/internal/testing/composite_ml_dsa_test_util.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -247,7 +247,8 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentClassicalPrivateKeyNotEqual) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key2 =
       GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/true);
+                                              /*force_random=*/false,
+                                              /*key_index=*/1);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key1 =
       CompositeMlDsaPrivateKey::Create(

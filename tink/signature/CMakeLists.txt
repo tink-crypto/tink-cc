@@ -1995,7 +1995,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )
@@ -2054,7 +2053,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )

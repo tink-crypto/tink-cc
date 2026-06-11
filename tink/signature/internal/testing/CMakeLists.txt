@@ -150,7 +150,6 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::ec_util
     tink::internal::rsa_util

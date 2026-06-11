@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -131,6 +132,67 @@ constexpr std::string_view kHex3072BitRsaQinv =
     "89dee31800d191ed7249721c25266650c46dcbfbae3070604d2e009914a2e269a01bafa5bd"
     "f8bba31c4f3b60";
 
+// Extracted from third_party/wycheproof/testvectors/rsa_pkcs1_3072_test.json
+constexpr std::string_view kHex3072BitRsaN2 =
+    "d91f0d00f1aab580e2ac0e837638de7004fc968be21315a1ef2a234969045dd4bc1945eb53"
+    "982eeb3fe97ce84a26c7d464784ff7e561cee570e26d4145e14ffcce70430ef32facd19e80"
+    "ccce8a9b6604065ff1e50a7fa8fdd432ca4e7b2b858c88a96626e3a10a831596f91c2f22c8"
+    "3e1a0267fc7df121d3337f3b0fa6a8c606ed9031c1f83b9213dea832dc5dcae9c03b478099"
+    "53d75d966f35bcb10fffd23345a6ee2714c388972980938ad6123d9c97916920b9412ee1a8"
+    "4e1d345b83866e2b3b02127384681aca038401a39bab5e4672d6493cd4a293b933252e3fc0"
+    "6d8e4348f0e16b99ae58f7972b43bb6a7a04295d112ee509fafaae39de6d064f622c3f3c8b"
+    "4fce6d836730c1285d90c548db62b795964794eaf143ad427360a2e83f5b1f8a20b08d18cd"
+    "bd474f21c1bf42e6f1e137890df92888d83cc405975597209b7a09f4dc999fab82d4ebd77e"
+    "0d66bd89d83fa564a03e3560977fb4e0fba7a0339f9221dc0c99402581cb95472a6c11b6e8"
+    "0e91059fbc14470b7a68d8e50e53";
+constexpr std::string_view kHex3072BitRsaD2 =
+    "02ab95175be18395f033b981f8643ea816079d3a5f2f68e6b2f04bbacd65d659956ea22380"
+    "c5b05e084d30d212876391c3228fa936d2fb1e6b42fda0fde10580d0712501fc0fac0a6fee"
+    "999638b22c91041b0df8892684c78a628d8665916575130132566c1a40ecd7c9218b2d313a"
+    "513934aa5eba95ca9ab4596e3a850c3253477cac7ffc338f5a5b34aa5b7773d5681dd2854c"
+    "5d719a9f0d03162cff4b60246d48de48f0c26edd9d0f0dc1795c841176f3bcdd402a030f97"
+    "684e87a4507bc8bd463eab49945ca8ccdebca2b4c5c8b15db40fcb12534cefd76c130e95c5"
+    "806a1ca3fb4359477780f437877813ec9f1f2415f16b2268155a399213252d0b8837b775e4"
+    "a2223012b20c767c794a4104411684590ae7bf7e4227949d59d94cbf85746d2fa690839865"
+    "91e9b0af51080ab7c1f4bef0d96fabb7318e64a03a93ae62f52fc941ba3a1eb2bcbceede59"
+    "3dcd6c4af0459fb77ab90f76ead70dbfb7249b17d62b740e2aa436f299fdb94071aa1518e9"
+    "7ca6ba00f0148afcf316ddd507d1";
+constexpr std::string_view kHex3072BitRsaP2 =
+    "f261bfc097786e1c34d123c19cd0d0b6cc65bef52720c8a003892b0e74611888099ab96c03"
+    "2a078b77e000be90d5b98fb8e4083cd9326adad050ec6cb92f55b5bf8066b1065e3fbfd133"
+    "eecdacb75cceba6673d2184ba9a0a95833fb7e0c27c607777947eacfe702ddceedf16a65fe"
+    "978ab5355207808fa2a590f1733b99d9164962ed5cf98b478cd0288ff161943ad1a3fdd135"
+    "35c752f622cf8e0c5c3ba43abbbaf901dc457faf11e09222473aef53d176061fa3a70741ba"
+    "b8d540a959e1c7";
+constexpr std::string_view kHex3072BitRsaQ2 =
+    "e551f8c7ef3718c07aa9f5127a3fe8439e70fba743524267355f8095af64fd7c0b4756cc43"
+    "555bb6157a488046f1cc9988e71694164116b250283dd50b7894a456918d6cf8e83bfe085a"
+    "be65bbefe791cfe178654891ab82d66f70c85a757573a051039605363c38ab9dab31110a93"
+    "c73fa09b6f71068633ed8fd077ee805c02d559090e346a28d7186a6b5f6804b65f655b34a2"
+    "a6c46b81501b2b47154ceefe6b6c20fe73cdf764fc768f724faf2948b270e6b52518710464"
+    "76d4390b5e2f15";
+constexpr std::string_view kHex3072BitRsaDp2 =
+    "75c5914a9f4ee111cb88237b9c1aca8f47d9d8637e53aba8348f9de0342449ab301f82213d"
+    "985a7a26112dcb6accae916b2141ef6f09d469e5f6ac2a5800ec0097c068257416af9b20a7"
+    "bf4d28b31fe143292cf5d4e04ed7c5f119b1059a1a695a8f6edac6f9a621fa6ce5a8fc2dfa"
+    "fadf6715357a77b9532a67b72a6ab7628835b85fe5614b8fc498105d80c80d225762fb9d7f"
+    "e155acb5f44c2d954beb9eecfaf2eab340b8744638c589bc262838c9dd691fa897f83cca6f"
+    "54082a971f1959";
+constexpr std::string_view kHex3072BitRsaDq2 =
+    "119d4c48bf3d322f86bc8b5092075aa5e703b2b0d460fb2cc652c1a3bdc73a194f1c79b452"
+    "efb98db0f4a5a104d209ef392ed6f3250a76ddd77e5fd17f821198d5f574318ca4fa06b749"
+    "911a6b67301869295e801924e751b37af7e4cbddfdd995d4e33ba0c6dbb556a953beff1a1a"
+    "e3d1255b0b225967f1912bdccd798a6e86e130679ba9b705d00fd60ccd55461764187afafe"
+    "0b654704b5cc80748354577f3f6d1cd3aebd816546672cf990d9598875fc6a1c3bef36af29"
+    "b05ef8cac0bf49";
+constexpr std::string_view kHex3072BitRsaQinv2 =
+    "999fd604b8158fb941618917240546c32a734ca8b4877d9cef9743887cd34a1d889a0beff8"
+    "ae1bc304061eb39d569af5fe0b2646b6d1ad7dac7a379ec695a8e9ccb44ce4f1c1178cf2ab"
+    "d741afcfbac9f2f8b7493820677347bdf08c16b481fb14d2a357823bb6faf2b3732830ff27"
+    "be7ebec8e6a325ccf1e8c24a529bb5749821fdeda8b25528fda0e473fbc5161b764b848135"
+    "989c2bd49914bb6d24484c81821bc30aa1c4a702b22f144cb2f7c359c1a68d7559c00f805a"
+    "17cee23d283d19";
+
 // From
 // https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_4096_test.json.
 constexpr std::string_view kHex4096BitRsaN =
@@ -204,6 +266,78 @@ constexpr std::string_view kHex4096BitRsaQinv =
     "d90d0539944e78cfcfd8fff55bb31a1cebc65b28f51e790701b2f7912188984f034e6e96e1"
     "c5251e33fe38fb221bce7a90a86857c5f56b6ca77307c45d5290b1f088ade082b349";
 
+// Extracted from third_party/wycheproof/testvectors/rsa_pkcs1_4096_test.json
+constexpr std::string_view kHex4096BitRsaN2 =
+    "a30b62740e25aab01934ea6d9b92090cff2c0ce9831941eb98376a2daabda6afce254617f6"
+    "dc579f97c299fa89ca5f746fe3693075a135774b703b008b8e884ea6ea25a5cc6b92f9b328"
+    "d77139401090fae69ebe327b36636306ff8b4a13e6e75d43eb6cf856a888442a9e03a2bbc2"
+    "2d003fe97c73fde4a3a6db1c56e1d5c8fb5e5c937d60e2752954a0bb194a2b84f50a12be18"
+    "3493b8035ff56b38f1b40ed3885cb864749342fb7d577ed5864bb42fd1b31e2d40e23c7192"
+    "335c9a3fc6b2870c9f3fb3037cf21c6cea27f39696f561ce0b60b5f0df94bf965e8364d8c1"
+    "fc1ea69755ee65540e051c5402ac3d93a1c65853cbb4231b6619afb07b58e7c7898d2f0efe"
+    "b119899ab7be7f5110e7ffcf97a226bc6df9b5ac7e21645369dfaf595d05694695e5dab014"
+    "ed1b0686ae065743a4f97f15a92723990c69c88adf0427e3f5c35b5612d1038151e5e4e359"
+    "de850e910b841b2d58c2febb5c773e707d171278f2e9b20d1f4fc05274f6043024ea644b8e"
+    "d7cddf5d7f7a4036630ce3220eca913fcc4d3f63d8036a49a76c0b9c3d3d815f61d98c37c1"
+    "2791fe300fc39a9b05ff28a5c5f54070f029b5d4214e874912c392bd92e9c870a6707927a0"
+    "df866d872dcfc7b0c133621ef1f1c01dc485920a66920a815cc35f4ceeda40e5dedef32aa6"
+    "5436ef360e4c10ec1c970c5990f6377ee16804c9f00f6a7a751c6fbce973d1";
+constexpr std::string_view kHex4096BitRsaD2 =
+    "50dbf689c3f25e42535df0dd470817c10053e25b748ef4285927325b4f901ab899add6a34f"
+    "e45af8651537b40eddf49514605dec9089d0b0471373cf8366bea6f314b073177c4a39d7e6"
+    "6b625598361f10af8b0e9c8e8a9ca3a1f6de2770d354eee61e3dbeb38b8578f901c09fd62a"
+    "2893351f207f8decf4546dda12249217c8c2357b57f4d29a7452ea1ba0212e9013ce591939"
+    "7be9be9abdde42bcccf21560470264d83d104369e1f1a08f58b8f6b5b873f28552e6603f9a"
+    "d82a16bd865747aeb4d3ac7e105b2a49c19eeaa946588f96d601b279b1085e33becfbf15d8"
+    "aea6accbe4ec0408b9a343374ed408fdcc7f4792d735912ba76919be968db2f53c7ba334d0"
+    "fa6c780eda7b36f437337b4734e8dccbb2e92cb0648cb7ee48e7343eade2efc0103a7aba8a"
+    "3686793cc93f47a62adcd4dcfba7a22c4436638d4e8f50b4248287ead7c8cc9c7f5d8c0067"
+    "5ac06bc7fc8c5559c73c3d0fa79a70c5b1f49096b1901141629c52359600fe6520c2b3cab1"
+    "7dd81f0245a2b33855ffcc8a7db394815b6b77f4cf6b33319167df390252b7c99ea4abac00"
+    "2e0d50ae7c046d5631e1f023ab50b0517980eb0ca232bbc74b297acee280ac52b8aaf795b5"
+    "4c9f93b8c97ee6667d08ee798b0910a4038462ffccedf4ae65876afbcfa744f52a8340daeb"
+    "a2b670c0fbdd8d8f96fc95447d4ede3f9b624722f98cc4ec4aafde697822f9";
+constexpr std::string_view kHex4096BitRsaP2 =
+    "db20bff0f553dc176de86baae4b93ac95673c6f715bb3f11b848bec81de4a0df846121b638"
+    "5aa256cb2a9e66996596a1b5b532257cbf078819b8bf3bbf7801441801abfe490ca84e5d74"
+    "82ee6211f04d8304be122684d1dc8cdf72d14bf85bd760ec0d0f5030e5ef62a0ceb275a2d5"
+    "7d95f3d63e39e4d2a97db0e243793bf32e83030cc0a0bea38824e6d1188b41703cc29a4f60"
+    "028d895ecf64a9ccb3b228c7e66cb1db316aed92433c63b0445f1cc03460e33440ed2a23f9"
+    "01eec8925e7671e302f7d226a5e741e82982e67c58419e22105319ceffce9bc26ed89f8b59"
+    "042b2974f6097f423a22e2656702b8d8813a5fde557d6adb6e7fa4e58cf8f0776973";
+constexpr std::string_view kHex4096BitRsaQ2 =
+    "be7ac2633836593c891975dded137d40f9e18519f92333048f1181b0b9ec1207502f5c5f0d"
+    "1cd58365bff3e80b350b01990b1ea85e263f8adf4b6a99eac132554855d255c2253bbaf722"
+    "e41b893c81cc9933560068b226e147d459b9a73ef1af2ab96a2b39a9e401385a713a860abd"
+    "3b6ad9157dd6c2508f1859cb84717d4d533a7ad0ae92734e085956c40a9fa612555e68247e"
+    "672523868e06cdc23e62524537435a142924c7c466b2cc89ef281c230ae6fe123ae92489e3"
+    "83407e6db9e5a859f8f7d6e3a68bef914494420226fe4123049c324eb0dccce0b7ee1382fb"
+    "b90b03d87aaad596d232be352d83e0a01bac664ffa948ffce419806b68029c50ecab";
+constexpr std::string_view kHex4096BitRsaDp2 =
+    "abdb408e336a04b85f5ba46d901af1cf0c3d9b3317d915fac8c44cd4581582522ad99efdf1"
+    "aeab995497e549644f3757365298b4abe48a7ca467af9ba56bf1da3cd5bad5a0e70b6d0280"
+    "a95b5a90e51d757f17aed684deae91d181944277d357d4ccece530a858fd6925e356354a73"
+    "139eb27139b6600f141cdec865d0c442d21cb01ca54aac9946e26220659679c913ee2fe5c6"
+    "cfd9bf7e1b3bc0ac29d6b58329e5df8ba07353459df3d3df5f9014d56d7efb5275054c4290"
+    "3d82cfcd73c683455e838c4f0158a0e8fafd8dd4c1c71cc56c76304c9775abd54ee81820ca"
+    "bca9394760db4bf25df4140921441242c2ff4c46ec5783a1fb44a2c7e1cb2f95079f";
+constexpr std::string_view kHex4096BitRsaDq2 =
+    "ad74dccfbdc0c0428016cf5ee925764a554329121dee0fe776e15a58b4f664f483f09d0d71"
+    "c3702bd7dc95201a14939140ecff5e135e813ed558b81ab1cc7d296c55bad49d978a6d17e0"
+    "8e19054034733c8fa3217c35bf722717191e174f1a8789408f8e0d54c86cd4048857e2f8a4"
+    "9a1712d89f5f925409fb02ca72316709a360fdb64b42d1fd9d5cbdc6886619b55848404dfb"
+    "4db2644783ce6e5114be346d138621e17a16245495b0fcd21f17478821c57858e18cadd963"
+    "7582a59f064a3ca4b233ff5c0fae1edb0ab877e3bdde8b32786044efa3df6e32b54bf838af"
+    "4232e5ad9d0734b9c370b2057b0d3ce09052ce58c6b7c2e7685050c17e55e2434f41";
+constexpr std::string_view kHex4096BitRsaQinv2 =
+    "9479c2cb8bcf71d5edbdc4f65240ce586e906ab636320420cf1906170d3af01f767fcab768"
+    "880628ec27953589454a0294409f78127666f45ec07d38139b4445c7638fb39dc18a91af5d"
+    "9c28ecb47f9cebb1ce19e48dcbe261056eecc107f6d3ca715f3747af24e6ae6a658c434a68"
+    "cec6ad84664c88167cc25567b0cac2302ab109c66bd339be5158c67472a01a81e9cf19dee2"
+    "762bbe9b0eafdcbb96991070d956db3007cb2b4d2b0acef96a233ff8ddedb970c11c0987f1"
+    "b3bc1ec8b1d95a7e10644c94fe6fb670d363869496d0e25ccd9564f283f55982f9c75108c4"
+    "70c81bf3b8f28c7e8533683d4945b538c4d683083610a7579f9e8dd1e0c8b15c5b8e";
+
 const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
 
 absl::Status NewRsaKeyPairF4(int modulus_size_in_bits,
@@ -266,7 +400,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateEcdsaPrivateKeyOrDie(
 }
 
 std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
-    bool force_random) {
+    bool force_random, int key_index = 0) {
   absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(3072)
@@ -306,7 +440,8 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
     ABSL_CHECK_OK(private_key);
     return std::make_unique<RsaSsaPssPrivateKey>(*private_key);
   }
-  BigInteger modulus(HexDecodeOrDie(kHex3072BitRsaN));
+  BigInteger modulus(
+      HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaN2 : kHex3072BitRsaN));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
@@ -314,25 +449,37 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHex3072BitRsaP),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHex3072BitRsaQ),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedData(HexDecodeOrDie(kHex3072BitRsaDp),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedData(HexDecodeOrDie(kHex3072BitRsaDq),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedData(HexDecodeOrDie(kHex3072BitRsaD),
-                                             InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedData(HexDecodeOrDie(kHex3072BitRsaQinv),
-                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaP2
+                                                           : kHex3072BitRsaP),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaQ2
+                                                           : kHex3072BitRsaQ),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaDp2
+                                                           : kHex3072BitRsaDp),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaDq2
+                                                           : kHex3072BitRsaDq),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaD2
+                                                           : kHex3072BitRsaD),
+                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(
+              HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaQinv2
+                                            : kHex3072BitRsaQinv),
+              InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
   return std::make_unique<RsaSsaPssPrivateKey>(*private_key);
 }
 
 std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
-    bool force_random) {
+    bool force_random, int key_index = 0) {
   absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(4096)
@@ -371,7 +518,8 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
             .Build(GetPartialKeyAccess());
     return std::make_unique<RsaSsaPssPrivateKey>(*private_key);
   }
-  BigInteger modulus(HexDecodeOrDie(kHex4096BitRsaN));
+  BigInteger modulus(
+      HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaN2 : kHex4096BitRsaN));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
@@ -379,25 +527,37 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHex4096BitRsaP),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHex4096BitRsaQ),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedData(HexDecodeOrDie(kHex4096BitRsaDp),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedData(HexDecodeOrDie(kHex4096BitRsaDq),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedData(HexDecodeOrDie(kHex4096BitRsaD),
-                                             InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedData(HexDecodeOrDie(kHex4096BitRsaQinv),
-                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaP2
+                                                           : kHex4096BitRsaP),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaQ2
+                                                           : kHex4096BitRsaQ),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaDp2
+                                                           : kHex4096BitRsaDp),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaDq2
+                                                           : kHex4096BitRsaDq),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaD2
+                                                           : kHex4096BitRsaD),
+                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(
+              HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaQinv2
+                                            : kHex4096BitRsaQinv),
+              InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
   return std::make_unique<RsaSsaPssPrivateKey>(*private_key);
 }
 
 std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
-    bool force_random) {
+    bool force_random, int key_index = 0) {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(3072)
@@ -435,7 +595,8 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
             .Build(GetPartialKeyAccess());
     return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
   }
-  BigInteger modulus(HexDecodeOrDie(kHex3072BitRsaN));
+  BigInteger modulus(
+      HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaN2 : kHex3072BitRsaN));
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
                                    /*id_requirement=*/absl::nullopt,
@@ -444,25 +605,37 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHex3072BitRsaP),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHex3072BitRsaQ),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedData(HexDecodeOrDie(kHex3072BitRsaDp),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedData(HexDecodeOrDie(kHex3072BitRsaDq),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedData(HexDecodeOrDie(kHex3072BitRsaD),
-                                             InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedData(HexDecodeOrDie(kHex3072BitRsaQinv),
-                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaP2
+                                                           : kHex3072BitRsaP),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaQ2
+                                                           : kHex3072BitRsaQ),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaDp2
+                                                           : kHex3072BitRsaDp),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaDq2
+                                                           : kHex3072BitRsaDq),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaD2
+                                                           : kHex3072BitRsaD),
+                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(
+              HexDecodeOrDie(key_index == 1 ? kHex3072BitRsaQinv2
+                                            : kHex3072BitRsaQinv),
+              InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
   return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
 }
 
 std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
-    bool force_random) {
+    bool force_random, int key_index = 0) {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
       RsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(4096)
@@ -500,7 +673,8 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
             .Build(GetPartialKeyAccess());
     return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
   }
-  BigInteger modulus(HexDecodeOrDie(kHex4096BitRsaN));
+  BigInteger modulus(
+      HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaN2 : kHex4096BitRsaN));
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
                                    /*id_requirement=*/absl::nullopt,
@@ -509,18 +683,30 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
-          .SetPrimeP(RestrictedData(HexDecodeOrDie(kHex4096BitRsaP),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeQ(RestrictedData(HexDecodeOrDie(kHex4096BitRsaQ),
-                                    InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentP(RestrictedData(HexDecodeOrDie(kHex4096BitRsaDp),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrimeExponentQ(RestrictedData(HexDecodeOrDie(kHex4096BitRsaDq),
-                                            InsecureSecretKeyAccess::Get()))
-          .SetPrivateExponent(RestrictedData(HexDecodeOrDie(kHex4096BitRsaD),
-                                             InsecureSecretKeyAccess::Get()))
-          .SetCrtCoefficient(RestrictedData(HexDecodeOrDie(kHex4096BitRsaQinv),
-                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaP2
+                                                           : kHex4096BitRsaP),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaQ2
+                                                           : kHex4096BitRsaQ),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaDp2
+                                                           : kHex4096BitRsaDp),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaDq2
+                                                           : kHex4096BitRsaDq),
+                             InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaD2
+                                                           : kHex4096BitRsaD),
+                             InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(RestrictedData(
+              HexDecodeOrDie(key_index == 1 ? kHex4096BitRsaQinv2
+                                            : kHex4096BitRsaQinv),
+              InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
   return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
@@ -587,7 +773,8 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
 }
 
 std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool force_random) {
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool force_random,
+    int key_index) {
   switch (algorithm) {
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519:
       return GenerateEd25519PrivateKeyOrDie();
@@ -604,13 +791,13 @@ std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
                                           EcdsaParameters::CurveType::kNistP521,
                                           EcdsaParameters::HashType::kSha512);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss:
-      return GenerateRsaPss3072PrivateKeyOrDie(force_random);
+      return GenerateRsaPss3072PrivateKeyOrDie(force_random, key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss:
-      return GenerateRsaPss4096PrivateKeyOrDie(force_random);
+      return GenerateRsaPss4096PrivateKeyOrDie(force_random, key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1:
-      return GenerateRsa3072Pkcs1PrivateKeyOrDie(force_random);
+      return GenerateRsa3072Pkcs1PrivateKeyOrDie(force_random, key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1:
-      return GenerateRsa4096Pkcs1PrivateKeyOrDie(force_random);
+      return GenerateRsa4096Pkcs1PrivateKeyOrDie(force_random, key_index);
     default:
       ABSL_LOG(FATAL) << "Unsupported classical algorithm";
   }
@@ -618,12 +805,12 @@ std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
 
 CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
     const CompositeMlDsaParameters& parameters, bool force_random,
-    std::optional<int> id_requirement) {
+    std::optional<int> id_requirement, int key_index) {
   MlDsaPrivateKey ml_dsa_private_key =
       GenerateMlDsaPrivateKeyForTestOrDie(parameters.GetMlDsaInstance());
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          parameters.GetClassicalAlgorithm(), force_random);
+          parameters.GetClassicalAlgorithm(), force_random, key_index);
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(parameters, ml_dsa_private_key,
                                        std::move(classical_private_key),

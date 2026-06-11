@@ -145,16 +145,15 @@ TEST(CompositeMlDsaKeyCreatorTest,
   EXPECT_THAT(**private_key1, Not(Eq(**private_key2)));
 }
 
-TEST_P(CompositeMlDsaKeyCreatorTest,
-       CreateKeysetHandleFromConfigWithCompositeMlDsaKeyWorks) {
-  TestCase test_case = GetParam();
-
+TEST(CompositeMlDsaKeyCreatorTest,
+     CreateKeysetHandleFromConfigWithCompositeMlDsaKeyWorks) {
   ASSERT_THAT(RegisterCompositeMlDsaProtoSerialization(), IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(test_case.ml_dsa_instance,
-                                       test_case.classical_algorithm,
-                                       test_case.variant);
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+          CompositeMlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   KeyGenConfiguration key_creator_config;

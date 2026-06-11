@@ -950,6 +950,7 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
     tink::core::keyset_reader
+    tink::core::parameters
     tink::core::partial_key_access
     tink::core::primitive_set
     tink::core::primitive_wrapper

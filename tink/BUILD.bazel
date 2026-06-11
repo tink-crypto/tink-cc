@@ -1021,6 +1021,7 @@ cc_test(
         ":keyset_handle",
         ":keyset_handle_builder",
         ":keyset_reader",
+        ":parameters",
         ":partial_key_access",
         ":primitive_set",
         ":primitive_wrapper",

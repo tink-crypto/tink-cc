@@ -670,10 +670,10 @@ KeysetHandle::GenerateNewFromParameters(
   static_assert(std::is_base_of<Parameters, P>::value, "");
 
   KeysetHandleBuilder::Entry entry =
-      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
-          parameters, KeyStatus::kEnabled,
-          /*is_primary=*/true,
-          /*id=*/absl::nullopt);
+      KeysetHandleBuilder::Entry::CreateFromParams(parameters.Clone(),
+                                                   KeyStatus::kEnabled,
+                                                   /*is_primary=*/true,
+                                                   /*id=*/absl::nullopt);
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(std::move(entry))

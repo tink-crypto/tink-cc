@@ -1623,3 +1623,75 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_signer
+  SRCS
+    jwt_ml_dsa_signer.cc
+    jwt_ml_dsa_signer.h
+  DEPS
+    tink::jwt::internal::jwt_public_key_sign_impl
+    tink::jwt::internal::jwt_public_key_sign_internal
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::internal::ml_dsa_sign_boringssl
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_signer_verifier_test
+  SRCS
+    jwt_ml_dsa_signer_verifier_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_signer
+    tink::jwt::internal::jwt_ml_dsa_verifier
+    tink::jwt::internal::jwt_public_key_sign_internal
+    tink::jwt::internal::jwt_public_key_verify_internal
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME jwt_ml_dsa_verifier
+  SRCS
+    jwt_ml_dsa_verifier.cc
+    jwt_ml_dsa_verifier.h
+  DEPS
+    tink::jwt::internal::jwt_public_key_verify_impl
+    tink::jwt::internal::jwt_public_key_verify_internal
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    tink::signature::internal::ml_dsa_verify_boringssl
+)

@@ -91,9 +91,6 @@ class AesEaxBoringSsl : public Aead {
   static void MultiplyByX(const uint8_t in[kBlockSize],
                           uint8_t out[kBlockSize]);
 
-  // Constant-time block equality
-  static bool EqualBlocks(const uint8_t x[kBlockSize],
-                          const uint8_t y[kBlockSize]);
 
   // Encrypts a single block with AES.
   void EncryptBlock(Block* /*absl_nonnull - not yet supported*/ block) const;

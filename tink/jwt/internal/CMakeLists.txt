@@ -1366,6 +1366,8 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_ml_dsa_signer
+    tink::jwt::internal::jwt_ml_dsa_verifier
     tink::jwt::internal::jwt_public_key_sign_impl
     tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::jwt_public_key_sign_wrapper
@@ -1381,6 +1383,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::optional
+    crypto
     tink::core::configuration
     tink::core::ec_point
     tink::core::partial_key_access
@@ -1393,6 +1396,9 @@ tink_cc_library(
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_proto_serialization
+    tink::jwt::jwt_ml_dsa_public_key
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
@@ -1448,7 +1454,6 @@ tink_cc_test(
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::internal::bn_util
@@ -1457,12 +1462,14 @@ tink_cc_test(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::internal::ssl_unique_ptr
+    tink::internal::ssl_util
     tink::internal::util
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_key_templates
+    tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
@@ -1473,7 +1480,6 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    tink::util::test_matchers
 )
 
 tink_cc_library(

@@ -30,6 +30,13 @@ namespace internal {
 // Java).
 std::vector<SignatureTestVector> CreateRsaSsaPssTestVectors();
 
+// Expose dummy test vectors to extract valid keys for use in Composite ML-DSA
+// tests.
+const SignatureTestVector& Create3072BitTestVector();
+const SignatureTestVector& Create3072BitTestVector2();
+const SignatureTestVector& Create4096BitTestVector();
+const SignatureTestVector& Create4096BitTestVector2();
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

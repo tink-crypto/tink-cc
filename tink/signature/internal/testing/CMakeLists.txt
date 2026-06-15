@@ -7,6 +7,7 @@ tink_cc_library(
     rsa_ssa_pkcs1_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
+    absl::no_destructor
     absl::absl_check
     absl::memory
     absl::statusor
@@ -43,6 +44,7 @@ tink_cc_library(
     rsa_ssa_pss_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
+    absl::no_destructor
     absl::absl_check
     absl::memory
     absl::statusor
@@ -51,7 +53,6 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::internal::fips_utils

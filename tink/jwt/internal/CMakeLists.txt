@@ -1701,3 +1701,49 @@ tink_cc_library(
     tink::signature::ml_dsa_public_key
     tink::signature::internal::ml_dsa_verify_boringssl
 )
+
+tink_cc_library(
+  NAME jwt_ml_dsa_sign_key_manager
+  SRCS
+    jwt_ml_dsa_sign_key_manager.cc
+    jwt_ml_dsa_sign_key_manager.h
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_key_creator
+    tink::jwt::internal::jwt_ml_dsa_signer
+    tink::jwt::internal::jwt_public_key_sign_internal
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::key_manager
+    tink::core::parameters
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::util::constants
+    tink::util::protobuf_helper
+    tink::proto::jwt_ml_dsa_cc_proto
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_sign_verify_key_manager_test
+  SRCS
+    jwt_ml_dsa_sign_verify_key_manager_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_sign_key_manager
+    tink::jwt::internal::jwt_public_key_sign_internal
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::optional
+    tink::core::key_manager
+    tink::jwt::jwt_ml_dsa_proto_serialization
+    tink::jwt::raw_jwt
+    tink::proto::jwt_ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)

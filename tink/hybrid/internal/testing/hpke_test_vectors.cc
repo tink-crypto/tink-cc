@@ -39,8 +39,6 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-namespace {
-
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::util::SecretDataFromStringView;
 
@@ -59,6 +57,58 @@ RestrictedData P256SecretValue() {
       "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721"));
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
 }
+
+// Taken from https://datatracker.ietf.org/doc/html/rfc6979.html#appendix-A.2.6
+std::string P384PointAsString() {
+  std::string pub_key_x_p384_hex =
+      "EC3A4E415B4E19A4568618029F427FA5DA9A8BC4AE92E02E06AAE5286B300C64DEF8F0EA"
+      "9055866064A254515480BC13";
+  std::string pub_key_y_p384_hex =
+      "8015D9B72D7D57244EA8EF9AC0C621896708A59367F9DFB9F54CA84B3F1C9DB1288B231C"
+      "3AE0D4FE7344FD2533264720";
+  return HexDecodeOrDie(
+      absl::StrCat("04", pub_key_x_p384_hex, pub_key_y_p384_hex));
+}
+
+RestrictedData P384SecretValue() {
+  SecretData secret_data = SecretDataFromStringView(
+      HexDecodeOrDie("6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA477407"
+                     "87137D896D5724E4C70A825F872C9EA60D2EDF5"));
+  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
+}
+
+// Taken from https://datatracker.ietf.org/doc/html/rfc6979.html#appendix-A.2.7
+std::string P521PointAsString() {
+  std::string pub_key_x_p521_hex =
+      "01894550D0785932E00EAA23B694F213F8C3121F86DC97A04E5A7167DB4E5BCD371123D4"
+      "6E45DB6B5D5370A7F20FB633155D38FFA16D2BD761DCAC474B9A2F5023A4";
+  std::string pub_key_y_p521_hex =
+      "00493101C962CD4D2FDDF782285E64584139C2F91B47F87FF82354D6630F746A28A0DB25"
+      "741B5B34A828008B22ACC23F924FAAFBD4D33F81EA66956DFEAA2BFDFCF5";
+  return HexDecodeOrDie(
+      absl::StrCat("04", pub_key_x_p521_hex, pub_key_y_p521_hex));
+}
+
+RestrictedData P521SecretValue() {
+  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
+      "00FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB"
+      "32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538"));
+  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
+}
+
+// Taken from Java, HpkeTestUtil
+std::string X25519PublicValue() {
+  return HexDecodeOrDie(
+      "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431");
+}
+
+RestrictedData X25519SecretValue() {
+  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
+      "52c4a758a802cd8b936eceea314432798d5baf2d7e9235dc084ab1b9cfa2f736"));
+  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
+}
+
+namespace {
 
 HybridTestVector CreateTestVector0() {
   absl::StatusOr<HpkeParameters> parameters =

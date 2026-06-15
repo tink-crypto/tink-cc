@@ -20,10 +20,20 @@
 #include <vector>
 
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
+#include "tink/restricted_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
+
+std::string P256PointAsString();
+RestrictedData P256SecretValue();
+std::string P384PointAsString();
+RestrictedData P384SecretValue();
+std::string P521PointAsString();
+RestrictedData P521SecretValue();
+std::string X25519PublicValue();
+RestrictedData X25519SecretValue();
 
 // Provides some test vectors for HPKE. These are the same as in Java,
 // HpkeTestUtil.createHpkeTestVectors().

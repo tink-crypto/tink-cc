@@ -43,8 +43,7 @@ template <typename StatusOrType>
 class IsOkAndHoldsMatcherImpl
     : public ::testing::MatcherInterface<StatusOrType> {
  public:
-  using value_type =
-      typename std::remove_reference<StatusOrType>::type::value_type;
+  using value_type = typename std::remove_reference_t<StatusOrType>::value_type;
 
   template <typename InnerMatcher>
   explicit IsOkAndHoldsMatcherImpl(InnerMatcher&& inner_matcher)
@@ -130,9 +129,9 @@ MATCHER(IsOk,
 // Returns a gMock matcher that matches a StatusOr<> whose status is
 // OK and whose value matches the inner matcher.
 template <typename InnerMatcher>
-internal::IsOkAndHoldsMatcher<typename std::decay<InnerMatcher>::type>
-IsOkAndHolds(InnerMatcher&& inner_matcher) {
-  return internal::IsOkAndHoldsMatcher<typename std::decay<InnerMatcher>::type>(
+internal::IsOkAndHoldsMatcher<std::decay_t<InnerMatcher>> IsOkAndHolds(
+    InnerMatcher&& inner_matcher) {
+  return internal::IsOkAndHoldsMatcher<std::decay_t<InnerMatcher>>(
       std::forward<InnerMatcher>(inner_matcher));
 }
 

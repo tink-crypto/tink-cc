@@ -345,13 +345,13 @@ TEST_P(HmacPrfProtoSerializationTest, ParseKeyWithMutableRegistry) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<HmacPrfParameters> expected_parameters =
@@ -387,13 +387,13 @@ TEST_P(HmacPrfProtoSerializationTest, ParseKeyWithRegistryBuilder) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<HmacPrfParameters> expected_parameters =
@@ -421,7 +421,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -477,11 +477,11 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -503,7 +503,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -544,7 +544,7 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeKeyWithMutableRegistry) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::HmacPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -588,7 +588,7 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::HmacPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -617,7 +617,7 @@ TEST_F(HmacPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

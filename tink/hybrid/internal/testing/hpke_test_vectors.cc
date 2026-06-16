@@ -120,7 +120,7 @@ HybridTestVector CreateTestVector0() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -148,7 +148,7 @@ HybridTestVector CreateTestVector1() {
       *parameters,
       HexDecodeOrDie(
           "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431"),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key,
@@ -176,7 +176,7 @@ HybridTestVector CreateTestVector2() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -202,7 +202,7 @@ HybridTestVector CreateTestVector3() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -322,7 +322,7 @@ HybridTestVector CreateTestVectorXWing() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, raw_public_key, /*id_requirement=*/absl::nullopt,
+      *parameters, raw_public_key, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -423,7 +423,7 @@ HybridTestVector CreateTestVectorMlKem768() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, raw_public_key, /*id_requirement=*/absl::nullopt,
+      *parameters, raw_public_key, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -537,7 +537,7 @@ HybridTestVector CreateTestVectorMlKem1024() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, raw_public_key, /*id_requirement=*/absl::nullopt,
+      *parameters, raw_public_key, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(

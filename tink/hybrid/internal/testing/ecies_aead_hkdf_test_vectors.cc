@@ -106,7 +106,7 @@ HybridTestVector CreateTestVector0() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -136,7 +136,7 @@ HybridTestVector CreateTestVector1() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -164,7 +164,7 @@ HybridTestVector CreateTestVector2() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -193,7 +193,7 @@ HybridTestVector CreateTestVector3() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -222,7 +222,7 @@ HybridTestVector CreateTestVector4() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -254,7 +254,7 @@ HybridTestVector CreateTestVector5() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -345,7 +345,7 @@ HybridTestVector CreateTestVector8() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -375,7 +375,7 @@ HybridTestVector CreateTestVector9() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -405,7 +405,7 @@ HybridTestVector CreateTestVector10() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -435,7 +435,7 @@ HybridTestVector CreateTestVector11() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -465,7 +465,7 @@ HybridTestVector CreateTestVector12() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P384Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -496,7 +496,7 @@ HybridTestVector CreateTestVector13() {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P521Point(),
-                                         /*id_requirement*/ absl::nullopt,
+                                         /*id_requirement*/ std::nullopt,
                                          GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
@@ -531,7 +531,7 @@ HybridTestVector CreateTestVector14() {
           *params,
           HexDecodeOrDie("90c5b6d9b337cc6c9c2e8ac44f1c0e7c41f23bdf7a04df3b9c808"
                          "1c0c278352a"),
-          /*id_requirement*/ absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement*/ std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   RestrictedData private_key_material = RestrictedData(
       HexDecodeOrDie(

@@ -63,7 +63,7 @@ TEST(AesCtrHmacStreamingKeyTest, CreateSucceeds) {
   EXPECT_THAT(key->GetParameters(), Eq(*parameters));
   EXPECT_THAT(key->GetInitialKeyMaterial(GetPartialKeyAccess()),
               Eq(initial_key_material));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(AesCtrHmacStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {

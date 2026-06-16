@@ -17,6 +17,7 @@
 #ifndef TINK_HYBRID_INTERNAL_TESTING_HPKE_TEST_VECTORS_H_
 #define TINK_HYBRID_INTERNAL_TESTING_HPKE_TEST_VECTORS_H_
 
+#include <string>
 #include <vector>
 
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"

@@ -876,7 +876,7 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::status_matchers
-    absl::strings
+    absl::statusor
     absl::string_view
     absl::optional
     crypto
@@ -886,18 +886,16 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS

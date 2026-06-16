@@ -71,7 +71,7 @@ TEST_P(HmacPrfKeyTest, CreateSucceeds) {
 
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
   EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(HmacPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {

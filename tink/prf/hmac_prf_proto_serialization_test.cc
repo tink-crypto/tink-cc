@@ -267,14 +267,14 @@ TEST_P(HmacPrfProtoSerializationTest, ParseKey) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<HmacPrfParameters> expected_parameters =
@@ -300,7 +300,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -354,12 +354,12 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -379,7 +379,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -421,7 +421,7 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeKey) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::HmacPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -449,7 +449,7 @@ TEST_F(HmacPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

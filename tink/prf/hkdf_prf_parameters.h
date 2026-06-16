@@ -78,7 +78,7 @@ class HkdfPrfParameters : public PrfParameters {
         salt_(std::move(salt)) {
     // If salt is an empty string, default to absl::nullopt
     if (salt_.has_value() && salt_->empty()) {
-      salt_ = absl::nullopt;
+      salt_ = std::nullopt;
     }
   }
 

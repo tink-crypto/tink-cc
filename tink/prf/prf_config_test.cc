@@ -313,7 +313,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoParamsSerializationRegistered) {
 
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
@@ -352,7 +352,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
 
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters,

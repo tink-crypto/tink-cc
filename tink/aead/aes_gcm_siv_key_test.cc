@@ -60,7 +60,7 @@ INSTANTIATE_TEST_SUITE_P(
                    TestCase{AesGcmSivParameters::Variant::kCrunchy, 0x01030005,
                             std::string("\x00\x01\x03\x00\x05", 5)},
                    TestCase{AesGcmSivParameters::Variant::kNoPrefix,
-                            absl::nullopt, ""})));
+                            std::nullopt, ""})));
 
 TEST_P(AesGcmSivKeyTest, CreateSucceeds) {
   int key_size;
@@ -115,7 +115,7 @@ TEST(AesGcmSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(AesGcmSivKey::Create(*tink_params, secret,
-                                   /*id_requirement=*/absl::nullopt,
+                                   /*id_requirement=*/std::nullopt,
                                    GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -270,7 +270,7 @@ TEST(AesGcmSivKeyTest, CopyAssignment) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<AesGcmSivKey> copy = AesGcmSivKey::Create(
-      *parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      *parameters2, secret2, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -317,7 +317,7 @@ TEST(AesGcmSivKeyTest, MoveAssignment) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<AesGcmSivKey> move = AesGcmSivKey::Create(
-      *parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      *parameters2, secret2, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

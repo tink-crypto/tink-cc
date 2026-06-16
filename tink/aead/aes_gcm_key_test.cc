@@ -60,7 +60,7 @@ INSTANTIATE_TEST_SUITE_P(
                             std::string("\x01\x02\x03\x04\x00", 5)},
                    TestCase{AesGcmParameters::Variant::kCrunchy, 0x01030005,
                             std::string("\x00\x01\x03\x00\x05", 5)},
-                   TestCase{AesGcmParameters::Variant::kNoPrefix, absl::nullopt,
+                   TestCase{AesGcmParameters::Variant::kNoPrefix, std::nullopt,
                             ""})));
 
 TEST_P(AesGcmKeyTest, CreateSucceeds) {
@@ -135,7 +135,7 @@ TEST(AesGcmKeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(
       AesGcmKey::Create(*tink_params, secret,
-                        /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -335,7 +335,7 @@ TEST(AesGcmKeyTest, CopyAssignment) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<AesGcmKey> copy =
-      AesGcmKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      AesGcmKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -397,7 +397,7 @@ TEST(AesGcmKeyTest, MoveAssignment) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<AesGcmKey> move =
-      AesGcmKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      AesGcmKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

@@ -57,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{ChaCha20Poly1305Parameters::Variant::kCrunchy, 0x01030005,
                     std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{ChaCha20Poly1305Parameters::Variant::kNoPrefix,
-                    absl::nullopt, ""}));
+                    std::nullopt, ""}));
 
 TEST_P(ChaCha20Poly1305KeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
@@ -109,7 +109,7 @@ TEST(ChaCha20Poly1305KeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(ChaCha20Poly1305Key::Create(
                   ChaCha20Poly1305Parameters::Variant::kTink, secret,
-                  /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                  /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -221,7 +221,7 @@ TEST(ChaCha20Poly1305KeyTest, CopyAssignment) {
 
   absl::StatusOr<ChaCha20Poly1305Key> copy = ChaCha20Poly1305Key::Create(
       ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret2,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *key;
@@ -260,7 +260,7 @@ TEST(ChaCha20Poly1305KeyTest, MoveAssignment) {
 
   absl::StatusOr<ChaCha20Poly1305Key> move = ChaCha20Poly1305Key::Create(
       ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret2,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 
   *move = std::move(*key);

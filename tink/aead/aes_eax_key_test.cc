@@ -64,7 +64,7 @@ INSTANTIATE_TEST_SUITE_P(
                     AesEaxParameters::Variant::kCrunchy, 0x01030005,
                     std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{/*key_size=*/32, /*iv_size=*/16, /*tag_size=*/16,
-                    AesEaxParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+                    AesEaxParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 TEST_P(AesEaxKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
@@ -140,7 +140,7 @@ TEST(AesEaxKeyTest, CreateKeyWithInvalidIdRequirementFails) {
   // requirement fails */
   EXPECT_THAT(
       AesEaxKey::Create(*tink_parameters, secret,
-                        /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -317,7 +317,7 @@ TEST(AesEaxKeyTest, CopyAssignment) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<AesEaxKey> copy =
-      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -379,7 +379,7 @@ TEST(AesEaxKeyTest, MoveAssignment) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<AesEaxKey> move =
-      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

@@ -107,7 +107,7 @@ absl::StatusOr<KemEncapsulation> MlKemEncapsulateAes256Gcm::Encapsulate()
 
   absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       aes_gcm_parameters_, raw_kem_encapsulation->shared_secret,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }

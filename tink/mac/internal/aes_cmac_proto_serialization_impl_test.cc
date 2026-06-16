@@ -118,7 +118,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{AesCmacParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw, /*key_size=*/32,
                     /*cryptographic_tag_size=*/16, /*total_tag_size=*/16,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
+                    /*id=*/std::nullopt, /*output_prefix=*/""}));
 
 TEST_P(AesCmacProtoSerializationTest, ParseParametersWithMutableRegistry) {
   TestCase test_case = GetParam();
@@ -425,7 +425,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, absl::nullopt);
+      registry.ParseKey(*serialization, std::nullopt);
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -557,11 +557,11 @@ TEST_F(AesCmacProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<ProtoKeySerialization>(*key, absl::nullopt);
+      registry.SerializeKey<ProtoKeySerialization>(*key, std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -636,12 +636,12 @@ KeyAndSerialization CanonicalKeyAndSerialization1() {
       AesCmacKey::Create(*parameters,
                          RestrictedData("32 key bytes....32 key bytes....",
                                         InsecureSecretKeyAccess::Get()),
-                         absl::nullopt, GetPartialKeyAccess());
+                         std::nullopt, GetPartialKeyAccess());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.AesCmacKey",
       {FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, absl::nullopt);
+      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
                              serialization);
@@ -656,14 +656,14 @@ KeyAndSerialization NonCanonicalKeyAndSerialization2() {
       AesCmacKey::Create(*parameters,
                          RestrictedData("32 key bytes....32 key bytes....",
                                         InsecureSecretKeyAccess::Get()),
-                         absl::nullopt, GetPartialKeyAccess());
+                         std::nullopt, GetPartialKeyAccess());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.AesCmacKey",
       {// Add an explicit version field
        FieldWithNumber(1).IsVarint(0),
        FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, absl::nullopt);
+      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
                              serialization);

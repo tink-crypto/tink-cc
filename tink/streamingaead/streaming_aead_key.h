@@ -31,7 +31,7 @@ class StreamingAeadKey : public Key {
   const StreamingAeadParameters& GetParameters() const override = 0;
 
   absl::optional<int32_t> GetIdRequirement() const override {
-    return absl::nullopt;
+    return std::nullopt;
   }
 
   bool operator==(const Key& other) const override = 0;

@@ -303,7 +303,7 @@ TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWorks) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(0x03050709));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), true);
@@ -366,7 +366,7 @@ TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -391,7 +391,7 @@ TEST_F(MlKemProtoSerializationTest, SerializePublicKeyWorks) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -437,7 +437,7 @@ TEST_F(MlKemProtoSerializationTest, RoundTripPublicKey) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   const internal::ProtoKeySerialization* proto_serialization =
@@ -447,7 +447,7 @@ TEST_F(MlKemProtoSerializationTest, RoundTripPublicKey) {
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *proto_serialization, /*token=*/absl::nullopt);
+          *proto_serialization, /*token=*/std::nullopt);
   ASSERT_THAT(parsed_key, IsOk());
   ASSERT_THAT(**parsed_key, Eq(*key));
 }
@@ -610,7 +610,7 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -702,7 +702,7 @@ TEST_F(MlKemProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, /*token=*/absl::nullopt);
+              *private_key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

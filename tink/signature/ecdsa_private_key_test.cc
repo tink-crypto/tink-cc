@@ -98,7 +98,7 @@ INSTANTIATE_TEST_SUITE_P(
                     EcdsaParameters::HashType::kSha512,
                     EcdsaParameters::SignatureEncoding::kIeeeP1363,
                     EcdsaParameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""},
            TestCase{subtle::EllipticCurveType::NIST_P256,
                     EcdsaParameters::CurveType::kNistP256,

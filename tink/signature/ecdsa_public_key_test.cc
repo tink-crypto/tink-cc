@@ -99,7 +99,7 @@ INSTANTIATE_TEST_SUITE_P(
                     EcdsaParameters::HashType::kSha512,
                     EcdsaParameters::SignatureEncoding::kIeeeP1363,
                     EcdsaParameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""},
            TestCase{subtle::EllipticCurveType::NIST_P256,
                     EcdsaParameters::CurveType::kNistP256,
@@ -166,7 +166,7 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
                          "requirement")));
 
   EXPECT_THAT(EcdsaPublicKey::Create(*tink_params, kP256EcPoint,
-                                     /*id_requirement=*/absl::nullopt,
+                                     /*id_requirement=*/std::nullopt,
                                      GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -193,7 +193,7 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidPointFails) {
 
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *params, invalid_point,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(), StatusIs(absl::StatusCode::kInternal));
 }
 
@@ -287,12 +287,12 @@ TEST(EcdsaPublicKeyTest, DifferentPublicPointsNotEqual) {
 
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *params, public_point1,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EcdsaPublicKey> other_public_key = EcdsaPublicKey::Create(
       *params, public_point2,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   EXPECT_TRUE(*public_key != *other_public_key);

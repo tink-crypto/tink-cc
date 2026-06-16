@@ -105,7 +105,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{/*key_size=*/32, /*iv_size=*/16,
                     AesEaxParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
+                    /*id=*/std::nullopt, /*output_prefix=*/""}));
 
 TEST_P(AesEaxProtoSerializationTest, ParseParametersWithMutableRegistry) {
   TestCase test_case = GetParam();
@@ -474,7 +474,7 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -620,7 +620,7 @@ TEST_F(AesEaxProtoSerializationTest, SerializeKeyWithDisallowedTagSizeFails) {
   absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -649,11 +649,11 @@ TEST_F(AesEaxProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<ProtoKeySerialization>(*key, absl::nullopt);
+      registry.SerializeKey<ProtoKeySerialization>(*key, std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

@@ -101,7 +101,7 @@ INSTANTIATE_TEST_SUITE_P(
     XAesGcmProtoSerializationTestSuite, XAesGcmProtoSerializationTest,
     Values(XAesGcmTestCase{XAesGcmParameters::Variant::kNoPrefix, kSaltSize,
                            OutputPrefixTypeTP::kRaw,
-                           /*id=*/absl::nullopt, /*output_prefix=*/""},
+                           /*id=*/std::nullopt, /*output_prefix=*/""},
            XAesGcmTestCase{
                XAesGcmParameters::Variant::kTink, kSaltSize,
                OutputPrefixTypeTP::kTink,
@@ -401,7 +401,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -580,12 +580,12 @@ TEST_F(XAesGcmProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }

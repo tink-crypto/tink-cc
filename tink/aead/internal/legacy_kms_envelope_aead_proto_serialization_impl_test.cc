@@ -274,7 +274,7 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
             OutputPrefixTypeTP::kRaw,
-            /*id=*/absl::nullopt,
+            /*id=*/std::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm,
             absl::make_unique<AesGcmParameters>(GetAesGcmParameters()),
@@ -290,7 +290,7 @@ INSTANTIATE_TEST_SUITE_P(
             GetAesGcmSivKeyTemplate()},
         TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
                  OutputPrefixTypeTP::kRaw,
-                 /*id=*/absl::nullopt,
+                 /*id=*/std::nullopt,
                  /*output_prefix=*/"",
                  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
                      kAssumeAesCtrHmac,
@@ -300,7 +300,7 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
             OutputPrefixTypeTP::kRaw,
-            /*id=*/absl::nullopt,
+            /*id=*/std::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax,
             absl::make_unique<AesEaxParameters>(GetAesEaxParameters()),
@@ -587,7 +587,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -632,7 +632,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -670,7 +670,7 @@ TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -699,7 +699,7 @@ TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -726,7 +726,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 
@@ -773,7 +773,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 

@@ -116,7 +116,7 @@ INSTANTIATE_TEST_SUITE_P(
                     HashType::SHA512,
                     AesCtrHmacAeadParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw,
-                    /*id_requirement=*/absl::nullopt, ""}));
+                    /*id_requirement=*/std::nullopt, ""}));
 
 AesCtrHmacAeadKeyFormat BuildAesCtrHmacAeadKeyFormat(int aes_key_size,
                                                      int hmac_key_size,
@@ -684,7 +684,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -939,7 +939,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<ProtoKeySerialization>(*key, absl::nullopt);
+      registry.SerializeKey<ProtoKeySerialization>(*key, std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

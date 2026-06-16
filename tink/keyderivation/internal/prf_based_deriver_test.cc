@@ -135,7 +135,7 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholders) {
   EXPECT_THAT(primary.GetStatus(), Eq(KeyStatus::kEnabled));
 
   // Verify derived key ID.
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
   // Verify primary key ID, which is generated when the KeysetHandle is built.
   // http://google3/third_party/tink/cc/core/keyset_handle_builder.cc;l=163;rcl=604267117
   EXPECT_THAT(CleartextKeysetHandle::GetKeyset(**handle).primary_key_id(),

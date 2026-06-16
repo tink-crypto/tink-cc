@@ -577,7 +577,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -613,7 +613,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key, StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -820,7 +820,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, /*token=*/absl::nullopt);
+          *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, StatusIs(absl::StatusCode::kPermissionDenied));
 }
 

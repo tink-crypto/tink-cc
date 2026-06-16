@@ -216,7 +216,7 @@ TEST_P(KeyDeriversTest, DeriveKey) {
       DeriveKey(*params, Randomness().get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromKey(*key, KeyStatus::kEnabled,
@@ -259,7 +259,7 @@ TEST_P(KeyDeriversBoringSslTest, DeriveKey) {
       DeriveKey(*params, Randomness().get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromKey(*key, KeyStatus::kEnabled,

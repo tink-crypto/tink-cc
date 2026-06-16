@@ -134,7 +134,7 @@ absl::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
               RestrictedData(*aes_key_bytes, InsecureSecretKeyAccess::Get()))
           .SetHmacKeyBytes(
               RestrictedData(*hmac_key_bytes, InsecureSecretKeyAccess::Get()))
-          .SetIdRequirement(absl::nullopt)
+          .SetIdRequirement(std::nullopt)
           .Build(GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
@@ -157,7 +157,7 @@ absl::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
   }
   absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *params, RestrictedData(*rand, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }
@@ -181,7 +181,7 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
   absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       params->GetVariant(),
       RestrictedData(*rand, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }
@@ -203,7 +203,7 @@ absl::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
   }
   absl::StatusOr<AesSivKey> key = AesSivKey::Create(
       *params, RestrictedData(*rand, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }
@@ -225,7 +225,7 @@ absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
   }
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *params, RestrictedData(*rand, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }
@@ -339,7 +339,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *params, public_point, /*id_requirement=*/absl::nullopt,
+      *params, public_point, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
@@ -378,7 +378,7 @@ absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
 
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       *params, (*key_pair)->public_key,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }

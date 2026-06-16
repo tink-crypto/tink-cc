@@ -280,8 +280,8 @@ INSTANTIATE_TEST_SUITE_P(
                  JwtMlDsaParameters::KidStrategy::kIgnored,
                  OutputPrefixTypeTP::kRaw,
                  JwtMlDsaParameters::Algorithm::kMlDsa65,
-                 JwtMlDsaAlgorithm::ML_DSA65, /*kid=*/absl::nullopt,
-                 /*id=*/absl::nullopt, /*output_prefix=*/"",
+                 JwtMlDsaAlgorithm::ML_DSA65, /*kid=*/std::nullopt,
+                 /*id=*/std::nullopt, /*output_prefix=*/"",
                  test::HexDecodeOrDie(kMlDsa65PublicKeyBytes),
                  test::HexDecodeOrDie(kMlDsa65PrivateSeedBytes)},
         TestCase{/*strategy=*/JwtMlDsaParameters::KidStrategy::kCustom,
@@ -290,7 +290,7 @@ INSTANTIATE_TEST_SUITE_P(
                  OutputPrefixTypeTP::kRaw,
                  JwtMlDsaParameters::Algorithm::kMlDsa87,
                  JwtMlDsaAlgorithm::ML_DSA87, /*kid=*/"custom_kid",
-                 /*id=*/absl::nullopt, /*output_prefix=*/"",
+                 /*id=*/std::nullopt, /*output_prefix=*/"",
                  test::HexDecodeOrDie(kMlDsa87PublicKeyBytes),
                  test::HexDecodeOrDie(kMlDsa87PrivateSeedBytes)}));
 
@@ -387,7 +387,7 @@ TEST_P(JwtMlDsaProtoSerializationTest, ParsePublicKey) {
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(parsed_key, IsOk());
   EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
@@ -423,12 +423,12 @@ TEST_F(JwtMlDsaProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
           OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -456,7 +456,7 @@ TEST_P(JwtMlDsaProtoSerializationTest, SerializePublicKey) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -559,7 +559,7 @@ TEST_F(JwtMlDsaProtoSerializationTest,
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =

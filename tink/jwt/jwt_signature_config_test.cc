@@ -179,7 +179,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(
@@ -246,7 +246,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(
@@ -410,7 +410,7 @@ TEST_F(JwtSignatureConfigTest,
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(
@@ -481,7 +481,7 @@ TEST_F(JwtSignatureConfigTest,
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(
@@ -604,7 +604,7 @@ TEST_F(JwtSignatureConfigTest,
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(
@@ -675,7 +675,7 @@ TEST_F(JwtSignatureConfigTest,
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(

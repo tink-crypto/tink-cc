@@ -84,7 +84,7 @@ absl::StatusOr<std::optional<std::string>> JwtHmacKey::Builder::ComputeKid() {
             absl::StatusCode::kInvalidArgument,
             "Custom kid must not be set for KidStrategy::kIgnored.");
       }
-      return absl::nullopt;
+      return std::nullopt;
     }
     default:
       // Should be unreachable if all valid kid strategies have been handled.

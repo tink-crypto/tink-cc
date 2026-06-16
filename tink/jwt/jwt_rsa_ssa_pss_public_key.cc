@@ -90,7 +90,7 @@ JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
           absl::StatusCode::kInvalidArgument,
           "Custom kid must not be set for KidStrategy::kIgnored.");
     }
-    return absl::nullopt;
+    return std::nullopt;
   }
   return absl::Status(absl::StatusCode::kInvalidArgument,
                       "Unknown kid strategy.");

@@ -79,16 +79,16 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{JwtRsaSsaPssParameters::Algorithm::kPs256,
                     JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId,
                     /*id_requirement=*/0x1ac6a944,
-                    /*custom_kid=*/absl::nullopt, /*expected_kid=*/"GsapRA"},
+                    /*custom_kid=*/std::nullopt, /*expected_kid=*/"GsapRA"},
            TestCase{JwtRsaSsaPssParameters::Algorithm::kPs384,
                     JwtRsaSsaPssParameters::KidStrategy::kCustom,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*custom_kid=*/"custom_kid", /*expected_kid=*/"custom_kid"},
            TestCase{JwtRsaSsaPssParameters::Algorithm::kPs512,
                     JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-                    /*id_requirement=*/absl::nullopt,
-                    /*custom_kid=*/absl::nullopt,
-                    /*expected_kid=*/absl::nullopt}));
+                    /*id_requirement=*/std::nullopt,
+                    /*custom_kid=*/std::nullopt,
+                    /*expected_kid=*/std::nullopt}));
 
 TEST_P(JwtRsaSsaPssPublicKeyTest, BuildWorks) {
   TestCase test_case = GetParam();

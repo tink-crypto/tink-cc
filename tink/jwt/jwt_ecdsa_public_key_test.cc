@@ -65,20 +65,20 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
                     JwtEcdsaParameters::Algorithm::kEs256,
                     subtle::EllipticCurveType::NIST_P256,
-                    /*custom_kid=*/absl::nullopt, /*id_requirement=*/123,
+                    /*custom_kid=*/std::nullopt, /*id_requirement=*/123,
                     /*expected_kid=*/"AAAAew"},
            TestCase{JwtEcdsaParameters::KidStrategy::kCustom,
                     JwtEcdsaParameters::Algorithm::kEs384,
                     subtle::EllipticCurveType::NIST_P384,
                     /*custom_kid=*/"custom_kid",
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*expected_kid=*/"custom_kid"},
            TestCase{JwtEcdsaParameters::KidStrategy::kIgnored,
                     JwtEcdsaParameters::Algorithm::kEs512,
                     subtle::EllipticCurveType::NIST_P521,
-                    /*custom_kid=*/absl::nullopt,
-                    /*id_requirement=*/absl::nullopt,
-                    /*expected_kid=*/absl::nullopt}));
+                    /*custom_kid=*/std::nullopt,
+                    /*id_requirement=*/std::nullopt,
+                    /*expected_kid=*/std::nullopt}));
 
 TEST_P(JwtEcdsaPublicKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();

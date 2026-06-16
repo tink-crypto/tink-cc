@@ -192,16 +192,16 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{JwtRsaSsaPssParameters::Algorithm::kPs256,
                     JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId,
                     /*id_requirement=*/0x1ac6a944,
-                    /*custom_kid=*/absl::nullopt, /*expected_kid=*/"GsapRA"},
+                    /*custom_kid=*/std::nullopt, /*expected_kid=*/"GsapRA"},
            TestCase{JwtRsaSsaPssParameters::Algorithm::kPs384,
                     JwtRsaSsaPssParameters::KidStrategy::kCustom,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*custom_kid=*/"custom_kid", /*expected_kid=*/"custom_kid"},
            TestCase{JwtRsaSsaPssParameters::Algorithm::kPs512,
                     JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-                    /*id_requirement=*/absl::nullopt,
-                    /*custom_kid=*/absl::nullopt,
-                    /*expected_kid=*/absl::nullopt}));
+                    /*id_requirement=*/std::nullopt,
+                    /*custom_kid=*/std::nullopt,
+                    /*expected_kid=*/std::nullopt}));
 
 TEST_P(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
   TestCase test_case = GetParam();
@@ -285,7 +285,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest,
   JwtRsaSsaPssPublicKey public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId,
-      /*id_requirement=*/0x1ac6a944, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/0x1ac6a944, /*custom_kid=*/std::nullopt);
 
   PrivateValues private_values = GetValidPrivateValues();
   RestrictedData padded_p(
@@ -486,16 +486,16 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
               InsecureSecretKeyAccess::Get())));
   // TINK-PENDING-REMOVAL-IN-3.0.0-END
   // NOLINTEND(whitespace/line_length)
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(absl::nullopt));
-  EXPECT_THAT(private_key->GetKid(), Eq(absl::nullopt));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(std::nullopt));
+  EXPECT_THAT(private_key->GetKid(), Eq(std::nullopt));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesModulus) {
   JwtRsaSsaPssPublicKey valid_public_key =
       GetValidPublicKey(JwtRsaSsaPssParameters::Algorithm::kPs256,
                         JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-                        /*id_requirement=*/absl::nullopt,
-                        /*custom_kid=*/absl::nullopt);
+                        /*id_requirement=*/std::nullopt,
+                        /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPublicKey> public_key_modified_modulus =
@@ -526,7 +526,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeP) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /* id_requirement= */ absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /* id_requirement= */ std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_modified_prime_p =
@@ -550,7 +550,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeQ) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_modified_prime_q =
@@ -574,7 +574,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentP) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_modified_prime_exponent_p =
@@ -599,7 +599,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentQ) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_modified_prime_exponent_q =
@@ -624,7 +624,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrivateExponent) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_modified_private_exponent =
@@ -649,7 +649,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesCrtCoefficient) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_modified_crt_coefficient =
@@ -693,7 +693,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrimePNotSetFails) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_no_prime_p_set =
@@ -714,7 +714,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrimeQNotSetFails) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_no_prime_q_set =
@@ -735,7 +735,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrimeExponentPNotSetFails) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_no_prime_exponent_p_set =
@@ -756,7 +756,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrimeExponentQNotSetFails) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_no_prime_exponent_q_set =
@@ -777,7 +777,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateExponentNotSetFails) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_no_private_exponent_set =
@@ -798,7 +798,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildCrtCoefficientNotSetFails) {
   JwtRsaSsaPssPublicKey valid_public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
   PrivateValues private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key_no_crt_coefficient_set =
@@ -1050,7 +1050,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, DifferentKeyTypesNotEqual) {
   JwtRsaSsaPssPublicKey public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
 
   PrivateValues private_values = GetValidPrivateValues();
 
@@ -1077,7 +1077,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, Clone) {
   JwtRsaSsaPssPublicKey public_key = GetValidPublicKey(
       JwtRsaSsaPssParameters::Algorithm::kPs256,
       JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
 
   PrivateValues private_values = GetValidPrivateValues();
 

@@ -83,7 +83,7 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KdfId::kHkdfSha512,
                     HpkeParameters::AeadId::kChaCha20Poly1305,
                     HpkeParameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 struct MlKemTestCase {
@@ -144,11 +144,11 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   EXPECT_THAT(public_key->GetParameters(), Eq(*params));
-  EXPECT_THAT(public_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(public_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(public_key->GetOutputPrefix(), Eq(""));
   EXPECT_THAT(public_key->GetPublicKeyBytes(GetPartialKeyAccess()),
               Eq(public_key_bytes));
@@ -168,11 +168,11 @@ TEST(HpkePublicKeyTest, CreateXWingPublicKey) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   EXPECT_THAT(public_key->GetParameters(), Eq(*params));
-  EXPECT_THAT(public_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(public_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(public_key->GetOutputPrefix(), Eq(""));
   EXPECT_THAT(public_key->GetPublicKeyBytes(GetPartialKeyAccess()),
               Eq(public_key_bytes));
@@ -193,11 +193,11 @@ TEST_P(HpkeMlKemPublicKeyTest, CreateMlKemPublicKey) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   EXPECT_THAT(public_key->GetParameters(), Eq(*params));
-  EXPECT_THAT(public_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(public_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(public_key->GetOutputPrefix(), Eq(""));
   EXPECT_THAT(public_key->GetPublicKeyBytes(GetPartialKeyAccess()),
               Eq(public_key_bytes));
@@ -244,7 +244,7 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKeyWithInvalidLength) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -263,7 +263,7 @@ TEST(HpkePublicKeyTest, CreateXWingPublicKeyWithInvalidLength) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -283,7 +283,7 @@ TEST_P(HpkeMlKemPublicKeyTest, CreateMlKemPublicKeyWithInvalidLength) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -317,7 +317,7 @@ TEST(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidPoint) {
   ASSERT_THAT(params, IsOk());
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *params, public_key_bytes, /*id_requirement=*/absl::nullopt,
+      *params, public_key_bytes, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(), StatusIs(absl::StatusCode::kInternal));
 }
@@ -350,7 +350,7 @@ TEST(HpkePublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 
   EXPECT_THAT(HpkePublicKey::Create(*tink_params, public_key_bytes,
-                                    /*id_requirement=*/absl::nullopt,
+                                    /*id_requirement=*/std::nullopt,
                                     GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -406,12 +406,12 @@ TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   EXPECT_TRUE(*public_key == *other_public_key);
@@ -434,12 +434,12 @@ TEST(HpkePublicKeyTest, XWingPublicKeyEquals) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   EXPECT_TRUE(*public_key == *other_public_key);
@@ -463,12 +463,12 @@ TEST_P(HpkeMlKemPublicKeyTest, MlKemPublicKeyEquals) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   EXPECT_TRUE(*public_key == *other_public_key);
@@ -708,7 +708,7 @@ TEST(HpkePublicKeyTest, Clone) {
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   // Clone the key.

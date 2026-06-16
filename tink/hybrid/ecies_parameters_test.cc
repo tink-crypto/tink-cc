@@ -133,7 +133,7 @@ TEST(EciesParametersTest, BuildWithX25519Curve) {
               Eq(EciesParameters::CurveType::kX25519));
   EXPECT_THAT(parameters->GetHashType(),
               Eq(EciesParameters::HashType::kSha256));
-  EXPECT_THAT(parameters->GetNistCurvePointFormat(), Eq(absl::nullopt));
+  EXPECT_THAT(parameters->GetNistCurvePointFormat(), Eq(std::nullopt));
   EXPECT_THAT(parameters->GetDemId(),
               Eq(EciesParameters::DemId::kAes256SivRaw));
   EXPECT_THAT(parameters->GetSalt(), Eq(test::HexDecodeOrDie(kSalt)));
@@ -291,7 +291,7 @@ TEST(EciesParametersTest, BuildWithEmptySaltSucceeds) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  EXPECT_THAT(parameters->GetSalt(), Eq(absl::nullopt));
+  EXPECT_THAT(parameters->GetSalt(), Eq(std::nullopt));
 }
 
 TEST(EciesParametersTest, BuildWithoutSaltSucceeds) {
@@ -305,7 +305,7 @@ TEST(EciesParametersTest, BuildWithoutSaltSucceeds) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  EXPECT_THAT(parameters->GetSalt(), Eq(absl::nullopt));
+  EXPECT_THAT(parameters->GetSalt(), Eq(std::nullopt));
 }
 
 TEST(EciesParametersTest, BuildWithInvalidVariantFails) {

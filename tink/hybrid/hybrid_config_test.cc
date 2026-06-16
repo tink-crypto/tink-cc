@@ -271,7 +271,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -290,7 +290,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*parameters, public_key_bytes,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
@@ -345,7 +345,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -364,7 +364,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*parameters, public_key_bytes,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 

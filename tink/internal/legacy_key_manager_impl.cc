@@ -145,7 +145,7 @@ LegacyPrivateKeyFactoryImpl::GetPublicKeyData(
           absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPrivateKeyTypeName()),
           serialized_key, KeyMaterialTypeTP::kAsymmetricPrivate,
           OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
   }
@@ -204,7 +204,7 @@ absl::StatusOr<std::unique_ptr<Key>> LegacyKeyManagerBaseAdaptor::GetKey(
       internal::ProtoKeySerialization::Create(GetKeyType(), serialized_key,
                                               GetKeyMaterialType(),
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
   }
@@ -230,7 +230,7 @@ absl::StatusOr<std::unique_ptr<Key>> LegacyKeyManagerBaseAdaptor::GetKey(
       internal::ProtoKeySerialization::Create(GetKeyType(), serialized_key,
                                               GetKeyMaterialType(),
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
   }

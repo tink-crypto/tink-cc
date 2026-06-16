@@ -64,7 +64,7 @@ TEST(KeyParserTest, ParseKey) {
   absl::StatusOr<std::unique_ptr<Key>> key =
       parser->ParseKey(serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters(), Eq(NoIdParams()));
   EXPECT_THAT(**key, Eq(NoIdKey()));
 }
@@ -76,9 +76,9 @@ TEST(KeyParserTest, ParsePublicKeyNoAccessToken) {
 
   NoIdSerialization serialization;
   absl::StatusOr<std::unique_ptr<Key>> public_key =
-      parser->ParseKey(serialization, absl::nullopt);
+      parser->ParseKey(serialization, std::nullopt);
   ASSERT_THAT(public_key, IsOk());
-  EXPECT_THAT((*public_key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*public_key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*public_key)->GetParameters(), Eq(NoIdParams()));
   EXPECT_THAT(**public_key, Eq(NoIdKey()));
 }

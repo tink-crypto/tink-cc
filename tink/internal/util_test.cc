@@ -112,7 +112,7 @@ class TestKey : public Key {
       : parameters_(parameters) {}
   const Parameters& GetParameters() const override { return parameters_; }
   absl::optional<int32_t> GetIdRequirement() const override {
-    return absl::nullopt;
+    return std::nullopt;
   }
   bool operator==(const Key& other) const override {
     const TestKey* other_test_key = dynamic_cast<const TestKey*>(&other);

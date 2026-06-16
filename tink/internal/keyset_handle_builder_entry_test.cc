@@ -128,8 +128,8 @@ TEST(KeysetHandleBuilderEntryTest, IdStrategy) {
   entry.SetRandomId();
   EXPECT_THAT(entry.GetKeyIdStrategyEnum(), KeyIdStrategyEnum::kRandomId);
   EXPECT_THAT(entry.GetKeyIdStrategy().strategy, KeyIdStrategyEnum::kRandomId);
-  EXPECT_THAT(entry.GetKeyIdStrategy().id_requirement, absl::nullopt);
-  EXPECT_THAT(entry.GetKeyIdRequirement(), absl::nullopt);
+  EXPECT_THAT(entry.GetKeyIdStrategy().id_requirement, std::nullopt);
+  EXPECT_THAT(entry.GetKeyIdRequirement(), std::nullopt);
 }
 
 TEST(KeysetHandleBuilderEntryTest, Primary) {

@@ -296,7 +296,7 @@ std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
 std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<HkdfPrfKey> key =

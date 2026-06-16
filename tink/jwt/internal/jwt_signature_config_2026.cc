@@ -136,7 +136,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSigner(
     const RestrictedData& private_key_value) {
   absl::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
       params, public_point,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!ecdsa_public_key.ok()) {
     return ecdsa_public_key.status();
   }
@@ -223,7 +223,7 @@ NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
   }
   absl::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
       raw_ecdsa_parameters.value(),
-      jwt_ecdsa_public_key.GetPublicPoint(GetPartialKeyAccess()), absl::nullopt,
+      jwt_ecdsa_public_key.GetPublicPoint(GetPartialKeyAccess()), std::nullopt,
       GetPartialKeyAccess());
   if (!ecdsa_public_key.ok()) {
     return ecdsa_public_key.status();
@@ -285,7 +285,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1Signer(
           params,
           jwt_rsa_ssa_pkcs1_private_key.GetPublicKey().GetModulus(
               GetPartialKeyAccess()),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!rsa_ssa_pkcs1_public_key.ok()) {
     return rsa_ssa_pkcs1_public_key.status();
   }
@@ -411,7 +411,7 @@ NewJwtRsaSsaPkcs1VerifyInternal(
       RsaSsaPkcs1PublicKey::Create(
           raw_rsa_ssa_pkcs1_parameters.value(),
           jwt_rsa_ssa_pkcs1_public_key.GetModulus(GetPartialKeyAccess()),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!rsa_ssa_pkcs1_public_key.ok()) {
     return rsa_ssa_pkcs1_public_key.status();
   }
@@ -461,7 +461,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
           params,
           jwt_rsa_ssa_pss_private_key.GetPublicKey().GetModulus(
               GetPartialKeyAccess()),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!rsa_ssa_pss_public_key.ok()) {
     return rsa_ssa_pss_public_key.status();
   }
@@ -608,7 +608,7 @@ NewJwtRsaSsaPssVerifyInternal(
       RsaSsaPssPublicKey::Create(
           raw_rsa_ssa_pss_parameters.value(),
           jwt_rsa_ssa_pss_public_key.GetModulus(GetPartialKeyAccess()),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!rsa_ssa_pss_public_key.ok()) {
     return rsa_ssa_pss_public_key.status();
   }

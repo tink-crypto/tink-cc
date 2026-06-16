@@ -177,7 +177,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
   ASSERT_THAT(raw_jwt, IsOk());
 
   absl::StatusOr<std::string> compact =
-      (*sign)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      (*sign)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
 
   absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
@@ -191,7 +191,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
-      *compact, *validator, /*kid=*/absl::nullopt);
+      *compact, *validator, /*kid=*/std::nullopt);
   ASSERT_THAT(verified_jwt, IsOk());
   absl::StatusOr<std::string> issuer = verified_jwt->GetIssuer();
   EXPECT_THAT(issuer, IsOkAndHolds("issuer"));
@@ -205,7 +205,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
       JwtValidatorBuilder().ExpectIssuer("unknown").Build();
   ASSERT_THAT(validator2, IsOk());
   EXPECT_THAT((*verify)->VerifyAndDecodeWithKid(*compact, *validator2,
-                                                /*kid=*/absl::nullopt),
+                                                /*kid=*/std::nullopt),
               Not(IsOk()));
 
   // Token with kid header
@@ -214,7 +214,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*verify)
                   ->VerifyAndDecodeWithKid(*token_with_kid, *validator,
-                                           /*kid=*/absl::nullopt)
+                                           /*kid=*/std::nullopt)
                   .status(),
               IsOk());
   EXPECT_THAT(
@@ -248,7 +248,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
   ASSERT_THAT(raw_jwt, IsOk());
 
   absl::StatusOr<std::string> compact =
-      (*sign)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      (*sign)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
 
   // parse header and check "kid"
@@ -276,7 +276,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
-      *compact, *validator, /*kid=*/absl::nullopt);
+      *compact, *validator, /*kid=*/std::nullopt);
   ASSERT_THAT(verified_jwt, IsOk());
   absl::StatusOr<std::string> issuer = verified_jwt->GetIssuer();
   ASSERT_THAT(issuer, IsOk());
@@ -299,7 +299,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
   ASSERT_THAT(other_verify, IsOk());
   EXPECT_THAT(
       (*other_verify)
-          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
+          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/std::nullopt)
           .status(),
       Not(IsOk()));
 }
@@ -325,7 +325,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
   ASSERT_THAT(raw_jwt, IsOk());
 
   absl::StatusOr<std::string> compact =
-      (*sign1)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      (*sign1)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
 
   absl::StatusOr<JwtValidator> validator =
@@ -338,7 +338,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
 
   EXPECT_THAT(
       (*verify2)
-          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
+          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/std::nullopt)
           .status(),
       Not(IsOk()));
 }

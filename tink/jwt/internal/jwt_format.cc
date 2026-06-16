@@ -77,7 +77,7 @@ bool DecodeHeader(absl::string_view header, std::string* json_header) {
 absl::optional<std::string> GetKid(uint32_t key_id,
                                    OutputPrefixType output_prefix_type) {
   if (output_prefix_type != OutputPrefixType::TINK) {
-    return absl::nullopt;
+    return std::nullopt;
   }
   char buffer[4];
   internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(buffer), key_id);
@@ -87,10 +87,10 @@ absl::optional<std::string> GetKid(uint32_t key_id,
 absl::optional<uint32_t> GetKeyId(absl::string_view kid) {
   std::string decoded_kid;
   if (!StrictWebSafeBase64Unescape(kid, &decoded_kid)) {
-    return absl::nullopt;
+    return std::nullopt;
   }
   if (decoded_kid.size() != 4) {
-    return absl::nullopt;
+    return std::nullopt;
   }
 
   return internal::LoadBigEndian32(
@@ -179,11 +179,11 @@ absl::optional<std::string> GetTypeHeader(
     const google::protobuf::Struct& header) {
   auto it = header.fields().find("typ");
   if (it == header.fields().end()) {
-    return absl::nullopt;
+    return std::nullopt;
   }
   const auto& value = it->second;
   if (value.kind_case() != google::protobuf::Value::kStringValue) {
-    return absl::nullopt;
+    return std::nullopt;
   }
   return value.string_value();
 }

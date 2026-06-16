@@ -90,7 +90,7 @@ NewJwtMlDsaVerifyInternal(const JwtMlDsaPublicKey& jwt_ml_dsa_public_key) {
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *raw_ml_dsa_parameters,
       jwt_ml_dsa_public_key.GetPublicKeyBytes(GetPartialKeyAccess()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!ml_dsa_public_key.ok()) {
     return ml_dsa_public_key.status();
   }

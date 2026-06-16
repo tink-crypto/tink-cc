@@ -85,7 +85,7 @@ TEST(JwtSignatureImplTest, CreateAndValidateToken) {
       JwtPublicKeyVerifyImpl::Raw(*std::move(verify), "ES256");
 
   absl::StatusOr<std::string> compact =
-      jwt_sign->SignAndEncodeWithKid(raw_jwt, /*kid=*/absl::nullopt);
+      jwt_sign->SignAndEncodeWithKid(raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
 
   absl::StatusOr<JwtValidator> validator =
@@ -95,7 +95,7 @@ TEST(JwtSignatureImplTest, CreateAndValidateToken) {
   // Success
   absl::StatusOr<VerifiedJwt> verified_jwt =
       jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
-                                         /*kid=*/absl::nullopt);
+                                         /*kid=*/std::nullopt);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
   EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
@@ -111,7 +111,7 @@ TEST(JwtSignatureImplTest, CreateAndValidateToken) {
       JwtValidatorBuilder().ExpectIssuer("unknown").Build();
   ASSERT_THAT(validator2, IsOk());
   EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid(*compact, *validator2,
-                                                 /*kid=*/absl::nullopt),
+                                                 /*kid=*/std::nullopt),
               Not(IsOk()));
 
   // Fails because token is not yet valid
@@ -119,7 +119,7 @@ TEST(JwtSignatureImplTest, CreateAndValidateToken) {
       JwtValidatorBuilder().SetFixedNow(absl::FromUnixSeconds(12345)).Build();
   ASSERT_THAT(validator_1970, IsOk());
   EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid(*compact, *validator_1970,
-                                                 /*kid=*/absl::nullopt),
+                                                 /*kid=*/std::nullopt),
               Not(IsOk()));
 }
 
@@ -168,7 +168,7 @@ TEST(JwtSignatureImplTest, CreateAndValidateTokenWithKid) {
   // Kid header in the token is ignored.
   EXPECT_THAT(
       jwt_verify
-          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
+          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/std::nullopt)
           .status(),
       IsOk());
 
@@ -206,7 +206,7 @@ TEST(JwtSignatureImplTest, SignAndEncodeWithKidFailsWithWrongKid) {
       JwtPublicKeySignImpl::WithKid(*std::move(sign), "ES256", kid);
   EXPECT_THAT(jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/"05060708"),
               Not(IsOk()));
-  EXPECT_THAT(jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt),
+  EXPECT_THAT(jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt),
               Not(IsOk()));
 }
 
@@ -294,7 +294,7 @@ TEST(JwtSignatureImplTest, SignerWithKidAndValidate) {
     // Kid header in the token is ignored.
     EXPECT_THAT(jwt_verify
                     ->VerifyAndDecodeWithKid(*compact, *validator,
-                                             /*kid=*/absl::nullopt)
+                                             /*kid=*/std::nullopt)
                     .status(),
                 IsOk());
     // A wrong kid makes the verification fail.
@@ -323,7 +323,7 @@ TEST(JwtSignatureImplTest, SignerWithKidAndValidate) {
     // Kid must be specified.
     EXPECT_THAT(jwt_verify
                     ->VerifyAndDecodeWithKid(*compact, *validator,
-                                             /*kid=*/absl::nullopt)
+                                             /*kid=*/std::nullopt)
                     .status(),
                 Not(IsOk()));
     // A wrong kid makes the verification fail.
@@ -350,7 +350,7 @@ TEST(JwtSignatureImplTest, SignerWithKidAndValidate) {
 
     absl::StatusOr<VerifiedJwt> verified_jwt =
         jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
-                                           /*kid=*/absl::nullopt);
+                                           /*kid=*/std::nullopt);
     ASSERT_THAT(verified_jwt, IsOk());
     EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
     EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
@@ -382,7 +382,7 @@ TEST(JwtSignatureImplTest, SignerWithCustomKidAndValidate) {
                                              custom_kid);
 
   absl::StatusOr<std::string> compact =
-      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
   // Parse header to make sure the kid value is set correctly.
   std::vector<absl::string_view> parts = absl::StrSplit(*compact, '.');
@@ -411,7 +411,7 @@ TEST(JwtSignatureImplTest, SignerWithCustomKidAndValidate) {
     // Kid header in the token is ignored.
     absl::StatusOr<VerifiedJwt> verified_jwt =
         jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
-                                           /*kid=*/absl::nullopt);
+                                           /*kid=*/std::nullopt);
     ASSERT_THAT(verified_jwt, IsOk());
     EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
     EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
@@ -432,7 +432,7 @@ TEST(JwtSignatureImplTest, SignerWithCustomKidAndValidate) {
 
     absl::StatusOr<VerifiedJwt> verified_jwt =
         jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
-                                           /*kid=*/absl::nullopt);
+                                           /*kid=*/std::nullopt);
     ASSERT_THAT(verified_jwt, IsOk());
     EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
     EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
@@ -457,7 +457,7 @@ TEST(JwtSignatureImplTest, SignerWithCustomKidAndValidate) {
         JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
 
     EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
-                                                   /*kid=*/absl::nullopt),
+                                                   /*kid=*/std::nullopt),
                 Not(IsOk()));
   }
 }
@@ -486,7 +486,7 @@ TEST(JwtSignatureImplTest, FailsWithModifiedCompact) {
       JwtPublicKeyVerifyImpl::Raw(*std::move(verify), "ES256");
 
   absl::StatusOr<std::string> compact =
-      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
   absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
@@ -494,28 +494,28 @@ TEST(JwtSignatureImplTest, FailsWithModifiedCompact) {
 
   EXPECT_THAT(
       jwt_verify
-          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
+          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/std::nullopt)
           .status(),
       IsOk());
   EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat(*compact, "x"),
                                             *validator,
-                                            /*kid=*/absl::nullopt)
+                                            /*kid=*/std::nullopt)
                    .ok());
   EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat(*compact, " "),
                                             *validator,
-                                            /*kid=*/absl::nullopt)
+                                            /*kid=*/std::nullopt)
                    .ok());
   EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat("x", *compact),
                                             *validator,
-                                            /*kid=*/absl::nullopt)
+                                            /*kid=*/std::nullopt)
                    .ok());
   EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat(" ", *compact),
                                             *validator,
-                                            /*kid=*/absl::nullopt)
+                                            /*kid=*/std::nullopt)
                    .ok());
 }
 
@@ -536,29 +536,29 @@ TEST(JwtSignatureImplTest, FailsWithInvalidTokens) {
   ASSERT_THAT(validator, IsOk());
   EXPECT_THAT(
       jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30.YWJj.",
-                                         *validator, /*kid=*/absl::nullopt),
+                                         *validator, /*kid=*/std::nullopt),
       Not(IsOk()));
   EXPECT_THAT(
       jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9?.e30.YWJj",
-                                         *validator, /*kid=*/absl::nullopt),
+                                         *validator, /*kid=*/std::nullopt),
       Not(IsOk()));
   EXPECT_THAT(
       jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30?.YWJj",
-                                         *validator, /*kid=*/absl::nullopt),
+                                         *validator, /*kid=*/std::nullopt),
       Not(IsOk()));
   EXPECT_THAT(
       jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30.YWJj?",
-                                         *validator, /*kid=*/absl::nullopt),
+                                         *validator, /*kid=*/std::nullopt),
       Not(IsOk()));
   EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.YWJj",
                                                  *validator,
-                                                 /*kid=*/absl::nullopt),
+                                                 /*kid=*/std::nullopt),
               Not(IsOk()));
   EXPECT_THAT(
-      jwt_verify->VerifyAndDecodeWithKid("", *validator, /*kid=*/absl::nullopt),
+      jwt_verify->VerifyAndDecodeWithKid("", *validator, /*kid=*/std::nullopt),
       Not(IsOk()));
   EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid("..", *validator,
-                                                 /*kid=*/absl::nullopt)
+                                                 /*kid=*/std::nullopt)
 
                   ,
               Not(IsOk()));

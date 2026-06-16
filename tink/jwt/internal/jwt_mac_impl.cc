@@ -151,7 +151,7 @@ std::unique_ptr<JwtMacImpl> JwtMacImpl::WithKid(std::unique_ptr<Mac> mac,
                                                 absl::string_view algorithm,
                                                 absl::string_view kid) {
   return absl::WrapUnique(new JwtMacImpl(std::move(mac), algorithm,
-                                         /*custom_kid=*/absl::nullopt,
+                                         /*custom_kid=*/std::nullopt,
                                          std::string(kid)));
 }
 
@@ -160,14 +160,14 @@ std::unique_ptr<JwtMacImpl> JwtMacImpl::RawWithCustomKid(
     absl::string_view custom_kid) {
   return absl::WrapUnique(new JwtMacImpl(std::move(mac), algorithm,
                                          std::string(custom_kid),
-                                         /*kid=*/absl::nullopt));
+                                         /*kid=*/std::nullopt));
 }
 
 std::unique_ptr<JwtMacImpl> JwtMacImpl::Raw(std::unique_ptr<Mac> mac,
                                             absl::string_view algorithm) {
   return absl::WrapUnique(new JwtMacImpl(std::move(mac), algorithm,
-                                         /*custom_kid=*/absl::nullopt,
-                                         /*kid=*/absl::nullopt));
+                                         /*custom_kid=*/std::nullopt,
+                                         /*kid=*/std::nullopt));
 }
 
 }  // namespace jwt_internal

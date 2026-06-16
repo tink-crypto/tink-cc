@@ -239,19 +239,19 @@ INSTANTIATE_TEST_SUITE_P(
     JwtMlDsaSignerVerifierTests, JwtMlDsaSignerVerifierTest,
     Values(TestCase{JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
                     JwtMlDsaParameters::Algorithm::kMlDsa44,
-                    /*custom_kid=*/absl::nullopt, /*id_requirement=*/123,
+                    /*custom_kid=*/std::nullopt, /*id_requirement=*/123,
                     test::HexDecodeOrDie(kMlDsa44PublicKeyBytes),
                     test::HexDecodeOrDie(kMlDsa44PrivateSeedBytes)},
            TestCase{JwtMlDsaParameters::KidStrategy::kCustom,
                     JwtMlDsaParameters::Algorithm::kMlDsa65,
                     /*custom_kid=*/"custom_kid",
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     test::HexDecodeOrDie(kMlDsa65PublicKeyBytes),
                     test::HexDecodeOrDie(kMlDsa65PrivateSeedBytes)},
            TestCase{JwtMlDsaParameters::KidStrategy::kIgnored,
                     JwtMlDsaParameters::Algorithm::kMlDsa87,
-                    /*custom_kid=*/absl::nullopt,
-                    /*id_requirement=*/absl::nullopt,
+                    /*custom_kid=*/std::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     test::HexDecodeOrDie(kMlDsa87PublicKeyBytes),
                     test::HexDecodeOrDie(kMlDsa87PrivateSeedBytes)}));
 
@@ -301,7 +301,7 @@ TEST_P(JwtMlDsaSignerVerifierTest, CreateSucceeds) {
                                                .Build();
   ASSERT_THAT(validator, IsOk());
 
-  absl::optional<std::string> kid = absl::nullopt;
+  absl::optional<std::string> kid = std::nullopt;
   if (parameters->GetKidStrategy() ==
       JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId) {
     kid = public_key->GetKid();

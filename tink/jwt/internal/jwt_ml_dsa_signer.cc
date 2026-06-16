@@ -92,7 +92,7 @@ NewJwtMlDsaSignInternal(const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
       *raw_ml_dsa_parameters,
       jwt_ml_dsa_private_key.GetPublicKey().GetPublicKeyBytes(
           GetPartialKeyAccess()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!ml_dsa_public_key.ok()) {
     return ml_dsa_public_key.status();
   }

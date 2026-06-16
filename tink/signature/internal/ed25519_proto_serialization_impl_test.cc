@@ -107,7 +107,7 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kLegacy, /*id=*/0x07080910,
                     /*output_prefix=*/std::string("\x00\x07\x08\x09\x10", 5)},
            TestCase{Ed25519Parameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, /*id=*/absl::nullopt,
+                    OutputPrefixTypeTP::kRaw, /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(Ed25519ProtoSerializationTest, ParseParametersWithMutableRegistry) {
@@ -301,7 +301,7 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -340,7 +340,7 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -399,7 +399,7 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -420,7 +420,7 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(),
               Eq("type.googleapis.com/google.crypto.tink.Ed25519PublicKey"));
@@ -463,7 +463,7 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(),
               Eq("type.googleapis.com/google.crypto.tink.Ed25519PublicKey"));
@@ -746,7 +746,7 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -886,7 +886,7 @@ TEST_F(Ed25519ProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*private_key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }

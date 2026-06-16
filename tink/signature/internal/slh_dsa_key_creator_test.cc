@@ -56,7 +56,7 @@ using KeyCreatorsTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     KeyCreatorsTestSuite, KeyCreatorsTest,
     Values(TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{absl::nullopt, ""}));
+           TestCase{std::nullopt, ""}));
 
 TEST_P(KeyCreatorsTest, CreateSlhDsaPrivateKeyWorks) {
   TestCase test_case = GetParam();

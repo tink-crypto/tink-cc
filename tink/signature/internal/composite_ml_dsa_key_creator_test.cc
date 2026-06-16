@@ -61,7 +61,7 @@ INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaKeyCreatorTestSuite, CompositeMlDsaKeyCreatorTest,
     Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
@@ -69,7 +69,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
@@ -77,7 +77,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
@@ -85,23 +85,23 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
@@ -135,11 +135,11 @@ TEST(CompositeMlDsaKeyCreatorTest,
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<CompositeMlDsaPrivateKey>> private_key1 =
-      CreateCompositeMlDsaKey(*parameters, absl::nullopt);
+      CreateCompositeMlDsaKey(*parameters, std::nullopt);
   ASSERT_THAT(private_key1, IsOk());
 
   absl::StatusOr<std::unique_ptr<CompositeMlDsaPrivateKey>> private_key2 =
-      CreateCompositeMlDsaKey(*parameters, absl::nullopt);
+      CreateCompositeMlDsaKey(*parameters, std::nullopt);
   ASSERT_THAT(private_key2, IsOk());
 
   EXPECT_THAT(**private_key1, Not(Eq(**private_key2)));

@@ -64,7 +64,7 @@ TEST(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -135,7 +135,7 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -168,7 +168,7 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -266,7 +266,7 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -302,7 +302,7 @@ TEST(SlhDsaVerifyBoringSslTest, FipsMode) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -338,7 +338,7 @@ TEST_P(SlhDsaVerifyBoringSslTestVectorTest, SignAndVerify) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
-      *parameters, public_key_bytes, absl::nullopt, GetPartialKeyAccess());
+      *parameters, public_key_bytes, std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =

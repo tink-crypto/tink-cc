@@ -154,7 +154,7 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kRaw, EllipticCurveType::NIST_P521,
                     HashType::SHA512, EcdsaSignatureEncoding::IEEE_P1363,
                     subtle::EllipticCurveType::NIST_P521,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""},
            TestCase{EcdsaParameters::Variant::kNoPrefixWithPrehashId,
                     EcdsaParameters::CurveType::kNistP256,
@@ -526,7 +526,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -580,7 +580,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -655,7 +655,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -687,7 +687,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -744,7 +744,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -1076,7 +1076,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -1330,7 +1330,7 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
@@ -1342,7 +1342,7 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*private_key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

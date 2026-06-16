@@ -78,7 +78,7 @@ class SlhDsaSignKeyManagerAdaptor
         return absl::InternalError("Unexpected parameters type.");
       }
       return internal::CreateSlhDsaKey(*key_parameters,
-                                       /*id_requirement=*/absl::nullopt);
+                                       /*id_requirement=*/std::nullopt);
     }
   };
 

@@ -62,8 +62,8 @@ INSTANTIATE_TEST_SUITE_P(
                             std::string("\x00\x01\x03\x00\x05", 5)},
                    TestCase{AesCmacParameters::Variant::kLegacy, 0x01020304,
                             std::string("\x00\x01\x02\x03\x04", 5)},
-                   TestCase{AesCmacParameters::Variant::kNoPrefix,
-                            absl::nullopt, ""})));
+                   TestCase{AesCmacParameters::Variant::kNoPrefix, std::nullopt,
+                            ""})));
 
 TEST_P(AesCmacKeyTest, CreateSucceeds) {
   int key_size;
@@ -121,11 +121,11 @@ TEST(AesCmacKeyTest, CreateKeyWithWrongIdRequirementFails) {
                                  /*id_requirement=*/123, GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(AesCmacKey::Create(*tink_params, secret,
-                                 /*id_requirement=*/absl::nullopt,
-                                 GetPartialKeyAccess())
-                  .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      AesCmacKey::Create(*tink_params, secret,
+                         /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_P(AesCmacKeyTest, GetAesCmacKey) {
@@ -292,7 +292,7 @@ TEST(AesCmacKeyTest, CopyAssigment) {
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
   absl::StatusOr<AesCmacKey> copy =
-      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/absl::nullopt,
+      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/std::nullopt,
                          GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -345,7 +345,7 @@ TEST(AesCmacKeyTest, MoveAssigment) {
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
   absl::StatusOr<AesCmacKey> move =
-      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/absl::nullopt,
+      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/std::nullopt,
                          GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

@@ -68,7 +68,7 @@ INSTANTIATE_TEST_SUITE_P(
                             std::string("\x00\x01\x03\x00\x05", 5)},
                    TestCase{HmacParameters::Variant::kLegacy, 0x01020304,
                             std::string("\x00\x01\x02\x03\x04", 5)},
-                   TestCase{HmacParameters::Variant::kNoPrefix, absl::nullopt,
+                   TestCase{HmacParameters::Variant::kNoPrefix, std::nullopt,
                             ""})));
 
 TEST_P(HmacKeyTest, CreateSucceeds) {
@@ -127,7 +127,7 @@ TEST(HmacKeyTest, CreateKeyWithWrongIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(
       HmacKey::Create(*tink_params, secret,
-                      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                      /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -291,7 +291,7 @@ TEST(HmacKeyTest, CopyAssignment) {
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
   absl::StatusOr<HmacKey> copy =
-      HmacKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      HmacKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                       GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -341,7 +341,7 @@ TEST(HmacKeyTest, MoveAssignment) {
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
   absl::StatusOr<HmacKey> move =
-      HmacKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      HmacKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                       GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

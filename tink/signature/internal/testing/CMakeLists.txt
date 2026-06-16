@@ -140,6 +140,9 @@ tink_cc_library(
     composite_ml_dsa_test_util.cc
     composite_ml_dsa_test_util.h
   DEPS
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    absl::no_destructor
     absl::absl_check
     absl::absl_log
     absl::status
@@ -156,6 +159,7 @@ tink_cc_library(
     tink::internal::rsa_util
     tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
+    tink::internal::util
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_private_key
     tink::signature::ecdsa_parameters
@@ -176,7 +180,6 @@ tink_cc_library(
     tink::signature::signature_private_key
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_util
   TESTONLY
   TAGS
     exclude_if_openssl

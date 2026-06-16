@@ -849,15 +849,13 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::mlkem_util
     tink::internal::secret_buffer
-    tink::internal::ssl_unique_ptr
     tink::internal::xwing_util
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
   TAGS
     exclude_if_openssl

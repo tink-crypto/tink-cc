@@ -128,7 +128,8 @@ class SecretDataInternalClass {
                                    absl::crc32c_t crc32c)
       : buffer_(std::move(buffer)) {
     if (!buffer_.empty()) {
-      absl::big_endian::Store32(crc32c_data(), static_cast<uint32_t>(crc32c));
+      crypto::tink::internal::StoreBigEndian32(crc32c_data(),
+                                               static_cast<uint32_t>(crc32c));
     }
   }
 

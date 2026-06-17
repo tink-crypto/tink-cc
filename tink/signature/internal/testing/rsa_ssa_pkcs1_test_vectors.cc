@@ -136,6 +136,102 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
   return *private_key;
 }
 
+RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters2(
+    const RsaSsaPkcs1Parameters& parameters,
+    std::optional<int> id_requirement) {
+  std::string public_modulus;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "s1EKK81M5kTFtZSuUFnhKy8FS2WNXaWVmi_fGHG4CLw98-"
+      "Yo0nkuUarVwSS0O9pFPcpc3kvPKOe9Tv-6DLS3Qru21aATy2PRqjqJ4CYn71OYtSwM_"
+      "ZfSCKvrjXybzgu-sBmobdtYm-sppbdL-GEHXGd8gdQw8DDCZSR6-dPJFAzLZTCdB-Ctwe_"
+      "RXPF-ewVdfaOGjkZIzDoYDw7n-OHnsYCYozkbTOcWHpjVevipR-IBpGPi1rvKgFnlcG6d_"
+      "tj0hWRl_6cS7RqhjoiNEtxqoJzpXs_"
+      "Kg8xbCxXbCchkf11STA8udiCjQWuWI8rcDwl69XMmHJjIQAqhKvOOQ8rYTQ",
+      &public_modulus));
+  std::string p;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "7BJc834xCi_0YmO5suBinWOQAF7IiRPU-3G9TdhWEkSYquupg9e6K9lC5k0iP-t6I69NYF7-"
+      "6mvXDTmv6Z01o6oV50oXaHeAk74O3UqNCbLe9tybZ_-FdkYlwuGSNttMQBzjCiVy0-y0-"
+      "Wm3rRnFIsAtd0RlZ24aN3bFTWJINIs",
+      &p));
+  RestrictedData p_data =
+      RestrictedData(WithoutLeadingZeros(p), InsecureSecretKeyAccess::Get());
+  std::string q;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "wnQqvNmJe9SwtnH5c_yCqPhKv1cF_4jdQZSGI6_p3KYNxlQzkHZ_"
+      "6uvrU5V27ov6YbX8vKlKfO91oJFQxUD6lpTdgAStI3GMiJBJIZNpyZ9EWNSvwUj28H34cySp"
+      "bZ"
+      "z3s4XdhiJBShgy-fKURvBQwtWmQHZJ3EGrcOI7PcwiyYc",
+      &q));
+  RestrictedData q_data =
+      RestrictedData(WithoutLeadingZeros(q), InsecureSecretKeyAccess::Get());
+  std::string d;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "GlAtDupse2niHVg5EB9wVFbtDvhS-0f-"
+      "IQcfVMXzPIzrBmxi1yfjLSbFgTcyn4nTGVMlt5UmTBldhUcvdQfb0JYdKVH5NaJrNPCsJNFU"
+      "kO"
+      "ESiptxOJFbx9v6j-OWNXExxUOunJhQc2jZzrCMHGGYo-"
+      "2nrqGFoOl2zULCLQDwA9nxnZbqTJr8v-"
+      "FEHMyALPsGifWdgExqTk9ATBUXR0XtbLi8iO8LM7oNKoDjXkO8kPNQBS5yAW51sA01ejgcnA"
+      "1G"
+      "cGnKZgiHyYd2Y0n8xDRgtKpRa84Hnt2HuhZDB7dSwnftlSitO6C_"
+      "GHc0ntO3lmpsJAEQQJv00PreDGj9rdhH_Q",
+      &d));
+  absl::StatusOr<SecretData> d_data =
+      ParseBigIntToFixedLength(d, (parameters.GetModulusSizeInBits() + 7) / 8);
+  ABSL_CHECK_OK(d_data.status());
+  std::string prime_exponent_p;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "lql5jSUCY0ALtidzQogWJ-B87N-RGHsBuJ_0cxQYinwg-ySAAVbSyF1WZujfbO_5-"
+      "YBN362A_"
+      "1dn3lbswCnHK_bHF9-fZNqvwprPnceQj5oK1n4g6JSZNsy6GNAhosT-"
+      "uwQ0misgR8SQE4W25dDGkdEYsz-BgCsyrCcu8J5C-tU",
+      &prime_exponent_p));
+  absl::StatusOr<SecretData> prime_exponent_p_data =
+      ParseBigIntToFixedLength(prime_exponent_p, p_data.size());
+  ABSL_CHECK_OK(prime_exponent_p_data.status());
+  std::string prime_exponent_q;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "BVT0GwuH9opFcis74M9KseFlA0wakQAquPKenvni2rb-57JFW6-0IDfp0vflM_"
+      "NIoUdBL9cggL58JjP12ALJHDnmvOzj5nXlmZUDPFVzcCDa2eizDQS4KK37kwStVKEaNaT1Bw"
+      "mH"
+      "asWxGCNrp2pNfJopHdlgexad4dGCOFaRmZ8",
+      &prime_exponent_q));
+  absl::StatusOr<SecretData> prime_exponent_q_data =
+      ParseBigIntToFixedLength(prime_exponent_q, q_data.size());
+  ABSL_CHECK_OK(prime_exponent_q_data.status());
+  std::string q_inverse;
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "HGQBidm_6MYjgzIQp2xCDG9E5ddg4lmRbOwq4rFWRWlg_ZXidHZgw4lWIlDwVQSc-"
+      "rflwwOVSThKeiquscgk069wlIKoz5tYcCKgCx8HIttQ8zyybcIN0iRdUmXfYe4pg8k4whZ9z"
+      "uE"
+      "h_EtEecI35yjPYzq2CowOzQT85-O6pVk",
+      &q_inverse));
+  absl::StatusOr<SecretData> q_inverse_data =
+      ParseBigIntToFixedLength(q_inverse, p_data.size());
+  ABSL_CHECK_OK(q_inverse_data.status());
+  absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(parameters, BigInteger(public_modulus),
+                                   id_requirement, GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key.status());
+  absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(p_data)
+          .SetPrimeQ(q_data)
+          .SetPrimeExponentP(RestrictedData(*prime_exponent_p_data,
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(RestrictedData(*prime_exponent_q_data,
+                                            InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(*d_data, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(*q_inverse_data, InsecureSecretKeyAccess::Get()))
+          .Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key.status());
+  return *private_key;
+}
+
 RsaSsaPkcs1PrivateKey PrivateKeyFor3072BitParameters(
     const RsaSsaPkcs1Parameters& parameters,
     std::optional<int> id_requirement) {
@@ -718,8 +814,9 @@ const SignatureTestVector& Create3072BitsTestVector() {
   return *test_vector;
 }
 
-// Extracted from third_party/wycheproof/testvectors/rsa_pkcs1_3072_test.json
-const SignatureTestVector& Create3072BitsTestVector2() {
+// Extracted from
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_3072_test.json
+const SignatureTestVector& CreateWycheproof3072BitsTestVector() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
         RsaSsaPkcs1Parameters::Builder()
@@ -840,6 +937,24 @@ const SignatureTestVector& CreateTestVector5() {
 }
 
 }  // namespace
+
+const SignatureTestVector& Create2048BitsTestVector() {
+  static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
+    absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+        RsaSsaPkcs1Parameters::Builder()
+            .SetModulusSizeInBits(2048)
+            .SetPublicExponent(kF4)
+            .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+            .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+            .Build();
+    ABSL_CHECK_OK(parameters.status());
+    return SignatureTestVector(
+        absl::make_unique<RsaSsaPkcs1PrivateKey>(
+            PrivateKeyFor2048BitParameters2(*parameters, absl::nullopt)),
+        HexDecodeOrDie("aa"), HexDecodeOrDie("aa"));
+  }());
+  return *test_vector;
+}
 
 std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
   std::vector<SignatureTestVector> test_vectors = {

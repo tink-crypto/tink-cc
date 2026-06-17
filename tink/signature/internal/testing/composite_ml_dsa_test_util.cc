@@ -291,7 +291,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
         *Create3072BitsTestVector().signature_private_key);
   } else if (key_index == 1) {
     return CloneKeyOrDie<SignaturePrivateKey>(
-        *Create3072BitsTestVector2().signature_private_key);
+        *CreateWycheproof3072BitsTestVector().signature_private_key);
   }
   ABSL_LOG(FATAL) << "Could not find a 3072-bit RSA Pkcs1 key in test vectors";
   return nullptr;

@@ -31,8 +31,9 @@ std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors();
 
 // Expose dummy test vectors to extract valid keys for use in Composite ML-DSA
 // tests.
+const SignatureTestVector& Create2048BitsTestVector();
 const SignatureTestVector& Create3072BitsTestVector();
-const SignatureTestVector& Create3072BitsTestVector2();
+const SignatureTestVector& CreateWycheproof3072BitsTestVector();
 const SignatureTestVector& Create4096BitsTestVector();
 const SignatureTestVector& Create4096BitsTestVector2();
 

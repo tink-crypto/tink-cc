@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -31,13 +32,12 @@
 #include "openssl/base.h"
 #endif
 #include "tink/hybrid/hpke_parameters.h"
+#include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/internal/ec_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -46,6 +46,9 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::P256PointAsString;
+using ::crypto::tink::internal::P384PointAsString;
+using ::crypto::tink::internal::P521PointAsString;
 using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -109,25 +112,27 @@ TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKey) {
                                               .Build();
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
-      internal::GetEcPoint(test_case.curve, ec_key->pub_x, ec_key->pub_y);
-  ASSERT_THAT(ec_point, IsOk());
-  absl::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
-      test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
-  ASSERT_THAT(public_key_bytes, IsOk());
+  std::string public_key_bytes;
+  if (test_case.curve == subtle::EllipticCurveType::NIST_P256) {
+    public_key_bytes = P256PointAsString();
+  } else if (test_case.curve == subtle::EllipticCurveType::NIST_P384) {
+    public_key_bytes = P384PointAsString();
+  } else if (test_case.curve == subtle::EllipticCurveType::NIST_P521) {
+    public_key_bytes = P521PointAsString();
+  } else {
+    FAIL() << "Unsupported curve";
+  }
 
   absl::StatusOr<HpkePublicKey> public_key =
-      HpkePublicKey::Create(*params, *public_key_bytes,
-                            test_case.id_requirement, GetPartialKeyAccess());
+      HpkePublicKey::Create(*params, public_key_bytes, test_case.id_requirement,
+                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   EXPECT_THAT(public_key->GetParameters(), Eq(*params));
   EXPECT_THAT(public_key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(public_key->GetOutputPrefix(), Eq(test_case.output_prefix));
   EXPECT_THAT(public_key->GetPublicKeyBytes(GetPartialKeyAccess()),
-              Eq(*public_key_bytes));
+              Eq(public_key_bytes));
 }
 
 TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
@@ -214,17 +219,19 @@ TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidLength) {
                                               .Build();
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
-      internal::GetEcPoint(test_case.curve, ec_key->pub_x, ec_key->pub_y);
-  ASSERT_THAT(ec_point, IsOk());
-  absl::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
-      test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
-  ASSERT_THAT(public_key_bytes, IsOk());
+  std::string public_key_bytes;
+  if (test_case.curve == subtle::EllipticCurveType::NIST_P256) {
+    public_key_bytes = P256PointAsString();
+  } else if (test_case.curve == subtle::EllipticCurveType::NIST_P384) {
+    public_key_bytes = P384PointAsString();
+  } else if (test_case.curve == subtle::EllipticCurveType::NIST_P521) {
+    public_key_bytes = P521PointAsString();
+  } else {
+    FAIL() << "Unsupported curve";
+  }
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *params, public_key_bytes->substr(0, public_key_bytes->size() - 1),
+      *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
       test_case.id_requirement, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -367,23 +374,25 @@ TEST_P(HpkePublicKeyTest, NistCurvePublicKeyEquals) {
                                               .Build();
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
-      internal::GetEcPoint(test_case.curve, ec_key->pub_x, ec_key->pub_y);
-  ASSERT_THAT(ec_point, IsOk());
-  absl::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
-      test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
-  ASSERT_THAT(public_key_bytes, IsOk());
+  std::string public_key_bytes;
+  if (test_case.curve == subtle::EllipticCurveType::NIST_P256) {
+    public_key_bytes = P256PointAsString();
+  } else if (test_case.curve == subtle::EllipticCurveType::NIST_P384) {
+    public_key_bytes = P384PointAsString();
+  } else if (test_case.curve == subtle::EllipticCurveType::NIST_P521) {
+    public_key_bytes = P521PointAsString();
+  } else {
+    FAIL() << "Unsupported curve";
+  }
 
   absl::StatusOr<HpkePublicKey> public_key =
-      HpkePublicKey::Create(*params, *public_key_bytes,
-                            test_case.id_requirement, GetPartialKeyAccess());
+      HpkePublicKey::Create(*params, public_key_bytes, test_case.id_requirement,
+                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<HpkePublicKey> other_public_key =
-      HpkePublicKey::Create(*params, *public_key_bytes,
-                            test_case.id_requirement, GetPartialKeyAccess());
+      HpkePublicKey::Create(*params, public_key_bytes, test_case.id_requirement,
+                            GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   EXPECT_TRUE(*public_key == *other_public_key);

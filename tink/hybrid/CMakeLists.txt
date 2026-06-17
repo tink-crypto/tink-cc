@@ -310,6 +310,8 @@ tink_cc_library(
     tink::internal::output_prefix_util
     tink::subtle::common_enums
     tink::util::statusor
+  TAGS
+    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -821,12 +823,13 @@ tink_cc_test(
     crypto
     tink::core::key
     tink::core::partial_key_access
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::ec_util
-    tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::random
-    tink::util::test_matchers
     tink::util::test_util
+  TAGS
+    exclude_if_openssl
 )
 
 tink_cc_test(

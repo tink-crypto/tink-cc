@@ -1,5 +1,7 @@
 tink_module(jwt::internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME raw_jwt_hmac_key_manager
   SRCS

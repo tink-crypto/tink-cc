@@ -410,6 +410,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    tink::core::keyset_handle
     tink::core::keyset_reader
     tink::internal::ec_util
     tink::internal::rsa_util
@@ -1237,6 +1238,8 @@ tink_cc_test(
     signature_pem_keyset_reader_test.cc
   DEPS
     tink::signature::config_v0
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_public_key
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
@@ -1247,10 +1250,15 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
+    absl::optional
     crypto
+    tink::core::big_integer
     tink::core::cleartext_keyset_handle
+    tink::core::ec_point
+    tink::core::key
     tink::core::keyset_handle
     tink::core::keyset_reader
+    tink::core::partial_key_access
     tink::core::proto_keyset_format
     tink::core::public_key_sign
     tink::core::public_key_verify

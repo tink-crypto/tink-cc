@@ -154,7 +154,7 @@ std::vector<VerifyEntry> UnpackPrimitives(
     verify_entry.primitive = entry->ReleasePrimitive();
     verify_entry.key_id = entry->get_key_id();
     verify_entry.output_prefix_type = entry->get_output_prefix_type();
-    std::string identifier = entry->get_identifier();
+    const std::string& identifier = entry->get_identifier();
     if (!identifier.empty()) {
       verify_entry.has_prefix = true;
       for (int i = 0; i < CryptoFormat::kNonRawPrefixSize; ++i) {

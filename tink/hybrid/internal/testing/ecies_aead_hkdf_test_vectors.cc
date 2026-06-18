@@ -17,8 +17,11 @@
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 
 #include <memory>
+#include <optional>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
@@ -27,10 +30,12 @@
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/ecies_public_key.h"
+#include "tink/hybrid/hybrid_private_key.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -551,12 +556,44 @@ HybridTestVector CreateTestVector14() {
 
 }  // namespace
 
-std::vector<HybridTestVector> CreateEciesTestVectors() {
-  return {CreateTestVector0(),  CreateTestVector1(),  CreateTestVector2(),
-          CreateTestVector3(),  CreateTestVector4(),  CreateTestVector5(),
-          CreateTestVector6(),  CreateTestVector7(),  CreateTestVector8(),
-          CreateTestVector9(),  CreateTestVector10(), CreateTestVector11(),
-          CreateTestVector12(), CreateTestVector13(), CreateTestVector14()};
+const std::vector<HybridTestVector>& CreateEciesTestVectors() {
+  static const absl::NoDestructor<std::vector<HybridTestVector>> vectors([]() {
+    return std::vector<HybridTestVector>{
+        CreateTestVector0(),  CreateTestVector1(),  CreateTestVector2(),
+        CreateTestVector3(),  CreateTestVector4(),  CreateTestVector5(),
+        CreateTestVector6(),  CreateTestVector7(),  CreateTestVector8(),
+        CreateTestVector9(),  CreateTestVector10(), CreateTestVector11(),
+        CreateTestVector12(), CreateTestVector13(), CreateTestVector14()};
+  }());
+  return *vectors;
+}
+
+const EciesPrivateKey* GetEciesPrivateKey(
+    subtle::EllipticCurveType curve_type) {
+  static const absl::NoDestructor<absl::flat_hash_map<
+      subtle::EllipticCurveType, std::shared_ptr<HybridPrivateKey>>>
+      keys([]() {
+        absl::flat_hash_map<subtle::EllipticCurveType,
+                            std::shared_ptr<HybridPrivateKey>>
+            map;
+        map.reserve(4);
+        // NIST_P256
+        map[subtle::EllipticCurveType::NIST_P256] =
+            CreateTestVector0().hybrid_private_key;
+        // NIST_P384
+        map[subtle::EllipticCurveType::NIST_P384] =
+            CreateTestVector12().hybrid_private_key;
+        // NIST_P521
+        map[subtle::EllipticCurveType::NIST_P521] =
+            CreateTestVector13().hybrid_private_key;
+        // CURVE25519
+        map[subtle::EllipticCurveType::CURVE25519] =
+            CreateTestVector14().hybrid_private_key;
+        return map;
+      }());
+  auto it = keys->find(curve_type);
+  ABSL_CHECK(it != keys->end()) << "No vector found for curve: " << curve_type;
+  return static_cast<const EciesPrivateKey*>(it->second.get());
 }
 
 }  // namespace internal

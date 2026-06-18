@@ -42,6 +42,8 @@ tink_cc_library(
     ecies_aead_hkdf_test_vectors.h
   DEPS
     tink::hybrid::internal::testing::hybrid_test_vectors
+    absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
     absl::statusor
     absl::optional
@@ -53,6 +55,8 @@ tink_cc_library(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
+    tink::hybrid::hybrid_private_key
+    tink::subtle::common_enums
     tink::util::test_util
   TESTONLY
 )

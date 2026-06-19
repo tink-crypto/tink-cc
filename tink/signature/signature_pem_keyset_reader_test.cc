@@ -753,11 +753,11 @@ TEST(SignaturePemKeysetReaderTest, ReadAndUseRsaPemKeys) {
 
       absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
           (*private_keyset_handle)
-              ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+              ->GetPrimitive<PublicKeySign>(ConfigSignature2026());
       ASSERT_THAT(sign, IsOk());
       absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
           (*public_keyset_handle)
-              ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+              ->GetPrimitive<PublicKeyVerify>(ConfigSignature2026());
       ASSERT_THAT(verify, IsOk());
 
       std::string data = "data";
@@ -1048,11 +1048,11 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadAndUseEcdsaPemKeys) {
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*private_keyset_handle)
-          ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+          ->GetPrimitive<PublicKeySign>(ConfigSignature2026());
   ASSERT_THAT(sign, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_keyset_handle)
-          ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+          ->GetPrimitive<PublicKeyVerify>(ConfigSignature2026());
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
@@ -1191,7 +1191,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::ReadNoSecret((*keyset)->SerializeAsString());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*handle)->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+      (*handle)->GetPrimitive<PublicKeyVerify>(ConfigSignature2026());
   ASSERT_THAT(verify, IsOk());
 }
 

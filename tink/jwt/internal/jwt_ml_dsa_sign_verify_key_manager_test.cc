@@ -114,7 +114,7 @@ TEST(JwtMlDsaSignVerifyKeyManagerTest, GetPrimitive) {
   ASSERT_THAT(validator, IsOk());
 
   absl::StatusOr<std::string> compact =
-      (*signer)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      (*signer)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*verifier)->VerifyAndDecodeWithKid(*compact, *validator,
                                                   /*kid=*/absl::nullopt),

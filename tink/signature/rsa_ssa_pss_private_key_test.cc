@@ -164,7 +164,7 @@ RsaSsaPssPublicKey GetValidPublicKey() {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status()) << "Failed to create public key.";
   return *public_key;
 }
@@ -215,7 +215,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{RsaSsaPssParameters::HashType::kSha512,
                     RsaSsaPssParameters::Variant::kNoPrefix,
                     /*salt_length_in_bytes*/ 64,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
@@ -377,7 +377,7 @@ TEST(RsaSsaPssPrivateKeyTest,
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
-      *parameters, modulus, /*id_requirement=*/absl::nullopt,
+      *parameters, modulus, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
@@ -510,7 +510,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
 
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, /*modulus=*/BigInteger(*n_str),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
@@ -549,7 +549,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
   EXPECT_THAT(private_key->GetPrivateExponentData().GetSecret(
                   InsecureSecretKeyAccess::Get()),
               Eq(*d_str));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(""));
 }
 
@@ -561,7 +561,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesModulus) {
       RsaSsaPssPublicKey::Create(
           public_key.GetParameters(),
           BigInteger(FlipFirstByte(Base64WebSafeDecode(k2048BitRsaModulus))),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key_modified_modulus, IsOk());
 
   absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_modulus =
@@ -1202,7 +1202,7 @@ TEST(RsaSsaPssPrivateKeyTest, DifferentKeyTypesNotEqual) {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
@@ -1241,7 +1241,7 @@ TEST(RsaSsaPssPrivateKeyTest, Clone) {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
@@ -1280,7 +1280,7 @@ TEST(RsaSsaPssPrivateKeyTest, CopyConstructor) {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   RsaSsaPssPrivateKey private_key = CreateWithValidPrivateValues(*public_key);
@@ -1317,7 +1317,7 @@ TEST(RsaSsaPssPrivateKeyTest, CopyAssignment) {
 
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<RsaSsaPssPublicKey> other_public_key =
@@ -1348,7 +1348,7 @@ TEST(RsaSsaPssPrivateKeyTest, MoveConstructor) {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   RsaSsaPssPrivateKey private_key = CreateWithValidPrivateValues(*public_key);
@@ -1386,7 +1386,7 @@ TEST(RsaSsaPssPrivateKeyTest, MoveAssignment) {
 
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<RsaSsaPssPublicKey> other_public_key =

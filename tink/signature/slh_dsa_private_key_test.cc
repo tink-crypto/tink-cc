@@ -103,7 +103,7 @@ INSTANTIATE_TEST_SUITE_P(
                     SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
                     SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
                     SlhDsaParameters::SignatureType::kSmallSignature},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, "",
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, "",
                     SlhDsaParameters::HashType::kSha2,
                     SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
                     SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
@@ -114,7 +114,7 @@ INSTANTIATE_TEST_SUITE_P(
                     SLHDSA_SHAKE_256F_PRIVATE_KEY_BYTES,
                     SLHDSA_SHAKE_256F_PUBLIC_KEY_BYTES,
                     SlhDsaParameters::SignatureType::kFastSigning},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, "",
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, "",
                     SlhDsaParameters::HashType::kShake,
                     SLHDSA_SHAKE_256F_PRIVATE_KEY_BYTES,
                     SLHDSA_SHAKE_256F_PUBLIC_KEY_BYTES,
@@ -406,7 +406,7 @@ TEST(SlhDsaPrivateKeyTest, CopyAssignment) {
 
   absl::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
       *other_parameters, key_pair.public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   absl::StatusOr<SlhDsaPrivateKey> copy = SlhDsaPrivateKey::Create(
@@ -475,7 +475,7 @@ TEST(SlhDsaPrivateKeyTest, MoveAssignment) {
 
   absl::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
       *other_parameters, key_pair.public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   absl::StatusOr<SlhDsaPrivateKey> moved = SlhDsaPrivateKey::Create(

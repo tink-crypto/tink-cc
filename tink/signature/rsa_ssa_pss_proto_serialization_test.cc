@@ -133,7 +133,7 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kRaw,
                     RsaSsaPssParameters::HashType::kSha512, HashType::SHA512,
                     /*modulus_size=*/3072, /*salt_length_in_bytes=*/64,
-                    /*id=*/absl::nullopt,
+                    /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(RsaSsaPssProtoSerializationTest, ParseParametersSucceeds) {
@@ -524,7 +524,7 @@ TEST_P(RsaSsaPssProtoSerializationTest, ParsePublicKeySucceeds) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -596,7 +596,7 @@ TEST_F(RsaSsaPssProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -625,7 +625,7 @@ TEST_P(RsaSsaPssProtoSerializationTest, SerializePublicKeySucceeds) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -916,7 +916,7 @@ TEST_F(RsaSsaPssProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -1047,7 +1047,7 @@ TEST_F(RsaSsaPssProtoSerializationTest,
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, /*token=*/absl::nullopt);
+              *private_key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
@@ -1135,7 +1135,7 @@ KeyAndSerialization PublicKeyAndSerializationRaw() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
-      *parameters, BigInteger(values.n), absl::nullopt, GetPartialKeyAccess());
+      *parameters, BigInteger(values.n), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey",
@@ -1145,7 +1145,7 @@ KeyAndSerialization PublicKeyAndSerializationRaw() {
        FieldWithNumber(3).IsString(values.n),
        FieldWithNumber(4).IsString(values.e)},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PublicKeyRAW",
                              std::make_shared<RsaSsaPssPublicKey>(*public_key),
@@ -1165,7 +1165,7 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
-      *parameters, BigInteger(values.n), absl::nullopt, GetPartialKeyAccess());
+      *parameters, BigInteger(values.n), std::nullopt, GetPartialKeyAccess());
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
@@ -1194,7 +1194,7 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
        FieldWithNumber(7).IsString(values.dq),
        FieldWithNumber(8).IsString(values.q_inv)},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization(
       "PrivateKeyRAW", std::make_shared<RsaSsaPssPrivateKey>(*private_key),

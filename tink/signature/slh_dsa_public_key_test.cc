@@ -70,7 +70,7 @@ INSTANTIATE_TEST_SUITE_P(
                     SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
                     SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
                     SlhDsaParameters::SignatureType::kSmallSignature},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, "",
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, "",
                     SlhDsaParameters::HashType::kSha2,
                     SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
                     SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES,
@@ -81,7 +81,7 @@ INSTANTIATE_TEST_SUITE_P(
                     SLHDSA_SHAKE_256F_PRIVATE_KEY_BYTES,
                     SLHDSA_SHAKE_256F_PUBLIC_KEY_BYTES,
                     SlhDsaParameters::SignatureType::kFastSigning},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, "",
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, "",
                     SlhDsaParameters::HashType::kShake,
                     SLHDSA_SHAKE_256F_PRIVATE_KEY_BYTES,
                     SLHDSA_SHAKE_256F_PUBLIC_KEY_BYTES,
@@ -136,7 +136,7 @@ TEST(SlhDsaPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
   EXPECT_THAT(SlhDsaPublicKey::Create(*tink_params, public_key_bytes,
-                                      /*id_requirement=*/absl::nullopt,
+                                      /*id_requirement=*/std::nullopt,
                                       GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -307,7 +307,7 @@ TEST(SlhDsaPublicKeyTest, CopyAssignment) {
   std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
 
   absl::StatusOr<SlhDsaPublicKey> copy = SlhDsaPublicKey::Create(
-      *other_params, other_public_key_bytes, /*id_requirement=*/absl::nullopt,
+      *other_params, other_public_key_bytes, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -362,7 +362,7 @@ TEST(SlhDsaPublicKeyTest, MoveAssignment) {
   std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
 
   absl::StatusOr<SlhDsaPublicKey> moved = SlhDsaPublicKey::Create(
-      *other_params, other_public_key_bytes, /*id_requirement=*/absl::nullopt,
+      *other_params, other_public_key_bytes, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(moved, IsOk());
 

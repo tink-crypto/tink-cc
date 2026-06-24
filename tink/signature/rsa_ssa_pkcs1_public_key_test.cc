@@ -102,7 +102,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{/*modulus_size=*/2048,
                     RsaSsaPkcs1Parameters::HashType::kSha512,
                     RsaSsaPkcs1Parameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(RsaSsaPkcs1PublicKeyTest, CreatePublicKeySucceeds) {
@@ -143,7 +143,7 @@ TEST(RsaSsaPkcs1PublicKeyTest, CreateWithNonMatchingModulusSizeFails) {
   BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
-                                   /*id_requirement=*/absl::nullopt,
+                                   /*id_requirement=*/std::nullopt,
                                    GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -177,7 +177,7 @@ TEST(Ed25519PublicKeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 
   EXPECT_THAT(RsaSsaPkcs1PublicKey::Create(*tink_parameters, modulus,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -276,12 +276,12 @@ TEST(RsaSsaPkcs1PublicKeyTest, DifferentModulusNotEqual) {
 
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
-                                   /*id_requirement=*/absl::nullopt,
+                                   /*id_requirement=*/std::nullopt,
                                    GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
   absl::StatusOr<RsaSsaPkcs1PublicKey> other_public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, other_modulus,
-                                   /*id_requirement=*/absl::nullopt,
+                                   /*id_requirement=*/std::nullopt,
                                    GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 

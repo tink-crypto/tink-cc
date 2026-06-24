@@ -178,7 +178,7 @@ RsaSsaPkcs1PublicKey GetValidPublicKey() {
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(
           *parameters, key.GetPublicKey().GetModulus(GetPartialKeyAccess()),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status()) << "Failed to create public key.";
   return *public_key;
 }
@@ -207,7 +207,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*output_prefix=*/std::string("\x00\x07\x08\x09\x10", 5)},
            TestCase{RsaSsaPkcs1Parameters::HashType::kSha512,
                     RsaSsaPkcs1Parameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeySucceeds) {
@@ -374,7 +374,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
 
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, /*modulus=*/BigInteger(*n_str),
-                                   /*id_requirement=*/absl::nullopt,
+                                   /*id_requirement=*/std::nullopt,
                                    GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
@@ -414,7 +414,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
   EXPECT_THAT(private_key->GetPrivateExponentData().GetSecret(
                   InsecureSecretKeyAccess::Get()),
               Eq(*d_str));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(""));
 }
 
@@ -429,7 +429,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesModulus) {
                                        .GetPublicKey()
                                        .GetModulus(GetPartialKeyAccess())
                                        .GetValue())),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key_modified_modulus, IsOk());
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key_modified_modulus =
@@ -1116,12 +1116,12 @@ TEST(RsaSsaPkcs1PrivateKeyTest, DifferentKeyTypesNotEqual) {
           *parameters,
           Get2048BitPrivateKey().GetPublicKey().GetModulus(
               GetPartialKeyAccess()),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
+                                   /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   EXPECT_TRUE(*private_key != *public_key);
@@ -1142,7 +1142,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, Clone) {
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
+                                   /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Clone the key.
@@ -1163,7 +1163,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, CopyConstructor) {
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
+                                   /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   RsaSsaPkcs1PrivateKey copy(*private_key);
@@ -1183,7 +1183,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, CopyAssignment) {
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
+                                   /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<RsaSsaPkcs1Parameters> other_parameters =
@@ -1260,7 +1260,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, MoveConstructor) {
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
+                                   /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   RsaSsaPkcs1PrivateKey expected = *private_key;
@@ -1281,7 +1281,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest, MoveAssignment) {
 
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
+                                   /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<RsaSsaPkcs1Parameters> other_parameters =

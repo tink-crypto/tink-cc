@@ -65,7 +65,7 @@ std::string Ed25519PublicKeyBytes() {
 SignatureTestVector CreateTestVector0() {
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix).value(),
-      Ed25519PublicKeyBytes(), absl::nullopt, GetPartialKeyAccess());
+      Ed25519PublicKeyBytes(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
       absl::make_unique<Ed25519PrivateKey>(

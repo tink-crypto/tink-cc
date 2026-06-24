@@ -229,7 +229,7 @@ SignatureTestVector CreateMlDsa65Ed2551TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForEd25519),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -248,7 +248,7 @@ SignatureTestVector CreateMlDsa65Ed2551TestVector() {
   absl::StatusOr<Ed25519PublicKey> ed25519_public_key =
       Ed25519PublicKey::Create(
           *ed25519_parameters, HexDecodeOrDie(kHexMlDsa65Ed25519Pub),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ed25519_public_key);
 
   internal::SecretBuffer ed25519_private_key_bytes(
@@ -275,7 +275,7 @@ SignatureTestVector CreateMlDsa65Ed2551TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -449,7 +449,7 @@ SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForEcdsaP256),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -475,7 +475,7 @@ SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
       *ecdsa_parameters,
       EcPoint(BigInteger(HexDecodeOrDie(kHexMlDsa65EcdsaP256PubX)),
               BigInteger(HexDecodeOrDie(kHexMlDsa65EcdsaP256PubY))),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_public_key);
 
   internal::SecretBuffer ecdsa_private_key_bytes(
@@ -501,7 +501,7 @@ SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -679,7 +679,7 @@ SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForEcdsaP384),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -705,7 +705,7 @@ SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
       *ecdsa_parameters,
       EcPoint(BigInteger(HexDecodeOrDie(kHexMlDsa65EcdsaP384PubX)),
               BigInteger(HexDecodeOrDie(kHexMlDsa65EcdsaP384PubY))),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_public_key);
 
   internal::SecretBuffer ecdsa_private_key_bytes(
@@ -731,7 +731,7 @@ SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -966,7 +966,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForRsa3072Pss),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -993,7 +993,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector() {
   absl::StatusOr<RsaSsaPssPublicKey> rsa_public_key =
       RsaSsaPssPublicKey::Create(
           *rsa_parameters, BigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072PssN)),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(rsa_public_key);
   absl::StatusOr<RsaSsaPssPrivateKey> rsa_private_key =
       RsaSsaPssPrivateKey::Builder()
@@ -1029,7 +1029,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -1279,7 +1279,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForRsa4096Pss),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -1306,7 +1306,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector() {
   absl::StatusOr<RsaSsaPssPublicKey> rsa_public_key =
       RsaSsaPssPublicKey::Create(
           *rsa_parameters, BigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096PssN)),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(rsa_public_key);
   absl::StatusOr<RsaSsaPssPrivateKey> rsa_private_key =
       RsaSsaPssPrivateKey::Builder()
@@ -1342,7 +1342,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -1577,7 +1577,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForRsa3072Pkcs1),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -1602,7 +1602,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector() {
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(
           *rsa_parameters, BigInteger(HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1N)),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<RsaSsaPkcs1PrivateKey> rsa_private_key =
       RsaSsaPkcs1PrivateKey::Builder()
@@ -1638,7 +1638,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -1888,7 +1888,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa65PubForRsa4096Pkcs1),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -1913,7 +1913,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector() {
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(
           *rsa_parameters, BigInteger(HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1N)),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<RsaSsaPkcs1PrivateKey> rsa_private_key =
       RsaSsaPkcs1PrivateKey::Builder()
@@ -1949,7 +1949,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -2180,7 +2180,7 @@ SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa87PubForEcdsaP384),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -2206,7 +2206,7 @@ SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
       *ecdsa_parameters,
       EcPoint(BigInteger(HexDecodeOrDie(kHexMlDsa87EcdsaP384PubX)),
               BigInteger(HexDecodeOrDie(kHexMlDsa87EcdsaP384PubY))),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_public_key);
 
   internal::SecretBuffer ecdsa_private_key_bytes(
@@ -2232,7 +2232,7 @@ SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -2464,7 +2464,7 @@ SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa87PubForEcdsaP521),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -2490,7 +2490,7 @@ SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
       *ecdsa_parameters,
       EcPoint(BigInteger(HexDecodeOrDie(kHexMlDsa87EcdsaP521PubX)),
               BigInteger(HexDecodeOrDie(kHexMlDsa87EcdsaP521PubY))),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_public_key);
 
   internal::SecretBuffer ecdsa_private_key_bytes(
@@ -2516,7 +2516,7 @@ SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -2805,7 +2805,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa87PubForRsa3072Pss),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -2832,7 +2832,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector() {
   absl::StatusOr<RsaSsaPssPublicKey> rsa_public_key =
       RsaSsaPssPublicKey::Create(
           *rsa_parameters, BigInteger(HexDecodeOrDie(kHexMlDsa87Rsa3072PssN)),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(rsa_public_key);
   absl::StatusOr<RsaSsaPssPrivateKey> rsa_private_key =
       RsaSsaPssPrivateKey::Builder()
@@ -2868,7 +2868,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(
@@ -3171,7 +3171,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector() {
 
   absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
       *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa87PubForRsa4096Pss),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_public_key);
 
   internal::SecretBuffer private_seed_bytes(
@@ -3198,7 +3198,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector() {
   absl::StatusOr<RsaSsaPssPublicKey> rsa_public_key =
       RsaSsaPssPublicKey::Create(
           *rsa_parameters, BigInteger(HexDecodeOrDie(kHexMlDsa87Rsa4096PssN)),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(rsa_public_key);
   absl::StatusOr<RsaSsaPssPrivateKey> rsa_private_key =
       RsaSsaPssPrivateKey::Builder()
@@ -3234,7 +3234,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector() {
   absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
       CompositeMlDsaPrivateKey::Create(
           *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(composite_ml_dsa_private_key);
 
   return SignatureTestVector(absl::make_unique<CompositeMlDsaPrivateKey>(

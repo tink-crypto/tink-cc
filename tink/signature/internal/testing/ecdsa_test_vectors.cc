@@ -104,7 +104,7 @@ SignatureTestVector CreateTestVector0() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
+      *parameters, P256Point(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
@@ -128,7 +128,7 @@ SignatureTestVector CreateTestVector1() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
+      *parameters, P256Point(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
@@ -227,7 +227,7 @@ SignatureTestVector CreateTestVector5() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
+      *parameters, P256Point(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
@@ -251,7 +251,7 @@ SignatureTestVector CreateTestVector6() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P384Point(), absl::nullopt, GetPartialKeyAccess());
+      *parameters, P384Point(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
@@ -276,7 +276,7 @@ SignatureTestVector CreateTestVector7() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P384Point(), absl::nullopt, GetPartialKeyAccess());
+      *parameters, P384Point(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
@@ -301,7 +301,7 @@ SignatureTestVector CreateTestVector8() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P521Point(), absl::nullopt, GetPartialKeyAccess());
+      *parameters, P521Point(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P521SecretValue(), GetPartialKeyAccess());

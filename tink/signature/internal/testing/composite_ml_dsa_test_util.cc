@@ -93,7 +93,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateEd25519PrivateKeyOrDie() {
   ABSL_CHECK_OK(parameters);
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       *parameters, (*key_pair)->public_key,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
       *public_key,
@@ -121,7 +121,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateEcdsaPrivateKeyOrDie(
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(key_pair->pub_x), BigInteger(key_pair->pub_y)),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
@@ -155,7 +155,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
     ABSL_CHECK_OK(status);
     absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
         *parameters, BigInteger(rsa_public_key.n),
-        /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
     absl::StatusOr<RsaSsaPssPrivateKey> private_key =
         RsaSsaPssPrivateKey::Builder()
@@ -211,7 +211,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
     ABSL_CHECK_OK(status);
     absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
         *parameters, BigInteger(rsa_public_key.n),
-        /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
     absl::StatusOr<RsaSsaPssPrivateKey> private_key =
         RsaSsaPssPrivateKey::Builder()
@@ -265,7 +265,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
     ABSL_CHECK_OK(status);
     absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
         RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(rsa_public_key.n),
-                                     /*id_requirement=*/absl::nullopt,
+                                     /*id_requirement=*/std::nullopt,
                                      GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
     absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
@@ -319,7 +319,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
     ABSL_CHECK_OK(status);
     absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
         RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(rsa_public_key.n),
-                                     /*id_requirement=*/absl::nullopt,
+                                     /*id_requirement=*/std::nullopt,
                                      GetPartialKeyAccess());
     ABSL_CHECK_OK(public_key);
     absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
@@ -369,7 +369,7 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
                                   MlDsaParameters::Variant::kNoPrefix);
       ABSL_CHECK_OK(parameters);
       absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
-          *parameters, public_key_bytes, /*id_requirement=*/absl::nullopt,
+          *parameters, public_key_bytes, /*id_requirement=*/std::nullopt,
           GetPartialKeyAccess());
       ABSL_CHECK_OK(public_key);
       absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
@@ -394,7 +394,7 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
                                   MlDsaParameters::Variant::kNoPrefix);
       ABSL_CHECK_OK(parameters);
       absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
-          *parameters, public_key_bytes, /*id_requirement=*/absl::nullopt,
+          *parameters, public_key_bytes, /*id_requirement=*/std::nullopt,
           GetPartialKeyAccess());
       ABSL_CHECK_OK(public_key);
       absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(

@@ -1,5 +1,8 @@
 # Bazel rules for tools.
 
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
 sh_binary(
     name = "update_build_files_for_tink_2_0_bazel",
     srcs = ["update_build_files_for_tink_2_0_bazel.sh"],

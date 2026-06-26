@@ -2101,6 +2101,7 @@ tink_cc_test(
     tink::signature::signature_config
     tink::signature::internal::ml_dsa_sign_key_manager
     tink::signature::internal::ml_dsa_verify_key_manager
+    tink::util::protobuf_helper
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto

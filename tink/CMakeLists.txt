@@ -1186,6 +1186,7 @@ tink_cc_test(
     tink::subtle::subtle
     tink::util::input_stream_util
     tink::util::istream_input_stream
+    tink::util::protobuf_helper
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -1213,6 +1214,7 @@ tink_cc_test(
     absl::status_matchers
     tink::subtle::aes_gcm_boringssl
     tink::subtle::random
+    tink::util::protobuf_helper
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

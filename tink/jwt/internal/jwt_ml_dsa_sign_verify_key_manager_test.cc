@@ -30,6 +30,7 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/key_manager.h"
+#include "tink/util/protobuf_helper.h"
 #include "proto/jwt_ml_dsa.pb.h"
 
 namespace crypto {
@@ -90,8 +91,8 @@ TEST(JwtMlDsaSignVerifyKeyManagerTest, GetPrimitive) {
   ASSERT_THAT(signer, IsOk());
 
   const google::crypto::tink::JwtMlDsaPrivateKey* jwt_ml_dsa_private_key =
-      dynamic_cast<const google::crypto::tink::JwtMlDsaPrivateKey*>(
-          private_key->get());
+      portable_proto::DynamicCastMessage<
+          google::crypto::tink::JwtMlDsaPrivateKey>(private_key->get());
   ASSERT_THAT(jwt_ml_dsa_private_key, NotNull());
   ASSERT_THAT(jwt_ml_dsa_private_key->has_public_key(), IsTrue());
 

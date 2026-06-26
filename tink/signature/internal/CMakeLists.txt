@@ -1008,6 +1008,7 @@ tink_cc_test(
     tink::core::key_manager
     tink::core::public_key_sign
     tink::signature::signature_config
+    tink::util::protobuf_helper
     tink::util::test_matchers
     tink::proto::ml_dsa_cc_proto
   TAGS
@@ -1073,6 +1074,7 @@ tink_cc_test(
     tink::core::key_manager
     tink::core::public_key_sign
     tink::signature::signature_config
+    tink::util::protobuf_helper
     tink::util::test_matchers
     tink::proto::slh_dsa_cc_proto
   TAGS

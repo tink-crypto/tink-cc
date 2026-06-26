@@ -32,6 +32,7 @@
 #include "tink/registry.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/random.h"
+#include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -157,9 +158,11 @@ TEST(PrivateKeyManagerImplTest, FactoryNewKeyFromMessage) {
   EcdsaKeyFormat key_format;
   key_format.mutable_params()->set_encoding(EcdsaSignatureEncoding::DER);
   auto key = key_manager->get_key_factory().NewKey(key_format).value();
-  EXPECT_THAT(
-      dynamic_cast<EcdsaPrivateKey&>(*key).public_key().params().encoding(),
-      Eq(EcdsaSignatureEncoding::DER));
+  EXPECT_THAT(portable_proto::DynamicCastMessage<EcdsaPrivateKey>(*key)
+                  .public_key()
+                  .params()
+                  .encoding(),
+              Eq(EcdsaSignatureEncoding::DER));
 }
 
 TEST(PrivateKeyManagerImplTest, GetPublicKeyData) {
@@ -213,9 +216,11 @@ TEST(PrivateKeyManagerImplTest, PublicKeyManagerCanHaveShortLifetime) {
   EcdsaKeyFormat key_format;
   key_format.mutable_params()->set_encoding(EcdsaSignatureEncoding::DER);
   auto key = key_manager->get_key_factory().NewKey(key_format).value();
-  EXPECT_THAT(
-      dynamic_cast<EcdsaPrivateKey&>(*key).public_key().params().encoding(),
-      Eq(EcdsaSignatureEncoding::DER));
+  EXPECT_THAT(portable_proto::DynamicCastMessage<EcdsaPrivateKey>(*key)
+                  .public_key()
+                  .params()
+                  .encoding(),
+              Eq(EcdsaSignatureEncoding::DER));
 }
 
 }  // namespace

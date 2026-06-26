@@ -26,6 +26,7 @@
 #include "tink/public_key_sign.h"
 #include "tink/signature/internal/slh_dsa_verify_key_manager.h"
 #include "tink/signature/signature_config.h"
+#include "tink/util/protobuf_helper.h"
 #include "tink/util/test_matchers.h"
 #include "proto/slh_dsa.pb.h"
 
@@ -84,8 +85,8 @@ TEST_F(SlhDsaSignKeyManagerTest, GetPrimitive) {
   ASSERT_THAT(signer, IsOk());
 
   const google::crypto::tink::SlhDsaPrivateKey* slh_dsa_private_key =
-      dynamic_cast<const google::crypto::tink::SlhDsaPrivateKey*>(
-          private_key->get());
+      portable_proto::DynamicCastMessage<
+          google::crypto::tink::SlhDsaPrivateKey>(private_key->get());
   ASSERT_THAT(slh_dsa_private_key, NotNull());
 
   auto verifier =

@@ -1748,6 +1748,7 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_proto_serialization
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
+    tink::util::protobuf_helper
     tink::proto::jwt_ml_dsa_cc_proto
   TAGS
     exclude_if_openssl

@@ -20,10 +20,13 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -38,6 +41,7 @@
 #include "tink/primitive_set.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "proto/rsa_ssa_pss.pb.h"
@@ -48,13 +52,11 @@
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
@@ -67,6 +69,7 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
@@ -77,7 +80,6 @@
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/common.pb.h"
 #include "proto/ed25519.pb.h"
@@ -309,56 +311,40 @@ struct RsaKeyValues {
 };
 
 // Creates the values corresponding to an RSA key using OpenSSL.
+RsaKeyValues GetRsaKeyValues(const RsaSsaPkcs1PrivateKey& key) {
+  return RsaKeyValues{
+      std::string(
+          key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue()),
+      std::string(
+          key.GetPublicKey().GetParameters().GetPublicExponent().GetValue()),
+      std::string(key.GetPrimePData(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeQData(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeExponentPData().GetSecret(
+          InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeExponentQData().GetSecret(
+          InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrivateExponentData().GetSecret(
+          InsecureSecretKeyAccess::Get())),
+      std::string(key.GetCrtCoefficientData().GetSecret(
+          InsecureSecretKeyAccess::Get()))};
+}
+
 RsaKeyValues GenerateRsaKeyValues(int modulus_size_in_bits) {
-  internal::SslUniquePtr<RSA> rsa(RSA_new());
-  ABSL_CHECK_NE(rsa.get(), nullptr);
-
-  // Set public exponent to 65537.
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  ABSL_CHECK_NE(e.get(), nullptr);
-  BN_set_word(e.get(), 65537);
-
-  // Generate an RSA key pair and get the values.
-  ABSL_CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
-                                 /*cb=*/nullptr));
-
-  const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dp_bn, *dq_bn, *q_inv_bn;
-
-  RSA_get0_key(rsa.get(), &n_bn, &e_bn, &d_bn);
-
-  absl::StatusOr<std::string> n_str =
-      internal::BignumToString(n_bn, BN_num_bytes(n_bn));
-  ABSL_CHECK_OK(n_str);
-  absl::StatusOr<std::string> e_str =
-      internal::BignumToString(e_bn, BN_num_bytes(e_bn));
-  ABSL_CHECK_OK(e_str);
-  absl::StatusOr<std::string> d_str =
-      internal::BignumToString(d_bn, (modulus_size_in_bits + 7) / 8);
-  ABSL_CHECK_OK(d_str);
-
-  RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
-
-  absl::StatusOr<std::string> p_str =
-      internal::BignumToString(p_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(p_str);
-  absl::StatusOr<std::string> q_str =
-      internal::BignumToString(q_bn, BN_num_bytes(q_bn));
-  ABSL_CHECK_OK(q_str);
-
-  RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
-
-  absl::StatusOr<std::string> dp_str =
-      internal::BignumToString(dp_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(dp_str);
-  absl::StatusOr<std::string> dq_str =
-      internal::BignumToString(dq_bn, BN_num_bytes(q_bn));
-  ABSL_CHECK_OK(dq_str);
-  absl::StatusOr<std::string> q_inv_str =
-      internal::BignumToString(q_inv_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(q_inv_str);
-
-  return RsaKeyValues{*n_str,  *e_str,  *p_str, *q_str,
-                      *dp_str, *dq_str, *d_str, *q_inv_str};
+  if (modulus_size_in_bits == 2048) {
+    static const absl::NoDestructor<RsaKeyValues> values([]() {
+      std::vector<internal::SignatureTestVector> vectors =
+          internal::CreateRsaSsaPkcs1TestVectors();
+      const RsaSsaPkcs1PrivateKey* key =
+          dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+              vectors[0].signature_private_key.get());
+      ABSL_CHECK_NE(key, nullptr);
+      return GetRsaKeyValues(*key);
+    }());
+    return *values;
+  }
+  ABSL_LOG(FATAL) << "Unsupported modulus size: " << modulus_size_in_bits;
 }
 
 TEST_F(SignatureConfigTest, RsaSsaPkcs1ProtoPublicKeySerializationRegistered) {

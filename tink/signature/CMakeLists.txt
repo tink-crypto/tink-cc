@@ -1157,7 +1157,9 @@ tink_cc_test(
     tink::signature::signature_config
     tink::signature::signature_key_templates
     gmock
+    absl::no_destructor
     absl::absl_check
+    absl::absl_log
     absl::memory
     absl::status
     absl::status_matchers
@@ -1180,19 +1182,18 @@ tink_cc_test(
     tink::core::registry
     tink::core::restricted_data
     tink::config::global_registry
-    tink::internal::bn_util
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ed25519_cc_proto

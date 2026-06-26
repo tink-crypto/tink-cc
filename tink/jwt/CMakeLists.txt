@@ -928,17 +928,15 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::string_view
-    absl::optional
     crypto
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
-    tink::util::test_matchers
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::util::test_util
 )
 

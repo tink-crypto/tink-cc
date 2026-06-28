@@ -19,13 +19,17 @@
 
 #include <vector>
 
+#include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
+#include "tink/subtle/common_enums.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-std::vector<HybridTestVector> CreateEciesTestVectors();
+const std::vector<HybridTestVector>& CreateEciesTestVectors();
+
+const EciesPrivateKey* GetEciesPrivateKey(subtle::EllipticCurveType curve_type);
 
 }  // namespace internal
 }  // namespace tink

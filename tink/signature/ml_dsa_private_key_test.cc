@@ -72,7 +72,7 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kTink, 0x03050709,
                     std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
-                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""},
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
@@ -80,7 +80,7 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kTink, 0x03050709,
                     std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 struct KeyPair {
   std::string public_key_bytes;
@@ -412,7 +412,7 @@ TEST(MlDsaPrivateKeyTest, CopyAssignment) {
 
   absl::StatusOr<MlDsaPublicKey> other_public_key = MlDsaPublicKey::Create(
       *other_parameters, other_key_pair->public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   absl::StatusOr<MlDsaPrivateKey> copy = MlDsaPrivateKey::Create(
@@ -477,7 +477,7 @@ TEST(MlDsaPrivateKeyTest, MoveAssignment) {
 
   absl::StatusOr<MlDsaPublicKey> other_public_key = MlDsaPublicKey::Create(
       *other_parameters, other_key_pair->public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   absl::StatusOr<MlDsaPrivateKey> moved = MlDsaPrivateKey::Create(

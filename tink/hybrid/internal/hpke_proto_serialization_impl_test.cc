@@ -17,6 +17,7 @@
 #include "tink/hybrid/internal/hpke_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -26,7 +27,6 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/serialization_registry.h"
@@ -42,13 +42,12 @@
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_public_key.h"
+#include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/testing/equals_proto_key_serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
@@ -56,7 +55,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -88,71 +86,6 @@ const absl::string_view kPublicTypeUrl =
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.HpkePrivateKey";
 
-// Taken from https://datatracker.ietf.org/doc/html/rfc6979.html#appendix-A.2.5
-std::string P256PointAsString() {
-  std::string pub_key_x_p256_hex =
-      "60FED4BA255A9D31C961EB74C6356D68C049B8923B61FA6CE669622E60F29FB6";
-  std::string pub_key_y_p256_hex =
-      "7903FE1008B8BC99A41AE9E95628BC64F2F1B20C2D7E9F5177A3C294D4462299";
-  return HexDecodeOrDie(
-      absl::StrCat("04", pub_key_x_p256_hex, pub_key_y_p256_hex));
-}
-
-RestrictedData P256SecretValue() {
-  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
-      "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721"));
-  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
-}
-
-// Taken from https://datatracker.ietf.org/doc/html/rfc6979.html#appendix-A.2.6
-std::string P384PointAsString() {
-  std::string pub_key_x_p384_hex =
-      "EC3A4E415B4E19A4568618029F427FA5DA9A8BC4AE92E02E06AAE5286B300C64DEF8F0EA"
-      "9055866064A254515480BC13";
-  std::string pub_key_y_p384_hex =
-      "8015D9B72D7D57244EA8EF9AC0C621896708A59367F9DFB9F54CA84B3F1C9DB1288B231C"
-      "3AE0D4FE7344FD2533264720";
-  return HexDecodeOrDie(
-      absl::StrCat("04", pub_key_x_p384_hex, pub_key_y_p384_hex));
-}
-
-RestrictedData P384SecretValue() {
-  SecretData secret_data = SecretDataFromStringView(
-      HexDecodeOrDie("6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA477407"
-                     "87137D896D5724E4C70A825F872C9EA60D2EDF5"));
-  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
-}
-
-// Taken from https://datatracker.ietf.org/doc/html/rfc6979.html#appendix-A.2.7
-std::string P521PointAsString() {
-  std::string pub_key_x_p521_hex =
-      "01894550D0785932E00EAA23B694F213F8C3121F86DC97A04E5A7167DB4E5BCD371123D4"
-      "6E45DB6B5D5370A7F20FB633155D38FFA16D2BD761DCAC474B9A2F5023A4";
-  std::string pub_key_y_p521_hex =
-      "00493101C962CD4D2FDDF782285E64584139C2F91B47F87FF82354D6630F746A28A0DB25"
-      "741B5B34A828008B22ACC23F924FAAFBD4D33F81EA66956DFEAA2BFDFCF5";
-  return HexDecodeOrDie(
-      absl::StrCat("04", pub_key_x_p521_hex, pub_key_y_p521_hex));
-}
-
-RestrictedData P521SecretValue() {
-  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
-      "00FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB"
-      "32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538"));
-  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
-}
-
-// Taken from Java, HpkeTestUtil
-std::string X25519PublicValue() {
-  return HexDecodeOrDie(
-      "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431");
-}
-
-RestrictedData X25519SecretValue() {
-  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
-      "52c4a758a802cd8b936eceea314432798d5baf2d7e9235dc084ab1b9cfa2f736"));
-  return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
-}
 
 // Taken from
 // https://www.ietf.org/archive/id/draft-connolly-cfrg-xwing-kem-09.html
@@ -376,7 +309,7 @@ INSTANTIATE_TEST_SUITE_P(
                  HpkeParameters::AeadId::kChaCha20Poly1305,
                  OutputPrefixTypeTP::kRaw, HpkeKem::DHKEM_X25519_HKDF_SHA256,
                  HpkeKdf::HKDF_SHA256, HpkeAead::CHACHA20_POLY1305,
-                 /*id=*/absl::nullopt, /*output_prefix=*/"",
+                 /*id=*/std::nullopt, /*output_prefix=*/"",
                  subtle::EllipticCurveType::CURVE25519}));
 
 TEST_P(HpkeProtoSerializationTest, ParseParametersWithMutableRegistry) {
@@ -671,30 +604,23 @@ struct KeyPair {
 
 absl::StatusOr<KeyPair> GenerateKeyPair(subtle::EllipticCurveType curve) {
   if (curve == subtle::EllipticCurveType::CURVE25519) {
-    absl::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
-    if (!x25519_key.ok()) {
-      return x25519_key.status();
-    }
-    return KeyPair{
-        std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
-                    X25519KeyPubKeySize()),
-        std::string(util::SecretDataAsStringView((*x25519_key)->private_key))};
+    return KeyPair{X25519PublicValue(),
+                   std::string(X25519SecretValue().GetSecret(
+                       InsecureSecretKeyAccess::Get()))};
   }
-  absl::StatusOr<EcKey> ec_key = NewEcKey(curve);
-  if (!ec_key.ok()) {
-    return ec_key.status();
+  if (curve == subtle::EllipticCurveType::NIST_P256) {
+    return KeyPair{P256PointAsString(), std::string(P256SecretValue().GetSecret(
+                                            InsecureSecretKeyAccess::Get()))};
   }
-  absl::StatusOr<SslUniquePtr<EC_POINT>> ec_point =
-      GetEcPoint(curve, ec_key->pub_x, ec_key->pub_y);
-  if (!ec_point.ok()) {
-    return ec_point.status();
+  if (curve == subtle::EllipticCurveType::NIST_P384) {
+    return KeyPair{P384PointAsString(), std::string(P384SecretValue().GetSecret(
+                                            InsecureSecretKeyAccess::Get()))};
   }
-  absl::StatusOr<std::string> pub = EcPointEncode(
-      curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
-  if (!pub.ok()) {
-    return pub.status();
+  if (curve == subtle::EllipticCurveType::NIST_P521) {
+    return KeyPair{P521PointAsString(), std::string(P521SecretValue().GetSecret(
+                                            InsecureSecretKeyAccess::Get()))};
   }
-  return KeyPair{*pub, std::string(util::SecretDataAsStringView(ec_key->priv))};
+  return absl::InvalidArgumentError("Unsupported curve");
 }
 
 TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
@@ -725,7 +651,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -777,7 +703,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -849,7 +775,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -876,7 +802,7 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -927,7 +853,7 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -1246,7 +1172,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -1390,7 +1316,7 @@ TEST_F(HpkeProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, key_pair->public_key, /*id_requirement=*/absl::nullopt,
+      *parameters, key_pair->public_key, /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
@@ -1402,7 +1328,7 @@ TEST_F(HpkeProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*private_key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
@@ -1461,7 +1387,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1482,7 +1408,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PrivateKeyP256",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1499,7 +1425,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P384PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1520,7 +1446,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
        FieldWithNumber(3).IsString(
            P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PrivateKeyP384",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1537,7 +1463,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P521PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1558,7 +1484,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
        FieldWithNumber(3).IsString(
            P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PrivateKeyP521",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1575,7 +1501,7 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, X25519PublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, X25519PublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1596,7 +1522,7 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
        FieldWithNumber(3).IsString(
            X25519SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PrivateKeyX25519",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1613,7 +1539,7 @@ KeyAndSerialization PrivateKeyAndSerializationXWing() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, XWingPublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, XWingPublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1632,7 +1558,7 @@ KeyAndSerialization PrivateKeyAndSerializationXWing() {
        FieldWithNumber(3).IsString(
            XWingSecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      /*id_requirement=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PrivateKeyXWing",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1649,7 +1575,7 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem768() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, MlKem768PublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, MlKem768PublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1668,7 +1594,7 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem768() {
        FieldWithNumber(3).IsString(
            MlKem768SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      /*id_requirement=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PrivateKeyMlKem768",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1685,7 +1611,7 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem1024() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, MlKem1024PublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, MlKem1024PublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -1704,7 +1630,7 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem1024() {
        FieldWithNumber(3).IsString(
            MlKem1024SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      /*id_requirement=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PrivateKeyMlKem1024",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1797,7 +1723,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1810,7 +1736,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PublicKeyP256",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1827,7 +1753,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P384PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1840,7 +1766,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(P384PointAsString())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PublicKeyP384",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1857,7 +1783,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P521PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1870,7 +1796,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P521PointAsString())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PublicKeyP521",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1887,7 +1813,7 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, X25519PublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, X25519PublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1900,7 +1826,7 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(X25519PublicValue())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("PublicKeyX25519",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1917,7 +1843,7 @@ KeyAndSerialization PublicKeyAndSerializationXWing() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, XWingPublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, XWingPublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1929,7 +1855,7 @@ KeyAndSerialization PublicKeyAndSerializationXWing() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(XWingPublicValue())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      /*id_requirement=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PublicKeyXWing",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1946,7 +1872,7 @@ KeyAndSerialization PublicKeyAndSerializationMlKem768() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, MlKem768PublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, MlKem768PublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1958,7 +1884,7 @@ KeyAndSerialization PublicKeyAndSerializationMlKem768() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(MlKem768PublicValue())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      /*id_requirement=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PublicKeyMlKem768",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1975,7 +1901,7 @@ KeyAndSerialization PublicKeyAndSerializationMlKem1024() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, MlKem1024PublicValue(), /*id_requirement=*/absl::nullopt,
+      *parameters, MlKem1024PublicValue(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
@@ -1987,7 +1913,7 @@ KeyAndSerialization PublicKeyAndSerializationMlKem1024() {
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(MlKem1024PublicValue())},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      /*id_requirement=*/absl::nullopt);
+      /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PublicKeyMlKem1024",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -2066,7 +1992,7 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
           .Build();
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -2093,7 +2019,7 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization("NonCanonicalSerialization",
                              std::make_shared<HpkePrivateKey>(*private_key),

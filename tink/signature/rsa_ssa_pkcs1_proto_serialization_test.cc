@@ -18,11 +18,13 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -30,6 +32,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -38,12 +41,10 @@
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/testing/equals_proto_key_serialization.h"
 #include "tink/internal/testing/field_with_number.h"
 #include "tink/key.h"
@@ -51,10 +52,10 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
-#include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 
@@ -131,7 +132,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{RsaSsaPkcs1Parameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw,
                     RsaSsaPkcs1Parameters::HashType::kSha512, HashType::SHA512,
-                    /*modulus_size=*/3072, /*id=*/absl::nullopt,
+                    /*modulus_size=*/3072, /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(RsaSsaPkcs1ProtoSerializationTest, ParseParametersSucceeds) {
@@ -327,56 +328,56 @@ struct KeyValues {
   std::string q_inv;
 };
 
+KeyValues GetKeyValues(const RsaSsaPkcs1PrivateKey& key) {
+  return KeyValues{
+      std::string(
+          key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue()),
+      std::string(
+          key.GetPublicKey().GetParameters().GetPublicExponent().GetValue()),
+      std::string(key.GetPrimePData(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeQData(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeExponentPData().GetSecret(
+          InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeExponentQData().GetSecret(
+          InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrivateExponentData().GetSecret(
+          InsecureSecretKeyAccess::Get())),
+      std::string(key.GetCrtCoefficientData().GetSecret(
+          InsecureSecretKeyAccess::Get()))};
+}
+
+KeyValues GetKeyValuesFromTestVector(
+    const internal::SignatureTestVector& test_vector) {
+  const RsaSsaPkcs1PrivateKey* key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      test_vector.signature_private_key.get());
+  ABSL_CHECK_NE(key, nullptr);
+  return GetKeyValues(*key);
+}
+
 KeyValues GenerateKeyValues(int modulus_size_in_bits) {
-  internal::SslUniquePtr<RSA> rsa(RSA_new());
-  ABSL_CHECK_NE(rsa.get(), nullptr);
-
-  // Set public exponent to 65537.
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  ABSL_CHECK_NE(e.get(), nullptr);
-  BN_set_word(e.get(), 65537);
-
-  // Generate an RSA key pair and get the values.
-  ABSL_CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
-                                 /*cb=*/nullptr));
-
-  const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dp_bn, *dq_bn, *q_inv_bn;
-
-  RSA_get0_key(rsa.get(), &n_bn, &e_bn, &d_bn);
-
-  absl::StatusOr<std::string> n_str =
-      internal::BignumToString(n_bn, BN_num_bytes(n_bn));
-  ABSL_CHECK_OK(n_str);
-  absl::StatusOr<std::string> e_str =
-      internal::BignumToString(e_bn, BN_num_bytes(e_bn));
-  ABSL_CHECK_OK(e_str);
-  absl::StatusOr<std::string> d_str =
-      internal::BignumToString(d_bn, (modulus_size_in_bits + 7) / 8);
-  ABSL_CHECK_OK(d_str);
-
-  RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
-
-  absl::StatusOr<std::string> p_str =
-      internal::BignumToString(p_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(p_str);
-  absl::StatusOr<std::string> q_str =
-      internal::BignumToString(q_bn, BN_num_bytes(q_bn));
-  ABSL_CHECK_OK(q_str);
-
-  RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
-
-  absl::StatusOr<std::string> dp_str =
-      internal::BignumToString(dp_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(dp_str);
-  absl::StatusOr<std::string> dq_str =
-      internal::BignumToString(dq_bn, BN_num_bytes(q_bn));
-  ABSL_CHECK_OK(dq_str);
-  absl::StatusOr<std::string> q_inv_str =
-      internal::BignumToString(q_inv_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(q_inv_str);
-
-  return KeyValues{*n_str,  *e_str,  *p_str, *q_str,
-                   *dp_str, *dq_str, *d_str, *q_inv_str};
+  if (modulus_size_in_bits == 2048) {
+    static const absl::NoDestructor<KeyValues> values([]() {
+      std::vector<internal::SignatureTestVector> vectors =
+          internal::CreateRsaSsaPkcs1TestVectors();
+      return GetKeyValuesFromTestVector(vectors[0]);
+    }());
+    return *values;
+  }
+  if (modulus_size_in_bits == 3072) {
+    static const absl::NoDestructor<KeyValues> values([]() {
+      return GetKeyValuesFromTestVector(internal::Create3072BitsTestVector());
+    }());
+    return *values;
+  }
+  if (modulus_size_in_bits == 4096) {
+    static const absl::NoDestructor<KeyValues> values([]() {
+      return GetKeyValuesFromTestVector(internal::Create4096BitsTestVector());
+    }());
+    return *values;
+  }
+  ABSL_LOG(FATAL) << "Unsupported modulus size: " << modulus_size_in_bits;
 }
 
 const KeyValues& Get2048BitKeyValues() {
@@ -409,7 +410,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest, ParsePublicKeySucceeds) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -479,7 +480,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -506,7 +507,7 @@ TEST_P(RsaSsaPkcs1ProtoSerializationTest, SerializePublicKeySucceeds) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -782,7 +783,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -906,7 +907,7 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, /*token=*/absl::nullopt);
+              *private_key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
@@ -991,7 +992,7 @@ KeyAndSerialization PublicKeyAndSerializationRaw() {
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n),
-                                   absl::nullopt, GetPartialKeyAccess());
+                                   std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PublicKey",
@@ -1001,7 +1002,7 @@ KeyAndSerialization PublicKeyAndSerializationRaw() {
        FieldWithNumber(3).IsString(values.n),
        FieldWithNumber(4).IsString(values.e)},
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization(
       "PublicKeyRAW", std::make_shared<RsaSsaPkcs1PublicKey>(*public_key),
@@ -1020,7 +1021,7 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
   ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n),
-                                   absl::nullopt, GetPartialKeyAccess());
+                                   std::nullopt, GetPartialKeyAccess());
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
@@ -1048,7 +1049,7 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
        FieldWithNumber(7).IsString(values.dq),
        FieldWithNumber(8).IsString(values.q_inv)},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      absl::nullopt);
+      std::nullopt);
 
   return KeyAndSerialization(
       "PrivateKeyRAW", std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key),

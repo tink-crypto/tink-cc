@@ -28,16 +28,22 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/crypto.h"
+#include "absl/types/optional.h"
+#include "tink/big_integer.h"
 #include "tink/cleartext_keyset_handle.h"
+#include "tink/ec_point.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/key.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
+#include "tink/partial_key_access.h"
 #include "tink/proto_keyset_format.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/config_v0.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
@@ -77,6 +83,7 @@ using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 using MlDsaPublicKeyProto = ::google::crypto::tink::MlDsaPublicKey;
 using ::google::crypto::tink::MlDsaInstance;
 using ::testing::Eq;
+using ::testing::NotNull;
 using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
@@ -746,11 +753,11 @@ TEST(SignaturePemKeysetReaderTest, ReadAndUseRsaPemKeys) {
 
       absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
           (*private_keyset_handle)
-              ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+              ->GetPrimitive<PublicKeySign>(ConfigSignature2026());
       ASSERT_THAT(sign, IsOk());
       absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
           (*public_keyset_handle)
-              ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+              ->GetPrimitive<PublicKeyVerify>(ConfigSignature2026());
       ASSERT_THAT(verify, IsOk());
 
       std::string data = "data";
@@ -1041,11 +1048,11 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadAndUseEcdsaPemKeys) {
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*private_keyset_handle)
-          ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+          ->GetPrimitive<PublicKeySign>(ConfigSignature2026());
   ASSERT_THAT(sign, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_keyset_handle)
-          ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+          ->GetPrimitive<PublicKeyVerify>(ConfigSignature2026());
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
@@ -1184,7 +1191,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::ReadNoSecret((*keyset)->SerializeAsString());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*handle)->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+      (*handle)->GetPrimitive<PublicKeyVerify>(ConfigSignature2026());
   ASSERT_THAT(verify, IsOk());
 }
 
@@ -1786,6 +1793,55 @@ TEST(SignaturePemKeysetReaderTest, ReadMlDsaPrivateKeyUnsupported) {
   ASSERT_THAT(reader, IsOk());
   EXPECT_THAT(reader->get()->Read(),
               StatusIs(absl::StatusCode::kUnimplemented));
+}
+
+TEST(SignaturePemKeysetReaderTest, BuildKeysetHandleFromPrivateKeysetFails) {
+  SignaturePemKeysetReaderBuilder builder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+
+  EXPECT_THAT(builder.BuildPublicKeysetHandle(), Not(IsOk()));
+}
+
+TEST(SignaturePemKeysetReaderTest, BuildKeysetHandleSuccess) {
+  SignaturePemKeysetReaderBuilder builder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kEcdsaP256PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      builder.BuildPublicKeysetHandle();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<EcdsaParameters> expected_parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  EcPoint expected_public_point(
+      BigInteger(test::HexDecodeOrDie(kEcdsaP256PublicKeyX)),
+      BigInteger(test::HexDecodeOrDie(kEcdsaP256PublicKeyY)));
+
+  absl::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
+      *expected_parameters, expected_public_point,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  // Check that the handle has the expected key.
+  ASSERT_EQ((*handle)->size(), 1);
+  ASSERT_THAT((*handle)->Validate(), IsOk());
+  std::shared_ptr<const Key> primary_key = (*handle)->GetPrimary().GetKey();
+  ASSERT_THAT(primary_key, NotNull());
+  EXPECT_THAT(*primary_key, Eq(*expected_public_key));
 }
 
 }  // namespace

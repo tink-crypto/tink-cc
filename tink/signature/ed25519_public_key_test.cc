@@ -58,7 +58,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{Ed25519Parameters::Variant::kLegacy, 0x07080910,
                     std::string("\x00\x07\x08\x09\x10", 5)},
-           TestCase{Ed25519Parameters::Variant::kNoPrefix, absl::nullopt, ""}));
+           TestCase{Ed25519Parameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 TEST_P(Ed25519PublicKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
@@ -112,7 +112,7 @@ TEST(Ed25519PublicKeyTest, CreateKeyWithInvalidIdRequirementFails) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 
   EXPECT_THAT(Ed25519PublicKey::Create(*tink_params, public_key_bytes,
-                                       /*id_requirement=*/absl::nullopt,
+                                       /*id_requirement=*/std::nullopt,
                                        GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -269,7 +269,7 @@ TEST(Ed25519PublicKeyTest, CopyAssignment) {
   std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
   absl::StatusOr<Ed25519PublicKey> copy = Ed25519PublicKey::Create(
       *other_params, other_public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *public_key;
@@ -312,7 +312,7 @@ TEST(Ed25519PublicKeyTest, MoveAssignment) {
   std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
   absl::StatusOr<Ed25519PublicKey> moved = Ed25519PublicKey::Create(
       *other_params, other_public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(moved, IsOk());
 
   Ed25519PublicKey expected = *public_key;

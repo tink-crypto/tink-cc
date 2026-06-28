@@ -113,6 +113,19 @@ TEST_F(RsaPssSignBoringsslTest, EncodesPssWithSeparateHashes) {
               IsOk());
 }
 
+TEST_F(RsaPssSignBoringsslTest, NegativeSaltLengthFails) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
+                                   /*mgf1_hash=*/HashType::SHA256,
+                                   /*salt_length=*/-1};
+  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(private_key_, params),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       testing::HasSubstr("Salt length is negative")));
+}
+
 TEST_F(RsaPssSignBoringsslTest, RejectsInvalidPaddingHash) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";

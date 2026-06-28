@@ -183,7 +183,7 @@ absl::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
       ProtoKeySerialization::Create(
           key_data.type_url(), RestrictedData(key_data.value(), token),
           key_data.key_material_type(), OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   if (!proto_key_serialization.ok()) {
     return proto_key_serialization.status();
   }

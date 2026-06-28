@@ -29,8 +29,12 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -68,6 +72,37 @@ using ::google::crypto::tink::OutputPrefixType;
 namespace crypto {
 namespace tink {
 namespace test {
+namespace {
+
+const crypto::tink::internal::EcKey& GetCachedEcKey(
+    crypto::tink::subtle::EllipticCurveType curve_type) {
+  static const absl::NoDestructor<absl::flat_hash_map<
+      crypto::tink::subtle::EllipticCurveType, crypto::tink::internal::EcKey>>
+      key_cache([]() {
+        absl::flat_hash_map<crypto::tink::subtle::EllipticCurveType,
+                            crypto::tink::internal::EcKey>
+            map;
+        map.reserve(4);
+        for (crypto::tink::subtle::EllipticCurveType curve : {
+                 crypto::tink::subtle::EllipticCurveType::NIST_P256,
+                 crypto::tink::subtle::EllipticCurveType::NIST_P384,
+                 crypto::tink::subtle::EllipticCurveType::NIST_P521,
+                 crypto::tink::subtle::EllipticCurveType::CURVE25519,
+             }) {
+          absl::StatusOr<crypto::tink::internal::EcKey> test_key =
+              crypto::tink::internal::NewEcKey(curve);
+          ABSL_CHECK_OK(test_key.status());
+          map[curve] = *std::move(test_key);
+        }
+        return map;
+      }());
+  auto it = key_cache->find(curve_type);
+  ABSL_CHECK(it != key_cache->end()) << "No cached EC key found for curve "
+                                     << subtle::EnumToString(curve_type);
+  return it->second;
+}
+
+}  // namespace
 
 std::string ReadTestFile(absl::string_view filename) {
   std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
@@ -185,7 +220,9 @@ EciesAeadHkdfPrivateKey GetEciesAeadHkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type) {
-  auto test_key = internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
+  const internal::EcKey& test_key =
+      GetCachedEcKey(Enums::ProtoToSubtle(curve_type));
+
   EciesAeadHkdfPrivateKey ecies_key;
   ecies_key.set_version(0);
   ecies_key.set_key_value(util::SecretDataAsStringView(test_key.priv));

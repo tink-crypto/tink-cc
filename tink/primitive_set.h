@@ -91,6 +91,8 @@ class PrimitiveSet {
 
     P2& get_primitive() const { return *primitive_; }
 
+    std::unique_ptr<P> ReleasePrimitive() { return std::move(primitive_); }
+
     // Returns an empty string if the output prefix type is WITH_ID_REQUIREMENT.
     // Otherwise, it returns the corresponding output prefix according to
     // `CryptoFormat::GetOutputPrefix()`.
@@ -349,6 +351,26 @@ class PrimitiveSet {
   std::vector<Entry<P>*> get_all_in_keyset_order() const {
     absl::MutexLockMaybe lock(primitives_mutex_.get());
     return primitives_in_keyset_order_;
+  }
+
+  std::vector<std::unique_ptr<Entry<P>>> ReleaseAllEntries() {
+    absl::MutexLockMaybe lock(primitives_mutex_.get());
+    std::vector<std::unique_ptr<Entry<P>>> result;
+    result.reserve(primitives_in_keyset_order_.size());
+    for (Entry<P>* raw_entry : primitives_in_keyset_order_) {
+      std::string id = raw_entry->get_identifier();
+      auto& list = primitives_[id];
+      for (auto& entry : list) {
+        if (entry.get() == raw_entry) {
+          result.push_back(std::move(entry));
+          break;
+        }
+      }
+    }
+    primitives_ = CiphertextPrefixToPrimitivesMap();
+    primitives_in_keyset_order_ = std::vector<Entry<P>*>();
+    primary_ = nullptr;
+    return result;
   }
 
   const absl::flat_hash_map<std::string, std::string>& get_annotations() const {

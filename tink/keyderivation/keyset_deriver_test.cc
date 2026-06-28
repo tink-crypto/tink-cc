@@ -385,18 +385,18 @@ std::vector<std::shared_ptr<Key>> AeadTestVector() {
                       kOkmFromRfc.substr(0, 64), /*id_requirement=*/5050505),
       CreateAesGcmKey(/*key_size=*/16, AesGcmParameters::Variant::kNoPrefix,
                       kOkmFromRfc.substr(0, 32),
-                      /*id_requirement=*/absl::nullopt),
+                      /*id_requirement=*/std::nullopt),
       CreateXChaCha20Poly1305Key(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix,
           kOkmFromRfc.substr(0, 64),
-          /*id_requirement=*/absl::nullopt),
+          /*id_requirement=*/std::nullopt),
       CreateXChaCha20Poly1305Key(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix,
           kOkmFromRfc.substr(0, 64),
-          /*id_requirement=*/absl::nullopt),
+          /*id_requirement=*/std::nullopt),
       CreateXChaCha20Poly1305Key(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix,
-          kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
+          kOkmFromRfc.substr(0, 64), /*id_requirement=*/std::nullopt),
   };
 }
 
@@ -408,7 +408,7 @@ std::vector<std::shared_ptr<Key>> DaeadTestVector() {
                       kOkmFromRfc.substr(0, 96), /*id_requirement=*/2020202),
       CreateAesSivKey(/*key_size=*/64, AesSivParameters::Variant::kNoPrefix,
                       kOkmFromRfc.substr(0, 128),
-                      /*id_requirement=*/absl::nullopt),
+                      /*id_requirement=*/std::nullopt),
   };
 }
 
@@ -425,7 +425,7 @@ std::vector<std::shared_ptr<Key>> MacTestVector() {
       CreateHmacKey(
           /*key_size=*/32, /*cryptographic_tag_size=*/32,
           HmacParameters::HashType::kSha512, HmacParameters::Variant::kNoPrefix,
-          kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
+          kOkmFromRfc.substr(0, 64), /*id_requirement=*/std::nullopt),
   };
 }
 
@@ -438,13 +438,13 @@ std::vector<std::shared_ptr<Key>> PrfTestVector() {
           /*salt=*/test::HexDecodeOrDie("de"), kOkmFromRfc.substr(0, 32)),
       CreateHkdfPrfKey(/*key_size_in_bytes=*/16,
                        HkdfPrfParameters::HashType::kSha224,
-                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 32)),
+                       /*salt=*/std::nullopt, kOkmFromRfc.substr(0, 32)),
       CreateHkdfPrfKey(
           /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
           /*salt=*/test::HexDecodeOrDie("ad"), kOkmFromRfc.substr(0, 32)),
       CreateHkdfPrfKey(/*key_size_in_bytes=*/32,
                        HkdfPrfParameters::HashType::kSha384,
-                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 64)),
+                       /*salt=*/std::nullopt, kOkmFromRfc.substr(0, 64)),
       CreateHkdfPrfKey(
           /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
           /*salt=*/test::HexDecodeOrDie("beef"), kOkmFromRfc.substr(0, 64)),
@@ -495,7 +495,7 @@ std::vector<std::shared_ptr<Key>> SignatureEcdsaTestVector() {
                             EcdsaParameters::SignatureEncoding::kIeeeP1363,
                             EcdsaParameters::Variant::kNoPrefix,
                             kOkmFromRfc.substr(0, 64),
-                            /*id_requirement=*/absl::nullopt),
+                            /*id_requirement=*/std::nullopt),
   };
 }
 
@@ -512,7 +512,7 @@ std::vector<std::shared_ptr<Key>> SignatureEd25519TestVector() {
                               /*id_requirement=*/3030303),
       CreateEd25519PrivateKey(Ed25519Parameters::Variant::kNoPrefix,
                               kOkmFromRfc.substr(0, 64),
-                              /*id_requirement=*/absl::nullopt),
+                              /*id_requirement=*/std::nullopt),
   };
 }
 

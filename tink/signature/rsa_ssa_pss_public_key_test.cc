@@ -89,7 +89,7 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{/*modulus_size=*/2048, RsaSsaPssParameters::HashType::kSha512,
                  /*salt_length_in_bytes*/ 64,
                  RsaSsaPssParameters::Variant::kNoPrefix,
-                 /*id_requirement=*/absl::nullopt,
+                 /*id_requirement=*/std::nullopt,
                  /*output_prefix=*/""}));
 
 TEST_P(RsaSsaPssPublicKeyTest, CreatePublicKeySucceeds) {
@@ -132,7 +132,7 @@ TEST(RsaSsaPssPublicKeyTest, CreateWithNonMatchingModulusSizeFails) {
   BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -169,7 +169,7 @@ TEST(Ed25519PublicKeyTest, CreateKeyWithInvalidIdRequirementFails) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 
   EXPECT_THAT(RsaSsaPssPublicKey::Create(*tink_parameters, modulus,
-                                         /*id_requirement=*/absl::nullopt,
+                                         /*id_requirement=*/std::nullopt,
                                          GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -272,11 +272,11 @@ TEST(RsaSsaPssPublicKeyTest, DifferentModulusNotEqual) {
 
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
   absl::StatusOr<RsaSsaPssPublicKey> other_public_key =
       RsaSsaPssPublicKey::Create(*parameters, other_modulus,
-                                 /*id_requirement=*/absl::nullopt,
+                                 /*id_requirement=*/std::nullopt,
                                  GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
@@ -429,7 +429,7 @@ TEST(RsaSsaPssPublicKeyTest, CopyAssignment) {
 
   absl::StatusOr<RsaSsaPssPublicKey> copy = RsaSsaPssPublicKey::Create(
       *other_parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *public_key;
@@ -494,7 +494,7 @@ TEST(RsaSsaPssPublicKeyTest, MoveAssignment) {
 
   absl::StatusOr<RsaSsaPssPublicKey> moved = RsaSsaPssPublicKey::Create(
       *other_parameters, modulus,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(moved, IsOk());
 
   RsaSsaPssPublicKey expected(*public_key);

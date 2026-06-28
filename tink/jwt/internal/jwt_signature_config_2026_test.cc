@@ -41,6 +41,7 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/ssl_util.h"
 #include "tink/internal/util.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
@@ -54,6 +55,7 @@
 #include "tink/jwt/jwt_ecdsa_proto_serialization.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/jwt/jwt_key_templates.h"
+#include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_public_key_verify.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
@@ -69,10 +71,8 @@
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -805,6 +805,50 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
 INSTANTIATE_TEST_SUITE_P(JwtDeterministicSignatureTestSuite,
                          JwtDeterministicSignatureTest,
                          testing::ValuesIn(GetJwtSignatureTestVectors()));
+
+TEST(JwtSignature2026Test, GetJwtMlDsaPrimitive) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "JWT ML-DSA requires BoringSSL.";
+  }
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddJwtSignature2026(config), IsOk());
+
+  absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtMlDsaParameters::Algorithm::kMlDsa44);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      (*handle)->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
+      (*handle)->GetPrimitive<JwtPublicKeySign>(config);
+  ASSERT_THAT(sign, IsOk());
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
+      (*public_handle)->GetPrimitive<JwtPublicKeyVerify>(config);
+  ASSERT_THAT(verify, IsOk());
+
+  absl::StatusOr<RawJwt> raw_jwt =
+      RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectIssuer("issuer")
+                                               .AllowMissingExpiration()
+                                               .Build();
+  ASSERT_THAT(validator, IsOk());
+
+  absl::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
+  ASSERT_THAT(compact, IsOk());
+  EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator), IsOk());
+}
 
 }  // namespace
 }  // namespace jwt_internal

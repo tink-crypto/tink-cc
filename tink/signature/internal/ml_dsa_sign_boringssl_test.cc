@@ -59,12 +59,12 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
-                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""},
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 int SignatureBytes(MlDsaParameters::Instance instance) {
   switch (instance) {
@@ -150,7 +150,7 @@ TEST_P(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, absl::nullopt);
+      CreateMlDsaKey(*key_parameters, std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
@@ -185,7 +185,7 @@ TEST_P(MlDsaSignBoringSslTest, SignatureWithContextIsNonDeterministic) {
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, absl::nullopt);
+      CreateMlDsaKey(*key_parameters, std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
@@ -242,7 +242,7 @@ TEST_P(MlDsaSignBoringSslTest, FipsMode) {
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, absl::nullopt);
+      CreateMlDsaKey(*key_parameters, std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -262,7 +262,7 @@ TEST_P(MlDsaSignBoringSslTest, FipsModeWithContext) {
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, absl::nullopt);
+      CreateMlDsaKey(*key_parameters, std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.

@@ -25,6 +25,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_test_helpers.h"
 #include "absl/strings/str_split.h"
@@ -33,10 +34,9 @@
 #include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/wycheproof_aead.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {

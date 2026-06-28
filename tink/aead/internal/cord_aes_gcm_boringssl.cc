@@ -153,8 +153,11 @@ bool DoCryptAndConsume(absl::Cord& input, size_t bytes_to_crypt,
   while (bytes_to_crypt > 0) {
     // Process at most `kMaxSegmentSize` bytes at a time, then remove the
     // decrypted segment from the Cord.
-    const int segment_size = std::min<int>(bytes_to_crypt, kMaxSegmentSize);
+    const size_t segment_size =
+        std::min<size_t>(bytes_to_crypt, kMaxSegmentSize);
     CordReader reader(input);
+    // segment_size never exceeds kMaxSegmentSize, so this is safe to cast to
+    // int.
     int left_in_segment = segment_size;
     while (left_in_segment > 0) {
       absl::string_view chunk = reader.Peek().substr(0, left_in_segment);

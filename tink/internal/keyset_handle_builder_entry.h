@@ -89,7 +89,7 @@ class KeysetHandleBuilderEntry {
  private:
   bool is_primary_ = false;
   KeyIdStrategy strategy_ =
-      KeyIdStrategy{KeyIdStrategyEnum::kRandomId, absl::nullopt};
+      KeyIdStrategy{KeyIdStrategyEnum::kRandomId, std::nullopt};
 };
 
 // Internal keyset handle builder entry constructed from a `Key` object.

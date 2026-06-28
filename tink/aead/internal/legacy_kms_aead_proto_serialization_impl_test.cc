@@ -105,7 +105,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{LegacyKmsAeadParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, /*id=*/absl::nullopt,
+                    OutputPrefixTypeTP::kRaw, /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(LegacyKmsAeadProtoSerializationTest,
@@ -300,7 +300,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKeyWithMutableRegistry) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -340,7 +340,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKeyWithImmutableRegistry) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -374,7 +374,7 @@ TEST_F(LegacyKmsAeadProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -400,7 +400,7 @@ TEST_F(LegacyKmsAeadProtoSerializationTest, ParseKeyWithInvalidVersion) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -423,7 +423,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKeyWithMutableRegistry) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, /*token=*/absl::nullopt);
+          *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 
@@ -465,7 +465,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKeyWithImmutableRegistry) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, /*token=*/absl::nullopt);
+          *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 

@@ -96,7 +96,7 @@ TEST(IdParamsTest, Clone) {
 TEST(NoIdKeyTest, Create) {
   NoIdKey key;
 
-  EXPECT_THAT(key.GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key.GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(key.GetParameters(), Eq(NoIdParams()));
   EXPECT_THAT(key, Eq(NoIdKey()));
   EXPECT_THAT(key, Not(Eq(IdKey(123))));

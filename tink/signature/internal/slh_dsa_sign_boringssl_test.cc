@@ -55,7 +55,7 @@ INSTANTIATE_TEST_SUITE_P(
     SlhDsaSignBoringSslTestSuite, SlhDsaSignBoringSslTest,
     Values(TestCase{SlhDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
@@ -106,7 +106,7 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a signer based on the private key.
@@ -143,7 +143,7 @@ TEST_F(SlhDsaSignBoringSslTest, FipsMode) {
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.

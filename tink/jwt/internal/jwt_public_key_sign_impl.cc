@@ -85,7 +85,7 @@ std::unique_ptr<JwtPublicKeySignImpl> JwtPublicKeySignImpl::WithKid(
     std::unique_ptr<crypto::tink::PublicKeySign> sign,
     absl::string_view algorithm, absl::string_view kid) {
   return absl::WrapUnique(new JwtPublicKeySignImpl(
-      std::move(sign), algorithm, absl::nullopt, std::string(kid)));
+      std::move(sign), algorithm, std::nullopt, std::string(kid)));
 }
 
 std::unique_ptr<JwtPublicKeySignImpl> JwtPublicKeySignImpl::RawWithCustomKid(
@@ -93,15 +93,15 @@ std::unique_ptr<JwtPublicKeySignImpl> JwtPublicKeySignImpl::RawWithCustomKid(
     absl::string_view algorithm, absl::string_view custom_kid) {
   return absl::WrapUnique(new JwtPublicKeySignImpl(std::move(sign), algorithm,
                                                    std::string(custom_kid),
-                                                   /*kid=*/absl::nullopt));
+                                                   /*kid=*/std::nullopt));
 }
 
 std::unique_ptr<JwtPublicKeySignImpl> JwtPublicKeySignImpl::Raw(
     std::unique_ptr<crypto::tink::PublicKeySign> sign,
     absl::string_view algorithm) {
   return absl::WrapUnique(new JwtPublicKeySignImpl(std::move(sign), algorithm,
-                                                   /*custom_kid=*/absl::nullopt,
-                                                   /*kid=*/absl::nullopt));
+                                                   /*custom_kid=*/std::nullopt,
+                                                   /*kid=*/std::nullopt));
 }
 
 }  // namespace jwt_internal

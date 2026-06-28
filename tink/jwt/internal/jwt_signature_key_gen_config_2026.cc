@@ -18,13 +18,23 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
+#ifdef OPENSSL_IS_BORINGSSL
+#include "openssl/mldsa.h"
+#endif
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
+#include "tink/jwt/internal/jwt_ml_dsa_key_creator.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
+#include "tink/jwt/jwt_ml_dsa_parameters.h"
+#include "tink/jwt/jwt_ml_dsa_proto_serialization.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
@@ -45,9 +55,28 @@ absl::Status AddJwtSignatureKeyGen2026(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
-  return internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+  status = internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<JwtRsaSsaPssSignKeyManager>(),
       absl::make_unique<JwtRsaSsaPssVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+
+  // Tink implements PQC signatures with BoringSSL, not OpenSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+  // JWT ML-DSA
+  status = RegisterJwtMlDsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = internal::KeyGenConfigurationImpl::AddKeyCreator<JwtMlDsaParameters>(
+      internal::CreateJwtMlDsaKey, config);
+  if (!status.ok()) {
+    return status;
+  }
+#endif
+
+  return absl::OkStatus();
 }
 
 }  // namespace jwt_internal

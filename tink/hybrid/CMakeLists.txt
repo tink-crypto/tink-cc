@@ -310,6 +310,8 @@ tink_cc_library(
     tink::internal::output_prefix_util
     tink::subtle::common_enums
     tink::util::statusor
+  TAGS
+    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -821,12 +823,13 @@ tink_cc_test(
     crypto
     tink::core::key
     tink::core::partial_key_access
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::ec_util
-    tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::random
-    tink::util::test_matchers
     tink::util::test_util
+  TAGS
+    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -849,15 +852,13 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::mlkem_util
     tink::internal::secret_buffer
-    tink::internal::ssl_unique_ptr
     tink::internal::xwing_util
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
   TAGS
     exclude_if_openssl
@@ -876,7 +877,7 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::status_matchers
-    absl::strings
+    absl::statusor
     absl::string_view
     absl::optional
     crypto
@@ -886,18 +887,16 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS

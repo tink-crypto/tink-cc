@@ -168,6 +168,11 @@ RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
     return res;
   }
 
+  if (params.salt_length < 0) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Salt length is negative");
+  }
+
   // Check if the hash type is safe to use.
   absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.sig_hash);
   if (!is_safe.ok()) {

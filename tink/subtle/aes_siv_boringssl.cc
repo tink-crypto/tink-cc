@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
@@ -27,30 +26,27 @@
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/aes.h"
 #include "openssl/crypto.h"
-#include "tink/aead/internal/aead_util.h"
 #include "tink/deterministic_aead.h"
 #include "tink/internal/aes_util.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/errors.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
 
-using crypto::tink::internal::CallWithCoreDumpProtection;
-using crypto::tink::internal::SafeCryptoMemEquals;
+using ::crypto::tink::internal::CallWithCoreDumpProtection;
+using ::crypto::tink::internal::SafeCryptoMemEquals;
 
 absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {

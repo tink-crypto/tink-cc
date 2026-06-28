@@ -81,7 +81,7 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
               static_cast<KeyMaterialTypeTP>(
                   proto_key.key_data().key_material_type()),
               OutputPrefixTypeTP::kRaw,
-              /*id_requirement=*/absl::nullopt);
+              /*id_requirement=*/std::nullopt);
       if (!serialization.ok()) {
         return serialization.status();
       }

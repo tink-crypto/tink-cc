@@ -356,7 +356,7 @@ TEST(KeyTypeInfoStoreInfoTest, KeyTypeManager) {
 
   EXPECT_EQ(info.key_manager_type_index(),
             std::type_index(typeid(AesGcmKeyManager)));
-  EXPECT_EQ(info.public_key_type_manager_type_index(), absl::nullopt);
+  EXPECT_EQ(info.public_key_type_manager_type_index(), std::nullopt);
 
   EXPECT_EQ(info.new_key_allowed(), false);
   info.set_new_key_allowed(true);
@@ -421,7 +421,7 @@ TEST(KeyTypeInfoStoreInfoTest, KeyManager) {
                               /*new_key_allowed=*/false);
 
   EXPECT_EQ(info.key_manager_type_index(), type_index);
-  EXPECT_EQ(info.public_key_type_manager_type_index(), absl::nullopt);
+  EXPECT_EQ(info.public_key_type_manager_type_index(), std::nullopt);
 
   EXPECT_EQ(info.new_key_allowed(), false);
   info.set_new_key_allowed(true);

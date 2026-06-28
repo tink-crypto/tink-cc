@@ -49,7 +49,7 @@ JwtEcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
   if (!verify.ok()) {
     return verify.status();
   }
-  absl::optional<absl::string_view> custom_kid = absl::nullopt;
+  absl::optional<absl::string_view> custom_kid = std::nullopt;
   if (jwt_ecdsa_public_key.has_custom_kid()) {
     custom_kid = jwt_ecdsa_public_key.custom_kid().value();
   }

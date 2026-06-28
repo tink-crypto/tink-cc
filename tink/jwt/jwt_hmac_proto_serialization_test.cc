@@ -106,8 +106,8 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kRaw,
                     JwtHmacParameters::Algorithm::kHs384,
                     JwtHmacAlgorithm::HS384,
-                    /*key_size=*/48, /*kid=*/absl::nullopt,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""},
+                    /*key_size=*/48, /*kid=*/std::nullopt,
+                    /*id=*/std::nullopt, /*output_prefix=*/""},
            TestCase{/*strategy=*/JwtHmacParameters::KidStrategy::kCustom,
                     /*expected_parameters_strategy=*/
                     JwtHmacParameters::KidStrategy::kIgnored,
@@ -115,7 +115,7 @@ INSTANTIATE_TEST_SUITE_P(
                     JwtHmacParameters::Algorithm::kHs512,
                     JwtHmacAlgorithm::HS512,
                     /*key_size=*/64, /*kid=*/"custom_kid",
-                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
+                    /*id=*/std::nullopt, /*output_prefix=*/""}));
 
 TEST_P(JwtHmacProtoSerializationTest, ParseParameters) {
   TestCase test_case = GetParam();
@@ -376,7 +376,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidSerialization) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -400,7 +400,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidVersion) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -457,7 +457,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithUnknownAlgorithm) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -483,12 +483,12 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithoutSecretKeyAccess) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -570,7 +570,7 @@ TEST_F(JwtHmacProtoSerializationTest, SerializeKeyWithoutSecretKeyAccess) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("SecretKeyAccess is required")));

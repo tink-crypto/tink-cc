@@ -246,15 +246,15 @@ tink_cc_test(
     tink::aead::internal::wycheproof_aead
     gmock
     absl::status_matchers
+    absl::statusor
     absl::strings
     absl::cord
     crypto
     tink::core::aead
+    tink::core::secret_data
     tink::aead::cord_aead
     tink::subtle::aes_gcm_boringssl
     tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

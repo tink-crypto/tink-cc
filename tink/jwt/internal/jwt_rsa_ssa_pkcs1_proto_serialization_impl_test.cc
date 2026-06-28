@@ -135,8 +135,8 @@ INSTANTIATE_TEST_SUITE_P(
                JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
                JwtRsaSsaPkcs1Algorithm::RS384,
                /*modulus_size_in_bits=*/2048,
-               /*kid=*/absl::nullopt,
-               /*id=*/absl::nullopt},
+               /*kid=*/std::nullopt,
+               /*id=*/std::nullopt},
            TestCase{/*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
                     /*expected_parameters_strategy=*/
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
@@ -145,7 +145,7 @@ INSTANTIATE_TEST_SUITE_P(
                     JwtRsaSsaPkcs1Algorithm::RS512,
                     /*modulus_size_in_bits=*/2048,
                     /*kid=*/"custom_kid",
-                    /*id=*/absl::nullopt}));
+                    /*id=*/std::nullopt}));
 
 TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
        ParseParametersSucceedsWithMutableRegistry) {
@@ -519,7 +519,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -580,7 +580,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -654,11 +654,11 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPublic,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
                                      HasSubstr("only version 0 is accepted")));
 }
@@ -688,7 +688,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   // Omitting expectation on specific error message since the error occurs
   // downstream while building JwtRsaSsaPkcs1PublicKey object.
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -718,7 +718,7 @@ TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(
       key.status(),
       StatusIs(
@@ -745,11 +745,11 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPublic,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(
       parsed_key.status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -791,7 +791,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -857,7 +857,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -1122,7 +1122,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1164,7 +1164,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1199,7 +1199,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1283,11 +1283,11 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -1520,7 +1520,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*private_key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

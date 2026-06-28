@@ -120,7 +120,7 @@ absl::optional<uint64_t> HmacPrfKeyManager::MaxOutputLength(
            {subtle::HashType::SHA512, 64}});
   auto length_it = max_output_length->find(hash_type);
   if (length_it == max_output_length->end()) {
-    return absl::nullopt;
+    return std::nullopt;
   }
   return length_it->second;
 }

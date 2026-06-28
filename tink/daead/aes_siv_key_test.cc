@@ -59,7 +59,7 @@ INSTANTIATE_TEST_SUITE_P(
                             std::string("\x01\x02\x03\x04\x00", 5)},
                    TestCase{AesSivParameters::Variant::kCrunchy, 0x01030005,
                             std::string("\x00\x01\x03\x00\x05", 5)},
-                   TestCase{AesSivParameters::Variant::kNoPrefix, absl::nullopt,
+                   TestCase{AesSivParameters::Variant::kNoPrefix, std::nullopt,
                             ""})));
 
 TEST_P(AesSivKeyTest, CreateSucceeds) {
@@ -113,7 +113,7 @@ TEST(AesSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(
       AesSivKey::Create(*tink_params, secret,
-                        /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -268,7 +268,7 @@ TEST(AesSivKeyTest, CopyAssignment) {
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/key_size2);
 
   absl::StatusOr<AesSivKey> copy =
-      AesSivKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      AesSivKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -318,7 +318,7 @@ TEST(AesSivKeyTest, MoveAssignment) {
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/key_size2);
 
   absl::StatusOr<AesSivKey> move =
-      AesSivKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+      AesSivKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

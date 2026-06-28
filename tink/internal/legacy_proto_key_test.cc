@@ -301,7 +301,7 @@ using AllOutputPrefixTypesTest =
 
 INSTANTIATE_TEST_SUITE_P(
     AllOutputPrefixTypesTestSuite, AllOutputPrefixTypesTest,
-    Values(std::make_tuple(OutputPrefixTypeTP::kRaw, absl::nullopt),
+    Values(std::make_tuple(OutputPrefixTypeTP::kRaw, std::nullopt),
            std::make_tuple(OutputPrefixTypeTP::kTink, 123),
            std::make_tuple(OutputPrefixTypeTP::kCrunchy, 456),
            std::make_tuple(OutputPrefixTypeTP::kLegacy, 789)));
@@ -377,7 +377,7 @@ TEST_P(SecretKeyMaterialTypesTest, CreateWithoutSecretAccessToken) {
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<LegacyProtoKey> key =
-      LegacyProtoKey::Create(*serialization, /*token=*/absl::nullopt);
+      LegacyProtoKey::Create(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -400,7 +400,7 @@ TEST_P(SecretKeyMaterialTypesTest, SerializationWithoutSecretAccessToken) {
   ASSERT_THAT(key.status(), IsOk());
 
   absl::StatusOr<const ProtoKeySerialization&> key_serialization =
-      key->Serialization(/*token=*/absl::nullopt);
+      key->Serialization(/*token=*/std::nullopt);
   ASSERT_THAT(key_serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
@@ -426,7 +426,7 @@ TEST_P(NonSecretKeyMaterialTypesTest, CreateWithoutSecretAccessToken) {
   ASSERT_THAT(serialization.status(), IsOk());
 
   absl::StatusOr<LegacyProtoKey> key =
-      LegacyProtoKey::Create(*serialization, /*token=*/absl::nullopt);
+      LegacyProtoKey::Create(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key.status(), IsOk());
 }
 
@@ -449,7 +449,7 @@ TEST_P(NonSecretKeyMaterialTypesTest, SerializationWithoutSecretAccessToken) {
   ASSERT_THAT(key.status(), IsOk());
 
   absl::StatusOr<const ProtoKeySerialization&> key_serialization =
-      key->Serialization(/*token=*/absl::nullopt);
+      key->Serialization(/*token=*/std::nullopt);
   ASSERT_THAT(key_serialization.status(), IsOk());
 }
 

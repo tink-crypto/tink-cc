@@ -70,7 +70,7 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kTink, 0x03050709,
                     std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
-                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""},
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
@@ -78,7 +78,7 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kTink, 0x03050709,
                     std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 using MlDsaPublicKeyTest = TestWithParam<TestCase>;
 
@@ -193,7 +193,7 @@ TEST_P(MlDsaPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
 
   std::string public_key_bytes = GeneratePublicKey(test_case.instance);
   EXPECT_THAT(MlDsaPublicKey::Create(*parameters, public_key_bytes,
-                                     /*id_requirement=*/absl::nullopt,
+                                     /*id_requirement=*/std::nullopt,
                                      GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -353,7 +353,7 @@ TEST(MlDsaPublicKeyTest, CopyAssignment) {
 
   absl::StatusOr<MlDsaPublicKey> copy = MlDsaPublicKey::Create(
       *other_parameters, other_public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *public_key;
@@ -402,7 +402,7 @@ TEST(MlDsaPublicKeyTest, MoveAssignment) {
 
   absl::StatusOr<MlDsaPublicKey> moved = MlDsaPublicKey::Create(
       *other_parameters, other_public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(moved, IsOk());
 
   MlDsaPublicKey expected(*public_key);

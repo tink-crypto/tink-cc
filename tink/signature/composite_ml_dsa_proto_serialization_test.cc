@@ -101,7 +101,7 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -110,7 +110,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -119,7 +119,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -128,7 +128,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -137,7 +137,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -146,7 +146,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -155,7 +155,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -164,7 +164,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -173,7 +173,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -182,7 +182,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -191,7 +191,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kTink,
@@ -678,7 +678,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest, ParsePublicKeyWorks) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -712,12 +712,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(private_key.GetPublicKey(),
-                                               /*token=*/absl::nullopt);
+                                               /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   const ProtoKeySerialization* public_key_serialization =
@@ -728,12 +728,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       ProtoKeySerialization::Create(
           kPublicTypeUrl, public_key_serialization->SerializedKeyProto(),
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *proto_serialization, /*token=*/absl::nullopt);
+          *proto_serialization, /*token=*/std::nullopt);
   EXPECT_THAT(
       key.status(),
       StatusIs(
@@ -758,7 +758,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(
       key.status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -808,7 +808,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -847,7 +847,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest, SerializePublicKeyWorks) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(*public_key,
-                                               /*token=*/absl::nullopt);
+                                               /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -908,7 +908,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(*public_key,
-                                               /*token=*/absl::nullopt);
+                                               /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   const ProtoKeySerialization* proto_serialization =
@@ -917,7 +917,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *proto_serialization, /*token=*/absl::nullopt);
+          *proto_serialization, /*token=*/std::nullopt);
   ASSERT_THAT(parsed_key, IsOk());
   ASSERT_THAT(**parsed_key, Eq(*public_key));
 }
@@ -999,7 +999,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
@@ -1015,7 +1015,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       ProtoKeySerialization::Create(
           kPrivateTypeUrl, private_key_serialization->SerializedKeyProto(),
           KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1147,7 +1147,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -1165,7 +1165,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1194,7 +1194,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1217,7 +1217,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1246,7 +1246,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1269,7 +1269,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1297,7 +1297,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1323,7 +1323,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1350,7 +1350,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kAsymmetricPrivate,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1427,7 +1427,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(private_key,
-                                               /*token=*/absl::nullopt);
+                                               /*token=*/std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

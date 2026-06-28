@@ -410,6 +410,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    tink::core::keyset_handle
     tink::core::keyset_reader
     tink::internal::ec_util
     tink::internal::rsa_util
@@ -1156,7 +1157,9 @@ tink_cc_test(
     tink::signature::signature_config
     tink::signature::signature_key_templates
     gmock
+    absl::no_destructor
     absl::absl_check
+    absl::absl_log
     absl::memory
     absl::status
     absl::status_matchers
@@ -1179,19 +1182,18 @@ tink_cc_test(
     tink::core::registry
     tink::core::restricted_data
     tink::config::global_registry
-    tink::internal::bn_util
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ed25519_cc_proto
@@ -1237,6 +1239,8 @@ tink_cc_test(
     signature_pem_keyset_reader_test.cc
   DEPS
     tink::signature::config_v0
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_public_key
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
@@ -1247,10 +1251,15 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
+    absl::optional
     crypto
+    tink::core::big_integer
     tink::core::cleartext_keyset_handle
+    tink::core::ec_point
+    tink::core::key
     tink::core::keyset_handle
     tink::core::keyset_reader
+    tink::core::partial_key_access
     tink::core::proto_keyset_format
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -1422,6 +1431,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
     gmock
+    absl::no_destructor
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1433,11 +1443,10 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
-    tink::util::test_matchers
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::util::test_util
 )
 
@@ -1453,6 +1462,7 @@ tink_cc_test(
     gmock
     absl::no_destructor
     absl::absl_check
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1467,16 +1477,15 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::internal::bn_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
-    tink::util::test_matchers
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
@@ -1561,6 +1570,7 @@ tink_cc_test(
     gmock
     absl::no_destructor
     absl::absl_check
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1574,16 +1584,15 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::internal::bn_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
-    tink::util::test_matchers
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
 )
@@ -1995,7 +2004,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )
@@ -2054,7 +2062,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )

@@ -64,8 +64,8 @@ INSTANTIATE_TEST_SUITE_P(
                     /*id_requirement=*/123, /*expected_kid=*/"AAAAew"},
            TestCase{JwtMlDsaParameters::KidStrategy::kIgnored,
                     JwtMlDsaParameters::Algorithm::kMlDsa87,
-                    /*id_requirement=*/absl::nullopt,
-                    /*expected_kid=*/absl::nullopt}));
+                    /*id_requirement=*/std::nullopt,
+                    /*expected_kid=*/std::nullopt}));
 
 TEST_P(KeyCreatorsTest, CreateJwtMlDsaPrivateKey) {
   TestCase test_case = GetParam();

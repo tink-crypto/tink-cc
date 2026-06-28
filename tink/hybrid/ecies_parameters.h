@@ -110,9 +110,9 @@ class EciesParameters : public HybridParameters {
    private:
     CurveType curve_type_;
     HashType hash_type_;
-    absl::optional<PointFormat> point_format_ = absl::nullopt;
+    absl::optional<PointFormat> point_format_ = std::nullopt;
     DemId dem_id_;
-    absl::optional<std::string> salt_ = absl::nullopt;
+    absl::optional<std::string> salt_ = std::nullopt;
     Variant variant_;
   };
 
@@ -168,7 +168,7 @@ class EciesParameters : public HybridParameters {
   HashType hash_type_;
   absl::optional<PointFormat> point_format_;
   DemId dem_id_;
-  absl::optional<std::string> salt_ = absl::nullopt;
+  absl::optional<std::string> salt_ = std::nullopt;
   Variant variant_;
 };
 

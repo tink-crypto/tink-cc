@@ -169,6 +169,8 @@ tink_cc_library(
     tink::util::protobuf_helper
     tink::util::secret_data
     absl::core_headers
+    absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
     absl::memory
     absl::status

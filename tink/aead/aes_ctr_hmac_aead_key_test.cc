@@ -74,7 +74,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*iv_size=*/16, /*tag_size=*/48,
                     AesCtrHmacAeadParameters::HashType::kSha512,
                     AesCtrHmacAeadParameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt, ""}));
+                    /*id_requirement=*/std::nullopt, ""}));
 
 TEST_P(AesCtrHmacAeadKeyTest, BuildKeySucceeds) {
   TestCase test_case = GetParam();

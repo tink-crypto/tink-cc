@@ -129,7 +129,7 @@ TEST(MlKemPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
 
   std::string public_key_bytes = GeneratePublicKey();
   EXPECT_THAT(MlKemPublicKey::Create(*parameters, public_key_bytes,
-                                     /*id_requirement=*/absl::nullopt,
+                                     /*id_requirement=*/std::nullopt,
                                      GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,

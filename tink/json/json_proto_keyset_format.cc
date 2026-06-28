@@ -128,7 +128,7 @@ absl::StatusOr<KeysetHandle> ParseKeysetFromJsonProtoKeysetFormat(
 absl::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromJsonProtoKeysetFormat(
     absl::string_view serialized_keyset) {
   return ParseKeysetFromJsonProtoKeysetFormatWithOptional(serialized_keyset,
-                                                          absl::nullopt);
+                                                          std::nullopt);
 }
 
 absl::StatusOr<SecretData> SerializeKeysetToJsonProtoKeysetFormat(
@@ -144,7 +144,7 @@ absl::StatusOr<SecretData> SerializeKeysetToJsonProtoKeysetFormat(
 absl::StatusOr<std::string> SerializeKeysetWithoutSecretToJsonProtoKeysetFormat(
     const KeysetHandle& keyset_handle) {
   return SerializeKeysetToJsonProtoKeysetFormatWithOptional(keyset_handle,
-                                                            absl::nullopt);
+                                                            std::nullopt);
 }
 
 }  // namespace tink

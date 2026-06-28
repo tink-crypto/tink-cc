@@ -79,13 +79,13 @@ class RsaSsaPssParameters : public SignatureParameters {
    private:
     static BigInteger CreateDefaultPublicExponent();
 
-    absl::optional<int> modulus_size_in_bits_ = absl::nullopt;
+    absl::optional<int> modulus_size_in_bits_ = std::nullopt;
     // Defaults to F4.
     BigInteger public_exponent_ = CreateDefaultPublicExponent();
-    absl::optional<HashType> sig_hash_type_ = absl::nullopt;
-    absl::optional<HashType> mgf1_hash_type_ = absl::nullopt;
-    absl::optional<int> salt_length_in_bytes_ = absl::nullopt;
-    absl::optional<Variant> variant_ = absl::nullopt;
+    absl::optional<HashType> sig_hash_type_ = std::nullopt;
+    absl::optional<HashType> mgf1_hash_type_ = std::nullopt;
+    absl::optional<int> salt_length_in_bytes_ = std::nullopt;
+    absl::optional<Variant> variant_ = std::nullopt;
   };
 
   // Copyable and movable.

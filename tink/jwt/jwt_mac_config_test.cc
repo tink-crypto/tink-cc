@@ -147,7 +147,7 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/absl::nullopt);
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =

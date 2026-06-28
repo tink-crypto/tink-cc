@@ -108,9 +108,9 @@ absl::StatusOr<KeysetHandle> MlKemDecapsulateAes256Gcm::Decapsulate(
     return shared_secret.status();
   }
 
-  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
-      aes_gcm_parameters_, *shared_secret,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  absl::StatusOr<AesGcmKey> key =
+      AesGcmKey::Create(aes_gcm_parameters_, *shared_secret,
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }

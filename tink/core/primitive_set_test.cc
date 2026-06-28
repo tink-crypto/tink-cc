@@ -500,6 +500,52 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   }
 }
 
+TEST_F(PrimitiveSetTest, ReleaseAllEntries) {
+  PrimitiveSet<Mac>::Builder pset_builder;
+
+  KeysetInfo::KeyInfo key_info_1 = CreateKey(
+      1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_url_1");
+  pset_builder.AddPrimitive(absl::make_unique<DummyMac>("MAC1"), key_info_1);
+
+  KeysetInfo::KeyInfo key_info_2 =
+      CreateKey(2, OutputPrefixType::RAW, KeyStatusType::ENABLED, "type_url_2");
+  pset_builder.AddPrimaryPrimitive(absl::make_unique<DummyMac>("MAC2"),
+                                   key_info_2);
+
+  absl::StatusOr<PrimitiveSet<Mac>> pset = std::move(pset_builder).Build();
+  ASSERT_THAT(pset, IsOk());
+
+  std::vector<std::unique_ptr<PrimitiveSet<Mac>::Entry<Mac>>> released =
+      pset->ReleaseAllEntries();
+
+  ASSERT_THAT(released, SizeIs(2));
+
+  // Verify first entry (TINK)
+  EXPECT_EQ(released[0]->get_key_id(), 1);
+  EXPECT_EQ(released[0]->get_output_prefix_type(), OutputPrefixType::TINK);
+  EXPECT_EQ(released[0]->get_key_type_url(), "type_url_1");
+  auto mac1 = released[0]->ReleasePrimitive();
+  ASSERT_NE(mac1, nullptr);
+  auto mac1_val = mac1->ComputeMac("");
+  ASSERT_THAT(mac1_val, IsOk());
+  EXPECT_EQ(mac1_val.value(), "13:0:DummyMac:MAC1");
+
+  // Verify second entry (RAW, primary)
+  EXPECT_EQ(released[1]->get_key_id(), 2);
+  EXPECT_EQ(released[1]->get_output_prefix_type(), OutputPrefixType::RAW);
+  EXPECT_EQ(released[1]->get_key_type_url(), "type_url_2");
+  auto mac2 = released[1]->ReleasePrimitive();
+  ASSERT_NE(mac2, nullptr);
+  auto mac2_val = mac2->ComputeMac("");
+  ASSERT_THAT(mac2_val, IsOk());
+  EXPECT_EQ(mac2_val.value(), "13:0:DummyMac:MAC2");
+
+  // Verify PrimitiveSet is now empty
+  EXPECT_EQ(pset->get_primary(), nullptr);
+  EXPECT_THAT(pset->get_all(), SizeIs(0));
+  EXPECT_THAT(pset->get_all_in_keyset_order(), SizeIs(0));
+}
+
 // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_F(PrimitiveSetTest, LegacyConcurrentOperations) {

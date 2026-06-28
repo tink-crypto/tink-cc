@@ -64,7 +64,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{Ed25519Parameters::Variant::kLegacy, 0x07080910,
                     std::string("\x00\x07\x08\x09\x10", 5)},
-           TestCase{Ed25519Parameters::Variant::kNoPrefix, absl::nullopt, ""}));
+           TestCase{Ed25519Parameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 TEST_P(Ed25519PrivateKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
@@ -303,7 +303,7 @@ TEST(Ed25519PrivateKeyTest, CopyAssignment) {
 
   absl::StatusOr<Ed25519PublicKey> other_public_key = Ed25519PublicKey::Create(
       *other_params, (*other_key_pair)->public_key,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   RestrictedData other_private_key_bytes = RestrictedData(
@@ -376,7 +376,7 @@ TEST(Ed25519PrivateKeyTest, MoveAssignment) {
 
   absl::StatusOr<Ed25519PublicKey> other_public_key = Ed25519PublicKey::Create(
       *other_params, (*other_key_pair)->public_key,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
   RestrictedData other_private_key_bytes = RestrictedData(

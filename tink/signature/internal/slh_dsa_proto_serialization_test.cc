@@ -96,7 +96,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{SlhDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{SlhDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""}));
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""}));
 
 TEST_P(SlhDsaProtoSerializationTest,
        ParseSlhDsa128Sha2SmallSignatureParametersWorks) {
@@ -383,7 +383,7 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWorks) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -450,7 +450,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -474,7 +474,7 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePublicKeyWorks) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -677,7 +677,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -779,7 +779,7 @@ TEST_F(SlhDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, /*token=*/absl::nullopt);
+              *private_key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

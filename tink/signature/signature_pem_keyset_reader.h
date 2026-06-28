@@ -26,6 +26,7 @@
 #include "absl/status/statusor.h"
 #include "tink/keyset_reader.h"
 #include "tink/util/statusor.h"
+#include "tink/keyset_handle.h"
 #include "proto/common.pb.h"
 #include "proto/tink.pb.h"
 
@@ -142,6 +143,9 @@ class SignaturePemKeysetReaderBuilder {
   // Creates an instance of keyset reader based on `pem_reader_type_`, to parse
   // the PEM-encoded keys in `pem_serialized_keys_`.
   absl::StatusOr<std::unique_ptr<KeysetReader>> Build();
+
+  // Builds a KeysetHandle from the public PEM keys added to this builder.
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> BuildPublicKeysetHandle();
 
  private:
   // List of keys as PEM serialized items.

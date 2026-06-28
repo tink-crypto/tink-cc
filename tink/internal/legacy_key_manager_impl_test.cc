@@ -31,6 +31,7 @@
 #include "tink/signature/internal/ml_dsa_sign_key_manager.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
 #include "tink/signature/signature_config.h"
+#include "tink/util/protobuf_helper.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/common.pb.h"
@@ -84,7 +85,8 @@ TEST_F(LegacyKeyManagerImplTest, Factory_NewKey) {
   ASSERT_THAT(key, IsOk());
 
   auto ml_dsa_key =
-      dynamic_cast<const google::crypto::tink::MlDsaPrivateKey*>(key->get());
+      portable_proto::DynamicCastMessage<google::crypto::tink::MlDsaPrivateKey>(
+          key->get());
   ASSERT_THAT(ml_dsa_key, NotNull());
   EXPECT_THAT(ml_dsa_key->version(), Eq(0));
   EXPECT_THAT(ml_dsa_key->key_value().size(), Eq(32));
@@ -109,7 +111,8 @@ TEST_F(LegacyKeyManagerImplTest, Factory_NewKey_SerializedKeyFormat) {
   ASSERT_THAT(key, IsOk());
 
   auto ml_dsa_key =
-      dynamic_cast<const google::crypto::tink::MlDsaPrivateKey*>(key->get());
+      portable_proto::DynamicCastMessage<google::crypto::tink::MlDsaPrivateKey>(
+          key->get());
   ASSERT_THAT(ml_dsa_key, NotNull());
   EXPECT_THAT(ml_dsa_key->version(), Eq(0));
   EXPECT_THAT(ml_dsa_key->key_value().size(), Eq(32));

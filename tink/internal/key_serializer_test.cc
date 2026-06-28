@@ -71,7 +71,7 @@ TEST(KeySerializerTest, SerializePublicKeyNoAccessToken) {
 
   NoIdKey public_key;
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      serializer->SerializeKey(public_key, absl::nullopt);
+      serializer->SerializeKey(public_key, std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
 }

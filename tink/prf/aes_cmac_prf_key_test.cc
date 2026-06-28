@@ -60,7 +60,7 @@ TEST_P(AesCmacPrfKeyTest, CreateSucceeds) {
 
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
   EXPECT_THAT(key->GetParameters(), Eq(*expected_parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(AesCmacPrfKeyTest, CreateKeyWithInvalidKeySizeFails) {

@@ -26,6 +26,7 @@
 #include "tink/public_key_sign.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
 #include "tink/signature/signature_config.h"
+#include "tink/util/protobuf_helper.h"
 #include "tink/util/test_matchers.h"
 #include "proto/ml_dsa.pb.h"
 
@@ -83,7 +84,7 @@ TEST_F(MlDsaSignKeyManagerTest, GetPrimitive) {
   ASSERT_THAT(signer, IsOk());
 
   const google::crypto::tink::MlDsaPrivateKey* ml_dsa_private_key =
-      dynamic_cast<const google::crypto::tink::MlDsaPrivateKey*>(
+      portable_proto::DynamicCastMessage<google::crypto::tink::MlDsaPrivateKey>(
           private_key->get());
   ASSERT_THAT(ml_dsa_private_key, NotNull());
 

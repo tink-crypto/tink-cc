@@ -40,7 +40,7 @@ TEST(CompositeMlDsaTestUtilTest, GenerateCompositeMlDsaPrivateKeyForTestRuns) {
           crypto::tink::CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
           crypto::tink::CompositeMlDsaParameters::Variant::kNoPrefix)
           .value(),
-      /*force_random=*/false, /*id_requirement=*/absl::nullopt);
+      /*force_random=*/false, /*id_requirement=*/std::nullopt);
 }
 
 }  // namespace

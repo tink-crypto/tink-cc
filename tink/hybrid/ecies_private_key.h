@@ -116,7 +116,7 @@ class EciesPrivateKey final : public HybridPrivateKey {
       case EciesParameters::CurveType::kX25519:
         return private_key_bytes_;
       default:
-        return absl::nullopt;
+        return std::nullopt;
     }
   }
 
@@ -130,7 +130,7 @@ class EciesPrivateKey final : public HybridPrivateKey {
       case EciesParameters::CurveType::kNistP521:
         return private_key_bytes_;
       default:
-        return absl::nullopt;
+        return std::nullopt;
     }
   }
   const EciesPublicKey& GetPublicKey() const override { return public_key_; }

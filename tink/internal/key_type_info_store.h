@@ -81,7 +81,7 @@ class KeyTypeInfoStore {
     Info(KeyTypeManager<KeyProto, KeyFormatProto, List<Primitives...>>* manager,
          bool new_key_allowed)
         : key_manager_type_index_(std::type_index(typeid(*manager))),
-          public_key_type_manager_type_index_(absl::nullopt),
+          public_key_type_manager_type_index_(std::nullopt),
           new_key_allowed_(new_key_allowed),
           key_type_manager_(absl::WrapUnique(manager)),
           internal_key_factory_(
@@ -133,7 +133,7 @@ class KeyTypeInfoStore {
     template <typename P>
     Info(KeyManager<P>* manager, bool new_key_allowed)
         : key_manager_type_index_(std::type_index(typeid(*manager))),
-          public_key_type_manager_type_index_(absl::nullopt),
+          public_key_type_manager_type_index_(std::nullopt),
           new_key_allowed_(new_key_allowed),
           key_type_manager_(nullptr),
           internal_key_factory_(nullptr),

@@ -92,7 +92,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{AesSivParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw,
-                    /*key_size=*/64, /*id=*/absl::nullopt,
+                    /*key_size=*/64, /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(AesSivProtoSerializationTest, ParseParameters) {
@@ -316,7 +316,7 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -397,12 +397,12 @@ TEST_F(AesSivProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   absl::StatusOr<AesSivKey> key = AesSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(*key, absl::nullopt);
+          .SerializeKey<internal::ProtoKeySerialization>(*key, std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

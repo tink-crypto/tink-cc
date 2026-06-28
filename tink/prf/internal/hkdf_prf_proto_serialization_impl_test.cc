@@ -82,7 +82,7 @@ using HkdfPrfProtoSerializationTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     HkdfPrfParametersCreateTestSuite, HkdfPrfProtoSerializationTest,
     Values(TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha1,
-                    HashType::SHA1, /*salt=*/absl::nullopt},
+                    HashType::SHA1, /*salt=*/std::nullopt},
            TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha224,
                     HashType::SHA224,
                     /*salt=*/test::HexDecodeOrDie("00010203040506")},
@@ -381,13 +381,13 @@ TEST_P(HkdfPrfProtoSerializationTest, ParseKeyWithMutableRegistry) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<HkdfPrfParameters> expected_parameters =
@@ -429,13 +429,13 @@ TEST_P(HkdfPrfProtoSerializationTest, ParseKeyWithRegistryBuilder) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<HkdfPrfParameters> expected_parameters =
@@ -464,7 +464,7 @@ TEST_F(HkdfPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -520,11 +520,11 @@ TEST_F(HkdfPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -546,7 +546,7 @@ TEST_F(HkdfPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -587,7 +587,7 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeKeyWithMutableRegistry) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::HkdfPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -634,7 +634,7 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::HkdfPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -657,7 +657,7 @@ TEST_F(HkdfPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   std::string raw_key_bytes = Random::GetRandomBytes(16);
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<HkdfPrfKey> key = HkdfPrfKey::Create(
       *parameters,
@@ -667,7 +667,7 @@ TEST_F(HkdfPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

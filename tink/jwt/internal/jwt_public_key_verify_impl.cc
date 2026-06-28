@@ -109,7 +109,7 @@ std::unique_ptr<JwtPublicKeyVerifyImpl> JwtPublicKeyVerifyImpl::WithKid(
     std::unique_ptr<crypto::tink::PublicKeyVerify> verify,
     absl::string_view algorithm, absl::string_view kid) {
   return absl::WrapUnique(new JwtPublicKeyVerifyImpl(
-      std::move(verify), algorithm, /*custom_kid=*/absl::nullopt,
+      std::move(verify), algorithm, /*custom_kid=*/std::nullopt,
       std::string(kid)));
 }
 
@@ -119,7 +119,7 @@ JwtPublicKeyVerifyImpl::RawWithCustomKid(
     absl::string_view algorithm, absl::string_view custom_kid) {
   return absl::WrapUnique(new JwtPublicKeyVerifyImpl(
       std::move(verify), algorithm, std::string(custom_kid),
-      /*kid=*/absl::nullopt));
+      /*kid=*/std::nullopt));
 }
 
 std::unique_ptr<JwtPublicKeyVerifyImpl> JwtPublicKeyVerifyImpl::Raw(
@@ -127,8 +127,8 @@ std::unique_ptr<JwtPublicKeyVerifyImpl> JwtPublicKeyVerifyImpl::Raw(
     absl::string_view algorithm) {
   return absl::WrapUnique(
       new JwtPublicKeyVerifyImpl(std::move(verify), algorithm,
-                                 /*custom_kid=*/absl::nullopt,
-                                 /*kid=*/absl::nullopt));
+                                 /*custom_kid=*/std::nullopt,
+                                 /*kid=*/std::nullopt));
 }
 
 }  // namespace jwt_internal

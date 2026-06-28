@@ -91,13 +91,13 @@ TEST(PrfBasedKeyDerivationKeyTest, CreateWithoutIdRequirement) {
 
   absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
-                                       /*id_requirement=*/absl::nullopt,
+                                       /*id_requirement=*/std::nullopt,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(key->GetParameters(), Eq(*parameters));
   EXPECT_THAT(key->GetPrfKey(), Eq(*prf_key));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, CreateWithMismatchedPrfParametersFails) {
@@ -167,7 +167,7 @@ TEST(PrfBasedKeyDerivationKeyTest, CreateWithMismatchedIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Cannot create key with ID requirement")));
   EXPECT_THAT(PrfBasedKeyDerivationKey::Create(*tink_parameters, *prf_key,
-                                               /*id_requirement=*/absl::nullopt,
+                                               /*id_requirement=*/std::nullopt,
                                                GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -245,7 +245,7 @@ TEST(PrfBasedKeyDerivationKeyTest, CopyAssignment) {
 
   absl::StatusOr<PrfBasedKeyDerivationKey> copy =
       PrfBasedKeyDerivationKey::Create(*parameters2, *prf_key2,
-                                       /*id_requirement=*/absl::nullopt,
+                                       /*id_requirement=*/std::nullopt,
                                        GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
@@ -327,7 +327,7 @@ TEST(PrfBasedKeyDerivationKeyTest, MoveAssignment) {
 
   absl::StatusOr<PrfBasedKeyDerivationKey> move =
       PrfBasedKeyDerivationKey::Create(*parameters2, *prf_key2,
-                                       /*id_requirement=*/absl::nullopt,
+                                       /*id_requirement=*/std::nullopt,
                                        GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 

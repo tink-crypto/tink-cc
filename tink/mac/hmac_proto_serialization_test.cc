@@ -105,12 +105,12 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{HmacParameters::Variant::kNoPrefix, OutputPrefixTypeTP::kRaw,
                  HmacParameters::HashType::kSha384, HashType::SHA384,
                  /*key_size=*/32, /*cryptographic_tag_size=*/16,
-                 /*total_tag_size=*/16, /*id=*/absl::nullopt,
+                 /*total_tag_size=*/16, /*id=*/std::nullopt,
                  /*output_prefix=*/""},
         TestCase{HmacParameters::Variant::kNoPrefix, OutputPrefixTypeTP::kRaw,
                  HmacParameters::HashType::kSha512, HashType::SHA512,
                  /*key_size=*/32, /*cryptographic_tag_size=*/20,
-                 /*total_tag_size=*/20, /*id=*/absl::nullopt,
+                 /*total_tag_size=*/20, /*id=*/std::nullopt,
                  /*output_prefix=*/""}));
 
 TEST_P(HmacProtoSerializationTest, ParseParameters) {
@@ -417,7 +417,7 @@ TEST_F(HmacProtoSerializationTest, ParseKeyWithoutSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, absl::nullopt);
+          *serialization, std::nullopt);
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -479,12 +479,12 @@ TEST_F(HmacProtoSerializationTest, SerializeKeyWithoutSecretKeyAccess) {
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(*key, absl::nullopt);
+          .SerializeKey<internal::ProtoKeySerialization>(*key, std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

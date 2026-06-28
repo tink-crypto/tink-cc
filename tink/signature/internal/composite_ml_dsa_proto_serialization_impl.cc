@@ -478,7 +478,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
           proto_key.ml_dsa_public_key().type_url(),
           std::move(ml_dsa_serialized_key),
           proto_key.ml_dsa_public_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
   if (!ml_dsa_serialization.ok()) {
     return ml_dsa_serialization.status();
   }
@@ -503,7 +503,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
           proto_key.classical_public_key().type_url(),
           std::move(classical_serialized_key),
           proto_key.classical_public_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
   if (!classical_serialization.ok()) {
     return classical_serialization.status();
   }
@@ -573,7 +573,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
           proto_key.ml_dsa_private_key().type_url(),
           std::move(ml_dsa_serialized_key),
           proto_key.ml_dsa_private_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
   if (!ml_dsa_serialization.ok()) {
     return ml_dsa_serialization.status();
   }
@@ -598,7 +598,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
           proto_key.classical_private_key().type_url(),
           std::move(classical_serialized_key),
           proto_key.classical_private_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/absl::nullopt);
+          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
   if (!classical_serialization.ok()) {
     return classical_serialization.status();
   }

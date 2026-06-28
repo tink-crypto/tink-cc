@@ -76,7 +76,7 @@ JwtHmacKeyManager::JwtMacFactory::Create(const JwtHmacKey& jwt_hmac_key) const {
   if (!mac.ok()) {
     return mac.status();
   }
-  absl::optional<std::string> custom_kid = absl::nullopt;
+  absl::optional<std::string> custom_kid = std::nullopt;
   if (jwt_hmac_key.has_custom_kid()) {
     custom_kid = jwt_hmac_key.custom_kid().value();
   }

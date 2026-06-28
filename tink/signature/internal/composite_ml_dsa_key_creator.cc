@@ -51,7 +51,7 @@ GenerateEd25519PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateEd25519Key(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateEd25519Key(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -66,7 +66,7 @@ GenerateEcdsaP256PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateEcdsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateEcdsaKey(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -81,7 +81,7 @@ GenerateEcdsaP384PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateEcdsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateEcdsaKey(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -96,7 +96,7 @@ GenerateEcdsaP521PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateEcdsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateEcdsaKey(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -113,7 +113,7 @@ GenerateRsaPss3072PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateRsaSsaPssKey(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateRsaSsaPssKey(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -130,7 +130,7 @@ GenerateRsaPss4096PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateRsaSsaPssKey(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateRsaSsaPssKey(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -145,7 +145,7 @@ GenerateRsa3072Pkcs1PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateRsaSsaPkcs1Key(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateRsaSsaPkcs1Key(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<std::unique_ptr<SignaturePrivateKey>>
@@ -160,7 +160,7 @@ GenerateRsa4096Pkcs1PrivateKey() {
   if (!parameters.ok()) {
     return parameters.status();
   }
-  return CreateRsaSsaPkcs1Key(*parameters, /*id_requirement=*/absl::nullopt);
+  return CreateRsaSsaPkcs1Key(*parameters, /*id_requirement=*/std::nullopt);
 }
 
 absl::StatusOr<MlDsaPrivateKey> GenerateMlDsa65PrivateKey() {
@@ -170,7 +170,7 @@ absl::StatusOr<MlDsaPrivateKey> GenerateMlDsa65PrivateKey() {
     return parameters.status();
   }
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> key =
-      CreateMlDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateMlDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   if (!key.ok()) {
     return key.status();
   }
@@ -184,7 +184,7 @@ absl::StatusOr<MlDsaPrivateKey> GenerateMlDsa87PrivateKey() {
     return parameters.status();
   }
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> key =
-      CreateMlDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
+      CreateMlDsaKey(*parameters, /*id_requirement=*/std::nullopt);
   if (!key.ok()) {
     return key.status();
   }

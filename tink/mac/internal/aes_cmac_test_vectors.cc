@@ -47,7 +47,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("2b7e151628aed2a6abf7158809cf4f3c"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie(""), HexDecodeOrDie("bb1d6929e95937287fa37d129b756746")},
       // From Java AesCmacTestUtil
@@ -59,7 +59,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("2b7e151628aed2a6abf7158809cf4f3c"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac"
                       "45af8e5130c81c46a35ce411"),
@@ -73,7 +73,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("2b7e151628aed2a6abf7158809cf4f3c"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie(
            "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c"
@@ -88,7 +88,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("aaaaaa"),
        HexDecodeOrDie("97268151a23fcd035a2dd0573d84e6ba")},
@@ -101,7 +101,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
        HexDecodeOrDie("70e4648706483f8c5e8e2fab7b190c08")},
@@ -114,7 +114,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie(
            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
@@ -128,7 +128,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
        HexDecodeOrDie("0336c9c4bf8f1bc219b017292af24358")},
@@ -141,7 +141,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
                       "bbbbbbbbbbbbbb"),
@@ -155,7 +155,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
                .value(),
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
                       "bbbbbbbbbbbbbb"),
@@ -210,7 +210,7 @@ std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
            RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff00112"
                                          "233445566778899aabbccddeeff"),
                           ska),
-           /*id_requirement=*/absl::nullopt, pka)
+           /*id_requirement=*/std::nullopt, pka)
            .value(),
        HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
                       "bbbbbbbbbbbbbb"),

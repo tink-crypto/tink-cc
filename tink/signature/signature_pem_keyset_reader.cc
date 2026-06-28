@@ -29,6 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/rsa_util.h"
+#include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
@@ -582,6 +583,20 @@ SignaturePemKeysetReaderBuilder::Build() {
   }
   return absl::Status(absl::StatusCode::kInvalidArgument,
                       "Unknown pem_reader_type_");
+}
+
+absl::StatusOr<std::unique_ptr<KeysetHandle>>
+SignaturePemKeysetReaderBuilder::BuildPublicKeysetHandle() {
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = Build();
+  if (!reader.ok()) {
+    return reader.status();
+  }
+  absl::StatusOr<std::unique_ptr<google::crypto::tink::Keyset>> keyset =
+      (*reader)->Read();
+  if (!keyset.ok()) {
+    return keyset.status();
+  }
+  return KeysetHandle::ReadNoSecret((*keyset)->SerializeAsString());
 }
 
 absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {

@@ -65,7 +65,7 @@ absl::StatusOr<MlDsaPublicKey> ToMlDsaPublicKeyWithNoPrefix(
   }
   return MlDsaPublicKey::Create(
       *ml_dsa_parameters, public_key.GetPublicKeyBytes(GetPartialKeyAccess()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
 }
 
 // Returns true if the corresponding ML-DSA key pair is valid.

@@ -77,14 +77,14 @@ TEST_P(HkdfPrfParametersTest, Create) {
 TEST(HkdfPrfParametersTest, CreateWithoutSaltWorks) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ;
   ASSERT_THAT(parameters, IsOk());
 
   EXPECT_THAT(parameters->KeySizeInBytes(), Eq(16));
   EXPECT_THAT(parameters->GetHashType(),
               Eq(HkdfPrfParameters::HashType::kSha256));
-  EXPECT_THAT(parameters->GetSalt(), Eq(absl::nullopt));
+  EXPECT_THAT(parameters->GetSalt(), Eq(std::nullopt));
   EXPECT_THAT(parameters->HasIdRequirement(), IsFalse());
 }
 
@@ -98,14 +98,14 @@ TEST(HkdfPrfParametersTest, CreateWithEmptySaltDefaultsToNullopt) {
   EXPECT_THAT(parameters->KeySizeInBytes(), Eq(16));
   EXPECT_THAT(parameters->GetHashType(),
               Eq(HkdfPrfParameters::HashType::kSha256));
-  EXPECT_THAT(parameters->GetSalt(), Eq(absl::nullopt));
+  EXPECT_THAT(parameters->GetSalt(), Eq(std::nullopt));
   EXPECT_THAT(parameters->HasIdRequirement(), IsFalse());
 }
 
 TEST(HkdfPrfParametersTest, CreateWithInvalidKeySizeFails) {
   EXPECT_THAT(HkdfPrfParameters::Create(/*key_size_in_bytes=*/15,
                                         HkdfPrfParameters::HashType::kSha256,
-                                        /*salt=*/absl::nullopt)
+                                        /*salt=*/std::nullopt)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Key size must be at least 16 bytes")));
@@ -117,7 +117,7 @@ TEST(HkdfPrfParametersTest, CreateWithInvalidKHashTypeFails) {
           /*key_size_in_bytes=*/16,
           HkdfPrfParameters::HashType::
               kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements,
-          /*salt=*/absl::nullopt)
+          /*salt=*/std::nullopt)
           .status(),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
@@ -127,7 +127,7 @@ TEST(HkdfPrfParametersTest, CreateWithInvalidKHashTypeFails) {
 TEST(HkdfPrfParametersTest, CopyConstructor) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   HkdfPrfParameters copy(*parameters);
@@ -138,7 +138,7 @@ TEST(HkdfPrfParametersTest, CopyConstructor) {
 TEST(HkdfPrfParametersTest, CopyAssignment) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<HkdfPrfParameters> copy = HkdfPrfParameters::Create(
@@ -153,7 +153,7 @@ TEST(HkdfPrfParametersTest, CopyAssignment) {
 TEST(HkdfPrfParametersTest, MoveConstructor) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   HkdfPrfParameters expected = *parameters;
@@ -165,7 +165,7 @@ TEST(HkdfPrfParametersTest, MoveConstructor) {
 TEST(HkdfPrfParametersTest, MoveAssignment) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<HkdfPrfParameters> moved = HkdfPrfParameters::Create(
@@ -200,13 +200,13 @@ TEST_P(HkdfPrfParametersTest, ParametersEquals) {
 TEST(HkdfPrfParametersTest, DifferentKeySizeNotEqual) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(/*key_size_in_bytes=*/32,
                                 HkdfPrfParameters::HashType::kSha256,
-                                /*salt=*/absl::nullopt);
+                                /*salt=*/std::nullopt);
   ASSERT_THAT(other_parameters, IsOk());
 
   EXPECT_TRUE(*parameters != *other_parameters);
@@ -216,13 +216,13 @@ TEST(HkdfPrfParametersTest, DifferentKeySizeNotEqual) {
 TEST(HkdfPrfParametersTest, DifferentashTypeNotEqual) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(/*key_size_in_bytes=*/16,
                                 HkdfPrfParameters::HashType::kSha512,
-                                /*salt=*/absl::nullopt);
+                                /*salt=*/std::nullopt);
   ASSERT_THAT(other_parameters, IsOk());
 
   EXPECT_TRUE(*parameters != *other_parameters);

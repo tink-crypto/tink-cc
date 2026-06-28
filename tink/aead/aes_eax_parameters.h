@@ -77,10 +77,10 @@ class AesEaxParameters : public AeadParameters {
     absl::StatusOr<AesEaxParameters> Build();
 
    private:
-    absl::optional<int> key_size_in_bytes_ = absl::nullopt;
-    absl::optional<int> iv_size_in_bytes_ = absl::nullopt;
-    absl::optional<int> tag_size_in_bytes_ = absl::nullopt;
-    absl::optional<Variant> variant_ = absl::nullopt;
+    absl::optional<int> key_size_in_bytes_ = std::nullopt;
+    absl::optional<int> iv_size_in_bytes_ = std::nullopt;
+    absl::optional<int> tag_size_in_bytes_ = std::nullopt;
+    absl::optional<Variant> variant_ = std::nullopt;
   };
 
   // Copyable and movable.

@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -58,13 +59,20 @@ absl::Status Validate(PrimitiveSet<PublicKeyVerify>* public_key_verify_set) {
   return absl::OkStatus();
 }
 
+struct VerifyEntry {
+  std::unique_ptr<PublicKeyVerify> primitive;
+  uint32_t key_id;
+  OutputPrefixType output_prefix_type;
+  bool has_prefix = false;
+  char prefix[CryptoFormat::kNonRawPrefixSize] = {0};
+};
+
 class PublicKeyVerifySetWrapper : public PublicKeyVerify {
  public:
-  explicit PublicKeyVerifySetWrapper(
-      std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set,
-      std::unique_ptr<internal::MonitoringClient> monitoring_verify_client =
-          nullptr)
-      : public_key_verify_set_(std::move(public_key_verify_set)),
+  explicit PublicKeyVerifySetWrapper(std::vector<VerifyEntry> entries,
+                                     std::unique_ptr<internal::MonitoringClient>
+                                         monitoring_verify_client = nullptr)
+      : entries_(std::move(entries)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
   absl::Status Verify(absl::string_view signature,
@@ -73,7 +81,7 @@ class PublicKeyVerifySetWrapper : public PublicKeyVerify {
   ~PublicKeyVerifySetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set_;
+  std::vector<VerifyEntry> entries_;
   std::unique_ptr<internal::MonitoringClient> monitoring_verify_client_;
 };
 
@@ -92,39 +100,38 @@ absl::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
   }
   absl::string_view key_id =
       signature.substr(0, CryptoFormat::kNonRawPrefixSize);
-  auto primitives_result = public_key_verify_set_->get_primitives(key_id);
-  if (primitives_result.ok()) {
-    absl::string_view raw_signature =
-        signature.substr(CryptoFormat::kNonRawPrefixSize);
-    for (auto& entry : *(primitives_result.value())) {
+  absl::string_view raw_signature =
+      signature.substr(CryptoFormat::kNonRawPrefixSize);
+
+  // 1. Try matching non-RAW prefix keys.
+  for (const auto& entry : entries_) {
+    if (entry.has_prefix &&
+        absl::string_view(entry.prefix, CryptoFormat::kNonRawPrefixSize) ==
+            key_id) {
       std::string legacy_data;
       absl::string_view view_on_data_or_legacy_data = data;
-      if (entry->get_output_prefix_type() == OutputPrefixType::LEGACY) {
+      if (entry.output_prefix_type == OutputPrefixType::LEGACY) {
         legacy_data = absl::StrCat(data, std::string("\x00", 1));
         view_on_data_or_legacy_data = legacy_data;
       }
-      auto& public_key_verify = entry->get_primitive();
       auto verify_result =
-          public_key_verify.Verify(raw_signature, view_on_data_or_legacy_data);
+          entry.primitive->Verify(raw_signature, view_on_data_or_legacy_data);
       if (verify_result.ok()) {
         if (monitoring_verify_client_ != nullptr) {
-          monitoring_verify_client_->Log(entry->get_key_id(), data.size());
+          monitoring_verify_client_->Log(entry.key_id, data.size());
         }
         return absl::OkStatus();
       }
     }
   }
 
-  // No matching key succeeded with verification, try all RAW keys.
-  auto raw_primitives_result = public_key_verify_set_->get_raw_primitives();
-  if (raw_primitives_result.ok()) {
-    for (auto& public_key_verify_entry : *(raw_primitives_result.value())) {
-      auto& public_key_verify = public_key_verify_entry->get_primitive();
-      auto verify_result = public_key_verify.Verify(signature, data);
+  // 2. No matching key succeeded with verification, try all RAW keys.
+  for (const auto& entry : entries_) {
+    if (!entry.has_prefix) {
+      auto verify_result = entry.primitive->Verify(signature, data);
       if (verify_result.ok()) {
         if (monitoring_verify_client_ != nullptr) {
-          monitoring_verify_client_->Log(public_key_verify_entry->get_key_id(),
-                                         data.size());
+          monitoring_verify_client_->Log(entry.key_id, data.size());
         }
         return absl::OkStatus();
       }
@@ -134,6 +141,29 @@ absl::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
     monitoring_verify_client_->LogFailure();
   }
   return absl::Status(absl::StatusCode::kInvalidArgument, "Invalid signature.");
+}
+
+std::vector<VerifyEntry> UnpackPrimitives(
+    std::vector<
+        std::unique_ptr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>>>
+        set_entries) {
+  std::vector<VerifyEntry> entries;
+  entries.reserve(set_entries.size());
+  for (auto& entry : set_entries) {
+    VerifyEntry verify_entry;
+    verify_entry.primitive = entry->ReleasePrimitive();
+    verify_entry.key_id = entry->get_key_id();
+    verify_entry.output_prefix_type = entry->get_output_prefix_type();
+    const std::string& identifier = entry->get_identifier();
+    if (!identifier.empty()) {
+      verify_entry.has_prefix = true;
+      for (int i = 0; i < CryptoFormat::kNonRawPrefixSize; ++i) {
+        verify_entry.prefix[i] = identifier[i];
+      }
+    }
+    entries.push_back(std::move(verify_entry));
+  }
+  return entries;
 }
 
 }  // anonymous namespace
@@ -149,8 +179,9 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<PublicKeyVerifySetWrapper>(
-        std::move(public_key_verify_set))};
+    std::vector<VerifyEntry> entries =
+        UnpackPrimitives(public_key_verify_set->ReleaseAllEntries());
+    return {absl::make_unique<PublicKeyVerifySetWrapper>(std::move(entries))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -166,8 +197,10 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
     return monitoring_verify_client.status();
   }
 
+  std::vector<VerifyEntry> entries =
+      UnpackPrimitives(public_key_verify_set->ReleaseAllEntries());
   return {absl::make_unique<PublicKeyVerifySetWrapper>(
-      std::move(public_key_verify_set), *std::move(monitoring_verify_client))};
+      std::move(entries), *std::move(monitoring_verify_client))};
 }
 
 }  // namespace tink

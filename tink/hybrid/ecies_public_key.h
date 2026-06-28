@@ -82,7 +82,7 @@ class EciesPublicKey final : public HybridPublicKey {
                           absl::string_view output_prefix)
       : parameters_(parameters),
         point_(point),
-        public_key_bytes_(absl::nullopt),
+        public_key_bytes_(std::nullopt),
         id_requirement_(id_requirement),
         output_prefix_(output_prefix) {}
 
@@ -92,7 +92,7 @@ class EciesPublicKey final : public HybridPublicKey {
                           absl::optional<int> id_requirement,
                           absl::string_view output_prefix)
       : parameters_(parameters),
-        point_(absl::nullopt),
+        point_(std::nullopt),
         public_key_bytes_(public_key_bytes),
         id_requirement_(id_requirement),
         output_prefix_(output_prefix) {}

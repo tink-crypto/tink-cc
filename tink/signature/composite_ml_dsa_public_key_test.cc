@@ -17,6 +17,7 @@
 #include "tink/signature/composite_ml_dsa_public_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -35,7 +36,6 @@
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/signature/signature_public_key.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -64,7 +64,7 @@ INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaPublicKeyTestSuite, CompositeMlDsaPublicKeyTest,
     Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
@@ -72,7 +72,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
@@ -80,7 +80,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
@@ -88,23 +88,23 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
@@ -112,7 +112,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
@@ -125,9 +125,10 @@ MlDsaPublicKey GenerateMlDsaPublicKeyOrDie(
 }
 
 std::unique_ptr<SignaturePublicKey> GenerateClassicalPublicKeyOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool random) {
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool random,
+    int key_index = 0) {
   std::unique_ptr<SignaturePrivateKey> private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(algorithm, random);
+      GenerateClassicalPrivateKeyForTestOrDie(algorithm, random, key_index);
   return crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
       private_key->GetPublicKey());
 }
@@ -183,7 +184,7 @@ TEST_P(CompositeMlDsaPublicKeyTest,
 
   EXPECT_THAT(CompositeMlDsaPublicKey::Create(*parameters, ml_dsa_public_key,
                                               std::move(classical_public_key),
-                                              /*id_requirement=*/absl::nullopt,
+                                              /*id_requirement=*/std::nullopt,
                                               GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -235,7 +236,7 @@ TEST(CompositeMlDsaPublicKeyTest, CreateWithUnmatchedMlDsaFails) {
   EXPECT_THAT(
       CompositeMlDsaPublicKey::Create(
           *parameters, ml_dsa_public_key, std::move(classical_public_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("ML-DSA public key does not match parameters")));
@@ -259,7 +260,7 @@ TEST(CompositeMlDsaPublicKeyTest, CreateWithUnmatchedClassicalFails) {
   EXPECT_THAT(
       CompositeMlDsaPublicKey::Create(
           *parameters, ml_dsa_public_key, std::move(classical_public_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("Classical public key does not match parameters")));
@@ -356,7 +357,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentClassicalPublicKeyNotEqual) {
                                       /*random=*/false);
   std::unique_ptr<SignaturePublicKey> classical_public_key2 =
       GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/true);
+                                      /*random=*/false, /*key_index=*/1);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -499,7 +500,7 @@ TEST(CompositeMlDsaPublicKeyTest, CopyAssignment) {
       CompositeMlDsaPublicKey::Create(
           *other_parameters, other_ml_dsa_public_key,
           std::move(other_classical_public_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *public_key;
@@ -572,7 +573,7 @@ TEST(CompositeMlDsaPublicKeyTest, MoveAssignment) {
       CompositeMlDsaPublicKey::Create(
           *other_parameters, other_ml_dsa_public_key,
           std::move(other_classical_public_key),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(moved, IsOk());
 
   CompositeMlDsaPublicKey expected(*public_key);

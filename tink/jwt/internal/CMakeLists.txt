@@ -1,5 +1,7 @@
 tink_module(jwt::internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME raw_jwt_hmac_key_manager
   SRCS
@@ -1366,6 +1368,8 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_ml_dsa_signer
+    tink::jwt::internal::jwt_ml_dsa_verifier
     tink::jwt::internal::jwt_public_key_sign_impl
     tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::jwt_public_key_sign_wrapper
@@ -1381,6 +1385,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::optional
+    crypto
     tink::core::configuration
     tink::core::ec_point
     tink::core::partial_key_access
@@ -1393,6 +1398,9 @@ tink_cc_library(
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_proto_serialization
+    tink::jwt::jwt_ml_dsa_public_key
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
@@ -1448,7 +1456,6 @@ tink_cc_test(
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::internal::bn_util
@@ -1457,12 +1464,14 @@ tink_cc_test(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::internal::ssl_unique_ptr
+    tink::internal::ssl_util
     tink::internal::util
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_key_templates
+    tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
@@ -1473,7 +1482,6 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    tink::util::test_matchers
 )
 
 tink_cc_library(
@@ -1484,14 +1492,34 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_ml_dsa_key_creator
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    crypto
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_proto_serialization
+)
+
+tink_cc_test(
+  NAME jwt_signature_key_gen_config_2026_test
+  SRCS
+    jwt_signature_key_gen_config_2026_test.cc
+  DEPS
+    tink::jwt::internal::jwt_signature_key_gen_config_2026
+    gmock
+    absl::status_matchers
+    absl::statusor
+    crypto
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::internal::ssl_util
+    tink::jwt::jwt_ml_dsa_parameters
 )
 
 tink_cc_library(
@@ -1524,8 +1552,6 @@ tink_cc_library(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1583,8 +1609,6 @@ tink_cc_library(
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1606,4 +1630,146 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_proto_serialization
   TAGS
     exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME jwt_ml_dsa_signer
+  SRCS
+    jwt_ml_dsa_signer.cc
+    jwt_ml_dsa_signer.h
+  DEPS
+    tink::jwt::internal::jwt_public_key_sign_impl
+    tink::jwt::internal::jwt_public_key_sign_internal
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::internal::ml_dsa_sign_boringssl
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_signer_verifier_test
+  SRCS
+    jwt_ml_dsa_signer_verifier_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_signer
+    tink::jwt::internal::jwt_ml_dsa_verifier
+    tink::jwt::internal::jwt_public_key_sign_internal
+    tink::jwt::internal::jwt_public_key_verify_internal
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME jwt_ml_dsa_verifier
+  SRCS
+    jwt_ml_dsa_verifier.cc
+    jwt_ml_dsa_verifier.h
+  DEPS
+    tink::jwt::internal::jwt_public_key_verify_impl
+    tink::jwt::internal::jwt_public_key_verify_internal
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    tink::signature::internal::ml_dsa_verify_boringssl
+)
+
+tink_cc_library(
+  NAME jwt_ml_dsa_sign_key_manager
+  SRCS
+    jwt_ml_dsa_sign_key_manager.cc
+    jwt_ml_dsa_sign_key_manager.h
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_key_creator
+    tink::jwt::internal::jwt_ml_dsa_signer
+    tink::jwt::internal::jwt_public_key_sign_internal
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::key_manager
+    tink::core::parameters
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::util::constants
+    tink::util::protobuf_helper
+    tink::proto::jwt_ml_dsa_cc_proto
+)
+
+tink_cc_test(
+  NAME jwt_ml_dsa_sign_verify_key_manager_test
+  SRCS
+    jwt_ml_dsa_sign_verify_key_manager_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_sign_key_manager
+    tink::jwt::internal::jwt_ml_dsa_verify_key_manager
+    tink::jwt::internal::jwt_public_key_sign_internal
+    tink::jwt::internal::jwt_public_key_verify_internal
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::optional
+    tink::core::key_manager
+    tink::jwt::jwt_ml_dsa_proto_serialization
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::util::protobuf_helper
+    tink::proto::jwt_ml_dsa_cc_proto
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME jwt_ml_dsa_verify_key_manager
+  SRCS
+    jwt_ml_dsa_verify_key_manager.cc
+    jwt_ml_dsa_verify_key_manager.h
+  DEPS
+    tink::jwt::internal::jwt_ml_dsa_verifier
+    tink::jwt::internal::jwt_public_key_verify_internal
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::key
+    tink::core::key_manager
+    tink::internal::legacy_key_manager_impl
+    tink::internal::tink_proto_structs
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::util::constants
 )

@@ -331,7 +331,7 @@ class MessageField : public MessageFieldBase {
     return *default_value;
   }
 
-  absl::optional<MessageT> value_ = absl::nullopt;
+  absl::optional<MessageT> value_ = std::nullopt;
   ProtoFieldOptions options_;
 };
 

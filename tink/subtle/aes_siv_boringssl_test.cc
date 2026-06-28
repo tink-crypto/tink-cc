@@ -22,17 +22,20 @@
 #include <string>
 #include <utility>
 
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
+#include "tink/deterministic_aead.h"
 #include "tink/internal/testing/wycheproof_util.h"
 #include "tink/secret_data.h"
+#include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -303,6 +306,50 @@ TEST(AesSivBoringSslTest, TestFipsOnly) {
   EXPECT_THAT(subtle::AesSivBoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
+
+void AesSivEncryptBenchmark(benchmark::State& state) {
+  if (IsFipsModeEnabled()) {
+    state.SetLabel("Not supported in FIPS-only mode");
+    return;
+  }
+  SecretData key = subtle::Random::GetRandomKeyBytes(64);
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> cipher =
+      AesSivBoringSsl::New(key);
+  ABSL_CHECK_OK(cipher.status());
+  std::string data(state.range(0), 'x');
+  benchmark::DoNotOptimize(data);
+  for (auto s : state) {
+    absl::StatusOr<std::string> ct =
+        (*cipher)->EncryptDeterministically(data, "aad");
+    benchmark::DoNotOptimize(ct);
+    ABSL_CHECK_OK(ct.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK(AesSivEncryptBenchmark)->RangeMultiplier(128)->Range(32, 1 << 23);
+
+void AesSivDecryptBenchmark(benchmark::State& state) {
+  if (IsFipsModeEnabled()) {
+    state.SetLabel("Not supported in FIPS-only mode");
+    return;
+  }
+  SecretData key = subtle::Random::GetRandomKeyBytes(64);
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> cipher =
+      AesSivBoringSsl::New(key);
+  ABSL_CHECK_OK(cipher.status());
+  std::string data(state.range(0), 'x');
+  absl::StatusOr<std::string> ct =
+      (*cipher)->EncryptDeterministically(data, "aad");
+  ABSL_CHECK_OK(ct.status());
+  absl::Status status;
+  for (auto s : state) {
+    benchmark::DoNotOptimize(
+        status = (*cipher)->DecryptDeterministically(*ct, "aad").status());
+    ABSL_CHECK_OK(status);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK(AesSivDecryptBenchmark)->RangeMultiplier(128)->Range(32, 1 << 23);
 
 }  // namespace
 }  // namespace subtle

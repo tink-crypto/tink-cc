@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
+#include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/key.h"
@@ -59,6 +60,10 @@ class JwtMlDsaPrivateKey : public JwtSignaturePrivateKey {
   }
 
   const JwtMlDsaPublicKey& GetPublicKey() const override { return public_key_; }
+
+  const JwtMlDsaParameters& GetParameters() const override {
+    return public_key_.GetParameters();
+  }
 
   bool operator==(const Key& other) const override;
 

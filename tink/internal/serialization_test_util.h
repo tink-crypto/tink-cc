@@ -98,12 +98,12 @@ class NoIdKey : public Key {
   const Parameters& GetParameters() const override { return params_; }
 
   absl::optional<int32_t> GetIdRequirement() const override {
-    return absl::nullopt;
+    return std::nullopt;
   }
 
   bool operator==(const Key& other) const override {
     return params_ == other.GetParameters() &&
-           absl::nullopt == other.GetIdRequirement();
+           std::nullopt == other.GetIdRequirement();
   }
 
   std::unique_ptr<Key> Clone() const override {

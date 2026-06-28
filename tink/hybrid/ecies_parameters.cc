@@ -103,7 +103,7 @@ absl::StatusOr<EciesParameters> EciesParameters::Builder::Build() {
   static const std::set<absl::optional<PointFormat>>* kSupportedPointFormats =
       new std::set<absl::optional<PointFormat>>(
           {PointFormat::kCompressed, PointFormat::kUncompressed,
-           PointFormat::kLegacyUncompressed, absl::nullopt});
+           PointFormat::kLegacyUncompressed, std::nullopt});
   if (kSupportedPointFormats->find(point_format_) ==
       kSupportedPointFormats->end()) {
     return absl::Status(

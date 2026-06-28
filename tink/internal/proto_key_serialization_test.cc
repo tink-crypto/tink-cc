@@ -75,7 +75,7 @@ TEST_F(ProtoKeySerializationTest, CreateWithoutIdRequirement) {
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization.status(), IsOk());
 
   EXPECT_THAT(serialization->TypeUrl(), Eq("type_url"));
@@ -84,7 +84,7 @@ TEST_F(ProtoKeySerializationTest, CreateWithoutIdRequirement) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(serialization->IdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(serialization->ObjectIdentifier(), Eq("type_url"));
 }
 
@@ -95,7 +95,7 @@ TEST_F(ProtoKeySerializationTest, OutputPrefixIncompatibleWithIdRequirement) {
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/absl::nullopt);
+                                    /*id_requirement=*/std::nullopt);
   ASSERT_THAT(tink_without_id.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 

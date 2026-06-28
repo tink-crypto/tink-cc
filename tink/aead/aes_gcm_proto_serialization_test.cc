@@ -81,8 +81,7 @@ TEST_F(AesGcmProtoSerializationTest, RegisterTwiceSucceeds) {
 
 INSTANTIATE_TEST_SUITE_P(
     AesGcmProtoSerializationTestSuite, AesGcmProtoSerializationTest,
-    Values(TestCase{AesGcmParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink,
+    Values(TestCase{AesGcmParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     /*key_size=*/16, /*iv_size=*/12, /*tag_size=*/16,
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
@@ -94,7 +93,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{AesGcmParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw,
                     /*key_size=*/32, /*iv_size=*/12, /*tag_size=*/16,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
+                    /*id=*/std::nullopt, /*output_prefix=*/""}));
 
 TEST_P(AesGcmProtoSerializationTest, ParseParameters) {
   TestCase test_case = GetParam();
@@ -370,7 +369,7 @@ TEST_F(AesGcmProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -461,7 +460,7 @@ TEST_F(AesGcmProtoSerializationTest, SerializeKeyWithDisallowedIvSize) {
   absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -488,7 +487,7 @@ TEST_F(AesGcmProtoSerializationTest, SerializeKeyWithDisallowedTagSize) {
   absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -515,12 +514,12 @@ TEST_F(AesGcmProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(*key, absl::nullopt);
+          .SerializeKey<internal::ProtoKeySerialization>(*key, std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

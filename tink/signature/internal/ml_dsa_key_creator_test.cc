@@ -58,13 +58,13 @@ INSTANTIATE_TEST_SUITE_P(
     KeyCreatorsTestSuite, KeyCreatorsTest,
     Values(TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5),
                     MlDsaParameters::Instance::kMlDsa44},
-           TestCase{absl::nullopt, "", MlDsaParameters::Instance::kMlDsa44},
+           TestCase{std::nullopt, "", MlDsaParameters::Instance::kMlDsa44},
            TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5),
                     MlDsaParameters::Instance::kMlDsa65},
-           TestCase{absl::nullopt, "", MlDsaParameters::Instance::kMlDsa65},
+           TestCase{std::nullopt, "", MlDsaParameters::Instance::kMlDsa65},
            TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5),
                     MlDsaParameters::Instance::kMlDsa87},
-           TestCase{absl::nullopt, "", MlDsaParameters::Instance::kMlDsa87}));
+           TestCase{std::nullopt, "", MlDsaParameters::Instance::kMlDsa87}));
 
 TEST_P(KeyCreatorsTest, CreateMlDsaPrivateKeyWorks) {
   TestCase test_case = GetParam();

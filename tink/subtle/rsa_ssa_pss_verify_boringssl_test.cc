@@ -161,6 +161,16 @@ TEST(RsaSsaPssVerifyBoringSslTest, NewErrors) {
                         "SHA1 is not safe for digital signature",
                         std::string(result.status().message()));
   }
+
+  {  // Negative salt length.
+    internal::RsaSsaPssParams negative_salt_params = {
+        kNistTestVector.sig_hash, kNistTestVector.mgf1_hash, -1};
+    absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> result =
+        RsaSsaPssVerifyBoringSsl::New(nist_pub_key, negative_salt_params);
+    EXPECT_THAT(result,
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         testing::HasSubstr("Salt length is negative")));
+  }
 }
 
 TEST(RsaSsaPssVerifyBoringSslTest, Modification) {

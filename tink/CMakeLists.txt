@@ -687,6 +687,7 @@ tink_cc_library(
   NAME parameters
   SRCS
     parameters.h
+  PUBLIC
 )
 
 tink_cc_library(
@@ -949,6 +950,7 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
     tink::core::keyset_reader
+    tink::core::parameters
     tink::core::partial_key_access
     tink::core::primitive_set
     tink::core::primitive_wrapper
@@ -1184,6 +1186,7 @@ tink_cc_test(
     tink::subtle::subtle
     tink::util::input_stream_util
     tink::util::istream_input_stream
+    tink::util::protobuf_helper
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -1211,6 +1214,7 @@ tink_cc_test(
     absl::status_matchers
     tink::subtle::aes_gcm_boringssl
     tink::subtle::random
+    tink::util::protobuf_helper
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

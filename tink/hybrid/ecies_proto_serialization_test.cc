@@ -231,7 +231,7 @@ INSTANTIATE_TEST_SUITE_P(
                     EciesParameters::HashType::kSha384,
                     EciesParameters::DemId::kAes256GcmRaw,
                     EciesParameters::PointFormat::kLegacyUncompressed,
-                    /*salt=*/absl::nullopt, OutputPrefixTypeTP::kCrunchy,
+                    /*salt=*/std::nullopt, OutputPrefixTypeTP::kCrunchy,
                     CreateKemParams(EllipticCurveType::NIST_P384,
                                     HashType::SHA384, /*salt=*/""),
                     CreateAesGcmDemParams(32),
@@ -243,7 +243,7 @@ INSTANTIATE_TEST_SUITE_P(
                     EciesParameters::HashType::kSha512,
                     EciesParameters::DemId::kAes256SivRaw,
                     EciesParameters::PointFormat::kUncompressed,
-                    /*salt=*/absl::nullopt, OutputPrefixTypeTP::kTink,
+                    /*salt=*/std::nullopt, OutputPrefixTypeTP::kTink,
                     CreateKemParams(EllipticCurveType::NIST_P521,
                                     HashType::SHA512, /*salt=*/""),
                     CreateAes256SivDemParams(), EcPointFormat::UNCOMPRESSED,
@@ -253,33 +253,33 @@ INSTANTIATE_TEST_SUITE_P(
                     EciesParameters::CurveType::kX25519,
                     EciesParameters::HashType::kSha256,
                     EciesParameters::DemId::kXChaCha20Poly1305Raw,
-                    /*point_format=*/absl::nullopt,
+                    /*point_format=*/std::nullopt,
                     /*salt=*/kSalt.data(), OutputPrefixTypeTP::kRaw,
                     CreateKemParams(EllipticCurveType::CURVE25519,
                                     HashType::SHA256, /*salt=*/kSalt),
                     CreateXChaCha20Poly1305DemParams(),
                     EcPointFormat::COMPRESSED,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""},
+                    /*id=*/std::nullopt, /*output_prefix=*/""},
            TestCase{EciesParameters::Variant::kNoPrefix,
                     EciesParameters::CurveType::kX25519,
                     EciesParameters::HashType::kSha256,
                     EciesParameters::DemId::kAes128CtrHmacSha256Raw,
-                    /*point_format=*/absl::nullopt,
+                    /*point_format=*/std::nullopt,
                     /*salt=*/kSalt.data(), OutputPrefixTypeTP::kRaw,
                     CreateKemParams(EllipticCurveType::CURVE25519,
                                     HashType::SHA256, /*salt=*/kSalt),
                     CreateAesCtrHmacDemParams(16), EcPointFormat::COMPRESSED,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""},
+                    /*id=*/std::nullopt, /*output_prefix=*/""},
            TestCase{EciesParameters::Variant::kNoPrefix,
                     EciesParameters::CurveType::kX25519,
                     EciesParameters::HashType::kSha256,
                     EciesParameters::DemId::kAes256CtrHmacSha256Raw,
-                    /*point_format=*/absl::nullopt,
+                    /*point_format=*/std::nullopt,
                     /*salt=*/kSalt.data(), OutputPrefixTypeTP::kRaw,
                     CreateKemParams(EllipticCurveType::CURVE25519,
                                     HashType::SHA256, /*salt=*/kSalt),
                     CreateAesCtrHmacDemParams(32), EcPointFormat::COMPRESSED,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
+                    /*id=*/std::nullopt, /*output_prefix=*/""}));
 
 TEST_P(EciesProtoSerializationTest, ParseParametersSucceeds) {
   TestCase test_case = GetParam();
@@ -484,7 +484,7 @@ TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingSaltSucceeds) {
   const EciesParameters* ecies_parameters =
       dynamic_cast<const EciesParameters*>(parameters->get());
   ASSERT_THAT(ecies_parameters, NotNull());
-  EXPECT_THAT(ecies_parameters->GetSalt(), Eq(absl::nullopt));
+  EXPECT_THAT(ecies_parameters->GetSalt(), Eq(std::nullopt));
 }
 
 TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingParamsFails) {
@@ -617,7 +617,7 @@ TEST_F(EciesProtoSerializationTest,
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
   *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
-      /*aes_key_size=*/absl::nullopt, /*iv_size=*/absl::nullopt,
+      /*aes_key_size=*/std::nullopt, /*iv_size=*/std::nullopt,
       /*version=*/0, /*hmac_key_size=*/32, /*tag_size=*/16,
       /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
@@ -645,7 +645,7 @@ TEST_F(EciesProtoSerializationTest,
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
   *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/absl::nullopt,
+      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/std::nullopt,
                                 /*version=*/0, /*hmac_key_size=*/32,
                                 /*tag_size=*/16,
                                 /*hash_type=*/internal::HashTypeEnum::kSha256);
@@ -704,8 +704,8 @@ TEST_F(EciesProtoSerializationTest,
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
   *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
       /*aes_key_size=*/16, /*iv_size=*/16,
-      /*version=*/absl::nullopt, /*hmac_key_size=*/absl::nullopt,
-      /*tag_size=*/absl::nullopt, /*hash_type=*/absl::nullopt);
+      /*version=*/std::nullopt, /*hmac_key_size=*/std::nullopt,
+      /*tag_size=*/std::nullopt, /*hash_type=*/std::nullopt);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -762,7 +762,7 @@ TEST_F(EciesProtoSerializationTest,
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
   *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
       /*aes_key_size=*/16, /*iv_size=*/16, /*version=*/0, /*hmac_key_size=*/32,
-      /*tag_size=*/absl::nullopt, /*hash_type=*/absl::nullopt);
+      /*tag_size=*/std::nullopt, /*hash_type=*/std::nullopt);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -991,7 +991,7 @@ TEST_P(EciesProtoSerializationTest, ParsePublicKey) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -1077,7 +1077,7 @@ TEST_F(EciesProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(
       key.status(),
       StatusIs(
@@ -1123,7 +1123,7 @@ TEST_P(EciesProtoSerializationTest, SerializePublicKey) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *public_key, /*token=*/absl::nullopt);
+              *public_key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -1448,7 +1448,7 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -1586,7 +1586,7 @@ TEST_F(EciesProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*parameters, key_pair->x,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
@@ -1600,7 +1600,7 @@ TEST_F(EciesProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, /*token=*/absl::nullopt);
+              *private_key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

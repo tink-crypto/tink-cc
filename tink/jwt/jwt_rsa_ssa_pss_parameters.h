@@ -95,10 +95,10 @@ class JwtRsaSsaPssParameters : public JwtSignatureParameters {
    private:
     static BigInteger CreateDefaultPublicExponent();
 
-    std::optional<JwtRsaSsaPssParameters::Algorithm> algorithm_ = absl::nullopt;
+    std::optional<JwtRsaSsaPssParameters::Algorithm> algorithm_ = std::nullopt;
     std::optional<JwtRsaSsaPssParameters::KidStrategy> kid_strategy_ =
-        absl::nullopt;
-    std::optional<int> modulus_size_in_bits_ = absl::nullopt;
+        std::nullopt;
+    std::optional<int> modulus_size_in_bits_ = std::nullopt;
     // Defaults to F4.
     BigInteger public_exponent_ = CreateDefaultPublicExponent();
   };

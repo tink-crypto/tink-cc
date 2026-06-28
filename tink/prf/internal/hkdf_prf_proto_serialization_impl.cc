@@ -212,7 +212,7 @@ absl::StatusOr<HkdfPrfParameters> ParseParameters(
   }
 
   return HkdfPrfParameters::Create(proto_key_format.key_size(), *hash_type,
-                                   absl::nullopt);
+                                   std::nullopt);
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -266,7 +266,7 @@ absl::StatusOr<HkdfPrfKey> ParseKey(
     return hash_type.status();
   }
 
-  absl::optional<std::string> salt = absl::nullopt;
+  absl::optional<std::string> salt = std::nullopt;
   if (!proto_key.params().salt().empty()) {
     salt = proto_key.params().salt();
   }

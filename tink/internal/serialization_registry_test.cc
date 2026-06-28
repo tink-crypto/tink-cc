@@ -261,7 +261,7 @@ TEST(SerializationRegistryTest, ParseKeyNoSecretAccess) {
   SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<std::unique_ptr<Key>> no_id_public_key =
-      registry.ParseKey(NoIdSerialization(), absl::nullopt);
+      registry.ParseKey(NoIdSerialization(), std::nullopt);
   ASSERT_THAT(no_id_public_key, IsOk());
   EXPECT_THAT(std::type_index(typeid(**no_id_public_key)),
               std::type_index(typeid(NoIdKey)));
@@ -324,7 +324,7 @@ TEST(SerializationRegistryTest, SerializeKeyNoSecretAccess) {
   SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<NoIdSerialization>(NoIdKey(), absl::nullopt);
+      registry.SerializeKey<NoIdSerialization>(NoIdKey(), std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
 }

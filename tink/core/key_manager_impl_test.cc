@@ -30,6 +30,7 @@
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
+#include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -132,7 +133,8 @@ TEST(KeyManagerImplTest, FactoryNewKeyFromMessage) {
   key_format.set_key_size(16);
   auto key = key_manager->get_key_factory().NewKey(key_format).value();
 
-  EXPECT_THAT(dynamic_cast<AesGcmKey&>(*key).key_value(), SizeIs(16));
+  EXPECT_THAT(portable_proto::DynamicCastMessage<AesGcmKey>(*key).key_value(),
+              SizeIs(16));
 }
 
 TEST(KeyManagerImplTest, FactoryNewKeyFromStringView) {
@@ -146,7 +148,8 @@ TEST(KeyManagerImplTest, FactoryNewKeyFromStringView) {
                  .NewKey(key_format.SerializeAsString())
                  .value();
 
-  EXPECT_THAT(dynamic_cast<AesGcmKey&>(*key).key_value(), SizeIs(16));
+  EXPECT_THAT(portable_proto::DynamicCastMessage<AesGcmKey>(*key).key_value(),
+              SizeIs(16));
 }
 
 TEST(KeyManagerImplTest, FactoryNewKeyFromKeyData) {

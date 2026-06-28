@@ -94,7 +94,7 @@ INSTANTIATE_TEST_SUITE_P(
                     EciesParameters::PointFormat::kUncompressed,
                     EciesParameters::DemId::kAes256SivRaw,
                     EciesParameters::Variant::kNoPrefix,
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(EciesPublicKeyTest, CreateNistCurvePublicKey) {
@@ -127,7 +127,7 @@ TEST_P(EciesPublicKeyTest, CreateNistCurvePublicKey) {
   EXPECT_THAT(public_key->GetNistCurvePoint(GetPartialKeyAccess()),
               Eq(public_point));
   EXPECT_THAT(public_key->GetX25519CurvePointBytes(GetPartialKeyAccess()),
-              Eq(absl::nullopt));
+              Eq(std::nullopt));
 }
 
 TEST(EciesPublicKeyTest, CreateX25519PublicKey) {
@@ -144,15 +144,15 @@ TEST(EciesPublicKeyTest, CreateX25519PublicKey) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   EXPECT_THAT(public_key->GetParameters(), Eq(*params));
-  EXPECT_THAT(public_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(public_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(public_key->GetOutputPrefix(), IsEmpty());
   EXPECT_THAT(public_key->GetNistCurvePoint(GetPartialKeyAccess()),
-              Eq(absl::nullopt));
+              Eq(std::nullopt));
   EXPECT_THAT(public_key->GetX25519CurvePointBytes(GetPartialKeyAccess()),
               Eq(public_key_bytes));
 }
@@ -172,7 +172,7 @@ TEST(EciesPublicKeyTest, CreateX25519PublicKeyWithInvalidLength) {
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(
           *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
-          /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -214,7 +214,7 @@ TEST(EciesPublicKeyTest, CreateNistCurvePublicKeyWithInvalidPoint) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, point,
-                                         /*id_requirement=*/absl::nullopt,
+                                         /*id_requirement=*/std::nullopt,
                                          GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(), StatusIs(absl::StatusCode::kInternal));
 }
@@ -249,7 +249,7 @@ TEST(EciesPublicKeyTest,
 
   EXPECT_THAT(EciesPublicKey::CreateForCurveX25519(
                   *tink_params, public_key_bytes,
-                  /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                  /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -290,7 +290,7 @@ TEST(EciesPublicKeyTest,
 
   EXPECT_THAT(EciesPublicKey::CreateForNistCurve(
                   *tink_params, public_point,
-                  /*id_requirement=*/absl::nullopt, GetPartialKeyAccess())
+                  /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -345,13 +345,13 @@ TEST(EciesPublicKeyTest, X25519PublicKeyEquals) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EciesPublicKey> other_public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
 
@@ -554,7 +554,7 @@ TEST(EciesPublicKeyTest, CopyAssignment) {
 
   absl::StatusOr<EciesPublicKey> copy = EciesPublicKey::CreateForCurveX25519(
       *other_params, other_public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *public_key;
@@ -617,7 +617,7 @@ TEST(EciesPublicKeyTest, MoveAssignment) {
 
   absl::StatusOr<EciesPublicKey> moved = EciesPublicKey::CreateForCurveX25519(
       *other_params, other_public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(moved, IsOk());
 
   EciesPublicKey expected = *public_key;
@@ -640,7 +640,7 @@ TEST(EciesPublicKeyTest, Clone) {
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/absl::nullopt,
+                                           /*id_requirement=*/std::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 

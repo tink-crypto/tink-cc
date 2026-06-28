@@ -93,7 +93,7 @@ INSTANTIATE_TEST_SUITE_P(
                     0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""},
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
@@ -102,7 +102,7 @@ INSTANTIATE_TEST_SUITE_P(
                     0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, absl::nullopt, ""}));
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""}));
 
 MlDsaPrivateKey GenerateMlDsaPrivateKey(MlDsaParameters::Instance instance,
                                         MlDsaParameters::Variant variant,
@@ -473,7 +473,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithMutableRegistry) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -521,7 +521,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithRegistryBuilder) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -591,7 +591,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
@@ -621,7 +621,7 @@ TEST_P(MlDsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -673,7 +673,7 @@ TEST_P(MlDsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
 
@@ -723,7 +723,7 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPublicKey) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   const ProtoKeySerialization* proto_serialization =
@@ -731,7 +731,7 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPublicKey) {
   ASSERT_THAT(proto_serialization, NotNull());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
-      registry.ParseKey(*proto_serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*proto_serialization, /*token=*/std::nullopt);
   ASSERT_THAT(parsed_key, IsOk());
   ASSERT_THAT(**parsed_key, Eq(*key));
 }
@@ -974,7 +974,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
@@ -1135,7 +1135,7 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*private_key,
-                                                   /*token=*/absl::nullopt);
+                                                   /*token=*/std::nullopt);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

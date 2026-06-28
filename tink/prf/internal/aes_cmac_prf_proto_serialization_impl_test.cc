@@ -302,13 +302,13 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseKeyWithMutableRegistry) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<AesCmacPrfKey> expected_key = AesCmacPrfKey::Create(
@@ -337,13 +337,13 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseKeyWithImmutableRegistry) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
   absl::StatusOr<AesCmacPrfKey> expected_key = AesCmacPrfKey::Create(
@@ -367,7 +367,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -420,11 +420,11 @@ TEST_F(AesCmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
 }
@@ -445,7 +445,7 @@ TEST_F(AesCmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyMaterialTypeTP::kSymmetric,
                                               OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
+                                              /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -482,7 +482,7 @@ TEST_P(AesCmacPrfProtoSerializationTest, SerializeKeyWithMutableRegistry) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::AesCmacPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -521,7 +521,7 @@ TEST_P(AesCmacPrfProtoSerializationTest, SerializeKeyWithImmutableRegistry) {
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));
 
   google::crypto::tink::AesCmacPrfKey proto_key;
   ASSERT_THAT(proto_key.ParseFromString(
@@ -545,7 +545,7 @@ TEST_F(AesCmacPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, /*token=*/absl::nullopt);
+          *key, /*token=*/std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied,
                        HasSubstr("SecretKeyAccess is required")));

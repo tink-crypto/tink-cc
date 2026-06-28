@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 package(
     default_testonly = 1,
@@ -26,6 +27,7 @@ cc_library(
         "//tink/signature:rsa_ssa_pkcs1_private_key",
         "//tink/signature:rsa_ssa_pkcs1_public_key",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status:statusor",
@@ -56,7 +58,6 @@ cc_library(
         "//tink:big_integer",
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink:secret_data",
         "//tink/internal:fips_utils",
@@ -65,6 +66,7 @@ cc_library(
         "//tink/signature:rsa_ssa_pss_private_key",
         "//tink/signature:rsa_ssa_pss_public_key",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status:statusor",
@@ -151,16 +153,18 @@ cc_library(
     hdrs = ["composite_ml_dsa_test_util.h"],
     include_prefix = "tink/signature/internal/testing",
     deps = [
+        ":rsa_ssa_pkcs1_test_vectors",
+        ":rsa_ssa_pss_test_vectors",
         "//tink:big_integer",
         "//tink:ec_point",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink/internal:ec_util",
         "//tink/internal:rsa_util",
         "//tink/internal:secret_buffer",
         "//tink/internal:ssl_unique_ptr",
+        "//tink/internal:util",
         "//tink/signature:composite_ml_dsa_parameters",
         "//tink/signature:composite_ml_dsa_private_key",
         "//tink/signature:ecdsa_parameters",
@@ -181,7 +185,7 @@ cc_library(
         "//tink/signature:signature_private_key",
         "//tink/subtle:common_enums",
         "//tink/util:secret_data",
-        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",

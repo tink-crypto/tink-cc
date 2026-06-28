@@ -59,20 +59,20 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{/*key_size_in_bytes=*/32,
                     JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
                     JwtHmacParameters::Algorithm::kHs256,
-                    /*custom_kid=*/absl::nullopt, /*id_requirement=*/123,
+                    /*custom_kid=*/std::nullopt, /*id_requirement=*/123,
                     /*expected_kid=*/"AAAAew"},
            TestCase{/*key_size_in_bytes=*/48,
                     JwtHmacParameters::KidStrategy::kCustom,
                     JwtHmacParameters::Algorithm::kHs384,
                     /*custom_kid=*/"custom_kid",
-                    /*id_requirement=*/absl::nullopt,
+                    /*id_requirement=*/std::nullopt,
                     /*expected_kid=*/"custom_kid"},
            TestCase{/*key_size_in_bytes=*/64,
                     JwtHmacParameters::KidStrategy::kIgnored,
                     JwtHmacParameters::Algorithm::kHs512,
-                    /*custom_kid=*/absl::nullopt,
-                    /*id_requirement=*/absl::nullopt,
-                    /*expected_kid=*/absl::nullopt}));
+                    /*custom_kid=*/std::nullopt,
+                    /*id_requirement=*/std::nullopt,
+                    /*expected_kid=*/std::nullopt}));
 
 TEST_P(JwtHmacKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();

@@ -246,7 +246,7 @@ void KeysetHandleBuilderEntry::SetFixedId(int id) {
 
 void KeysetHandleBuilderEntry::SetRandomId() {
   strategy_.strategy = KeyIdStrategyEnum::kRandomId;
-  strategy_.id_requirement = absl::nullopt;
+  strategy_.id_requirement = std::nullopt;
 }
 
 // `config` is not used by KeyEntry, which does not generate new key material.
@@ -282,9 +282,8 @@ absl::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
   // passed config, continue and try to create the key from the proto parameters
   // serialization.
   if (!internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
-    absl::optional<int> id_requirement = parameters_->HasIdRequirement()
-                                             ? std::make_optional(id)
-                                             : absl::nullopt;
+    absl::optional<int> id_requirement =
+        parameters_->HasIdRequirement() ? std::make_optional(id) : std::nullopt;
     absl::StatusOr<std::unique_ptr<Key>> key =
         internal::KeyGenConfigurationImpl::CreateKey(*parameters_,
                                                      id_requirement, config);

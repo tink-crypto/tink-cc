@@ -269,21 +269,21 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{
             JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
             JwtMlDsaParameters::Algorithm::kMlDsa44,
-            /*custom_kid=*/absl::nullopt, /*id_requirement=*/123,
+            /*custom_kid=*/std::nullopt, /*id_requirement=*/123,
             /*expected_kid=*/"AAAAew",
             /*public_key_bytes=*/test::HexDecodeOrDie(kMlDsa44PublicKeyBytes)},
         TestCase{
             JwtMlDsaParameters::KidStrategy::kCustom,
             JwtMlDsaParameters::Algorithm::kMlDsa65,
             /*custom_kid=*/"custom_kid",
-            /*id_requirement=*/absl::nullopt,
+            /*id_requirement=*/std::nullopt,
             /*expected_kid=*/"custom_kid",
             /*public_key_bytes=*/test::HexDecodeOrDie(kMlDsa65PublicKeyBytes)},
         TestCase{JwtMlDsaParameters::KidStrategy::kIgnored,
                  JwtMlDsaParameters::Algorithm::kMlDsa87,
-                 /*custom_kid=*/absl::nullopt,
-                 /*id_requirement=*/absl::nullopt,
-                 /*expected_kid=*/absl::nullopt, /*public_key_bytes=*/
+                 /*custom_kid=*/std::nullopt,
+                 /*id_requirement=*/std::nullopt,
+                 /*expected_kid=*/std::nullopt, /*public_key_bytes=*/
                  test::HexDecodeOrDie(kMlDsa87PublicKeyBytes)}));
 
 TEST_P(JwtMlDsaPublicKeyTest, CreateSucceeds) {

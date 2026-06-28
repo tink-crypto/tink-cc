@@ -328,7 +328,7 @@ TEST(HpkeDecryptNewFromKeyObject, P384DoesNotWork) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P384PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -368,7 +368,7 @@ TEST(HpkeDecryptNewFromKeyObject, P521DoesNotWork) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P521PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -405,7 +405,7 @@ TEST(HpkeDecryptNewFromKeyObject, SHA384DoesNotWork) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
@@ -424,7 +424,7 @@ TEST(HpkeDecryptNewFromKeyObject, SHA512DoesNotWork) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      *parameters, P256PointAsString(), /*id_requirement=*/std::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(

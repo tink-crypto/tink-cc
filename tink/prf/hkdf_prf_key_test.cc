@@ -55,7 +55,7 @@ using HkdfPrfKeyTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     HkdfPrfKeyCreateTestSuite, HkdfPrfKeyTest,
     Values(TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha1,
-                    absl::nullopt},
+                    std::nullopt},
            TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha224,
                     test::HexDecodeOrDie("00010203040506")},
            TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha256,
@@ -79,12 +79,12 @@ TEST_P(HkdfPrfKeyTest, CreateSucceeds) {
 
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
   EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(HkdfPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      16, HkdfPrfParameters::HashType::kSha256, /*salt=*/absl::nullopt);
+      16, HkdfPrfParameters::HashType::kSha256, /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   EXPECT_THAT(
@@ -120,7 +120,7 @@ TEST_P(HkdfPrfKeyTest, KeyEquals) {
 TEST(HkdfPrfKeyTest, DifferentSecretDataNotEqual) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
@@ -143,12 +143,12 @@ TEST(HkdfPrfKeyTest, DifferentSecretDataNotEqual) {
 TEST(HkdfPrfKeyTest, DifferentParametersNotEqual) {
   absl::StatusOr<HkdfPrfParameters> parameters1 = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters1, IsOk());
 
   absl::StatusOr<HkdfPrfParameters> parameters2 = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha384,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters2, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
@@ -170,7 +170,7 @@ TEST(HkdfPrfKeyTest, DifferentParametersNotEqual) {
 TEST(HkdfPrfKeyTest, CopyConstructor) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
@@ -186,7 +186,7 @@ TEST(HkdfPrfKeyTest, CopyConstructor) {
 TEST(HkdfPrfKeyTest, CopyAssignment) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
@@ -213,7 +213,7 @@ TEST(HkdfPrfKeyTest, CopyAssignment) {
 TEST(HkdfPrfKeyTest, MoveConstructor) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
@@ -230,7 +230,7 @@ TEST(HkdfPrfKeyTest, MoveConstructor) {
 TEST(HkdfPrfKeyTest, MoveAssignment) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
@@ -258,7 +258,7 @@ TEST(HkdfPrfKeyTest, MoveAssignment) {
 TEST(HkdfPrfKeyTest, Clone) {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/absl::nullopt);
+      /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);

@@ -17,6 +17,7 @@
 #include "tink/signature/composite_ml_dsa_private_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -32,7 +33,6 @@
 #include "tink/signature/internal/testing/composite_ml_dsa_test_util.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -63,7 +63,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
@@ -71,7 +71,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
@@ -79,7 +79,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
@@ -103,7 +103,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
@@ -111,7 +111,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-                    CompositeMlDsaParameters::Variant::kNoPrefix, absl::nullopt,
+                    CompositeMlDsaParameters::Variant::kNoPrefix, std::nullopt,
                     ""}));
 
 TEST_P(CompositeMlDsaPrivateKeyTest, CreateSucceeds) {
@@ -247,7 +247,8 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentClassicalPrivateKeyNotEqual) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key2 =
       GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/true);
+                                              /*force_random=*/false,
+                                              /*key_index=*/1);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key1 =
       CompositeMlDsaPrivateKey::Create(

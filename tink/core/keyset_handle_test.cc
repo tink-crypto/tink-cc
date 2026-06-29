@@ -817,8 +817,9 @@ TEST_F(KeysetHandleTest, GenerateNewInvalidKeyTemplateFails) {
   EXPECT_THAT(handle_result, StatusIs(absl::StatusCode::kNotFound));
 }
 
-using KeysetHandlePrefixTest =
-    TestWithParam<XChaCha20Poly1305Parameters::Variant>;
+class KeysetHandlePrefixTest : public KeysetHandleTest,
+                               public ::testing::WithParamInterface<
+                                   XChaCha20Poly1305Parameters::Variant> {};
 
 INSTANTIATE_TEST_SUITE_P(
     KeysetHandlePrefixTestSuite, KeysetHandlePrefixTest,
@@ -842,8 +843,10 @@ TEST_P(KeysetHandlePrefixTest, GenerateNewFromParametersWorks) {
   EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
 }
 
-TEST(KeysetHandleGenerateNewFromParametersTest,
-     GenerateNewFromParametersEmptyKeyGenConfigFails) {
+class KeysetHandleGenerateNewFromParametersTest : public KeysetHandleTest {};
+
+TEST_F(KeysetHandleGenerateNewFromParametersTest,
+       GenerateNewFromParametersEmptyKeyGenConfigFails) {
   Registry::Reset();
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
@@ -857,8 +860,8 @@ TEST(KeysetHandleGenerateNewFromParametersTest,
       StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST(KeysetHandleGenerateNewFromParametersTest,
-     GenerateNewFromAbstractParametersWorks) {
+TEST_F(KeysetHandleGenerateNewFromParametersTest,
+       GenerateNewFromAbstractParametersWorks) {
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
@@ -879,8 +882,8 @@ TEST(KeysetHandleGenerateNewFromParametersTest,
   EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
 }
 
-TEST(KeysetHandleGenerateNewFromParametersTest,
-     GenerateNewFromParametersWithAnnotations) {
+TEST_F(KeysetHandleGenerateNewFromParametersTest,
+       GenerateNewFromParametersWithAnnotations) {
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}};
 
@@ -929,8 +932,8 @@ TEST(KeysetHandleGenerateNewFromParametersTest,
   Registry::Reset();
 }
 
-TEST(KeysetHandleGenerateNewFromParametersTest,
-     GenerateNewFromParametersWithGlobalRegistryConfigFails) {
+TEST_F(KeysetHandleGenerateNewFromParametersTest,
+       GenerateNewFromParametersWithGlobalRegistryConfigFails) {
   Registry::Reset();
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(

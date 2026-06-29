@@ -1833,7 +1833,7 @@ TEST(SignaturePemKeysetReaderTest, BuildKeysetHandleSuccess) {
 
   absl::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
       *expected_parameters, expected_public_point,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
   // Check that the handle has the expected key.

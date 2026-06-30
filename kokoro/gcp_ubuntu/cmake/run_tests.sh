@@ -51,6 +51,7 @@ readonly CONTAINER_IMAGE
 
 if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
+  RUN_COMMAND_ARGS+=( -m "type=bind,src=/tmp,dst=/tmp" )
 fi
 
 EXTRA_CMAKE_ARGS=()
@@ -59,58 +60,45 @@ EXTRA_CMAKE_ARGS=()
 mkdir -p out
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
-  readonly REMOTE_CACHE_URL="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"
+  source kokoro/testutils/ccache_enable.sh "${TINK_CC_CMAKE_IMAGE_HASH}"
 
-  set -x
-  # Activate the service account for the remote cache.
-  gcloud auth activate-service-account \
-    --key-file="${TINK_REMOTE_CACHE_SERVICE_KEY}"
-  gcloud config set project tink-test-infrastructure
-
-  # Try to use the config cache.
-  if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"; then
-    echo "Using config cache: ${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"
-    gcloud storage cat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" \
-      | tar -C out -xzf - --strip-components=1
+  # Try to use the config cache only if the remote cache was successfully enabled.
+  if [[ -n "${REMOTE_CACHE_URL:-}" ]]; then
+    if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" &> /dev/null; then
+      echo "Using config cache: ${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"
+      gcloud storage cat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" \
+        | tar -C out -xzf - --strip-components=1
+    fi
   fi
-
-  # Try to use the ccache.
-  if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/ccache/ccache.tgz"; then
-    echo "Using ccache: ${REMOTE_CACHE_URL}/ccache/ccache.tgz"
-    mkdir -p ccache
-    gcloud storage cat "${REMOTE_CACHE_URL}/ccache/ccache.tgz" \
-      | tar -C ccache -xzf - --strip-components=1
-    # Tell CMake to use CCache.
-    EXTRA_CMAKE_ARGS+=( -DCMAKE_CXX_COMPILER_LAUNCHER=ccache )
-  fi
-  set +x
 fi
 readonly EXTRA_CMAKE_ARGS
 
-cat <<EOF > _build_and_test_tink.sh
-#!/bin/bash
+# Construct the command to be executed inside the Docker container (or on the host).
+# This command:
+# 1. Sets up the ccache environment variables.
+# 2. Runs the main Tink C++ CMake tests.
+# 3. Runs the examples CMake tests.
+# Both test suites are run in the same container instance to preserve the ccache
+# environment and avoid the overhead of starting a second container.
+cat << EOF > /tmp/do_run_test.sh
 set -euo pipefail
-
-# TODO: b/369963540 - Remove this once the Docker image is updated.
-apt install ccache
-
-set -x
-
 export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_READONLY=1
-
+set -x
 if [[ -d out ]]; then
-  ./kokoro/testutils/run_cmake_tests.sh -o out . ${EXTRA_CMAKE_ARGS[@]}
+  ./kokoro/testutils/run_cmake_tests.sh -o out . ${EXTRA_CMAKE_ARGS[@]@Q}
 else
-  ./kokoro/testutils/run_cmake_tests.sh . ${EXTRA_CMAKE_ARGS[@]}
+  ./kokoro/testutils/run_cmake_tests.sh . ${EXTRA_CMAKE_ARGS[@]@Q}
 fi
+./kokoro/testutils/run_cmake_tests.sh examples
 EOF
 
-chmod +x _build_and_test_tink.sh
-
 readonly RUN_COMMAND_ARGS
-./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./_build_and_test_tink.sh
+if [[ -z "${CONTAINER_IMAGE:-}" ]]; then
+  echo "Running command on the host"
+  time bash /tmp/do_run_test.sh
+else
+  ./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
+    bash /tmp/do_run_test.sh
+fi
 
-./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_cmake_tests.sh "examples"

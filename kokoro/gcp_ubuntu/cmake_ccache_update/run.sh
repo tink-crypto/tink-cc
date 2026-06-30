@@ -46,6 +46,7 @@ readonly CONTAINER_IMAGE
 
 if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
+  RUN_COMMAND_ARGS+=( -m "type=bind,src=/tmp,dst=/tmp" )
 fi
 
 readonly CONFIG_CACHE_DIR="config_cache"
@@ -57,14 +58,6 @@ mkdir -p ccache
 # Output folder for caching the CMake config.
 mkdir -p config_cache
 
-cat <<'EOF' > _run.sh
-#!/bin/bash
-set -euo pipefail
-
-# TODO: b/369963540 - Remove this once the Docker image is updated.
-apt install ccache
-
-export CCACHE_DIR="$(pwd)/ccache"
 readonly CMAKE_OPTS=(
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
   -DCMAKE_CXX_STANDARD=17
@@ -72,21 +65,32 @@ readonly CMAKE_OPTS=(
   -DTINK_BUILD_TESTS=ON
 )
 
+# Construct the command to build Tink and update the ccache.
+# This command:
+# 1. Configures CCACHE_DIR.
+# 2. Configures and builds Tink with CMake, populating the local ccache directory.
+# 3. Tars the ccache directory and the CMake config cache for uploading to GCS.
+cat << EOF > /tmp/do_run_test.sh
+set -euo pipefail
+export CCACHE_DIR="\$(pwd)/ccache"
 set -x
-rm -rf out && mkdir -p out
-cmake -S . -B out "${CMAKE_OPTS[@]}"
-
-# Create the config cache.
+rm -rf out
+mkdir -p out
+cmake -S . -B out ${CMAKE_OPTS[@]@Q}
 tar -C . -czf config_cache/config_cache.tgz out
-
-# Build and create the ccache TAR.
-cmake --build out --parallel "$(nproc)"
+cmake --build out --parallel \$(nproc)
 tar -C . -czf ccache.tgz ccache
 EOF
 
-chmod +x _run.sh
 
-./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" ./_run.sh
+if [[ -z "${CONTAINER_IMAGE:-}" ]]; then
+  echo "Running command on the host"
+  time bash /tmp/do_run_test.sh
+else
+  ./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
+    bash /tmp/do_run_test.sh
+fi
+
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
   readonly REMOTE_CACHE_URL="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"

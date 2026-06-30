@@ -34,11 +34,13 @@ echo "==========================================================================
 
 set -euo pipefail
 
+EXTRA_CMAKE_ARGS=()
 RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
   source kokoro/testutils/cc_test_container_images.sh
+  source kokoro/testutils/ccache_enable.sh "${TINK_CC_CMAKE_AND_OPENSSL_3_IMAGE_HASH}"
   CONTAINER_IMAGE="${TINK_CC_CMAKE_AND_OPENSSL_3_IMAGE}"
   RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
 fi
@@ -46,10 +48,30 @@ readonly CONTAINER_IMAGE
 
 if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
+  RUN_COMMAND_ARGS+=( -m "type=bind,src=/tmp,dst=/tmp" )
 fi
 
-./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON
+# Construct the command to be executed inside the Docker container (or on the host).
+# This command:
+# 1. Sets up the ccache environment variables.
+# 2. Runs the main Tink C++ CMake tests with OpenSSL 3.
+# 3. Runs the examples CMake tests with OpenSSL 3.
+# Both test suites are run in the same container instance to preserve the ccache
+# environment and avoid the overhead of starting a second container.
+cat << EOF > /tmp/do_run_test.sh
+set -euo pipefail
+export CCACHE_DIR="\$(pwd)/ccache"
+export CCACHE_READONLY=1
+./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+./kokoro/testutils/run_cmake_tests.sh examples -DTINK_USE_SYSTEM_OPENSSL=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+EOF
 
-./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_USE_SYSTEM_OPENSSL=ON
+readonly RUN_COMMAND_ARGS
+if [[ -z "${CONTAINER_IMAGE:-}" ]]; then
+  echo "Running command on the host"
+  time bash /tmp/do_run_test.sh
+else
+  ./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
+    bash /tmp/do_run_test.sh
+fi
+

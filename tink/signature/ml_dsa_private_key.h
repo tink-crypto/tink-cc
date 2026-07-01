@@ -21,9 +21,11 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
+#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
 
@@ -48,6 +50,15 @@ class MlDsaPrivateKey final : public SignaturePrivateKey {
   static absl::StatusOr<MlDsaPrivateKey> Create(
       const MlDsaPublicKey& public_key,
       const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
+
+  // Creates a new ML-DSA private key from `private_seed_bytes` and
+  // `parameters`.
+  //
+  // This function unconditionally returns an error in non-BoringSSL builds.
+  static absl::StatusOr<MlDsaPrivateKey> Create(
+      const MlDsaParameters& parameters,
+      const RestrictedData& private_seed_bytes,
+      absl::optional<int> id_requirement, PartialKeyAccessToken token);
 
   // Returns the seed that was used to generate the private key.
   //
@@ -99,6 +110,27 @@ class MlDsaPrivateKey final : public SignaturePrivateKey {
   static absl::StatusOr<MlDsaPrivateKey> Create87(
       const MlDsaPublicKey& public_key,
       const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
+
+  // Creates a new ML-DSA-44 private key from `private_seed_bytes` and
+  // `parameters`.
+  static absl::StatusOr<MlDsaPrivateKey> Create44(
+      const MlDsaParameters& parameters,
+      const RestrictedData& private_seed_bytes,
+      absl::optional<int> id_requirement, PartialKeyAccessToken token);
+
+  // Creates a new ML-DSA-65 private key from `private_seed_bytes` and
+  // `parameters`.
+  static absl::StatusOr<MlDsaPrivateKey> Create65(
+      const MlDsaParameters& parameters,
+      const RestrictedData& private_seed_bytes,
+      absl::optional<int> id_requirement, PartialKeyAccessToken token);
+
+  // Creates a new ML-DSA-87 private key from `private_seed_bytes` and
+  // `parameters`.
+  static absl::StatusOr<MlDsaPrivateKey> Create87(
+      const MlDsaParameters& parameters,
+      const RestrictedData& private_seed_bytes,
+      absl::optional<int> id_requirement, PartialKeyAccessToken token);
 
   MlDsaPublicKey public_key_;
   RestrictedData private_seed_bytes_;

@@ -1739,6 +1739,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
+    absl::optional
     crypto
     tink::core::insecure_secret_key_access
     tink::core::key

@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 // Every header in BoringSSL includes base.h, which in turn defines
 // OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
 // "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
@@ -68,6 +69,38 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
       return MlDsaPrivateKey::Create65(public_key, private_seed_bytes, token);
     case MlDsaParameters::Instance::kMlDsa87:
       return MlDsaPrivateKey::Create87(public_key, private_seed_bytes, token);
+    default:
+      return absl::InvalidArgumentError(
+          "Invalid ML-DSA instance. Only ML-DSA-44, ML-DSA-65 and "
+          "ML-DSA-87 are currently supported.");
+  }
+#endif
+}
+
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
+    const MlDsaParameters& parameters,
+    const RestrictedData& private_seed_bytes,
+    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in BoringSSL builds.");
+#else
+  if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Invalid ML-DSA private seed size. The seed must be ",
+                     MLDSA_SEED_BYTES, " bytes."));
+  }
+
+  switch (parameters.GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa44:
+      return MlDsaPrivateKey::Create44(parameters, private_seed_bytes,
+                                       id_requirement, token);
+    case MlDsaParameters::Instance::kMlDsa65:
+      return MlDsaPrivateKey::Create65(parameters, private_seed_bytes,
+                                       id_requirement, token);
+    case MlDsaParameters::Instance::kMlDsa87:
+      return MlDsaPrivateKey::Create87(parameters, private_seed_bytes,
+                                       id_requirement, token);
     default:
       return absl::InvalidArgumentError(
           "Invalid ML-DSA instance. Only ML-DSA-44, ML-DSA-65 and "
@@ -301,6 +334,231 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
   }
 
   return MlDsaPrivateKey(public_key, private_seed_bytes);
+#endif
+}
+
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
+    const MlDsaParameters& parameters,
+    const RestrictedData& private_seed_bytes,
+    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in BoringSSL builds.");
+#else
+  util::SecretUniquePtr<MLDSA44_private_key> boringssl_private_key =
+      util::MakeSecretUniquePtr<MLDSA44_private_key>();
+  absl::Status status = internal::CallWithCoreDumpProtection([&]() {
+    if (!MLDSA44_private_key_from_seed(
+            boringssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(
+                private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+                    .data()),
+            private_seed_bytes.size())) {
+      return absl::InternalError(
+          "Failed to create ML-DSA private key from seed.");
+    }
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  auto boringssl_public_key = std::make_unique<MLDSA44_public_key>();
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(boringssl_public_key.get(),
+                                                   sizeof(MLDSA44_public_key));
+    if (!MLDSA44_public_from_private(boringssl_public_key.get(),
+                                     boringssl_private_key.get())) {
+      return absl::InternalError(
+          "Failed to get ML-DSA public key from private key.");
+    }
+    internal::DfsanClearLabel(boringssl_public_key.get(),
+                              sizeof(MLDSA44_public_key));
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  CBB cbb;
+  size_t size;
+  std::string public_key_bytes;
+  public_key_bytes.resize(MLDSA44_PUBLIC_KEY_BYTES);
+
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
+                                                   MLDSA44_PUBLIC_KEY_BYTES);
+    if (!CBB_init_fixed(&cbb,
+                        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                        MLDSA44_PUBLIC_KEY_BYTES) ||
+        !MLDSA44_marshal_public_key(&cbb, boringssl_public_key.get()) ||
+        !CBB_finish(&cbb, nullptr, &size) || size != MLDSA44_PUBLIC_KEY_BYTES) {
+      return absl::InternalError("Failed to serialize ML-DSA public key.");
+    }
+    internal::DfsanClearLabel(&public_key_bytes[0], MLDSA44_PUBLIC_KEY_BYTES);
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+      parameters, public_key_bytes, id_requirement, token);
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return MlDsaPrivateKey(*public_key, private_seed_bytes);
+#endif
+}
+
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
+    const MlDsaParameters& parameters,
+    const RestrictedData& private_seed_bytes,
+    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in BoringSSL builds.");
+#else
+  util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key =
+      util::MakeSecretUniquePtr<MLDSA65_private_key>();
+  absl::Status status = internal::CallWithCoreDumpProtection([&]() {
+    if (!MLDSA65_private_key_from_seed(
+            boringssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(
+                private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+                    .data()),
+            private_seed_bytes.size())) {
+      return absl::InternalError(
+          "Failed to create ML-DSA private key from seed.");
+    }
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(boringssl_public_key.get(),
+                                                   sizeof(MLDSA65_public_key));
+    if (!MLDSA65_public_from_private(boringssl_public_key.get(),
+                                     boringssl_private_key.get())) {
+      return absl::InternalError(
+          "Failed to get ML-DSA public key from private key.");
+    }
+    internal::DfsanClearLabel(boringssl_public_key.get(),
+                              sizeof(MLDSA65_public_key));
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  CBB cbb;
+  size_t size;
+  std::string public_key_bytes;
+  public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
+
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
+                                                   MLDSA65_PUBLIC_KEY_BYTES);
+    if (!CBB_init_fixed(&cbb,
+                        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                        MLDSA65_PUBLIC_KEY_BYTES) ||
+        !MLDSA65_marshal_public_key(&cbb, boringssl_public_key.get()) ||
+        !CBB_finish(&cbb, nullptr, &size) || size != MLDSA65_PUBLIC_KEY_BYTES) {
+      return absl::InternalError("Failed to serialize ML-DSA public key.");
+    }
+    internal::DfsanClearLabel(&public_key_bytes[0], MLDSA65_PUBLIC_KEY_BYTES);
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+      parameters, public_key_bytes, id_requirement, token);
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return MlDsaPrivateKey(*public_key, private_seed_bytes);
+#endif
+}
+
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
+    const MlDsaParameters& parameters,
+    const RestrictedData& private_seed_bytes,
+    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in BoringSSL builds.");
+#else
+  util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key =
+      util::MakeSecretUniquePtr<MLDSA87_private_key>();
+  absl::Status status = internal::CallWithCoreDumpProtection([&]() {
+    if (!MLDSA87_private_key_from_seed(
+            boringssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(
+                private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+                    .data()),
+            private_seed_bytes.size())) {
+      return absl::InternalError(
+          "Failed to create ML-DSA private key from seed.");
+    }
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  auto boringssl_public_key = std::make_unique<MLDSA87_public_key>();
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(boringssl_public_key.get(),
+                                                   sizeof(MLDSA87_public_key));
+    if (!MLDSA87_public_from_private(boringssl_public_key.get(),
+                                     boringssl_private_key.get())) {
+      return absl::InternalError(
+          "Failed to get ML-DSA public key from private key.");
+    }
+    internal::DfsanClearLabel(boringssl_public_key.get(),
+                              sizeof(MLDSA87_public_key));
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  CBB cbb;
+  size_t size;
+  std::string public_key_bytes;
+  public_key_bytes.resize(MLDSA87_PUBLIC_KEY_BYTES);
+
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
+                                                   MLDSA87_PUBLIC_KEY_BYTES);
+    if (!CBB_init_fixed(&cbb,
+                        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                        MLDSA87_PUBLIC_KEY_BYTES) ||
+        !MLDSA87_marshal_public_key(&cbb, boringssl_public_key.get()) ||
+        !CBB_finish(&cbb, nullptr, &size) || size != MLDSA87_PUBLIC_KEY_BYTES) {
+      return absl::InternalError("Failed to serialize ML-DSA public key.");
+    }
+    internal::DfsanClearLabel(&public_key_bytes[0], MLDSA87_PUBLIC_KEY_BYTES);
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+      parameters, public_key_bytes, id_requirement, token);
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return MlDsaPrivateKey(*public_key, private_seed_bytes);
 #endif
 }
 

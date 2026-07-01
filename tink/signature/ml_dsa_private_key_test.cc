@@ -169,6 +169,102 @@ TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
               Eq(key_pair->private_seed_bytes));
 }
 
+TEST_P(MlDsaPrivateKeyTest, CreateFromSeedSucceeds) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> private_key =
+      MlDsaPrivateKey::Create(
+          *parameters, key_pair->private_seed_bytes, test_case.id_requirement,
+          GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<MlDsaPublicKey> expected_public_key =
+      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             test_case.id_requirement, GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
+  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
+  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
+              Eq(key_pair->private_seed_bytes));
+}
+
+TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
+  ASSERT_THAT(key_pair, IsOk());
+
+  RestrictedData private_seed_bytes = RestrictedData(
+      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+          .substr(MLDSA_SEED_BYTES - 1),
+      InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
+                              test_case.id_requirement,
+                              GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr(absl::StrCat(
+                   "Invalid ML-DSA private seed size. The seed must be ",
+                   MLDSA_SEED_BYTES, " bytes."))));
+
+  std::string longer_private_seed_bytes(
+      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
+  longer_private_seed_bytes.push_back(0);
+  private_seed_bytes = RestrictedData(longer_private_seed_bytes,
+                                      InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
+                              test_case.id_requirement,
+                              GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr(absl::StrCat(
+                   "Invalid ML-DSA private seed size. The seed must be ",
+                   MLDSA_SEED_BYTES, " bytes."))));
+}
+
+TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithMismatchedIdRequirementFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
+  ASSERT_THAT(key_pair, IsOk());
+
+  if (parameters->HasIdRequirement()) {
+    EXPECT_THAT(
+        MlDsaPrivateKey::Create(
+            *parameters, key_pair->private_seed_bytes,
+            /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  } else {
+    EXPECT_THAT(
+        MlDsaPrivateKey::Create(
+            *parameters, key_pair->private_seed_bytes,
+            /*id_requirement=*/123, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
 TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   TestCase test_case = GetParam();
 

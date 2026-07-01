@@ -104,8 +104,8 @@ endif()
 if (NOT TINK_USE_INSTALLED_ABSEIL)
   http_archive(
     NAME abseil
-    URL https://github.com/abseil/abseil-cpp/releases/download/20260107.0/abseil-cpp-20260107.0.tar.gz
-    SHA256 4c124408da902be896a2f368042729655709db5e3004ec99f57e3e14439bc1b2
+    URL https://github.com/abseil/abseil-cpp/releases/download/20250814.1/abseil-cpp-20250814.1.tar.gz
+    SHA256 1692f77d1739bacf3f94337188b78583cf09bab7e420d2dc6c5605a4f86785a1
   )
 else()
   # This is everything that needs to be done here. Abseil already defines its

@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 // Every header in BoringSSL includes base.h, which in turn defines
 // OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
 // "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
@@ -100,6 +101,8 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   if (!public_from_private_func.ok()) {
     return public_from_private_func.status();
   }
+  PublicFromPrivateFunc public_from_private_function =
+      *public_from_private_func;
 
   // Confirm that the private key and public key are a valid SLH-DSA key pair.
   std::string public_key_bytes_regen;
@@ -109,7 +112,7 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes_regen[0],
                                                    public_key_size);
 
-    (*public_from_private_func)(
+    public_from_private_function(
         reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
         reinterpret_cast<const uint8_t*>(
             private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())
@@ -127,6 +130,68 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   }
 
   return SlhDsaPrivateKey(public_key, private_key_bytes);
+#endif
+}
+
+absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
+    const SlhDsaParameters& parameters,
+    const RestrictedData& private_key_bytes,
+    absl::optional<int> id_requirement, PartialKeyAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "SLH-DSA is only supported in BoringSSL builds.");
+#else
+  // Only 64-byte, 96-byte and 128-byte private keys are supported.
+  if (private_key_bytes.size() != 64 && private_key_bytes.size() != 96 &&
+      private_key_bytes.size() != 128) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "SLH-DSA private key length must be 64, 96, or 128 bytes.");
+  }
+
+  if (parameters.GetPrivateKeySizeInBytes() != private_key_bytes.size()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Private key size does not match parameters");
+  }
+
+  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
+      internal::GetSlhDsaParameterSet(parameters);
+  if (!parameter_set.ok()) {
+    return parameter_set.status();
+  }
+
+  int public_key_size = parameter_set->GetPublicKeySizeInBytes();
+
+  absl::StatusOr<PublicFromPrivateFunc> public_from_private_func =
+      GetPublicFromPrivateFunc(*parameter_set);
+  if (!public_from_private_func.ok()) {
+    return public_from_private_func.status();
+  }
+  PublicFromPrivateFunc public_from_private_function =
+      *public_from_private_func;
+
+  std::string public_key_bytes;
+  public_key_bytes.resize(public_key_size);
+
+  internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
+                                                   public_key_size);
+
+    public_from_private_function(
+        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+        reinterpret_cast<const uint8_t*>(
+            private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+                .data()));
+    internal::DfsanClearLabel(&public_key_bytes[0], public_key_size);
+  });
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      parameters, public_key_bytes, id_requirement, token);
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return SlhDsaPrivateKey(*public_key, private_key_bytes);
 #endif
 }
 

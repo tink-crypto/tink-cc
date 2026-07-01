@@ -149,6 +149,88 @@ TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
               Eq(key_pair.private_key_bytes));
 }
 
+TEST_P(SlhDsaPrivateKeyTest, CreateFromParametersSucceeds) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  KeyPair key_pair =
+      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
+                      test_case.public_key_size_in_bytes);
+
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+      *parameters, key_pair.private_key_bytes, test_case.id_requirement,
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<SlhDsaPublicKey> expected_public_key =
+      SlhDsaPublicKey::Create(*parameters, key_pair.public_key_bytes,
+                              test_case.id_requirement,
+                              GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
+  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
+  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+              Eq(key_pair.private_key_bytes));
+}
+
+TEST(SlhDsaPrivateKeyTest,
+     CreateFromParametersWithInvalidPrivateKeyLengthFails) {
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData restricted_private_key_bytes = RestrictedData(
+      subtle::Random::GetRandomBytes(63), InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      SlhDsaPrivateKey::Create(*parameters, restricted_private_key_bytes,
+                               /*id_requirement=*/123, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("SLH-DSA private key length must be "
+                         "64, 96, or 128 bytes.")));
+}
+
+TEST_P(SlhDsaPrivateKeyTest,
+       CreateFromParametersWithMismatchedIdRequirementFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  KeyPair key_pair =
+      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
+                      test_case.public_key_size_in_bytes);
+
+  if (parameters->HasIdRequirement()) {
+    EXPECT_THAT(
+        SlhDsaPrivateKey::Create(
+            *parameters, key_pair.private_key_bytes,
+            /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  } else {
+    EXPECT_THAT(
+        SlhDsaPrivateKey::Create(
+            *parameters, key_pair.private_key_bytes,
+            /*id_requirement=*/123, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
+
 TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,

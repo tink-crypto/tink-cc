@@ -1859,10 +1859,12 @@ tink_cc_library(
     slh_dsa_private_key.h
   DEPS
     tink::signature::signature_private_key
+    tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_public_key
     absl::status
     absl::statusor
     absl::string_view
+    absl::optional
     crypto
     tink::core::insecure_secret_key_access
     tink::core::key

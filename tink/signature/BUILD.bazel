@@ -968,6 +968,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":signature_private_key",
+        ":slh_dsa_parameters",
         ":slh_dsa_public_key",
         "//tink:insecure_secret_key_access",
         "//tink:key",
@@ -979,6 +980,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
     ],
 )

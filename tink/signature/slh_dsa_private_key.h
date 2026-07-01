@@ -20,10 +20,12 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
+#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/signature_private_key.h"
+#include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_public_key.h"
 
 namespace crypto {
@@ -45,6 +47,15 @@ class SlhDsaPrivateKey final : public SignaturePrivateKey {
   static absl::StatusOr<SlhDsaPrivateKey> Create(
       const SlhDsaPublicKey& public_key,
       const RestrictedData& private_key_bytes, PartialKeyAccessToken token);
+
+  // Creates a new SLH-DSA private key from `private_key_bytes` and
+  // `parameters`.
+  //
+  // This function unconditionally returns an error in non-BoringSSL builds.
+  static absl::StatusOr<SlhDsaPrivateKey> Create(
+      const SlhDsaParameters& parameters,
+      const RestrictedData& private_key_bytes,
+      absl::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateKeyBytes(PartialKeyAccessToken token) const {
     return private_key_bytes_;

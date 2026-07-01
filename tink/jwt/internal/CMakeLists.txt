@@ -1116,7 +1116,9 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pss_proto_serialization_impl
     gmock
+    absl::no_destructor
     absl::absl_check
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1131,19 +1133,17 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::internal::bn_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
-    tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
     tink::internal::testing::field_with_number
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key
-    tink::util::test_matchers
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
 )

@@ -1171,19 +1171,13 @@ tink_cc_library(
     ml_dsa_key_creator.h
   DEPS
     absl::memory
-    absl::status
     absl::statusor
-    absl::string_view
     absl::optional
     crypto
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::internal_insecure_secret_key_access
-    tink::internal::secret_buffer
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-    tink::signature::ml_dsa_public_key
-    tink::util::secret_data
 )
 
 tink_cc_test(

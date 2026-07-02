@@ -17,12 +17,14 @@
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/absl_check.h"
+#include "absl/base/no_destructor.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -30,6 +32,7 @@
 #include "absl/types/optional.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -37,21 +40,17 @@
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 
@@ -71,6 +70,24 @@ using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
+struct KeyValues {
+  std::string n;
+  std::string e;
+  std::string p;
+  std::string q;
+  std::string dp;
+  std::string dq;
+  std::string d;
+  std::string q_inv;
+};
+
+const absl::NoDestructor<KeyValues> kKeyValues([]() {
+  const jwt_internal::RsaSsaTestVector& vector =
+      jwt_internal::GetRsa2048BitVector2();
+  return KeyValues{vector.n,  vector.e,  vector.p, vector.q,
+                   vector.dp, vector.dq, vector.d, vector.q_inv};
+}());
+
 struct TestCase {
   JwtRsaSsaPkcs1Parameters::KidStrategy strategy;
   // Helper member for parsing/serializing parameters with custom kid strategy.
@@ -78,7 +95,7 @@ struct TestCase {
   OutputPrefixTypeTP output_prefix_type;
   JwtRsaSsaPkcs1Parameters::Algorithm algorithm;
   JwtRsaSsaPkcs1Algorithm proto_algorithm;
-  int modulus_size_in_bits;
+  KeyValues key_values;
   absl::optional<std::string> kid;
   absl::optional<int> id;
 };
@@ -125,7 +142,7 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kTink,
                     JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
                     JwtRsaSsaPkcs1Algorithm::RS256,
-                    /*modulus_size_in_bits=*/2048,
+                    /*key_values=*/*kKeyValues,
                     /*kid=*/"AgMEAA", /*id=*/0x02030400},
            TestCase{
                /*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
@@ -134,7 +151,7 @@ INSTANTIATE_TEST_SUITE_P(
                OutputPrefixTypeTP::kRaw,
                JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
                JwtRsaSsaPkcs1Algorithm::RS384,
-               /*modulus_size_in_bits=*/2048,
+               /*key_values=*/*kKeyValues,
                /*kid=*/std::nullopt,
                /*id=*/std::nullopt},
            TestCase{/*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
@@ -143,7 +160,7 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kRaw,
                     JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
                     JwtRsaSsaPkcs1Algorithm::RS512,
-                    /*modulus_size_in_bits=*/2048,
+                    /*key_values=*/*kKeyValues,
                     /*kid=*/"custom_kid",
                     /*id=*/std::nullopt}));
 
@@ -157,7 +174,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   JwtRsaSsaPkcs1KeyFormat key_format_proto;
   key_format_proto.set_version(0);
-  key_format_proto.set_modulus_size_in_bits(test_case.modulus_size_in_bits);
+  key_format_proto.set_modulus_size_in_bits(kModulusSizeInBits);
   key_format_proto.set_public_exponent(kF4Str);
   key_format_proto.set_algorithm(test_case.proto_algorithm);
 
@@ -176,7 +193,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   absl::StatusOr<const JwtRsaSsaPkcs1Parameters> expected_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(kF4Str))
           .SetKidStrategy(test_case.expected_parameters_strategy)
           .Build();
@@ -195,7 +212,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   JwtRsaSsaPkcs1KeyFormat key_format_proto;
   key_format_proto.set_version(0);
-  key_format_proto.set_modulus_size_in_bits(test_case.modulus_size_in_bits);
+  key_format_proto.set_modulus_size_in_bits(kModulusSizeInBits);
   key_format_proto.set_public_exponent(kF4Str);
   key_format_proto.set_algorithm(test_case.proto_algorithm);
 
@@ -214,7 +231,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   absl::StatusOr<const JwtRsaSsaPkcs1Parameters> expected_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(kF4Str))
           .SetKidStrategy(test_case.expected_parameters_strategy)
           .Build();
@@ -338,7 +355,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.expected_parameters_strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(kF4Str))
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -361,8 +378,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
   EXPECT_THAT(key_format.algorithm(), Eq(test_case.proto_algorithm));
-  EXPECT_THAT(key_format.modulus_size_in_bits(),
-              Eq(test_case.modulus_size_in_bits));
+  EXPECT_THAT(key_format.modulus_size_in_bits(), Eq(kModulusSizeInBits));
   EXPECT_THAT(key_format.public_exponent(), Eq(kF4Str));
 }
 
@@ -379,7 +395,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.expected_parameters_strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(kF4Str))
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -402,8 +418,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
   EXPECT_THAT(key_format.algorithm(), Eq(test_case.proto_algorithm));
-  EXPECT_THAT(key_format.modulus_size_in_bits(),
-              Eq(test_case.modulus_size_in_bits));
+  EXPECT_THAT(key_format.modulus_size_in_bits(), Eq(kModulusSizeInBits));
   EXPECT_THAT(key_format.public_exponent(), Eq(kF4Str));
 }
 
@@ -432,65 +447,6 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
                          "JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom")));
 }
 
-struct KeyValues {
-  std::string n;
-  std::string e;
-  std::string p;
-  std::string q;
-  std::string dp;
-  std::string dq;
-  std::string d;
-  std::string q_inv;
-};
-
-KeyValues GenerateKeyValues(int modulus_size_in_bits) {
-  SslUniquePtr<RSA> rsa(RSA_new());
-  ABSL_CHECK_NE(rsa.get(), nullptr);
-
-  // Set public exponent to 65537.
-  SslUniquePtr<BIGNUM> e(BN_new());
-  ABSL_CHECK_NE(e.get(), nullptr);
-  BN_set_word(e.get(), 65537);
-
-  // Generate an RSA key pair and get the values.
-  ABSL_CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
-                                 /*cb=*/nullptr));
-
-  const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dp_bn, *dq_bn, *q_inv_bn;
-
-  RSA_get0_key(rsa.get(), &n_bn, &e_bn, &d_bn);
-
-  absl::StatusOr<std::string> n_str = BignumToString(n_bn, BN_num_bytes(n_bn));
-  ABSL_CHECK_OK(n_str);
-  absl::StatusOr<std::string> e_str = BignumToString(e_bn, BN_num_bytes(e_bn));
-  ABSL_CHECK_OK(e_str);
-  absl::StatusOr<std::string> d_str =
-      BignumToString(d_bn, (modulus_size_in_bits + 7) / 8);
-  ABSL_CHECK_OK(d_str);
-
-  RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
-
-  absl::StatusOr<std::string> p_str = BignumToString(p_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(p_str);
-  absl::StatusOr<std::string> q_str = BignumToString(q_bn, BN_num_bytes(q_bn));
-  ABSL_CHECK_OK(q_str);
-
-  RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
-
-  absl::StatusOr<std::string> dp_str =
-      BignumToString(dp_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(dp_str);
-  absl::StatusOr<std::string> dq_str =
-      BignumToString(dq_bn, BN_num_bytes(q_bn));
-  ABSL_CHECK_OK(dq_str);
-  absl::StatusOr<std::string> q_inv_str =
-      BignumToString(q_inv_bn, BN_num_bytes(p_bn));
-  ABSL_CHECK_OK(q_inv_str);
-
-  return KeyValues{*n_str,  *e_str,  *p_str, *q_str,
-                   *dp_str, *dq_str, *d_str, *q_inv_str};
-}
-
 TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
        ParsePublicKeySucceedsWithMutableRegistry) {
   TestCase test_case = GetParam();
@@ -499,7 +455,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(0);
@@ -529,7 +485,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
@@ -560,7 +516,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(0);
@@ -590,7 +546,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
@@ -641,7 +597,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(1);
   key_proto.set_algorithm(JwtRsaSsaPkcs1Algorithm::RS256);
@@ -670,7 +626,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(1);
   key_proto.set_algorithm(JwtRsaSsaPkcs1Algorithm::RS256);
@@ -764,13 +720,13 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       IsOk());
 
   TestCase test_case = GetParam();
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -830,13 +786,13 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   SerializationRegistry registry = std::move(builder).Build();
 
   TestCase test_case = GetParam();
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -895,7 +851,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -936,7 +892,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
@@ -986,7 +942,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1027,7 +983,7 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
@@ -1097,7 +1053,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1139,7 +1095,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(1);  // invalid version number
@@ -1181,7 +1137,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
 
   google::crypto::tink::JwtRsaSsaPkcs1PrivateKey private_key_proto;
   private_key_proto.set_version(0);
@@ -1215,7 +1171,7 @@ TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1258,7 +1214,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
 
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1300,13 +1256,13 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -1392,13 +1348,13 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
+  KeyValues key_values = test_case.key_values;
 
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
-          .SetModulusSizeInBits(test_case.modulus_size_in_bits)
+          .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(BigInteger(key_values.e))
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -1482,7 +1438,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
       IsOk());
 
-  KeyValues key_values = GenerateKeyValues(2048);
+  KeyValues key_values = *kKeyValues;
 
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()

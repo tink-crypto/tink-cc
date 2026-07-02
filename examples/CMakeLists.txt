@@ -31,8 +31,8 @@ else()
 
   FetchContent_Declare(
     googletest
-    URL       https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz
-    URL_HASH  SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
+    URL       https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz
+    URL_HASH  SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
   )
 
   FetchContent_GetProperties(googletest)

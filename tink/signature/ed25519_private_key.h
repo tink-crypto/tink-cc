@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_ED25519_PRIVATE_KEY_H_
 
 #include <memory>
+#include <optional>
 
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -25,7 +26,6 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -44,6 +44,13 @@ class Ed25519PrivateKey final : public SignaturePrivateKey {
   static absl::StatusOr<Ed25519PrivateKey> Create(
       const Ed25519PublicKey& public_key,
       const RestrictedData& private_key_bytes, PartialKeyAccessToken token);
+
+  // Creates a new Ed25519 private key from `private_key_bytes` and
+  // `parameters`.
+  static absl::StatusOr<Ed25519PrivateKey> Create(
+      const Ed25519Parameters& parameters,
+      const RestrictedData& private_key_bytes,
+      std::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateKeyBytes(PartialKeyAccessToken token) const {
     return private_key_bytes_;

@@ -17,6 +17,7 @@
 #include "tink/signature/ed25519_private_key.h"
 
 #include <memory>
+#include <optional>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -52,6 +53,31 @@ absl::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
                         "Invalid public key for private key bytes.");
   }
   return Ed25519PrivateKey(public_key, private_key_bytes);
+}
+
+absl::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
+    const Ed25519Parameters& parameters,
+    const RestrictedData& private_key_bytes,
+    std::optional<int> id_requirement, PartialKeyAccessToken token) {
+  if (private_key_bytes.size() != 32) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Ed25519 private key length must be 32 bytes.");
+  }
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key(
+          private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
+  if (!key_pair.ok()) {
+    return key_pair.status();
+  }
+
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      parameters, (*key_pair)->public_key, id_requirement, token);
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return Ed25519PrivateKey(*public_key, private_key_bytes);
 }
 
 bool Ed25519PrivateKey::operator==(const Key& other) const {

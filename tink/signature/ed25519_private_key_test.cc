@@ -97,6 +97,88 @@ TEST_P(Ed25519PrivateKeyTest, CreateSucceeds) {
               Eq(private_key_bytes));
 }
 
+TEST_P(Ed25519PrivateKeyTest, CreateFromParametersSucceeds) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *parameters, private_key_bytes, test_case.id_requirement,
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> expected_public_key =
+      Ed25519PublicKey::Create(*parameters, (*key_pair)->public_key,
+                               test_case.id_requirement,
+                               GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
+  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
+  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+              Eq(private_key_bytes));
+}
+
+TEST(Ed25519PrivateKeyTest,
+     CreateFromParametersWithInvalidPrivateKeyLengthFails) {
+  absl::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData restricted_private_key_bytes = RestrictedData(
+      subtle::Random::GetRandomBytes(31), InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      Ed25519PrivateKey::Create(*parameters, restricted_private_key_bytes,
+                                /*id_requirement=*/123, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               ::testing::HasSubstr(
+                   "Ed25519 private key length must be 32 bytes.")));
+}
+
+TEST_P(Ed25519PrivateKeyTest,
+       CreateFromParametersWithMismatchedIdRequirementFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  if (parameters->HasIdRequirement()) {
+    EXPECT_THAT(
+        Ed25519PrivateKey::Create(
+            *parameters, private_key_bytes,
+            /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  } else {
+    EXPECT_THAT(
+        Ed25519PrivateKey::Create(
+            *parameters, private_key_bytes,
+            /*id_requirement=*/123, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
 TEST(Ed25519PrivateKeyTest, CreateWithMismatchedPublicKeyFails) {
   absl::StatusOr<Ed25519Parameters> params =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);

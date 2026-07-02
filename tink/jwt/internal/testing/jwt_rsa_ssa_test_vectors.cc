@@ -133,6 +133,62 @@ RsaSsaTestVector CreateVector2() {
           "wBgfp_gh6A5603k2-ZQwVK0JKSHuLFkuQ3U")};
 }
 
+RsaSsaTestVector CreateVector3072() {
+  // From Wycheproof rsa_pkcs1_3072_test.json
+  return RsaSsaTestVector{
+      /*n=*/DecodeOrDie(
+          "ANyPeIBnLwz51jYXqKWL3ScaEJut2g-oJvlLinlVJrakmoBWTMq6ipSRqTWlPt6uHZ"
+          "p7VGPZ4u8-4M57_11LbIFHtcBzwvIgUV1THVWjZoem3jw0d1wvFRkawKdC1zQiKMjZ"
+          "EP5rvKQ5U5xIXevL0O4OS64xdQO4PO6BAKx7tFh0Z8vENzxL2i7t98QWMeUJIrWA9b"
+          "zoHSSyCMq80tdfz-mfdbST3_xcm9mQ9_w78u_jkv7K428-TvRFbBtd6ZzHRRczqRC2"
+          "g0th7CknTZhr43UsNQsToyfavAjfz2VlSZrSboU0RmM-rbKXDKlbz2vwX_28KoBDeN"
+          "dphacfBvkJefn-9xbDaqYlpFte7fUIJaU-nZQ1sjyqueXGTTj9OnZ-GFrXcn1uFfnp"
+          "urL0GE1kh2lduaJpjGcrLoI0ENvvHZP-QMnTV-6fx3-EneETY_WDr4zPUYHKGuuUTE"
+          "IlFstAHpUJI-S9iBQ5-hCTx3WCv-GsWZNnRwC2Q0M54CRTFdhvyw"),
+      /*e=*/std::string("\x01\x00\x01", 3),
+      /*d=*/
+      DecodeOrDie(
+          "BQEgW9F7iNDWYm3Q_siYoP1_aPjd3MMU900WfEBJW5WKh-TtYyAuasaPT09LiOPse"
+          "gfYV1enRYRot2aq2aQPdzN4VUCLKNFA51wuazYE6okHu9f46VeMJACuZF0o4t7vi_c"
+          "Y4pzxL8y5L--YafQ67lvWrcIjhI0WnNbCfCdmZSdm_4GZOz4BWlU97O4P_cFiTzn42"
+          "Wtu1dlQR8FXC1n6LrPWiN1eFKzJQHuAlPGLRpQkTrGtzWVdhz9X_5r25P7EcL4ja68"
+          "7IMIECrNg11nItOYYv4vU4OxmmPG3LHFg7QUhyCtRdrYPtjUD0K4j9uL7emCTBbCvY"
+          "hULkhrFP03omWZssB2wydi2UHUwFcG25oLmvzggTln3QJw4CMDlPyVJNVQKOBqWPCw"
+          "ad8b5h_BqB6BXJobtIogtvILngjzsCApY1ysJ0AzB0kXPFY_0nMQFmdOvcZ3DAbSqf"
+          "1sDYproU-naq-KE24bVxB0EARQ98rRZPvTjdHIJxSP1p_gPAtAR"),
+      /*p=*/
+      DecodeOrDie(
+          "_sahC_xJtYoshQ6v69uZdkmpVXWgwXYxsBHLINejICMqgVua9gQNe_I9Jn5eBjBMM-"
+          "BMhebUgUQvAQqXWLoINkpwA175npyY7rQxUFsq-2d50ckdDqL7CmXcOR557Np9Uv19"
+          "1pkjsl365EjKzoKeusprPIo8tkqBgAYUQ0iVd4wg1imxJbafQpRfZrZE84QLz6b842"
+          "EHQlbFCGPsyiznVrSp-36ZPQ8fpIssxIW36qYUBfvvFQ51Y8IVCBF2feD5"),
+      /*q=*/
+      DecodeOrDie(
+          "3Z7BzubYqXGxZpAsRKTwLvN6YgU7QSiKHYc9OZy8nnvTBu2QZIfaL0m8HBgJwNTYgQ"
+          "bWh5UY7ZJf62aq1f88K4NGbFVO2XuWq-9Vs7AjFPUNA4WgodikauA-j86RtBISDwoQ"
+          "3GgVcPpWS2hzus2Ze2FrK9dzP7cjreI7wQidoy5QlYNDbx40SLV5-yGyQGINIEWNCP"
+          "D5lauswKOY8KtqZ8n1vPfgMvsdZo_mmNgDJ1ma4_3zqqqxm68XY5RDGUvj"),
+      /*dp=*/
+      DecodeOrDie(
+          "8b-0DNVlc5cay162WwzSv0UCIo8s7KWkXDdmEVHL_bCgooIztgD-cn_WunHp8eFeTV"
+          "MmCWCQf-Ac4dYU6iILrMhRJUG3hmN9UfM1X9RCIq97Di7RHZRUtPcWUjSy6KYhiN_z"
+          "ye8hyhwW9wqDNhUHXKK5woZBOY_U9Y_PJlD3Uqpqdgy1hN2WnOyA4ctN_etr8au4Bm"
+          "GJK899wopeozCcis9_A56K9T8mfVF6NzfS3hqcoVj-8XH4vaHppvA7CRKx"),
+      /*dq=*/
+      DecodeOrDie(
+          "Pjwq6NNi3JKU4txx0gUPfd_Z6lTVwwKDZq9nvhoJzeev5y4nclPELatjK_CELKaY9g"
+          "LZk9GG4pBMZ2q5Zsb6Oq3uxNVgAyr1sOrRAljgQS5frTGFXm3cHjdC2leECzFX6OlG"
+          "ut5vxv5F5X87oKXECCXfVrx2HNptJpN1fEvTGNQUxSfLdBTjUdfEnYVk7TebwAhIBs"
+          "7FCAbhyGcot80rYGISpDJnv2lNZFPcyec_W3mKSaQzHSY6IiIVS12DSkNJ"),
+      /*q_inv=*/
+      DecodeOrDie(
+          "GMyXHpGG-GwUTRQM6rvJriLJTo2FdTVvtqSgM5ke8hC6-jmkzRq_"
+          "qZszL96eVpVa8XlFmnI2pwC3_"
+          "R2ICTkG9hMK58qXQtntDVxj5qnptD302LJhwS0sL5FIvAZp8WW4uIGHnD7VjUps1aPxG"
+          "T6avSeEYJwB-5CUx8giUyrXrsKgiu6eJjCVrQQmRVy1kljH_"
+          "Tcxyone4xgA0ZHtcklyHCUmZlDEbcv7rjBwYE0uAJkUouJpoBuvpb34u6McTztg")};
+}
+
 }  // namespace
 
 const RsaSsaTestVector& GetRsa2048BitVector1() {
@@ -142,6 +198,11 @@ const RsaSsaTestVector& GetRsa2048BitVector1() {
 
 const RsaSsaTestVector& GetRsa2048BitVector2() {
   static const absl::NoDestructor<RsaSsaTestVector> vector(CreateVector2());
+  return *vector;
+}
+
+const RsaSsaTestVector& GetRsa3072BitVector() {
+  static const absl::NoDestructor<RsaSsaTestVector> vector(CreateVector3072());
   return *vector;
 }
 

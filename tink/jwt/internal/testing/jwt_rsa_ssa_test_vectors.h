@@ -40,6 +40,9 @@ const RsaSsaTestVector& GetRsa2048BitVector1();
 // Returns RSA key values from RFC 7515 Appendix A.2.
 const RsaSsaTestVector& GetRsa2048BitVector2();
 
+// Returns 3072-bit RSA key values (from Wycheproof rsa_pkcs1_3072_test.json).
+const RsaSsaTestVector& GetRsa3072BitVector();
+
 }  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto

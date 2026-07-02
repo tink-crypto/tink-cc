@@ -86,11 +86,11 @@ export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_READONLY=1
 set -x
 if [[ -d out ]]; then
-  ./kokoro/testutils/run_cmake_tests.sh -o out . ${EXTRA_CMAKE_ARGS[@]@Q}
+  ./kokoro/testutils/run_cmake_tests.sh -o out . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 else
-  ./kokoro/testutils/run_cmake_tests.sh . ${EXTRA_CMAKE_ARGS[@]@Q}
+  ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 fi
-./kokoro/testutils/run_cmake_tests.sh examples
+./kokoro/testutils/run_cmake_tests.sh examples -DTINK_USE_INSTALLED_BENCHMARK=ON
 EOF
 
 readonly RUN_COMMAND_ARGS

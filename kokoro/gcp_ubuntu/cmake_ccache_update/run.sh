@@ -63,6 +63,7 @@ readonly CMAKE_OPTS=(
   -DCMAKE_CXX_STANDARD=17
   -DCMAKE_CXX_STANDARD_REQUIRED=ON
   -DTINK_BUILD_TESTS=ON
+  -DTINK_USE_INSTALLED_BENCHMARK=ON
 )
 
 # Construct the command to build Tink and update the ccache.

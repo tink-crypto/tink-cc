@@ -57,6 +57,7 @@ readonly CMAKE_ARGS=(
   -DTINK_USE_INSTALLED_ABSEIL=ON
   -DTINK_USE_INSTALLED_GOOGLETEST=ON
   -DTINK_USE_INSTALLED_PROTOBUF=ON
+  -DTINK_USE_INSTALLED_BENCHMARK=ON
 )
 
 # Construct the command to be executed inside the Docker container (or on the host).

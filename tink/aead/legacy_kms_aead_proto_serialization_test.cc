@@ -86,7 +86,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{LegacyKmsAeadParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, /*id=*/absl::nullopt,
+                    OutputPrefixTypeTP::kRaw, /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(LegacyKmsAeadProtoSerializationTest, ParseParameters) {
@@ -167,7 +167,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -199,7 +199,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKey) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
+              *key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 

@@ -102,7 +102,7 @@ absl::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
       *x_aes_gcm_params,
       RestrictedData(util::SecretDataFromStringView(key.key_value()),
                      InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
 }
 
 class XAesGcmKeyManagerImpl

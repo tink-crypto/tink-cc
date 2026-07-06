@@ -56,7 +56,7 @@ INSTANTIATE_TEST_SUITE_P(
     LegacyKmsAeadKeyTestSuite, LegacyKmsAeadKeyTest,
     Values(TestCase{LegacyKmsAeadParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{LegacyKmsAeadParameters::Variant::kNoPrefix, absl::nullopt,
+           TestCase{LegacyKmsAeadParameters::Variant::kNoPrefix, std::nullopt,
                     ""}));
 
 TEST_P(LegacyKmsAeadKeyTest, CreateSucceeds) {
@@ -93,7 +93,7 @@ TEST(LegacyKmsAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
   ASSERT_THAT(tink_parameters, IsOk());
 
   EXPECT_THAT(LegacyKmsAeadKey::Create(*tink_parameters,
-                                       /*id_requirement=*/absl::nullopt)
+                                       /*id_requirement=*/std::nullopt)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Cannot create key without ID requirement")));
@@ -127,7 +127,7 @@ TEST(LegacyKmsAeadKeyTest, DifferentParametersNotEqual) {
   ASSERT_THAT(parameters1, IsOk());
 
   absl::StatusOr<LegacyKmsAeadKey> key =
-      LegacyKmsAeadKey::Create(*parameters1, /*id_requirement=*/absl::nullopt);
+      LegacyKmsAeadKey::Create(*parameters1, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<LegacyKmsAeadParameters> parameters2 =
@@ -136,7 +136,7 @@ TEST(LegacyKmsAeadKeyTest, DifferentParametersNotEqual) {
   ASSERT_THAT(parameters2, IsOk());
 
   absl::StatusOr<LegacyKmsAeadKey> other_key =
-      LegacyKmsAeadKey::Create(*parameters2, /*id_requirement=*/absl::nullopt);
+      LegacyKmsAeadKey::Create(*parameters2, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);
@@ -199,7 +199,7 @@ TEST(LegacyKmsAeadKeyTest, CopyAssignment) {
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
   absl::StatusOr<LegacyKmsAeadKey> copy = LegacyKmsAeadKey::Create(
-      *no_prefix_parameters, /*id_requirement=*/absl::nullopt);
+      *no_prefix_parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(copy, IsOk());
 
   *copy = *key;
@@ -240,7 +240,7 @@ TEST(LegacyKmsAeadKeyTest, MoveAssignment) {
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
   absl::StatusOr<LegacyKmsAeadKey> move = LegacyKmsAeadKey::Create(
-      *no_prefix_parameters, /*id_requirement=*/absl::nullopt);
+      *no_prefix_parameters, /*id_requirement=*/std::nullopt);
   ASSERT_THAT(move, IsOk());
 
   *move = std::move(*key);

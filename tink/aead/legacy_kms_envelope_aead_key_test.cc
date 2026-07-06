@@ -67,7 +67,7 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
-                    absl::nullopt, ""}));
+                    std::nullopt, ""}));
 
 TEST_P(LegacyKmsEnvelopeAeadKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
@@ -117,7 +117,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
   ASSERT_THAT(tink_parameters, IsOk());
 
   EXPECT_THAT(LegacyKmsEnvelopeAeadKey::Create(*tink_parameters,
-                                               /*id_requirement=*/absl::nullopt)
+                                               /*id_requirement=*/std::nullopt)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Cannot create key without ID requirement")));
@@ -164,7 +164,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentParametersNotEqual) {
 
   absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters1,
-                                       /*id_requirement=*/absl::nullopt);
+                                       /*id_requirement=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters2 =
@@ -177,7 +177,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentParametersNotEqual) {
 
   absl::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters2,
-                                       /*id_requirement=*/absl::nullopt);
+                                       /*id_requirement=*/std::nullopt);
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);
@@ -263,7 +263,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CopyAssignment) {
 
   absl::StatusOr<LegacyKmsEnvelopeAeadKey> copy =
       LegacyKmsEnvelopeAeadKey::Create(*no_prefix_parameters,
-                                       /*id_requirement=*/absl::nullopt);
+                                       /*id_requirement=*/std::nullopt);
   ASSERT_THAT(copy, IsOk());
 
   *copy = *key;
@@ -321,7 +321,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, MoveAssignment) {
 
   absl::StatusOr<LegacyKmsEnvelopeAeadKey> move =
       LegacyKmsEnvelopeAeadKey::Create(*no_prefix_parameters,
-                                       /*id_requirement=*/absl::nullopt);
+                                       /*id_requirement=*/std::nullopt);
   ASSERT_THAT(move, IsOk());
 
   *move = std::move(*key);

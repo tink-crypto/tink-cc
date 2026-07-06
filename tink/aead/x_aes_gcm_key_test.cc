@@ -62,7 +62,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*salt_size_bytes=*/10, 0x01030005,
                     std::string("\x01\x01\x03\x00\x05", 5)},
            TestCase{XAesGcmParameters::Variant::kNoPrefix,
-                    /*salt_size_bytes=*/12, absl::nullopt, ""}));
+                    /*salt_size_bytes=*/12, std::nullopt, ""}));
 
 TEST_P(XAesGcmKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
@@ -112,11 +112,11 @@ TEST(XAesGcmKeyTest, CreateKeyWithInvalidIdRequirementFails) {
       XAesGcmParameters::Variant::kTink, kSaltSizeBytes);
   ASSERT_THAT(params, IsOk());
 
-  EXPECT_THAT(XAesGcmKey::Create(*other_params, secret,
-                                 /*id_requirement=*/absl::nullopt,
-                                 GetPartialKeyAccess())
-                  .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      XAesGcmKey::Create(*other_params, secret,
+                         /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_P(XAesGcmKeyTest, KeyEquals) {
@@ -160,7 +160,7 @@ TEST(XAesGcmKeyTest, DifferentVariantNotEqual) {
 
   absl::StatusOr<XAesGcmKey> other_key = XAesGcmKey::Create(
       *other_params, secret,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);
@@ -278,7 +278,7 @@ TEST(XAesGcmKeyTest, CopyAssignment) {
 
   absl::StatusOr<XAesGcmKey> copy = XAesGcmKey::Create(
       *parameters2, secret2,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
 
   *copy = *key;
@@ -325,7 +325,7 @@ TEST(XAesGcmKeyTest, MoveAssignment) {
 
   absl::StatusOr<XAesGcmKey> move = XAesGcmKey::Create(
       *parameters2, secret2,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
 
   *move = std::move(*key);

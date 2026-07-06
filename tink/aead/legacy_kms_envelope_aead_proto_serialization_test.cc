@@ -250,7 +250,7 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
             OutputPrefixTypeTP::kRaw,
-            /*id=*/absl::nullopt,
+            /*id=*/std::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm,
             absl::make_unique<AesGcmParameters>(GetAesGcmParameters()),
@@ -266,7 +266,7 @@ INSTANTIATE_TEST_SUITE_P(
             GetAesGcmSivKeyTemplate()},
         TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
                  OutputPrefixTypeTP::kRaw,
-                 /*id=*/absl::nullopt,
+                 /*id=*/std::nullopt,
                  /*output_prefix=*/"",
                  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
                      kAssumeAesCtrHmac,
@@ -276,7 +276,7 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
             OutputPrefixTypeTP::kRaw,
-            /*id=*/absl::nullopt,
+            /*id=*/std::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax,
             absl::make_unique<AesEaxParameters>(GetAesEaxParameters()),
@@ -365,7 +365,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
@@ -400,7 +400,7 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest, SerializeKey) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<ProtoKeySerialization>(*key, /*token=*/absl::nullopt);
+          .SerializeKey<ProtoKeySerialization>(*key, /*token=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 

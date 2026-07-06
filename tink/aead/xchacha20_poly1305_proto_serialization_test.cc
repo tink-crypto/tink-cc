@@ -91,7 +91,7 @@ INSTANTIATE_TEST_SUITE_P(
                     OutputPrefixTypeTP::kCrunchy, /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{XChaCha20Poly1305Parameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, /*id=*/absl::nullopt,
+                    OutputPrefixTypeTP::kRaw, /*id=*/std::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(XChaCha20Poly1305ProtoSerializationTest, ParseParameters) {
@@ -313,7 +313,7 @@ TEST_F(XChaCha20Poly1305ProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
+          *serialization, /*token=*/std::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -393,12 +393,12 @@ TEST_F(XChaCha20Poly1305ProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       parameters->GetVariant(),
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(*key, absl::nullopt);
+          .SerializeKey<internal::ProtoKeySerialization>(*key, std::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

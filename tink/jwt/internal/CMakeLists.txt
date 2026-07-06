@@ -461,7 +461,6 @@ tink_cc_test(
   SRCS
     raw_jwt_rsa_ssa_pkcs1_verify_key_manager_test.cc
   DEPS
-    tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
     gmock
     absl::status
@@ -470,13 +469,11 @@ tink_cc_test(
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::internal::bn_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto

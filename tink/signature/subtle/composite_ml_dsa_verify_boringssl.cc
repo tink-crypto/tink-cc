@@ -25,7 +25,14 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+// Every header in BoringSSL includes base.h, which in turn defines
+// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
+// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
+#include "openssl/crypto.h"
+#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
+#endif
+
 #include "tink/internal/fips_utils.h"
 #include "tink/low_level_crypto_access_token.h"
 #include "tink/public_key_verify.h"
@@ -45,6 +52,8 @@
 namespace crypto {
 namespace tink {
 namespace subtle {
+
+#ifdef OPENSSL_IS_BORINGSSL
 namespace {
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetClassicalPublicKeyVerify(
@@ -201,11 +210,17 @@ absl::Status CompositeMlDsaVerify::Verify(absl::string_view signature,
 }
 
 }  // namespace
+#endif  // OPENSSL_IS_BORINGSSL
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewCompositeMlDsaVerify(
     const CompositeMlDsaPublicKey& public_key,
     LowLevelCryptoAccessToken token) {
+#ifndef OPENSSL_IS_BORINGSSL
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in BoringSSL builds.");
+#else
   return CompositeMlDsaVerify::New(public_key);
+#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace subtle

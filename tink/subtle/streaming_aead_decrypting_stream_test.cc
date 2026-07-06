@@ -264,6 +264,47 @@ TEST_F(StreamingAeadDecryptingStreamTest, OneSegmentAndOneBytePlaintext) {
   EXPECT_EQ(absl::StatusCode::kOutOfRange, next_result.status().code());
 }
 
+TEST_F(StreamingAeadDecryptingStreamTest, TrailingDataAfterLastSegmentRejected) {
+  int pt_segment_size = 512;
+  int header_size = 64;
+
+  // Plaintext sizes whose ciphertext ends with an exactly full last segment:
+  // a single full segment, and two full segments.
+  for (int pt_size : {pt_segment_size - header_size,
+                      2 * pt_segment_size - header_size}) {
+    SCOPED_TRACE(absl::StrCat("pt_size = ", pt_size));
+    std::string pt = Random::GetRandomBytes(pt_size);
+    DummyStreamSegmentEncrypter seg_enc(pt_segment_size, header_size,
+        /* ct_offset = */ 0);
+    std::string ct = seg_enc.GenerateCiphertext(pt);
+    ASSERT_EQ(0, ct.size() % seg_enc.get_ciphertext_segment_size());
+
+    // The unmodified ciphertext still decrypts.
+    ValidationRefs refs;
+    auto dec_stream = GetDecryptingStream(pt_segment_size, header_size,
+        /* ct_offset = */ 0, ct, &refs);
+    std::string decrypted;
+    EXPECT_THAT(test::ReadFromStream(dec_stream.get(), &decrypted), IsOk());
+    EXPECT_EQ(pt, decrypted);
+
+    // Appending unauthenticated trailing data is rejected.
+    for (int trailing_size : {1, seg_enc.get_ciphertext_segment_size()}) {
+      SCOPED_TRACE(absl::StrCat("trailing_size = ", trailing_size));
+      ValidationRefs tampered_refs;
+      auto tampered_stream = GetDecryptingStream(
+          pt_segment_size, header_size, /* ct_offset = */ 0,
+          ct + std::string(trailing_size, 'x'), &tampered_refs);
+      std::string tampered_decrypted;
+      auto status =
+          test::ReadFromStream(tampered_stream.get(), &tampered_decrypted);
+      EXPECT_THAT(status, Not(IsOk()));
+      EXPECT_EQ(status.code(), absl::StatusCode::kInvalidArgument);
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "trailing data",
+                          std::string(status.message()));
+    }
+  }
+}
+
 TEST_F(StreamingAeadDecryptingStreamTest, NextAfterBackUp) {
   int pt_segment_size = 97;
   int pt_size = 334;

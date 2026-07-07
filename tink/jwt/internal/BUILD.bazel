@@ -1811,3 +1811,45 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
     ],
 )
+
+cc_library(
+    name = "jwt_ml_dsa_signature_config",
+    srcs = ["jwt_ml_dsa_signature_config.cc"],
+    hdrs = ["jwt_ml_dsa_signature_config.h"],
+    include_prefix = "tink/jwt/internal",
+    deps = [
+        ":jwt_ml_dsa_sign_key_manager",
+        ":jwt_ml_dsa_verify_key_manager",
+        ":jwt_public_key_sign_wrapper",
+        ":jwt_public_key_verify_wrapper",
+        "//tink:registry",
+        "//tink/internal:fips_utils",
+        "//tink/jwt:jwt_ml_dsa_proto_serialization",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "jwt_ml_dsa_signature_config_test",
+    srcs = ["jwt_ml_dsa_signature_config_test.cc"],
+    deps = [
+        ":jwt_ml_dsa_signature_config",
+        "//tink:keyset_handle",
+        "//tink:registry",
+        "//tink/config:global_registry",
+        "//tink/internal:fips_utils",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:ssl_util",
+        "//tink/jwt:jwt_ml_dsa_parameters",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt:jwt_public_key_verify",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

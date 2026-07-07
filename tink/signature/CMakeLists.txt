@@ -401,6 +401,7 @@ tink_cc_library(
   DEPS
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_sign_key_manager
     tink::signature::ed25519_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
@@ -413,6 +414,7 @@ tink_cc_library(
     tink::core::keyset_handle
     tink::core::keyset_reader
     tink::internal::ec_util
+    tink::internal::pem_key_parser
     tink::internal::rsa_util
     tink::signature::internal::ml_dsa_pem
     tink::subtle::pem_parser_boringssl
@@ -1238,6 +1240,7 @@ tink_cc_test(
   SRCS
     signature_pem_keyset_reader_test.cc
   DEPS
+    tink::signature::config_2026
     tink::signature::config_v0
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key

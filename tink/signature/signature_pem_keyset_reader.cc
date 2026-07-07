@@ -28,11 +28,13 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/pem_key_parser.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/ml_dsa_pem.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
@@ -58,6 +60,7 @@ namespace tink {
 using ::google::crypto::tink::EcdsaParams;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
+using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::EncryptedKeyset;
@@ -404,6 +407,40 @@ absl::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   return absl::OkStatus();
 }
 
+absl::Status AddEd25519PrivateKey(const PemKey& pem_key, Keyset& keyset) {
+  if (pem_key.parameters.hash_type != HashType::SHA512) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid ed25519 hash type: ",
+                                     pem_key.parameters.hash_type));
+  }
+  if (pem_key.parameters.key_size_in_bits != 253) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid ed25519 key size: ",
+                                     pem_key.parameters.key_size_in_bits));
+  }
+  absl::StatusOr<internal::Ed25519Key> ecc_private_key =
+      internal::ParseEd25519PrivateKey(pem_key.serialized_key);
+  if (!ecc_private_key.ok()) {
+    return ecc_private_key.status();
+  }
+
+  Ed25519PrivateKeyProto ed25519_key;
+  Ed25519SignKeyManager key_manager;
+
+  ed25519_key.set_version(key_manager.get_version());
+  ed25519_key.set_key_value(
+      util::SecretDataAsStringView((*ecc_private_key).private_key));
+  ed25519_key.mutable_public_key()->set_version(key_manager.get_version());
+  ed25519_key.mutable_public_key()->set_key_value(
+      (*ecc_private_key).public_key);
+
+  *keyset.add_key() = NewKeysetKey(
+      GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
+      key_manager.key_material_type(), ed25519_key.SerializeAsString());
+
+  return absl::OkStatus();
+}
+
 absl::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
   if (pem_key.parameters.hash_type != HashType::SHA512) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -615,8 +652,23 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
         break;
       }
       case PemKeyType::PEM_EC: {
-        auto add_ecdsa_status = AddEcdsaPrivateKey(pem_key, *keyset);
-        if (!add_ecdsa_status.ok()) return add_ecdsa_status;
+        switch (pem_key.parameters.algorithm) {
+          case PemAlgorithm::ECDSA_IEEE:
+          case PemAlgorithm::ECDSA_DER: {
+            auto add_ecdsa_status = AddEcdsaPrivateKey(pem_key, *keyset);
+            if (!add_ecdsa_status.ok()) return add_ecdsa_status;
+            break;
+          }
+          case PemAlgorithm::ED25519: {
+            auto add_ed25519_status = AddEd25519PrivateKey(pem_key, *keyset);
+            if (!add_ed25519_status.ok()) return add_ed25519_status;
+            break;
+          }
+          default:
+            return absl::Status(absl::StatusCode::kInvalidArgument,
+                                absl::StrCat("Invalid ECC algorithm ",
+                                             pem_key.parameters.algorithm));
+        }
         break;
       }
       case PemKeyType::PEM_ML_DSA:
@@ -655,8 +707,11 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
             break;
           }
           case PemAlgorithm::ED25519: {
-            auto add_ed25519_status = AddEd25519PublicKey(pem_key, *keyset);
-            if (!add_ed25519_status.ok()) return add_ed25519_status;
+            absl::Status add_ed25519_status =
+                AddEd25519PublicKey(pem_key, *keyset);
+            if (!add_ed25519_status.ok()) {
+              return add_ed25519_status;
+            }
             break;
           }
           default:

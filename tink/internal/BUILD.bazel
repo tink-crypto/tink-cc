@@ -2256,3 +2256,37 @@ cc_library(
         "@boringssl//:crypto",
     ],
 )
+
+cc_library(
+    name = "pem_key_parser",
+    srcs = ["pem_key_parser.cc"],
+    hdrs = ["pem_key_parser.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":ec_util",
+        ":secret_buffer",
+        ":ssl_unique_ptr",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "pem_key_parser_test",
+    srcs = ["pem_key_parser_test.cc"],
+    deps = [
+        ":ec_util",
+        ":pem_key_parser",
+        "//tink/util:secret_data",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -118,12 +118,7 @@ absl::StatusOr<std::string> EncryptThenAuthenticate::Decrypt(
     return verified;
   }
 
-  auto pt = ind_cpa_cipher_->Decrypt(payload);
-  if (!pt.ok()) {
-    return pt.status();
-  }
-
-  return pt.value();
+  return ind_cpa_cipher_->Decrypt(payload);
 }
 
 }  // namespace subtle

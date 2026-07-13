@@ -34,74 +34,117 @@ if [[ -z "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
 fi
 readonly IS_KOKORO
 
-RUN_COMMAND_ARGS=()
-if [[ "${IS_KOKORO}" == "true" ]]; then
-  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
-  cd "${TINK_BASE_DIR}/tink_cc"
-  source kokoro/testutils/cc_test_container_images.sh
-  CONTAINER_IMAGE="${TINK_CC_CMAKE_IMAGE}"
-  RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
-fi
-readonly CONTAINER_IMAGE
+# Function to build Tink and update the ccache for a given container image.
+build_and_upload_ccache() {
+  local -r container_image="$1"
+  local -r image_hash="$2"
+  shift 2
+  local -a cmake_opts=("$@")
 
-if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
-  RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
-  RUN_COMMAND_ARGS+=( -m "type=bind,src=/tmp,dst=/tmp" )
-fi
+  echo "==========================================================================="
+  echo "Updating ccache for image: ${container_image}"
+  echo "Image hash: ${image_hash}"
+  echo "==========================================================================="
 
-readonly CONFIG_CACHE_DIR="config_cache"
-readonly CONFIG_CACHE_TAR="config_cache.tgz"
-readonly CCACHE_TAR="ccache.tgz"
+  local -r config_cache_dir="config_cache"
+  local -r config_cache_tar="config_cache.tgz"
+  local -r ccache_tar="ccache.tgz"
 
-# Output folder for ccache.
-mkdir -p ccache
-# Output folder for caching the CMake config.
-mkdir -p config_cache
+  # Clean up and recreate directories.
+  rm -rf ccache config_cache out
+  mkdir -p ccache
+  mkdir -p config_cache
 
-readonly CMAKE_OPTS=(
-  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-  -DCMAKE_CXX_STANDARD=17
-  -DCMAKE_CXX_STANDARD_REQUIRED=ON
-  -DTINK_BUILD_TESTS=ON
-  -DTINK_USE_INSTALLED_BENCHMARK=ON
-)
-
-# Construct the command to build Tink and update the ccache.
-# This command:
-# 1. Configures CCACHE_DIR.
-# 2. Configures and builds Tink with CMake, populating the local ccache directory.
-# 3. Tars the ccache directory and the CMake config cache for uploading to GCS.
-cat << EOF > /tmp/do_run_test.sh
+  # Construct the command to build Tink and update the ccache.
+  cat << EOF > /tmp/do_run_test.sh
 set -euo pipefail
 export CCACHE_DIR="\$(pwd)/ccache"
 set -x
 rm -rf out
 mkdir -p out
-cmake -S . -B out ${CMAKE_OPTS[@]@Q}
+cmake -S . -B out ${cmake_opts[@]@Q}
 tar -C . -czf config_cache/config_cache.tgz out
 cmake --build out --parallel \$(nproc)
 tar -C . -czf ccache.tgz ccache
 EOF
 
+  local run_command_args=()
+  if [[ "${IS_KOKORO}" == "true" ]]; then
+    run_command_args+=( -k "${TINK_GCR_SERVICE_KEY}" )
+  fi
+  if [[ -n "${container_image}" ]]; then
+    run_command_args+=( -c "${container_image}" )
+    run_command_args+=( -m "type=bind,src=/tmp,dst=/tmp" )
+  fi
 
-if [[ -z "${CONTAINER_IMAGE:-}" ]]; then
-  echo "Running command on the host"
-  time bash /tmp/do_run_test.sh
-else
-  ./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
-    bash /tmp/do_run_test.sh
-fi
+  if [[ -z "${container_image}" ]]; then
+    echo "Running command on the host"
+    time bash /tmp/do_run_test.sh
+  else
+    ./kokoro/testutils/docker_execute.sh "${run_command_args[@]}" \
+      bash /tmp/do_run_test.sh
+  fi
 
+  if [[ "${IS_KOKORO}" == "true" ]]; then
+    local -r remote_cache_url="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${image_hash}"
+
+    # Activate the service account for the remote cache.
+    gcloud auth activate-service-account \
+      --key-file="${TINK_REMOTE_CACHE_SERVICE_KEY}"
+    gcloud config set project tink-test-infrastructure
+
+    gcloud storage cp "${ccache_tar}" "${remote_cache_url}/ccache/${ccache_tar}"
+    gcloud storage cp "${config_cache_dir}/${config_cache_tar}" \
+      "${remote_cache_url}/${config_cache_dir}/${config_cache_tar}"
+  fi
+}
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
-  readonly REMOTE_CACHE_URL="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  cd "${TINK_BASE_DIR}/tink_cc"
+  source kokoro/testutils/cc_test_container_images.sh
 
-  # Activate the service account for the remote cache.
-  gcloud auth activate-service-account \
-    --key-file="${TINK_REMOTE_CACHE_SERVICE_KEY}"
-  gcloud config set project tink-test-infrastructure
+  # 1. Update ccache for standard CMake image.
+  CMAKE_OPTS_STANDARD=(
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+    -DCMAKE_CXX_STANDARD=17
+    -DCMAKE_CXX_STANDARD_REQUIRED=ON
+    -DTINK_BUILD_TESTS=ON
+    -DTINK_USE_INSTALLED_BENCHMARK=ON
+  )
+  build_and_upload_ccache \
+    "${TINK_CC_CMAKE_IMAGE}" \
+    "${TINK_CC_CMAKE_IMAGE_HASH}" \
+    "${CMAKE_OPTS_STANDARD[@]}"
 
-  gcloud storage cp "${CCACHE_TAR}" "${REMOTE_CACHE_URL}/ccache/${CCACHE_TAR}"
-  gcloud storage cp "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" \
-    "${REMOTE_CACHE_URL}/${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}"
+  # 2. Update ccache for installed dependencies CMake image.
+  CMAKE_OPTS_INSTALLED_DEPS=(
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+    -DCMAKE_CXX_STANDARD=17
+    -DCMAKE_CXX_STANDARD_REQUIRED=ON
+    -DTINK_BUILD_TESTS=ON
+    -DTINK_USE_SYSTEM_OPENSSL=ON
+    -DTINK_USE_INSTALLED_ABSEIL=ON
+    -DTINK_USE_INSTALLED_GOOGLETEST=ON
+    -DTINK_USE_INSTALLED_PROTOBUF=ON
+    -DTINK_USE_INSTALLED_BENCHMARK=ON
+  )
+  build_and_upload_ccache \
+    "${TINK_CC_CMAKE_WITH_INSTALLED_DEPS_IMAGE}" \
+    "${TINK_CC_CMAKE_WITH_INSTALLED_DEPS_IMAGE_HASH}" \
+    "${CMAKE_OPTS_INSTALLED_DEPS[@]}"
+else
+  # Running locally.
+  CMAKE_OPTS_STANDARD=(
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+    -DCMAKE_CXX_STANDARD=17
+    -DCMAKE_CXX_STANDARD_REQUIRED=ON
+    -DTINK_BUILD_TESTS=ON
+    -DTINK_USE_INSTALLED_BENCHMARK=ON
+  )
+  if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
+    build_and_upload_ccache "${CONTAINER_IMAGE}" "local-hash" "${CMAKE_OPTS_STANDARD[@]}"
+  else
+    build_and_upload_ccache "" "local-hash" "${CMAKE_OPTS_STANDARD[@]}"
+  fi
 fi

@@ -90,7 +90,7 @@ if [[ -d out ]]; then
 else
   ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 fi
-./kokoro/testutils/run_cmake_tests.sh examples -DTINK_USE_INSTALLED_BENCHMARK=ON
+./kokoro/testutils/run_cmake_tests.sh examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF
 
 readonly RUN_COMMAND_ARGS

@@ -30,6 +30,10 @@ CMake w/ OpenSSL3            | [![CMake_OpenSsl3_GcpUbuntu][cmake_openssl3_gcp_u
 CMake w/ Installed Deps      | [![CMake_Installed_Deps][cmake_installed_deps_gcp_ubuntu]](#) | N/A                                              | N/A
 
 
+> [!NOTE] We plan to change Tink to always require BoringSSL as a backend
+> (instead of allowing OpenSSL), starting from Tink 3.0.0. See
+> https://github.com/tink-crypto/tink-cc/issues/22 for details.
+
 Using crypto in your application [shouldn't have to][devs_are_users_too_slides]
 feel like juggling chainsaws in the dark. Tink is a crypto library written by a
 group of cryptographers and security engineers at Google. It was born out of our

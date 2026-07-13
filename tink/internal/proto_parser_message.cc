@@ -176,6 +176,7 @@ bool Message::Parse(ParsingState& in) {
       }
       continue;
     }
+    BeforeFieldSet(field);
     if (!const_cast<Field*>(field)->ConsumeIntoMember(in)) {
       return false;
     }

@@ -115,6 +115,107 @@ class OuterStruct : public Message {
   MessageField<InnerStruct> inner_member_{1};
 };
 
+class OneofTestMessageTP : public Message {
+ public:
+  enum MyOneof1Case {
+    MY_ONEOF_1_NOT_SET = 0,
+    kFieldA = 1,
+    kFieldB = 2,
+  };
+  enum MyOneof2Case {
+    MY_ONEOF_2_NOT_SET = 0,
+    kFieldC = 3,
+    kFieldD = 4,
+  };
+
+  OneofTestMessageTP() = default;
+  OneofTestMessageTP(const OneofTestMessageTP&) = default;
+  OneofTestMessageTP& operator=(const OneofTestMessageTP&) = default;
+
+  MyOneof1Case my_oneof_1_case() const { return my_oneof_1_case_; }
+  MyOneof2Case my_oneof_2_case() const { return my_oneof_2_case_; }
+
+  // Oneof 1
+  bool has_field_a() const { return field_a_.has_value(); }
+  const InnerStruct& field_a() const { return field_a_.value(); }
+  InnerStruct* mutable_field_a() {
+    BeforeFieldSet(&field_a_);
+    return field_a_.mutable_value();
+  }
+
+  bool has_field_b() const { return field_b_.has_value(); }
+  uint32_t field_b() const { return field_b_.value(); }
+  void set_field_b(uint32_t val) {
+    BeforeFieldSet(&field_b_);
+    field_b_.set_value(val);
+  }
+
+  // Oneof 2
+  bool has_field_c() const { return field_c_.has_value(); }
+  uint32_t field_c() const { return field_c_.value(); }
+  void set_field_c(uint32_t val) {
+    BeforeFieldSet(&field_c_);
+    field_c_.set_value(val);
+  }
+
+  bool has_field_d() const { return field_d_.has_value(); }
+  uint32_t field_d() const { return field_d_.value(); }
+  void set_field_d(uint32_t val) {
+    BeforeFieldSet(&field_d_);
+    field_d_.set_value(val);
+  }
+
+  void Clear() override {
+    Message::Clear();
+    my_oneof_1_case_ = MY_ONEOF_1_NOT_SET;
+    my_oneof_2_case_ = MY_ONEOF_2_NOT_SET;
+  }
+
+ protected:
+  void BeforeFieldSet(const Field* field) override {
+    if (field == &field_a_ || field == &field_b_) {
+      MyOneof1Case parsed_case =
+          static_cast<MyOneof1Case>(field->FieldNumber());
+      if (my_oneof_1_case_ == parsed_case) {
+        return;
+      }
+      if (my_oneof_1_case_ == kFieldA) {
+        field_a_.Clear();
+      } else if (my_oneof_1_case_ == kFieldB) {
+        field_b_.Clear();
+      }
+      my_oneof_1_case_ = parsed_case;
+    } else if (field == &field_c_ || field == &field_d_) {
+      MyOneof2Case parsed_case =
+          static_cast<MyOneof2Case>(field->FieldNumber());
+      if (my_oneof_2_case_ == parsed_case) {
+        return;
+      }
+      if (my_oneof_2_case_ == kFieldC) {
+        field_c_.Clear();
+      } else if (my_oneof_2_case_ == kFieldD) {
+        field_d_.Clear();
+      }
+      my_oneof_2_case_ = parsed_case;
+    }
+  }
+
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{
+        {&field_a_, &field_b_, &field_c_, &field_d_}}[i];
+  }
+
+  MessageField<InnerStruct> field_a_{1, ProtoFieldOptions::kExplicit};
+  Uint32Field field_b_{2, ProtoFieldOptions::kExplicit};
+  Uint32Field field_c_{3, ProtoFieldOptions::kExplicit};
+  Uint32Field field_d_{4, ProtoFieldOptions::kExplicit};
+
+  MyOneof1Case my_oneof_1_case_ = MY_ONEOF_1_NOT_SET;
+  MyOneof2Case my_oneof_2_case_ = MY_ONEOF_2_NOT_SET;
+};
+
 TEST(MessageTest, Clear) {
   OuterStruct s;
   s.mutable_inner_member()->set_uint32_member_1(123);
@@ -122,6 +223,110 @@ TEST(MessageTest, Clear) {
   s.Clear();
   EXPECT_THAT(s.inner_member().uint32_member_1(), Eq(0));
   EXPECT_THAT(s.inner_member().uint32_member_2(), Eq(0));
+}
+
+TEST(MessageTest, MultipleOneofsSettersEnforceMutualExclusion) {
+  OneofTestMessageTP msg;
+
+  // Set field in oneof_1 (submessage)
+  msg.mutable_field_a()->set_uint32_member_1(10);
+  EXPECT_TRUE(msg.has_field_a());
+  EXPECT_EQ(msg.field_a().uint32_member_1(), 10);
+  EXPECT_FALSE(msg.has_field_b());
+  EXPECT_EQ(msg.my_oneof_1_case(), OneofTestMessageTP::kFieldA);
+
+  // Set field in oneof_2 (should be independent)
+  msg.set_field_c(30);
+  EXPECT_TRUE(msg.has_field_a());  // oneof_1 unaffected
+  EXPECT_TRUE(msg.has_field_c());
+  EXPECT_EQ(msg.field_c(), 30);
+  EXPECT_FALSE(msg.has_field_d());
+  EXPECT_EQ(msg.my_oneof_2_case(), OneofTestMessageTP::kFieldC);
+
+  // Mutually exclude within oneof_1
+  msg.set_field_b(20);
+  EXPECT_FALSE(msg.has_field_a());  // field_a cleared
+  EXPECT_TRUE(msg.has_field_b());
+  EXPECT_EQ(msg.field_b(), 20);
+  EXPECT_TRUE(msg.has_field_c());  // oneof_2 still unaffected
+  EXPECT_EQ(msg.my_oneof_1_case(), OneofTestMessageTP::kFieldB);
+
+  // Clear resets everything
+  msg.Clear();
+  EXPECT_FALSE(msg.has_field_a());
+  EXPECT_FALSE(msg.has_field_b());
+  EXPECT_FALSE(msg.has_field_c());
+  EXPECT_FALSE(msg.has_field_d());
+  EXPECT_EQ(msg.my_oneof_1_case(), OneofTestMessageTP::MY_ONEOF_1_NOT_SET);
+  EXPECT_EQ(msg.my_oneof_2_case(), OneofTestMessageTP::MY_ONEOF_2_NOT_SET);
+}
+
+TEST(MessageTest, MultipleOneofsParsingEnforcesMutualExclusionLastWins) {
+  // Serialized:
+  // oneof_1: field_a (submessage with member 1 = 10), then field_b (20) ->
+  // field_b wins oneof_2: field_c (30), then field_d (40) -> field_d wins
+  std::string bytes = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(10)}),
+      FieldWithNumber(3).IsVarint(30), FieldWithNumber(2).IsVarint(20),
+      FieldWithNumber(4).IsVarint(40));
+
+  OneofTestMessageTP msg;
+  EXPECT_TRUE(msg.ParseFromString(bytes));
+
+  // Verify oneof_1 last-writer wins
+  EXPECT_FALSE(msg.has_field_a());
+  EXPECT_TRUE(msg.has_field_b());
+  EXPECT_EQ(msg.field_b(), 20);
+  EXPECT_EQ(msg.my_oneof_1_case(), OneofTestMessageTP::kFieldB);
+
+  // Verify oneof_2 last-writer wins
+  EXPECT_FALSE(msg.has_field_c());
+  EXPECT_TRUE(msg.has_field_d());
+  EXPECT_EQ(msg.field_d(), 40);
+  EXPECT_EQ(msg.my_oneof_2_case(), OneofTestMessageTP::kFieldD);
+}
+
+TEST(MessageTest, OneofParsingMergesSameField) {
+  // Serialized:
+  // oneof_1: field_a (member 1 = 10), then field_a again (member 2 = 20)
+  // Since it's the same field, they should merge!
+  std::string bytes = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(10)}),
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(2).IsVarint(20)}));
+
+  OneofTestMessageTP msg;
+  EXPECT_TRUE(msg.ParseFromString(bytes));
+
+  EXPECT_TRUE(msg.has_field_a());
+  EXPECT_EQ(msg.field_a().uint32_member_1(), 10);
+  EXPECT_EQ(msg.field_a().uint32_member_2(), 20);
+  EXPECT_FALSE(msg.has_field_b());
+  EXPECT_EQ(msg.my_oneof_1_case(), OneofTestMessageTP::kFieldA);
+}
+
+TEST(MessageTest, OneofCopyConstructorWorks) {
+  OneofTestMessageTP msg1;
+  msg1.mutable_field_a()->set_uint32_member_1(10);
+  msg1.set_field_c(30);
+
+  // Copy construct
+  OneofTestMessageTP msg2 = msg1;
+  EXPECT_TRUE(msg2.has_field_a());
+  EXPECT_EQ(msg2.field_a().uint32_member_1(), 10);
+  EXPECT_TRUE(msg2.has_field_c());
+  EXPECT_EQ(msg2.field_c(), 30);
+  EXPECT_EQ(msg2.my_oneof_1_case(), OneofTestMessageTP::kFieldA);
+  EXPECT_EQ(msg2.my_oneof_2_case(), OneofTestMessageTP::kFieldC);
+
+  // Modify copy, original should be unaffected
+  msg2.set_field_b(20);
+  EXPECT_FALSE(msg2.has_field_a());
+  EXPECT_TRUE(msg2.has_field_b());
+  EXPECT_EQ(msg2.my_oneof_1_case(), OneofTestMessageTP::kFieldB);
+
+  EXPECT_TRUE(msg1.has_field_a());  // original still has field_a!
+  EXPECT_FALSE(msg1.has_field_b());
+  EXPECT_EQ(msg1.my_oneof_1_case(), OneofTestMessageTP::kFieldA);
 }
 
 #if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)

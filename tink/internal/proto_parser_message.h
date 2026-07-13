@@ -78,7 +78,7 @@ class Message {
 
   // Methods taken from the proto2::Message interface.
   // Clears all fields.
-  void Clear();
+  virtual void Clear();
   bool ParseFromString(absl::string_view in);
   size_t ByteSizeLong() const;
 
@@ -123,6 +123,10 @@ class Message {
   //   * 0 <= i < num_fields().
   //   * The fields are sorted by field number.
   virtual const Field* field(int i) const = 0;
+
+  // Hook called during parsing or setter invocation when a field belongs to a
+  // oneof.
+  virtual void BeforeFieldSet(const Field* field) {}
 };
 
 // Base class for RepeatedMessageField.

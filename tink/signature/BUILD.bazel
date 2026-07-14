@@ -902,6 +902,7 @@ cc_library(
     srcs = ["ml_dsa_private_key.cc"],
     hdrs = ["ml_dsa_private_key.h"],
     include_prefix = "tink/signature",
+    tags = ["fips"],
     visibility = ["//visibility:public"],
     deps = [
         ":ml_dsa_parameters",
@@ -913,6 +914,7 @@ cc_library(
         "//tink:restricted_data",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:dfsan_forwarders",
+        "//tink/internal:fips_utils",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
@@ -1909,6 +1911,7 @@ cc_test(
 cc_test(
     name = "ml_dsa_private_key_test",
     srcs = ["ml_dsa_private_key_test.cc"],
+    tags = ["fips"],
     deps = [
         ":ml_dsa_parameters",
         ":ml_dsa_private_key",
@@ -1917,6 +1920,7 @@ cc_test(
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink/internal:fips_utils",
         "//tink/internal:secret_buffer",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",

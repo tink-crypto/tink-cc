@@ -1750,6 +1750,7 @@ tink_cc_library(
     tink::core::restricted_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
     tink::util::secret_data
 )
 
@@ -1773,6 +1774,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::internal::fips_utils
     tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::test_matchers

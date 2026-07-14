@@ -29,7 +29,10 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
+#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
+#ifndef TINK_USE_ONLY_FIPS
 #include "openssl/mldsa.h"
+#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
@@ -88,6 +91,10 @@ struct KeyPair {
 };
 
 absl::StatusOr<KeyPair> GenerateKeyPair(MlDsaParameters::Instance instance) {
+#ifdef TINK_USE_ONLY_FIPS
+  return absl::UnimplementedError(
+      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+#else
   if (instance == MlDsaParameters::Instance::kMlDsa44) {
     std::string public_key_bytes;
     public_key_bytes.resize(MLDSA44_PUBLIC_KEY_BYTES);
@@ -140,8 +147,25 @@ absl::StatusOr<KeyPair> GenerateKeyPair(MlDsaParameters::Instance instance) {
     return absl::InvalidArgumentError(
         absl::StrCat("Unsupported instance: ", instance));
   }
+#endif
 }
 
+#ifdef TINK_USE_ONLY_FIPS
+TEST_P(MlDsaPrivateKeyTest, CreateFipsFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
+  ASSERT_THAT(
+      key_pair,
+      StatusIs(
+          absl::StatusCode::kUnimplemented,
+          HasSubstr("ML-DSA is only supported in non-FIPS BoringSSL builds.")));
+}
+#else
 TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
@@ -180,9 +204,8 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedSucceeds) {
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPrivateKey> private_key =
-      MlDsaPrivateKey::Create(
-          *parameters, key_pair->private_seed_bytes, test_case.id_requirement,
-          GetPartialKeyAccess());
+      MlDsaPrivateKey::Create(*parameters, key_pair->private_seed_bytes,
+                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> expected_public_key =
@@ -214,8 +237,7 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
       MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
-                              test_case.id_requirement,
-                              GetPartialKeyAccess())
+                              test_case.id_requirement, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat(
@@ -225,12 +247,11 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
   std::string longer_private_seed_bytes(
       key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
   longer_private_seed_bytes.push_back(0);
-  private_seed_bytes = RestrictedData(longer_private_seed_bytes,
-                                      InsecureSecretKeyAccess::Get());
+  private_seed_bytes =
+      RestrictedData(longer_private_seed_bytes, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
       MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
-                              test_case.id_requirement,
-                              GetPartialKeyAccess())
+                              test_case.id_requirement, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat(
@@ -249,17 +270,15 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithMismatchedIdRequirementFails) {
   ASSERT_THAT(key_pair, IsOk());
 
   if (parameters->HasIdRequirement()) {
-    EXPECT_THAT(
-        MlDsaPrivateKey::Create(
-            *parameters, key_pair->private_seed_bytes,
-            /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
-            .status(),
-        StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(MlDsaPrivateKey::Create(
+                    *parameters, key_pair->private_seed_bytes,
+                    /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+                    .status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
   } else {
     EXPECT_THAT(
-        MlDsaPrivateKey::Create(
-            *parameters, key_pair->private_seed_bytes,
-            /*id_requirement=*/123, GetPartialKeyAccess())
+        MlDsaPrivateKey::Create(*parameters, key_pair->private_seed_bytes,
+                                /*id_requirement=*/123, GetPartialKeyAccess())
             .status(),
         StatusIs(absl::StatusCode::kInvalidArgument));
   }
@@ -586,6 +605,7 @@ TEST(MlDsaPrivateKeyTest, MoveAssignment) {
 
   EXPECT_THAT(*moved, Eq(expected));
 }
+#endif  // TINK_USE_ONLY_FIPS
 
 }  // namespace
 }  // namespace tink

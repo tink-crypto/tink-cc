@@ -29,6 +29,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "openssl/crypto.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
@@ -47,6 +48,7 @@
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key.h"
@@ -81,6 +83,9 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
@@ -89,7 +94,6 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -315,6 +319,24 @@ std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
           .value());
 }
 
+std::unique_ptr<MlDsaPrivateKey> CreateMlDsaPrivateKey(
+    MlDsaParameters::Instance instance, MlDsaParameters::Variant variant,
+    absl::string_view secret_seed, std::optional<int> id_requirement) {
+  absl::StatusOr<MlDsaParameters> params =
+      MlDsaParameters::Create(instance, variant);
+  if (!params.ok()) {
+    return nullptr;
+  }
+  RestrictedData private_seed_data = RestrictedData(
+      test::HexDecodeOrDie(secret_seed), InsecureSecretKeyAccess::Get());
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *params, private_seed_data, id_requirement, GetPartialKeyAccess());
+  if (!private_key.ok()) {
+    return nullptr;
+  }
+  return std::make_unique<MlDsaPrivateKey>(*private_key);
+}
+
 std::unique_ptr<AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey(
     int key_size_in_bytes, int derived_key_size_in_bytes,
     AesCtrHmacStreamingParameters::HashType hkdf_hash_type,
@@ -516,6 +538,25 @@ std::vector<std::shared_ptr<Key>> SignatureEd25519TestVector() {
   };
 }
 
+std::vector<std::shared_ptr<Key>> SignatureMlDsaTestVector() {
+  std::vector<std::shared_ptr<Key>> vectors;
+  if (internal::IsBoringSsl() && !internal::IsFipsModeEnabled()) {
+    vectors.push_back(CreateMlDsaPrivateKey(MlDsaParameters::Instance::kMlDsa44,
+                                            MlDsaParameters::Variant::kTink,
+                                            kOkmFromRfc.substr(0, 64),
+                                            /*id_requirement=*/1010101));
+    vectors.push_back(CreateMlDsaPrivateKey(MlDsaParameters::Instance::kMlDsa87,
+                                            MlDsaParameters::Variant::kTink,
+                                            kOkmFromRfc.substr(0, 64),
+                                            /*id_requirement=*/3030303));
+    vectors.push_back(CreateMlDsaPrivateKey(MlDsaParameters::Instance::kMlDsa65,
+                                            MlDsaParameters::Variant::kNoPrefix,
+                                            kOkmFromRfc.substr(0, 64),
+                                            /*id_requirement=*/std::nullopt));
+  }
+  return vectors;
+}
+
 std::vector<std::shared_ptr<Key>> StreamingAeadTestVector() {
   return {
       CreateAesCtrHmacStreamingKey(
@@ -579,6 +620,7 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   // Deriving EC keys with secret seed is not implemented in OpenSSL.
   if (internal::IsBoringSsl()) {
     vectors.push_back(SignatureEcdsaTestVector());
+    vectors.push_back(SignatureMlDsaTestVector());
   }
 
   return vectors;
@@ -655,6 +697,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 

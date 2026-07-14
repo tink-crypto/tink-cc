@@ -241,6 +241,7 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
+    crypto
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
@@ -267,6 +268,7 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     tink::daead::aes_siv_proto_serialization
     tink::internal::ec_util
+    tink::internal::fips_utils
     tink::internal::mutable_serialization_registry
     tink::internal::ssl_util
     tink::keyderivation::internal::prf_based_deriver_key_manager
@@ -289,6 +291,9 @@ tink_cc_test(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_proto_serialization
     tink::signature::ed25519_public_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::internal::ml_dsa_proto_serialization
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
@@ -297,7 +302,6 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

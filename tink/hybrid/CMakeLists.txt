@@ -990,6 +990,7 @@ tink_cc_test(
     tink::hybrid::ecies_public_key
     gmock
     absl::status
+    absl::status_macros
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -1004,8 +1005,9 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::aead::internal::aes_ctr_hmac_proto_structs
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
+    tink::internal::bn_encoding_util
     tink::internal::common_proto_enums
-    tink::internal::ec_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
@@ -1013,8 +1015,6 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::subtle::common_enums
     tink::util::enums
-    tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto

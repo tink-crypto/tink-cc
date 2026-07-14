@@ -123,6 +123,30 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, BuildWorks) {
   EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
 }
 
+TEST(JwtRsaSsaPkcs1PublicKeyTest, CustomKidPreservesStringViewBounds) {
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+      JwtRsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
+          .SetKidStrategy(JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string backing = "custom_kid|secret";
+  absl::string_view custom_kid(backing.data(), /*len=*/10);
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+      JwtRsaSsaPkcs1PublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetModulus(BigInteger(Base64WebSafeDecode(k2048BitRsaModulus)))
+          .SetCustomKid(custom_kid)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_TRUE(key->GetKid().has_value());
+  EXPECT_EQ(*key->GetKid(), "custom_kid");
+}
+
 TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithoutModulusFails) {
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()

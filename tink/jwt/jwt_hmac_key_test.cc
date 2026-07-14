@@ -26,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/key.h"
@@ -97,6 +98,45 @@ TEST_P(JwtHmacKeyTest, CreateSucceeds) {
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
   EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
+}
+
+TEST(JwtHmacKeyTest, CustomKidPreservesStringViewBounds) {
+  absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  std::string backing = "custom_kid|secret";
+  absl::string_view custom_kid(backing.data(), /*len=*/10);
+  absl::StatusOr<JwtHmacKey> key =
+      JwtHmacKey::Builder()
+          .SetParameters(*params)
+          .SetKeyBytes(RestrictedData(/*num_random_bytes=*/32))
+          .SetCustomKid(custom_kid)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_TRUE(key->GetKid().has_value());
+  EXPECT_EQ(*key->GetKid(), "custom_kid");
+}
+
+TEST(JwtHmacKeyTest, CustomKidPreservesEmbeddedNull) {
+  absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  std::string custom_kid("custom\0kid", 10);
+  absl::StatusOr<JwtHmacKey> key =
+      JwtHmacKey::Builder()
+          .SetParameters(*params)
+          .SetKeyBytes(RestrictedData(/*num_random_bytes=*/32))
+          .SetCustomKid(custom_kid)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_TRUE(key->GetKid().has_value());
+  EXPECT_EQ(*key->GetKid(), custom_kid);
 }
 
 TEST(JwtHmacKeyTest, CreateKeyWithMismatchedKeySizeFails) {

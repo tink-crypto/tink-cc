@@ -25,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
@@ -108,6 +109,31 @@ TEST_P(JwtEcdsaPublicKeyTest, CreateSucceeds) {
   EXPECT_THAT(key->GetPublicPoint(GetPartialKeyAccess()), Eq(public_point));
   EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
+}
+
+TEST(JwtEcdsaPublicKeyTest, CustomKidPreservesStringViewBounds) {
+  absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
+      JwtEcdsaParameters::KidStrategy::kCustom,
+      JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  std::string backing = "custom_kid|secret";
+  absl::string_view custom_kid(backing.data(), /*len=*/10);
+  absl::StatusOr<JwtEcdsaPublicKey> key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*params)
+          .SetPublicPoint(public_point)
+          .SetCustomKid(custom_kid)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_TRUE(key->GetKid().has_value());
+  EXPECT_EQ(*key->GetKid(), "custom_kid");
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateKeyWithInvalidPublicPointFails) {

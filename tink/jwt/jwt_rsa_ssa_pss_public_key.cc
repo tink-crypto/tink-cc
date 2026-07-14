@@ -55,7 +55,7 @@ JwtRsaSsaPssPublicKey::Builder::SetIdRequirement(int id_requirement) {
 
 JwtRsaSsaPssPublicKey::Builder& JwtRsaSsaPssPublicKey::Builder::SetCustomKid(
     absl::string_view custom_kid) {
-  custom_kid_ = custom_kid.data();
+  custom_kid_ = std::string(custom_kid);
   return *this;
 }
 

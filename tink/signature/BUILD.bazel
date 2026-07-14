@@ -969,6 +969,7 @@ cc_library(
     srcs = ["slh_dsa_private_key.cc"],
     hdrs = ["slh_dsa_private_key.h"],
     include_prefix = "tink/signature",
+    tags = ["fips"],
     visibility = ["//visibility:public"],
     deps = [
         ":signature_private_key",
@@ -980,6 +981,7 @@ cc_library(
         "//tink:restricted_data",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:dfsan_forwarders",
+        "//tink/internal:fips_utils",
         "//tink/signature/internal:slh_dsa_parameter_set",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -1977,6 +1979,7 @@ cc_test(
 cc_test(
     name = "slh_dsa_private_key_test",
     srcs = ["slh_dsa_private_key_test.cc"],
+    tags = ["fips"],
     deps = [
         ":slh_dsa_parameters",
         ":slh_dsa_private_key",
@@ -1985,8 +1988,8 @@ cc_test(
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink/internal:fips_utils",
         "//tink/subtle:random",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",

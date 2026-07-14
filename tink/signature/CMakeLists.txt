@@ -1877,6 +1877,7 @@ tink_cc_library(
     tink::core::restricted_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
     tink::signature::internal::slh_dsa_parameter_set
 )
 
@@ -1898,8 +1899,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::internal::fips_utils
     tink::subtle::random
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )

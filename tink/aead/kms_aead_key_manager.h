@@ -54,7 +54,7 @@ class KmsAeadKeyManager
     }
   };
 
-  KmsAeadKeyManager() : KeyTypeManager(absl::make_unique<AeadFactory>()) {}
+  KmsAeadKeyManager() : KeyTypeManager(std::make_unique<AeadFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

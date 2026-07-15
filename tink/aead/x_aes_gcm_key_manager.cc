@@ -130,7 +130,7 @@ class XAesGcmKeyManagerImpl
       if (!zero_copy_aead.ok()) {
         return zero_copy_aead.status();
       }
-      return absl::make_unique<internal::AeadFromZeroCopy>(
+      return std::make_unique<internal::AeadFromZeroCopy>(
           *std::move(zero_copy_aead));
     }
   };
@@ -157,8 +157,8 @@ class XAesGcmKeyManagerImpl
 
   XAesGcmKeyManagerImpl()
       : KeyTypeManager(
-            absl::make_unique<XAesGcmKeyManagerImpl::AeadFactory>(),
-            absl::make_unique<XAesGcmKeyManagerImpl::CordAeadFactory>()) {}
+            std::make_unique<XAesGcmKeyManagerImpl::AeadFactory>(),
+            std::make_unique<XAesGcmKeyManagerImpl::CordAeadFactory>()) {}
 
   uint32_t get_version() const override { return kCurrentVersion; }
 
@@ -219,7 +219,7 @@ class XAesGcmKeyManagerImpl
 std::unique_ptr<
     KeyTypeManager<XAesGcmKeyProto, XAesGcmKeyFormat, List<Aead, CordAead>>>
 CreateXAesGcmKeyManager() {
-  return absl::make_unique<XAesGcmKeyManagerImpl>();
+  return std::make_unique<XAesGcmKeyManagerImpl>();
 }
 
 }  // namespace tink

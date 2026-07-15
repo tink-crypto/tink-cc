@@ -156,13 +156,13 @@ class KmsEnvelopeAeadKeyManagerCreateTest : public ::testing::Test {
   // function.
   static void SetUpTestSuite() {
     if (!KmsClients::Add(
-             absl::make_unique<DummyKmsClient>("prefix1", "prefix1:some_key1"))
+             std::make_unique<DummyKmsClient>("prefix1", "prefix1:some_key1"))
              .ok())
       abort();
-    if (!KmsClients::Add(absl::make_unique<DummyKmsClient>("prefix2", "")).ok())
+    if (!KmsClients::Add(std::make_unique<DummyKmsClient>("prefix2", "")).ok())
       abort();
 
-    if (!Registry::RegisterKeyTypeManager(absl::make_unique<AesEaxKeyManager>(),
+    if (!Registry::RegisterKeyTypeManager(std::make_unique<AesEaxKeyManager>(),
                                           true)
              .ok())
       abort();
@@ -181,7 +181,7 @@ TEST_F(KmsEnvelopeAeadKeyManagerCreateTest, CreateAead) {
 
   auto direct_aead =
       KmsEnvelopeAead::New(key.params().dek_template(),
-                           absl::make_unique<DummyAead>("prefix1:some_key1"));
+                           std::make_unique<DummyAead>("prefix1:some_key1"));
   ASSERT_THAT(direct_aead, IsOk());
 
   EXPECT_THAT(EncryptThenDecrypt(*kms_aead.value(), *direct_aead.value(),
@@ -236,7 +236,7 @@ TEST_F(KmsEnvelopeAeadKeyManagerCreateTest, CreateAeadUnboundKey) {
 
   auto direct_aead =
       KmsEnvelopeAead::New(key.params().dek_template(),
-                           absl::make_unique<DummyAead>("prefix2:some_key2"));
+                           std::make_unique<DummyAead>("prefix2:some_key2"));
   ASSERT_THAT(direct_aead, IsOk());
 
   EXPECT_THAT(EncryptThenDecrypt(*kms_aead.value(), *direct_aead.value(),

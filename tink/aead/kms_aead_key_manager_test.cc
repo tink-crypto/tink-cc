@@ -115,10 +115,10 @@ class KmsAeadKeyManagerCreateTest : public ::testing::Test {
   // function.
   static void SetUpTestSuite() {
     if (!KmsClients::Add(
-             absl::make_unique<DummyKmsClient>("prefix1", "prefix1:some_key1"))
+             std::make_unique<DummyKmsClient>("prefix1", "prefix1:some_key1"))
              .ok())
       abort();
-    if (!KmsClients::Add(absl::make_unique<DummyKmsClient>("prefix2", "")).ok())
+    if (!KmsClients::Add(std::make_unique<DummyKmsClient>("prefix2", "")).ok())
       abort();
   }
 };

@@ -116,7 +116,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateKey) {
 
 TEST(XChaCha20Poly1305KeyManagerTest, DeriveKey) {
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
   XChaCha20Poly1305KeyFormat format;
   format.set_version(0);
   absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =
@@ -128,7 +128,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKey) {
 }
 
 TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyFromLongSeed) {
-  util::IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  util::IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdefXXX")};
 
   XChaCha20Poly1305KeyFormat format;
@@ -142,7 +142,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyFromLongSeed) {
 
 TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyWithoutEnoughEntropy) {
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0")};
+      std::make_unique<std::stringstream>("0")};
   XChaCha20Poly1305KeyFormat format;
   format.set_version(0);
 
@@ -155,7 +155,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyWithoutEnoughEntropy) {
 
 TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyWrongVersion) {
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
   XChaCha20Poly1305KeyFormat format;
   format.set_version(1);
   absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =

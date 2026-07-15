@@ -105,7 +105,7 @@ TEST_F(KmsEnvelopeAeadTest, NewFailsIfReamoteAeadIsNull) {
 TEST_F(KmsEnvelopeAeadTest, NewFailsIfDekKeyManagerIsNotRegistered) {
   Registry::Reset();
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Eax();
-  auto remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
+  auto remote_aead = std::make_unique<DummyAead>(kRemoteAeadName);
   EXPECT_THAT(
       KmsEnvelopeAead::New(dek_template, std::move(remote_aead)).status(),
       StatusIs(absl::StatusCode::kNotFound, HasSubstr("AesEaxKey")));
@@ -113,7 +113,7 @@ TEST_F(KmsEnvelopeAeadTest, NewFailsIfDekKeyManagerIsNotRegistered) {
 
 TEST_F(KmsEnvelopeAeadTest, NewFailsIfUsingDekTemplateOfUnsupportedKeyType) {
   KeyTemplate dek_template = MacKeyTemplates::HmacSha256();
-  auto remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
+  auto remote_aead = std::make_unique<DummyAead>(kRemoteAeadName);
   EXPECT_THAT(
       KmsEnvelopeAead::New(dek_template, std::move(remote_aead)).status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -122,7 +122,7 @@ TEST_F(KmsEnvelopeAeadTest, NewFailsIfUsingDekTemplateOfUnsupportedKeyType) {
 
 TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
-  auto remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
+  auto remote_aead = std::make_unique<DummyAead>(kRemoteAeadName);
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       KmsEnvelopeAead::New(dek_template, std::move(remote_aead));
   ASSERT_THAT(aead, IsOk());
@@ -174,7 +174,7 @@ TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
 
 TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
-  auto kms_remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
+  auto kms_remote_aead = std::make_unique<DummyAead>(kRemoteAeadName);
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       KmsEnvelopeAead::New(dek_template, std::move(kms_remote_aead));
   ASSERT_THAT(aead, IsOk());
@@ -205,7 +205,7 @@ TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {
 
 TEST_F(KmsEnvelopeAeadTest, MultipleEncryptionsProduceDifferentDeks) {
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
-  auto kms_remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
+  auto kms_remote_aead = std::make_unique<DummyAead>(kRemoteAeadName);
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       KmsEnvelopeAead::New(dek_template, std::move(kms_remote_aead));
   ASSERT_THAT(aead, IsOk());

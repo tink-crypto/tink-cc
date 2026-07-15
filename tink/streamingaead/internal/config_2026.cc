@@ -30,18 +30,18 @@ namespace internal {
 
 absl::Status AddStreamingAead2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<StreamingAeadWrapper>(), config);
+      std::make_unique<StreamingAeadWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCtrHmacStreamingKeyManager>(), config);
+      std::make_unique<AesCtrHmacStreamingKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
+      std::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
 }
 
 }  // namespace internal

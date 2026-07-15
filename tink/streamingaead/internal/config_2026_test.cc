@@ -105,20 +105,20 @@ TEST(StreamingAeadV0Test, GetPrimitive) {
     std::string plaintext = "plaintext";
     std::string ad = "ad";
 
-    auto ciphertext = absl::make_unique<std::stringstream>();
+    auto ciphertext = std::make_unique<std::stringstream>();
     std::stringbuf* const ciphertext_buf = ciphertext->rdbuf();
 
     auto ciphertext_out_stream =
-        absl::make_unique<util::OstreamOutputStream>(std::move(ciphertext));
+        std::make_unique<util::OstreamOutputStream>(std::move(ciphertext));
     absl::StatusOr<std::unique_ptr<OutputStream>> encrypt =
         (*saead)->NewEncryptingStream(std::move(ciphertext_out_stream), ad);
     ASSERT_THAT(encrypt, IsOk());
     ASSERT_THAT(WriteToStream((*encrypt).get(), plaintext), IsOk());
 
     auto ciphertext_in =
-        absl::make_unique<std::stringstream>(ciphertext_buf->str());
+        std::make_unique<std::stringstream>(ciphertext_buf->str());
     auto ciphertext_in_stream =
-        absl::make_unique<util::IstreamInputStream>(std::move(ciphertext_in));
+        std::make_unique<util::IstreamInputStream>(std::move(ciphertext_in));
     absl::StatusOr<std::unique_ptr<InputStream>> decrypt =
         (*saead)->NewDecryptingStream(std::move(ciphertext_in_stream), ad);
     ASSERT_THAT(decrypt, IsOk());

@@ -29,12 +29,12 @@ namespace internal {
 
 absl::Status AddStreamingAeadKeyGen2026(KeyGenConfiguration& config) {
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCtrHmacStreamingKeyManager>(), config);
+      std::make_unique<AesCtrHmacStreamingKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
+      std::make_unique<AesGcmHkdfStreamingKeyManager>(), config);
 }
 
 }  // namespace internal

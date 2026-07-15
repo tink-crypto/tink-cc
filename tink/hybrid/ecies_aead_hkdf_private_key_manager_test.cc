@@ -324,7 +324,8 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, GetPublicKey) {
 
 TEST(EciesAeadHkdfPrivateKeyManagerTest, Create) {
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesGcmKeyManager>(), true), IsOk());
+                  std::make_unique<AesGcmKeyManager>(), true),
+              IsOk());
 
   EciesAeadHkdfPrivateKey private_key = CreateValidKey();
   EciesAeadHkdfPublicKey public_key =
@@ -344,7 +345,8 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, Create) {
 
 TEST(EciesAeadHkdfPrivateKeyManagerTest, CreateDifferentKey) {
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesGcmKeyManager>(), true), IsOk());
+                  std::make_unique<AesGcmKeyManager>(), true),
+              IsOk());
 
   EciesAeadHkdfPrivateKey private_key = CreateValidKey();
   // Note: we create a new private key in the next line.

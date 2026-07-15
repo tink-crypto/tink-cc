@@ -76,12 +76,12 @@ class AlwaysFailHybridDecrypt : public HybridDecrypt {
 
 std::unique_ptr<HybridEncrypt> CreateAlwaysFailingHybridEncrypt(
     std::string message) {
-  return absl::make_unique<AlwaysFailHybridEncrypt>(std::move(message));
+  return std::make_unique<AlwaysFailHybridEncrypt>(std::move(message));
 }
 
 std::unique_ptr<HybridDecrypt> CreateAlwaysFailingHybridDecrypt(
     std::string message) {
-  return absl::make_unique<AlwaysFailHybridDecrypt>(std::move(message));
+  return std::make_unique<AlwaysFailHybridDecrypt>(std::move(message));
 }
 
 

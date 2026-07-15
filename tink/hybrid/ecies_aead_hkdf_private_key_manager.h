@@ -54,7 +54,7 @@ class EciesAeadHkdfPrivateKeyManager
   };
 
   EciesAeadHkdfPrivateKeyManager()
-      : PrivateKeyTypeManager(absl::make_unique<HybridDecryptFactory>()) {}
+      : PrivateKeyTypeManager(std::make_unique<HybridDecryptFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

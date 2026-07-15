@@ -38,12 +38,12 @@ absl::Status RegisterHpke() {
 
   // Register primitive wrappers.
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<HybridEncryptWrapper>());
+      std::make_unique<HybridEncryptWrapper>());
   if (!status.ok()) {
     return status;
   }
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<HybridDecryptWrapper>());
+      std::make_unique<HybridDecryptWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -56,8 +56,8 @@ absl::Status RegisterHpke() {
 
   // Register non-FIPS HPKE key managers.
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<internal::HpkePrivateKeyManager>(),
-      absl::make_unique<internal::HpkePublicKeyManager>(), true);
+      std::make_unique<internal::HpkePrivateKeyManager>(),
+      std::make_unique<internal::HpkePublicKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

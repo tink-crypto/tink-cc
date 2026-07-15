@@ -183,9 +183,9 @@ class HybridEncryptSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
     auto encryption_monitoring_client =
-        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
+        std::make_unique<NiceMock<internal::MockMonitoringClient>>();
     encryption_monitoring_client_ = encryption_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
@@ -219,14 +219,11 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
   PrimitiveSet<HybridEncrypt>::Builder hybrid_encrypt_set_builder;
   hybrid_encrypt_set_builder.AddAnnotations(annotations);
   hybrid_encrypt_set_builder.AddPrimitive(
-      absl::make_unique<DummyHybridEncrypt>("hybrid0"),
-      keyset_info.key_info(0));
+      std::make_unique<DummyHybridEncrypt>("hybrid0"), keyset_info.key_info(0));
   hybrid_encrypt_set_builder.AddPrimitive(
-      absl::make_unique<DummyHybridEncrypt>("hybrid1"),
-      keyset_info.key_info(1));
+      std::make_unique<DummyHybridEncrypt>("hybrid1"), keyset_info.key_info(1));
   hybrid_encrypt_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyHybridEncrypt>("hybrid2"),
-      keyset_info.key_info(2));
+      std::make_unique<DummyHybridEncrypt>("hybrid2"), keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_primitive_set =
       std::move(hybrid_encrypt_set_builder).Build();
   ASSERT_THAT(hybrid_encrypt_primitive_set, IsOk());

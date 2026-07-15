@@ -40,13 +40,13 @@ absl::Status HybridConfig::Register() {
 
   // Register primitive wrappers.
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<HybridEncryptWrapper>());
+      std::make_unique<HybridEncryptWrapper>());
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<HybridDecryptWrapper>());
+      std::make_unique<HybridDecryptWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -60,8 +60,8 @@ absl::Status HybridConfig::Register() {
 
   // Register non-FIPS key managers.
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<EciesAeadHkdfPrivateKeyManager>(),
-      absl::make_unique<EciesAeadHkdfPublicKeyManager>(), true);
+      std::make_unique<EciesAeadHkdfPrivateKeyManager>(),
+      std::make_unique<EciesAeadHkdfPublicKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

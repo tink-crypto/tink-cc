@@ -229,7 +229,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesGcmHybridDecryption) {
   // Register DEM key manager.
   std::string dem_key_type = AesGcmKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true)
+                  std::make_unique<AesGcmKeyManager>(), true)
                   .ok());
 
   int i = 0;
@@ -250,7 +250,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesCtrAeadHybridDecryption) {
   // Register DEM key manager.
   std::string dem_key_type = AesCtrHmacAeadKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesCtrHmacAeadKeyManager>(), true)
+                  std::make_unique<AesCtrHmacAeadKeyManager>(), true)
                   .ok());
 
   uint32_t aes_ctr_iv_size = 16;
@@ -279,7 +279,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testXChaCha20Poly1305HybridDecryption) {
   // Register DEM key manager.
   std::string dem_key_type = XChaCha20Poly1305KeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<XChaCha20Poly1305KeyManager>(), true)
+                  std::make_unique<XChaCha20Poly1305KeyManager>(), true)
                   .ok());
 
   // Generate and test many keys with various parameters.
@@ -294,7 +294,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesSivHybridDecryption) {
   // Register DEM key manager.
   std::string dem_key_type = AesSivKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesSivKeyManager>(), true)
+                  std::make_unique<AesSivKeyManager>(), true)
                   .ok());
 
   // Generate and test many keys with various parameters.
@@ -317,7 +317,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest,
   // Register DEM key manager.
   std::string dem_key_type = AesSivKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesSivKeyManager>(), true)
+                  std::make_unique<AesSivKeyManager>(), true)
                   .ok());
 
   CommonHybridKeyParams key_params = {EllipticCurveType::NIST_P256,

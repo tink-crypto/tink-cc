@@ -68,12 +68,12 @@ class FakeKeyTypeManager
    public:
     absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const AesGcmKeyProto& key) const override {
-      return absl::make_unique<FakePrimitive>(key.key_value());
+      return std::make_unique<FakePrimitive>(key.key_value());
     }
   };
 
   FakeKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<FakePrimitiveFactory>()) {}
+      : KeyTypeManager(std::make_unique<FakePrimitiveFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::SYMMETRIC;
@@ -114,7 +114,7 @@ class FakePrimitiveWrapper
   absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
-    return absl::make_unique<FakePrimitive>(
+    return std::make_unique<FakePrimitive>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -130,7 +130,7 @@ TEST(GlobalRegistryTest, GenerateNewKeysetHandleFromKeyGenConfig) {
       StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<FakeKeyTypeManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<FakeKeyTypeManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 
@@ -142,7 +142,7 @@ TEST(GlobalRegistryTest, GenerateNewKeysetHandleFromKeyGenConfig) {
 TEST(GlobalRegistryTest, GetPrimitiveFromConfig) {
   Registry::Reset();
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<FakeKeyTypeManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<FakeKeyTypeManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 
@@ -158,11 +158,11 @@ TEST(GlobalRegistryTest, GetPrimitiveFromConfig) {
 
   Registry::Reset();
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<FakeKeyTypeManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<FakeKeyTypeManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>()),
+                  std::make_unique<FakePrimitiveWrapper>()),
               IsOk());
 
   EXPECT_THAT((*handle)->GetPrimitive<FakePrimitive>(ConfigGlobalRegistry()),

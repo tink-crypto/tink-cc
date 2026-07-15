@@ -45,74 +45,74 @@ namespace {
 
 absl::Status AddMac(Configuration& config) {
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<MacWrapper>(), config);
+      std::make_unique<MacWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<internal::ChunkedMacWrapper>(), config);
+      std::make_unique<internal::ChunkedMacWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   return internal::ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HmacKeyManager>(), config);
+      std::make_unique<HmacKeyManager>(), config);
 }
 
 absl::Status AddAead(Configuration& config) {
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<AeadWrapper>(), config);
+      std::make_unique<AeadWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   status = internal::ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCtrHmacAeadKeyManager>(), config);
+      std::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return internal::ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmKeyManager>(), config);
+      std::make_unique<AesGcmKeyManager>(), config);
 }
 
 absl::Status AddPrf(Configuration& config) {
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<PrfSetWrapper>(), config);
+      std::make_unique<PrfSetWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   return internal::ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HmacPrfKeyManager>(), config);
+      std::make_unique<HmacPrfKeyManager>(), config);
 }
 
 absl::Status AddSignature(Configuration& config) {
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<PublicKeySignWrapper>(), config);
+      std::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<PublicKeyVerifyWrapper>(), config);
+      std::make_unique<PublicKeyVerifyWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<EcdsaSignKeyManager>(),
-      absl::make_unique<EcdsaVerifyKeyManager>(), config);
+      std::make_unique<EcdsaSignKeyManager>(),
+      std::make_unique<EcdsaVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPssSignKeyManager>(),
-      absl::make_unique<RsaSsaPssVerifyKeyManager>(), config);
+      std::make_unique<RsaSsaPssSignKeyManager>(),
+      std::make_unique<RsaSsaPssVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return internal::ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
+      std::make_unique<RsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
 }
 
 }  // namespace

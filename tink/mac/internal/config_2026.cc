@@ -31,23 +31,23 @@ namespace internal {
 
 absl::Status AddMac2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<MacWrapper>(), config);
+      std::make_unique<MacWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<ChunkedMacWrapper>(), config);
+      std::make_unique<ChunkedMacWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCmacKeyManager>(), config);
+      std::make_unique<AesCmacKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HmacKeyManager>(), config);
+      std::make_unique<HmacKeyManager>(), config);
 }
 
 }  // namespace internal

@@ -213,7 +213,7 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdates) {
 
 TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
   TestVector test_vector = GetParam();
-  auto factory = absl::make_unique<StatefulHmacBoringSslFactory>(
+  auto factory = std::make_unique<StatefulHmacBoringSslFactory>(
       test_vector.hash_type, test_vector.tag_size,
       util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
   absl::StatusOr<std::unique_ptr<StatefulMac>> hmac = factory->Create();

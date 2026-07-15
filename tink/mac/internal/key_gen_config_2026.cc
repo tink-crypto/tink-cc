@@ -29,12 +29,12 @@ namespace internal {
 
 absl::Status AddMacKeyGen2026(KeyGenConfiguration& config) {
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCmacKeyManager>(), config);
+      std::make_unique<AesCmacKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HmacKeyManager>(), config);
+      std::make_unique<HmacKeyManager>(), config);
 }
 
 }  // namespace internal

@@ -182,7 +182,7 @@ ChunkedMacSetWrapper::CreateComputation() const {
   absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       primary->get_primitive().CreateComputation();
   if (!computation.ok()) return computation.status();
-  return {absl::make_unique<ChunkedMacComputationSetWrapper>(
+  return {std::make_unique<ChunkedMacComputationSetWrapper>(
       *std::move(computation), primary->get_identifier(),
       primary->get_output_prefix_type())};
 }
@@ -191,7 +191,7 @@ absl::StatusOr<std::unique_ptr<ChunkedMacVerification>>
 ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
   tag = internal::EnsureStringNonNull(tag);
 
-  auto verifications = absl::make_unique<
+  auto verifications = std::make_unique<
       std::vector<std::unique_ptr<ChunkedMacVerificationWithPrefixType>>>();
 
   // Create verifications for all non-RAW keys with matching identifiers by
@@ -206,7 +206,7 @@ ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
             mac_entry->get_primitive().CreateVerification(raw_tag);
         if (verification.ok()) {
           auto verification_with_prefix =
-              absl::make_unique<ChunkedMacVerificationWithPrefixType>(
+              std::make_unique<ChunkedMacVerificationWithPrefixType>(
                   *std::move(verification),
                   mac_entry->get_output_prefix_type());
           verifications->push_back(std::move(verification_with_prefix));
@@ -223,14 +223,14 @@ ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
           mac_entry->get_primitive().CreateVerification(tag);
       if (verification.ok()) {
         auto verification_with_prefix =
-            absl::make_unique<ChunkedMacVerificationWithPrefixType>(
+            std::make_unique<ChunkedMacVerificationWithPrefixType>(
                 *std::move(verification), mac_entry->get_output_prefix_type());
         verifications->push_back(std::move(verification_with_prefix));
       }
     }
   }
 
-  return {absl::make_unique<ChunkedMacVerificationSetWrapper>(
+  return {std::make_unique<ChunkedMacVerificationSetWrapper>(
       std::move(verifications))};
 }
 
@@ -240,7 +240,7 @@ absl::StatusOr<std::unique_ptr<ChunkedMac>> ChunkedMacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set) const {
   absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;
-  return {absl::make_unique<ChunkedMacSetWrapper>(std::move(mac_set))};
+  return {std::make_unique<ChunkedMacSetWrapper>(std::move(mac_set))};
 }
 
 }  // namespace internal

@@ -76,7 +76,7 @@ class FakeStatefulMacFactory : public StatefulMacFactory {
 
   absl::StatusOr<std::unique_ptr<StatefulMac>> Create() const override {
     return std::unique_ptr<StatefulMac>(
-        absl::make_unique<FakeStatefulMac>(name_));
+        std::make_unique<FakeStatefulMac>(name_));
   }
 
  private:
@@ -95,8 +95,8 @@ TEST(ChunkedMacWrapperTest, WrapEmpty) {
 }
 
 std::unique_ptr<ChunkedMac> CreateFakeChunkedMac(absl::string_view name) {
-  return absl::make_unique<ChunkedMacImpl>(
-      absl::make_unique<FakeStatefulMacFactory>(name));
+  return std::make_unique<ChunkedMacImpl>(
+      std::make_unique<FakeStatefulMacFactory>(name));
 }
 
 KeysetInfo::KeyInfo CreateKeyInfo(uint32_t key_id,
@@ -129,7 +129,7 @@ TEST(ChunkedMacWrapperTest, ComputeMac) {
   // Wrap primitive set into a ChunkedMac.
   absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(
-          absl::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
+          std::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
@@ -163,7 +163,7 @@ TEST(ChunkedMacWrapperTest, VerifyMacWithUniquePrefix) {
   // Wrap primitive set into a ChunkedMac.
   absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(
-          absl::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
+          std::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   const std::string output_prefix = std::string("\x01\x00\x6e\x12\xaf", 5);
@@ -196,7 +196,7 @@ TEST(ChunkedMacWrapperTest, VerifyMacWithDuplicatePrefix) {
   // Wrap primitive set into a ChunkedMac.
   absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(
-          absl::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
+          std::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   const std::string output_prefix = std::string("\x01\x00\x6e\x12\xaf", 5);
@@ -228,7 +228,7 @@ TEST(ChunkedMacWrapperTest, VerifyMacWithRawTagStartingWithKeyId) {
   // Wrap primitive set into a ChunkedMac.
   absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(
-          absl::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
+          std::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   const std::string raw_tag = absl::StrCat(key_id0, ":chunkedmac1:inputdata");
@@ -264,7 +264,7 @@ TEST_P(ChunkedMacWrapperOutputPrefixTest, ComputeVerifyMac) {
   // Wrap primitive set into a ChunkedMac.
   absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(
-          absl::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
+          std::make_unique<PrimitiveSet<ChunkedMac>>(*std::move(mac_set)));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   // Compute MAC via wrapper.

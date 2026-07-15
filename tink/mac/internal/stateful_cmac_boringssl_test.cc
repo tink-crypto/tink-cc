@@ -142,7 +142,7 @@ TEST(StatefulCmacBoringSslTest,
 }
 
 TEST(StatefulCmacFactoryTest, FactoryGeneratesValidInstances) {
-  auto factory = absl::make_unique<StatefulCmacBoringSslFactory>(
+  auto factory = std::make_unique<StatefulCmacBoringSslFactory>(
       kTagSize, util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex)));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac = factory->Create();
   ASSERT_THAT(cmac, IsOk());

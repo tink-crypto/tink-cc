@@ -96,8 +96,8 @@ TEST(ChunkedMacFactoryTest, NewChunkedHmacWithMissingKeyParamsFails) {
 }
 
 TEST(ChunkedMacImplTest, CreateComputationSucceeds) {
-  auto factory = absl::make_unique<MockStatefulMacFactory>();
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto factory = std::make_unique<MockStatefulMacFactory>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   EXPECT_CALL(*factory, Create())
       .WillOnce(Return(ByMove(absl::StatusOr<std::unique_ptr<StatefulMac>>(
           std::move(stateful_mac)))));
@@ -107,7 +107,7 @@ TEST(ChunkedMacImplTest, CreateComputationSucceeds) {
 }
 
 TEST(ChunkedMacImplTest, CreateComputationWithFactoryErrorFails) {
-  auto factory = absl::make_unique<MockStatefulMacFactory>();
+  auto factory = std::make_unique<MockStatefulMacFactory>();
   absl::StatusOr<std::unique_ptr<StatefulMac>> error_status =
       absl::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*factory, Create())
@@ -119,8 +119,8 @@ TEST(ChunkedMacImplTest, CreateComputationWithFactoryErrorFails) {
 }
 
 TEST(ChunkedMacImplTest, CreateVerificationSucceeds) {
-  auto factory = absl::make_unique<MockStatefulMacFactory>();
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto factory = std::make_unique<MockStatefulMacFactory>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   EXPECT_CALL(*factory, Create())
       .WillOnce(Return(ByMove(absl::StatusOr<std::unique_ptr<StatefulMac>>(
           std::move(stateful_mac)))));
@@ -130,7 +130,7 @@ TEST(ChunkedMacImplTest, CreateVerificationSucceeds) {
 }
 
 TEST(ChunkedMacImplTest, CreateVerificationWithFactoryErrorFails) {
-  auto factory = absl::make_unique<MockStatefulMacFactory>();
+  auto factory = std::make_unique<MockStatefulMacFactory>();
   absl::StatusOr<std::unique_ptr<StatefulMac>> error_status =
       absl::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*factory, Create())
@@ -142,7 +142,7 @@ TEST(ChunkedMacImplTest, CreateVerificationWithFactoryErrorFails) {
 }
 
 TEST(ChunkedMacComputationImplTest, UpdateSucceeds) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   EXPECT_CALL(*stateful_mac, Update(_)).WillOnce(Return(absl::OkStatus()));
   ChunkedMacComputationImpl mac_computation(std::move(stateful_mac));
 
@@ -150,7 +150,7 @@ TEST(ChunkedMacComputationImplTest, UpdateSucceeds) {
 }
 
 TEST(ChunkedMacComputationImplTest, UpdateFails) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::Status error_status =
       absl::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*stateful_mac, Update(_)).WillOnce(Return(error_status));
@@ -160,7 +160,7 @@ TEST(ChunkedMacComputationImplTest, UpdateFails) {
 }
 
 TEST(ChunkedMacComputationImplTest, OperationsFailAfterComputeMac) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacComputationImpl mac_computation(std::move(stateful_mac));
@@ -174,7 +174,7 @@ TEST(ChunkedMacComputationImplTest, OperationsFailAfterComputeMac) {
 }
 
 TEST(ChunkedMacComputationImplTest, ComputeMacSucceeds) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacComputationImpl mac_computation(std::move(stateful_mac));
@@ -183,7 +183,7 @@ TEST(ChunkedMacComputationImplTest, ComputeMacSucceeds) {
 }
 
 TEST(ChunkedMacComputationImplTest, ComputeMacFails) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::Status error_status =
       absl::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData())
@@ -195,7 +195,7 @@ TEST(ChunkedMacComputationImplTest, ComputeMacFails) {
 }
 
 TEST(ChunkedMacVerificationImplTest, UpdateSucceeds) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   EXPECT_CALL(*stateful_mac, Update(_)).WillOnce(Return(absl::OkStatus()));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");
 
@@ -203,7 +203,7 @@ TEST(ChunkedMacVerificationImplTest, UpdateSucceeds) {
 }
 
 TEST(ChunkedMacVerificationImplTest, UpdateFails) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::Status error_status =
       absl::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*stateful_mac, Update(_)).WillOnce(Return(error_status));
@@ -213,7 +213,7 @@ TEST(ChunkedMacVerificationImplTest, UpdateFails) {
 }
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacSucceeds) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");
@@ -222,7 +222,7 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacSucceeds) {
 }
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithInvalidSameLengthTag) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag123");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac),
@@ -233,7 +233,7 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithInvalidSameLengthTag) {
 }
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithDifferentLengthTag) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac),
@@ -244,7 +244,7 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithDifferentLengthTag) {
 }
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithFinalizeError) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::Status error_status =
       absl::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData())
@@ -255,7 +255,7 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithFinalizeError) {
 }
 
 TEST(ChunkedMacVerificationImplTest, OperationsFailAfterVerifyMac) {
-  auto stateful_mac = absl::make_unique<MockStatefulMac>();
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
   EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");

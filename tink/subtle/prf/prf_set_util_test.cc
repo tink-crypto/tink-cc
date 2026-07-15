@@ -71,7 +71,7 @@ class FakeStatefulMacFactory : public internal::StatefulMacFactory {
       : update_status_(update_status), finalize_result_(finalize_result) {}
   absl::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
       const override {
-    auto mac_mock = absl::make_unique<NiceMock<MockStatefulMac>>();
+    auto mac_mock = std::make_unique<NiceMock<MockStatefulMac>>();
     ON_CALL(*mac_mock, Update(_)).WillByDefault(Return(update_status_));
     ON_CALL(*mac_mock, FinalizeAsSecretData())
         .WillByDefault(Return(finalize_result_));
@@ -91,8 +91,8 @@ class MockStreamingPrf : public StreamingPrf {
 };
 
 std::unique_ptr<InputStream> GetInputStreamForString(const std::string& input) {
-  return absl::make_unique<util::IstreamInputStream>(
-      absl::make_unique<std::stringstream>(input));
+  return std::make_unique<util::IstreamInputStream>(
+      std::make_unique<std::stringstream>(input));
 }
 
 class PrfFromStatefulMacFactoryTest : public ::testing::Test {
@@ -105,8 +105,8 @@ class PrfFromStatefulMacFactoryTest : public ::testing::Test {
                   util::SecretDataFromStringView(*finalize_result))
             : static_cast<absl::StatusOr<SecretData>>(finalize_result.status());
     prf_ = CreatePrfFromStatefulMacFactory(
-        absl::make_unique<FakeStatefulMacFactory>(update_status,
-                                                  finalize_result_secret_data));
+        std::make_unique<FakeStatefulMacFactory>(update_status,
+                                                 finalize_result_secret_data));
   }
   Prf* prf() { return prf_.get(); }
 
@@ -146,7 +146,7 @@ TEST_F(PrfFromStatefulMacFactoryTest, ComputePrfTooMuchOutputRequested) {
 class PrfFromStreamingPrfTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    auto streaming_prf = absl::make_unique<NiceMock<MockStreamingPrf>>();
+    auto streaming_prf = std::make_unique<NiceMock<MockStreamingPrf>>();
     DefaultValue<std::unique_ptr<InputStream>>::SetFactory(
         [] { return GetInputStreamForString("output"); });
     EXPECT_CALL(*streaming_prf, ComputePrf(Eq("input"))).Times(AnyNumber());

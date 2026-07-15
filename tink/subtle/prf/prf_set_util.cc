@@ -97,12 +97,12 @@ class PrfFromStatefulMacFactory : public Prf {
 
 std::unique_ptr<Prf> CreatePrfFromStreamingPrf(
     std::unique_ptr<StreamingPrf> streaming_prf) {
-  return absl::make_unique<PrfFromStreamingPrf>(std::move(streaming_prf));
+  return std::make_unique<PrfFromStreamingPrf>(std::move(streaming_prf));
 }
 
 std::unique_ptr<Prf> CreatePrfFromStatefulMacFactory(
     std::unique_ptr<internal::StatefulMacFactory> stateful_mac_factory) {
-  return absl::make_unique<PrfFromStatefulMacFactory>(
+  return std::make_unique<PrfFromStatefulMacFactory>(
       std::move(stateful_mac_factory));
 }
 

@@ -54,8 +54,8 @@ class DummyStreamingPrf : public StreamingPrf {
   explicit DummyStreamingPrf(absl::string_view name) : name_(name) {}
   std::unique_ptr<InputStream> ComputePrf(
       absl::string_view input) const override {
-    return absl::make_unique<crypto::tink::util::IstreamInputStream>(
-        absl::make_unique<std::stringstream>(
+    return std::make_unique<crypto::tink::util::IstreamInputStream>(
+        std::make_unique<std::stringstream>(
             absl::StrCat(name_.length(), ":", name_, input)));
   }
 
@@ -72,7 +72,7 @@ TEST(AeadSetWrapperTest, WrapNullptr) {
 
 TEST(KeysetDeriverWrapperTest, WrapEmpty) {
   EXPECT_THAT(StreamingPrfWrapper()
-                  .Wrap(absl::make_unique<PrimitiveSet<StreamingPrf>>())
+                  .Wrap(std::make_unique<PrimitiveSet<StreamingPrf>>())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("exactly one key")));
@@ -86,7 +86,7 @@ TEST(KeysetDeriverWrapperTest, WrapSingle) {
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
 
   prf_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyStreamingPrf>("single_key"), key_info);
+      std::make_unique<DummyStreamingPrf>("single_key"), key_info);
 
   absl::StatusOr<PrimitiveSet<StreamingPrf>> prf_set =
       std::move(prf_set_builder).Build();
@@ -112,7 +112,7 @@ TEST(KeysetDeriverWrapperTest, WrapNonRaw) {
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
 
   prf_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyStreamingPrf>("single_key"), key_info);
+      std::make_unique<DummyStreamingPrf>("single_key"), key_info);
   absl::StatusOr<PrimitiveSet<StreamingPrf>> prf_set =
       std::move(prf_set_builder).Build();
   ASSERT_THAT(prf_set, IsOk());
@@ -133,10 +133,10 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
 
   prf_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyStreamingPrf>("single_key"), key_info);
+      std::make_unique<DummyStreamingPrf>("single_key"), key_info);
   key_info.set_key_id(2345);
   prf_set_builder.AddPrimitive(
-      absl::make_unique<DummyStreamingPrf>("second_key"), key_info);
+      std::make_unique<DummyStreamingPrf>("second_key"), key_info);
   absl::StatusOr<PrimitiveSet<StreamingPrf>> prf_set =
       std::move(prf_set_builder).Build();
   ASSERT_THAT(prf_set, IsOk());

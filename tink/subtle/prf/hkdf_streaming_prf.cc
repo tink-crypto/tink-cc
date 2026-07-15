@@ -195,7 +195,7 @@ class HkdfInputStream : public InputStream {
 
 std::unique_ptr<InputStream> HkdfStreamingPrf::ComputePrf(
     absl::string_view input) const {
-  return absl::make_unique<HkdfInputStream>(hash_, secret_, salt_, input);
+  return std::make_unique<HkdfInputStream>(hash_, secret_, salt_, input);
 }
 
 // static

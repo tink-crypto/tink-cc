@@ -87,7 +87,7 @@ absl::StatusOr<std::unique_ptr<StreamingPrf>> StreamingPrfWrapper::Wrap(
                      entry->get_output_prefix_type()));
   }
   return {
-      absl::make_unique<StreamingPrfSetWrapper>(std::move(streaming_prf_set))};
+      std::make_unique<StreamingPrfSetWrapper>(std::move(streaming_prf_set))};
 }
 
 }  // namespace tink

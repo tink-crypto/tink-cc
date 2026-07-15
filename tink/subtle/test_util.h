@@ -247,13 +247,13 @@ class DummyStreamingAead : public NonceBasedStreamingAead {
  protected:
   absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> NewSegmentEncrypter(
       absl::string_view associated_data) const override {
-    return {absl::make_unique<DummyStreamSegmentEncrypter>(
+    return {std::make_unique<DummyStreamSegmentEncrypter>(
         pt_segment_size_, header_size_, ct_offset_)};
   }
 
   absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> NewSegmentDecrypter(
       absl::string_view associated_data) const override {
-    return {absl::make_unique<DummyStreamSegmentDecrypter>(
+    return {std::make_unique<DummyStreamSegmentDecrypter>(
         pt_segment_size_, header_size_, ct_offset_)};
   }
 

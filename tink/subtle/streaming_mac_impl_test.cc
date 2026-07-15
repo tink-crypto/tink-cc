@@ -82,7 +82,7 @@ class DummyStatefulMacFactory : public internal::StatefulMacFactory {
   absl::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
       const override {
     return std::unique_ptr<internal::StatefulMac>(
-        absl::make_unique<DummyStatefulMac>("streaming mac:"));
+        std::make_unique<DummyStatefulMac>("streaming mac:"));
   }
 };
 
@@ -91,9 +91,9 @@ class DummyStatefulMacFactory : public internal::StatefulMacFactory {
 std::unique_ptr<OutputStreamWithResult<std::string>>
 GetComputeMacOutputStream() {
   auto mac_factory = std::unique_ptr<internal::StatefulMacFactory>(
-      absl::make_unique<DummyStatefulMacFactory>());
+      std::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
-      absl::make_unique<StreamingMacImpl>(std::move(mac_factory));
+      std::make_unique<StreamingMacImpl>(std::move(mac_factory));
   absl::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
       stream_status = streaming_mac->NewComputeMacOutputStream();
   EXPECT_THAT(stream_status, IsOk());
@@ -105,9 +105,9 @@ GetComputeMacOutputStream() {
 std::unique_ptr<OutputStreamWithResult<absl::Status>> GetVerifyMacOutputStream(
     std::string expected_mac) {
   auto mac_factory = std::unique_ptr<internal::StatefulMacFactory>(
-      absl::make_unique<DummyStatefulMacFactory>());
+      std::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
-      absl::make_unique<StreamingMacImpl>(std::move(mac_factory));
+      std::make_unique<StreamingMacImpl>(std::move(mac_factory));
   absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>
       stream_status = streaming_mac->NewVerifyMacOutputStream(expected_mac);
   EXPECT_THAT(stream_status, IsOk());

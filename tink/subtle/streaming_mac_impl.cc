@@ -79,7 +79,7 @@ StreamingMacImpl::NewComputeMacOutputStream() const {
   }
 
   std::unique_ptr<OutputStreamWithResult<std::string>> string_to_return =
-      absl::make_unique<ComputeMacOutputStream>(std::move(mac_status.value()));
+      std::make_unique<ComputeMacOutputStream>(std::move(mac_status.value()));
   return std::move(string_to_return);
 }
 
@@ -218,8 +218,8 @@ StreamingMacImpl::NewVerifyMacOutputStream(const std::string& mac_value) const {
     return mac_status.status();
   }
   return std::unique_ptr<OutputStreamWithResult<absl::Status>>(
-      absl::make_unique<VerifyMacOutputStream>(mac_value,
-                                               std::move(mac_status.value())));
+      std::make_unique<VerifyMacOutputStream>(mac_value,
+                                              std::move(mac_status.value())));
 }
 }  // namespace subtle
 }  // namespace tink

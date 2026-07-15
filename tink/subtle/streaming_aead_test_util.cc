@@ -89,12 +89,12 @@ absl::Status EncryptThenDecrypt(StreamingAead* encrypter,
                                 absl::string_view associated_data,
                                 int ciphertext_offset) {
   // Prepare ciphertext destination stream.
-  auto ct_stream = absl::make_unique<std::stringstream>();
+  auto ct_stream = std::make_unique<std::stringstream>();
 
   // A reference to the ciphertext buffer, for later validation.
   auto ct_buf = ct_stream->rdbuf();
   auto ct_destination =
-      absl::make_unique<OstreamOutputStream>(std::move(ct_stream));
+      std::make_unique<OstreamOutputStream>(std::move(ct_stream));
   auto status = subtle::test::WriteToStream(
       ct_destination.get(), std::string(ciphertext_offset, 'o'), false);
   if (!status.ok()) return status;
@@ -117,10 +117,10 @@ absl::Status EncryptThenDecrypt(StreamingAead* encrypter,
   }
 
   // Prepare an InputStream with the ciphertext.
-  auto ct_bytes = absl::make_unique<std::stringstream>(
+  auto ct_bytes = std::make_unique<std::stringstream>(
       ct_buf->str().substr(ciphertext_offset));
   std::unique_ptr<InputStream> ct_source(
-      absl::make_unique<IstreamInputStream>(std::move(ct_bytes)));
+      std::make_unique<IstreamInputStream>(std::move(ct_bytes)));
 
   // Decrypt the ciphertext using the decrypter.
   auto dec_stream_result = decrypter->NewDecryptingStream(

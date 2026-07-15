@@ -62,12 +62,11 @@ std::unique_ptr<InputStream> GetDecryptingStream(
     int pt_segment_size, int header_size, int ct_offset,
     absl::string_view ciphertext, ValidationRefs* refs) {
   // Prepare ciphertext source stream.
-  auto ct_stream =
-      absl::make_unique<std::stringstream>(std::string(ciphertext));
+  auto ct_stream = std::make_unique<std::stringstream>(std::string(ciphertext));
   std::unique_ptr<InputStream> ct_source(
-      absl::make_unique<IstreamInputStream>(std::move(ct_stream)));
-  auto seg_dec = absl::make_unique<DummyStreamSegmentDecrypter>(
-          pt_segment_size, header_size, ct_offset);
+      std::make_unique<IstreamInputStream>(std::move(ct_stream)));
+  auto seg_dec = std::make_unique<DummyStreamSegmentDecrypter>(
+      pt_segment_size, header_size, ct_offset);
   // A reference to the segment decrypter, for later validation.
   refs->seg_dec = seg_dec.get();
   auto dec_stream = std::move(StreamingAeadDecryptingStream::New(

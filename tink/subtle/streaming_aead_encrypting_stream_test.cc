@@ -65,12 +65,12 @@ std::unique_ptr<OutputStream> GetEncryptingStream(int pt_segment_size,
                                                   int ct_offset,
                                                   ValidationRefs* refs) {
   // Prepare ciphertext destination stream.
-  auto ct_stream = absl::make_unique<std::stringstream>();
+  auto ct_stream = std::make_unique<std::stringstream>();
   // A reference to the ciphertext buffer, for later validation.
   refs->ct_buf = ct_stream->rdbuf();
   std::unique_ptr<OutputStream> ct_destination(
-      absl::make_unique<OstreamOutputStream>(std::move(ct_stream)));
-  auto seg_enc = absl::make_unique<DummyStreamSegmentEncrypter>(
+      std::make_unique<OstreamOutputStream>(std::move(ct_stream)));
+  auto seg_enc = std::make_unique<DummyStreamSegmentEncrypter>(
       pt_segment_size, header_size, ct_offset);
   // A reference to the segment encrypter, for later validation.
   refs->seg_enc = seg_enc.get();

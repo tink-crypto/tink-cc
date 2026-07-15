@@ -85,7 +85,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid JSON Keyset");
   }
-  auto keyset = absl::make_unique<Keyset>();
+  auto keyset = std::make_unique<Keyset>();
   if (!keyset->ParseFromString(binary_keyset)) {
     return absl::Status(absl::StatusCode::kInternal,
                         "internal error parsing keyset");
@@ -113,7 +113,7 @@ JsonKeysetReader::ReadEncrypted() {
   if (!status.ok()) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
   }
-  auto encrypted_keyset = absl::make_unique<EncryptedKeyset>();
+  auto encrypted_keyset = std::make_unique<EncryptedKeyset>();
   if (!encrypted_keyset->ParseFromString(binary_encrypted_keyset)) {
     return absl::Status(absl::StatusCode::kInternal,
                         "internal error parsing encrypted_keyset");

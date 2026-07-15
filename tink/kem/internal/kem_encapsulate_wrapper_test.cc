@@ -136,7 +136,7 @@ class KemEncapsulateWrapperTest : public ::testing::Test {
             .Build();
     ABSL_CHECK_OK(kem_encapsulate_set.status());
 
-    kem_encapsulate_set_ = absl::make_unique<PrimitiveSet<KemEncapsulate>>(
+    kem_encapsulate_set_ = std::make_unique<PrimitiveSet<KemEncapsulate>>(
         std::move(*kem_encapsulate_set));
   }
 
@@ -153,7 +153,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapNullptr) {
 TEST_F(KemEncapsulateWrapperTest, WrapEmpty) {
   EXPECT_THAT(
       KemEncapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemEncapsulate>>())
+          .Wrap(std::make_unique<PrimitiveSet<KemEncapsulate>>())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("no primary")));
 }
@@ -172,7 +172,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapNoPrimary) {
 
   EXPECT_THAT(
       KemEncapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemEncapsulate>>(
+          .Wrap(std::make_unique<PrimitiveSet<KemEncapsulate>>(
               std::move(*kem_encapsulate_set)))
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("no primary")));
@@ -205,7 +205,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapNonTinkOutputPrefix) {
 
   EXPECT_THAT(
       KemEncapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemEncapsulate>>(
+          .Wrap(std::make_unique<PrimitiveSet<KemEncapsulate>>(
               std::move(*kem_encapsulate_set)))
           .status(),
       StatusIs(
@@ -239,7 +239,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapRepeatedKeyId) {
 
   EXPECT_THAT(
       KemEncapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemEncapsulate>>(
+          .Wrap(std::make_unique<PrimitiveSet<KemEncapsulate>>(
               std::move(*kem_encapsulate_set)))
           .status(),
       StatusIs(
@@ -270,10 +270,10 @@ class KemEncapsulateWrapperTestWithMonitoring
     KemEncapsulateWrapperTest::SetUp();
 
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
 
     auto encapsulation_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     encapsulation_monitoring_client_ptr_ =
         encapsulation_monitoring_client.get();
 

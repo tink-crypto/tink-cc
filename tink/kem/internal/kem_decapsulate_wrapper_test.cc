@@ -182,9 +182,9 @@ class KemDecapsulateWrapperTest : public ::testing::Test {
             .Build();
     ABSL_CHECK_OK(kem_decapsulate_set.status());
 
-    kem_encapsulate_set_ = absl::make_unique<PrimitiveSet<KemEncapsulate>>(
+    kem_encapsulate_set_ = std::make_unique<PrimitiveSet<KemEncapsulate>>(
         std::move(*kem_encapsulate_set));
-    kem_decapsulate_set_ = absl::make_unique<PrimitiveSet<KemDecapsulate>>(
+    kem_decapsulate_set_ = std::make_unique<PrimitiveSet<KemDecapsulate>>(
         std::move(*kem_decapsulate_set));
   }
 
@@ -202,7 +202,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapNullptr) {
 TEST_F(KemDecapsulateWrapperTest, WrapEmpty) {
   EXPECT_THAT(
       KemDecapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemDecapsulate>>())
+          .Wrap(std::make_unique<PrimitiveSet<KemDecapsulate>>())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("no primary")));
 }
@@ -221,7 +221,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapNoPrimary) {
 
   EXPECT_THAT(
       KemDecapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemDecapsulate>>(
+          .Wrap(std::make_unique<PrimitiveSet<KemDecapsulate>>(
               std::move(*kem_decapsulate_set)))
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("no primary")));
@@ -254,7 +254,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapNonTinkOutputPrefix) {
 
   EXPECT_THAT(
       KemDecapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemDecapsulate>>(
+          .Wrap(std::make_unique<PrimitiveSet<KemDecapsulate>>(
               std::move(*kem_decapsulate_set)))
           .status(),
       StatusIs(
@@ -288,7 +288,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapRepeatedKeyId) {
 
   EXPECT_THAT(
       KemDecapsulateWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KemDecapsulate>>(
+          .Wrap(std::make_unique<PrimitiveSet<KemDecapsulate>>(
               std::move(*kem_decapsulate_set)))
           .status(),
       StatusIs(
@@ -414,15 +414,15 @@ class KemDecapsulateWrapperTestWithMonitoring
     KemDecapsulateWrapperTest::SetUp();
 
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
 
     auto encapsulation_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     encapsulation_monitoring_client_ptr_ =
         encapsulation_monitoring_client.get();
 
     auto decapsulation_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     decapsulation_monitoring_client_ptr_ =
         decapsulation_monitoring_client.get();
 

@@ -60,7 +60,7 @@ TEST(MonitoringUtilTest,
 
 TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetNullPrimary) {
   PrimitiveSet<std::string>::Builder primitive_set_builder;
-  auto some_string = absl::make_unique<std::string>("Text");
+  auto some_string = std::make_unique<std::string>("Text");
   KeysetInfo::KeyInfo key_info;
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.SomePrimitiveInstance");
@@ -85,7 +85,7 @@ struct PrimitiveSetInputPrimitive {
 PrimitiveSetInputPrimitive<std::string> NewPrimitiveSetInputPrimitive(
     absl::string_view primitive_value, absl::string_view type_url,
     KeyStatusType status, uint32_t key_id, OutputPrefixType prefix_type) {
-  auto some_string = absl::make_unique<std::string>(primitive_value);
+  auto some_string = std::make_unique<std::string>(primitive_value);
   KeysetInfo::KeyInfo key_info;
   std::string type_url_str(type_url);
   key_info.set_type_url(type_url_str);

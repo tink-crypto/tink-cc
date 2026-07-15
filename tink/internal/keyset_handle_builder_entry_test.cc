@@ -90,7 +90,7 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
+  return std::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
 }
 
 TEST(KeysetHandleBuilderEntryTest, Status) {
@@ -99,7 +99,7 @@ TEST(KeysetHandleBuilderEntryTest, Status) {
   ASSERT_THAT(parameters, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(absl::make_unique<LegacyProtoParameters>(*parameters));
+      ParametersEntry(std::make_unique<LegacyProtoParameters>(*parameters));
 
   entry.SetStatus(KeyStatus::kEnabled);
   EXPECT_THAT(entry.GetStatus(), KeyStatus::kEnabled);
@@ -117,7 +117,7 @@ TEST(KeysetHandleBuilderEntryTest, IdStrategy) {
   ASSERT_THAT(parameters, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(absl::make_unique<LegacyProtoParameters>(*parameters));
+      ParametersEntry(std::make_unique<LegacyProtoParameters>(*parameters));
 
   entry.SetFixedId(123);
   EXPECT_THAT(entry.GetKeyIdStrategyEnum(), KeyIdStrategyEnum::kFixedId);
@@ -138,7 +138,7 @@ TEST(KeysetHandleBuilderEntryTest, Primary) {
   ASSERT_THAT(parameters, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(absl::make_unique<LegacyProtoParameters>(*parameters));
+      ParametersEntry(std::make_unique<LegacyProtoParameters>(*parameters));
 
   entry.SetPrimary();
   EXPECT_THAT(entry.IsPrimary(), IsTrue());
@@ -158,7 +158,7 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromParameters) {
   ASSERT_THAT(parameters, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(absl::make_unique<LegacyProtoParameters>(*parameters));
+      ParametersEntry(std::make_unique<LegacyProtoParameters>(*parameters));
   entry.SetStatus(KeyStatus::kEnabled);
   entry.SetFixedId(123);
   absl::StatusOr<util::SecretProto<Keyset::Key>> keyset_key =
@@ -183,7 +183,7 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
   ASSERT_THAT(parameters, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(absl::make_unique<LegacyProtoParameters>(*parameters));
+      ParametersEntry(std::make_unique<LegacyProtoParameters>(*parameters));
   entry.SetStatus(KeyStatus::kEnabled);
   entry.SetFixedId(123);
   absl::StatusOr<util::SecretProto<Keyset::Key>> keyset_key =
@@ -202,7 +202,7 @@ TEST(CreateKeysetKeyCustomConfigTest,
   ASSERT_THAT(params, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(absl::make_unique<XChaCha20Poly1305Parameters>(*params));
+      ParametersEntry(std::make_unique<XChaCha20Poly1305Parameters>(*params));
   entry.SetStatus(KeyStatus::kEnabled);
   entry.SetFixedId(123);
 
@@ -215,7 +215,7 @@ TEST(CreateKeysetKeyCustomConfigTest,
   KeyGenConfiguration key_manager_config;
   ASSERT_THAT(
       internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-          absl::make_unique<XChaCha20Poly1305KeyManager>(), key_manager_config),
+          std::make_unique<XChaCha20Poly1305KeyManager>(), key_manager_config),
       IsOk());
 
   absl::StatusOr<util::SecretProto<Keyset::Key>> key_from_creator_fn =
@@ -260,7 +260,7 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromKey) {
       LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key.status(), IsOk());
 
-  KeyEntry entry = KeyEntry(absl::make_unique<LegacyProtoKey>(*key));
+  KeyEntry entry = KeyEntry(std::make_unique<LegacyProtoKey>(*key));
   entry.SetStatus(KeyStatus::kEnabled);
   entry.SetFixedId(123);
   absl::StatusOr<util::SecretProto<Keyset::Key>> keyset_key =
@@ -291,7 +291,7 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
       LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key.status(), IsOk());
 
-  KeyEntry entry = KeyEntry(absl::make_unique<LegacyProtoKey>(*key));
+  KeyEntry entry = KeyEntry(std::make_unique<LegacyProtoKey>(*key));
   entry.SetStatus(KeyStatus::kEnabled);
   entry.SetFixedId(123);
   absl::StatusOr<util::SecretProto<Keyset::Key>> keyset_key =
@@ -315,7 +315,7 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
       LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key.status(), IsOk());
 
-  KeyEntry entry = KeyEntry(absl::make_unique<LegacyProtoKey>(*key));
+  KeyEntry entry = KeyEntry(std::make_unique<LegacyProtoKey>(*key));
   entry.SetStatus(KeyStatus::kEnabled);
   absl::StatusOr<util::SecretProto<Keyset::Key>> keyset_key =
       entry.CreateKeysetKey(/*id=*/456, KeyGenConfigGlobalRegistry());

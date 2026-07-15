@@ -87,12 +87,12 @@ class FakeKeyTypeManager
    public:
     absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const AesGcmKeyProto& key) const override {
-      return absl::make_unique<FakePrimitive>(key.key_value());
+      return std::make_unique<FakePrimitive>(key.key_value());
     }
   };
 
   FakeKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<FakePrimitiveFactory>()) {}
+      : KeyTypeManager(std::make_unique<FakePrimitiveFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::SYMMETRIC;
@@ -135,13 +135,13 @@ absl::StatusOr<std::unique_ptr<crypto::tink::AesGcmKey>> CreateAesGcmKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<crypto::tink::AesGcmKey>(*key);
+  return std::make_unique<crypto::tink::AesGcmKey>(*key);
 }
 
 TEST(KeyGenConfigurationImplTest, AddKeyTypeManager) {
   KeyGenConfiguration config;
   EXPECT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 }
 
@@ -163,7 +163,7 @@ TEST(KeyGenConfigurationImplTest, AddKeyCreator) {
 TEST(KeyGenConfigurationImplTest, GetKeyTypeInfoStore) {
   KeyGenConfiguration config;
   ASSERT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
   EXPECT_THAT(KeyGenConfigurationImpl::GetKeyTypeInfoStore(config), IsOk());
@@ -172,7 +172,7 @@ TEST(KeyGenConfigurationImplTest, GetKeyTypeInfoStore) {
 TEST(KeyGenConfigurationImplTest, GetKeyTypeManager) {
   KeyGenConfiguration config;
   ASSERT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
   std::string type_url = FakeKeyTypeManager().get_key_type();
@@ -275,12 +275,12 @@ class FakeSignKeyManager
    public:
     absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const RsaSsaPssPrivateKeyProto& key) const override {
-      return {absl::make_unique<test::DummyPublicKeySign>("a public key sign")};
+      return {std::make_unique<test::DummyPublicKeySign>("a public key sign")};
     }
   };
 
   explicit FakeSignKeyManager()
-      : PrivateKeyTypeManager(absl::make_unique<PublicKeySignFactory>()) {}
+      : PrivateKeyTypeManager(std::make_unique<PublicKeySignFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::ASYMMETRIC_PRIVATE;
@@ -328,12 +328,12 @@ class FakeVerifyKeyManager
     absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const RsaSsaPssPublicKeyProto& key) const override {
       return {
-          absl::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
+          std::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
     }
   };
 
   explicit FakeVerifyKeyManager()
-      : KeyTypeManager(absl::make_unique<PublicKeyVerifyFactory>()) {}
+      : KeyTypeManager(std::make_unique<PublicKeyVerifyFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::ASYMMETRIC_PUBLIC;
@@ -358,16 +358,16 @@ class FakeVerifyKeyManager
 TEST(KeyGenConfigurationImplTest, AddAsymmetricKeyManagers) {
   KeyGenConfiguration config;
   EXPECT_THAT(KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-                  absl::make_unique<FakeSignKeyManager>(),
-                  absl::make_unique<FakeVerifyKeyManager>(), config),
+                  std::make_unique<FakeSignKeyManager>(),
+                  std::make_unique<FakeVerifyKeyManager>(), config),
               IsOk());
 }
 
 TEST(KeyGenConfigurationImplTest, GetAsymmetricKeyManagers) {
   KeyGenConfiguration config;
   ASSERT_THAT(KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-                  absl::make_unique<FakeSignKeyManager>(),
-                  absl::make_unique<FakeVerifyKeyManager>(), config),
+                  std::make_unique<FakeSignKeyManager>(),
+                  std::make_unique<FakeVerifyKeyManager>(), config),
               IsOk());
 
   {
@@ -408,11 +408,11 @@ TEST(KeyGenConfigurationImplTest, GlobalRegistryMode) {
 
   // Check that KeyGenConfigurationImpl functions return kFailedPrecondition.
   EXPECT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT(KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-                  absl::make_unique<FakeSignKeyManager>(),
-                  absl::make_unique<FakeVerifyKeyManager>(), config),
+                  std::make_unique<FakeSignKeyManager>(),
+                  std::make_unique<FakeVerifyKeyManager>(), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   FakeKeyTypeManager manager;
   EXPECT_THAT(KeyGenConfigurationImpl::AddLegacyKeyManager(
@@ -429,7 +429,7 @@ TEST(KeyGenConfigurationImplTest, GlobalRegistryMode) {
       StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<FakeKeyTypeManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<FakeKeyTypeManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   EXPECT_THAT(
@@ -440,7 +440,7 @@ TEST(KeyGenConfigurationImplTest, GlobalRegistryMode) {
 TEST(KeyGenConfigurationImplTest, GlobalRegistryModeWithNonEmptyConfigFails) {
   KeyGenConfiguration config;
   ASSERT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
   EXPECT_THAT(KeyGenConfigurationImpl::SetGlobalRegistryMode(config),
               StatusIs(absl::StatusCode::kFailedPrecondition));

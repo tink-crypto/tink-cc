@@ -63,7 +63,7 @@ using ::google::crypto::tink::KeyData;
 // implementations.
 TEST(KeyTypeInfoStoreTest, AddKeyTypeManager) {
   KeyTypeInfoStore store;
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               IsOk());
 
@@ -85,14 +85,14 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerNoBoringCrypto) {
   }
   KeyTypeInfoStore store;
   EXPECT_THAT(
-      store.AddKeyTypeManager(absl::make_unique<KmsEnvelopeAeadKeyManager>(),
+      store.AddKeyTypeManager(std::make_unique<KmsEnvelopeAeadKeyManager>(),
                               /*new_key_allowed=*/true),
       StatusIs(absl::StatusCode::kInternal));
 }
 
 TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
   KeyTypeInfoStore store;
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               IsOk());
 
@@ -102,7 +102,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
   // new_key_allowed true -> true is allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               IsOk());
   info = store.Get(type_url);
@@ -110,7 +110,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
   // new_key_allowed true -> false is allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/false),
               IsOk());
   info = store.Get(type_url);
@@ -118,7 +118,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
   EXPECT_EQ((*info)->new_key_allowed(), false);
 
   // new_key_allowed false -> false is allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/false),
               IsOk());
   info = store.Get(type_url);
@@ -126,7 +126,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
   EXPECT_EQ((*info)->new_key_allowed(), false);
 
   // new_key_allowed false -> true is not allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
@@ -134,8 +134,8 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
   KeyTypeInfoStore store;
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  absl::make_unique<EcdsaSignKeyManager>(),
-                  absl::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<EcdsaSignKeyManager>(),
+                  std::make_unique<EcdsaVerifyKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
 
@@ -164,38 +164,37 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAlreadyExists) {
   {
     KeyTypeInfoStore store;
-    ASSERT_THAT(
-        store.AddKeyTypeManager(absl::make_unique<EcdsaSignKeyManager>(),
-                                /*new_key_allowed=*/true),
-        IsOk());
+    ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<EcdsaSignKeyManager>(),
+                                        /*new_key_allowed=*/true),
+                IsOk());
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    absl::make_unique<EcdsaSignKeyManager>(),
-                    absl::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<EcdsaSignKeyManager>(),
+                    std::make_unique<EcdsaVerifyKeyManager>(),
                     /*new_key_allowed=*/true),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     KeyTypeInfoStore store;
     ASSERT_THAT(
-        store.AddKeyTypeManager(absl::make_unique<EcdsaVerifyKeyManager>(),
+        store.AddKeyTypeManager(std::make_unique<EcdsaVerifyKeyManager>(),
                                 /*new_key_allowed=*/true),
         IsOk());
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    absl::make_unique<EcdsaSignKeyManager>(),
-                    absl::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<EcdsaSignKeyManager>(),
+                    std::make_unique<EcdsaVerifyKeyManager>(),
                     /*new_key_allowed=*/true),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     KeyTypeInfoStore store;
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    absl::make_unique<EcdsaSignKeyManager>(),
-                    absl::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<EcdsaSignKeyManager>(),
+                    std::make_unique<EcdsaVerifyKeyManager>(),
                     /*new_key_allowed=*/true),
                 IsOk());
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    absl::make_unique<EcdsaSignKeyManager>(),
-                    absl::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<EcdsaSignKeyManager>(),
+                    std::make_unique<EcdsaVerifyKeyManager>(),
                     /*new_key_allowed=*/true),
                 IsOk());
   }
@@ -204,8 +203,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAlreadyExists) {
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
   KeyTypeInfoStore store;
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  absl::make_unique<EcdsaSignKeyManager>(),
-                  absl::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<EcdsaSignKeyManager>(),
+                  std::make_unique<EcdsaVerifyKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
 
@@ -223,8 +222,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed true -> true is allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  absl::make_unique<EcdsaSignKeyManager>(),
-                  absl::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<EcdsaSignKeyManager>(),
+                  std::make_unique<EcdsaVerifyKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
   private_info = store.Get(private_type_url);
@@ -236,8 +235,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed true -> false is allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  absl::make_unique<EcdsaSignKeyManager>(),
-                  absl::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<EcdsaSignKeyManager>(),
+                  std::make_unique<EcdsaVerifyKeyManager>(),
                   /*new_key_allowed=*/false),
               IsOk());
   private_info = store.Get(private_type_url);
@@ -249,8 +248,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed false -> false is allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  absl::make_unique<EcdsaSignKeyManager>(),
-                  absl::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<EcdsaSignKeyManager>(),
+                  std::make_unique<EcdsaVerifyKeyManager>(),
                   /*new_key_allowed=*/false),
               IsOk());
   private_info = store.Get(private_type_url);
@@ -262,8 +261,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed false -> true is not allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  absl::make_unique<EcdsaSignKeyManager>(),
-                  absl::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<EcdsaSignKeyManager>(),
+                  std::make_unique<EcdsaVerifyKeyManager>(),
                   /*new_key_allowed=*/true),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
@@ -329,7 +328,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyManagerAndChangeNewKeyAllowed) {
 
 TEST(KeyTypeInfoStoreTest, Get) {
   KeyTypeInfoStore store;
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               IsOk());
   absl::StatusOr<KeyTypeInfoStore::Info *> info =
@@ -344,14 +343,14 @@ TEST(KeyTypeInfoStoreTest, IsEmpty) {
   KeyTypeInfoStore store;
   EXPECT_EQ(store.IsEmpty(), true);
 
-  ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               IsOk());
   EXPECT_THAT(store.IsEmpty(), false);
 }
 
 TEST(KeyTypeInfoStoreInfoTest, KeyTypeManager) {
-  KeyTypeInfoStore::Info info(absl::make_unique<AesGcmKeyManager>().release(),
+  KeyTypeInfoStore::Info info(std::make_unique<AesGcmKeyManager>().release(),
                               /*new_key_allowed=*/false);
 
   EXPECT_EQ(info.key_manager_type_index(),
@@ -381,10 +380,9 @@ TEST(KeyTypeInfoStoreInfoTest, KeyTypeManager) {
 }
 
 TEST(KeyTypeInfoStoreInfoTest, AsymmetricKeyTypeManagers) {
-  KeyTypeInfoStore::Info info(
-      absl::make_unique<EcdsaSignKeyManager>().release(),
-      absl::make_unique<EcdsaVerifyKeyManager>().get(),
-      /*new_key_allowed=*/false);
+  KeyTypeInfoStore::Info info(std::make_unique<EcdsaSignKeyManager>().release(),
+                              std::make_unique<EcdsaVerifyKeyManager>().get(),
+                              /*new_key_allowed=*/false);
 
   EXPECT_EQ(info.key_manager_type_index(),
             std::type_index(typeid(EcdsaSignKeyManager)));
@@ -445,7 +443,7 @@ TEST(KeyTypeInfoStoreInfoTest, KeyManager) {
 }
 
 TEST(KeyTypeInfoStoreInfoTest, GetPrimitive) {
-  KeyTypeInfoStore::Info info(absl::make_unique<AesGcmKeyManager>().release(),
+  KeyTypeInfoStore::Info info(std::make_unique<AesGcmKeyManager>().release(),
                               /*new_key_allowed=*/false);
 
   AesGcmKeyFormat format;

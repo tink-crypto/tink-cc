@@ -99,7 +99,7 @@ std::unique_ptr<const AesCmacKey> CreateAesCmacKey() {
                          /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const AesCmacKey>(*key);
+  return std::make_unique<const AesCmacKey>(*key);
 }
 
 std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
@@ -107,7 +107,7 @@ std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
       RestrictedData(/*num_random_bytes=*/32), GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const AesCmacPrfKey>(*key);
+  return std::make_unique<const AesCmacPrfKey>(*key);
 }
 
 std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
@@ -130,7 +130,7 @@ std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
           .SetIdRequirement(123)
           .Build(GetPartialKeyAccess());
 
-  return absl::make_unique<const AesCtrHmacAeadKey>(*key);
+  return std::make_unique<const AesCtrHmacAeadKey>(*key);
 }
 
 std::unique_ptr<const AesEaxKey> CreateAesEaxKey() {
@@ -148,7 +148,7 @@ std::unique_ptr<const AesEaxKey> CreateAesEaxKey() {
                         /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const AesEaxKey>(*key);
+  return std::make_unique<const AesEaxKey>(*key);
 }
 
 std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
@@ -166,7 +166,7 @@ std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
                         /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const AesGcmKey>(*key);
+  return std::make_unique<const AesGcmKey>(*key);
 }
 
 std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
@@ -179,7 +179,7 @@ std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
                            /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const AesGcmSivKey>(*key);
+  return std::make_unique<const AesGcmSivKey>(*key);
 }
 
 std::unique_ptr<const AesSivKey> CreateAesSivKey() {
@@ -192,7 +192,7 @@ std::unique_ptr<const AesSivKey> CreateAesSivKey() {
                         /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const AesSivKey>(*key);
+  return std::make_unique<const AesSivKey>(*key);
 }
 
 std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
@@ -202,7 +202,7 @@ std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
       GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const ChaCha20Poly1305Key>(*key);
+  return std::make_unique<const ChaCha20Poly1305Key>(*key);
 }
 
 std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
@@ -231,7 +231,7 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
       *public_key, private_key_value, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
 
-  return absl::make_unique<const EcdsaPrivateKey>(*private_key);
+  return std::make_unique<const EcdsaPrivateKey>(*private_key);
 }
 
 std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
@@ -254,7 +254,7 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
 
-  return absl::make_unique<const EcdsaPublicKey>(*public_key);
+  return std::make_unique<const EcdsaPublicKey>(*public_key);
 }
 
 std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
@@ -277,7 +277,7 @@ std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
       *public_key, private_key_bytes, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
 
-  return absl::make_unique<const Ed25519PrivateKey>(*private_key);
+  return std::make_unique<const Ed25519PrivateKey>(*private_key);
 }
 
 std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
@@ -290,7 +290,7 @@ std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
                                /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const Ed25519PublicKey>(*key);
+  return std::make_unique<const Ed25519PublicKey>(*key);
 }
 
 std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
@@ -304,7 +304,7 @@ std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
                          GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const HkdfPrfKey>(*key);
+  return std::make_unique<const HkdfPrfKey>(*key);
 }
 
 std::unique_ptr<const HmacKey> CreateHmacKey() {
@@ -318,7 +318,7 @@ std::unique_ptr<const HmacKey> CreateHmacKey() {
                       /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const HmacKey>(*key);
+  return std::make_unique<const HmacKey>(*key);
 }
 
 std::unique_ptr<const HmacPrfKey> CreateHmacPrfKey() {
@@ -331,7 +331,7 @@ std::unique_ptr<const HmacPrfKey> CreateHmacPrfKey() {
                          GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const HmacPrfKey>(*key);
+  return std::make_unique<const HmacPrfKey>(*key);
 }
 
 std::unique_ptr<const LegacyKmsAeadKey> CreateLegacyKmsAeadKey() {
@@ -344,7 +344,7 @@ std::unique_ptr<const LegacyKmsAeadKey> CreateLegacyKmsAeadKey() {
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/123);
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const LegacyKmsAeadKey>(*key);
+  return std::make_unique<const LegacyKmsAeadKey>(*key);
 }
 
 std::unique_ptr<const XAesGcmKey> CreateXAesGcmKey() {
@@ -357,7 +357,7 @@ std::unique_ptr<const XAesGcmKey> CreateXAesGcmKey() {
                          /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const XAesGcmKey>(*key);
+  return std::make_unique<const XAesGcmKey>(*key);
 }
 
 std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
@@ -367,7 +367,7 @@ std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
       GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
 
-  return absl::make_unique<const XChaCha20Poly1305Key>(*key);
+  return std::make_unique<const XChaCha20Poly1305Key>(*key);
 }
 
 std::unique_ptr<const AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey() {
@@ -386,7 +386,7 @@ std::unique_ptr<const AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey() {
       *parameters, RestrictedData(/*num_random_bytes=*/35),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
-  return absl::make_unique<const AesCtrHmacStreamingKey>(*key);
+  return std::make_unique<const AesCtrHmacStreamingKey>(*key);
 }
 
 std::unique_ptr<const AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey() {
@@ -403,7 +403,7 @@ std::unique_ptr<const AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey() {
       *parameters, RestrictedData(/*num_random_bytes=*/32),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(key);
-  return absl::make_unique<const AesGcmHkdfStreamingKey>(*key);
+  return std::make_unique<const AesGcmHkdfStreamingKey>(*key);
 }
 
 using GlobalSerializationRegistryTest = TestWithParam<KeyTestVector>;

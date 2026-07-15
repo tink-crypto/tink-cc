@@ -129,7 +129,7 @@ class TestKeyFactory : public KeyFactory {
 
   absl::StatusOr<std::unique_ptr<KeyData>> NewKeyData(
       absl::string_view serialized_key_format) const override {
-    auto key_data = absl::make_unique<KeyData>();
+    auto key_data = std::make_unique<KeyData>();
     key_data->set_type_url(key_type_);
     key_data->set_value(serialized_key_format);
     return std::move(key_data);
@@ -197,13 +197,13 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
    public:
     absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKey& key) const override {
-      return absl::make_unique<AeadVariant>(key.key_value());
+      return std::make_unique<AeadVariant>(key.key_value());
     }
   };
 
   ExampleKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<AeadFactory>(),
-                       absl::make_unique<AeadVariantFactory>()) {}
+      : KeyTypeManager(std::make_unique<AeadFactory>(),
+                       std::make_unique<AeadVariantFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {
@@ -268,7 +268,7 @@ class AeadVariantWrapper : public PrimitiveWrapper<AeadVariant, AeadVariant> {
  public:
   absl::StatusOr<std::unique_ptr<AeadVariant>> Wrap(
       std::unique_ptr<PrimitiveSet<AeadVariant>> primitive_set) const override {
-    return absl::make_unique<AeadVariant>(
+    return std::make_unique<AeadVariant>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -278,7 +278,7 @@ class AeadVariantToStringWrapper
  public:
   absl::StatusOr<std::unique_ptr<std::string>> Wrap(
       std::unique_ptr<PrimitiveSet<AeadVariant>> primitive_set) const override {
-    return absl::make_unique<std::string>(
+    return std::make_unique<std::string>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -288,7 +288,7 @@ void register_test_managers(const std::string& key_type_prefix,
   for (int i = 0; i < manager_count; i++) {
     std::string key_type = key_type_prefix + std::to_string(i);
     absl::Status status = Registry::RegisterKeyManager(
-        absl::make_unique<TestAeadKeyManager>(key_type),
+        std::make_unique<TestAeadKeyManager>(key_type),
         /* new_key_allowed= */ true);
     EXPECT_THAT(status, IsOk());
   }
@@ -313,7 +313,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerMoreRestrictiveNewKeyAllowed) {
   // Register the key manager with new_key_allowed == true and verify that
   // new key data can be created.
   absl::Status status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type),
+      std::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ true);
   EXPECT_THAT(status, IsOk());
 
@@ -323,7 +323,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerMoreRestrictiveNewKeyAllowed) {
   // Re-register the key manager with new_key_allowed == false and check the
   // restriction (i.e. new key data cannot be created).
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type),
+      std::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ false);
   EXPECT_THAT(status, IsOk());
 
@@ -340,7 +340,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerLessRestrictiveNewKeyAllowed) {
 
   // Register the key manager with new_key_allowed == false.
   absl::Status status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type),
+      std::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ false);
   EXPECT_THAT(status, IsOk());
 
@@ -348,7 +348,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerLessRestrictiveNewKeyAllowed) {
   // not possible and that the restriction still holds after that operation
   // (i.e. new key data cannot be created).
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type),
+      std::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ true);
   EXPECT_THAT(status,
               StatusIs(absl::StatusCode::kAlreadyExists,
@@ -404,12 +404,12 @@ TEST_F(RegistryTest, testBasic) {
   EXPECT_THAT(manager_result, StatusIs(absl::StatusCode::kNotFound));
 
   auto status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_1), true);
+      std::make_unique<TestAeadKeyManager>(key_type_1), true);
 
   EXPECT_THAT(status, IsOk());
 
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_2), true);
+      std::make_unique<TestAeadKeyManager>(key_type_2), true);
   EXPECT_THAT(status, IsOk());
 
   manager_result = Registry::get_key_manager<Aead>(key_type_1);
@@ -434,12 +434,12 @@ TEST_F(RegistryTest, testRegisterKeyManager) {
 
   // Register a key manager.
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_1), true);
+      std::make_unique<TestAeadKeyManager>(key_type_1), true);
   EXPECT_THAT(status, IsOk());
 
   // Register the same key manager again, it should work (idempotence).
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_1), true);
+      std::make_unique<TestAeadKeyManager>(key_type_1), true);
   EXPECT_THAT(status, IsOk());
 
   // Try overriding a key manager.
@@ -461,14 +461,14 @@ TEST_F(RegistryTest, testRegisterKeyManager) {
 TEST_F(RegistryTest, GetKeyManagerRemainsValid) {
   std::string key_type = AesGcmKeyManager().get_key_type();
   EXPECT_THAT(Registry::RegisterKeyManager(
-                  absl::make_unique<TestAeadKeyManager>(key_type), true),
+                  std::make_unique<TestAeadKeyManager>(key_type), true),
               IsOk());
 
   absl::StatusOr<const KeyManager<Aead>*> key_manager =
       Registry::get_key_manager<Aead>(key_type);
   ASSERT_THAT(key_manager, IsOk());
   EXPECT_THAT(Registry::RegisterKeyManager(
-                  absl::make_unique<TestAeadKeyManager>(key_type), true),
+                  std::make_unique<TestAeadKeyManager>(key_type), true),
               IsOk());
   EXPECT_THAT(key_manager.value()->get_key_type(), Eq(key_type));
 }
@@ -507,10 +507,10 @@ TEST_F(RegistryTest, testGettingPrimitives) {
   // Register key managers.
   absl::Status status;
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_1), true);
+      std::make_unique<TestAeadKeyManager>(key_type_1), true);
   EXPECT_THAT(status, IsOk());
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_2), true);
+      std::make_unique<TestAeadKeyManager>(key_type_2), true);
   EXPECT_THAT(status, IsOk());
 
   // Get and use primitives.
@@ -544,15 +544,15 @@ TEST_F(RegistryTest, testNewKeyData) {
   // Register key managers.
   absl::Status status;
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_1),
+      std::make_unique<TestAeadKeyManager>(key_type_1),
       /*new_key_allowed=*/true);
   EXPECT_THAT(status, IsOk());
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_2),
+      std::make_unique<TestAeadKeyManager>(key_type_2),
       /*new_key_allowed=*/true);
   EXPECT_THAT(status, IsOk());
   status = Registry::RegisterKeyManager(
-      absl::make_unique<TestAeadKeyManager>(key_type_3),
+      std::make_unique<TestAeadKeyManager>(key_type_3),
       /*new_key_allowed=*/false);
   EXPECT_THAT(status, IsOk());
 
@@ -602,9 +602,9 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   // Setup the registry.
   Registry::Reset();
   auto private_key_type_manager =
-      absl::make_unique<EciesAeadHkdfPrivateKeyManager>();
+      std::make_unique<EciesAeadHkdfPrivateKeyManager>();
   auto public_key_type_manager =
-      absl::make_unique<EciesAeadHkdfPublicKeyManager>();
+      std::make_unique<EciesAeadHkdfPublicKeyManager>();
 
   auto status = Registry::RegisterKeyManager(
       internal::MakePrivateKeyManager<HybridDecrypt>(
@@ -652,10 +652,10 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
 // succeeds.
 TEST_F(RegistryTest, RegisterWrapperTwice) {
   EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
       IsOk());
   EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
       IsOk());
 }
 
@@ -663,10 +663,10 @@ TEST_F(RegistryTest, RegisterWrapperTwice) {
 // succeeds.
 TEST_F(RegistryTest, RegisterTransformingWrapperTwice) {
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>()),
+                  std::make_unique<AeadVariantToStringWrapper>()),
               IsOk());
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>()),
+                  std::make_unique<AeadVariantToStringWrapper>()),
               IsOk());
 }
 
@@ -674,15 +674,15 @@ TEST_F(RegistryTest, RegisterTransformingWrapperTwice) {
 // previous wrapper it will fail.
 TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixing) {
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>()),
+                  std::make_unique<AeadVariantToStringWrapper>()),
               IsOk());
   // We cannot register a different wrapper creating a std::string.
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<TestWrapper<std::string>>()),
+                  std::make_unique<TestWrapper<std::string>>()),
               Not(IsOk()));
   // But one creating an Aead.
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<TestWrapper<AeadVariant>>()),
+                  std::make_unique<TestWrapper<AeadVariant>>()),
               IsOk());
 }
 
@@ -690,11 +690,11 @@ TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixing) {
 // previous wrapper it will fail (order swapped).
 TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixingBackwards) {
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<TestWrapper<std::string>>()),
+                  std::make_unique<TestWrapper<std::string>>()),
               IsOk());
   // We cannot register another wrapper producing strings.
   EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>()),
+                  std::make_unique<AeadVariantToStringWrapper>()),
               Not(IsOk()));
 }
 
@@ -702,21 +702,21 @@ TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixingBackwards) {
 // the second call fails.
 TEST_F(RegistryTest, RegisterDifferentWrappers) {
   EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
       IsOk());
-  absl::Status result = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<TestWrapper<Aead>>());
+  absl::Status result =
+      Registry::RegisterPrimitiveWrapper(std::make_unique<TestWrapper<Aead>>());
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
 // Tests that if we register different wrappers for different primitives, this
 // returns ok.
 TEST_F(RegistryTest, RegisterDifferentWrappersDifferentPrimitives) {
-  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<TestWrapper<Aead>>()),
-              IsOk());
   EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Mac>>()),
+      Registry::RegisterPrimitiveWrapper(std::make_unique<TestWrapper<Aead>>()),
+      IsOk());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(std::make_unique<TestWrapper<Mac>>()),
       IsOk());
 }
 
@@ -725,11 +725,11 @@ TEST_F(RegistryTest, RegisterDifferentWrappersDifferentPrimitives) {
 // different primitive registered.
 TEST_F(RegistryTest, NoWrapperRegistered) {
   EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<TestWrapper<Mac>>()),
+      Registry::RegisterPrimitiveWrapper(std::make_unique<TestWrapper<Mac>>()),
       IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> result =
-      Registry::Wrap<Aead>(absl::make_unique<PrimitiveSet<Aead>>());
+      Registry::Wrap<Aead>(std::make_unique<PrimitiveSet<Aead>>());
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kNotFound,
                                HasSubstr("No wrapper registered")));
 }
@@ -737,12 +737,12 @@ TEST_F(RegistryTest, NoWrapperRegistered) {
 // Tests that if the wrapper fails, the error of the wrapped is forwarded
 // in GetWrappedPrimitive.
 TEST_F(RegistryTest, WrapperFails) {
-  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<TestWrapper<Aead>>()),
-              IsOk());
+  EXPECT_THAT(
+      Registry::RegisterPrimitiveWrapper(std::make_unique<TestWrapper<Aead>>()),
+      IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> result =
-      Registry::Wrap<Aead>(absl::make_unique<PrimitiveSet<Aead>>());
+      Registry::Wrap<Aead>(std::make_unique<PrimitiveSet<Aead>>());
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kUnimplemented,
                                HasSubstr("This is a test wrapper")));
 }
@@ -768,18 +768,18 @@ TEST_F(RegistryTest, UsualWrappingTest) {
   keyset_info.mutable_key_info(2)->set_status(KeyStatusType::ENABLED);
 
   PrimitiveSet<Aead>::Builder primitive_set_builder;
-  primitive_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead0"),
+  primitive_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead0"),
                                      keyset_info.key_info(0));
-  primitive_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead1"),
+  primitive_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead1"),
                                      keyset_info.key_info(1));
   primitive_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyAead>("primary_aead"), keyset_info.key_info(2));
+      std::make_unique<DummyAead>("primary_aead"), keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<Aead>> primitive_set =
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
   EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>()),
+      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
       IsOk());
 
   auto aead_result = Registry::Wrap<Aead>(
@@ -828,7 +828,7 @@ TEST_F(RegistryTest, KeysetWrappingTest) {
       AddAesGcmKey(13, OutputPrefixType::TINK, KeyStatusType::ENABLED, keyset);
   keyset.set_primary_key_id(13);
 
-  auto fips_key_manager = absl::make_unique<ExampleKeyTypeManager>();
+  auto fips_key_manager = std::make_unique<ExampleKeyTypeManager>();
 
   ON_CALL(*fips_key_manager, FipsStatus())
       .WillByDefault(testing::Return(FipsCompatibility::kRequiresBoringCrypto));
@@ -837,7 +837,7 @@ TEST_F(RegistryTest, KeysetWrappingTest) {
       Registry::RegisterKeyTypeManager(std::move(fips_key_manager), true),
       IsOk());
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantWrapper>()),
+                  std::make_unique<AeadVariantWrapper>()),
               IsOk());
 
   absl::StatusOr<std::unique_ptr<AeadVariant>> aead_variant =
@@ -859,10 +859,10 @@ TEST_F(RegistryTest, TransformingKeysetWrappingTest) {
   keyset.set_primary_key_id(13);
 
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<AeadVariantToStringWrapper>()),
+                  std::make_unique<AeadVariantToStringWrapper>()),
               IsOk());
 
   absl::StatusOr<std::unique_ptr<std::string>> string_primitive =
@@ -881,11 +881,11 @@ TEST_F(RegistryTest, TransformingPrimitiveWrapperCustomKeyManager) {
   }
 
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   // Register a transforming wrapper taking strings and making Aeads.
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<TestWrapper<std::string, Aead>>()),
+                  std::make_unique<TestWrapper<std::string, Aead>>()),
               IsOk());
 
   KeysetInfo keyset_info;
@@ -897,7 +897,7 @@ TEST_F(RegistryTest, TransformingPrimitiveWrapperCustomKeyManager) {
   keyset_info.set_primary_key_id(1234543);
 
   PrimitiveSet<Aead>::Builder primitive_set_builder;
-  primitive_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead0"),
+  primitive_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead0"),
                                      keyset_info.key_info(0));
   absl::StatusOr<PrimitiveSet<Aead>> primitive_set =
       std::move(primitive_set_builder).Build();
@@ -937,7 +937,7 @@ TEST_F(RegistryTest, RegisterKeyTypeManager) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
 }
 
@@ -946,7 +946,7 @@ TEST_F(RegistryTest, RegisterFipsKeyTypeManager) {
     GTEST_SKIP() << "Only supported in FIPS-mode with BoringCrypto available.";
   }
 
-  auto fips_key_manager = absl::make_unique<ExampleKeyTypeManager>();
+  auto fips_key_manager = std::make_unique<ExampleKeyTypeManager>();
 
   ON_CALL(*fips_key_manager, FipsStatus())
       .WillByDefault(testing::Return(FipsCompatibility::kRequiresBoringCrypto));
@@ -962,7 +962,7 @@ TEST_F(RegistryTest, RegisterFipsKeyTypeManagerNoBoringCrypto) {
         << "Only supported in FIPS-mode with BoringCrypto not available.";
   }
 
-  auto fips_key_manager = absl::make_unique<ExampleKeyTypeManager>();
+  auto fips_key_manager = std::make_unique<ExampleKeyTypeManager>();
 
   ON_CALL(*fips_key_manager, FipsStatus())
       .WillByDefault(testing::Return(FipsCompatibility::kNotFips));
@@ -978,7 +978,7 @@ TEST_F(RegistryTest, KeyTypeManagerGetFirstKeyManager) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   AesGcmKeyFormat format;
   format.set_key_size(16);
@@ -999,7 +999,7 @@ TEST_F(RegistryTest, KeyTypeManagerGetSecondKeyManager) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   AesGcmKeyFormat format;
   format.set_key_size(16);
@@ -1018,7 +1018,7 @@ TEST_F(RegistryTest, KeyTypeManagerNotSupportedPrimitive) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::get_key_manager<Mac>(
                   "type.googleapis.com/google.crypto.tink.AesGcmKey")
@@ -1036,14 +1036,14 @@ TEST_F(RegistryTest, GetKeyManagerRemainsValidForKeyTypeManagers) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
 
   absl::StatusOr<const KeyManager<Aead>*> key_manager =
       Registry::get_key_manager<Aead>(ExampleKeyTypeManager().get_key_type());
   ASSERT_THAT(key_manager, IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(key_manager.value()->get_key_type(),
               Eq(ExampleKeyTypeManager().get_key_type()));
@@ -1055,7 +1055,7 @@ TEST_F(RegistryTest, KeyTypeManagerNewKey) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
 
   AesGcmKeyFormat format;
@@ -1080,7 +1080,7 @@ TEST_F(RegistryTest, KeyTypeManagerNewKeyInvalidSize) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
 
   AesGcmKeyFormat format;
@@ -1098,7 +1098,7 @@ TEST_F(RegistryTest, KeyTypeManagerDeriveKey) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
 
   AesGcmKeyFormat format;
@@ -1108,7 +1108,7 @@ TEST_F(RegistryTest, KeyTypeManagerDeriveKey) {
   key_template.set_value(format.SerializeAsString());
 
   crypto::tink::util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>(
+      std::make_unique<std::stringstream>(
           "0123456789012345678901234567890123456789")};
 
   auto key_data_or =
@@ -1129,10 +1129,10 @@ TEST_F(RegistryTest, KeyTypeManagerDeriveKeyRegisterTwice) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
 
   AesGcmKeyFormat format;
@@ -1142,7 +1142,7 @@ TEST_F(RegistryTest, KeyTypeManagerDeriveKeyRegisterTwice) {
   key_template.set_value(format.SerializeAsString());
 
   crypto::tink::util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>(
+      std::make_unique<std::stringstream>(
           "0123456789012345678901234567890123456789")};
 
   auto key_data_or =
@@ -1160,7 +1160,7 @@ TEST_F(RegistryTest, KeyTypeManagerDeriveKeyRegisterTwice) {
 TEST_F(RegistryTest, KeyManagerDeriveKeyFail) {
   std::string key_type = "type.googleapis.com/google.crypto.tink.AesGcmKey";
   ASSERT_THAT(Registry::RegisterKeyManager(
-                  absl::make_unique<TestAeadKeyManager>(key_type),
+                  std::make_unique<TestAeadKeyManager>(key_type),
                   /* new_key_allowed= */ true),
               IsOk());
 
@@ -1187,10 +1187,10 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerTwiceMoreRestrictive) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), false),
+                  std::make_unique<ExampleKeyTypeManager>(), false),
               IsOk());
 }
 
@@ -1200,16 +1200,16 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerTwice) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), false),
+                  std::make_unique<ExampleKeyTypeManager>(), false),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), false),
+                  std::make_unique<ExampleKeyTypeManager>(), false),
               IsOk());
 }
 
@@ -1219,10 +1219,10 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerLessRestrictive) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), false),
+                  std::make_unique<ExampleKeyTypeManager>(), false),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
@@ -1232,10 +1232,10 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerBeforeKeyManager) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyManager(
-                  absl::make_unique<TestAeadKeyManager>(
+                  std::make_unique<TestAeadKeyManager>(
                       "type.googleapis.com/google.crypto.tink.AesGcmKey"),
                   true),
               StatusIs(absl::StatusCode::kAlreadyExists));
@@ -1247,12 +1247,12 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerAfterKeyManager) {
   }
 
   EXPECT_THAT(Registry::RegisterKeyManager(
-                  absl::make_unique<TestAeadKeyManager>(
+                  std::make_unique<TestAeadKeyManager>(
                       "type.googleapis.com/google.crypto.tink.AesGcmKey"),
                   true),
               IsOk());
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<ExampleKeyTypeManager>(), true),
+                  std::make_unique<ExampleKeyTypeManager>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
@@ -1286,8 +1286,8 @@ class TestPrivateKeyTypeManager
   };
 
   TestPrivateKeyTypeManager()
-      : PrivateKeyTypeManager(absl::make_unique<PrivatePrimitiveAFactory>(),
-                              absl::make_unique<PrivatePrimitiveBFactory>()) {}
+      : PrivateKeyTypeManager(std::make_unique<PrivatePrimitiveAFactory>(),
+                              std::make_unique<PrivatePrimitiveBFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {
@@ -1354,8 +1354,8 @@ class TestPublicKeyTypeManager
   };
 
   TestPublicKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<PublicPrimitiveAFactory>(),
-                       absl::make_unique<PublicPrimitiveBFactory>()) {}
+      : KeyTypeManager(std::make_unique<PublicPrimitiveAFactory>(),
+                       std::make_unique<PublicPrimitiveBFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {
@@ -1378,7 +1378,7 @@ class TestPublicKeyTypeManager
 
 std::unique_ptr<TestPrivateKeyTypeManager>
 CreateTestPrivateKeyManagerFipsCompatible() {
-  auto private_key_manager = absl::make_unique<TestPrivateKeyTypeManager>();
+  auto private_key_manager = std::make_unique<TestPrivateKeyTypeManager>();
   ON_CALL(*private_key_manager, FipsStatus())
       .WillByDefault(testing::Return(FipsCompatibility::kRequiresBoringCrypto));
   return private_key_manager;
@@ -1386,7 +1386,7 @@ CreateTestPrivateKeyManagerFipsCompatible() {
 
 std::unique_ptr<TestPublicKeyTypeManager>
 CreateTestPublicKeyManagerFipsCompatible() {
-  auto public_key_manager = absl::make_unique<TestPublicKeyTypeManager>();
+  auto public_key_manager = std::make_unique<TestPublicKeyTypeManager>();
   ON_CALL(*public_key_manager, FipsStatus())
       .WillByDefault(testing::Return(FipsCompatibility::kRequiresBoringCrypto));
   return public_key_manager;
@@ -1704,30 +1704,30 @@ TEST_F(RegistryTest, RegisterAssymmetricReregistrationWithWrongClasses) {
   }
 
   ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                  absl::make_unique<TestPrivateKeyTypeManager>(),
-                  absl::make_unique<TestPublicKeyTypeManager>(), true),
+                  std::make_unique<TestPrivateKeyTypeManager>(),
+                  std::make_unique<TestPublicKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                  absl::make_unique<TestPrivateKeyTypeManager2>(),
-                  absl::make_unique<TestPublicKeyTypeManager>(), true),
+                  std::make_unique<TestPrivateKeyTypeManager2>(),
+                  std::make_unique<TestPublicKeyTypeManager>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists,
                        HasSubstr("already registered")));
   EXPECT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                  absl::make_unique<TestPrivateKeyTypeManager>(),
-                  absl::make_unique<TestPublicKeyTypeManager2>(), true),
+                  std::make_unique<TestPrivateKeyTypeManager>(),
+                  std::make_unique<TestPublicKeyTypeManager2>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists,
                        HasSubstr("already registered")));
   EXPECT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                  absl::make_unique<TestPrivateKeyTypeManager2>(),
-                  absl::make_unique<TestPublicKeyTypeManager2>(), true),
+                  std::make_unique<TestPrivateKeyTypeManager2>(),
+                  std::make_unique<TestPublicKeyTypeManager2>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists,
                        HasSubstr("already registered")));
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<TestPrivateKeyTypeManager2>(), true),
+                  std::make_unique<TestPrivateKeyTypeManager2>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists,
                        HasSubstr("already registered")));
   EXPECT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<TestPublicKeyTypeManager2>(), true),
+                  std::make_unique<TestPublicKeyTypeManager2>(), true),
               StatusIs(absl::StatusCode::kAlreadyExists,
                        HasSubstr("already registered")));
 }
@@ -1746,13 +1746,13 @@ TEST_F(RegistryTest, RegisterAssymmetricReregistrationWithNewKeyType) {
   }
 
   ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                  absl::make_unique<TestPrivateKeyTypeManager>(),
-                  absl::make_unique<TestPublicKeyTypeManager>(), true),
+                  std::make_unique<TestPrivateKeyTypeManager>(),
+                  std::make_unique<TestPublicKeyTypeManager>(), true),
               IsOk());
   EXPECT_THAT(
       Registry::RegisterAsymmetricKeyManagers(
-          absl::make_unique<TestPrivateKeyTypeManager>(),
-          absl::make_unique<TestPublicKeyTypeManagerWithDifferentKeyType>(),
+          std::make_unique<TestPrivateKeyTypeManager>(),
+          std::make_unique<TestPublicKeyTypeManagerWithDifferentKeyType>(),
           true),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("impossible to register")));
@@ -1853,7 +1853,7 @@ TEST_F(RegistryImplTest, CanDelegateCreateKey) {
   }
 
   RegistryImpl registry_impl;
-  auto delegating_key_manager = absl::make_unique<DelegatingKeyTypeManager>();
+  auto delegating_key_manager = std::make_unique<DelegatingKeyTypeManager>();
   delegating_key_manager->set_registry(&registry_impl);
   auto status =
       registry_impl
@@ -1862,7 +1862,7 @@ TEST_F(RegistryImplTest, CanDelegateCreateKey) {
   EXPECT_THAT(status, IsOk());
   status = registry_impl.RegisterKeyTypeManager<AesGcmKey, AesGcmKeyFormat,
                                                 List<Aead, AeadVariant>>(
-      absl::make_unique<ExampleKeyTypeManager>(), true);
+      std::make_unique<ExampleKeyTypeManager>(), true);
   EXPECT_THAT(status, IsOk());
 
   EcdsaKeyFormat format;
@@ -1882,7 +1882,7 @@ TEST_F(RegistryImplTest, CanDelegateDeriveKey) {
   }
 
   RegistryImpl registry_impl;
-  auto delegating_key_manager = absl::make_unique<DelegatingKeyTypeManager>();
+  auto delegating_key_manager = std::make_unique<DelegatingKeyTypeManager>();
   delegating_key_manager->set_registry(&registry_impl);
   auto status =
       registry_impl
@@ -1891,7 +1891,7 @@ TEST_F(RegistryImplTest, CanDelegateDeriveKey) {
   EXPECT_THAT(status, IsOk());
   status = registry_impl.RegisterKeyTypeManager<AesGcmKey, AesGcmKeyFormat,
                                                 List<Aead, AeadVariant>>(
-      absl::make_unique<ExampleKeyTypeManager>(), true);
+      std::make_unique<ExampleKeyTypeManager>(), true);
   EXPECT_THAT(status, IsOk());
 
   EcdsaKeyFormat format;
@@ -1910,15 +1910,15 @@ TEST_F(RegistryImplTest, CanDelegateGetPublicKey) {
   }
 
   RegistryImpl registry_impl;
-  auto delegating_key_manager = absl::make_unique<DelegatingKeyTypeManager>();
+  auto delegating_key_manager = std::make_unique<DelegatingKeyTypeManager>();
   delegating_key_manager->set_registry(&registry_impl);
   auto status = registry_impl.RegisterAsymmetricKeyManagers(
       delegating_key_manager.release(),
-      absl::make_unique<TestPublicKeyTypeManager>().release(), true);
+      std::make_unique<TestPublicKeyTypeManager>().release(), true);
   EXPECT_THAT(status, IsOk());
   status = registry_impl.RegisterKeyTypeManager<AesGcmKey, AesGcmKeyFormat,
                                                 List<Aead, AeadVariant>>(
-      absl::make_unique<ExampleKeyTypeManager>(), true);
+      std::make_unique<ExampleKeyTypeManager>(), true);
   EXPECT_THAT(status, IsOk());
 
   EcdsaPrivateKey private_key;
@@ -1958,7 +1958,7 @@ TEST_F(RegistryImplTest, FipsFailsIfNotEmpty) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  auto fips_key_manager = absl::make_unique<ExampleKeyTypeManager>();
+  auto fips_key_manager = std::make_unique<ExampleKeyTypeManager>();
   ON_CALL(*fips_key_manager, FipsStatus())
       .WillByDefault(testing::Return(FipsCompatibility::kRequiresBoringCrypto));
 
@@ -1973,7 +1973,7 @@ TEST_F(RegistryImplTest, FipsFailsIfNotEmpty) {
 
 TEST_F(RegistryImplTest, CanRegisterOnlyOneMonitoringFactory) {
   auto monitoring_client_factory =
-      absl::make_unique<internal::MockMonitoringClientFactory>();
+      std::make_unique<internal::MockMonitoringClientFactory>();
 
   RegistryImpl registry_impl;
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(
@@ -1981,7 +1981,7 @@ TEST_F(RegistryImplTest, CanRegisterOnlyOneMonitoringFactory) {
               IsOk());
   ASSERT_THAT(registry_impl.GetMonitoringClientFactory(), Not(IsNull()));
   auto another_monitoring_client_factory =
-      absl::make_unique<internal::MockMonitoringClientFactory>();
+      std::make_unique<internal::MockMonitoringClientFactory>();
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(
                   std::move(another_monitoring_client_factory)),
               StatusIs(absl::StatusCode::kAlreadyExists));
@@ -1992,7 +1992,7 @@ TEST_F(RegistryImplTest, CannotRegisterNullFactory) {
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(nullptr),
               StatusIs(absl::StatusCode::kInvalidArgument));
   auto monitoring_client_factory =
-      absl::make_unique<internal::MockMonitoringClientFactory>();
+      std::make_unique<internal::MockMonitoringClientFactory>();
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(
                   std::move(monitoring_client_factory)),
               IsOk());

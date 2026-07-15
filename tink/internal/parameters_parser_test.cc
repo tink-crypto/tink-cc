@@ -43,7 +43,7 @@ using ::testing::IsFalse;
 
 TEST(ParametersParserTest, Create) {
   std::unique_ptr<ParametersParser> parser =
-      absl::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
+      std::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
           kNoIdTypeUrl, ParseNoIdParams);
 
   EXPECT_THAT(parser->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -53,7 +53,7 @@ TEST(ParametersParserTest, Create) {
 
 TEST(ParametersParserTest, ParseParameters) {
   std::unique_ptr<ParametersParser> parser =
-      absl::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
+      std::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
           kNoIdTypeUrl, ParseNoIdParams);
 
   NoIdSerialization serialization;
@@ -65,7 +65,7 @@ TEST(ParametersParserTest, ParseParameters) {
 
 TEST(ParametersParserTest, ParseParametersWithInvalidSerializationType) {
   std::unique_ptr<ParametersParser> parser =
-      absl::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
+      std::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
           kNoIdTypeUrl, ParseNoIdParams);
 
   IdParamsSerialization serialization;
@@ -76,7 +76,7 @@ TEST(ParametersParserTest, ParseParametersWithInvalidSerializationType) {
 
 TEST(ParametersParserTest, ParseParametersWithInvalidObjectIdentifier) {
   std::unique_ptr<ParametersParser> parser =
-      absl::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
+      std::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
           "mismatched_type_url", ParseNoIdParams);
 
   IdParamsSerialization serialization;

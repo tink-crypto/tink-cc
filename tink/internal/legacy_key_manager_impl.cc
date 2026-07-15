@@ -126,7 +126,7 @@ LegacyPrivateKeyFactoryImpl::NewKeyData(
     return new_key.status();
   }
 
-  auto key_data = absl::make_unique<google::crypto::tink::KeyData>();
+  auto key_data = std::make_unique<google::crypto::tink::KeyData>();
   key_data->set_type_url(
       absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPrivateKeyTypeName()));
   key_data->set_value((*new_key)->SerializeAsString());
@@ -180,7 +180,7 @@ LegacyPrivateKeyFactoryImpl::GetPublicKeyData(
         "type.");
   }
 
-  auto key_data = absl::make_unique<google::crypto::tink::KeyData>();
+  auto key_data = std::make_unique<google::crypto::tink::KeyData>();
   key_data->set_type_url(
       absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPublicKeyTypeName()));
   key_data->set_value(proto_serialization->SerializedKeyProto().GetSecret(

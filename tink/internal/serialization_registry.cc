@@ -141,7 +141,7 @@ SerializationRegistry::ParseParametersWithLegacyFallback(
           absl::StatusCode::kInternal,
           "Failed to convert serialization to ProtoParametersSerialization.");
     }
-    return {absl::make_unique<LegacyProtoParameters>(*proto_serialization)};
+    return {std::make_unique<LegacyProtoParameters>(*proto_serialization)};
   }
   if (!parameters.ok()) {
     return parameters.status();
@@ -181,7 +181,7 @@ SerializationRegistry::ParseKeyWithLegacyFallback(
     if (!proto_key.ok()) {
       return proto_key.status();
     }
-    return {absl::make_unique<LegacyProtoKey>(std::move(*proto_key))};
+    return {std::make_unique<LegacyProtoKey>(std::move(*proto_key))};
   }
   if (!key.ok()) {
     return key.status();

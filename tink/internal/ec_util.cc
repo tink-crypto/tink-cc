@@ -452,7 +452,7 @@ absl::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {
     return private_key.status();
   }
 
-  auto key = absl::make_unique<X25519Key>();
+  auto key = std::make_unique<X25519Key>();
   internal::SecretBuffer x22519_priv_key_buffer(X25519KeyPrivKeySize());
   absl::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, **private_key,
@@ -483,7 +483,7 @@ absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   // In BoringSSL this calls ED25519_keypair_from_seed. Accessing the public key
   // with EVP_PKEY_get_raw_public_key returns the last 32 bytes of the private
   // key stored by BoringSSL.
-  auto key = absl::make_unique<Ed25519Key>();
+  auto key = std::make_unique<Ed25519Key>();
   internal::SecretBuffer priv_key_buffer(Ed25519KeyPrivKeySize());
   subtle::ResizeStringUninitialized(&key->public_key, Ed25519KeyPubKeySize());
   uint8_t* priv_key_ptr = priv_key_buffer.data();
@@ -553,7 +553,7 @@ absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
     return EVP_PKEY_new_raw_private_key(SslEvpPkeyType::kX25519Key, nullptr,
                                         private_key.data(), private_key.size());
   }));
-  auto key = absl::make_unique<X25519Key>();
+  auto key = std::make_unique<X25519Key>();
   internal::SecretBuffer priv_key_buffer(X25519KeyPrivKeySize());
   absl::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, *pkey,

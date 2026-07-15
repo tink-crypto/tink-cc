@@ -92,7 +92,7 @@ absl::StatusOr<MlKemKey> MlKem768KeyFromPrivateKey(
                           "Failed to expand ML-KEM-768 private key from seed.");
     }
 
-    auto bssl_public_key = absl::make_unique<MLKEM768_public_key>();
+    auto bssl_public_key = std::make_unique<MLKEM768_public_key>();
     MLKEM768_public_from_private(bssl_public_key.get(), bssl_private_key.get());
 
     CBB cbb;
@@ -130,7 +130,7 @@ absl::StatusOr<MlKemKey> MlKem1024KeyFromPrivateKey(
           "Failed to expand ML-KEM-1024 private key from seed.");
     }
 
-    auto bssl_public_key = absl::make_unique<MLKEM1024_public_key>();
+    auto bssl_public_key = std::make_unique<MLKEM1024_public_key>();
     MLKEM1024_public_from_private(bssl_public_key.get(),
                                   bssl_private_key.get());
 

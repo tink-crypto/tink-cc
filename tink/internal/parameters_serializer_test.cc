@@ -41,9 +41,9 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 
 TEST(ParametersSerializerTest, Create) {
-  std::unique_ptr<ParametersSerializer> serializer = absl::make_unique<
-      ParametersSerializerImpl<NoIdParams, NoIdSerialization>>(
-      kNoIdTypeUrl, SerializeNoIdParams);
+  std::unique_ptr<ParametersSerializer> serializer =
+      std::make_unique<ParametersSerializerImpl<NoIdParams, NoIdSerialization>>(
+          kNoIdTypeUrl, SerializeNoIdParams);
 
   EXPECT_THAT(serializer->ObjectIdentifier(), Eq(kNoIdTypeUrl));
   EXPECT_THAT(serializer->Index(),
@@ -51,9 +51,9 @@ TEST(ParametersSerializerTest, Create) {
 }
 
 TEST(ParametersSerializerTest, SerializeParameters) {
-  std::unique_ptr<ParametersSerializer> serializer = absl::make_unique<
-      ParametersSerializerImpl<NoIdParams, NoIdSerialization>>(
-      kNoIdTypeUrl, SerializeNoIdParams);
+  std::unique_ptr<ParametersSerializer> serializer =
+      std::make_unique<ParametersSerializerImpl<NoIdParams, NoIdSerialization>>(
+          kNoIdTypeUrl, SerializeNoIdParams);
 
   NoIdParams parameters;
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -63,9 +63,9 @@ TEST(ParametersSerializerTest, SerializeParameters) {
 }
 
 TEST(ParametersSerializerTest, SerializeParametersWithInvalidParametersType) {
-  std::unique_ptr<ParametersSerializer> serializer = absl::make_unique<
-      ParametersSerializerImpl<NoIdParams, NoIdSerialization>>(
-      kNoIdTypeUrl, SerializeNoIdParams);
+  std::unique_ptr<ParametersSerializer> serializer =
+      std::make_unique<ParametersSerializerImpl<NoIdParams, NoIdSerialization>>(
+          kNoIdTypeUrl, SerializeNoIdParams);
 
   IdParams parameters;
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =

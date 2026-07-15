@@ -46,8 +46,8 @@ using ::testing::Eq;
 
 TEST(KeyParserTest, Create) {
   std::unique_ptr<KeyParser> parser =
-      absl::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
-          kNoIdTypeUrl, ParseNoIdKey);
+      std::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(kNoIdTypeUrl,
+                                                                  ParseNoIdKey);
 
   EXPECT_THAT(parser->ObjectIdentifier(), Eq(kNoIdTypeUrl));
   EXPECT_THAT(
@@ -57,8 +57,8 @@ TEST(KeyParserTest, Create) {
 
 TEST(KeyParserTest, ParseKey) {
   std::unique_ptr<KeyParser> parser =
-      absl::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
-          kNoIdTypeUrl, ParseNoIdKey);
+      std::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(kNoIdTypeUrl,
+                                                                  ParseNoIdKey);
 
   NoIdSerialization serialization;
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -71,8 +71,8 @@ TEST(KeyParserTest, ParseKey) {
 
 TEST(KeyParserTest, ParsePublicKeyNoAccessToken) {
   std::unique_ptr<KeyParser> parser =
-      absl::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
-          kNoIdTypeUrl, ParseNoIdKey);
+      std::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(kNoIdTypeUrl,
+                                                                  ParseNoIdKey);
 
   NoIdSerialization serialization;
   absl::StatusOr<std::unique_ptr<Key>> public_key =
@@ -85,7 +85,7 @@ TEST(KeyParserTest, ParsePublicKeyNoAccessToken) {
 
 TEST(KeyParserTest, ParseKeyWithInvalidSerializationType) {
   std::unique_ptr<KeyParser> parser =
-      absl::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
+      std::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
           "example_type_url", ParseNoIdKey);
 
   IdKeySerialization serialization(/*id=*/123);
@@ -96,7 +96,7 @@ TEST(KeyParserTest, ParseKeyWithInvalidSerializationType) {
 
 TEST(KeyParserTest, ParseKeyWithInvalidObjectIdentifier) {
   std::unique_ptr<KeyParser> parser =
-      absl::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
+      std::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
           "mismatched_type_url", ParseNoIdKey);
 
   NoIdSerialization serialization;

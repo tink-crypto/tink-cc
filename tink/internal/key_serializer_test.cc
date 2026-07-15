@@ -45,7 +45,7 @@ using ::testing::Eq;
 
 TEST(KeySerializerTest, Create) {
   std::unique_ptr<KeySerializer> serializer =
-      absl::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
+      std::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
           SerializeNoIdKey);
 
   EXPECT_THAT(serializer->Index(),
@@ -54,7 +54,7 @@ TEST(KeySerializerTest, Create) {
 
 TEST(KeySerializerTest, SerializeKey) {
   std::unique_ptr<KeySerializer> serializer =
-      absl::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
+      std::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
           SerializeNoIdKey);
 
   NoIdKey key;
@@ -66,7 +66,7 @@ TEST(KeySerializerTest, SerializeKey) {
 
 TEST(KeySerializerTest, SerializePublicKeyNoAccessToken) {
   std::unique_ptr<KeySerializer> serializer =
-      absl::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
+      std::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
           SerializeNoIdKey);
 
   NoIdKey public_key;
@@ -78,7 +78,7 @@ TEST(KeySerializerTest, SerializePublicKeyNoAccessToken) {
 
 TEST(KeySerializerTest, SerializeKeyWithInvalidKeyType) {
   std::unique_ptr<KeySerializer> serializer =
-      absl::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
+      std::make_unique<KeySerializerImpl<NoIdKey, NoIdSerialization>>(
           SerializeNoIdKey);
 
   IdKey key(/*id=*/123);

@@ -85,7 +85,7 @@ class Wrapper : public PrimitiveWrapper<InputPrimitive, OutputPrimitive> {
   absl::StatusOr<std::unique_ptr<OutputPrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<InputPrimitive>> primitive_set)
       const override {
-    auto result = absl::make_unique<OutputPrimitive>();
+    auto result = std::make_unique<OutputPrimitive>();
     for (const auto* entry : primitive_set->get_all()) {
       (*result).push_back(
           std::make_pair(entry->get_key_id(), entry->get_primitive()));
@@ -103,13 +103,13 @@ absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateIn(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         key_data.type_url());
   } else {
-    return absl::make_unique<InputPrimitive>(key_data.type_url());
+    return std::make_unique<InputPrimitive>(key_data.type_url());
   }
 }
 
 absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKey(
     const Key& key) {
-  return absl::make_unique<InputPrimitive>("input primitive from key");
+  return std::make_unique<InputPrimitive>("input primitive from key");
 }
 
 absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKeyFailing(
@@ -127,7 +127,7 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<XChaCha20Poly1305Key>(*key);
+  return std::make_unique<XChaCha20Poly1305Key>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
@@ -170,7 +170,7 @@ google::crypto::tink::Keyset CreateKeyset(
 TEST(KeysetWrapperImplTest, Basic) {
   Wrapper wrapper;
   auto wrapper_impl =
-      absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKeyFailing);
   std::vector<std::pair<int, std::string>> keydata = {
       {111, "one"}, {222, "two"}, {333, "three"}};
@@ -223,7 +223,7 @@ TEST_P(KeysetWrapperImplTest, BasicFromKey) {
 
   Wrapper wrapper;
   auto wrapper_impl =
-      absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKey);
 
   absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped = wrapper_impl->Wrap(
@@ -266,7 +266,7 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
   ASSERT_THAT(handle.status(), IsOk());
 
   AeadWrapper wrapper;
-  auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(
+  auto wrapper_impl = std::make_unique<KeysetWrapperImpl<Aead, Aead>>(
       &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
       &GetPrimitiveFromXChaCha20Poly1305Key);
   absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
@@ -321,7 +321,7 @@ TEST_P(KeysetWrapperImplTest,
     return absl::Status(absl::StatusCode::kNotFound, "Not implemented.");
   };
   AeadWrapper wrapper;
-  auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(
+  auto wrapper_impl = std::make_unique<KeysetWrapperImpl<Aead, Aead>>(
       &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
       aead_primitive_getter_failing);
   absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
@@ -364,7 +364,7 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
       KeysetHandleBuilder().AddEntry(std::move(entry0)).Build();
   ASSERT_THAT(handle.status(), IsOk());
   AeadWrapper wrapper;
-  auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(
+  auto wrapper_impl = std::make_unique<KeysetWrapperImpl<Aead, Aead>>(
       &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
       &GetPrimitiveFromXChaCha20Poly1305Key);
   absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
@@ -399,7 +399,7 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
 TEST(KeysetWrapperImplTest, FailingGetPrimitive) {
   Wrapper wrapper;
   auto wrapper_impl =
-      absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKeyFailing);
   std::vector<std::pair<int, std::string>> keydata = {{1, "ok:one"},
                                                       {2, "error:two"}};
@@ -418,7 +418,7 @@ TEST(KeysetWrapperImplTest, FailingGetPrimitive) {
 TEST(KeysetWrapperImplTest, ValidatesKeyset) {
   Wrapper wrapper;
   auto wrapper_impl =
-      absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKey);
   absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
       wrapper_impl->Wrap(google::crypto::tink::Keyset(), /*annotations=*/{});
@@ -430,7 +430,7 @@ TEST(KeysetWrapperImplTest, ValidatesKeyset) {
 TEST(KeysetWrapperImplTest, OnlyEnabled) {
   Wrapper wrapper;
   auto wrapper_impl =
-      absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKey);
   std::vector<std::pair<int, std::string>> keydata = {
       {111, "one"}, {222, "two"}, {333, "three"}, {444, "four"}};
@@ -459,7 +459,7 @@ class MockWrapper : public PrimitiveWrapper<I, O> {
 
 // Returns a valid output primitive.
 std::unique_ptr<OutputPrimitive> GetOutputPrimitiveForTesting() {
-  auto output_primitive = absl::make_unique<OutputPrimitive>();
+  auto output_primitive = std::make_unique<OutputPrimitive>();
   output_primitive->push_back({111, "one"});
   output_primitive->push_back({222, "two (primary)"});
   output_primitive->push_back({333, "three"});
@@ -471,7 +471,7 @@ std::unique_ptr<OutputPrimitive> GetOutputPrimitiveForTesting() {
 TEST(KeysetWrapperImplTest, WrapWithAnnotationCorrectlyWrittenToPrimitiveSet) {
   MockWrapper<InputPrimitive, OutputPrimitive> wrapper;
   auto keyset_wrapper =
-      absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, CreateIn, CreateInFromKeyFailing);
   Keyset keyset = CreateKeyset(
       /*keydata=*/{{111, "one"}, {222, "two"}, {333, "three"}, {444, "four"}});

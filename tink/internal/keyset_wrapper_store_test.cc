@@ -79,12 +79,12 @@ class FakeKeyTypeManager
    public:
     absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const AesGcmKeyProto& key) const override {
-      return absl::make_unique<FakePrimitive>(key.key_value());
+      return std::make_unique<FakePrimitive>(key.key_value());
     }
   };
 
   FakeKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<FakePrimitiveFactory>()) {}
+      : KeyTypeManager(std::make_unique<FakePrimitiveFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::SYMMETRIC;
@@ -125,7 +125,7 @@ class FakePrimitiveWrapper
   absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
-    return absl::make_unique<FakePrimitive>(
+    return std::make_unique<FakePrimitive>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -136,7 +136,7 @@ class FakePrimitiveWrapper2
   absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
-    return absl::make_unique<FakePrimitive>(
+    return std::make_unique<FakePrimitive>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -144,7 +144,7 @@ class FakePrimitiveWrapper2
 std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
 FakePrimitiveGetterFromKey() {
   return [](const Key& key) {
-    return absl::make_unique<FakePrimitive>("fake key material");
+    return std::make_unique<FakePrimitive>("fake key material");
   };
 }
 
@@ -177,7 +177,7 @@ PrimitiveGetter(RegistryImpl& registry) {
   absl::Status status =
       registry.RegisterKeyTypeManager<AesGcmKeyProto, AesGcmKeyFormat,
                                       List<FakePrimitive>>(
-          absl::make_unique<FakeKeyTypeManager>(),
+          std::make_unique<FakeKeyTypeManager>(),
           /*new_key_allowed=*/true);
   if (!status.ok()) {
     return status;
@@ -196,7 +196,7 @@ TEST(KeysetWrapperStoreTest, Add) {
 
   KeysetWrapperStore store;
   EXPECT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 }
@@ -224,7 +224,7 @@ TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
@@ -237,10 +237,10 @@ TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
         return absl::Status(absl::StatusCode::kUnimplemented,
                             "Not implemented.");
       };
-  EXPECT_THAT((store.Add<Mac, Mac>(absl::make_unique<MacWrapper>(),
-                                   primitive_getter_mac,
-                                   primitive_getter_mac_from_key)),
-              IsOk());
+  EXPECT_THAT(
+      (store.Add<Mac, Mac>(std::make_unique<MacWrapper>(), primitive_getter_mac,
+                           primitive_getter_mac_from_key)),
+      IsOk());
 }
 
 TEST(KeysetWrapperStoreTest, AddSameWrapperTwiceSucceeds) {
@@ -252,11 +252,11 @@ TEST(KeysetWrapperStoreTest, AddSameWrapperTwiceSucceeds) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
   EXPECT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 }
@@ -270,11 +270,11 @@ TEST(KeysetWrapperStoreTest, AddDifferentWrappersForSamePrimitiveFails) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
   EXPECT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper2>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper2>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
@@ -288,7 +288,7 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
@@ -308,7 +308,7 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
   keyset_info.set_primary_key_id(1234543);
   PrimitiveSet<FakePrimitive>::Builder primitive_set_builder;
   primitive_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<FakePrimitive>(raw_key), keyset_info.key_info(0));
+      std::make_unique<FakePrimitive>(raw_key), keyset_info.key_info(0));
   absl::StatusOr<PrimitiveSet<FakePrimitive>> primitive_set =
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
@@ -330,7 +330,7 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapperNonexistentWrapperFails) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
@@ -347,7 +347,7 @@ TEST(KeysetWrapperStoreTest, Get) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
@@ -376,7 +376,7 @@ TEST(KeysetWrapperStoreTest,
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FailingFakePrimitiveGetterFromKey())),
               IsOk());
 
@@ -404,7 +404,7 @@ TEST(KeysetWrapperStoreTest, GetNonexistentWrapperFails) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
@@ -421,7 +421,7 @@ TEST(KeysetWrapperStoreTest, IsEmpty) {
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
   EXPECT_THAT(store.IsEmpty(), false);
@@ -436,7 +436,7 @@ TEST(KeysetWrapperStoreTest, Move) {
 
   KeysetWrapperStore store;
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
-                  absl::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
                   FakePrimitiveGetterFromKey())),
               IsOk());
 

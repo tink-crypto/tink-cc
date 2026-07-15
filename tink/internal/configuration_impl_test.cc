@@ -98,12 +98,12 @@ class FakeKeyTypeManager
    public:
     absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const google::crypto::tink::AesGcmKey& key) const override {
-      return absl::make_unique<FakePrimitive>(key.key_value());
+      return std::make_unique<FakePrimitive>(key.key_value());
     }
   };
 
   FakeKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<FakePrimitiveFactory>()) {}
+      : KeyTypeManager(std::make_unique<FakePrimitiveFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::SYMMETRIC;
@@ -146,7 +146,7 @@ class FakePrimitiveWrapper
   absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
-    return absl::make_unique<FakePrimitive>(
+    return std::make_unique<FakePrimitive>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -158,7 +158,7 @@ class FakePrimitiveWrapper2
   absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive2>> primitive_set)
       const override {
-    return absl::make_unique<FakePrimitive>(
+    return std::make_unique<FakePrimitive>(
         primitive_set->get_primary()->get_primitive().get());
   }
 };
@@ -167,7 +167,7 @@ std::function<
     absl::StatusOr<std::unique_ptr<FakePrimitive>>(const AesGcmKey& key)>
 FakePrimitiveGetterFromKey() {
   return [](const AesGcmKey& key) {
-    return absl::make_unique<FakePrimitive>("primitive from key");
+    return std::make_unique<FakePrimitive>("primitive from key");
   };
 }
 
@@ -188,14 +188,14 @@ std::string AddAesGcmKeyToKeyset(Keyset& keyset, uint32_t key_id,
 TEST(ConfigurationImplTest, AddPrimitiveWrapper) {
   Configuration config;
   EXPECT_THAT((ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>(), config)),
+                  std::make_unique<FakePrimitiveWrapper>(), config)),
               IsOk());
 }
 
 TEST(ConfigurationImplTest, AddKeyTypeManager) {
   Configuration config;
   EXPECT_THAT(ConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 }
 
@@ -227,7 +227,7 @@ TEST(ConfigurationImplTest, AddPrimitiveGetterForSameTupleTwiceFails) {
 TEST(ConfigurationImplTest, GetKeyTypeInfoStore) {
   Configuration config;
   ASSERT_THAT(ConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
   EXPECT_THAT(ConfigurationImpl::GetKeyTypeInfoStore(config), IsOk());
@@ -236,7 +236,7 @@ TEST(ConfigurationImplTest, GetKeyTypeInfoStore) {
 TEST(ConfigurationImplTest, GetKeyTypeManager) {
   Configuration config;
   ASSERT_THAT(ConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
   absl::StatusOr<const KeyTypeInfoStore*> store =
@@ -284,10 +284,10 @@ TEST(ConfigurationImplTest, GetMissingKeyManagerFails) {
 TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrap) {
   Configuration config;
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>(), config)),
+                  std::make_unique<FakePrimitiveWrapper>(), config)),
               IsOk());
   ASSERT_THAT(ConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
   absl::StatusOr<const KeysetWrapperStore*> store =
@@ -313,7 +313,7 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
 
   Configuration config;
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>(), config)),
+                  std::make_unique<FakePrimitiveWrapper>(), config)),
               IsOk());
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
                   FakePrimitiveGetterFromKey(), config)),
@@ -340,7 +340,7 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
 TEST(ConfigurationImplTest, KeysetWrapperWrapMissingKeyTypeInfoFails) {
   Configuration config;
   ASSERT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>(), config),
+                  std::make_unique<FakePrimitiveWrapper>(), config),
               IsOk());
 
   absl::StatusOr<const KeysetWrapperStore*> store =
@@ -363,11 +363,11 @@ TEST(ConfigurationImplTest, KeysetWrapperWrapMissingKeyManagerFails) {
   Configuration config;
   // Transforms FakePrimitive2 to FakePrimitive.
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper2>(), config)),
+                  std::make_unique<FakePrimitiveWrapper2>(), config)),
               IsOk());
   // Transforms KeyData to FakePrimitive.
   ASSERT_THAT(ConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
   // AesGcmKey KeyData -> FakePrimitive2 -> FakePrimitive is the success path,
@@ -398,12 +398,12 @@ class FakeSignKeyManager
    public:
     absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const RsaSsaPssPrivateKey& key) const override {
-      return {absl::make_unique<test::DummyPublicKeySign>("a public key sign")};
+      return {std::make_unique<test::DummyPublicKeySign>("a public key sign")};
     }
   };
 
   explicit FakeSignKeyManager()
-      : PrivateKeyTypeManager(absl::make_unique<PublicKeySignFactory>()) {}
+      : PrivateKeyTypeManager(std::make_unique<PublicKeySignFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::ASYMMETRIC_PRIVATE;
@@ -450,12 +450,12 @@ class FakeVerifyKeyManager
     absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const RsaSsaPssPublicKey& key) const override {
       return {
-          absl::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
+          std::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
     }
   };
 
   explicit FakeVerifyKeyManager()
-      : KeyTypeManager(absl::make_unique<PublicKeyVerifyFactory>()) {}
+      : KeyTypeManager(std::make_unique<PublicKeyVerifyFactory>()) {}
 
   KeyData::KeyMaterialType key_material_type() const override {
     return KeyData::ASYMMETRIC_PUBLIC;
@@ -480,16 +480,16 @@ class FakeVerifyKeyManager
 TEST(ConfigurationImplTest, AddAsymmetricKeyManagers) {
   Configuration config;
   EXPECT_THAT(ConfigurationImpl::AddAsymmetricKeyManagers(
-                  absl::make_unique<FakeSignKeyManager>(),
-                  absl::make_unique<FakeVerifyKeyManager>(), config),
+                  std::make_unique<FakeSignKeyManager>(),
+                  std::make_unique<FakeVerifyKeyManager>(), config),
               IsOk());
 }
 
 TEST(ConfigurationImplTest, GetAsymmetricKeyManagers) {
   Configuration config;
   ASSERT_THAT(ConfigurationImpl::AddAsymmetricKeyManagers(
-                  absl::make_unique<FakeSignKeyManager>(),
-                  absl::make_unique<FakeVerifyKeyManager>(), config),
+                  std::make_unique<FakeSignKeyManager>(),
+                  std::make_unique<FakeVerifyKeyManager>(), config),
               IsOk());
 
   {
@@ -530,14 +530,14 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
 
   // Check that ConfigurationImpl functions return kFailedPrecondition.
   EXPECT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>(), config),
+                  std::make_unique<FakePrimitiveWrapper>(), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT(ConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<FakeKeyTypeManager>(), config),
+                  std::make_unique<FakeKeyTypeManager>(), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT(ConfigurationImpl::AddAsymmetricKeyManagers(
-                  absl::make_unique<FakeSignKeyManager>(),
-                  absl::make_unique<FakeVerifyKeyManager>(), config),
+                  std::make_unique<FakeSignKeyManager>(),
+                  std::make_unique<FakeVerifyKeyManager>(), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
                   FakePrimitiveGetterFromKey(), config)),
@@ -561,10 +561,10 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
               StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>()),
+                  std::make_unique<FakePrimitiveWrapper>()),
               IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<FakeKeyTypeManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<FakeKeyTypeManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   EXPECT_THAT(handle->GetPrimitive<FakePrimitive>(config), IsOk());
@@ -573,7 +573,7 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
 TEST(ConfigurationImplTest, GlobalRegistryModeWithNonEmptyConfigFails) {
   Configuration config;
   ASSERT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
-                  absl::make_unique<FakePrimitiveWrapper>(), config),
+                  std::make_unique<FakePrimitiveWrapper>(), config),
               IsOk());
   EXPECT_THAT(ConfigurationImpl::SetGlobalRegistryMode(config),
               StatusIs(absl::StatusCode::kFailedPrecondition));

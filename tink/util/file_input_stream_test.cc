@@ -88,7 +88,7 @@ TEST_P(FileInputStreamTestDefaultBufferSize, ReadAllfFromInputStreamSucceeds) {
   absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(stream_size, file_contents.size());
-  auto input_stream = absl::make_unique<util::FileInputStream>(*input_fd);
+  auto input_stream = std::make_unique<util::FileInputStream>(*input_fd);
   std::string stream_contents;
   auto status = ReadAll(input_stream.get(), &stream_contents);
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kOutOfRange));
@@ -116,7 +116,7 @@ TEST_P(FileInputStreamTestCustomBufferSizes,
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(kDefaultTestStreamSize, file_contents.size());
   auto input_stream =
-      absl::make_unique<util::FileInputStream>(*input_fd, buffer_size);
+      std::make_unique<util::FileInputStream>(*input_fd, buffer_size);
   const void* buffer;
   auto next_result = input_stream->Next(&buffer);
   ASSERT_THAT(next_result, IsOk());
@@ -131,7 +131,7 @@ INSTANTIATE_TEST_SUITE_P(FileInputStreamTest,
 
 TEST(FileInputStreamTest, NextFailsIfFdIsInvalid) {
   int buffer_size = 4 * 1024;
-  auto input_stream = absl::make_unique<util::FileInputStream>(-1, buffer_size);
+  auto input_stream = std::make_unique<util::FileInputStream>(-1, buffer_size);
   const void* buffer = nullptr;
   EXPECT_THAT(input_stream->Next(&buffer).status(),
               StatusIs(absl::StatusCode::kInternal));
@@ -148,7 +148,7 @@ TEST(FileInputStreamTest, NextFailsIfDataIsNull) {
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(kDefaultTestStreamSize, file_contents.size());
   auto input_stream =
-      absl::make_unique<util::FileInputStream>(*input_fd, buffer_size);
+      std::make_unique<util::FileInputStream>(*input_fd, buffer_size);
 
   EXPECT_THAT(input_stream->Next(nullptr).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -165,7 +165,7 @@ TEST(FileInputStreamTest, NextReadsExactlyOneBlockOfData) {
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(kDefaultTestStreamSize, file_contents.size());
   auto input_stream =
-      absl::make_unique<util::FileInputStream>(*input_fd, buffer_size);
+      std::make_unique<util::FileInputStream>(*input_fd, buffer_size);
 
   auto expected_file_content_block =
       absl::string_view(file_contents).substr(0, buffer_size);
@@ -189,7 +189,7 @@ TEST(FileInputStreamTest, BackupForNegativeOrZeroBytesIsANoop) {
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(kDefaultTestStreamSize, file_contents.size());
   auto input_stream =
-      absl::make_unique<util::FileInputStream>(*input_fd, buffer_size);
+      std::make_unique<util::FileInputStream>(*input_fd, buffer_size);
   EXPECT_EQ(input_stream->Position(), 0);
 
   auto expected_file_content_block =
@@ -228,7 +228,7 @@ TEST(FileInputStreamTest, BackupForLessThanOneBlockOfData) {
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(kDefaultTestStreamSize, file_contents.size());
   auto input_stream =
-      absl::make_unique<util::FileInputStream>(*input_fd, buffer_size);
+      std::make_unique<util::FileInputStream>(*input_fd, buffer_size);
 
   auto expected_file_content_block =
       absl::string_view(file_contents).substr(0, buffer_size);
@@ -279,7 +279,7 @@ TEST(FileInputStreamTest, BackupAtMostOfOneBlock) {
   ASSERT_THAT(input_fd.status(), IsOk());
   EXPECT_EQ(kDefaultTestStreamSize, file_contents.size());
   auto input_stream =
-      absl::make_unique<util::FileInputStream>(*input_fd, buffer_size);
+      std::make_unique<util::FileInputStream>(*input_fd, buffer_size);
 
   // Read two blocks of size buffer_size, then back up of more than buffer_size
   // bytes.

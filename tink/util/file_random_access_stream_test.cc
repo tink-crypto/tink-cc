@@ -120,7 +120,7 @@ TEST(FileRandomAccessStreamTest, ReadingStreams) {
     absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
     ASSERT_THAT(input_fd.status(), IsOk());
     EXPECT_EQ(stream_size, file_contents.size());
-    auto ra_stream = absl::make_unique<util::FileRandomAccessStream>(*input_fd);
+    auto ra_stream = std::make_unique<util::FileRandomAccessStream>(*input_fd);
     std::string stream_contents;
     auto status =
         ReadAll(ra_stream.get(), 1 + (stream_size / 10), &stream_contents);
@@ -143,7 +143,7 @@ TEST(FileRandomAccessStreamTest, ReadingStreamsTillLastByte) {
     absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
     ASSERT_THAT(input_fd.status(), IsOk());
     EXPECT_EQ(stream_size, file_contents.size());
-    auto ra_stream = absl::make_unique<util::FileRandomAccessStream>(*input_fd);
+    auto ra_stream = std::make_unique<util::FileRandomAccessStream>(*input_fd);
     auto buffer = std::move(Buffer::New(stream_size).value());
 
     // Read from the beginning till the last byte.
@@ -167,7 +167,7 @@ TEST(FileRandomAccessStreamTest, ConcurrentReads) {
     absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
     ASSERT_THAT(input_fd.status(), IsOk());
     EXPECT_EQ(stream_size, file_contents.size());
-    auto ra_stream = absl::make_unique<util::FileRandomAccessStream>(*input_fd);
+    auto ra_stream = std::make_unique<util::FileRandomAccessStream>(*input_fd);
     std::thread read_0(ReadAndVerifyChunk,
         ra_stream.get(), 0, stream_size / 2, file_contents);
     std::thread read_1(ReadAndVerifyChunk,
@@ -193,7 +193,7 @@ TEST(FileRandomAccessStreamTest, NegativeReadPosition) {
                 IsOk());
     absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
     ASSERT_THAT(input_fd.status(), IsOk());
-    auto ra_stream = absl::make_unique<util::FileRandomAccessStream>(*input_fd);
+    auto ra_stream = std::make_unique<util::FileRandomAccessStream>(*input_fd);
     int count = 42;
     auto buffer = std::move(Buffer::New(count).value());
     for (auto position : {-100, -10, -1}) {
@@ -216,7 +216,7 @@ TEST(FileRandomAccessStreamTest, NotPositiveReadCount) {
                 IsOk());
     absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
     ASSERT_THAT(input_fd.status(), IsOk());
-    auto ra_stream = absl::make_unique<util::FileRandomAccessStream>(*input_fd);
+    auto ra_stream = std::make_unique<util::FileRandomAccessStream>(*input_fd);
     auto buffer = std::move(Buffer::New(42).value());
     int64_t position = 0;
     for (auto count : {-100, -10, -1, 0}) {
@@ -238,7 +238,7 @@ TEST(FileRandomAccessStreamTest, ReadPositionAfterEof) {
                 IsOk());
     absl::StatusOr<int> input_fd = OpenTestFileToRead(filename);
     ASSERT_THAT(input_fd.status(), IsOk());
-    auto ra_stream = absl::make_unique<util::FileRandomAccessStream>(*input_fd);
+    auto ra_stream = std::make_unique<util::FileRandomAccessStream>(*input_fd);
     int count = 42;
     auto buffer = std::move(Buffer::New(count).value());
     for (auto position : {stream_size + 1, stream_size + 10}) {

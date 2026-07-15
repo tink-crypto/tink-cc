@@ -51,7 +51,7 @@ absl::StatusOr<int> OstreamOutputStream::Next(void** data) {
   if (!status_.ok()) return status_;
 
   if (buffer_ == nullptr) {  // possible only at the first call to Next()
-    buffer_ = absl::make_unique<uint8_t[]>(buffer_size_);
+    buffer_ = std::make_unique<uint8_t[]>(buffer_size_);
     *data = buffer_.get();
     count_in_buffer_ = buffer_size_;
     position_ = buffer_size_;

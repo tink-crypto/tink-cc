@@ -137,7 +137,7 @@ absl::StatusOr<std::string> FakeKmsClient::CreateFakeKeyUri() {
   }
   std::stringbuf keyset;
   auto writer_result =
-      BinaryKeysetWriter::New(absl::make_unique<std::ostream>(&keyset));
+      BinaryKeysetWriter::New(std::make_unique<std::ostream>(&keyset));
   if (!writer_result.ok()) {
     return writer_result.status();
   }

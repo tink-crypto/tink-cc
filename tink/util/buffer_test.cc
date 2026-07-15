@@ -41,7 +41,7 @@ using testing::HasSubstr;
 TEST(BufferTest, ExternalMemoryBlock) {
   for (auto buf_size : {1, 10, 100, 1000, 10000, 100000, 1000000}) {
     SCOPED_TRACE(absl::StrCat("buf_size = ", buf_size));
-    auto mem_block = absl::make_unique<char[]>(buf_size);
+    auto mem_block = std::make_unique<char[]>(buf_size);
     auto buf_result = Buffer::NewNonOwning(mem_block.get(), buf_size);
     ASSERT_THAT(buf_result, IsOk());
     auto buf = std::move(buf_result.value());
@@ -90,7 +90,7 @@ TEST(BufferTest, NullMemoryBlock) {
 TEST(BufferTest, BadAllocatedSize_ExternalMemoryBlock) {
   for (auto allocated_size : {-10, -1, 0}) {
     SCOPED_TRACE(absl::StrCat("allocated_size = ", allocated_size));
-    auto mem_block = absl::make_unique<char[]>(42);
+    auto mem_block = std::make_unique<char[]>(42);
     auto buf_result = Buffer::NewNonOwning(mem_block.get(), allocated_size);
     EXPECT_THAT(buf_result.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument,
@@ -124,7 +124,7 @@ TEST(BufferTest, BadNewSize_ExternalMemoryBlock) {
 TEST(BufferTest, BadNewSize_InternalMemoryBlock) {
   for (auto buf_size : {1, 10, 100, 1000, 10000}) {
     SCOPED_TRACE(absl::StrCat("buf_size = ", buf_size));
-    auto mem_block = absl::make_unique<char[]>(buf_size);
+    auto mem_block = std::make_unique<char[]>(buf_size);
     auto buf =
         std::move(Buffer::NewNonOwning(mem_block.get(), buf_size).value());
     for (auto new_size : {-10, -1, buf_size + 1, 2 * buf_size}) {

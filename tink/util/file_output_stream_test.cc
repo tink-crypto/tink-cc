@@ -95,7 +95,7 @@ TEST_F(FileOutputStreamTest, WritingStreams) {
     ASSERT_THAT(internal::CreateTestFile(filename, stream_contents), IsOk());
     absl::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
     ASSERT_THAT(output_fd.status(), IsOk());
-    auto output_stream = absl::make_unique<util::FileOutputStream>(*output_fd);
+    auto output_stream = std::make_unique<util::FileOutputStream>(*output_fd);
     auto status = WriteToStream(output_stream.get(), stream_contents);
     ASSERT_THAT(status, IsOk());
     std::string file_contents = test::ReadTestFile(filename);
@@ -115,7 +115,7 @@ TEST_F(FileOutputStreamTest, CustomBufferSizes) {
     absl::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
     ASSERT_THAT(output_fd.status(), IsOk());
     auto output_stream =
-        absl::make_unique<util::FileOutputStream>(*output_fd, buffer_size);
+        std::make_unique<util::FileOutputStream>(*output_fd, buffer_size);
     void* buffer;
     auto next_result = output_stream->Next(&buffer);
     ASSERT_THAT(next_result, IsOk());
@@ -143,7 +143,7 @@ TEST_F(FileOutputStreamTest, BackupAndPosition) {
 
   // Prepare the stream and do the first call to Next().
   auto output_stream =
-      absl::make_unique<util::FileOutputStream>(*output_fd, buffer_size);
+      std::make_unique<util::FileOutputStream>(*output_fd, buffer_size);
   EXPECT_EQ(0, output_stream->Position());
   auto next_result = output_stream->Next(&buffer);
   ASSERT_THAT(next_result, IsOk());

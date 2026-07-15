@@ -42,7 +42,7 @@ IstreamInputStream::IstreamInputStream(std::unique_ptr<std::istream> input,
   count_in_buffer_ = 0;
   count_backedup_ = 0;
   position_ = 0;
-  buffer_ = absl::make_unique<uint8_t[]>(buffer_size_);
+  buffer_ = std::make_unique<uint8_t[]>(buffer_size_);
   buffer_offset_ = 0;
   status_ = absl::OkStatus();
 }

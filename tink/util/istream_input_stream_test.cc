@@ -65,8 +65,8 @@ std::unique_ptr<std::istream> GetTestIstream(absl::string_view filename,
     exit(1);
   }
   output.close();
-  auto test_istream = absl::make_unique<std::ifstream>(
-      full_filename, std::ofstream::binary);
+  auto test_istream =
+      std::make_unique<std::ifstream>(full_filename, std::ofstream::binary);
   return std::move(test_istream);
 }
 
@@ -95,8 +95,8 @@ TEST_F(IstreamInputStreamTest, testReadingStreams) {
         stream_size, "_", internal::GetTestFileNamePrefix(), "_file.bin");
     auto input = GetTestIstream(filename, stream_size, &file_contents);
     EXPECT_EQ(stream_size, file_contents.size());
-    auto input_stream = absl::make_unique<util::IstreamInputStream>(
-        std::move(input));
+    auto input_stream =
+        std::make_unique<util::IstreamInputStream>(std::move(input));
     std::string stream_contents;
     auto status = ReadTillEnd(input_stream.get(), &stream_contents);
     ASSERT_THAT(status, StatusIs(absl::StatusCode::kOutOfRange));
@@ -113,7 +113,7 @@ TEST_F(IstreamInputStreamTest, testCustomBufferSizes) {
         buffer_size, "_", internal::GetTestFileNamePrefix(), "_file.bin");
     auto input = GetTestIstream(filename, stream_size, &file_contents);
     EXPECT_EQ(stream_size, file_contents.size());
-    auto input_stream = absl::make_unique<util::IstreamInputStream>(
+    auto input_stream = std::make_unique<util::IstreamInputStream>(
         std::move(input), buffer_size);
     const void* buffer;
     auto next_result = input_stream->Next(&buffer);
@@ -135,8 +135,8 @@ TEST_F(IstreamInputStreamTest, testBackupAndPosition) {
   EXPECT_EQ(stream_size, file_contents.size());
 
   // Prepare the stream and do the first call to Next().
-  auto input_stream = absl::make_unique<util::IstreamInputStream>(
-      std::move(input), buffer_size);
+  auto input_stream =
+      std::make_unique<util::IstreamInputStream>(std::move(input), buffer_size);
   EXPECT_EQ(0, input_stream->Position());
   auto next_result = input_stream->Next(&buffer);
   ASSERT_THAT(next_result, IsOk());

@@ -36,7 +36,7 @@ class OwningBuffer : public Buffer {
   // It is assumed that 'allocated_size' is positive.
   explicit OwningBuffer(int allocated_size)
       : allocated_size_(allocated_size), size_(allocated_size) {
-    owned_mem_block_ = absl::make_unique<char[]>(allocated_size);
+    owned_mem_block_ = std::make_unique<char[]>(allocated_size);
   }
 
   char* const get_mem_block() const override  {
@@ -111,7 +111,7 @@ absl::StatusOr<std::unique_ptr<Buffer>> Buffer::New(int allocated_size) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "allocated_size must be positive");
   }
-  return {absl::make_unique<OwningBuffer>(allocated_size)};
+  return {std::make_unique<OwningBuffer>(allocated_size)};
 }
 
 // static
@@ -125,7 +125,7 @@ absl::StatusOr<std::unique_ptr<Buffer>> Buffer::NewNonOwning(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "mem_block must be non-null");
   }
-  return {absl::make_unique<NonOwningBuffer>(mem_block, allocated_size)};
+  return {std::make_unique<NonOwningBuffer>(mem_block, allocated_size)};
 }
 
 }  // namespace util

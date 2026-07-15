@@ -46,8 +46,8 @@ using ::absl_testing::IsOk;
 std::unique_ptr<std::ostream> GetTestOstream(absl::string_view filename) {
   std::string full_filename =
       absl::StrCat(crypto::tink::test::TmpDir(), "/", filename);
-  auto test_ostream = absl::make_unique<std::ofstream>(
-      full_filename, std::ofstream::binary);
+  auto test_ostream =
+      std::make_unique<std::ofstream>(full_filename, std::ofstream::binary);
   return std::move(test_ostream);
 }
 
@@ -86,8 +86,8 @@ TEST_F(OstreamOutputStreamTest, WritingStreams) {
     std::string filename = absl::StrCat(
         stream_size, internal::GetTestFileNamePrefix(), "_file.bin");
     auto output = GetTestOstream(filename);
-    auto output_stream = absl::make_unique<util::OstreamOutputStream>(
-        std::move(output));
+    auto output_stream =
+        std::make_unique<util::OstreamOutputStream>(std::move(output));
     auto status = WriteToStream(output_stream.get(), stream_contents);
     ASSERT_THAT(status, IsOk());
     std::string ostream_contents = test::ReadTestFile(filename);
@@ -104,7 +104,7 @@ TEST_F(OstreamOutputStreamTest, CustomBufferSizes) {
     std::string filename = absl::StrCat(
         buffer_size, internal::GetTestFileNamePrefix(), "_file.bin");
     auto output = GetTestOstream(filename);
-    auto output_stream = absl::make_unique<util::OstreamOutputStream>(
+    auto output_stream = std::make_unique<util::OstreamOutputStream>(
         std::move(output), buffer_size);
     void* buffer;
     auto next_result = output_stream->Next(&buffer);
@@ -129,7 +129,7 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
   auto output = GetTestOstream(filename);
 
   // Prepare the stream and do the first call to Next().
-  auto output_stream = absl::make_unique<util::OstreamOutputStream>(
+  auto output_stream = std::make_unique<util::OstreamOutputStream>(
       std::move(output), buffer_size);
   EXPECT_EQ(0, output_stream->Position());
   auto next_result = output_stream->Next(&buffer);

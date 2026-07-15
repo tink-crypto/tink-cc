@@ -73,9 +73,8 @@ class AesGcmKeyManager
   };
 
   AesGcmKeyManager()
-      : KeyTypeManager(absl::make_unique<AesGcmKeyManager::AeadFactory>(),
-                       absl::make_unique<AesGcmKeyManager::CordAeadFactory>()) {
-  }
+      : KeyTypeManager(std::make_unique<AesGcmKeyManager::AeadFactory>(),
+                       std::make_unique<AesGcmKeyManager::CordAeadFactory>()) {}
 
   // Returns the version of this key manager.
   uint32_t get_version() const override { return 0; }

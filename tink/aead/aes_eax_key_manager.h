@@ -53,7 +53,7 @@ class AesEaxKeyManager
     }
   };
 
-  AesEaxKeyManager() : KeyTypeManager(absl::make_unique<AeadFactory>()) {}
+  AesEaxKeyManager() : KeyTypeManager(std::make_unique<AeadFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

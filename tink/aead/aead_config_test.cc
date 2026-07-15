@@ -936,7 +936,7 @@ TEST_F(AeadConfigTest, KmsAeadProtoKeySerializationRegistered) {
 
   // NOTE: `KeyGenConfigAeadV0` does not support `KmsAeadKey`.
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<KmsAeadKeyManager>(), true),
+                  std::make_unique<KmsAeadKeyManager>(), true),
               IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
@@ -1059,7 +1059,7 @@ TEST_F(AeadConfigTest, KmsEnvelopeAeadProtoKeySerializationRegistered) {
 
   // NOTE: `KeyGenConfigAeadV0` does not support `KmsEnvelopeAeadKey`.
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<KmsEnvelopeAeadKeyManager>(), true),
+                  std::make_unique<KmsEnvelopeAeadKeyManager>(), true),
               IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());

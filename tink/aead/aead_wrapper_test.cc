@@ -97,7 +97,7 @@ TEST(AeadSetWrapperTest, WrapNullptr) {
 TEST(AeadSetWrapperTest, WrapEmpty) {
   AeadWrapper wrapper;
   absl::StatusOr<std::unique_ptr<Aead>> aead =
-      wrapper.Wrap(absl::make_unique<PrimitiveSet<Aead>>());
+      wrapper.Wrap(std::make_unique<PrimitiveSet<Aead>>());
   EXPECT_THAT(aead, Not(IsOk()));
   EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_PRED_FORMAT2(IsSubstring, "no primary",
@@ -111,12 +111,12 @@ TEST(AeadSetWrapperTest, Basic) {
   std::string aead_name_1 = "aead1";
   std::string aead_name_2 = "aead2";
   PrimitiveSet<Aead>::Builder aead_set_builder;
-  aead_set_builder.AddPrimitive(absl::make_unique<DummyAead>(aead_name_0),
+  aead_set_builder.AddPrimitive(std::make_unique<DummyAead>(aead_name_0),
                                 keyset_info.key_info(0));
-  aead_set_builder.AddPrimitive(absl::make_unique<DummyAead>(aead_name_1),
+  aead_set_builder.AddPrimitive(std::make_unique<DummyAead>(aead_name_1),
                                 keyset_info.key_info(1));
-  aead_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyAead>(aead_name_2), keyset_info.key_info(2));
+  aead_set_builder.AddPrimaryPrimitive(std::make_unique<DummyAead>(aead_name_2),
+                                       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<Aead>> aead_set =
       std::move(aead_set_builder).Build();
   ASSERT_THAT(aead_set, IsOk());
@@ -153,7 +153,7 @@ TEST(AeadSetWrapperTest, DecryptNonPrimary) {
   std::string aead_name_0 = "aead0";
   std::string aead_name_1 = "aead1";
   std::string aead_name_2 = "aead2";
-  auto dummy_aead_0 = absl::make_unique<DummyAead>(aead_name_0);
+  auto dummy_aead_0 = std::make_unique<DummyAead>(aead_name_0);
 
   // Encrypt some message with the first aead.
   std::string plaintext = "some_plaintext";
@@ -172,10 +172,10 @@ TEST(AeadSetWrapperTest, DecryptNonPrimary) {
   PrimitiveSet<Aead>::Builder aead_set_builder;
   aead_set_builder.AddPrimitive(std::move(dummy_aead_0),
                                 keyset_info.key_info(0));
-  aead_set_builder.AddPrimitive(absl::make_unique<DummyAead>(aead_name_1),
+  aead_set_builder.AddPrimitive(std::make_unique<DummyAead>(aead_name_1),
                                 keyset_info.key_info(1));
-  aead_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyAead>(aead_name_2), keyset_info.key_info(2));
+  aead_set_builder.AddPrimaryPrimitive(std::make_unique<DummyAead>(aead_name_2),
+                                       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<Aead>> aead_set =
       std::move(aead_set_builder).Build();
   ASSERT_THAT(aead_set, IsOk());
@@ -203,13 +203,13 @@ class AeadSetWrapperTestWithMonitoring : public Test {
   void SetUp() override {
     Registry::Reset();
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
 
     auto encryption_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     encryption_monitoring_client_ptr_ = encryption_monitoring_client.get();
     auto decryption_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     decryption_monitoring_client_ptr_ = decryption_monitoring_client.get();
 
     EXPECT_CALL(*monitoring_client_factory, New(_))
@@ -246,11 +246,11 @@ TEST_F(AeadSetWrapperTestWithMonitoring,
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
   PrimitiveSet<Aead>::Builder aead_set_builder;
   aead_set_builder.AddAnnotations(kAnnotations);
-  aead_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead0"),
+  aead_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead0"),
                                 keyset_info.key_info(0));
-  aead_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead1"),
+  aead_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead1"),
                                 keyset_info.key_info(1));
-  aead_set_builder.AddPrimaryPrimitive(absl::make_unique<DummyAead>("aead2"),
+  aead_set_builder.AddPrimaryPrimitive(std::make_unique<DummyAead>("aead2"),
                                        keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<Aead>> aead_set =
       std::move(aead_set_builder).Build();
@@ -292,7 +292,7 @@ TEST_F(AeadSetWrapperTestWithMonitoring,
   aead_set_builder.AddAnnotations(kAnnotations);
 
   // Assume encryption and decryption always fail.
-  auto mock_aead = absl::make_unique<MockAead>();
+  auto mock_aead = std::make_unique<MockAead>();
   constexpr absl::string_view kPlaintext = "A plaintext!!";
   constexpr absl::string_view kCiphertext = "A ciphertext!";
   constexpr absl::string_view kAssociatedData = "Some associated data!";

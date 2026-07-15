@@ -48,7 +48,7 @@ class AesCtrHmacAeadKeyManager
   };
 
   AesCtrHmacAeadKeyManager()
-      : KeyTypeManager(absl::make_unique<AeadFactory>()) {}
+      : KeyTypeManager(std::make_unique<AeadFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

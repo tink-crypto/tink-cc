@@ -52,7 +52,7 @@ absl::Status AeadConfig::Register() {
   }
 
   // Register primitive wrapper.
-  status = Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>());
+  status = Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -60,13 +60,13 @@ absl::Status AeadConfig::Register() {
   // Register key managers which utilize the FIPS validated BoringCrypto
   // implementations.
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesCtrHmacAeadKeyManager>(), true);
+      std::make_unique<AesCtrHmacAeadKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesGcmKeyManager>(), true);
+      std::make_unique<AesGcmKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
@@ -87,31 +87,31 @@ absl::Status AeadConfig::Register() {
 
   // Register all the other key managers.
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesGcmSivKeyManager>(), true);
+      std::make_unique<AesGcmSivKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesEaxKeyManager>(), true);
+      std::make_unique<AesEaxKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<XChaCha20Poly1305KeyManager>(), true);
+      std::make_unique<XChaCha20Poly1305KeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<KmsAeadKeyManager>(), true);
+      std::make_unique<KmsAeadKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<KmsEnvelopeAeadKeyManager>(), true);
+      std::make_unique<KmsEnvelopeAeadKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

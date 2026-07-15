@@ -59,7 +59,7 @@ TEST(AeadSetWrapperTest, WrapNullptr) {
 
 TEST(AeadSetWrapperTest, WrapEmpty) {
   CordAeadWrapper wrapper;
-  auto aead_result = wrapper.Wrap(absl::make_unique<PrimitiveSet<CordAead>>());
+  auto aead_result = wrapper.Wrap(std::make_unique<PrimitiveSet<CordAead>>());
   EXPECT_THAT(aead_result.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        testing::HasSubstr("no primary")));
@@ -73,7 +73,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecrypt) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string aead_name = "aead0";
   auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
-  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
+  std::unique_ptr<CordAead> aead = std::make_unique<DummyCordAead>(aead_name);
   aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
   auto aead_set = std::move(aead_set_builder).Build();
   ASSERT_THAT(aead_set, IsOk());
@@ -109,7 +109,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   // Build PrimitiveSet with only the primary key
   auto primary_aead_set_builder = PrimitiveSet<CordAead>::Builder();
   std::unique_ptr<CordAead> primary_aead =
-      absl::make_unique<DummyCordAead>(aead_name_0);
+      std::make_unique<DummyCordAead>(aead_name_0);
   primary_aead_set_builder.AddPrimaryPrimitive(std::move(primary_aead),
                                                key_info_0);
   auto primary_aead_set = std::move(primary_aead_set_builder).Build();
@@ -132,7 +132,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   // Builder for the multi-key PrimitiveSet
   auto multi_aead_set_builder = PrimitiveSet<CordAead>::Builder();
   std::unique_ptr<CordAead> aead0 =
-      absl::make_unique<DummyCordAead>(aead_name_0);
+      std::make_unique<DummyCordAead>(aead_name_0);
   multi_aead_set_builder.AddPrimaryPrimitive(std::move(aead0), key_info_0);
   uint32_t key_id_1 = 42;
   KeysetInfo::KeyInfo key_info_1;
@@ -141,7 +141,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptMultipleKeys) {
   key_info_1.set_status(KeyStatusType::ENABLED);
   std::string aead_name_1 = "aead1";
   std::unique_ptr<CordAead> aead_1 =
-      absl::make_unique<DummyCordAead>(aead_name_1);
+      std::make_unique<DummyCordAead>(aead_name_1);
   multi_aead_set_builder.AddPrimitive(std::move(aead_1), key_info_1);
   auto multi_aead_set = std::move(multi_aead_set_builder).Build();
   auto wrapped_multi_aead_result = wrapper.Wrap(
@@ -162,7 +162,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptDecryptManyChunks) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string aead_name = "aead0";
   auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
-  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
+  std::unique_ptr<CordAead> aead = std::make_unique<DummyCordAead>(aead_name);
   aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
   auto aead_set = std::move(aead_set_builder).Build();
 
@@ -199,7 +199,7 @@ TEST(AeadSetWrapperTest, WrapperEncryptBadDecrypt) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string aead_name = "aead0";
   auto aead_set_builder = PrimitiveSet<CordAead>::Builder();
-  std::unique_ptr<CordAead> aead = absl::make_unique<DummyCordAead>(aead_name);
+  std::unique_ptr<CordAead> aead = std::make_unique<DummyCordAead>(aead_name);
   aead_set_builder.AddPrimaryPrimitive(std::move(aead), key_info);
   auto aead_set = std::move(aead_set_builder).Build();
   ASSERT_THAT(aead_set, IsOk());

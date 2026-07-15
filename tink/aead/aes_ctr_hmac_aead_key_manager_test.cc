@@ -148,10 +148,10 @@ TEST(AesCtrHmacAeadKeyManagerTest, ValidateKeyFormatKeySizes) {
   AesCtrHmacAeadKeyFormat key_format = CreateValidKeyFormat();
   for (int len = 0; len < 42; ++len) {
     key_format.mutable_aes_ctr_key_format()->set_key_size(len);
-    IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
-      "0123456789abcde0123456789abcdefghijklmnopqrztuvwxyz0123456789abcde01"
-      "23456789abcdefghijklmnopqrztuvwxyz0123456789abcde0123456789abcdefghi"
-      "jklmnopqrztuvwxyz")};
+    IstreamInputStream input_stream{std::make_unique<std::stringstream>(
+        "0123456789abcde0123456789abcdefghijklmnopqrztuvwxyz0123456789abcde01"
+        "23456789abcdefghijklmnopqrztuvwxyz0123456789abcde0123456789abcdefghi"
+        "jklmnopqrztuvwxyz")};
     if (len == 16 || len == 32) {
       EXPECT_THAT(AesCtrHmacAeadKeyManager().ValidateKeyFormat(key_format),
                   IsOk())
@@ -174,10 +174,10 @@ TEST(AesCtrHmacAeadKeyManagerTest, ValidateKeyFormatHmacKeySizes) {
   AesCtrHmacAeadKeyFormat key_format = CreateValidKeyFormat();
   for (int len = 0; len < 42; ++len) {
     key_format.mutable_hmac_key_format()->set_key_size(len);
-    IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
-      "0123456789abcde0123456789abcdefghijklmnopqrztuvwxyz0123456789abcde01"
-      "23456789abcdefghijklmnopqrztuvwxyz0123456789abcde0123456789abcdefghi"
-      "jklmnopqrztuvwxyz")};
+    IstreamInputStream input_stream{std::make_unique<std::stringstream>(
+        "0123456789abcde0123456789abcdefghijklmnopqrztuvwxyz0123456789abcde01"
+        "23456789abcdefghijklmnopqrztuvwxyz0123456789abcde0123456789abcdefghi"
+        "jklmnopqrztuvwxyz")};
     if (len >= 16) {
       EXPECT_THAT(AesCtrHmacAeadKeyManager().ValidateKeyFormat(key_format),
                   IsOk())
@@ -254,7 +254,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, Derive16ByteKey) {
       google::crypto::tink::SHA256);
   key_format.mutable_hmac_key_format()->set_version(0);
 
-  IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcde_YELLOW_SUBMARINE_EXTRA")};
 
   absl::StatusOr<AesCtrHmacAeadKeyProto> derived_key =
@@ -282,7 +282,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, Derive32ByteKey) {
       google::crypto::tink::SHA256);
   format.mutable_hmac_key_format()->set_version(0);
 
-  IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcde0123456789abcdef_YELLOW_SUBMARINE_YELLOW_SUBMARIN")};
 
   absl::StatusOr<AesCtrHmacAeadKeyProto> derived_key =
@@ -305,7 +305,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, DeriveKeyNotEnoughRandomnessForAesCtrKey) {
   format.mutable_hmac_key_format()->set_version(0);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789")};
+      std::make_unique<std::stringstream>("0123456789")};
 
   ASSERT_THAT(
       AesCtrHmacAeadKeyManager().DeriveKey(format, &input_stream).status(),
@@ -323,7 +323,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, DeriveKeyNotEnoughRandomnessForHmacKey) {
   format.mutable_hmac_key_format()->set_version(0);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("YELLOW_SUBMARINE")};
+      std::make_unique<std::stringstream>("YELLOW_SUBMARINE")};
 
   ASSERT_THAT(
       AesCtrHmacAeadKeyManager().DeriveKey(format, &input_stream).status(),

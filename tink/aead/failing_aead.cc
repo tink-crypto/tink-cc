@@ -62,7 +62,7 @@ class AlwaysFailAead : public Aead {
 }  // namespace
 
 std::unique_ptr<Aead> CreateAlwaysFailingAead(absl::string_view message) {
-  return absl::make_unique<AlwaysFailAead>(std::string(message));
+  return std::make_unique<AlwaysFailAead>(std::string(message));
 }
 
 }  // namespace tink

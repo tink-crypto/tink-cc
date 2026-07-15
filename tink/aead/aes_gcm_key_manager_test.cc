@@ -221,7 +221,7 @@ TEST(AesGcmKeyManagerTest, DeriveShortKey) {
   format.set_version(0);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
+      std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
   absl::StatusOr<AesGcmKeyProto> key_or =
       AesGcmKeyManager().DeriveKey(format, &input_stream);
@@ -234,7 +234,7 @@ TEST(AesGcmKeyManagerTest, DeriveLongKey) {
   format.set_key_size(32);
   format.set_version(0);
 
-  IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdefXXX")};
 
   absl::StatusOr<AesGcmKeyProto> key_or =
@@ -250,7 +250,7 @@ TEST(AesGcmKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   format.set_version(0);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789")};
+      std::make_unique<std::stringstream>("0123456789")};
 
   ASSERT_THAT(AesGcmKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -262,7 +262,7 @@ TEST(AesGcmKeyManagerTest, DeriveKeyWrongVersion) {
   format.set_version(1);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
+      std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
   ASSERT_THAT(
       AesGcmKeyManager().DeriveKey(format, &input_stream).status(),

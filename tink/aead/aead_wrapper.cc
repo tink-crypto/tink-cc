@@ -170,7 +170,7 @@ absl::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<AeadSetWrapper>(std::move(aead_set))};
+    return {std::make_unique<AeadSetWrapper>(std::move(aead_set))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -193,7 +193,7 @@ absl::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
     return monitoring_decryption_client.status();
   }
 
-  return {absl::make_unique<AeadSetWrapper>(
+  return {std::make_unique<AeadSetWrapper>(
       std::move(aead_set), *std::move(monitoring_encryption_client),
       *std::move(monitoring_decryption_client))};
 }

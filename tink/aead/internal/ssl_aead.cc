@@ -520,8 +520,8 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
         absl::StatusCode::kInternal,
         absl::StrCat("EVP_AEAD_CTX_new failed: ", internal::GetSslErrors()));
   }
-  return {absl::make_unique<BoringSslOneShotAeadImpl>(std::move(context),
-                                                      kAesGcmTagSizeInBytes)};
+  return {std::make_unique<BoringSslOneShotAeadImpl>(std::move(context),
+                                                     kAesGcmTagSizeInBytes)};
 #else
   absl::StatusOr<const EVP_CIPHER *> aead_cipher =
       GetAesGcmCipherForKeySize(key.size());
@@ -552,8 +552,8 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
                         absl::StrCat("EVP_AEAD_CTX_new initialization Failed: ",
                                      internal::GetSslErrors()));
   }
-  return {absl::make_unique<BoringSslOneShotAeadImpl>(
-      std::move(context), kAesGcmSivTagSizeInBytes)};
+  return {std::make_unique<BoringSslOneShotAeadImpl>(std::move(context),
+                                                     kAesGcmSivTagSizeInBytes)};
 #else
   return absl::Status(absl::StatusCode::kUnimplemented,
                       "AES-GCM-SIV is unimplemented for OpenSSL");
@@ -580,7 +580,7 @@ CreateXchacha20Poly1305OneShotCrypter(const SecretData &key) {
                         absl::StrCat("EVP_AEAD_CTX_new initialization Failed: ",
                                      internal::GetSslErrors()));
   }
-  return {absl::make_unique<BoringSslOneShotAeadImpl>(
+  return {std::make_unique<BoringSslOneShotAeadImpl>(
       std::move(context), kXchacha20Poly1305TagSizeInBytes)};
 #else
   return absl::Status(absl::StatusCode::kUnimplemented,

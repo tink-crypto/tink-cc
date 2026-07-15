@@ -268,7 +268,7 @@ INSTANTIATE_TEST_SUITE_P(
                  /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
                  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
                      kAssumeXChaCha20Poly1305,
-                 absl::make_unique<XChaCha20Poly1305Parameters>(
+                 std::make_unique<XChaCha20Poly1305Parameters>(
                      GetXChaCha20Poly1305Parameters()),
                  GetXChaCha20Poly1305KeyTemplate()},
         TestCase{
@@ -277,7 +277,7 @@ INSTANTIATE_TEST_SUITE_P(
             /*id=*/std::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm,
-            absl::make_unique<AesGcmParameters>(GetAesGcmParameters()),
+            std::make_unique<AesGcmParameters>(GetAesGcmParameters()),
             GetAesGcmKeyTemplate()},
         TestCase{
             LegacyKmsEnvelopeAeadParameters::Variant::kTink,
@@ -286,7 +286,7 @@ INSTANTIATE_TEST_SUITE_P(
             /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5),
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
                 kAssumeAesGcmSiv,
-            absl::make_unique<AesGcmSivParameters>(GetAesGcmSivParameters()),
+            std::make_unique<AesGcmSivParameters>(GetAesGcmSivParameters()),
             GetAesGcmSivKeyTemplate()},
         TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
                  OutputPrefixTypeTP::kRaw,
@@ -294,7 +294,7 @@ INSTANTIATE_TEST_SUITE_P(
                  /*output_prefix=*/"",
                  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
                      kAssumeAesCtrHmac,
-                 absl::make_unique<AesCtrHmacAeadParameters>(
+                 std::make_unique<AesCtrHmacAeadParameters>(
                      GetAesCtrHmacAeadParameters()),
                  GetAesCtrHmacAeadKeyTemplate()},
         TestCase{
@@ -303,7 +303,7 @@ INSTANTIATE_TEST_SUITE_P(
             /*id=*/std::nullopt,
             /*output_prefix=*/"",
             LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax,
-            absl::make_unique<AesEaxParameters>(GetAesEaxParameters()),
+            std::make_unique<AesEaxParameters>(GetAesEaxParameters()),
             GetAesEaxKeyTemplate()}));
 
 TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,

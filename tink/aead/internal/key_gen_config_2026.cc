@@ -34,22 +34,22 @@ namespace internal {
 absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
   // TODO(b/296630956): Alphabetize in all AEAD config files.
   absl::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCtrHmacAeadKeyManager>(), config);
+      std::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmKeyManager>(), config);
+      std::make_unique<AesGcmKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmSivKeyManager>(), config);
+      std::make_unique<AesGcmSivKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesEaxKeyManager>(), config);
+      std::make_unique<AesEaxKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -59,7 +59,7 @@ absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<XChaCha20Poly1305KeyManager>(), config);
+      std::make_unique<XChaCha20Poly1305KeyManager>(), config);
 }
 
 }  // namespace internal

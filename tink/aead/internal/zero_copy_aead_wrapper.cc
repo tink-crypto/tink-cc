@@ -148,7 +148,7 @@ absl::StatusOr<std::unique_ptr<Aead>> ZeroCopyAeadWrapper::Wrap(
   absl::Status status = Validate(aead_set.get());
   if (!status.ok()) return status;
   std::unique_ptr<Aead> aead =
-      absl::make_unique<ZeroCopyAeadSetWrapper>(std::move(aead_set));
+      std::make_unique<ZeroCopyAeadSetWrapper>(std::move(aead_set));
   return std::move(aead);
 }
 

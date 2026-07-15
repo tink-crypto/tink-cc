@@ -73,7 +73,7 @@ TEST(ZeroCopyAeadWrapperEmptyTest, Nullptr) {
 TEST(ZeroCopyAeadWrapperEmptyTest, Empty) {
   ZeroCopyAeadWrapper wrapper;
   absl::StatusOr<std::unique_ptr<Aead>> aead_set =
-      wrapper.Wrap(absl::make_unique<PrimitiveSet<ZeroCopyAead>>());
+      wrapper.Wrap(std::make_unique<PrimitiveSet<ZeroCopyAead>>());
   EXPECT_THAT(aead_set.status(), StatusIs(absl::StatusCode::kInvalidArgument,
                                           HasSubstr("no primary")));
 }
@@ -82,7 +82,7 @@ TEST(ZeroCopyAeadWrapperEmptyTest, Empty) {
 // EXPECT_CALL. All values are derived from constants kPlaintext, kAad, and
 // kCiphertext.
 std::unique_ptr<MockZeroCopyAead> SetUpMockZeroCopyAead() {
-  auto aead = absl::make_unique<MockZeroCopyAead>();
+  auto aead = std::make_unique<MockZeroCopyAead>();
 
   EXPECT_CALL(*aead, MaxEncryptionSize(kPlaintext.size()))
       .WillRepeatedly(Return(kCiphertext.size()));
@@ -168,7 +168,7 @@ TEST(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
   key_info2.set_output_prefix_type(OutputPrefixType::TINK);
   key_info2.set_key_id(42);
   key_info2.set_status(KeyStatusType::ENABLED);
-  std::unique_ptr<ZeroCopyAead> aead1 = absl::make_unique<MockZeroCopyAead>();
+  std::unique_ptr<ZeroCopyAead> aead1 = std::make_unique<MockZeroCopyAead>();
 
   PrimitiveSet<ZeroCopyAead>::Builder new_aead_set_builder;
   new_aead_set_builder.AddPrimaryPrimitive(SetUpMockZeroCopyAead(), key_info);

@@ -35,32 +35,32 @@ namespace internal {
 
 absl::Status AddAead2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<AeadWrapper>(), config);
+      std::make_unique<AeadWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<CordAeadWrapper>(), config);
+      std::make_unique<CordAeadWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCtrHmacAeadKeyManager>(), config);
+      std::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesEaxKeyManager>(), config);
+      std::make_unique<AesEaxKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmKeyManager>(), config);
+      std::make_unique<AesGcmKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesGcmSivKeyManager>(), config);
+      std::make_unique<AesGcmSivKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -70,7 +70,7 @@ absl::Status AddAead2026(Configuration& config) {
     return status;
   }
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<XChaCha20Poly1305KeyManager>(), config);
+      std::make_unique<XChaCha20Poly1305KeyManager>(), config);
 }
 
 }  // namespace internal

@@ -144,7 +144,7 @@ absl::StatusOr<std::unique_ptr<ZeroCopyAead>> NewZeroCopyXAesGcmBoringSsl(
   if (!base_x_aes_gcm.ok()) {
     return base_x_aes_gcm.status();
   }
-  return absl::make_unique<XAesGcmBoringSslZeroCopyAead>(
+  return std::make_unique<XAesGcmBoringSslZeroCopyAead>(
       *std::move(base_x_aes_gcm));
 }
 

@@ -29,12 +29,12 @@ namespace internal {
 
 absl::Status AddKmsAead2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<KmsAeadKeyManager>(), config);
+      std::make_unique<KmsAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<KmsEnvelopeAeadKeyManager>(), config);
+      std::make_unique<KmsEnvelopeAeadKeyManager>(), config);
 }
 
 }  // namespace internal

@@ -61,20 +61,20 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> NewHpkeEncrypt(
 
 absl::Status AddHybrid2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<HybridEncryptWrapper>(), config);
+      std::make_unique<HybridEncryptWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<HybridDecryptWrapper>(), config);
+      std::make_unique<HybridDecryptWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
 #ifdef OPENSSL_IS_BORINGSSL
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<HpkePrivateKeyManager>(),
-      absl::make_unique<HpkePublicKeyManager>(), config);
+      std::make_unique<HpkePrivateKeyManager>(),
+      std::make_unique<HpkePublicKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -94,8 +94,8 @@ absl::Status AddHybrid2026(Configuration& config) {
   }
 #endif
   return ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<EciesAeadHkdfPrivateKeyManager>(),
-      absl::make_unique<EciesAeadHkdfPublicKeyManager>(), config);
+      std::make_unique<EciesAeadHkdfPrivateKeyManager>(),
+      std::make_unique<EciesAeadHkdfPublicKeyManager>(), config);
 }
 
 }  // namespace internal

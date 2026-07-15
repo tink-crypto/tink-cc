@@ -52,7 +52,7 @@ class HpkePublicKeyManager
   };
 
   HpkePublicKeyManager()
-      : KeyTypeManager(absl::make_unique<HybridEncryptFactory>()) {}
+      : KeyTypeManager(std::make_unique<HybridEncryptFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

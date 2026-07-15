@@ -34,15 +34,15 @@ namespace internal {
 absl::Status AddHybridKeyGen2026(KeyGenConfiguration& config) {
 #ifdef OPENSSL_IS_BORINGSSL
   absl::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<HpkePrivateKeyManager>(),
-      absl::make_unique<HpkePublicKeyManager>(), config);
+      std::make_unique<HpkePrivateKeyManager>(),
+      std::make_unique<HpkePublicKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
 #endif
   return KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<EciesAeadHkdfPrivateKeyManager>(),
-      absl::make_unique<EciesAeadHkdfPublicKeyManager>(), config);
+      std::make_unique<EciesAeadHkdfPrivateKeyManager>(),
+      std::make_unique<EciesAeadHkdfPublicKeyManager>(), config);
 }
 
 }  // namespace internal

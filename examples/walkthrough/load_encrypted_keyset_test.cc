@@ -95,7 +95,7 @@ class LoadKeysetTest : public Test {
 };
 
 TEST_F(LoadKeysetTest, LoadKeysetFailsWhenInvalidKeyset) {
-  auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
+  auto fake_kms = std::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
   absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead(kFakeKmsKeyUri);
   ASSERT_THAT(keyset_encryption_aead, IsOk());
@@ -107,7 +107,7 @@ TEST_F(LoadKeysetTest, LoadKeysetFailsWhenInvalidKeyset) {
 }
 
 TEST_F(LoadKeysetTest, LoadKeysetSucceeds) {
-  auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
+  auto fake_kms = std::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
   absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead(kFakeKmsKeyUri);
   ASSERT_THAT(keyset_encryption_aead, IsOk());

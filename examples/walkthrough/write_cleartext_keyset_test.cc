@@ -64,7 +64,7 @@ TEST(WriteCleartextKeysetTest, WriteKeysetSerializesCorrectly) {
       LoadKeyset(kSerializedKeyset);
 
   std::stringbuf buffer;
-  auto output_stream = absl::make_unique<std::ostream>(&buffer);
+  auto output_stream = std::make_unique<std::ostream>(&buffer);
   ASSERT_THAT(WriteKeyset(**keyset, std::move(output_stream)), IsOk());
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =

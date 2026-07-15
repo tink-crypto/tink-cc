@@ -89,7 +89,7 @@ class WriteKeysetTest : public testing::Test {
 };
 
 TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWithNullOutputStream) {
-  auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
+  auto fake_kms = std::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
   absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead("fake://some_key");
   ASSERT_THAT(keyset_encryption_aead, IsOk());
@@ -105,7 +105,7 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWithNullOutputStream) {
 }
 
 TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWhenStreamFails) {
-  auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
+  auto fake_kms = std::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
   absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead("fake://some_key");
   ASSERT_THAT(keyset_encryption_aead, IsOk());
@@ -114,7 +114,7 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWhenStreamFails) {
       LoadKeyset(kSerializedKeysetToEncrypt);
   ASSERT_THAT(keyset_handle_to_encrypt, IsOk());
 
-  auto output_stream = absl::make_unique<std::ostream>(nullptr);
+  auto output_stream = std::make_unique<std::ostream>(nullptr);
   EXPECT_THAT(
       WriteEncryptedKeyset(**keyset_handle_to_encrypt, std::move(output_stream),
                            **keyset_encryption_aead),
@@ -122,7 +122,7 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWhenStreamFails) {
 }
 
 TEST_F(WriteKeysetTest, WriteEncryptedKeysetWithValidInputs) {
-  auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
+  auto fake_kms = std::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
   absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead("fake://some_key");
   ASSERT_THAT(keyset_encryption_aead, IsOk());
@@ -132,7 +132,7 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetWithValidInputs) {
   ASSERT_THAT(keyset_handle_to_encrypt, IsOk());
 
   std::stringbuf buffer;
-  auto output_stream = absl::make_unique<std::ostream>(&buffer);
+  auto output_stream = std::make_unique<std::ostream>(&buffer);
   ASSERT_THAT(
       WriteEncryptedKeyset(**keyset_handle_to_encrypt, std::move(output_stream),
                            **keyset_encryption_aead),

@@ -144,7 +144,7 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholders) {
 
 TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholdersWithGlobalRegistry) {
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesCtrHmacAeadKeyManager>(), true),
+                  std::make_unique<AesCtrHmacAeadKeyManager>(), true),
               IsOk());
   absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver = PrfBasedDeriver::New(
       valid_prf_key_data_, AeadKeyTemplates::Aes128CtrHmacSha256());
@@ -286,13 +286,13 @@ TEST_F(PrfBasedDeriverRfcVectorTest, AesGcm) {
   // Derive key with global registry.
   Registry::Reset();
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   absl::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
       Registry::GetPrimitive<StreamingPrf>(prf_key_from_rfc_vector_);
   ASSERT_THAT(streaming_prf, IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true),
+                  std::make_unique<AesGcmKeyManager>(), true),
               IsOk());
   absl::StatusOr<KeyData> proto_generic_key =
       RegistryImpl::GlobalInstance().DeriveKey(

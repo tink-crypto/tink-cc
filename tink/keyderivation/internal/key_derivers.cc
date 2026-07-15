@@ -146,7 +146,7 @@ absl::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<AesCtrHmacAeadKey>(*key);
+  return std::make_unique<AesCtrHmacAeadKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
@@ -168,7 +168,7 @@ absl::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<AesGcmKey>(*key);
+  return std::make_unique<AesGcmKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
@@ -192,7 +192,7 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<XChaCha20Poly1305Key>(*key);
+  return std::make_unique<XChaCha20Poly1305Key>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
@@ -214,7 +214,7 @@ absl::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<AesSivKey>(*key);
+  return std::make_unique<AesSivKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
@@ -236,7 +236,7 @@ absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<HmacKey>(*key);
+  return std::make_unique<HmacKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<AesCmacPrfKey>> DeriveAesCmacPrfKey(
@@ -258,7 +258,7 @@ absl::StatusOr<std::unique_ptr<AesCmacPrfKey>> DeriveAesCmacPrfKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<AesCmacPrfKey>(*key);
+  return std::make_unique<AesCmacPrfKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<HkdfPrfKey>> DeriveHkdfPrfKey(
@@ -280,7 +280,7 @@ absl::StatusOr<std::unique_ptr<HkdfPrfKey>> DeriveHkdfPrfKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<HkdfPrfKey>(*key);
+  return std::make_unique<HkdfPrfKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<HmacPrfKey>> DeriveHmacPrfKey(
@@ -302,7 +302,7 @@ absl::StatusOr<std::unique_ptr<HmacPrfKey>> DeriveHmacPrfKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<HmacPrfKey>(*key);
+  return std::make_unique<HmacPrfKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
@@ -360,7 +360,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
   if (!private_key.ok()) {
     return private_key.status();
   }
-  return absl::make_unique<EcdsaPrivateKey>(*private_key);
+  return std::make_unique<EcdsaPrivateKey>(*private_key);
 }
 
 absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
@@ -397,7 +397,7 @@ absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
   if (!private_key.ok()) {
     return private_key.status();
   }
-  return absl::make_unique<Ed25519PrivateKey>(*private_key);
+  return std::make_unique<Ed25519PrivateKey>(*private_key);
 }
 
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> DeriveMlDsaPrivateKey(
@@ -471,7 +471,7 @@ DeriveAesCtrHmacStreamingKey(const Parameters& generic_params,
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<AesCtrHmacStreamingKey>(*key);
+  return std::make_unique<AesCtrHmacStreamingKey>(*key);
 }
 
 absl::StatusOr<std::unique_ptr<AesGcmHkdfStreamingKey>>
@@ -494,7 +494,7 @@ DeriveAesGcmHkdfStreamingKey(const Parameters& generic_params,
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<AesGcmHkdfStreamingKey>(*key);
+  return std::make_unique<AesGcmHkdfStreamingKey>(*key);
 }
 
 const KeyDeriverFnMap& ParametersToKeyDeriver() {

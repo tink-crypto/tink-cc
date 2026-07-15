@@ -34,7 +34,7 @@ inline const Configuration& ConfigPrfForDeriver() {
     static Configuration* config = new Configuration();
 
     ABSL_CHECK_OK(ConfigurationImpl::AddKeyTypeManager(
-        absl::make_unique<HkdfPrfKeyManager>(), *config));
+        std::make_unique<HkdfPrfKeyManager>(), *config));
 
     return config;
   }();

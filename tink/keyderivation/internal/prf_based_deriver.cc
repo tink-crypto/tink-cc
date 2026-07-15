@@ -118,7 +118,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
   if (!handle.ok()) {
     return handle.status();
   }
-  return absl::make_unique<KeysetHandle>(*handle);
+  return std::make_unique<KeysetHandle>(*handle);
 }
 
 absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeysetHandle(

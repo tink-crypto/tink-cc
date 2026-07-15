@@ -226,7 +226,7 @@ TEST_P(KeyDeriversTest, DeriveKey) {
 
 TEST_P(KeyDeriversTest, InsufficientRandomness) {
   util::IstreamInputStream insufficient_randomness{
-      absl::make_unique<std::stringstream>("0123456789")};
+      std::make_unique<std::stringstream>("0123456789")};
   absl::StatusOr<std::unique_ptr<Key>> key =
       DeriveKey(*GetParam().get(), &insufficient_randomness);
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kOutOfRange));
@@ -288,7 +288,7 @@ class KeyDeriversRfcVectorTest : public Test {
   void SetUp() override {
     Registry::Reset();
     ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                    absl::make_unique<HkdfPrfKeyManager>(), true),
+                    std::make_unique<HkdfPrfKeyManager>(), true),
                 IsOk());
 
     google::crypto::tink::HkdfPrfKey prf_key;

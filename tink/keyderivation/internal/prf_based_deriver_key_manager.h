@@ -55,7 +55,7 @@ class PrfBasedDeriverKeyManager
   };
 
   PrfBasedDeriverKeyManager()
-      : KeyTypeManager(absl::make_unique<
+      : KeyTypeManager(std::make_unique<
                        PrfBasedDeriverKeyManager::KeysetDeriverFactory>()) {}
 
   // Returns the version of this key manager.

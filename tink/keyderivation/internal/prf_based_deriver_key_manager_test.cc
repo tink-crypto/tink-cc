@@ -132,13 +132,13 @@ TEST(PrfBasedDeriverKeyManagerTest, ValidateKeyFormatEmpty) {
 TEST(PrfBasedDeriverKeyManagerTest, CreateKey) {
   Registry::Reset();
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true),
+                  std::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
   HkdfPrfKeyFormat prf_key_format;
@@ -174,13 +174,13 @@ TEST(PrfBasedDeriverKeyManagerTest, CreateKey) {
 TEST(PrfBasedDeriverKeyManagerTest, CreateKeyWithInvalidPrfKey) {
   Registry::Reset();
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true),
+                  std::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
   HkdfPrfKeyFormat prf_key_format;
@@ -202,13 +202,13 @@ TEST(PrfBasedDeriverKeyManagerTest, CreateKeyWithInvalidPrfKey) {
 TEST(PrfBasedDeriverKeyManagerTest, CreateKeyWithInvalidDerivedKeyTemplate) {
   Registry::Reset();
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true),
+                  std::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
   HkdfPrfKeyFormat prf_key_format;
@@ -233,13 +233,13 @@ TEST(PrfBasedDeriverKeyManagerTest, CreateKeyWithInvalidDerivedKeyTemplate) {
 TEST(PrfBasedDeriverKeyManagerTest, GetPrimitive) {
   Registry::Reset();
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<PrfBasedDeriverKeyManager>(), true),
+                  std::make_unique<PrfBasedDeriverKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<HkdfPrfKeyManager>(), true),
+                  std::make_unique<HkdfPrfKeyManager>(), true),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true),
+                  std::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
   HkdfPrfKeyProto prf_key;

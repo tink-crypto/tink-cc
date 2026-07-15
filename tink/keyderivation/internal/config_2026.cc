@@ -29,12 +29,12 @@ namespace internal {
 
 absl::Status AddKeyDerivation2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<KeysetDeriverWrapper>(), config);
+      std::make_unique<KeysetDeriverWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<PrfBasedDeriverKeyManager>(), config);
+      std::make_unique<PrfBasedDeriverKeyManager>(), config);
 }
 
 }  // namespace internal

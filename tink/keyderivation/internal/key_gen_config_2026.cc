@@ -28,7 +28,7 @@ namespace internal {
 
 absl::Status AddKeyDerivationKeyGen2026(KeyGenConfiguration& config) {
   return KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<PrfBasedDeriverKeyManager>(), config);
+      std::make_unique<PrfBasedDeriverKeyManager>(), config);
 }
 
 }  // namespace internal

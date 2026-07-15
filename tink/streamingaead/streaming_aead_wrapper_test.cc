@@ -95,7 +95,7 @@ std::unique_ptr<PrimitiveSet<StreamingAead>> GetTestStreamingAeadSet(
     key_info.set_key_id(s.key_id);
     key_info.set_status(KeyStatusType::ENABLED);
     std::unique_ptr<StreamingAead> saead =
-        absl::make_unique<DummyStreamingAead>(s.saead_name);
+        std::make_unique<DummyStreamingAead>(s.saead_name);
     if (i + 1 == spec.size()) {
       saead_set_builder.AddPrimaryPrimitive(std::move(saead), key_info);
     } else {
@@ -120,7 +120,7 @@ TEST(StreamingAeadSetWrapperTest, WrapNullptr) {
 
 TEST(StreamingAeadSetWrapperTest, WrapEmpty) {
   StreamingAeadWrapper wrapper;
-  auto result = wrapper.Wrap(absl::make_unique<PrimitiveSet<StreamingAead>>());
+  auto result = wrapper.Wrap(std::make_unique<PrimitiveSet<StreamingAead>>());
   EXPECT_THAT(result, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
   EXPECT_PRED_FORMAT2(testing::IsSubstring, "no primary",
@@ -152,11 +152,11 @@ TEST(StreamingAeadSetWrapperTest, BasicEncryptionAndDecryption) {
                                 ", aad = '", aad, "'"));
 
       // Prepare ciphertext destination stream.
-      auto ct_stream = absl::make_unique<std::stringstream>();
+      auto ct_stream = std::make_unique<std::stringstream>();
       // A reference to the ciphertext buffer, for later validation.
       auto ct_buf = ct_stream->rdbuf();
       std::unique_ptr<OutputStream> ct_destination(
-          absl::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
+          std::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
       // Encrypt the plaintext.
       auto enc_stream_result =
           saead->NewEncryptingStream(std::move(ct_destination), aad);
@@ -167,9 +167,9 @@ TEST(StreamingAeadSetWrapperTest, BasicEncryptionAndDecryption) {
       EXPECT_EQ(absl::StrCat(saead_name_2, aad, plaintext), ct_buf->str());
       // Prepare ciphertext source stream.
       auto ct_source_stream =
-          absl::make_unique<std::stringstream>(ct_buf->str());
+          std::make_unique<std::stringstream>(ct_buf->str());
       std::unique_ptr<InputStream> ct_source(
-          absl::make_unique<util::IstreamInputStream>(
+          std::make_unique<util::IstreamInputStream>(
               std::move(ct_source_stream)));
       // Decrypt the ciphertext.
       auto dec_stream_result =
@@ -208,11 +208,11 @@ TEST(StreamingAeadSetWrapperTest, DecryptionWithRandomAccessStream) {
                                 ", aad = '", aad, "'"));
 
       // Prepare ciphertext destination stream.
-      auto ct_stream = absl::make_unique<std::stringstream>();
+      auto ct_stream = std::make_unique<std::stringstream>();
       // A reference to the ciphertext buffer, for later validation.
       auto ct_buf = ct_stream->rdbuf();
       std::unique_ptr<OutputStream> ct_destination(
-          absl::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
+          std::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
 
       // Encrypt the plaintext.
       auto enc_stream_result =
@@ -264,11 +264,11 @@ TEST(StreamingAeadSetWrapperTest, DecryptionAfterWrapperIsDestroyed) {
     auto saead = std::move(wrap_result.value());
 
     // Prepare ciphertext destination stream.
-    auto ct_stream = absl::make_unique<std::stringstream>();
+    auto ct_stream = std::make_unique<std::stringstream>();
     // A reference to the ciphertext buffer, for later validation.
     auto ct_buf = ct_stream->rdbuf();
     std::unique_ptr<OutputStream> ct_destination(
-        absl::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
+        std::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
     // Encrypt the plaintext.
     auto enc_stream_result =
         saead->NewEncryptingStream(std::move(ct_destination), aad);
@@ -278,10 +278,9 @@ TEST(StreamingAeadSetWrapperTest, DecryptionAfterWrapperIsDestroyed) {
     EXPECT_THAT(status, IsOk());
     EXPECT_EQ(absl::StrCat(saead_name_2, aad, plaintext), ct_buf->str());
     // Prepare ciphertext source stream.
-    auto ct_source_stream =
-        absl::make_unique<std::stringstream>(ct_buf->str());
+    auto ct_source_stream = std::make_unique<std::stringstream>(ct_buf->str());
     std::unique_ptr<InputStream> ct_source(
-        absl::make_unique<util::IstreamInputStream>(
+        std::make_unique<util::IstreamInputStream>(
             std::move(ct_source_stream)));
     // Decrypt the ciphertext.
     auto dec_stream_result =
@@ -434,7 +433,7 @@ TEST(StreamingAeadSetWrapperTest, DecryptOldKeyWorks) {
   ASSERT_THAT(streaming_aead.status(), IsOk());
 
   auto ciphertext_input_stream = std::make_unique<IstreamInputStream>(
-      absl::make_unique<std::istringstream>(ciphertext));
+      std::make_unique<std::istringstream>(ciphertext));
   absl::StatusOr<std::unique_ptr<crypto::tink::InputStream>> plaintext_stream =
       (*streaming_aead)
           ->NewDecryptingStream(std::move(ciphertext_input_stream),

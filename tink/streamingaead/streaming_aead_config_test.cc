@@ -113,7 +113,7 @@ TEST_F(StreamingAeadConfigTest, WrappersRegistered) {
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::RAW);
   PrimitiveSet<StreamingAead>::Builder saead_set_builder;
   saead_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyStreamingAead>("dummy"), key_info);
+      std::make_unique<DummyStreamingAead>("dummy"), key_info);
   absl::StatusOr<PrimitiveSet<StreamingAead>> primitive_set =
       std::move(saead_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());

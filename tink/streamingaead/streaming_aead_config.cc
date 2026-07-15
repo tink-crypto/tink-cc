@@ -34,7 +34,7 @@ namespace tink {
 absl::Status StreamingAeadConfig::Register() {
   // Register primitive wrapper.
   auto status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<StreamingAeadWrapper>());
+      std::make_unique<StreamingAeadWrapper>());
 
   // Currently there are no streaming encryption key managers which only use
   // FIPS-validated implementations, therefore none will be registered in
@@ -43,13 +43,13 @@ absl::Status StreamingAeadConfig::Register() {
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesGcmHkdfStreamingKeyManager>(), true);
+      std::make_unique<AesGcmHkdfStreamingKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesCtrHmacStreamingKeyManager>(), true);
+      std::make_unique<AesCtrHmacStreamingKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

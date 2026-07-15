@@ -37,7 +37,7 @@ TEST(SharedRandomAccessStreamTest, ReadingStreams) {
     SCOPED_TRACE(absl::StrCat("stream_size = ", stream_size));
     std::string stream_content = subtle::Random::GetRandomBytes(stream_size);
     auto ra_stream =
-        absl::make_unique<internal::TestRandomAccessStream>(stream_content);
+        std::make_unique<internal::TestRandomAccessStream>(stream_content);
     SharedRandomAccessStream shared_stream(ra_stream.get());
     std::string stream_contents;
     auto status = internal::ReadAllFromRandomAccessStream(

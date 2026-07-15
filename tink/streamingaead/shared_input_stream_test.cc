@@ -50,10 +50,10 @@ static int kBufferSize = 4096;
 std::unique_ptr<InputStream> GetInputStream(absl::string_view contents) {
   // Prepare ciphertext source stream.
   auto string_stream =
-      absl::make_unique<std::stringstream>(std::string(contents));
+      std::make_unique<std::stringstream>(std::string(contents));
   std::unique_ptr<InputStream> input_stream(
-      absl::make_unique<util::IstreamInputStream>(
-          std::move(string_stream), kBufferSize));
+      std::make_unique<util::IstreamInputStream>(std::move(string_stream),
+                                                 kBufferSize));
   return input_stream;
 }
 
@@ -98,7 +98,7 @@ TEST(SharedInputStreamTest, BasicOperations) {
                                 ", read_size = ", read_size));
       {
         auto shared_stream =
-            absl::make_unique<SharedInputStream>(buffered_stream.get());
+            std::make_unique<SharedInputStream>(buffered_stream.get());
 
         // Read a prefix of the stream.
         std::string prefix;
@@ -144,8 +144,8 @@ TEST(SharedInputStreamTest, SingleBackup) {
       SCOPED_TRACE(absl::StrCat("input_size = ", input_size,
                                 ", read_size = ", read_size));
       {
-        auto shared_stream = absl::make_unique<SharedInputStream>(
-            buffered_stream.get());
+        auto shared_stream =
+            std::make_unique<SharedInputStream>(buffered_stream.get());
 
         // Read a part of the stream.
         std::string prefix;
@@ -200,8 +200,8 @@ TEST(SharedInputStreamTest, MultipleBackups) {
     EXPECT_THAT(status, IsOk());
     EXPECT_EQ(0, buffered_stream->Position());
 
-    auto shared_stream = absl::make_unique<SharedInputStream>(
-        buffered_stream.get());
+    auto shared_stream =
+        std::make_unique<SharedInputStream>(buffered_stream.get());
     EXPECT_EQ(0, shared_stream->Position());
 
     const void* buffer;

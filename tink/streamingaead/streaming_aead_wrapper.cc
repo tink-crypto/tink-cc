@@ -115,8 +115,7 @@ absl::StatusOr<std::unique_ptr<StreamingAead>> StreamingAeadWrapper::Wrap(
   auto status = Validate(streaming_aead_set.get());
   if (!status.ok()) return status;
   std::unique_ptr<StreamingAead> streaming_aead =
-      absl::make_unique<StreamingAeadSetWrapper>(
-          std::move(streaming_aead_set));
+      std::make_unique<StreamingAeadSetWrapper>(std::move(streaming_aead_set));
   return std::move(streaming_aead);
 }
 

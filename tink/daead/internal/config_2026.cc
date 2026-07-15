@@ -29,13 +29,13 @@ namespace internal {
 
 absl::Status AddDeterministicAead2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<DeterministicAeadWrapper>(), config);
+      std::make_unique<DeterministicAeadWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesSivKeyManager>(), config);
+      std::make_unique<AesSivKeyManager>(), config);
 }
 
 }  // namespace internal

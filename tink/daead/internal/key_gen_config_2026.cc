@@ -28,7 +28,7 @@ namespace internal {
 
 absl::Status AddDeterministicAeadKeyGen2026(KeyGenConfiguration& config) {
   return KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesSivKeyManager>(), config);
+      std::make_unique<AesSivKeyManager>(), config);
 }
 
 }  // namespace internal

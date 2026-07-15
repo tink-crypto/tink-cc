@@ -32,7 +32,7 @@ namespace tink {
 absl::Status KeyDerivationConfig::Register() {
   // Register primitive wrappers.
   absl::Status status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<KeysetDeriverWrapper>());
+      std::make_unique<KeysetDeriverWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -50,14 +50,14 @@ absl::Status KeyDerivationConfig::Register() {
 
   // Register required key manager for PrfBasedDeriverKeyManager.
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<HkdfPrfKeyManager>(), true);
+      std::make_unique<HkdfPrfKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   // Register key managers.
   return Registry::RegisterKeyTypeManager(
-      absl::make_unique<internal::PrfBasedDeriverKeyManager>(), true);
+      std::make_unique<internal::PrfBasedDeriverKeyManager>(), true);
 }
 
 }  // namespace tink

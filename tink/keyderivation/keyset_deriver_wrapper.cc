@@ -103,7 +103,7 @@ absl::StatusOr<std::unique_ptr<KeysetDeriver>> KeysetDeriverWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<KeysetDeriver>> deriver_set) const {
   absl::Status status = Validate(deriver_set.get());
   if (!status.ok()) return status;
-  return {absl::make_unique<KeysetDeriverSetWrapper>(std::move(deriver_set))};
+  return {std::make_unique<KeysetDeriverSetWrapper>(std::move(deriver_set))};
 }
 
 }  // namespace tink

@@ -55,18 +55,18 @@ class KeyDerivationKeyTemplatesTest : public ::testing::Test {
 
 TEST_F(KeyDerivationKeyTemplatesTest, CreatePrfBasedKeyTemplate) {
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<internal::PrfBasedDeriverKeyManager>(),
+                  std::make_unique<internal::PrfBasedDeriverKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<HkdfPrfKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<HkdfPrfKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 
@@ -97,18 +97,18 @@ TEST_F(KeyDerivationKeyTemplatesTest, CreatePrfBasedKeyTemplate) {
 
 TEST_F(KeyDerivationKeyTemplatesTest, CreatePrfBasedKeyTemplateInvalidPrfKey) {
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<internal::PrfBasedDeriverKeyManager>(),
+                  std::make_unique<internal::PrfBasedDeriverKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<HkdfPrfKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<HkdfPrfKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 
@@ -121,18 +121,18 @@ TEST_F(KeyDerivationKeyTemplatesTest, CreatePrfBasedKeyTemplateInvalidPrfKey) {
 TEST_F(KeyDerivationKeyTemplatesTest,
        CreatePrfBasedKeyTemplateInvalidDerivedKeyTemplate) {
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<internal::PrfBasedDeriverKeyManager>(),
+                  std::make_unique<internal::PrfBasedDeriverKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<HkdfPrfKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<HkdfPrfKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 
@@ -149,14 +149,14 @@ TEST_F(KeyDerivationKeyTemplatesTest,
 TEST_F(KeyDerivationKeyTemplatesTest,
        CreatePrfBasedKeyTemplateNoPrfBasedDeriverKeyManager) {
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<HkdfPrfKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<HkdfPrfKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 
@@ -168,14 +168,14 @@ TEST_F(KeyDerivationKeyTemplatesTest,
 TEST_F(KeyDerivationKeyTemplatesTest,
        CreatePrfBasedKeyTemplateNoHkdfPrfKeyManager) {
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<internal::PrfBasedDeriverKeyManager>(),
+                  std::make_unique<internal::PrfBasedDeriverKeyManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
   ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
+      Registry::RegisterKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
                                        /*new_key_allowed=*/true),
       IsOk());
 

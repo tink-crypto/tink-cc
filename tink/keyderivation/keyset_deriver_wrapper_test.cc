@@ -58,7 +58,7 @@ TEST(KeysetDeriverWrapperTest, WrapNullptr) {
 TEST(KeysetDeriverWrapperTest, WrapEmpty) {
   EXPECT_THAT(
       KeysetDeriverWrapper()
-          .Wrap(absl::make_unique<PrimitiveSet<KeysetDeriver>>())
+          .Wrap(std::make_unique<PrimitiveSet<KeysetDeriver>>())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("no primary")));
 }
@@ -71,7 +71,7 @@ TEST(KeysetDeriverWrapperTest, WrapNoPrimary) {
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
 
   deriver_set_builder.AddPrimitive(
-      absl::make_unique<test::FakeKeysetDeriver>(""), key_info);
+      std::make_unique<test::FakeKeysetDeriver>(""), key_info);
   absl::StatusOr<PrimitiveSet<KeysetDeriver>> deriver_set =
       std::move(deriver_set_builder).Build();
   ASSERT_THAT(deriver_set, IsOk());
@@ -94,7 +94,7 @@ TEST(KeysetDeriverWrapperTest, WrapSingle) {
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
 
   deriver_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<test::FakeKeysetDeriver>("wrap_single_key"), key_info);
+      std::make_unique<test::FakeKeysetDeriver>("wrap_single_key"), key_info);
   absl::StatusOr<PrimitiveSet<KeysetDeriver>> deriver_set =
       std::move(deriver_set_builder).Build();
   ASSERT_THAT(deriver_set, IsOk());
@@ -130,7 +130,7 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("k1"),
+  pset_builder.AddPrimitive(std::make_unique<test::FakeKeysetDeriver>("k1"),
                             key_info);
   key_infos.push_back(key_info);
 
@@ -140,7 +140,7 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
   pset_builder.AddPrimaryPrimitive(
-      absl::make_unique<test::FakeKeysetDeriver>("k2"), key_info);
+      std::make_unique<test::FakeKeysetDeriver>("k2"), key_info);
   key_infos.push_back(key_info);
 
   key_info.set_key_id(3030303);
@@ -148,7 +148,7 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("k3"),
+  pset_builder.AddPrimitive(std::make_unique<test::FakeKeysetDeriver>("k3"),
                             key_info);
   key_infos.push_back(key_info);
 

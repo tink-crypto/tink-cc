@@ -69,7 +69,7 @@ class PrfBasedKeyDerivationParameters : public KeyDerivationParameters {
   }
 
   std::unique_ptr<Parameters> Clone() const override {
-    return absl::make_unique<PrfBasedKeyDerivationParameters>(*this);
+    return std::make_unique<PrfBasedKeyDerivationParameters>(*this);
   }
 
   bool operator==(const Parameters& other) const override;

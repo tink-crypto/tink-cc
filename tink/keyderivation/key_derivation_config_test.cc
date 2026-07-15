@@ -102,7 +102,7 @@ TEST_F(KeyDerivationConfigTest, Register) {
   ASSERT_THAT(KeyDerivationConfig::Register(), IsOk());
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<AesGcmKeyManager>(), true),
+                  std::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
   absl::StatusOr<::google::crypto::tink::KeyTemplate> templ =
@@ -254,7 +254,7 @@ TEST_F(KeyDerivationConfigTest,
   // NOTE: No key generation config available yet for PrfBasedDeriver keys.
   ASSERT_THAT(
       Registry::RegisterKeyTypeManager(
-          absl::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
+          std::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
       IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());

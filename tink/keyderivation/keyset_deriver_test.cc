@@ -316,7 +316,7 @@ std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
           .value();
   RestrictedData private_key_bytes =
       RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get());
-  return absl::make_unique<Ed25519PrivateKey>(
+  return std::make_unique<Ed25519PrivateKey>(
       Ed25519PrivateKey::Create(public_key, private_key_bytes,
                                 GetPartialKeyAccess())
           .value());
@@ -721,11 +721,11 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   // TODO(b/314831964): Remove once KeysetDeriver does not depend on the global
   // registry.
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(
       Registry::RegisterKeyTypeManager(
-          absl::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
+          std::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
       IsOk());
 
   // Registering here as KeysetDeriver primitive creation verifies the derived
@@ -775,11 +775,11 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   ASSERT_THAT((*handle).size(), Eq(derived_keys.size()));
 
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                  absl::make_unique<KeysetDeriverWrapper>()),
+                  std::make_unique<KeysetDeriverWrapper>()),
               IsOk());
   ASSERT_THAT(
       Registry::RegisterKeyTypeManager(
-          absl::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
+          std::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
       IsOk());
 
   // When the derived keys' key managers are in the global registry,

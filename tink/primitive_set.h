@@ -396,7 +396,7 @@ class PrimitiveSet {
   // If primitives_mutex_ is a nullptr, PrimitiveSet is immutable and lock-free.
   // If not nullptr, primitives_mutex_ guards all read and write access.
   mutable std::unique_ptr<absl::Mutex> primitives_mutex_ =
-      absl::make_unique<absl::Mutex>();
+      std::make_unique<absl::Mutex>();
   CiphertextPrefixToPrimitivesMap primitives_
       ABSL_GUARDED_BY(primitives_mutex_);
   // Entries in the original keyset key order, all owned by primitives_.

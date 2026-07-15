@@ -70,9 +70,9 @@ class AesCtrHmacStreamingKeyManager
   };
 
   AesCtrHmacStreamingKeyManager()
-      : KeyTypeManager(
-            absl::make_unique<AesCtrHmacStreamingKeyManager::
-                                  StreamingAeadFactory>()) {}
+      : KeyTypeManager(std::make_unique<
+                       AesCtrHmacStreamingKeyManager::StreamingAeadFactory>()) {
+  }
 
   // Returns the version of this key manager.
   uint32_t get_version() const override { return 0; }

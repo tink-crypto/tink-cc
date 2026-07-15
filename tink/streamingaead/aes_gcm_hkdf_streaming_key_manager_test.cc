@@ -231,7 +231,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, DeriveKey) {
   key_format.mutable_params()->set_ciphertext_segment_size(1024);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("01234567890123456789012345678901")};
+      std::make_unique<std::stringstream>("01234567890123456789012345678901")};
 
   absl::StatusOr<AesGcmHkdfStreamingKey> key_or =
       AesGcmHkdfStreamingKeyManager().DeriveKey(key_format, &input_stream);
@@ -255,7 +255,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   key_format.mutable_params()->set_ciphertext_segment_size(1024);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789012345678901234567890")};
+      std::make_unique<std::stringstream>("0123456789012345678901234567890")};
 
   ASSERT_THAT(AesGcmHkdfStreamingKeyManager()
                   .DeriveKey(key_format, &input_stream)
@@ -271,8 +271,8 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, DeriveKeyWrongVersion) {
   key_format.mutable_params()->set_hkdf_hash_type(HashType::SHA256);
   key_format.mutable_params()->set_ciphertext_segment_size(1024);
 
-  IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
-      "0123456789abcdef")};
+  IstreamInputStream input_stream{
+      std::make_unique<std::stringstream>("0123456789abcdef")};
 
   ASSERT_THAT(
       AesGcmHkdfStreamingKeyManager()
@@ -288,9 +288,9 @@ TEST_P(AesGcmHkdfStreamingKeyManagerTestVectorTest, Decrypt) {
   ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
   const StreamingAeadTestVector& param = GetParam();
   // Prepare an InputStream with the ciphertext.
-  auto ct_bytes = absl::make_unique<std::stringstream>(param.ciphertext);
+  auto ct_bytes = std::make_unique<std::stringstream>(param.ciphertext);
   auto ct_source =
-      absl::make_unique<util::IstreamInputStream>(std::move(ct_bytes));
+      std::make_unique<util::IstreamInputStream>(std::move(ct_bytes));
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(

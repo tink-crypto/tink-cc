@@ -50,10 +50,10 @@ static int kBufferSize = 4096;
 std::unique_ptr<InputStream> GetInputStream(absl::string_view contents) {
   // Prepare ciphertext source stream.
   auto string_stream =
-      absl::make_unique<std::stringstream>(std::string(contents));
+      std::make_unique<std::stringstream>(std::string(contents));
   std::unique_ptr<InputStream> input_stream(
-      absl::make_unique<util::IstreamInputStream>(
-          std::move(string_stream), kBufferSize));
+      std::make_unique<util::IstreamInputStream>(std::move(string_stream),
+                                                 kBufferSize));
   return input_stream;
 }
 
@@ -91,8 +91,8 @@ TEST(BufferedInputStreamTest, ReadingAndRewinding) {
   for (auto input_size : {0, 1, 10, 100, 1000, 10000, 100000}) {
     std::string contents = subtle::Random::GetRandomBytes(input_size);
     auto input_stream = GetInputStream(contents);
-    auto buf_stream = absl::make_unique<BufferedInputStream>(
-        std::move(input_stream));
+    auto buf_stream =
+        std::make_unique<BufferedInputStream>(std::move(input_stream));
     for (auto read_size : {0, 1, 10, 123, 300}) {
       SCOPED_TRACE(absl::StrCat("input_size = ", input_size,
                                 ", read_size = ", read_size));
@@ -143,8 +143,8 @@ TEST(BufferedInputStreamTest, SingleBackup) {
       SCOPED_TRACE(absl::StrCat("input_size = ", input_size,
                                 ", read_size = ", read_size));
       auto input_stream = GetInputStream(contents);
-      auto buf_stream = absl::make_unique<BufferedInputStream>(
-          std::move(input_stream));
+      auto buf_stream =
+          std::make_unique<BufferedInputStream>(std::move(input_stream));
 
       // Read a part of the stream.
       std::string prefix;
@@ -215,8 +215,8 @@ TEST(BufferedInputStreamTest, MultipleBackups) {
   int input_size = 70000;
   std::string contents = subtle::Random::GetRandomBytes(input_size);
   auto input_stream = GetInputStream(contents);
-  auto buf_stream = absl::make_unique<BufferedInputStream>(
-      std::move(input_stream));
+  auto buf_stream =
+      std::make_unique<BufferedInputStream>(std::move(input_stream));
   const void* buffer;
 
   EXPECT_EQ(0, buf_stream->Position());
@@ -251,8 +251,8 @@ TEST(BufferedInputStreamTest, DisableRewindingInitially) {
       SCOPED_TRACE(absl::StrCat("input_size = ", input_size,
                                 ", read_size = ", read_size));
       auto input_stream = GetInputStream(contents);
-      auto buf_stream = absl::make_unique<BufferedInputStream>(
-          std::move(input_stream));
+      auto buf_stream =
+          std::make_unique<BufferedInputStream>(std::move(input_stream));
 
       // Disable rewinding, and attempt rewind.
       EXPECT_EQ(0, buf_stream->Position());
@@ -290,8 +290,8 @@ TEST(BufferedInputStreamTest, DisableRewindingAfterRewind) {
       SCOPED_TRACE(absl::StrCat("input_size = ", input_size,
                                 ", read_size = ", read_size));
       auto input_stream = GetInputStream(contents);
-      auto buf_stream = absl::make_unique<BufferedInputStream>(
-          std::move(input_stream));
+      auto buf_stream =
+          std::make_unique<BufferedInputStream>(std::move(input_stream));
 
       // Read a prefix of the stream.
       std::string prefix;

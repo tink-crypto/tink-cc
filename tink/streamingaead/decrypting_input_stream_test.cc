@@ -63,10 +63,10 @@ static int kBufferSize = 128;
 std::unique_ptr<InputStream> GetInputStream(absl::string_view contents) {
   // Prepare ciphertext source stream.
   auto string_stream =
-      absl::make_unique<std::stringstream>(std::string(contents));
+      std::make_unique<std::stringstream>(std::string(contents));
   std::unique_ptr<InputStream> input_stream(
-      absl::make_unique<util::IstreamInputStream>(
-          std::move(string_stream), kBufferSize));
+      std::make_unique<util::IstreamInputStream>(std::move(string_stream),
+                                                 kBufferSize));
   return input_stream;
 }
 
@@ -76,11 +76,11 @@ std::unique_ptr<InputStream> GetCiphertextSource(StreamingAead* saead,
                                                  absl::string_view pt,
                                                  absl::string_view aad) {
   // Prepare ciphertext destination stream.
-  auto ct_stream = absl::make_unique<std::stringstream>();
+  auto ct_stream = std::make_unique<std::stringstream>();
   // A reference to the ciphertext buffer.
   auto ct_buf = ct_stream->rdbuf();
   std::unique_ptr<OutputStream> ct_destination(
-      absl::make_unique<OstreamOutputStream>(std::move(ct_stream)));
+      std::make_unique<OstreamOutputStream>(std::move(ct_stream)));
 
   // Compute the ciphertext.
   auto enc_stream_result =
@@ -89,12 +89,12 @@ std::unique_ptr<InputStream> GetCiphertextSource(StreamingAead* saead,
   EXPECT_THAT(WriteToStream(enc_stream_result.value().get(), pt), IsOk());
 
   // Return the ciphertext as InputStream.
-  auto ct_stream3 = absl::make_unique<std::stringstream>(ct_buf->str());
-  auto input =  absl::make_unique<IstreamInputStream>(std::move(ct_stream3));
+  auto ct_stream3 = std::make_unique<std::stringstream>(ct_buf->str());
+  auto input = std::make_unique<IstreamInputStream>(std::move(ct_stream3));
   std::string reads;
   EXPECT_THAT(ReadFromStream(input.get(), &reads), IsOk());
-  auto ct_stream2 = absl::make_unique<std::stringstream>(ct_buf->str());
-  return absl::make_unique<IstreamInputStream>(std::move(ct_stream2));
+  auto ct_stream2 = std::make_unique<std::stringstream>(ct_buf->str());
+  return std::make_unique<IstreamInputStream>(std::move(ct_stream2));
 }
 
 // A container for specification of instances of DummyStreamingAead
@@ -117,7 +117,7 @@ std::shared_ptr<PrimitiveSet<StreamingAead>> GetTestStreamingAeadSet(
     key_info.set_key_id(s.key_id);
     key_info.set_status(KeyStatusType::ENABLED);
     std::unique_ptr<StreamingAead> saead =
-        absl::make_unique<DummyStreamingAead>(s.saead_name);
+        std::make_unique<DummyStreamingAead>(s.saead_name);
     if (i + 1 == spec.size()) {
       saead_set_builder.AddPrimaryPrimitive(std::move(saead), key_info);
     } else {

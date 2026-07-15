@@ -123,7 +123,7 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
   for (const StreamingAeadEntry* entry : all_primitives) {
     StreamingAead& streaming_aead = entry->get_primitive();
     auto shared_ct =
-        absl::make_unique<SharedRandomAccessStream>(ciphertext_source_.get());
+        std::make_unique<SharedRandomAccessStream>(ciphertext_source_.get());
     auto decrypting_stream_result =
         streaming_aead.NewDecryptingRandomAccessStream(std::move(shared_ct),
                                                        associated_data_);

@@ -68,8 +68,8 @@ class AesGcmHkdfStreamingKeyManager
 
   AesGcmHkdfStreamingKeyManager()
       : KeyTypeManager(
-            absl::make_unique<AesGcmHkdfStreamingKeyManager::
-                                  AesGcmHkdfStreamingKeyManagerFactory>()) {}
+            std::make_unique<AesGcmHkdfStreamingKeyManager::
+                                 AesGcmHkdfStreamingKeyManagerFactory>()) {}
 
   // Returns the version of this key manager.
   uint32_t get_version() const override { return 0; }

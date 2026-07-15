@@ -56,7 +56,7 @@ using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
 std::unique_ptr<KeyTemplate> NewEcdsaKeyTemplate(
     HashType hash_type, EllipticCurveType curve_type,
     EcdsaSignatureEncoding encoding, OutputPrefixType output_prefix_type) {
-  auto key_template = absl::make_unique<KeyTemplate>();
+  auto key_template = std::make_unique<KeyTemplate>();
   key_template->set_type_url(
       absl::StrCat(kTypeGoogleapisCom, EcdsaPrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(output_prefix_type);
@@ -79,7 +79,7 @@ std::unique_ptr<KeyTemplate> NewEcdsaKeyTemplate(
 std::unique_ptr<KeyTemplate> NewRsaSsaPkcs1KeyTemplate(HashType hash_type,
                                                        int modulus_size_in_bits,
                                                        int public_exponent) {
-  auto key_template = absl::make_unique<KeyTemplate>();
+  auto key_template = std::make_unique<KeyTemplate>();
   key_template->set_type_url(absl::StrCat(
       kTypeGoogleapisCom, RsaSsaPkcs1PrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(OutputPrefixType::TINK);
@@ -102,7 +102,7 @@ std::unique_ptr<KeyTemplate> NewRsaSsaPssKeyTemplate(HashType sig_hash,
                                                      int salt_length,
                                                      int modulus_size_in_bits,
                                                      int public_exponent) {
-  auto key_template = absl::make_unique<KeyTemplate>();
+  auto key_template = std::make_unique<KeyTemplate>();
   key_template->set_type_url(absl::StrCat(
       kTypeGoogleapisCom, RsaSsaPssPrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(OutputPrefixType::TINK);

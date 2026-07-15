@@ -115,7 +115,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
     return {
-        absl::make_unique<PublicKeySignSetWrapper>(std::move(primitive_set))};
+        std::make_unique<PublicKeySignSetWrapper>(std::move(primitive_set))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -131,7 +131,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
     return monitoring_sign_client.status();
   }
 
-  return {absl::make_unique<PublicKeySignSetWrapper>(
+  return {std::make_unique<PublicKeySignSetWrapper>(
       std::move(primitive_set), *std::move(monitoring_sign_client))};
 }
 

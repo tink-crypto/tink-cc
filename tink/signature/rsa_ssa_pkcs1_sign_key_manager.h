@@ -50,7 +50,7 @@ class RsaSsaPkcs1SignKeyManager
   };
 
   RsaSsaPkcs1SignKeyManager()
-      : PrivateKeyTypeManager(absl::make_unique<PublicKeySignFactory>()) {}
+      : PrivateKeyTypeManager(std::make_unique<PublicKeySignFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

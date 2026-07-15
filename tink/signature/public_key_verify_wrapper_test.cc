@@ -180,9 +180,9 @@ class PublicKeyVerifySetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
     auto verify_monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     verify_monitoring_client_ = verify_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
@@ -216,14 +216,12 @@ TEST_F(PublicKeyVerifySetWrapperWithMonitoringTest,
   PrimitiveSet<PublicKeyVerify>::Builder pk_verify_set_builder;
   pk_verify_set_builder.AddAnnotations(kAnnotations);
   pk_verify_set_builder.AddPrimitive(
-      absl::make_unique<DummyPublicKeyVerify>("verify0"),
+      std::make_unique<DummyPublicKeyVerify>("verify0"),
       keyset_info.key_info(0));
   pk_verify_set_builder.AddPrimitive(
-      absl::make_unique<DummyPublicKeyVerify>("sign1"),
-      keyset_info.key_info(1));
+      std::make_unique<DummyPublicKeyVerify>("sign1"), keyset_info.key_info(1));
   pk_verify_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyPublicKeyVerify>("sign2"),
-      keyset_info.key_info(2));
+      std::make_unique<DummyPublicKeyVerify>("sign2"), keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<PublicKeyVerify>>
       public_key_verify_primitive_set =
           std::move(pk_verify_set_builder).Build();

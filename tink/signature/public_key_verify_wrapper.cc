@@ -181,7 +181,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
   if (monitoring_factory == nullptr) {
     std::vector<VerifyEntry> entries =
         UnpackPrimitives(public_key_verify_set->ReleaseAllEntries());
-    return {absl::make_unique<PublicKeyVerifySetWrapper>(std::move(entries))};
+    return {std::make_unique<PublicKeyVerifySetWrapper>(std::move(entries))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -199,7 +199,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
 
   std::vector<VerifyEntry> entries =
       UnpackPrimitives(public_key_verify_set->ReleaseAllEntries());
-  return {absl::make_unique<PublicKeyVerifySetWrapper>(
+  return {std::make_unique<PublicKeyVerifySetWrapper>(
       std::move(entries), *std::move(monitoring_verify_client))};
 }
 

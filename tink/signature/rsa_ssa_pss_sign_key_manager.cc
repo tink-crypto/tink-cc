@@ -51,7 +51,7 @@ using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
 namespace {
 std::unique_ptr<RsaSsaPssPrivateKeyProto> RsaPrivateKeySubtleToProto(
     const internal::RsaPrivateKey& private_key) {
-  auto key_proto = absl::make_unique<RsaSsaPssPrivateKeyProto>();
+  auto key_proto = std::make_unique<RsaSsaPssPrivateKeyProto>();
   key_proto->set_version(RsaSsaPssSignKeyManager().get_version());
   key_proto->set_d(util::SecretDataAsStringView(private_key.d));
   key_proto->set_p(util::SecretDataAsStringView(private_key.p));

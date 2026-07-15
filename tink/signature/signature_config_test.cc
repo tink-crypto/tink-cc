@@ -148,7 +148,7 @@ TEST_F(SignatureConfigTest, PublicKeySignWrapperRegistered) {
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
   PrimitiveSet<PublicKeySign>::Builder sign_set_builder;
   sign_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyPublicKeySign>("dummy"), key_info);
+      std::make_unique<DummyPublicKeySign>("dummy"), key_info);
   absl::StatusOr<PrimitiveSet<PublicKeySign>> primitive_set =
       std::move(sign_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
@@ -182,7 +182,7 @@ TEST_F(SignatureConfigTest, PublicKeyVerifyWrapperRegistered) {
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
   PrimitiveSet<PublicKeyVerify>::Builder verify_set_builder;
   verify_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyPublicKeyVerify>("dummy"), key_info);
+      std::make_unique<DummyPublicKeyVerify>("dummy"), key_info);
   absl::StatusOr<PrimitiveSet<PublicKeyVerify>> primitive_set =
       std::move(verify_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());

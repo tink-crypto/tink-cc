@@ -55,18 +55,18 @@ namespace tink {
 absl::Status SignatureConfig::Register() {
   // Register primitive wrappers.
   auto status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<PublicKeySignWrapper>());
+      std::make_unique<PublicKeySignWrapper>());
   if (!status.ok()) return status;
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<PublicKeyVerifyWrapper>());
+      std::make_unique<PublicKeyVerifyWrapper>());
   if (!status.ok()) return status;
 
   // Register key managers which utilize FIPS validated BoringCrypto
   // implementations.
   // ECDSA
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<EcdsaSignKeyManager>(),
-      absl::make_unique<EcdsaVerifyKeyManager>(), true);
+      std::make_unique<EcdsaSignKeyManager>(),
+      std::make_unique<EcdsaVerifyKeyManager>(), true);
   if (!status.ok()) return status;
 
   status = RegisterEcdsaProtoSerialization();
@@ -76,8 +76,8 @@ absl::Status SignatureConfig::Register() {
 
   // RSA SSA PSS
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPssSignKeyManager>(),
-      absl::make_unique<RsaSsaPssVerifyKeyManager>(), true);
+      std::make_unique<RsaSsaPssSignKeyManager>(),
+      std::make_unique<RsaSsaPssVerifyKeyManager>(), true);
   if (!status.ok()) return status;
 
   status = RegisterRsaSsaPssProtoSerialization();
@@ -85,8 +85,8 @@ absl::Status SignatureConfig::Register() {
 
   // RSA SSA PKCS1
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<RsaSsaPkcs1VerifyKeyManager>(), true);
+      std::make_unique<RsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<RsaSsaPkcs1VerifyKeyManager>(), true);
   if (!status.ok()) return status;
 
   status = RegisterRsaSsaPkcs1ProtoSerialization();
@@ -98,8 +98,8 @@ absl::Status SignatureConfig::Register() {
 
   // ED25519
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<Ed25519SignKeyManager>(),
-      absl::make_unique<Ed25519VerifyKeyManager>(), true);
+      std::make_unique<Ed25519SignKeyManager>(),
+      std::make_unique<Ed25519VerifyKeyManager>(), true);
   if (!status.ok()) return status;
 
   status = RegisterEd25519ProtoSerialization();

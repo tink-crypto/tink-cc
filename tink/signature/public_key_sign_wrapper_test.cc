@@ -74,7 +74,7 @@ TEST(PublicKeySignSetWrapperTest, TestBasic) {
   }
 
   {  // pk_sign_set has no primary primitive.
-    auto pk_sign_set = absl::make_unique<PrimitiveSet<PublicKeySign>>();
+    auto pk_sign_set = std::make_unique<PrimitiveSet<PublicKeySign>>();
     auto pk_sign_result = PublicKeySignWrapper().Wrap(std::move(pk_sign_set));
     EXPECT_THAT(pk_sign_result, Not(IsOk()));
     EXPECT_EQ(absl::StatusCode::kInvalidArgument,
@@ -218,9 +218,9 @@ class PublicKeySignSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
-    auto sign_monitoring_client = absl::make_unique<
-        testing::StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
+    auto sign_monitoring_client =
+        std::make_unique<testing::StrictMock<internal::MockMonitoringClient>>();
     sign_monitoring_client_ = sign_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
@@ -254,11 +254,11 @@ TEST_F(PublicKeySignSetWrapperWithMonitoringTest,
   PrimitiveSet<PublicKeySign>::Builder pk_sign_set_builder;
   pk_sign_set_builder.AddAnnotations(kAnnotations);
   pk_sign_set_builder.AddPrimitive(
-      absl::make_unique<DummyPublicKeySign>("sign0"), keyset_info.key_info(0));
+      std::make_unique<DummyPublicKeySign>("sign0"), keyset_info.key_info(0));
   pk_sign_set_builder.AddPrimitive(
-      absl::make_unique<DummyPublicKeySign>("sign1"), keyset_info.key_info(1));
+      std::make_unique<DummyPublicKeySign>("sign1"), keyset_info.key_info(1));
   pk_sign_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyPublicKeySign>("sign2"), keyset_info.key_info(2));
+      std::make_unique<DummyPublicKeySign>("sign2"), keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<PublicKeySign>> public_key_sign_primitive_set =
       std::move(pk_sign_set_builder).Build();
   ASSERT_THAT(public_key_sign_primitive_set, IsOk());

@@ -642,7 +642,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
                         "Empty array of PEM-encoded keys");
   }
 
-  auto keyset = absl::make_unique<Keyset>();
+  auto keyset = std::make_unique<Keyset>();
   for (const PemKey& pem_key : pem_serialized_keys_) {
     // Parse and add the new key to the keyset.
     switch (pem_key.parameters.key_type) {
@@ -689,7 +689,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
                         "Empty array of PEM-encoded keys");
   }
 
-  auto keyset = absl::make_unique<Keyset>();
+  auto keyset = std::make_unique<Keyset>();
   for (const PemKey& pem_key : pem_serialized_keys_) {
     // Parse and add the new key to the keyset.
     switch (pem_key.parameters.key_type) {

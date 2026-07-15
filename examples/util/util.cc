@@ -45,14 +45,14 @@ using ::crypto::tink::KeysetReader;
 // from the given file.
 absl::StatusOr<std::unique_ptr<KeysetReader>> GetJsonKeysetReader(
     const std::string& filename) {
-  auto input_stream = absl::make_unique<std::ifstream>();
+  auto input_stream = std::make_unique<std::ifstream>();
   input_stream->open(filename, std::ifstream::in);
   return JsonKeysetReader::New(std::move(input_stream));
 }
 
 absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> GetJsonKeysetWriter(
     const std::string& filename) {
-  auto output_stream = absl::make_unique<std::ofstream>();
+  auto output_stream = std::make_unique<std::ofstream>();
   output_stream->open(filename, std::ofstream::out);
   return JsonKeysetWriter::New(std::move(output_stream));
 }

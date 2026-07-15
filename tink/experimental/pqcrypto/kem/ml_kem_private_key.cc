@@ -68,7 +68,7 @@ absl::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
                         "Failed to create ML-KEM private key from seed.");
   }
 
-  auto bssl_public_key = absl::make_unique<MLKEM768_public_key>();
+  auto bssl_public_key = std::make_unique<MLKEM768_public_key>();
   MLKEM768_public_from_private(bssl_public_key.get(), bssl_private_key.get());
 
   std::string public_key_bytes_regen;

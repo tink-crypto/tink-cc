@@ -394,29 +394,29 @@ TEST_F(PrimitiveSetTest, GetAll) {
   auto pset_result =
       PrimitiveSet<Mac>::Builder{}
           .AddPrimitive(
-              absl::make_unique<DummyMac>("MAC1"),
+              std::make_unique<DummyMac>("MAC1"),
               CreateKey(0x01010101, OutputPrefixType::TINK,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.HmacKey"))
           // WITH_ID_REQUIREMENT has an empty identifier.
           .AddPrimitive(
-              absl::make_unique<DummyMac>("MAC2"),
+              std::make_unique<DummyMac>("MAC2"),
               CreateKey(0x02020202, OutputPrefixType::WITH_ID_REQUIREMENT,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.HmacKey"))
           // Add primitive and make it primary.
           .AddPrimaryPrimitive(
-              absl::make_unique<DummyMac>("MAC3"),
+              std::make_unique<DummyMac>("MAC3"),
               CreateKey(0x02020202, OutputPrefixType::TINK,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.AesCmacKey"))
           .AddPrimitive(
-              absl::make_unique<DummyMac>("MAC4"),
+              std::make_unique<DummyMac>("MAC4"),
               CreateKey(0x02020202, OutputPrefixType::RAW,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.AesCmacKey"))
           .AddPrimitive(
-              absl::make_unique<DummyMac>("MAC5"),
+              std::make_unique<DummyMac>("MAC5"),
               CreateKey(0x01010101, OutputPrefixType::TINK,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.AesCmacKey"))
@@ -459,7 +459,7 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("one"),
+  pset_builder.AddPrimitive(std::make_unique<test::FakeKeysetDeriver>("one"),
                             key_info);
   key_infos.push_back(key_info);
 
@@ -468,7 +468,7 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   key_info.set_output_prefix_type(OutputPrefixType::LEGACY);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("two"),
+  pset_builder.AddPrimitive(std::make_unique<test::FakeKeysetDeriver>("two"),
                             key_info);
   key_infos.push_back(key_info);
 
@@ -477,7 +477,7 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("three"),
+  pset_builder.AddPrimitive(std::make_unique<test::FakeKeysetDeriver>("three"),
                             key_info);
   key_infos.push_back(key_info);
 
@@ -505,11 +505,11 @@ TEST_F(PrimitiveSetTest, ReleaseAllEntries) {
 
   KeysetInfo::KeyInfo key_info_1 = CreateKey(
       1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_url_1");
-  pset_builder.AddPrimitive(absl::make_unique<DummyMac>("MAC1"), key_info_1);
+  pset_builder.AddPrimitive(std::make_unique<DummyMac>("MAC1"), key_info_1);
 
   KeysetInfo::KeyInfo key_info_2 =
       CreateKey(2, OutputPrefixType::RAW, KeyStatusType::ENABLED, "type_url_2");
-  pset_builder.AddPrimaryPrimitive(absl::make_unique<DummyMac>("MAC2"),
+  pset_builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("MAC2"),
                                    key_info_2);
 
   absl::StatusOr<PrimitiveSet<Mac>> pset = std::move(pset_builder).Build();

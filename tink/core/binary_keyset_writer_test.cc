@@ -163,7 +163,7 @@ TEST_F(BinaryKeysetWriterTest, EncryptedKeysetOverhead) {
   std::stringbuf encrypted_keyset;
   absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
       BinaryKeysetWriter::New(
-          absl::make_unique<std::ostream>(&encrypted_keyset));
+          std::make_unique<std::ostream>(&encrypted_keyset));
   ASSERT_THAT(writer, IsOk());
 
   auto status = (*handle)->Write(writer->get(), **keyset_encryption_aead);

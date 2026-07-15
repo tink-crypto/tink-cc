@@ -43,7 +43,7 @@ using google::crypto::tink::KeyTemplate;
 // static
 absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
     const KeyTemplate& key_template) {
-  auto manager = absl::make_unique<KeysetManager>();
+  auto manager = std::make_unique<KeysetManager>();
   auto rotate_result = manager->Rotate(key_template);
   if (!rotate_result.ok()) return rotate_result.status();
   return std::move(manager);
@@ -52,7 +52,7 @@ absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
 // static
 absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
     const KeysetHandle& keyset_handle) {
-  auto manager = absl::make_unique<KeysetManager>();
+  auto manager = std::make_unique<KeysetManager>();
   absl::MutexLock lock(manager->keyset_mutex_);
   *manager->keyset_ = keyset_handle.get_keyset();
   return std::move(manager);

@@ -79,7 +79,7 @@ class ExamplePrivateKeyTypeManager
   };
 
   ExamplePrivateKeyTypeManager()
-      : PrivateKeyTypeManager(absl::make_unique<PrivatePrimitiveFactory>()) {}
+      : PrivateKeyTypeManager(std::make_unique<PrivatePrimitiveFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {
@@ -128,7 +128,7 @@ class TestPublicKeyTypeManager
   };
 
   TestPublicKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<PublicPrimitiveFactory>()) {}
+      : KeyTypeManager(std::make_unique<PublicPrimitiveFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {

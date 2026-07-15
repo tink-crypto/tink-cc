@@ -65,7 +65,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
   absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
       annotations_map;
   annotations_map[typeid(internal::LegacyAnnotations)] =
-      absl::make_unique<internal::LegacyAnnotations>(
+      std::make_unique<internal::LegacyAnnotations>(
           std::move(monitoring_annotations));
 
   std::unique_ptr<KeysetHandle> handle(

@@ -136,7 +136,7 @@ absl::StatusOr<std::string> SerializeKeysetToEncryptedKeysetFormat(
   std::stringbuf encrypted_keyset;
   absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
       BinaryKeysetWriter::New(
-          absl::make_unique<std::ostream>(&encrypted_keyset));
+          std::make_unique<std::ostream>(&encrypted_keyset));
   if (!writer.ok()) {
     return writer.status();
   }

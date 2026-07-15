@@ -78,13 +78,13 @@ class ExampleKeyTypeManager
    public:
     absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKeyProto& key) const override {
-      return absl::make_unique<AeadVariant>(key.key_value());
+      return std::make_unique<AeadVariant>(key.key_value());
     }
   };
 
   ExampleKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<AeadFactory>(),
-                       absl::make_unique<AeadVariantFactory>()) {}
+      : KeyTypeManager(std::make_unique<AeadFactory>(),
+                       std::make_unique<AeadVariantFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {
@@ -162,13 +162,13 @@ class ExampleKeyTypeManagerWithoutFactory
    public:
     absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKeyProto& key) const override {
-      return absl::make_unique<AeadVariant>(key.key_value());
+      return std::make_unique<AeadVariant>(key.key_value());
     }
   };
 
   ExampleKeyTypeManagerWithoutFactory()
-      : KeyTypeManager(absl::make_unique<AeadFactory>(),
-                       absl::make_unique<AeadVariantFactory>()) {}
+      : KeyTypeManager(std::make_unique<AeadFactory>(),
+                       std::make_unique<AeadVariantFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {

@@ -52,7 +52,7 @@ class AlwaysFailingKeyFactory : public KeyFactory {
 };
 std::unique_ptr<KeyFactory> KeyFactory::AlwaysFailingFactory(
     const absl::Status& status) {
-  return absl::make_unique<AlwaysFailingKeyFactory>(status);
+  return std::make_unique<AlwaysFailingKeyFactory>(status);
 }
 }  // namespace tink
 }  // namespace crypto

@@ -62,7 +62,7 @@ TEST(KmsClientsTest, AddAndGet) {
 
   // Add client for data_1, and verify it.
   auto status = KmsClients::Add(
-      absl::make_unique<DummyKmsClient>(data_1.prefix, data_1.uri));
+      std::make_unique<DummyKmsClient>(data_1.prefix, data_1.uri));
   EXPECT_THAT(status, IsOk());
   auto client_result = KmsClients::Get(data_1.uri);
   ASSERT_THAT(client_result, IsOk());
@@ -75,7 +75,7 @@ TEST(KmsClientsTest, AddAndGet) {
 
   // Add client for data_2, and verify it.
   status = KmsClients::Add(
-      absl::make_unique<DummyKmsClient>(data_2.prefix, data_2.uri));
+      std::make_unique<DummyKmsClient>(data_2.prefix, data_2.uri));
   EXPECT_THAT(status, IsOk());
   client_result = KmsClients::Get(data_2.uri);
   ASSERT_THAT(client_result, IsOk());
@@ -88,7 +88,7 @@ TEST(KmsClientsTest, AddAndGet) {
 
   // Add client for data_3, and verify it.
   status = KmsClients::Add(
-      absl::make_unique<DummyKmsClient>(data_3.prefix, data_3.uri));
+      std::make_unique<DummyKmsClient>(data_3.prefix, data_3.uri));
   EXPECT_THAT(status, IsOk());
   client_result = KmsClients::Get(data_3.uri);
   ASSERT_THAT(client_result, IsOk());

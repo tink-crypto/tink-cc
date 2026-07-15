@@ -127,7 +127,7 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
+  return std::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
 }
 
 // Creates an AesGcmSivKey from the given parameters.
@@ -140,7 +140,7 @@ absl::StatusOr<std::unique_ptr<AesGcmSivKey>> CreateAesGcmSivKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<crypto::tink::AesGcmSivKey>(*key);
+  return std::make_unique<crypto::tink::AesGcmSivKey>(*key);
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithSingleKey) {
@@ -238,7 +238,7 @@ TEST_P(KeysetHandleBuilderCustomConfigTest, BuildWithSingleKey) {
   KeyGenConfiguration key_manager_config;
   ASSERT_THAT(
       internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-          absl::make_unique<XChaCha20Poly1305KeyManager>(), key_manager_config),
+          std::make_unique<XChaCha20Poly1305KeyManager>(), key_manager_config),
       IsOk());
 
   KeysetHandleBuilder::Entry entry1 =
@@ -366,10 +366,10 @@ TEST(KeysetHandleBuilderCustomConfigTest,
 
   KeyGenConfiguration config;
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<XChaCha20Poly1305KeyManager>(), config),
+                  std::make_unique<XChaCha20Poly1305KeyManager>(), config),
               IsOk());
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-                  absl::make_unique<AesGcmSivKeyManager>(), config),
+                  std::make_unique<AesGcmSivKeyManager>(), config),
               IsOk());
 
   KeysetHandleBuilder::Entry entry0 =
@@ -471,7 +471,7 @@ TEST_F(KeysetHandleBuilderTest, BuildCopyPreservesIdOfKeyWithoutIdRequirement) {
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromParams(
-          absl::make_unique<AesCmacParameters>(std::move(*params)),
+          std::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
   entry.SetFixedId(987);
   absl::StatusOr<KeysetHandle> handle =
@@ -822,7 +822,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromParams) {
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromParams(
-          absl::make_unique<AesCmacParameters>(std::move(*params)),
+          std::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
 
   absl::StatusOr<KeysetHandle> handle =
@@ -851,7 +851,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromLegacyKey) {
   ASSERT_THAT(proto_key.status(), IsOk());
 
   KeysetHandleBuilder::Entry entry = KeysetHandleBuilder::Entry::CreateFromKey(
-      absl::make_unique<internal::LegacyProtoKey>(std::move(*proto_key)),
+      std::make_unique<internal::LegacyProtoKey>(std::move(*proto_key)),
       KeyStatus::kEnabled, /*is_primary=*/true);
 
   absl::StatusOr<KeysetHandle> handle =
@@ -871,7 +871,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromKey) {
   ASSERT_THAT(key.status(), IsOk());
 
   KeysetHandleBuilder::Entry entry = KeysetHandleBuilder::Entry::CreateFromKey(
-      absl::make_unique<AesCmacKey>(std::move(*key)), KeyStatus::kEnabled,
+      std::make_unique<AesCmacKey>(std::move(*key)), KeyStatus::kEnabled,
       /*is_primary=*/true);
 
   absl::StatusOr<KeysetHandle> handle =
@@ -888,7 +888,7 @@ TEST_F(KeysetHandleBuilderTest,
 
   KeysetHandleBuilder::Entry entry1 =
       KeysetHandleBuilder::Entry::CreateFromParams(
-          absl::make_unique<AesCmacParameters>(std::move(*params)),
+          std::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
   entry1.SetFixedId(123);
   absl::StatusOr<KeysetHandle> handle1 =
@@ -897,7 +897,7 @@ TEST_F(KeysetHandleBuilderTest,
 
   KeysetHandleBuilder::Entry entry2 =
       KeysetHandleBuilder::Entry::CreateFromParams(
-          absl::make_unique<AesCmacParameters>(std::move(*params)),
+          std::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
   entry2.SetFixedId(123);
   absl::StatusOr<KeysetHandle> handle2 =
@@ -954,7 +954,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromParameters) {
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromParams(
-          absl::make_unique<internal::LegacyProtoParameters>(*parameters),
+          std::make_unique<internal::LegacyProtoParameters>(*parameters),
           KeyStatus::kEnabled, /*is_primary=*/true);
 
   absl::StatusOr<KeysetHandle> handle =
@@ -1006,7 +1006,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromParams) {
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromParams(
-          absl::make_unique<AesCmacParameters>(std::move(*params)),
+          std::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
 
   absl::StatusOr<KeysetHandle> handle =
@@ -1073,7 +1073,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromKey) {
   ASSERT_THAT(key.status(), IsOk());
 
   KeysetHandleBuilder::Entry entry = KeysetHandleBuilder::Entry::CreateFromKey(
-      absl::make_unique<AesCmacKey>(std::move(*key)), KeyStatus::kEnabled,
+      std::make_unique<AesCmacKey>(std::move(*key)), KeyStatus::kEnabled,
       /*is_primary=*/true);
 
   absl::StatusOr<KeysetHandle> handle =
@@ -1182,7 +1182,7 @@ class FakeAeadKeyManager
 
     absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKeyProto& key) const override {
-      return {absl::make_unique<test::DummyAead>(key_type_)};
+      return {std::make_unique<test::DummyAead>(key_type_)};
     }
 
    private:
@@ -1190,7 +1190,7 @@ class FakeAeadKeyManager
   };
 
   explicit FakeAeadKeyManager(absl::string_view key_type)
-      : KeyTypeManager(absl::make_unique<AeadFactory>(key_type)),
+      : KeyTypeManager(std::make_unique<AeadFactory>(key_type)),
         key_type_(key_type) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
@@ -1251,21 +1251,21 @@ TEST_F(KeysetHandleBuilderTest, BuildWithAnnotations) {
   // generated primitive set, which is populated by KeysetWrapperImpl and passed
   // to the primitive wrapper. We thus register a mock primitive wrapper for
   // Aead so that we can copy the annotations and later check them.
-  auto primitive_wrapper = absl::make_unique<MockAeadPrimitiveWrapper>();
+  auto primitive_wrapper = std::make_unique<MockAeadPrimitiveWrapper>();
   absl::flat_hash_map<std::string, std::string> generated_annotations;
   EXPECT_CALL(*primitive_wrapper, Wrap(_))
       .WillOnce(
           [&generated_annotations](
               std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
             generated_annotations = generated_primitive_set->get_annotations();
-            std::unique_ptr<Aead> aead = absl::make_unique<test::DummyAead>("");
+            std::unique_ptr<Aead> aead = std::make_unique<test::DummyAead>("");
             return aead;
           });
   Registry::Reset();
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(std::move(primitive_wrapper)),
               IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<FakeAeadKeyManager>(
+                  std::make_unique<FakeAeadKeyManager>(
                       "type.googleapis.com/google.crypto.tink.AesGcmKey"),
                   /*new_key_allowed=*/true),
               IsOk());

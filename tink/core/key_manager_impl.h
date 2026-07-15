@@ -104,7 +104,7 @@ class KeyFactoryImpl<
     auto new_key_result = NewKey(serialized_key_format);
     if (!new_key_result.ok()) return new_key_result.status();
     auto new_key = static_cast<const KeyProto&>(*(new_key_result.value()));
-    auto key_data = absl::make_unique<google::crypto::tink::KeyData>();
+    auto key_data = std::make_unique<google::crypto::tink::KeyData>();
     key_data->set_type_url(
         absl::StrCat(kTypeGoogleapisCom, KeyProto().GetTypeName()));
     key_data->set_value(new_key.SerializeAsString());

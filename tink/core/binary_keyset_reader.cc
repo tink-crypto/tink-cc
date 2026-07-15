@@ -58,7 +58,7 @@ absl::StatusOr<std::unique_ptr<KeysetReader>> BinaryKeysetReader::New(
 }
 
 absl::StatusOr<std::unique_ptr<Keyset>> BinaryKeysetReader::Read() {
-  auto keyset = absl::make_unique<Keyset>();
+  auto keyset = std::make_unique<Keyset>();
   if (!keyset->ParseFromString(serialized_keyset_)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not parse the input stream as a Keyset-proto.");
@@ -68,7 +68,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> BinaryKeysetReader::Read() {
 
 absl::StatusOr<std::unique_ptr<EncryptedKeyset>>
 BinaryKeysetReader::ReadEncrypted() {
-  auto enc_keyset = absl::make_unique<EncryptedKeyset>();
+  auto enc_keyset = std::make_unique<EncryptedKeyset>();
   if (!enc_keyset->ParseFromString(serialized_keyset_)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

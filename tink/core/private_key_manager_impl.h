@@ -91,7 +91,7 @@ class PrivateKeyFactoryImpl : public PrivateKeyFactory {
     }
     auto validation = private_key_manager_->ValidateKey(*private_key);
     if (!validation.ok()) return validation;
-    auto key_data = absl::make_unique<google::crypto::tink::KeyData>();
+    auto key_data = std::make_unique<google::crypto::tink::KeyData>();
     absl::StatusOr<PublicKeyProto> public_key_result =
         private_key_manager_->GetPublicKey(*private_key);
     if (!public_key_result.ok()) return public_key_result.status();

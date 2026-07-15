@@ -85,13 +85,13 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
    public:
     absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKey& key) const override {
-      return absl::make_unique<AeadVariant>(key.key_value());
+      return std::make_unique<AeadVariant>(key.key_value());
     }
   };
 
   ExampleKeyTypeManager()
-      : KeyTypeManager(absl::make_unique<AeadFactory>(),
-                       absl::make_unique<AeadVariantFactory>()) {}
+      : KeyTypeManager(std::make_unique<AeadFactory>(),
+                       std::make_unique<AeadVariantFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {
@@ -236,7 +236,7 @@ TEST(CreateDeriverFunctionForTest, KeyMaterialAndKeyType) {
 
 TEST(CreateDeriverFunctionForTest, UseParametersAndReturnValue) {
   crypto::tink::util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
+      std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
   ExampleKeyTypeManager internal_km;
   AesGcmKeyFormat key_format;
   key_format.set_key_size(9);
@@ -456,13 +456,13 @@ class ExampleKeyTypeManagerWithoutFactory
    public:
     absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKey& key) const override {
-      return absl::make_unique<AeadVariant>(key.key_value());
+      return std::make_unique<AeadVariant>(key.key_value());
     }
   };
 
   ExampleKeyTypeManagerWithoutFactory()
-      : KeyTypeManager(absl::make_unique<AeadFactory>(),
-                       absl::make_unique<AeadVariantFactory>()) {}
+      : KeyTypeManager(std::make_unique<AeadFactory>(),
+                       std::make_unique<AeadVariantFactory>()) {}
 
   google::crypto::tink::KeyData::KeyMaterialType key_material_type()
       const override {

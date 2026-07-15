@@ -72,12 +72,12 @@ class AlwaysFailPublicKeyVerify : public PublicKeyVerify {
 
 std::unique_ptr<PublicKeySign> CreateAlwaysFailingPublicKeySign(
     std::string message) {
-  return absl::make_unique<AlwaysFailPublicKeySign>(std::move(message));
+  return std::make_unique<AlwaysFailPublicKeySign>(std::move(message));
 }
 
 std::unique_ptr<PublicKeyVerify> CreateAlwaysFailingPublicKeyVerify(
     std::string message) {
-  return absl::make_unique<AlwaysFailPublicKeyVerify>(std::move(message));
+  return std::make_unique<AlwaysFailPublicKeyVerify>(std::move(message));
 }
 
 }  // namespace tink

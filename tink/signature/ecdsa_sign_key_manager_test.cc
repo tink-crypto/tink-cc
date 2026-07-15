@@ -277,7 +277,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyFailsWithOpenSsl) {
   }
   EcdsaKeyFormat format = CreateValidKeyFormat();
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
   EXPECT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
               Not(IsOk()));
 }
@@ -290,7 +290,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeySignVerifySucceedsWithBoringSsl) {
   EcdsaKeyFormat format = CreateValidKeyFormat();
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   absl::StatusOr<EcdsaPrivateKeyProto> key =
       EcdsaSignKeyManager().DeriveKey(format, &input_stream);
@@ -318,7 +318,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   EcdsaKeyFormat format = CreateValidKeyFormat();
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("tooshort")};
+      std::make_unique<std::stringstream>("tooshort")};
 
   ASSERT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -337,7 +337,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyWithInvalidKeyTemplateVersionFails) {
   params->set_encoding(EcdsaSignatureEncoding::DER);
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("tooshort")};
+      std::make_unique<std::stringstream>("tooshort")};
 
   ASSERT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -353,7 +353,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeyInvalidCurve) {
   params->set_curve(EllipticCurveType::CURVE25519);
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   ASSERT_THAT(EcdsaSignKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -412,7 +412,7 @@ TEST_P(NistCurveParamsDeriveTest, TestVectors) {
   key_format.mutable_params()->set_curve(std::get<0>(GetParam()));
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>(std::get<1>(GetParam()))};
+      std::make_unique<std::stringstream>(std::get<1>(GetParam()))};
 
   absl::StatusOr<EcdsaPrivateKeyProto> private_key =
       EcdsaSignKeyManager().DeriveKey(key_format, &input_stream);

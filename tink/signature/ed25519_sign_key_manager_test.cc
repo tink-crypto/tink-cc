@@ -160,7 +160,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKey) {
   Ed25519KeyFormat format;
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().DeriveKey(format, &input_stream);
@@ -173,7 +173,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKeySignVerify) {
   Ed25519KeyFormat format;
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   Ed25519PrivateKeyProto key =
       Ed25519SignKeyManager().DeriveKey(format, &input_stream).value();
@@ -193,7 +193,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   Ed25519KeyFormat format;
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("tooshort")};
+      std::make_unique<std::stringstream>("tooshort")};
 
   ASSERT_THAT(Ed25519SignKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));

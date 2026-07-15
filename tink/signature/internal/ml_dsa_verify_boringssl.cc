@@ -98,7 +98,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa44VerifyBoringSsl::New(
     return absl::InternalError("Invalid ML-DSA public key");
   }
 
-  return absl::make_unique<MlDsa44VerifyBoringSsl>(
+  return std::make_unique<MlDsa44VerifyBoringSsl>(
       std::move(public_key), std::move(boringssl_public_key), context);
 }
 
@@ -181,7 +181,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa65VerifyBoringSsl::New(
     return absl::InternalError("Invalid ML-DSA public key");
   }
 
-  return absl::make_unique<MlDsa65VerifyBoringSsl>(
+  return std::make_unique<MlDsa65VerifyBoringSsl>(
       std::move(public_key), std::move(boringssl_public_key), context);
 }
 
@@ -264,7 +264,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa87VerifyBoringSsl::New(
     return absl::InternalError("Invalid ML-DSA public key");
   }
 
-  return absl::make_unique<MlDsa87VerifyBoringSsl>(
+  return std::make_unique<MlDsa87VerifyBoringSsl>(
       std::move(public_key), std::move(boringssl_public_key), context);
 }
 

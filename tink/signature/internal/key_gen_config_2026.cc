@@ -54,8 +54,8 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
   status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<EcdsaSignKeyManager>(),
-      absl::make_unique<EcdsaVerifyKeyManager>(), config);
+      std::make_unique<EcdsaSignKeyManager>(),
+      std::make_unique<EcdsaVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -64,8 +64,8 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
   status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPssSignKeyManager>(),
-      absl::make_unique<RsaSsaPssVerifyKeyManager>(), config);
+      std::make_unique<RsaSsaPssSignKeyManager>(),
+      std::make_unique<RsaSsaPssVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -74,8 +74,8 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
   status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
+      std::make_unique<RsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -84,8 +84,8 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
   status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<Ed25519SignKeyManager>(),
-      absl::make_unique<Ed25519VerifyKeyManager>(), config);
+      std::make_unique<Ed25519SignKeyManager>(),
+      std::make_unique<Ed25519VerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }

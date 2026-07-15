@@ -109,7 +109,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa44SignBoringSsl::New(
     return status;
   }
 
-  return absl::make_unique<MlDsa44SignBoringSsl>(
+  return std::make_unique<MlDsa44SignBoringSsl>(
       std::move(private_key), std::move(boringssl_private_key), context);
 }
 
@@ -201,7 +201,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa65SignBoringSsl::New(
     return status;
   }
 
-  return absl::make_unique<MlDsa65SignBoringSsl>(
+  return std::make_unique<MlDsa65SignBoringSsl>(
       std::move(private_key), std::move(boringssl_private_key), context);
 }
 
@@ -293,7 +293,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsa87SignBoringSsl::New(
     return status;
   }
 
-  return absl::make_unique<MlDsa87SignBoringSsl>(
+  return std::make_unique<MlDsa87SignBoringSsl>(
       std::move(private_key), std::move(boringssl_private_key), context);
 }
 

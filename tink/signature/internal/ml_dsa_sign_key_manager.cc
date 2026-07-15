@@ -62,12 +62,12 @@ class MlDsaSignKeyManagerAdaptor
 
     std::unique_ptr<portable_proto::MessageLite>
     GetKeyFormatProtoDefaultInstance() const final {
-      return absl::make_unique<google::crypto::tink::MlDsaKeyFormat>();
+      return std::make_unique<google::crypto::tink::MlDsaKeyFormat>();
     }
 
     std::unique_ptr<portable_proto::MessageLite>
     GetPrivateKeyProtoDefaultInstance() const final {
-      return absl::make_unique<google::crypto::tink::MlDsaPrivateKey>();
+      return std::make_unique<google::crypto::tink::MlDsaPrivateKey>();
     }
 
     absl::StatusOr<std::unique_ptr<Key>> CreateKey(

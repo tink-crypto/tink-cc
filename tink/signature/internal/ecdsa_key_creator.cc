@@ -89,7 +89,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
     return private_key.status();
   }
 
-  return absl::make_unique<EcdsaPrivateKey>(*private_key);
+  return std::make_unique<EcdsaPrivateKey>(*private_key);
 }
 
 }  // namespace internal

@@ -100,7 +100,7 @@ absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     return private_key.status();
   }
 
-  return absl::make_unique<SlhDsaPrivateKey>(*private_key);
+  return std::make_unique<SlhDsaPrivateKey>(*private_key);
 #endif  // OPENSSL_IS_BORINGSSL
 }
 

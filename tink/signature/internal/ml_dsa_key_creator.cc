@@ -49,7 +49,7 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<MlDsaPrivateKey>(*key);
+  return std::make_unique<MlDsaPrivateKey>(*key);
 #endif  // OPENSSL_IS_BORINGSSL
 }
 

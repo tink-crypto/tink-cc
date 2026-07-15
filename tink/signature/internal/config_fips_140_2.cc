@@ -42,31 +42,31 @@ absl::Status AddSignatureFips140_2(Configuration& config) {
   }
 
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<PublicKeySignWrapper>(), config);
+      std::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<PublicKeyVerifyWrapper>(), config);
+      std::make_unique<PublicKeyVerifyWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<EcdsaSignKeyManager>(),
-      absl::make_unique<EcdsaVerifyKeyManager>(), config);
+      std::make_unique<EcdsaSignKeyManager>(),
+      std::make_unique<EcdsaVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
+      std::make_unique<RsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<RsaSsaPssSignKeyManager>(),
-      absl::make_unique<RsaSsaPssVerifyKeyManager>(), config);
+      std::make_unique<RsaSsaPssSignKeyManager>(),
+      std::make_unique<RsaSsaPssVerifyKeyManager>(), config);
 }
 
 }  // namespace internal

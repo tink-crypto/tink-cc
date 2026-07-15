@@ -48,8 +48,8 @@ using ::testing::SizeIs;
 using ::testing::StrEq;
 
 std::unique_ptr<InputStream> GetInputStreamForString(const std::string& input) {
-  return absl::make_unique<util::IstreamInputStream>(
-      absl::make_unique<std::stringstream>(input));
+  return std::make_unique<util::IstreamInputStream>(
+      std::make_unique<std::stringstream>(input));
 }
 
 AesCmacPrfKeyFormat ValidKeyFormat() {

@@ -259,7 +259,7 @@ TEST(HkdfPrfKeyManagerTest, DeriveKey) {
   format.mutable_params()->set_hash(::google::crypto::tink::SHA256);
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   absl::StatusOr<HkdfPrfKeyProto> key_or =
       HkdfPrfKeyManager().DeriveKey(format, &input_stream);
@@ -276,7 +276,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   format.mutable_params()->set_hash(::google::crypto::tink::SHA256);
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef")};
 
   ASSERT_THAT(HkdfPrfKeyManager().DeriveKey(format, &input_stream).status(),
               Not(IsOk()));
@@ -289,7 +289,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKeyWrongVersion) {
   format.mutable_params()->set_hash(::google::crypto::tink::SHA256);
 
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   ASSERT_THAT(
       HkdfPrfKeyManager().DeriveKey(format, &input_stream).status(),

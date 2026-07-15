@@ -58,7 +58,7 @@ class AesCmacPrfKeyManager
     absl::StatusOr<std::unique_ptr<Prf>> Create(
         const google::crypto::tink::AesCmacPrfKey& key) const override {
       return subtle::CreatePrfFromStatefulMacFactory(
-          absl::make_unique<internal::StatefulCmacBoringSslFactory>(
+          std::make_unique<internal::StatefulCmacBoringSslFactory>(
               AesCmacPrfKeyManager::MaxOutputLength(),
               util::SecretDataFromStringView(key.key_value())));
     }
@@ -66,7 +66,7 @@ class AesCmacPrfKeyManager
 
   AesCmacPrfKeyManager()
       : KeyTypeManager(
-            absl::make_unique<AesCmacPrfKeyManager::PrfSetFactory>()) {}
+            std::make_unique<AesCmacPrfKeyManager::PrfSetFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

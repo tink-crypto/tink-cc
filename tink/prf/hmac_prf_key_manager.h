@@ -69,14 +69,14 @@ class HmacPrfKeyManager
                          HashType_Name(key.params().hash())));
       }
       return subtle::CreatePrfFromStatefulMacFactory(
-          absl::make_unique<internal::StatefulHmacBoringSslFactory>(
+          std::make_unique<internal::StatefulHmacBoringSslFactory>(
               hash, *max_output_length,
               util::SecretDataFromStringView(key.key_value())));
     }
   };
 
   HmacPrfKeyManager()
-      : KeyTypeManager(absl::make_unique<HmacPrfKeyManager::PrfFactory>()) {}
+      : KeyTypeManager(std::make_unique<HmacPrfKeyManager::PrfFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

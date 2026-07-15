@@ -124,7 +124,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKey) {
   format.mutable_params()->set_hash(HashType::SHA256);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
+      std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
   absl::StatusOr<HmacPrfKeyProto> key_or =
       HmacPrfKeyManager().DeriveKey(format, &input_stream);
@@ -140,7 +140,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   format.mutable_params()->set_hash(HashType::SHA256);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef")};
 
   ASSERT_THAT(HmacPrfKeyManager().DeriveKey(format, &input_stream).status(),
               Not(IsOk()));
@@ -153,7 +153,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKeyWrongVersion) {
   format.mutable_params()->set_hash(HashType::SHA256);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef")};
 
   ASSERT_THAT(
       HmacPrfKeyManager().DeriveKey(format, &input_stream).status(),

@@ -75,8 +75,8 @@ class HkdfPrfKeyManager
   };
 
   HkdfPrfKeyManager()
-      : KeyTypeManager(absl::make_unique<StreamingPrfFactory>(),
-                       absl::make_unique<PrfSetFactory>()) {}
+      : KeyTypeManager(std::make_unique<StreamingPrfFactory>(),
+                       std::make_unique<PrfSetFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

@@ -56,9 +56,9 @@ class AlwaysFailPrfSet : public PrfSet {
  public:
   explicit AlwaysFailPrfSet(std::string message)
       : message_(std::move(message)),
-        always_fail_prf_0_(absl::make_unique<AlwaysFailPrf>(message_)),
-        always_fail_prf_1_(absl::make_unique<AlwaysFailPrf>(message_)),
-        always_fail_prf_2_(absl::make_unique<AlwaysFailPrf>(message_)),
+        always_fail_prf_0_(std::make_unique<AlwaysFailPrf>(message_)),
+        always_fail_prf_1_(std::make_unique<AlwaysFailPrf>(message_)),
+        always_fail_prf_2_(std::make_unique<AlwaysFailPrf>(message_)),
         prfs_({{0, always_fail_prf_0_.get()},
                {1, always_fail_prf_1_.get()},
                {2, always_fail_prf_2_.get()}}) {}
@@ -88,11 +88,11 @@ class AlwaysFailPrfSet : public PrfSet {
 }  // namespace
 
 std::unique_ptr<Prf> CreateAlwaysFailingPrf(std::string message) {
-  return absl::make_unique<AlwaysFailPrf>(std::move(message));
+  return std::make_unique<AlwaysFailPrf>(std::move(message));
 }
 
 std::unique_ptr<PrfSet> CreateAlwaysFailingPrfSet(std::string message) {
-  return absl::make_unique<AlwaysFailPrfSet>(std::move(message));
+  return std::make_unique<AlwaysFailPrfSet>(std::move(message));
 }
 
 }  // namespace tink

@@ -33,13 +33,13 @@ namespace tink {
 absl::Status PrfConfig::Register() {
   // Register primitive wrapper.
   auto status =
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<PrfSetWrapper>());
+      Registry::RegisterPrimitiveWrapper(std::make_unique<PrfSetWrapper>());
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<HmacPrfKeyManager>(), true);
+      std::make_unique<HmacPrfKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
@@ -50,13 +50,13 @@ absl::Status PrfConfig::Register() {
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<HkdfPrfKeyManager>(), true);
+      std::make_unique<HkdfPrfKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesCmacPrfKeyManager>(), true);
+      std::make_unique<AesCmacPrfKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

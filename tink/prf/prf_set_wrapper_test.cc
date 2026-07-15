@@ -87,7 +87,7 @@ TEST_F(PrfSetWrapperTest, NullPrfSet) {
 
 TEST_F(PrfSetWrapperTest, EmptyPrfSet) {
   PrfSetWrapper wrapper;
-  EXPECT_THAT(wrapper.Wrap(absl::make_unique<PrimitiveSet<Prf>>()).status(),
+  EXPECT_THAT(wrapper.Wrap(std::make_unique<PrimitiveSet<Prf>>()).status(),
               Not(IsOk()));
 }
 
@@ -95,7 +95,7 @@ TEST_F(PrfSetWrapperTest, NonRawKeyType) {
   KeysetInfo::KeyInfo key_info = MakeKey(1);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
   PrimitiveSet<Prf>::Builder prf_set_builder;
-  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<FakePrf>("output"),
+  prf_set_builder.AddPrimaryPrimitive(std::make_unique<FakePrf>("output"),
                                       key_info);
   absl::StatusOr<PrimitiveSet<Prf>> prf_set =
       std::move(prf_set_builder).Build();
@@ -108,7 +108,7 @@ TEST_F(PrfSetWrapperTest, NonRawKeyType) {
 
 TEST_F(PrfSetWrapperTest, WrapOkay) {
   PrimitiveSet<Prf>::Builder prf_set_builder;
-  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<FakePrf>("output"),
+  prf_set_builder.AddPrimaryPrimitive(std::make_unique<FakePrf>("output"),
                                       MakeKey(1));
   absl::StatusOr<PrimitiveSet<Prf>> prf_set =
       std::move(prf_set_builder).Build();
@@ -125,11 +125,11 @@ TEST_F(PrfSetWrapperTest, WrapTwo) {
   std::string primary_output("output");
   std::string secondary_output("different");
   PrimitiveSet<Prf>::Builder prf_set_builder;
-  prf_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<FakePrf>(primary_output), MakeKey(1));
-  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>(primary_output),
+  prf_set_builder.AddPrimaryPrimitive(std::make_unique<FakePrf>(primary_output),
+                                      MakeKey(1));
+  prf_set_builder.AddPrimitive(std::make_unique<FakePrf>(primary_output),
                                MakeKey(1));
-  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>(secondary_output),
+  prf_set_builder.AddPrimitive(std::make_unique<FakePrf>(secondary_output),
                                MakeKey(2));
   absl::StatusOr<PrimitiveSet<Prf>> prf_set =
       std::move(prf_set_builder).Build();
@@ -158,9 +158,9 @@ class PrfSetWrapperWithMonitoringTest : public Test {
     Registry::Reset();
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
     auto monitoring_client =
-        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
+        std::make_unique<NiceMock<internal::MockMonitoringClient>>();
     monitoring_client_ref_ = monitoring_client.get();
     // Monitoring tests expect that the client factory will create the
     // corresponding internal::MockMonitoringClients.
@@ -199,9 +199,9 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringFailure) {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
   PrimitiveSet<Prf>::Builder prf_set_builder;
   prf_set_builder.AddAnnotations(annotations);
-  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<AlwaysFailingPrf>(),
+  prf_set_builder.AddPrimaryPrimitive(std::make_unique<AlwaysFailingPrf>(),
                                       MakeKey(/*id=*/1));
-  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>("output"),
+  prf_set_builder.AddPrimitive(std::make_unique<FakePrf>("output"),
                                MakeKey(/*id=*/1));
   absl::StatusOr<PrimitiveSet<Prf>> primitive_set =
       std::move(prf_set_builder).Build();
@@ -221,9 +221,9 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringVerifySuccess) {
   PrimitiveSet<Prf>::Builder prf_set_builder;
   prf_set_builder.AddAnnotations(annotations);
 
-  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<FakePrf>("output"),
+  prf_set_builder.AddPrimaryPrimitive(std::make_unique<FakePrf>("output"),
                                       MakeKey(/*id=*/1));
-  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>("output"),
+  prf_set_builder.AddPrimitive(std::make_unique<FakePrf>("output"),
                                MakeKey(/*id=*/1));
   absl::StatusOr<PrimitiveSet<Prf>> primitive_set =
       std::move(prf_set_builder).Build();

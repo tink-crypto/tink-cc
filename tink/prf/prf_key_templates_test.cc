@@ -69,7 +69,7 @@ TEST(HmacPrfTest, Basics) {
               Eq("type.googleapis.com/google.crypto.tink.HmacPrfKey"));
   EXPECT_THAT(PrfKeyTemplates::HmacSha512().type_url(),
               Eq("type.googleapis.com/google.crypto.tink.HmacPrfKey"));
-  auto manager = absl::make_unique<HmacPrfKeyManager>();
+  auto manager = std::make_unique<HmacPrfKeyManager>();
   EXPECT_THAT(PrfKeyTemplates::HmacSha256().type_url(),
               Eq(manager->get_key_type()));
   google::crypto::tink::HmacPrfKeyFormat format;
@@ -96,7 +96,7 @@ TEST(HmacPrfTest, MultipleCallsSameReference) {
 TEST(CmacPrfTest, Basics) {
   EXPECT_THAT(PrfKeyTemplates::AesCmac().type_url(),
               Eq("type.googleapis.com/google.crypto.tink.AesCmacPrfKey"));
-  auto manager = absl::make_unique<AesCmacPrfKeyManager>();
+  auto manager = std::make_unique<AesCmacPrfKeyManager>();
   EXPECT_THAT(PrfKeyTemplates::AesCmac().type_url(),
               Eq(manager->get_key_type()));
   google::crypto::tink::AesCmacPrfKeyFormat format;

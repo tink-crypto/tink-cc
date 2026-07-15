@@ -69,7 +69,7 @@ class DummyPrfSet : public PrfSet {
   }
 
  private:
-  std::unique_ptr<Prf> dummy_ = absl::make_unique<DummyPrf>();
+  std::unique_ptr<Prf> dummy_ = std::make_unique<DummyPrf>();
 };
 
 class BrokenDummyPrfSet : public PrfSet {

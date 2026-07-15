@@ -36,8 +36,8 @@ using google::crypto::tink::HkdfPrfKeyFormat;
 using google::crypto::tink::HmacPrfKeyFormat;
 
 std::unique_ptr<google::crypto::tink::KeyTemplate> NewHkdfSha256Template() {
-  auto key_template = absl::make_unique<google::crypto::tink::KeyTemplate>();
-  auto hkdf_prf_key_manager = absl::make_unique<HkdfPrfKeyManager>();
+  auto key_template = std::make_unique<google::crypto::tink::KeyTemplate>();
+  auto hkdf_prf_key_manager = std::make_unique<HkdfPrfKeyManager>();
   key_template->set_type_url(hkdf_prf_key_manager->get_key_type());
   key_template->set_output_prefix_type(
       google::crypto::tink::OutputPrefixType::RAW);
@@ -51,8 +51,8 @@ std::unique_ptr<google::crypto::tink::KeyTemplate> NewHkdfSha256Template() {
 
 std::unique_ptr<google::crypto::tink::KeyTemplate> NewHmacTemplate(
     google::crypto::tink::HashType hash_type, uint32_t key_size) {
-  auto key_template = absl::make_unique<google::crypto::tink::KeyTemplate>();
-  auto hmac_prf_key_manager = absl::make_unique<HmacPrfKeyManager>();
+  auto key_template = std::make_unique<google::crypto::tink::KeyTemplate>();
+  auto hmac_prf_key_manager = std::make_unique<HmacPrfKeyManager>();
   key_template->set_type_url(hmac_prf_key_manager->get_key_type());
   key_template->set_output_prefix_type(
       google::crypto::tink::OutputPrefixType::RAW);
@@ -65,8 +65,8 @@ std::unique_ptr<google::crypto::tink::KeyTemplate> NewHmacTemplate(
 }
 
 std::unique_ptr<google::crypto::tink::KeyTemplate> NewAesCmacTemplate() {
-  auto key_template = absl::make_unique<google::crypto::tink::KeyTemplate>();
-  auto aes_cmac_prf_key_manager = absl::make_unique<AesCmacPrfKeyManager>();
+  auto key_template = std::make_unique<google::crypto::tink::KeyTemplate>();
+  auto aes_cmac_prf_key_manager = std::make_unique<AesCmacPrfKeyManager>();
   key_template->set_type_url(aes_cmac_prf_key_manager->get_key_type());
   key_template->set_output_prefix_type(
       google::crypto::tink::OutputPrefixType::RAW);

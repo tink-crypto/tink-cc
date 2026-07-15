@@ -142,7 +142,7 @@ absl::StatusOr<std::unique_ptr<PrfSet>> PrfSetWrapper::Wrap(
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<PrfSetPrimitiveWrapper>(std::move(prf_set))};
+    return {std::make_unique<PrfSetPrimitiveWrapper>(std::move(prf_set))};
   }
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*prf_set);
@@ -155,7 +155,7 @@ absl::StatusOr<std::unique_ptr<PrfSet>> PrfSetWrapper::Wrap(
   if (!monitoring_client.ok()) {
     return monitoring_client.status();
   }
-  return {absl::make_unique<PrfSetPrimitiveWrapper>(
+  return {std::make_unique<PrfSetPrimitiveWrapper>(
       std::move(prf_set), *std::move(monitoring_client))};
 }
 

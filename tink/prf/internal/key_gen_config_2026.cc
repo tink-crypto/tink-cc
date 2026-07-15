@@ -30,17 +30,17 @@ namespace internal {
 
 absl::Status AddPrfKeyGen2026(KeyGenConfiguration& config) {
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCmacPrfKeyManager>(), config);
+      std::make_unique<AesCmacPrfKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HkdfPrfKeyManager>(), config);
+      std::make_unique<HkdfPrfKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HmacPrfKeyManager>(), config);
+      std::make_unique<HmacPrfKeyManager>(), config);
 }
 
 }  // namespace internal

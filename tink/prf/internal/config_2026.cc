@@ -31,23 +31,23 @@ namespace internal {
 
 absl::Status AddPrf2026(Configuration& config) {
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<PrfSetWrapper>(), config);
+      std::make_unique<PrfSetWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
 
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<AesCmacPrfKeyManager>(), config);
+      std::make_unique<AesCmacPrfKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HkdfPrfKeyManager>(), config);
+      std::make_unique<HkdfPrfKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   return ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<HmacPrfKeyManager>(), config);
+      std::make_unique<HmacPrfKeyManager>(), config);
 }
 
 }  // namespace internal

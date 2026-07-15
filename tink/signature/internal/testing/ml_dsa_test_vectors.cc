@@ -124,7 +124,7 @@ SignatureTestVector CreateTestVector0() {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
-      absl::make_unique<MlDsaPrivateKey>(
+      std::make_unique<MlDsaPrivateKey>(
           PrivateKeyForMlDsa65Parameters(*parameters, absl::nullopt)),
       HexDecodeOrDie(
           "BD0D51DB2F225AC6D3DA8F0C2439B0BCDA26EFF7EFA67CFD3C2B98EFA08477A74088"
@@ -236,7 +236,7 @@ SignatureTestVector CreateTestVector1() {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
-      absl::make_unique<MlDsaPrivateKey>(
+      std::make_unique<MlDsaPrivateKey>(
           PrivateKeyForMlDsa65Parameters(*parameters,
                                          /*id_requirement=*/0x02030400)),
       HexDecodeOrDie(

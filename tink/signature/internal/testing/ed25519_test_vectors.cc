@@ -68,7 +68,7 @@ SignatureTestVector CreateTestVector0() {
       Ed25519PublicKeyBytes(), std::nullopt, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
-      absl::make_unique<Ed25519PrivateKey>(
+      std::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
@@ -82,7 +82,7 @@ SignatureTestVector CreateTestVector1() {
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
-      absl::make_unique<Ed25519PrivateKey>(
+      std::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
@@ -97,7 +97,7 @@ SignatureTestVector CreateTestVector2() {
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
-      absl::make_unique<Ed25519PrivateKey>(
+      std::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
@@ -113,7 +113,7 @@ SignatureTestVector CreateTestVector3() {
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
-      absl::make_unique<Ed25519PrivateKey>(
+      std::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),

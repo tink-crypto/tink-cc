@@ -90,7 +90,7 @@ MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
                         "Failed to expand ML-KEM private key from seed.");
   }
 
-  return absl::make_unique<MlKemRawDecapsulateBoringSsl>(
+  return std::make_unique<MlKemRawDecapsulateBoringSsl>(
       std::move(recipient_key), std::move(boringssl_private_key));
 }
 

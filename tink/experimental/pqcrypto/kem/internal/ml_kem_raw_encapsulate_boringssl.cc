@@ -88,7 +88,7 @@ MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
                         "Invalid ML-KEM public key");
   }
 
-  return absl::make_unique<MlKemRawEncapsulateBoringSsl>(
+  return std::make_unique<MlKemRawEncapsulateBoringSsl>(
       std::move(recipient_key), std::move(public_key));
 }
 

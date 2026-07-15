@@ -93,7 +93,7 @@ absl::StatusOr<std::unique_ptr<KemEncapsulate>> MlKemEncapsulateAes256Gcm::New(
     return raw_kem_encapsulate.status();
   }
 
-  return absl::make_unique<MlKemEncapsulateAes256Gcm>(
+  return std::make_unique<MlKemEncapsulateAes256Gcm>(
       *std::move(raw_kem_encapsulate), std::move(aes_gcm_parameters));
 }
 
@@ -113,7 +113,7 @@ absl::StatusOr<KemEncapsulation> MlKemEncapsulateAes256Gcm::Encapsulate()
   }
 
   KeysetHandleBuilder::Entry entry = KeysetHandleBuilder::Entry::CreateFromKey(
-      absl::make_unique<AesGcmKey>(*key), KeyStatus::kEnabled,
+      std::make_unique<AesGcmKey>(*key), KeyStatus::kEnabled,
       /*is_primary=*/true);
   absl::StatusOr<KeysetHandle> keyset_handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();

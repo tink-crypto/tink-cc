@@ -116,7 +116,7 @@ TEST(AesSivKeyManagerTest, MultipleCreateCallsCreateDifferentKeys) {
 }
 
 TEST(AesSivKeyManagerTest, DeriveKey) {
-  util::IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  util::IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")};
   AesSivKeyFormat format;
   format.set_key_size(64);
@@ -129,7 +129,7 @@ TEST(AesSivKeyManagerTest, DeriveKey) {
 }
 
 TEST(AesSivKeyManagerTest, DeriveKeyFromLongSeed) {
-  util::IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  util::IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefXXXXX")};
 
   AesSivKeyFormat format;
@@ -148,14 +148,14 @@ TEST(AesSivKeyManagerTest, DeriveKeyWithoutEnoughEntropy) {
   format.set_key_size(64);
   format.set_version(0);
   util::IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
   auto key_or = AesSivKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or.status(), StatusIs(absl::StatusCode::kInvalidArgument,
                                         HasSubstr("pseudorandomness")));
 }
 
 TEST(AesSivKeyManagerTest, DeriveKeyWrongVersion) {
-  util::IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
+  util::IstreamInputStream input_stream{std::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")};
   AesSivKeyFormat format;
   format.set_key_size(64);

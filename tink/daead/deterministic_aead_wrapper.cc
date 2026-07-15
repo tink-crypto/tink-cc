@@ -171,7 +171,7 @@ DeterministicAeadWrapper::Wrap(
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<DeterministicAeadSetWrapper>(
+    return {std::make_unique<DeterministicAeadSetWrapper>(
         std::move(primitive_set))};
   }
 
@@ -195,7 +195,7 @@ DeterministicAeadWrapper::Wrap(
     return monitoring_decryption_client.status();
   }
 
-  return {absl::make_unique<DeterministicAeadSetWrapper>(
+  return {std::make_unique<DeterministicAeadSetWrapper>(
       std::move(primitive_set), *std::move(monitoring_encryption_client),
       *std::move(monitoring_decryption_client))};
 }

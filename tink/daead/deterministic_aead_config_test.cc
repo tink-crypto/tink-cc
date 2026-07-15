@@ -102,7 +102,7 @@ TEST_F(DeterministicAeadConfigTest, WrappersRegistered) {
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::RAW);
   PrimitiveSet<DeterministicAead>::Builder primitive_set_builder;
   primitive_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyDeterministicAead>("dummy"), key_info);
+      std::make_unique<DummyDeterministicAead>("dummy"), key_info);
   absl::StatusOr<PrimitiveSet<DeterministicAead>> primitive_set =
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());

@@ -65,7 +65,7 @@ class AlwaysFailDeterministicAead : public DeterministicAead {
 
 std::unique_ptr<DeterministicAead> CreateAlwaysFailingDeterministicAead(
     std::string message) {
-  return absl::make_unique<AlwaysFailDeterministicAead>(std::move(message));
+  return std::make_unique<AlwaysFailDeterministicAead>(std::move(message));
 }
 
 }  // namespace tink

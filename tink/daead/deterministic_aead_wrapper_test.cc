@@ -189,12 +189,12 @@ class DeterministicAeadSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
     auto encryption_monitoring_client =
-        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
+        std::make_unique<NiceMock<internal::MockMonitoringClient>>();
     encryption_monitoring_client_ = encryption_monitoring_client.get();
     auto decryption_monitoring_client =
-        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
+        std::make_unique<NiceMock<internal::MockMonitoringClient>>();
     decryption_monitoring_client_ = decryption_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
@@ -234,13 +234,13 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
   PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
   daead_set_builder.AddAnnotations(annotations);
   daead_set_builder.AddPrimitive(
-      absl::make_unique<DummyDeterministicAead>("daead0"),
+      std::make_unique<DummyDeterministicAead>("daead0"),
       keyset_info.key_info(0));
   daead_set_builder.AddPrimitive(
-      absl::make_unique<DummyDeterministicAead>("daead1"),
+      std::make_unique<DummyDeterministicAead>("daead1"),
       keyset_info.key_info(1));
   daead_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyDeterministicAead>("daead2"),
+      std::make_unique<DummyDeterministicAead>("daead2"),
       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_primitive_set =
       std::move(daead_set_builder).Build();
@@ -276,13 +276,13 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
   PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
   daead_set_builder.AddAnnotations(annotations);
   daead_set_builder.AddPrimitive(
-      absl::make_unique<DummyDeterministicAead>("daead0"),
+      std::make_unique<DummyDeterministicAead>("daead0"),
       keyset_info.key_info(0));
   daead_set_builder.AddPrimitive(
-      absl::make_unique<DummyDeterministicAead>("daead1"),
+      std::make_unique<DummyDeterministicAead>("daead1"),
       keyset_info.key_info(1));
   daead_set_builder.AddPrimaryPrimitive(
-      absl::make_unique<DummyDeterministicAead>("daead2"),
+      std::make_unique<DummyDeterministicAead>("daead2"),
       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_primitive_set =
       std::move(daead_set_builder).Build();

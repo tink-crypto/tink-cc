@@ -37,7 +37,7 @@ absl::Status DeterministicAeadConfig::Register() {
 
   // Register non-FIPS key managers.
   auto status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesSivKeyManager>(), true);
+      std::make_unique<AesSivKeyManager>(), true);
   if (!status.ok()) return status;
 
   status = RegisterAesSivProtoSerialization();
@@ -45,7 +45,7 @@ absl::Status DeterministicAeadConfig::Register() {
 
   // Register primitive wrapper.
   return Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<DeterministicAeadWrapper>());
+      std::make_unique<DeterministicAeadWrapper>());
 }
 
 }  // namespace tink

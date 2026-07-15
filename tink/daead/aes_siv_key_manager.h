@@ -57,7 +57,7 @@ class AesSivKeyManager
   };
 
   AesSivKeyManager()
-      : KeyTypeManager(absl::make_unique<DeterministicAeadFactory>()) {}
+      : KeyTypeManager(std::make_unique<DeterministicAeadFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

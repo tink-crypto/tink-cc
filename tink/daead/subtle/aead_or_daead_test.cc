@@ -58,7 +58,7 @@ absl::Status EncryptThenDecrypt(const AeadOrDaead& aead_or_daead,
 }
 
 TEST(AeadOrDaead, testWithAeadPrimitive) {
-  std::unique_ptr<Aead> aead = absl::make_unique<test::DummyAead>("TestAead");
+  std::unique_ptr<Aead> aead = std::make_unique<test::DummyAead>("TestAead");
   AeadOrDaead aead_or_daead(std::move(aead));
 
   EXPECT_THAT(EncryptThenDecrypt(aead_or_daead, "test_plaintext", "aad"),
@@ -67,7 +67,7 @@ TEST(AeadOrDaead, testWithAeadPrimitive) {
 
 TEST(AeadOrDaead, testWithDeterministicAeadPrimitive) {
   std::unique_ptr<DeterministicAead> daead =
-      absl::make_unique<test::DummyDeterministicAead>("TestDaead");
+      std::make_unique<test::DummyDeterministicAead>("TestDaead");
   AeadOrDaead aead_or_daead(std::move(daead));
 
   EXPECT_THAT(EncryptThenDecrypt(aead_or_daead, "test_plaintext", "aad"),

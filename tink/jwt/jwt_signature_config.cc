@@ -40,13 +40,13 @@ namespace tink {
 absl::Status JwtSignatureRegister() {
   // Register primitive wrappers.
   auto status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
+      std::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<jwt_internal::JwtPublicKeyVerifyWrapper>());
+      std::make_unique<jwt_internal::JwtPublicKeyVerifyWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -70,22 +70,22 @@ absl::Status JwtSignatureRegister() {
   // implementations.
   // ECDSA
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<jwt_internal::JwtEcdsaSignKeyManager>(),
-      absl::make_unique<jwt_internal::JwtEcdsaVerifyKeyManager>(), true);
+      std::make_unique<jwt_internal::JwtEcdsaSignKeyManager>(),
+      std::make_unique<jwt_internal::JwtEcdsaVerifyKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
   // RSA SSA PKCS1
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<jwt_internal::JwtRsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<jwt_internal::JwtRsaSsaPkcs1VerifyKeyManager>(), true);
+      std::make_unique<jwt_internal::JwtRsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<jwt_internal::JwtRsaSsaPkcs1VerifyKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
   // RSA SSA PSS
   status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<jwt_internal::JwtRsaSsaPssSignKeyManager>(),
-      absl::make_unique<jwt_internal::JwtRsaSsaPssVerifyKeyManager>(), true);
+      std::make_unique<jwt_internal::JwtRsaSsaPssSignKeyManager>(),
+      std::make_unique<jwt_internal::JwtRsaSsaPssVerifyKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

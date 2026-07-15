@@ -32,7 +32,7 @@ namespace tink {
 absl::Status JwtMacRegister() {
   // Register primitive wrapper.
   auto status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<jwt_internal::JwtMacWrapper>());
+      std::make_unique<jwt_internal::JwtMacWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -40,7 +40,7 @@ absl::Status JwtMacRegister() {
   // Register key managers which utilize the FIPS validated BoringCrypto
   // implementations.
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<jwt_internal::JwtHmacKeyManager>(), true);
+      std::make_unique<jwt_internal::JwtHmacKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }

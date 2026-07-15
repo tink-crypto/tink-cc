@@ -624,7 +624,7 @@ absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     const KeysetHandle& keyset_handle) {
   std::stringbuf keyset_buf;
   absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
-      BinaryKeysetWriter::New(absl::make_unique<std::ostream>(&keyset_buf));
+      BinaryKeysetWriter::New(std::make_unique<std::ostream>(&keyset_buf));
   if (!writer.ok()) {
     return writer.status();
   }

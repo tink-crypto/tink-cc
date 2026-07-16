@@ -135,7 +135,7 @@ TEST_F(MacConfigTest, MacWrappersRegistered) {
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
   PrimitiveSet<Mac>::Builder mac_set_builder;
-  mac_set_builder.AddPrimaryPrimitive(absl::make_unique<DummyMac>("dummy"),
+  mac_set_builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("dummy"),
                                       key_info);
   absl::StatusOr<PrimitiveSet<Mac>> primitive_set =
       std::move(mac_set_builder).Build();

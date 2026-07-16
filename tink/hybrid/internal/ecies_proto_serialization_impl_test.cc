@@ -17,6 +17,7 @@
 #include "tink/hybrid/internal/ecies_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -24,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -35,9 +37,10 @@
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/ecies_public_key.h"
+#include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/bn_encoding_util.h"
 #include "tink/internal/common_proto_enums.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
@@ -50,8 +53,6 @@
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/enums.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
@@ -1067,27 +1068,44 @@ struct KeyPair {
 };
 
 absl::StatusOr<KeyPair> GenerateKeyPair(subtle::EllipticCurveType curve) {
-  if (curve == subtle::EllipticCurveType::CURVE25519) {
-    absl::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
-    if (!x25519_key.ok()) {
-      return x25519_key.status();
-    }
-    const std::string public_key_bytes =
-        std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
-                    X25519KeyPubKeySize());
-    const std::string private_key_bytes =
-        std::string(util::SecretDataAsStringView((*x25519_key)->private_key));
-    return KeyPair{/*x=*/public_key_bytes, /*y=*/"", private_key_bytes};
+  const EciesPrivateKey* private_key = GetEciesPrivateKey(curve);
+
+  EciesParameters::CurveType vector_curve =
+      private_key->GetPublicKey().GetParameters().GetCurveType();
+
+  if (vector_curve == EciesParameters::CurveType::kX25519) {
+    ABSL_ASSIGN_OR_RETURN(
+        std::string pub,
+        GetValueOfFixedLength(
+            *private_key->GetPublicKey().GetX25519CurvePointBytes(
+                GetPartialKeyAccess()),
+            32));
+    ABSL_ASSIGN_OR_RETURN(
+        std::string priv,
+        GetValueOfFixedLength(
+            private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess())
+                ->GetSecret(InsecureSecretKeyAccess::Get()),
+            32));
+    return KeyPair{pub, "", priv};
   }
-  absl::StatusOr<EcKey> ec_key = NewEcKey(curve);
-  if (!ec_key.ok()) {
-    return ec_key.status();
-  }
-  return KeyPair{
-      ec_key->pub_x,
-      ec_key->pub_y,
-      std::string(util::SecretDataAsStringView(ec_key->priv)),
-  };
+
+  EcPoint point =
+      *(private_key)->GetPublicKey().GetNistCurvePoint(GetPartialKeyAccess());
+  int field_size =
+      private_key->GetPublicKey().GetParameters().GetPrivateKeyLength();
+  ABSL_ASSIGN_OR_RETURN(
+      std::string pub_x,
+      GetValueOfFixedLength(point.GetX().GetValue(), field_size));
+  ABSL_ASSIGN_OR_RETURN(
+      std::string pub_y,
+      GetValueOfFixedLength(point.GetY().GetValue(), field_size));
+  ABSL_ASSIGN_OR_RETURN(
+      std::string priv,
+      GetValueOfFixedLength(
+          private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess())
+              ->GetSecret(InsecureSecretKeyAccess::Get()),
+          field_size));
+  return KeyPair{pub_x, pub_y, priv};
 }
 
 TEST_P(EciesProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {

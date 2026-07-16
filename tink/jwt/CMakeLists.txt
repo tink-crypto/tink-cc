@@ -738,11 +738,11 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
+    absl::string_view
     absl::optional
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::test_matchers
 )
 
 tink_cc_test(
@@ -800,6 +800,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
+    absl::string_view
     absl::optional
     tink::core::big_integer
     tink::core::ec_point

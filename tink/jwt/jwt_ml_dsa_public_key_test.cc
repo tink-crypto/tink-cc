@@ -312,6 +312,26 @@ TEST_P(JwtMlDsaPublicKeyTest, CreateSucceeds) {
   EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
 }
 
+TEST(JwtMlDsaPublicKeyTest, CustomKidPreservesStringViewBounds) {
+  absl::StatusOr<JwtMlDsaParameters> params =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kCustom,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(params, IsOk());
+
+  std::string backing = "custom_kid|secret";
+  absl::string_view custom_kid(backing.data(), /*len=*/10);
+  absl::StatusOr<JwtMlDsaPublicKey> key =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*params)
+          .SetPublicKeyBytes(test::HexDecodeOrDie(kMlDsa65PublicKeyBytes))
+          .SetCustomKid(custom_kid)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_TRUE(key->GetKid().has_value());
+  EXPECT_EQ(*key->GetKid(), "custom_kid");
+}
+
 TEST(JwtMlDsaPublicKeyTest, CreateKeyWithInvalidPublicKeyBytesFails) {
   absl::StatusOr<JwtMlDsaParameters> params =
       JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kIgnored,

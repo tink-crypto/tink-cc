@@ -957,6 +957,7 @@ tink_cc_test(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
@@ -969,13 +970,10 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::subtle::common_enums
     tink::subtle::random
-    tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

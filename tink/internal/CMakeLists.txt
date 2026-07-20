@@ -1606,7 +1606,6 @@ tink_cc_library(
     tink::signature::internal::ecdsa_proto_serialization_impl
     tink::signature::internal::ed25519_proto_serialization_impl
     tink::signature::internal::ml_dsa_proto_serialization_impl
-    tink::signature::internal::slh_dsa_proto_serialization_impl
     tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
     tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
 )

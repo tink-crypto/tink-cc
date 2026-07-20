@@ -37,7 +37,6 @@
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization_impl.h"
-#include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
 #include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
 #include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 
@@ -93,7 +92,6 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     ABSL_CHECK_OK(
         RegisterEd25519ProtoSerializationWithRegistryBuilder(builder));
     ABSL_CHECK_OK(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder));
 
     // Streaming AEAD
     ABSL_CHECK_OK(

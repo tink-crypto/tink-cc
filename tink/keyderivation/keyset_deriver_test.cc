@@ -84,11 +84,8 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
-#include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/slh_dsa_parameters.h"
-#include "tink/signature/slh_dsa_private_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
@@ -340,26 +337,6 @@ std::unique_ptr<MlDsaPrivateKey> CreateMlDsaPrivateKey(
   return std::make_unique<MlDsaPrivateKey>(*private_key);
 }
 
-std::unique_ptr<SlhDsaPrivateKey> CreateSlhDsaPrivateKey(
-    SlhDsaParameters::HashType hash_type, int private_key_size_in_bytes,
-    SlhDsaParameters::SignatureType signature_type,
-    SlhDsaParameters::Variant variant, absl::string_view secret_key_bytes,
-    std::optional<int> id_requirement) {
-  absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
-      hash_type, private_key_size_in_bytes, signature_type, variant);
-  if (!params.ok()) {
-    return nullptr;
-  }
-  RestrictedData private_key_data = RestrictedData(
-      test::HexDecodeOrDie(secret_key_bytes), InsecureSecretKeyAccess::Get());
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *params, private_key_data, id_requirement, GetPartialKeyAccess());
-  if (!private_key.ok()) {
-    return nullptr;
-  }
-  return std::make_unique<SlhDsaPrivateKey>(*private_key);
-}
-
 std::unique_ptr<AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey(
     int key_size_in_bytes, int derived_key_size_in_bytes,
     AesCtrHmacStreamingParameters::HashType hkdf_hash_type,
@@ -580,25 +557,6 @@ std::vector<std::shared_ptr<Key>> SignatureMlDsaTestVector() {
   return vectors;
 }
 
-std::vector<std::shared_ptr<Key>> SignatureSlhDsaTestVector() {
-  std::vector<std::shared_ptr<Key>> vectors;
-  if (internal::IsBoringSsl() && !internal::IsFipsModeEnabled()) {
-    vectors.push_back(CreateSlhDsaPrivateKey(
-        SlhDsaParameters::HashType::kSha2,
-        /*private_key_size_in_bytes=*/64,
-        SlhDsaParameters::SignatureType::kSmallSignature,
-        SlhDsaParameters::Variant::kTink, kOkmFromRfc.substr(0, 128),
-        /*id_requirement=*/1010101));
-    vectors.push_back(CreateSlhDsaPrivateKey(
-        SlhDsaParameters::HashType::kSha2,
-        /*private_key_size_in_bytes=*/64,
-        SlhDsaParameters::SignatureType::kSmallSignature,
-        SlhDsaParameters::Variant::kNoPrefix, kOkmFromRfc.substr(0, 128),
-        /*id_requirement=*/std::nullopt));
-  }
-  return vectors;
-}
-
 std::vector<std::shared_ptr<Key>> StreamingAeadTestVector() {
   return {
       CreateAesCtrHmacStreamingKey(
@@ -663,7 +621,6 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   if (internal::IsBoringSsl()) {
     vectors.push_back(SignatureEcdsaTestVector());
     vectors.push_back(SignatureMlDsaTestVector());
-    vectors.push_back(SignatureSlhDsaTestVector());
   }
 
   return vectors;
@@ -741,7 +698,6 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 

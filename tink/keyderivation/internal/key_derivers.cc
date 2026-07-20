@@ -74,9 +74,6 @@
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/internal/slh_dsa_proto_serialization.h"
-#include "tink/signature/slh_dsa_parameters.h"
-#include "tink/signature/slh_dsa_private_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
@@ -425,32 +422,6 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> DeriveMlDsaPrivateKey(
   return absl::make_unique<MlDsaPrivateKey>(*private_key);
 }
 
-absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> DeriveSlhDsaPrivateKey(
-    const Parameters& generic_params, InputStream* rand_stream) {
-  const SlhDsaParameters* params =
-      dynamic_cast<const SlhDsaParameters*>(&generic_params);
-  if (params == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Parameters is not SlhDsaParameters.");
-  }
-
-  absl::StatusOr<SecretData> secret_key_bytes_status =
-      ReadSecretBytesFromStream(params->GetPrivateKeySizeInBytes(),
-                                rand_stream);
-  if (!secret_key_bytes_status.ok()) {
-    return secret_key_bytes_status.status();
-  }
-  RestrictedData private_key_bytes =
-      RestrictedData(*secret_key_bytes_status, InsecureSecretKeyAccess::Get());
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *params, private_key_bytes, /*id_requirement=*/std::nullopt,
-      GetPartialKeyAccess());
-  if (!private_key.ok()) {
-    return private_key.status();
-  }
-  return absl::make_unique<SlhDsaPrivateKey>(*private_key);
-}
-
 absl::StatusOr<std::unique_ptr<AesCtrHmacStreamingKey>>
 DeriveAesCtrHmacStreamingKey(const Parameters& generic_params,
                              InputStream* rand_stream) {
@@ -538,9 +509,6 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     ABSL_CHECK_OK(RegisterMlDsaProtoSerialization());
     m->insert(
         {std::type_index(typeid(MlDsaParameters)), DeriveMlDsaPrivateKey});
-    ABSL_CHECK_OK(RegisterSlhDsaProtoSerialization());
-    m->insert(
-        {std::type_index(typeid(SlhDsaParameters)), DeriveSlhDsaPrivateKey});
 
     // Streaming AEAD.
     ABSL_CHECK_OK(RegisterAesCtrHmacStreamingProtoSerialization());

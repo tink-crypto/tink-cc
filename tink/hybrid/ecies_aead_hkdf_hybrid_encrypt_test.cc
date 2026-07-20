@@ -27,9 +27,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/hybrid_encrypt.h"
-#include "tink/internal/ec_util.h"
-#include "tink/util/enums.h"
-#include "tink/util/test_matchers.h"
+#include "tink/subtle/random.h"
 #include "tink/util/test_util.h"
 #include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
@@ -40,6 +38,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;
 using ::google::crypto::tink::EcPointFormat;
@@ -89,16 +88,13 @@ TEST_F(EciesAeadHkdfHybridEncryptTest, testInvalidKeys) {
   }
 
   {  // Unsupported DEM key type.
-    EllipticCurveType curve = EllipticCurveType::NIST_P256;
-    auto test_key =
-        internal::NewEcKey(util::Enums::ProtoToSubtle(curve)).value();
     EciesAeadHkdfPublicKey recipient_key;
     recipient_key.set_version(0);
-    recipient_key.set_x(test_key.pub_x);
-    recipient_key.set_y(test_key.pub_y);
+    recipient_key.set_x(Random::GetRandomBytes(32));
     auto params = recipient_key.mutable_params();
-    params->mutable_kem_params()->set_curve_type(curve);
+    params->mutable_kem_params()->set_curve_type(EllipticCurveType::CURVE25519);
     params->mutable_kem_params()->set_hkdf_hash_type(HashType::SHA256);
+    params->set_ec_point_format(EcPointFormat::UNCOMPRESSED);
     auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
     aead_dem->set_type_url("some.type.url/that.is.not.supported");
     auto result(EciesAeadHkdfHybridEncrypt::New(recipient_key));

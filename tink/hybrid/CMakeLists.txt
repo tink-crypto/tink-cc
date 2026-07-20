@@ -683,7 +683,6 @@ tink_cc_test(
     tink::hybrid::ecies_aead_hkdf_hybrid_decrypt
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::string_view
@@ -694,12 +693,8 @@ tink_cc_test(
     tink::aead::aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     tink::daead::aes_siv_key_manager
-    tink::internal::ec_util
     tink::internal::ssl_util
     tink::subtle::random
-    tink::util::enums
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::common_cc_proto
@@ -717,9 +712,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::core::hybrid_encrypt
-    tink::internal::ec_util
-    tink::util::enums
-    tink::util::test_matchers
+    tink::subtle::random
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ecies_aead_hkdf_cc_proto

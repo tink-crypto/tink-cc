@@ -24,7 +24,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
@@ -35,13 +34,9 @@
 #include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/registry.h"
 #include "tink/subtle/random.h"
-#include "tink/util/enums.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/common.pb.h"
@@ -204,17 +199,16 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testInvalidKeys) {
   }
 
   {  // Unsupported DEM key type.
-    EllipticCurveType curve = EllipticCurveType::NIST_P256;
-    auto test_key =
-        internal::NewEcKey(util::Enums::ProtoToSubtle(curve)).value();
     EciesAeadHkdfPrivateKey recipient_key;
     recipient_key.set_version(0);
-    recipient_key.set_key_value("some key value bytes");
-    recipient_key.mutable_public_key()->set_x(test_key.pub_x);
-    recipient_key.mutable_public_key()->set_y(test_key.pub_y);
+    recipient_key.set_key_value(Random::GetRandomBytes(32));
+    recipient_key.mutable_public_key()->set_version(0);
+    recipient_key.mutable_public_key()->set_x(Random::GetRandomBytes(32));
+    recipient_key.mutable_public_key()->set_y(Random::GetRandomBytes(32));
     auto params = recipient_key.mutable_public_key()->mutable_params();
-    params->mutable_kem_params()->set_curve_type(curve);
+    params->mutable_kem_params()->set_curve_type(EllipticCurveType::NIST_P256);
     params->mutable_kem_params()->set_hkdf_hash_type(HashType::SHA256);
+    params->set_ec_point_format(EcPointFormat::UNCOMPRESSED);
     auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
     aead_dem->set_type_url("some.type.url/that.is.not.supported");
     auto result(EciesAeadHkdfHybridDecrypt::New(recipient_key));

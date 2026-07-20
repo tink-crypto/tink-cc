@@ -18,11 +18,14 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_log.h"
+#include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -33,12 +36,13 @@
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/hybrid/ecies_parameters.h"
+#include "tink/hybrid/ecies_private_key.h"
+#include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/internal/ec_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -49,6 +53,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::Pointee;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -66,6 +71,26 @@ struct TestCase {
 };
 
 using EciesPublicKeyTest = TestWithParam<TestCase>;
+
+const EciesPublicKey& GetStaticPublicKey(
+    EciesParameters::CurveType curve_type) {
+  switch (curve_type) {
+    case EciesParameters::CurveType::kNistP256:
+      return internal::GetEciesPrivateKey(subtle::EllipticCurveType::NIST_P256)
+          ->GetPublicKey();
+    case EciesParameters::CurveType::kNistP384:
+      return internal::GetEciesPrivateKey(subtle::EllipticCurveType::NIST_P384)
+          ->GetPublicKey();
+    case EciesParameters::CurveType::kNistP521:
+      return internal::GetEciesPrivateKey(subtle::EllipticCurveType::NIST_P521)
+          ->GetPublicKey();
+    case EciesParameters::CurveType::kX25519:
+      return internal::GetEciesPrivateKey(subtle::EllipticCurveType::CURVE25519)
+          ->GetPublicKey();
+    default:
+      ABSL_LOG(FATAL) << "Unknown curve type: " << static_cast<int>(curve_type);
+  }
+}
 
 INSTANTIATE_TEST_SUITE_P(
     EciesPublicKeyTestSuite, EciesPublicKeyTest,
@@ -110,10 +135,8 @@ TEST_P(EciesPublicKeyTest, CreateNistCurvePublicKey) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const EciesPublicKey& static_key = GetStaticPublicKey(test_case.curve_type);
+  EcPoint public_point = *static_key.GetNistCurvePoint(GetPartialKeyAccess());
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, public_point,
@@ -276,11 +299,9 @@ TEST(EciesPublicKeyTest,
           .Build();
   ASSERT_THAT(tink_params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const EciesPublicKey& static_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kNistP256);
+  EcPoint public_point = *static_key.GetNistCurvePoint(GetPartialKeyAccess());
 
   EXPECT_THAT(EciesPublicKey::CreateForNistCurve(
                   *no_prefix_params, public_point,
@@ -308,10 +329,8 @@ TEST_P(EciesPublicKeyTest, NistCurvePublicKeyEquals) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const EciesPublicKey& static_key = GetStaticPublicKey(test_case.curve_type);
+  EcPoint public_point = *static_key.GetNistCurvePoint(GetPartialKeyAccess());
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, public_point,
@@ -411,15 +430,16 @@ TEST(EciesPublicKeyTest, DifferentPublicPointsNotEqual) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key1 =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key1, IsOk());
-  absl::StatusOr<internal::EcKey> ec_key2 =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key2, IsOk());
+  const EciesPublicKey& static_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kNistP256);
+  EcPoint public_point1 = *static_key.GetNistCurvePoint(GetPartialKeyAccess());
 
-  EcPoint public_point1(BigInteger(ec_key1->pub_x), BigInteger(ec_key1->pub_y));
-  EcPoint public_point2(BigInteger(ec_key2->pub_x), BigInteger(ec_key2->pub_y));
+  google::crypto::tink::EciesAeadHkdfPrivateKey cached_proto_key =
+      test::GetEciesAesGcmHkdfTestKey(subtle::EllipticCurveType::NIST_P256,
+                                      subtle::EcPointFormat::UNCOMPRESSED,
+                                      subtle::HashType::SHA256, 16);
+  EcPoint public_point2(BigInteger(cached_proto_key.public_key().x()),
+                        BigInteger(cached_proto_key.public_key().y()));
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, public_point1,
@@ -501,153 +521,49 @@ TEST(EciesPublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(EciesPublicKeyTest, CopyConstructor) {
-  absl::StatusOr<EciesParameters> params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
-
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/0x01020304,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  EciesPublicKey copy(*public_key);
-
-  EXPECT_THAT(copy, Eq(*public_key));
+  const EciesPublicKey& public_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kX25519);
+  EciesPublicKey copy(public_key);
+  EXPECT_THAT(copy, Eq(public_key));
 }
 
 TEST(EciesPublicKeyTest, CopyAssignment) {
-  absl::StatusOr<EciesParameters> params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(params, IsOk());
+  const EciesPublicKey& public_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kX25519);
+  EciesPublicKey assign_to =
+      GetStaticPublicKey(EciesParameters::CurveType::kNistP256);
 
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  assign_to = public_key;
 
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/0x01020304,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<EciesParameters> other_params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
-          .SetVariant(EciesParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(other_params, IsOk());
-
-  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
-
-  absl::StatusOr<EciesPublicKey> copy = EciesPublicKey::CreateForCurveX25519(
-      *other_params, other_public_key_bytes,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *public_key;
-
-  EXPECT_THAT(*copy, Eq(*public_key));
+  EXPECT_THAT(assign_to, Eq(public_key));
 }
 
 TEST(EciesPublicKeyTest, MoveConstructor) {
-  absl::StatusOr<EciesParameters> params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(params, IsOk());
+  const EciesPublicKey& public_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kX25519);
+  EciesPublicKey copy_to_move = public_key;
+  EciesPublicKey moved(std::move(copy_to_move));
 
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
-
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/0x01020304,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  EciesPublicKey expected = *public_key;
-  EciesPublicKey moved(std::move(*public_key));
-
-  EXPECT_THAT(moved, Eq(expected));
+  EXPECT_THAT(moved, Eq(public_key));
 }
 
 TEST(EciesPublicKeyTest, MoveAssignment) {
-  absl::StatusOr<EciesParameters> params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(params, IsOk());
+  const EciesPublicKey& public_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kX25519);
+  EciesPublicKey copy_to_move = public_key;
+  EciesPublicKey moved =
+      GetStaticPublicKey(EciesParameters::CurveType::kNistP256);
+  moved = std::move(copy_to_move);
 
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
-
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/0x01020304,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<EciesParameters> other_params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
-          .SetVariant(EciesParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(other_params, IsOk());
-
-  std::string other_public_key_bytes = subtle::Random::GetRandomBytes(32);
-
-  absl::StatusOr<EciesPublicKey> moved = EciesPublicKey::CreateForCurveX25519(
-      *other_params, other_public_key_bytes,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(moved, IsOk());
-
-  EciesPublicKey expected = *public_key;
-  *moved = std::move(*public_key);
-
-  EXPECT_THAT(*moved, Eq(expected));
+  EXPECT_THAT(moved, Eq(public_key));
 }
 
 TEST(EciesPublicKeyTest, Clone) {
-  absl::StatusOr<EciesParameters> params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(params, IsOk());
+  const EciesPublicKey& public_key =
+      GetStaticPublicKey(EciesParameters::CurveType::kX25519);
+  std::unique_ptr<Key> cloned_key = public_key.Clone();
 
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
-
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
-                                           /*id_requirement=*/std::nullopt,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  // Clone the key.
-  std::unique_ptr<Key> cloned_key = public_key->Clone();
-
-  ASSERT_THAT(*cloned_key, Eq(*public_key));
+  ASSERT_THAT(cloned_key, Pointee(Eq(public_key)));
 }
 
 }  // namespace

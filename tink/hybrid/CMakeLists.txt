@@ -930,8 +930,11 @@ tink_cc_test(
     ecies_public_key_test.cc
   DEPS
     tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     gmock
+    absl::log
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
@@ -941,10 +944,10 @@ tink_cc_test(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
     tink::subtle::common_enums
     tink::subtle::random
-    tink::util::test_matchers
     tink::util::test_util
 )
 

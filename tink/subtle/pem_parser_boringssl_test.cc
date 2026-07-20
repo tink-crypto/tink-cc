@@ -57,6 +57,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::test::EqualsSecretData;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::Test;
@@ -858,6 +859,18 @@ TEST(PemParserEcTest, ParseEd25519PublicKey) {
   EXPECT_THAT((*ed25519_pub_key)->private_key.size(), Eq(0));
   EXPECT_THAT(test::HexEncode((*ed25519_pub_key)->public_key),
               Eq(kEd25519PublicKeyX));
+}
+
+TEST(PemParserEcTest, ParseX25519PublicKeyAsEd25519Fails) {
+  constexpr absl::string_view kX25519PublicKey =
+      "-----BEGIN PUBLIC KEY-----\n"
+      "MCowBQYDK2VuAyEAIrWkPFkg8HmlO4r7BTtJeW9hCdFaPj3QwmIdn7PGjRs=\n"
+      "-----END PUBLIC KEY-----\n";
+
+  EXPECT_THAT(
+      PemParser::ParseEd25519PublicKey(kX25519PublicKey),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("PEM key is not an Ed25519 public key")));
 }
 
 }  // namespace

@@ -358,6 +358,10 @@ PemParser::ParseEd25519PublicKey(absl::string_view pem_serialized_key) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "PEM Public Key parsing failed");
   }
+  if (EVP_PKEY_id(evp_pub_key.get()) != EVP_PKEY_ED25519) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "PEM key is not an Ed25519 public key");
+  }
   const size_t pub_key_size = internal::Ed25519KeyPubKeySize();
   uint8_t public_key[pub_key_size] = {0};
   size_t out_len_pub = pub_key_size;

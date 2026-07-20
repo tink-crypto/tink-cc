@@ -1285,6 +1285,26 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WInvalidKeySizeFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST(SignaturePemKeysetReaderTest, ReadX25519PublicKeyAsEd25519Fails) {
+  constexpr absl::string_view kX25519PublicKey =
+      "-----BEGIN PUBLIC KEY-----\n"
+      "MCowBQYDK2VuAyEAIrWkPFkg8HmlO4r7BTtJeW9hCdFaPj3QwmIdn7PGjRs=\n"
+      "-----END PUBLIC KEY-----\n";
+
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kX25519PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ED25519,
+                           /*key_size_in_bits=*/253, HashType::SHA512));
+
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  EXPECT_THAT((*reader)->Read(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("PEM key is not an Ed25519 public key")));
+}
+
 TEST(SignaturePemKeysetReaderTest, ReadEd25519PrivateKey) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);

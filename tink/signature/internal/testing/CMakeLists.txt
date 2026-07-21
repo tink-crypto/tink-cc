@@ -135,6 +135,32 @@ tink_cc_library(
 )
 
 tink_cc_library(
+  NAME slh_dsa_test_vectors
+  SRCS
+    slh_dsa_test_vectors.cc
+    slh_dsa_test_vectors.h
+  DEPS
+    tink::signature::internal::testing::signature_test_vector
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::strings
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::fips_utils
+    tink::signature::slh_dsa_parameters
+    tink::signature::slh_dsa_private_key
+    tink::signature::slh_dsa_public_key
+    tink::util::test_util
+  TESTONLY
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
   NAME composite_ml_dsa_test_util
   SRCS
     composite_ml_dsa_test_util.cc

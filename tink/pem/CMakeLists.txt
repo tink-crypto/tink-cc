@@ -1,0 +1,84 @@
+tink_module(pem)
+
+tink_cc_library(
+  NAME signature_key_parser
+  SRCS
+    signature_key_parser.cc
+    signature_key_parser.h
+  DEPS
+    absl::nullability
+    absl::check
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::string_view
+    crypto
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::core::secret_key_access_token
+    tink::internal::bn_util
+    tink::internal::secret_buffer
+    tink::internal::ssl_unique_ptr
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_public_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
+    tink::signature::internal::ml_dsa_pem
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME signature_key_parser_test
+  SRCS
+    signature_key_parser_test.cc
+  DEPS
+    tink::pem::signature_key_parser
+    gmock
+    absl::absl_check
+    absl::check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::config::global_registry
+    tink::internal::ssl_util
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_public_key
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
+    tink::signature::signature_config
+)

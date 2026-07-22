@@ -12,6 +12,7 @@ add_subdirectory(signature)
 add_subdirectory(streamingaead)
 add_subdirectory(subtle)
 add_subdirectory(util)
+add_subdirectory(pem)
 
 tink_module(core)
 
@@ -137,6 +138,7 @@ tink_cc_library(
     tink::mac::mac_config
     tink::mac::mac_factory
     tink::mac::mac_key_templates
+    tink::pem::signature_key_parser
     tink::signature::public_key_sign_factory
     tink::signature::public_key_verify_factory
     tink::signature::signature_config

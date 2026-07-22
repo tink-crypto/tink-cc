@@ -54,10 +54,10 @@ TEST(AeadFromZeroCopyTest, EncryptSucceeds) {
   EXPECT_CALL(*mock_zero_copy_aead, MaxEncryptionSize(kPlaintext.size()))
       .WillOnce(Return(kCiphertext.size()));
   EXPECT_CALL(*mock_zero_copy_aead, Encrypt(kPlaintext, kAssociatedData, _))
-      .WillOnce(Invoke([&](Unused, Unused, absl::Span<char> buffer) {
+      .WillOnce([&](Unused, Unused, absl::Span<char> buffer) {
         memcpy(buffer.data(), kCiphertext.data(), kCiphertext.size());
         return kCiphertext.size();
-      }));
+      });
 
   AeadFromZeroCopy aead(std::move(mock_zero_copy_aead));
   absl::StatusOr<std::string> ciphertext =
@@ -83,10 +83,10 @@ TEST(AeadFromZeroCopyTest, DecryptSucceeds) {
   EXPECT_CALL(*mock_zero_copy_aead, MaxDecryptionSize(kCiphertext.size()))
       .WillOnce(Return(kPlaintext.size()));
   EXPECT_CALL(*mock_zero_copy_aead, Decrypt(kCiphertext, kAssociatedData, _))
-      .WillOnce(Invoke([&](Unused, Unused, absl::Span<char> buffer) {
+      .WillOnce([&](Unused, Unused, absl::Span<char> buffer) {
         memcpy(buffer.data(), kPlaintext.data(), kPlaintext.size());
         return kPlaintext.size();
-      }));
+      });
 
   AeadFromZeroCopy aead(std::move(mock_zero_copy_aead));
   absl::StatusOr<std::string> plaintext =

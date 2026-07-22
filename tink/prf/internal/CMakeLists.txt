@@ -245,3 +245,25 @@ tink_cc_library(
     tink::prf::hmac_prf_key_manager
     tink::util::status
 )
+
+tink_cc_library(
+  NAME hmac_prf_test_vectors
+  SRCS
+    hmac_prf_test_vectors.cc
+    hmac_prf_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::string_view
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
+    tink::util::test_util
+  TESTONLY
+)

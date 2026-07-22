@@ -445,3 +445,26 @@ tink_cc_library(
     tink::mac::aes_cmac_key_manager
     tink::mac::hmac_key_manager
 )
+
+tink_cc_library(
+  NAME hmac_test_vectors
+  SRCS
+    hmac_test_vectors.cc
+    hmac_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
+    tink::util::test_util
+  TESTONLY
+)

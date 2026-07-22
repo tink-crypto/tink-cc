@@ -464,3 +464,27 @@ cc_library(
         "@abseil-cpp//absl/types:optional",
     ],
 )
+
+cc_library(
+    name = "hmac_test_vectors",
+    testonly = 1,
+    srcs = ["hmac_test_vectors.cc"],
+    hdrs = ["hmac_test_vectors.h"],
+    include_prefix = "tink/mac/internal",
+    deps = [
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:partial_key_access",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink:secret_key_access_token",
+        "//tink/mac:hmac_key",
+        "//tink/mac:hmac_parameters",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)

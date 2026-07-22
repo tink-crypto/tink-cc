@@ -460,12 +460,12 @@ class KeysetHandleBuilder {
     // does not have a value, then the key will be assigned a random id.
     static Entry CreateFromParams(std::shared_ptr<const Parameters> parameters,
                                   KeyStatus status, bool is_primary,
-                                  absl::optional<int> id = absl::nullopt);
+                                  absl::optional<int> id = std::nullopt);
 
     template <typename CopyableParameters>
     static Entry CreateFromCopyableParams(
         CopyableParameters parameters, KeyStatus status, bool is_primary,
-        absl::optional<int> id = absl::nullopt) {
+        absl::optional<int> id = std::nullopt) {
       auto copyable_params =
           absl::make_unique<CopyableParameters>(std::move(parameters));
       return CreateFromParams(std::move(copyable_params), status, is_primary,
@@ -673,7 +673,7 @@ KeysetHandle::GenerateNewFromParameters(
       KeysetHandleBuilder::Entry::CreateFromParams(parameters.Clone(),
                                                    KeyStatus::kEnabled,
                                                    /*is_primary=*/true,
-                                                   /*id=*/absl::nullopt);
+                                                   /*id=*/std::nullopt);
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(std::move(entry))

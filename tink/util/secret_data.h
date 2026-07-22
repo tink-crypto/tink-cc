@@ -252,9 +252,7 @@ class SecretValue {
   SecretUniquePtr<T> ptr_;
 };
 
-inline void SafeZeroMemory(void* ptr, std::size_t size) {
-  OPENSSL_cleanse(ptr, size);
-}
+void SafeZeroMemory(void* ptr, std::size_t size);
 
 inline void SafeZeroString(std::string* str) {
   SafeZeroMemory(&(*str)[0], str->size());

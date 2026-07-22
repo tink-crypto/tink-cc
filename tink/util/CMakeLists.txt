@@ -478,6 +478,7 @@ tink_cc_test(
 tink_cc_library(
   NAME secret_data
   SRCS
+    secret_data.cc
     secret_data.h
   DEPS
     absl::check

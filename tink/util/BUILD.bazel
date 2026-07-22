@@ -29,6 +29,7 @@ cc_library(
 
 cc_library(
     name = "secret_data",
+    srcs = ["secret_data.cc"],
     hdrs = ["secret_data.h"],
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],

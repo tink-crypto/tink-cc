@@ -144,11 +144,13 @@ tink_cc_library(
 tink_cc_library(
   NAME aes_gcm_key_manager
   SRCS
+    aes_gcm_key_manager.cc
     aes_gcm_key_manager.h
   DEPS
     tink::aead::cord_aead
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::aead
     tink::core::key_type_manager

@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/hybrid/ecies_aead_hkdf_hybrid_decrypt.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/util.h"
@@ -73,6 +74,12 @@ absl::Status ValidatePrivateKeyLength(const EciesAeadHkdfPrivateKey& key) {
 }
 
 }  // namespace
+
+absl::StatusOr<std::unique_ptr<HybridDecrypt>>
+EciesAeadHkdfPrivateKeyManager::HybridDecryptFactory::Create(
+    const EciesAeadHkdfPrivateKey& ecies_private_key) const {
+  return EciesAeadHkdfHybridDecrypt::New(ecies_private_key);
+}
 
 absl::Status EciesAeadHkdfPrivateKeyManager::ValidateKeyFormat(
     const EciesAeadHkdfKeyFormat& key_format) const {

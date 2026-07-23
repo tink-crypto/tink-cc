@@ -89,6 +89,16 @@ absl::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
       std::move(dem_result).value()))};
 }
 
+EciesAeadHkdfHybridDecrypt::EciesAeadHkdfHybridDecrypt(
+    google::crypto::tink::EciesAeadHkdfParams recipient_key_params,
+    std::unique_ptr<const subtle::EciesHkdfRecipientKemBoringSsl> kem,
+    std::unique_ptr<const internal::EciesAeadHkdfDemHelper> dem_helper)
+    : recipient_key_params_(std::move(recipient_key_params)),
+      recipient_kem_(std::move(kem)),
+      dem_helper_(std::move(dem_helper)) {}
+
+EciesAeadHkdfHybridDecrypt::~EciesAeadHkdfHybridDecrypt() = default;
+
 absl::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
   // Extract KEM-bytes from the ciphertext.

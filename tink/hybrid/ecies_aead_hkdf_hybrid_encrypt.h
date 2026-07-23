@@ -40,6 +40,8 @@ class EciesAeadHkdfHybridEncrypt : public HybridEncrypt {
   static absl::StatusOr<std::unique_ptr<HybridEncrypt>> New(
       const google::crypto::tink::EciesAeadHkdfPublicKey& recipient_key);
 
+  ~EciesAeadHkdfHybridEncrypt() override;
+
   absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view context_info) const override;
@@ -48,9 +50,7 @@ class EciesAeadHkdfHybridEncrypt : public HybridEncrypt {
   EciesAeadHkdfHybridEncrypt(
       const google::crypto::tink::EciesAeadHkdfPublicKey& recipient_key,
       std::unique_ptr<const subtle::EciesHkdfSenderKemBoringSsl> sender_kem,
-      std::unique_ptr<const internal::EciesAeadHkdfDemHelper> dem_helper)
-      : recipient_key_(recipient_key), sender_kem_(std::move(sender_kem)),
-        dem_helper_(std::move(dem_helper)) {}
+      std::unique_ptr<const internal::EciesAeadHkdfDemHelper> dem_helper);
 
   google::crypto::tink::EciesAeadHkdfPublicKey recipient_key_;
   std::unique_ptr<const subtle::EciesHkdfSenderKemBoringSsl> sender_kem_;

@@ -18,6 +18,7 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
 #include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
@@ -32,6 +33,12 @@ using google::crypto::tink::EciesAeadHkdfPublicKey;
 using google::crypto::tink::EcPointFormat;
 using google::crypto::tink::EllipticCurveType;
 using google::crypto::tink::HashType;
+
+absl::StatusOr<std::unique_ptr<HybridEncrypt>>
+EciesAeadHkdfPublicKeyManager::HybridEncryptFactory::Create(
+    const EciesAeadHkdfPublicKey& ecies_public_key) const {
+  return EciesAeadHkdfHybridEncrypt::New(ecies_public_key);
+}
 
 absl::Status EciesAeadHkdfPublicKeyManager::ValidateParams(
     const EciesAeadHkdfParams& params) const {

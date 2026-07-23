@@ -87,6 +87,16 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> EciesAeadHkdfHybridEncrypt::New(
       std::move(dem_result).value()))};
 }
 
+EciesAeadHkdfHybridEncrypt::EciesAeadHkdfHybridEncrypt(
+    const google::crypto::tink::EciesAeadHkdfPublicKey& recipient_key,
+    std::unique_ptr<const subtle::EciesHkdfSenderKemBoringSsl> sender_kem,
+    std::unique_ptr<const internal::EciesAeadHkdfDemHelper> dem_helper)
+    : recipient_key_(recipient_key),
+      sender_kem_(std::move(sender_kem)),
+      dem_helper_(std::move(dem_helper)) {}
+
+EciesAeadHkdfHybridEncrypt::~EciesAeadHkdfHybridEncrypt() = default;
+
 absl::StatusOr<std::string> EciesAeadHkdfHybridEncrypt::Encrypt(
     absl::string_view plaintext, absl::string_view context_info) const {
   // Use KEM to get a symmetric key.

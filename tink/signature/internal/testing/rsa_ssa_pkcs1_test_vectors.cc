@@ -662,7 +662,7 @@ const SignatureTestVector& CreateTestVector0() {
         "e5677ea7bb21a18d1ee22b6ba92c15a23ed6aede20abc29b290cc04fa0846027";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
+            PrivateKeyFor2048BitParameters(*parameters, std::nullopt)),
         HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -689,7 +689,7 @@ const SignatureTestVector& CreateTestVector1() {
         "6a15aa11dfe030595e49d6c71ea8cb6a016e4167f3a4168eb4326d12ffed608c";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
+            PrivateKeyFor2048BitParameters(*parameters, std::nullopt)),
         HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -808,7 +808,7 @@ const SignatureTestVector& Create3072BitsTestVector() {
         "03a40e3cf2503c40e921643bb7e26a4b14eac85cd5451c2f80b35fc8c5b060a7";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor3072BitParameters(*parameters, absl::nullopt)),
+            PrivateKeyFor3072BitParameters(*parameters, std::nullopt)),
         HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -828,7 +828,7 @@ const SignatureTestVector& CreateWycheproof3072BitsTestVector() {
     ABSL_CHECK_OK(parameters.status());
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor3072BitParameters2(*parameters, absl::nullopt)),
+            PrivateKeyFor3072BitParameters2(*parameters, std::nullopt)),
         HexDecodeOrDie("aa"), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -865,7 +865,7 @@ const SignatureTestVector& Create4096BitsTestVector() {
         "1dfec289ceaa207a7a496213ebc13e50a2f84450b68255d718793b7766bf4686";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor4096BitParameters(*parameters, absl::nullopt)),
+            PrivateKeyFor4096BitParameters(*parameters, std::nullopt)),
         HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -901,7 +901,7 @@ const SignatureTestVector& Create4096BitsTestVector2() {
         "b53579e505298971246f8253a21062e0a97ab45a1612d2502d1db714b1511fbb";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor4096BitParameters2(*parameters, absl::nullopt)),
+            PrivateKeyFor4096BitParameters2(*parameters, std::nullopt)),
         HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -930,7 +930,7 @@ const SignatureTestVector& CreateTestVector5() {
         "cea2af569d1fb51a8332f4b526ba214b0b8d10d562ba2dccb0267c85098d8ff1";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
+            PrivateKeyFor2048BitParameters(*parameters, std::nullopt)),
         HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
   }());
   return *test_vector;
@@ -950,7 +950,7 @@ const SignatureTestVector& Create2048BitsTestVector() {
     ABSL_CHECK_OK(parameters.status());
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
-            PrivateKeyFor2048BitParameters2(*parameters, absl::nullopt)),
+            PrivateKeyFor2048BitParameters2(*parameters, std::nullopt)),
         HexDecodeOrDie("aa"), HexDecodeOrDie("aa"));
   }());
   return *test_vector;

@@ -83,7 +83,8 @@ MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
   CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
            public_key_bytes.size());
   auto public_key = std::make_unique<MLKEM768_public_key>();
-  if (!MLKEM768_parse_public_key(public_key.get(), &cbs)) {
+  if (!MLKEM768_parse_public_key(public_key.get(), &cbs) ||
+      CBS_len(&cbs) != 0) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Invalid ML-KEM public key");
   }

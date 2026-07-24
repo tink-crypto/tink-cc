@@ -23,10 +23,11 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
+#include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/util/statusor.h"
-#include "tink/keyset_handle.h"
 #include "proto/common.pb.h"
 #include "proto/tink.pb.h"
 
@@ -34,20 +35,33 @@ namespace crypto {
 namespace tink {
 
 // Type of key.
-enum PemKeyType { PEM_RSA, PEM_EC, PEM_ML_DSA };
+enum ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    PemKeyType {
+      PEM_RSA,
+      PEM_EC,
+      PEM_ML_DSA
+    };
 
 // Algorithm to use with this key.
-enum PemAlgorithm {
-  RSASSA_PSS,
-  RSASSA_PKCS1,
-  ECDSA_IEEE,  // NIST curve (P256, P384, P521) with IEEE_P1363 encoding
-  ECDSA_DER,   // NIST curve (P256, P384, P521) with DER encoding
-  ED25519,
-  ML_DSA,
-};
+enum ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    PemAlgorithm {
+      RSASSA_PSS,
+      RSASSA_PKCS1,
+      ECDSA_IEEE,  // NIST curve (P256, P384, P521) with IEEE_P1363 encoding
+      ECDSA_DER,   // NIST curve (P256, P384, P521) with DER encoding
+      ED25519,
+      ML_DSA,
+    };
 
 // Common set of parameters for the PEM key.
-struct PemKeyParams {
+struct ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    PemKeyParams {
   PemKeyType key_type;
   PemAlgorithm algorithm;
   size_t key_size_in_bits;
@@ -62,25 +76,36 @@ struct PemKeyParams {
 
 // Pre-defined parameters for ML-DSA-44 keys.
 // Key size is 1312 * 8 = 10496 bits.
+ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
 constexpr PemKeyParams kPemParamsMlDsa44 = {
     PemKeyType::PEM_ML_DSA, PemAlgorithm::ML_DSA, 10496,
     google::crypto::tink::HashType::UNKNOWN_HASH};
 
 // Pre-defined parameters for ML-DSA-65 keys.
 // Key size is 1952 * 8 = 15616 bits.
+ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
 constexpr PemKeyParams kPemParamsMlDsa65 = {
     PemKeyType::PEM_ML_DSA, PemAlgorithm::ML_DSA, 15616,
     google::crypto::tink::HashType::UNKNOWN_HASH};
 
 // Pre-defined parameters for ML-DSA-87 keys.
 // Key size is 2592 * 8 = 20736 bits.
+ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
 constexpr PemKeyParams kPemParamsMlDsa87 = {
     PemKeyType::PEM_ML_DSA, PemAlgorithm::ML_DSA, 20736,
     google::crypto::tink::HashType::UNKNOWN_HASH};
 
 // A PEM key consists of its serialized data `serialized_key`, and parameters
 // `parameters`.
-struct PemKey {
+struct ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.") PemKey {
   std::string serialized_key;
   PemKeyParams parameters;
 };
@@ -91,7 +116,10 @@ struct PemKey {
 // "id-RSASSA-PSS", "sha256WithRSAEncryption",
 // "sha384WithRSAEncryption" and "sha512WithRSAEncryption" are not supported.
 // See RFC 4055 Section 1.2 and Section 5 for a discussion of these OIDs.
-class SignaturePemKeysetReader : public KeysetReader {
+class ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    SignaturePemKeysetReader : public KeysetReader {
  public:
   absl::StatusOr<std::unique_ptr<::google::crypto::tink::EncryptedKeyset>>
   ReadEncrypted() override;
@@ -128,7 +156,10 @@ class SignaturePemKeysetReader : public KeysetReader {
 //
 // auto keyset_handle_statusor =
 //     CleartextKeysetHandle::Read(*reader_statusor);
-class SignaturePemKeysetReaderBuilder {
+class ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    SignaturePemKeysetReaderBuilder {
  public:
   // Type of reader to build. The builder type depends on the primitive
   // supported by the keys to parse.
@@ -155,7 +186,10 @@ class SignaturePemKeysetReaderBuilder {
 };
 
 // Keyset reader for PEM keys that support the PublicKeySign principal.
-class PublicKeySignPemKeysetReader : public SignaturePemKeysetReader {
+class ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    PublicKeySignPemKeysetReader : public SignaturePemKeysetReader {
  public:
   absl::StatusOr<std::unique_ptr<::google::crypto::tink::Keyset>> Read()
       override;
@@ -170,7 +204,10 @@ class PublicKeySignPemKeysetReader : public SignaturePemKeysetReader {
 };
 
 // Keyset reader for PEM keys that support the PublicKeyVerify principal.
-class PublicKeyVerifyPemKeysetReader : public SignaturePemKeysetReader {
+class ABSL_DEPRECATED(
+    "Use the new PEM-to-key API in "
+    "tink/pem/signature_key_parser.h instead.")
+    PublicKeyVerifyPemKeysetReader : public SignaturePemKeysetReader {
  public:
   absl::StatusOr<std::unique_ptr<::google::crypto::tink::Keyset>> Read()
       override;

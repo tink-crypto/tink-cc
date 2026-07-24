@@ -407,6 +407,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
+    absl::core_headers
     absl::memory
     absl::status
     absl::statusor

@@ -163,6 +163,20 @@ GenerateRsa4096Pkcs1PrivateKey() {
   return CreateRsaSsaPkcs1Key(*parameters, /*id_requirement=*/std::nullopt);
 }
 
+absl::StatusOr<MlDsaPrivateKey> GenerateMlDsa44PrivateKey() {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa44, MlDsaParameters::Variant::kNoPrefix);
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> key =
+      CreateMlDsaKey(*parameters, /*id_requirement=*/std::nullopt);
+  if (!key.ok()) {
+    return key.status();
+  }
+  return MlDsaPrivateKey(**key);
+}
+
 absl::StatusOr<MlDsaPrivateKey> GenerateMlDsa65PrivateKey() {
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
@@ -194,6 +208,8 @@ absl::StatusOr<MlDsaPrivateKey> GenerateMlDsa87PrivateKey() {
 absl::StatusOr<MlDsaPrivateKey> GenerateMlDsaPrivateKey(
     CompositeMlDsaParameters::MlDsaInstance instance) {
   switch (instance) {
+    case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44:
+      return GenerateMlDsa44PrivateKey();
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65:
       return GenerateMlDsa65PrivateKey();
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa87:

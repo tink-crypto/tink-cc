@@ -24,6 +24,8 @@ namespace {
 
 TEST(CompositeMlDsaTestUtilTest, GenerateMlDsaPrivateKeyForTestRuns) {
   (void)crypto::tink::internal::GenerateMlDsaPrivateKeyForTestOrDie(
+      crypto::tink::CompositeMlDsaParameters::MlDsaInstance::kMlDsa44);
+  (void)crypto::tink::internal::GenerateMlDsaPrivateKeyForTestOrDie(
       crypto::tink::CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
 }
 

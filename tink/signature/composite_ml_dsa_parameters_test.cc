@@ -49,15 +49,32 @@ using CompositeMlDsaParametersTest = TestWithParam<VariantTestCase>;
 INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaParametersTestSuite, CompositeMlDsaParametersTest,
     Values(
+        VariantTestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                        CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+                        CompositeMlDsaParameters::Variant::kTink,
+                        /*has_id_requirement=*/true},
+        VariantTestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                        CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+                        CompositeMlDsaParameters::Variant::kNoPrefix,
+                        /*has_id_requirement=*/false},
+        VariantTestCase{
+            CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+            CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+            CompositeMlDsaParameters::Variant::kNoPrefix,
+            /*has_id_requirement=*/false},
+        VariantTestCase{
+            CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+            CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+            CompositeMlDsaParameters::Variant::kTink,
+            /*has_id_requirement=*/true},
         VariantTestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                         CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                         CompositeMlDsaParameters::Variant::kTink,
                         /*has_id_requirement=*/true},
-        VariantTestCase{
-            CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-            CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-            CompositeMlDsaParameters::Variant::kNoPrefix,
-            /*has_id_requirement=*/false},
+        VariantTestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+                        CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+                        CompositeMlDsaParameters::Variant::kNoPrefix,
+                        /*has_id_requirement=*/false},
         VariantTestCase{
             CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
             CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
@@ -334,18 +351,24 @@ TEST(CompositeMlDsaParametersTest, DifferentMlDsaInstanceNotEqual) {
 TEST_P(CompositeMlDsaParametersTest, DifferentClassicalAlgorithmNotEqual) {
   VariantTestCase test_case = GetParam();
 
+  CompositeMlDsaParameters::ClassicalAlgorithm alg1 =
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519;
+  CompositeMlDsaParameters::ClassicalAlgorithm alg2 =
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256;
+  if (test_case.ml_dsa_instance !=
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa44) {
+    alg1 = CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss;
+    alg2 = CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss;
+  }
+
   absl::StatusOr<CompositeMlDsaParameters> parameter =
-      CompositeMlDsaParameters::Create(
-          test_case.ml_dsa_instance,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
-          test_case.variant);
+      CompositeMlDsaParameters::Create(test_case.ml_dsa_instance, alg1,
+                                       test_case.variant);
   ASSERT_THAT(parameter, IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> other_parameter =
-      CompositeMlDsaParameters::Create(
-          test_case.ml_dsa_instance,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
-          test_case.variant);
+      CompositeMlDsaParameters::Create(test_case.ml_dsa_instance, alg2,
+                                       test_case.variant);
   ASSERT_THAT(other_parameter, IsOk());
 
   EXPECT_TRUE(*parameter != *other_parameter);

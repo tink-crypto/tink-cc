@@ -172,6 +172,9 @@ absl::Status CompositeMlDsaVerify::Verify(absl::string_view signature,
                                           absl::string_view data) const {
   size_t ml_dsa_signature_size = 0;
   switch (public_key_.GetParameters().GetMlDsaInstance()) {
+    case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44:
+      ml_dsa_signature_size = MLDSA44_SIGNATURE_BYTES;
+      break;
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65:
       ml_dsa_signature_size = MLDSA65_SIGNATURE_BYTES;
       break;

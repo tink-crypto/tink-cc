@@ -55,7 +55,11 @@ const T* CreateNewForInstance(const absl::StatusOr<T>& instance) {
 absl::flat_hash_map<CompositeMlDsaParameters::MlDsaInstance,
                     const SignatureParameters*>
 CreateMlDsaInstanceMap() {
-  return {{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+  return {{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+           CreateNewForInstance(
+               MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
+                                       MlDsaParameters::Variant::kNoPrefix))},
+          {CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
            CreateNewForInstance(
                MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
                                        MlDsaParameters::Variant::kNoPrefix))},

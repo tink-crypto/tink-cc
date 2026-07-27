@@ -66,6 +66,10 @@ using CompositeMlDsaVerifyBoringSslTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaVerifyTestSuite, CompositeMlDsaVerifyBoringSslTest,
     Values(
+        TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                 CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519},
+        TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                 CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256},
         TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                  CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519},
         TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,

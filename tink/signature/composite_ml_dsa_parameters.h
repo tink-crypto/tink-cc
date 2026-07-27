@@ -38,11 +38,11 @@ class CompositeMlDsaParameters : public SignatureParameters {
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
 
-  // Description of the ML-DSA instance. Only ML-DSA-65 and ML-DSA-87 are
-  // supported at the moment.
+  // Description of the ML-DSA instance.
   enum class MlDsaInstance : int {
     kMlDsa65 = 1,
     kMlDsa87 = 2,
+    kMlDsa44 = 3,
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
 

@@ -93,7 +93,25 @@ using CompositeMlDsaProtoSerializationTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaProtoSerializationTestSuite,
     CompositeMlDsaProtoSerializationTest,
-    Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+    Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                    CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+                    CompositeMlDsaParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+           TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                    CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+                    CompositeMlDsaParameters::Variant::kTink,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                    CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+                    CompositeMlDsaParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+           TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+                    CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+                    CompositeMlDsaParameters::Variant::kTink,
+                    OutputPrefixTypeTP::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw, std::nullopt, ""},
@@ -196,6 +214,8 @@ INSTANTIATE_TEST_SUITE_P(
 MlDsaInstance ToProtoInstance(
     CompositeMlDsaParameters::MlDsaInstance instance) {
   switch (instance) {
+    case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44:
+      return MlDsaInstance::ML_DSA_44;
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65:
       return MlDsaInstance::ML_DSA_65;
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa87:
@@ -512,7 +532,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
     // Out of range instance - too large.
     CompositeMlDsaKeyFormat key_format_proto;
     CompositeMlDsaParams& params = *key_format_proto.mutable_params();
-    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(3));
+    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(4));
     params.set_classical_algorithm(
         CompositeMlDsaClassicalAlgorithm::CLASSICAL_ALGORITHM_ED25519);
 

@@ -97,12 +97,13 @@ absl::StatusOr<SerializationRegistry*> GetSerializationRegistry() {
   return &registry->value();
 }
 
-bool MlDsaInstanceEnumTPValid(int c) { return c >= 0 && c <= 2; }
+bool MlDsaInstanceEnumTPValid(int c) { return c >= 0 && c <= 3; }
 
 enum class MlDsaInstanceEnumTP : uint32_t {
   kUnknownInstance = 0,
   kMlDsa65,
   kMlDsa87,
+  kMlDsa44,
 };
 
 bool CompositeMlDsaClassicalAlgorithmEnumTPValid(int c) {
@@ -301,6 +302,8 @@ absl::StatusOr<CompositeMlDsaParameters::MlDsaInstance> ToMlDsaInstance(
       return CompositeMlDsaParameters::MlDsaInstance::kMlDsa65;
     case MlDsaInstanceEnumTP::kMlDsa87:
       return CompositeMlDsaParameters::MlDsaInstance::kMlDsa87;
+    case MlDsaInstanceEnumTP::kMlDsa44:
+      return CompositeMlDsaParameters::MlDsaInstance::kMlDsa44;
     default:
       return absl::InvalidArgumentError(
           "Could not determine CompositeMlDsaParameters::MlDsaInstance");
@@ -314,6 +317,8 @@ absl::StatusOr<MlDsaInstanceEnumTP> ToProtoMlDsaInstance(
       return MlDsaInstanceEnumTP::kMlDsa65;
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa87:
       return MlDsaInstanceEnumTP::kMlDsa87;
+    case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44:
+      return MlDsaInstanceEnumTP::kMlDsa44;
     default:
       return absl::InvalidArgumentError(
           "Could not determine CompositeMlDsaParameters::MlDsaInstance");

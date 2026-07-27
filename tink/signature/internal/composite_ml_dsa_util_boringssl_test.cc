@@ -36,17 +36,45 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Eq;
 
 TEST(CompositeMlDsaUtilBoringSslTest, GetCompositeMlDsaLabelWorks) {
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters, IsOk());
+  {
+    absl::StatusOr<CompositeMlDsaParameters> parameters =
+        CompositeMlDsaParameters::Create(
+            CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+            CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+            CompositeMlDsaParameters::Variant::kNoPrefix);
+    ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<std::string> label = GetCompositeMlDsaLabel(*parameters);
-  ASSERT_THAT(label, IsOk());
+    absl::StatusOr<std::string> label = GetCompositeMlDsaLabel(*parameters);
+    ASSERT_THAT(label, IsOk());
 
-  EXPECT_THAT(*label, Eq("COMPSIG-MLDSA65-Ed25519-SHA512"));
+    EXPECT_THAT(*label, Eq("COMPSIG-MLDSA44-Ed25519-SHA512"));
+  }
+  {
+    absl::StatusOr<CompositeMlDsaParameters> parameters =
+        CompositeMlDsaParameters::Create(
+            CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+            CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+            CompositeMlDsaParameters::Variant::kNoPrefix);
+    ASSERT_THAT(parameters, IsOk());
+
+    absl::StatusOr<std::string> label = GetCompositeMlDsaLabel(*parameters);
+    ASSERT_THAT(label, IsOk());
+
+    EXPECT_THAT(*label, Eq("COMPSIG-MLDSA44-ECDSA-P256-SHA256"));
+  }
+  {
+    absl::StatusOr<CompositeMlDsaParameters> parameters =
+        CompositeMlDsaParameters::Create(
+            CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+            CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+            CompositeMlDsaParameters::Variant::kNoPrefix);
+    ASSERT_THAT(parameters, IsOk());
+
+    absl::StatusOr<std::string> label = GetCompositeMlDsaLabel(*parameters);
+    ASSERT_THAT(label, IsOk());
+
+    EXPECT_THAT(*label, Eq("COMPSIG-MLDSA65-Ed25519-SHA512"));
+  }
 }
 
 TEST(CompositeMlDsaUtilBoringSslTest, ComputeCompositeMlDsaMessagePrimeWorks) {

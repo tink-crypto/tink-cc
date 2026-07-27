@@ -28,6 +28,8 @@ absl::StatusOr<CompositeMlDsaParameters> CompositeMlDsaParameters::Create(
     Variant variant) {
   // We support the following combinations:
   //
+  // MLDSA44-Ed25519-SHA512
+  // MLDSA44-ECDSA-P256-SHA256
   // MLDSA65-RSA3072-PSS-SHA512
   // MLDSA65-RSA3072-PKCS15-SHA512
   // MLDSA65-RSA4096-PSS-SHA512
@@ -40,6 +42,16 @@ absl::StatusOr<CompositeMlDsaParameters> CompositeMlDsaParameters::Create(
   // MLDSA87-RSA3072-PSS-SHA512
   // MLDSA87-RSA4096-PSS-SHA512
   switch (ml_dsa_instance) {
+    case MlDsaInstance::kMlDsa44:
+      switch (classical_algorithm) {
+        case ClassicalAlgorithm::kEd25519:
+        case ClassicalAlgorithm::kEcdsaP256:
+          break;
+        default:
+          return absl::Status(absl::StatusCode::kInvalidArgument,
+                              "Unsupported classical algorithm for ML-DSA-44.");
+      }
+      break;
     case MlDsaInstance::kMlDsa65:
       switch (classical_algorithm) {
         case ClassicalAlgorithm::kEd25519:

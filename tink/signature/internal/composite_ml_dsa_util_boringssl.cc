@@ -20,6 +20,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/sha.h"
@@ -34,6 +35,9 @@ absl::StatusOr<std::string> GetCompositeMlDsaLabel(
     const CompositeMlDsaParameters& parameters) {
   std::string label = "COMPSIG-";
   switch (parameters.GetMlDsaInstance()) {
+    case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44:
+      absl::StrAppend(&label, "MLDSA44");
+      break;
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65:
       absl::StrAppend(&label, "MLDSA65");
       break;
@@ -73,8 +77,14 @@ absl::StatusOr<std::string> GetCompositeMlDsaLabel(
       return absl::InvalidArgumentError(
           "Classical algorithm is not supported.");
   }
-  // All of the currently supported classical algorithms use SHA512 as pre-hash.
-  absl::StrAppend(&label, "-SHA512");
+  if (parameters.GetMlDsaInstance() ==
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa44 &&
+      parameters.GetClassicalAlgorithm() ==
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256) {
+    absl::StrAppend(&label, "-SHA256");
+  } else {
+    absl::StrAppend(&label, "-SHA512");
+  }
   return label;
 }
 
@@ -83,9 +93,17 @@ std::string ComputeCompositeMlDsaMessagePrime(absl::string_view label,
   // M' = Prefix || Label || len(ctx) || ctx || PH( M )
   const absl::string_view kPrefix = "CompositeAlgorithmSignatures2025";
   std::string prehash;
-  subtle::ResizeStringUninitialized(&prehash, SHA512_DIGEST_LENGTH);
-  SHA512(reinterpret_cast<const unsigned char*>(message.data()), message.size(),
-         reinterpret_cast<unsigned char*>(prehash.data()));
+  if (absl::EndsWith(label, "SHA256")) {
+    subtle::ResizeStringUninitialized(&prehash, SHA256_DIGEST_LENGTH);
+    SHA256(reinterpret_cast<const unsigned char*>(message.data()),
+           message.size(), reinterpret_cast<unsigned char*>(prehash.data()));
+  } else {
+    // With the exception of `MLDSA44-ECDSA-P256-SHA256`, the other supported
+    // classical algorithms use `SHA512` as the pre-hash.
+    subtle::ResizeStringUninitialized(&prehash, SHA512_DIGEST_LENGTH);
+    SHA512(reinterpret_cast<const unsigned char*>(message.data()),
+           message.size(), reinterpret_cast<unsigned char*>(prehash.data()));
+  }
   // Here len(ctx) is a single byte containing the length of the context.
   // Since we use an empty context, we set it to '\x00'.
   return absl::StrCat(kPrefix, label, absl::string_view("\x00", 1), prehash);

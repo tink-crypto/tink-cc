@@ -6,6 +6,28 @@ package(default_visibility = ["//:__subpackages__"])
 licenses(["notice"])
 
 cc_library(
+    name = "prehash",
+    srcs = ["prehash.cc"],
+    hdrs = ["prehash.h"],
+    include_prefix = "tink/signature",
+    deps = [
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "sign_prehash",
+    srcs = ["sign_prehash.cc"],
+    hdrs = ["sign_prehash.h"],
+    include_prefix = "tink/signature",
+    deps = [
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+cc_library(
     name = "public_key_verify_wrapper",
     srcs = ["public_key_verify_wrapper.cc"],
     hdrs = ["public_key_verify_wrapper.h"],

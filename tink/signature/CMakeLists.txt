@@ -4,6 +4,26 @@ add_subdirectory(internal)
 add_subdirectory(subtle)
 
 tink_cc_library(
+  NAME prehash
+  SRCS
+    prehash.cc
+    prehash.h
+  DEPS
+    absl::statusor
+    absl::strings
+)
+
+tink_cc_library(
+  NAME sign_prehash
+  SRCS
+    sign_prehash.cc
+    sign_prehash.h
+  DEPS
+    absl::statusor
+    absl::strings
+)
+
+tink_cc_library(
   NAME public_key_verify_wrapper
   SRCS
     public_key_verify_wrapper.cc

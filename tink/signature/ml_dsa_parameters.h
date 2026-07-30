@@ -40,6 +40,8 @@ class MlDsaParameters : public SignatureParameters {
     kTink = 1,
     // Does not prepend any prefix (i.e., keys must have no ID requirement).
     kNoPrefix = 2,
+    // Does not prepend any prefix (i.e., keys must have no ID requirement).
+    kNoPrefixWithPrehashId = 3,
     // Added to guard from failures that may be caused by future expansions.
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
@@ -67,7 +69,9 @@ class MlDsaParameters : public SignatureParameters {
   Instance GetInstance() const { return instance_; }
   Variant GetVariant() const { return variant_; }
 
-  bool HasIdRequirement() const override { return variant_ == Variant::kTink; }
+  bool HasIdRequirement() const override {
+    return variant_ != Variant::kNoPrefix;
+  }
 
   bool operator==(const Parameters& other) const override;
 

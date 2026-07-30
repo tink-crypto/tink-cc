@@ -33,7 +33,8 @@ absl::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
         "ML-DSA-87 keys are currently supported.");
   }
 
-  if (variant != Variant::kTink && variant != Variant::kNoPrefix) {
+  if (variant != Variant::kTink && variant != Variant::kNoPrefix &&
+      variant != Variant::kNoPrefixWithPrehashId) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create ML-DSA parameters with unknown Variant.");

@@ -41,6 +41,7 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
     const MlDsaParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case MlDsaParameters::Variant::kNoPrefix:
+    case MlDsaParameters::Variant::kNoPrefixWithPrehashId:
       return std::string("");  // Empty prefix.
     case MlDsaParameters::Variant::kTink:
       if (!id_requirement.has_value()) {

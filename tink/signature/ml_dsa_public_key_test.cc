@@ -63,6 +63,9 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{MlDsaParameters::Instance::kMlDsa44,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa44,
+                    MlDsaParameters::Variant::kNoPrefixWithPrehashId,
+                    0x02040608, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
@@ -71,6 +74,9 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kNoPrefixWithPrehashId,
+                    0x02040608, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
@@ -78,7 +84,10 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kTink, 0x03050709,
                     std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kNoPrefixWithPrehashId,
+                    0x02040608, ""}));
 
 using MlDsaPublicKeyTest = TestWithParam<TestCase>;
 

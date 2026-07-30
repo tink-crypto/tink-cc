@@ -1629,3 +1629,45 @@ tink_cc_test(
     crypto
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME ml_dsa_prehash_boringssl
+  SRCS
+    ml_dsa_prehash_boringssl.cc
+    ml_dsa_prehash_boringssl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+    crypto
+    tink::core::partial_key_access
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    tink::signature::prehash
+)
+
+tink_cc_test(
+  NAME ml_dsa_prehash_boringssl_test
+  SRCS
+    ml_dsa_prehash_boringssl_test.cc
+  DEPS
+    tink::signature::internal::ml_dsa_key_creator
+    tink::signature::internal::ml_dsa_prehash_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::prehash
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

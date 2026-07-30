@@ -1617,3 +1617,44 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ml_dsa_prehash_boringssl",
+    srcs = ["ml_dsa_prehash_boringssl.cc"],
+    hdrs = ["ml_dsa_prehash_boringssl.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink:partial_key_access",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_public_key",
+        "//tink/signature:prehash",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_prehash_boringssl_test",
+    srcs = ["ml_dsa_prehash_boringssl_test.cc"],
+    deps = [
+        ":ml_dsa_key_creator",
+        ":ml_dsa_prehash_boringssl",
+        "//tink:partial_key_access",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature:ml_dsa_public_key",
+        "//tink/signature:prehash",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:optional",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)

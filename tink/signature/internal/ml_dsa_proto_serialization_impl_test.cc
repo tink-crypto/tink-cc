@@ -85,6 +85,9 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{MlDsaParameters::Instance::kMlDsa44,
                     MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa44,
+                    MlDsaParameters::Variant::kNoPrefixWithPrehashId,
+                    OutputPrefixTypeTP::kWithIdRequirement, 0x02040608, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
@@ -94,6 +97,9 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kNoPrefix,
                     OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kNoPrefixWithPrehashId,
+                    OutputPrefixTypeTP::kWithIdRequirement, 0x02040608, ""},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kTink, OutputPrefixTypeTP::kTink,
                     0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
@@ -102,7 +108,10 @@ INSTANTIATE_TEST_SUITE_P(
                     0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""}));
+                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kNoPrefixWithPrehashId,
+                    OutputPrefixTypeTP::kWithIdRequirement, 0x02040608, ""}));
 
 MlDsaPrivateKey GenerateMlDsaPrivateKey(MlDsaParameters::Instance instance,
                                         MlDsaParameters::Variant variant,

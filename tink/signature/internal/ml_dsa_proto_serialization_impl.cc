@@ -189,6 +189,8 @@ absl::StatusOr<MlDsaParameters::Variant> ToVariant(
       return MlDsaParameters::Variant::kNoPrefix;
     case OutputPrefixTypeTP::kTink:
       return MlDsaParameters::Variant::kTink;
+    case OutputPrefixTypeTP::kWithIdRequirement:
+      return MlDsaParameters::Variant::kNoPrefixWithPrehashId;
     default:
       return absl::InvalidArgumentError(
           "Could not determine MlDsaParameters::Variant");
@@ -202,6 +204,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
       return OutputPrefixTypeTP::kRaw;
     case MlDsaParameters::Variant::kTink:
       return OutputPrefixTypeTP::kTink;
+    case MlDsaParameters::Variant::kNoPrefixWithPrehashId:
+      return OutputPrefixTypeTP::kWithIdRequirement;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");

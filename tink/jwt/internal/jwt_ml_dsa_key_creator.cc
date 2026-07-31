@@ -31,6 +31,7 @@
 // OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
 // "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
 #include "openssl/crypto.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
 #endif
@@ -51,8 +52,7 @@ namespace {
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> BuildJwtMlDsaKey(
     const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement,
-    absl::string_view public_key_bytes,
-    const SecretData& private_key_seed_bytes) {
+    absl::string_view public_key_bytes, SecretData private_key_seed_bytes) {
   JwtMlDsaPublicKey::Builder builder = JwtMlDsaPublicKey::Builder()
                                            .SetParameters(parameters)
                                            .SetPublicKeyBytes(public_key_bytes);
@@ -67,7 +67,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> BuildJwtMlDsaKey(
 
   absl::StatusOr<JwtMlDsaPrivateKey> key = JwtMlDsaPrivateKey::Create(
       *public_key,
-      RestrictedData(private_key_seed_bytes,
+      RestrictedData(std::move(private_key_seed_bytes),
                      GetInsecureSecretKeyAccessInternal()),
       GetPartialKeyAccess());
   if (!key.ok()) {
@@ -87,8 +87,11 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa44Key(
   internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto private_key = util::MakeSecretUniquePtr<MLDSA44_private_key>();
 
-  if (!MLDSA44_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                            private_seed_bytes.data(), private_key.get())) {
+  if (!crypto::tink::internal::CallWithCoreDumpProtection([&] {
+        return MLDSA44_generate_key(
+                   reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                   private_seed_bytes.data(), private_key.get()) == 1;
+      })) {
     return absl::InternalError("Failed to generate ML-DSA-44 key");
   }
 
@@ -96,7 +99,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa44Key(
       util::internal::AsSecretData(std::move(private_seed_bytes));
 
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
-                          secret_data);
+                          std::move(secret_data));
 }
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa65Key(
@@ -109,8 +112,11 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa65Key(
   internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
-  if (!MLDSA65_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                            private_seed_bytes.data(), private_key.get())) {
+  if (!crypto::tink::internal::CallWithCoreDumpProtection([&] {
+        return MLDSA65_generate_key(
+                   reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                   private_seed_bytes.data(), private_key.get()) == 1;
+      })) {
     return absl::InternalError("Failed to generate ML-DSA-65 key");
   }
 
@@ -118,7 +124,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa65Key(
       util::internal::AsSecretData(std::move(private_seed_bytes));
 
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
-                          secret_data);
+                          std::move(secret_data));
 }
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
@@ -130,8 +136,11 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
   std::string public_key_bytes(MLDSA87_PUBLIC_KEY_BYTES, '\0');
   internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto private_key = util::MakeSecretUniquePtr<MLDSA87_private_key>();
-  if (!MLDSA87_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                            private_seed_bytes.data(), private_key.get())) {
+  if (!crypto::tink::internal::CallWithCoreDumpProtection([&] {
+        return MLDSA87_generate_key(
+                   reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                   private_seed_bytes.data(), private_key.get()) == 1;
+      })) {
     return absl::InternalError("Failed to generate ML-DSA-87 key");
   }
 
@@ -139,7 +148,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
       util::internal::AsSecretData(std::move(private_seed_bytes));
 
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
-                          secret_data);
+                          std::move(secret_data));
 }
 #endif  // OPENSSL_IS_BORINGSSL
 

@@ -1595,6 +1595,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
+    tink::internal::call_with_core_dump_protection
     tink::internal::internal_insecure_secret_key_access
     tink::internal::secret_buffer
     tink::jwt::jwt_ml_dsa_parameters

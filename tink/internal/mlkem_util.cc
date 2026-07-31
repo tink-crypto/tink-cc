@@ -84,12 +84,14 @@ absl::StatusOr<MlKemKey> MlKem768KeyFromPrivateKey(
   subtle::ResizeStringUninitialized(&key.public_key, kMlKem768KeyPubKeySize);
   absl::Status status = CallWithCoreDumpProtection([&]() {
     auto bssl_private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
-    if (!MLKEM768_private_key_from_seed(
-            bssl_private_key.get(),
-            reinterpret_cast<const uint8_t*>(private_key.data()),
-            private_key.size())) {
+    if (!CallWithCoreDumpProtection([&]() {
+          return MLKEM768_private_key_from_seed(
+              bssl_private_key.get(),
+              reinterpret_cast<const uint8_t*>(private_key.data()),
+              private_key.size());
+        })) {
       return absl::Status(absl::StatusCode::kInternal,
-                          "Failed to expand ML-KEM-768 private key from seed.");
+                          "Failed to expand ML-KEM private key from seed.");
     }
 
     auto bssl_public_key = std::make_unique<MLKEM768_public_key>();

@@ -17,6 +17,7 @@ cc_library(
         "//tink/experimental/pqcrypto/kem:ml_kem_parameters",
         "//tink/experimental/pqcrypto/kem:ml_kem_private_key",
         "//tink/experimental/pqcrypto/kem:ml_kem_public_key",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:fips_utils",
         "//tink/kem/internal:raw_kem_decapsulate",
         "//tink/util:secret_data",

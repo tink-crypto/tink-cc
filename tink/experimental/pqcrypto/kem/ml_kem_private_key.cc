@@ -40,6 +40,8 @@
 namespace crypto {
 namespace tink {
 
+using ::crypto::tink::internal::CallWithCoreDumpProtection;
+
 absl::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
     const MlKemPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
@@ -60,12 +62,14 @@ absl::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
   absl::string_view private_seed_view =
       private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get());
   auto bssl_private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
-  if (!MLKEM768_private_key_from_seed(
-          bssl_private_key.get(),
-          reinterpret_cast<const uint8_t*>(private_seed_view.data()),
-          private_seed_view.size())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to create ML-KEM private key from seed.");
+  if (!CallWithCoreDumpProtection([&]() {
+        return MLKEM768_private_key_from_seed(
+            bssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(private_seed_view.data()),
+            private_seed_view.size());
+      })) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Failed to expand ML-KEM private key from seed.");
   }
 
   auto bssl_public_key = std::make_unique<MLKEM768_public_key>();

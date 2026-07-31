@@ -30,6 +30,7 @@
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/kem/internal/raw_kem_decapsulate.h"
 #include "tink/partial_key_access.h"
@@ -42,6 +43,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
+
+using ::crypto::tink::internal::CallWithCoreDumpProtection;
 
 class MlKemRawDecapsulateBoringSsl : public RawKemDecapsulate {
  public:
@@ -82,10 +85,12 @@ MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
 
   auto boringssl_private_key =
       util::MakeSecretUniquePtr<MLKEM768_private_key>();
-  if (!MLKEM768_private_key_from_seed(
-          boringssl_private_key.get(),
-          reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
-          private_seed_bytes.size())) {
+  if (!CallWithCoreDumpProtection([&]() {
+        return MLKEM768_private_key_from_seed(
+            boringssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
+            private_seed_bytes.size());
+      })) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Failed to expand ML-KEM private key from seed.");
   }
@@ -110,10 +115,12 @@ absl::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
   }
 
   internal::SecretBuffer shared_secret(MLKEM_SHARED_SECRET_BYTES);
-  MLKEM768_decap(
-      shared_secret.data(),
-      reinterpret_cast<const uint8_t*>(&ciphertext[output_prefix_size]),
-      MLKEM768_CIPHERTEXT_BYTES, boringssl_private_key_.get());
+  CallWithCoreDumpProtection([&]() {
+    return MLKEM768_decap(
+        shared_secret.data(),
+        reinterpret_cast<const uint8_t*>(&ciphertext[output_prefix_size]),
+        MLKEM768_CIPHERTEXT_BYTES, boringssl_private_key_.get());
+  });
 
   return RestrictedData(util::internal::AsSecretData(shared_secret),
                         InsecureSecretKeyAccess::Get());

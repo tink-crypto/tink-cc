@@ -71,11 +71,14 @@ class SecretProto {
 
   SecretProto() = default;
 
-  SecretProto(const SecretProto& other) { *value_ = *other.value_; }
+  SecretProto(const SecretProto& other) { *this = other; }
 
   SecretProto(SecretProto&& other) noexcept { *this = std::move(other); }
 
-  explicit SecretProto(const T& value) { *value_ = value; }
+  explicit SecretProto(const T& value) {
+    crypto::tink::internal::CallWithCoreDumpProtection(
+        [&] { *value_ = value; });
+  }
 
   SecretProto& operator=(const SecretProto& other) {
     crypto::tink::internal::CallWithCoreDumpProtection([&] {

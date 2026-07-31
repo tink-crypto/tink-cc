@@ -1671,3 +1671,60 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME ml_dsa_sign_prehash_boringssl
+  SRCS
+    ml_dsa_sign_prehash_boringssl.cc
+    ml_dsa_sign_prehash_boringssl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::sign_prehash
+    tink::subtle::subtle_util
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME ml_dsa_sign_prehash_boringssl_test
+  SRCS
+    ml_dsa_sign_prehash_boringssl_test.cc
+  DATA
+    wycheproof::testvectors_v1
+  DEPS
+    tink::signature::internal::ml_dsa_key_creator
+    tink::signature::internal::ml_dsa_prehash_boringssl
+    tink::signature::internal::ml_dsa_sign_prehash_boringssl
+    tink::signature::internal::ml_dsa_verify_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::core::restricted_data
+    tink::internal::fips_utils
+    tink::internal::testing::wycheproof_util
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::prehash
+    tink::signature::sign_prehash
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

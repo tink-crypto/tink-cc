@@ -179,10 +179,12 @@ absl::StatusOr<std::string> HpkeContextBoringSsl::Open(
 absl::StatusOr<SecretData> HpkeContextBoringSsl::Export(
     absl::string_view exporter_context, int64_t secret_length) {
   internal::SecretBuffer secret(secret_length);
-  if (!EVP_HPKE_CTX_export(
-          context_.get(), secret.data(), secret_length,
-          reinterpret_cast<const uint8_t *>(exporter_context.data()),
-          exporter_context.size())) {
+  if (!CallWithCoreDumpProtection([&]() {
+        return EVP_HPKE_CTX_export(
+            context_.get(), secret.data(), secret_length,
+            reinterpret_cast<const uint8_t*>(exporter_context.data()),
+            exporter_context.size());
+      })) {
     return absl::Status(absl::StatusCode::kUnknown, "Unable to export secret.");
   }
   return util::internal::AsSecretData(std::move(secret));

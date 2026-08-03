@@ -267,3 +267,27 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME hkdf_prf_test_vectors
+  SRCS
+    hkdf_prf_test_vectors.cc
+    hkdf_prf_test_vectors.h
+  DEPS
+    absl::core_headers
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    tink::util::test_util
+  TESTONLY
+)

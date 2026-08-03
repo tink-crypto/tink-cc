@@ -160,6 +160,31 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "hkdf_prf_test_vectors",
+    testonly = 1,
+    srcs = ["hkdf_prf_test_vectors.cc"],
+    hdrs = ["hkdf_prf_test_vectors.h"],
+    include_prefix = "tink/prf/internal",
+    deps = [
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:partial_key_access",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink:secret_key_access_token",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(

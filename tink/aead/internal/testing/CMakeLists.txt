@@ -54,3 +54,31 @@ tink_cc_library(
   TESTONLY
 )
 
+tink_cc_library(
+  NAME aes_ctr_hmac_aead_test_vectors
+  SRCS
+    aes_ctr_hmac_aead_test_vectors.cc
+    aes_ctr_hmac_aead_test_vectors.h
+  DEPS
+    tink::aead::internal::testing::aead_test_vector
+    absl::absl_check
+    absl::no_destructor
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::subtle::aes_ctr_boringssl
+    tink::subtle::common_enums
+    tink::subtle::encrypt_then_authenticate
+    tink::subtle::hmac_boringssl
+    tink::util::secret_data
+    tink::util::test_util
+  TESTONLY
+)
+
+

@@ -20,19 +20,19 @@
 #include <vector>
 
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/ml_dsa_parameters.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
+namespace crypto::tink::internal {
 
-// Provides some test vectors for ML-DSA-65. Generated with the latest available
-// KAT code
-// (https://csrc.nist.gov/Projects/post-quantum-cryptography/post-quantum-cryptography-standardization/)
-// adjusted to the final standard.
-std::vector<SignatureTestVector> CreateMlDsaTestVectors();
+// Returns static test vectors for ML-DSA (ML-DSA-44, ML-DSA-65, and ML-DSA-87)
+// from NIST FIPS 204.
+const std::vector<SignatureTestVector>& CreateMlDsaTestVectors();
 
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+// Returns static test vector for ML-DSA for the given instance and variant from
+// NIST FIPS 204.
+const SignatureTestVector& GetMlDsaTestVector(
+    MlDsaParameters::Instance instance, MlDsaParameters::Variant variant);
+
+}  // namespace crypto::tink::internal
 
 #endif  // TINK_SIGNATURE_INTERNAL_TESTING_ML_DSA_TEST_VECTORS_H_

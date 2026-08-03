@@ -117,8 +117,10 @@ tink_cc_library(
     ml_dsa_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
+    absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
-    absl::memory
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::insecure_secret_key_access
@@ -127,7 +129,6 @@ tink_cc_library(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
   TAGS

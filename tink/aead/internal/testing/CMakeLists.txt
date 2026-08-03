@@ -31,3 +31,26 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME aes_eax_test_vectors
+  SRCS
+    aes_eax_test_vectors.cc
+    aes_eax_test_vectors.h
+  DEPS
+    tink::aead::internal::testing::aead_test_vector
+    absl::absl_check
+    absl::no_destructor
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aes_eax_key
+    tink::aead::aes_eax_parameters
+    tink::util::test_util
+  TESTONLY
+)
+

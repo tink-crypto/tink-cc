@@ -1636,6 +1636,7 @@ tink_cc_library(
     ml_dsa_prehash_boringssl.cc
     ml_dsa_prehash_boringssl.h
   DEPS
+    tink::signature::internal::prehash_format
     absl::status
     absl::statusor
     absl::string_view
@@ -1678,6 +1679,7 @@ tink_cc_library(
     ml_dsa_sign_prehash_boringssl.cc
     ml_dsa_sign_prehash_boringssl.h
   DEPS
+    tink::signature::internal::prehash_format
     absl::status
     absl::statusor
     absl::strings
@@ -1727,4 +1729,24 @@ tink_cc_test(
     tink::util::test_util
   TAGS
     exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME prehash_format
+  SRCS
+    prehash_format.cc
+    prehash_format.h
+  DEPS
+    tink::internal::endian
+)
+
+tink_cc_test(
+  NAME prehash_format_test
+  SRCS
+    prehash_format_test.cc
+  DEPS
+    tink::signature::internal::prehash_format
+    gmock
+    absl::strings
+    tink::util::test_util
 )

@@ -32,6 +32,7 @@
 #endif
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
+#include "tink/signature/internal/prehash_format.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/prehash.h"
@@ -42,16 +43,6 @@ namespace internal {
 namespace {
 
 #ifdef OPENSSL_IS_BORINGSSL
-
-std::string GetPrehashPrefix(uint32_t key_id) {
-  std::string prefix(5, '\0');
-  prefix[0] = static_cast<char>(0xff);
-  prefix[1] = static_cast<char>((key_id >> 24) & 0xff);
-  prefix[2] = static_cast<char>((key_id >> 16) & 0xff);
-  prefix[3] = static_cast<char>((key_id >> 8) & 0xff);
-  prefix[4] = static_cast<char>(key_id & 0xff);
-  return prefix;
-}
 
 class MlDsa44PrehashBoringSsl : public Prehash {
  public:

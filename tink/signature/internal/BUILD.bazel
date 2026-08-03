@@ -1624,6 +1624,7 @@ cc_library(
     hdrs = ["ml_dsa_prehash_boringssl.h"],
     include_prefix = "tink/signature/internal",
     deps = [
+        ":prehash_format",
         "//tink:partial_key_access",
         "//tink/internal:fips_utils",
         "//tink/signature:ml_dsa_parameters",
@@ -1665,6 +1666,7 @@ cc_library(
     hdrs = ["ml_dsa_sign_prehash_boringssl.h"],
     include_prefix = "tink/signature/internal",
     deps = [
+        ":prehash_format",
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
         "//tink/internal:call_with_core_dump_protection",
@@ -1710,6 +1712,25 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "prehash_format",
+    srcs = ["prehash_format.cc"],
+    hdrs = ["prehash_format.h"],
+    include_prefix = "tink/signature/internal",
+    deps = ["//tink/internal:endian"],
+)
+
+cc_test(
+    name = "prehash_format_test",
+    srcs = ["prehash_format_test.cc"],
+    deps = [
+        ":prehash_format",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],
 )

@@ -20,17 +20,21 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/status.h"
 #include "tink/aead.h"
+#include "tink/aead/internal/aead_util.h"
 #include "tink/aead/kms_envelope_aead.h"
 #include "tink/kms_client.h"
 #include "tink/kms_clients.h"
 #include "tink/util/statusor.h"
+#include "tink/util/validation.h"
 #include "proto/kms_envelope.pb.h"
 
 namespace crypto {
 namespace tink {
 
 using ::google::crypto::tink::KmsEnvelopeAeadKey;
+using ::google::crypto::tink::KmsEnvelopeAeadKeyFormat;
 
 absl::StatusOr<std::unique_ptr<Aead>>
 KmsEnvelopeAeadKeyManager::AeadFactory::Create(
@@ -42,6 +46,26 @@ KmsEnvelopeAeadKeyManager::AeadFactory::Create(
   if (!aead_result.ok()) return aead_result.status();
   return KmsEnvelopeAead::New(key.params().dek_template(),
                               std::move(aead_result.value()));
+}
+
+absl::Status KmsEnvelopeAeadKeyManager::ValidateKey(
+    const KmsEnvelopeAeadKey& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
+  if (!status.ok()) return status;
+  return ValidateKeyFormat(key.params());
+}
+
+absl::Status KmsEnvelopeAeadKeyManager::ValidateKeyFormat(
+    const KmsEnvelopeAeadKeyFormat& format) const {
+  if (format.kek_uri().empty()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing kek_uri.");
+  }
+  if (!internal::IsSupportedKmsEnvelopeAeadDekKeyType(
+          format.dek_template().type_url())) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "unsupported dek key type");
+  }
+  return absl::OkStatus();
 }
 
 }  // namespace tink

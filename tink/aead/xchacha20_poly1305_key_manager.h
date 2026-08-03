@@ -49,10 +49,7 @@ class XChaCha20Poly1305KeyManager
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
     absl::StatusOr<std::unique_ptr<Aead>> Create(
-        const google::crypto::tink::XChaCha20Poly1305Key& key) const override {
-      return subtle::XChacha20Poly1305BoringSsl::New(
-          util::SecretDataFromStringView(key.key_value()));
-    }
+        const google::crypto::tink::XChaCha20Poly1305Key& key) const override;
   };
 
   XChaCha20Poly1305KeyManager()

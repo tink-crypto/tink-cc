@@ -62,26 +62,11 @@ class KmsEnvelopeAeadKeyManager
   const std::string& get_key_type() const override { return key_type_; }
 
   absl::Status ValidateKey(
-      const google::crypto::tink::KmsEnvelopeAeadKey& key) const override {
-    absl::Status status = ValidateVersion(key.version(), get_version());
-    if (!status.ok()) return status;
-    return ValidateKeyFormat(key.params());
-  }
+      const google::crypto::tink::KmsEnvelopeAeadKey& key) const override;
 
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::KmsEnvelopeAeadKeyFormat& format)
-      const override {
-    if (format.kek_uri().empty()) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Missing kek_uri.");
-    }
-    if (!internal::IsSupportedKmsEnvelopeAeadDekKeyType(
-            format.dek_template().type_url())) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "unsupported dek key type");
-    }
-    return absl::OkStatus();
-  }
+      const override;
 
   absl::StatusOr<google::crypto::tink::KmsEnvelopeAeadKey> CreateKey(
       const google::crypto::tink::KmsEnvelopeAeadKeyFormat& key_format)

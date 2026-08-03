@@ -160,6 +160,7 @@ cc_library(
 
 cc_library(
     name = "aes_eax_key_manager",
+    srcs = ["aes_eax_key_manager.cc"],
     hdrs = ["aes_eax_key_manager.h"],
     include_prefix = "tink/aead",
     deps = [
@@ -168,6 +169,7 @@ cc_library(
         "//tink:aead",
         "//tink:core/key_type_manager",
         "//tink:core/template_util",
+        "//tink:key_manager",
         "//tink/subtle:aes_eax_boringssl",
         "//tink/subtle:random",
         "//tink/util:constants",
@@ -177,6 +179,7 @@ cc_library(
         "//tink/util:validation",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -214,6 +217,7 @@ cc_library(
 
 cc_library(
     name = "aes_gcm_siv_key_manager",
+    srcs = ["aes_gcm_siv_key_manager.cc"],
     hdrs = ["aes_gcm_siv_key_manager.h"],
     include_prefix = "tink/aead",
     deps = [
@@ -230,6 +234,7 @@ cc_library(
         "//tink/util:statusor",
         "//tink/util:validation",
         "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -273,6 +278,7 @@ cc_library(
 
 cc_library(
     name = "xchacha20_poly1305_key_manager",
+    srcs = ["xchacha20_poly1305_key_manager.cc"],
     hdrs = ["xchacha20_poly1305_key_manager.h"],
     include_prefix = "tink/aead",
     visibility = ["//visibility:public"],

@@ -76,6 +76,7 @@ tink_cc_library(
 tink_cc_library(
   NAME aes_cmac_key_manager
   SRCS
+    aes_cmac_key_manager.cc
     aes_cmac_key_manager.h
   DEPS
     absl::memory

@@ -84,6 +84,7 @@ cc_library(
 
 cc_library(
     name = "aes_cmac_key_manager",
+    srcs = ["aes_cmac_key_manager.cc"],
     hdrs = ["aes_cmac_key_manager.h"],
     include_prefix = "tink/mac",
     deps = [

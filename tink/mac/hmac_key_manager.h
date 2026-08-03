@@ -50,12 +50,7 @@ class HmacKeyManager
  public:
   class MacFactory : public PrimitiveFactory<Mac> {
     absl::StatusOr<std::unique_ptr<Mac>> Create(
-        const google::crypto::tink::HmacKey& hmac_key) const override {
-      return subtle::HmacBoringSsl::New(
-          util::Enums::ProtoToSubtle(hmac_key.params().hash()),
-          hmac_key.params().tag_size(),
-          util::SecretDataFromStringView(hmac_key.key_value()));
-    }
+        const google::crypto::tink::HmacKey& hmac_key) const override;
   };
 
   class ChunkedMacFactory : public PrimitiveFactory<ChunkedMac> {

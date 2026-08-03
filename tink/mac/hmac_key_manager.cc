@@ -48,6 +48,14 @@ using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::google::crypto::tink::HmacParams;
 
+absl::StatusOr<std::unique_ptr<Mac>> HmacKeyManager::MacFactory::Create(
+    const HmacKeyProto& hmac_key) const {
+  return subtle::HmacBoringSsl::New(
+      util::Enums::ProtoToSubtle(hmac_key.params().hash()),
+      hmac_key.params().tag_size(),
+      util::SecretDataFromStringView(hmac_key.key_value()));
+}
+
 namespace {
 
 constexpr int kMinKeySizeInBytes = 16;

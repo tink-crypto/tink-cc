@@ -48,11 +48,7 @@ class AesCmacKeyManager
  public:
   class MacFactory : public PrimitiveFactory<Mac> {
     absl::StatusOr<std::unique_ptr<Mac>> Create(
-        const google::crypto::tink::AesCmacKey& key) const override {
-      return subtle::AesCmacBoringSsl::New(
-          util::SecretDataFromStringView(key.key_value()),
-          key.params().tag_size());
-    }
+        const google::crypto::tink::AesCmacKey& key) const override;
   };
 
   class ChunkedMacFactory : public PrimitiveFactory<ChunkedMac> {

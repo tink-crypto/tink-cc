@@ -56,12 +56,7 @@ class AesCmacPrfKeyManager
  public:
   class PrfSetFactory : public PrimitiveFactory<Prf> {
     absl::StatusOr<std::unique_ptr<Prf>> Create(
-        const google::crypto::tink::AesCmacPrfKey& key) const override {
-      return subtle::CreatePrfFromStatefulMacFactory(
-          std::make_unique<internal::StatefulCmacBoringSslFactory>(
-              AesCmacPrfKeyManager::MaxOutputLength(),
-              util::SecretDataFromStringView(key.key_value())));
-    }
+        const google::crypto::tink::AesCmacPrfKey& key) const override;
   };
 
   AesCmacPrfKeyManager()

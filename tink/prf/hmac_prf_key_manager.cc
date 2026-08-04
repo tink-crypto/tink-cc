@@ -17,14 +17,18 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <set>
-#include <string>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/input_stream.h"
+#include "tink/mac/internal/stateful_hmac_boringssl.h"
+#include "tink/prf/prf_set.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/subtle/prf/prf_set_util.h"
 #include "tink/subtle/random.h"
 #include "tink/util/enums.h"
 #include "tink/util/errors.h"
@@ -44,6 +48,22 @@ using ::crypto::tink::subtle::HashType;
 using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::HmacPrfKeyFormat;
 using ::google::crypto::tink::HmacPrfParams;
+
+absl::StatusOr<std::unique_ptr<Prf>> HmacPrfKeyManager::PrfFactory::Create(
+    const google::crypto::tink::HmacPrfKey& key) const {
+  crypto::tink::subtle::HashType hash =
+      util::Enums::ProtoToSubtle(key.params().hash());
+  absl::optional<uint64_t> max_output_length = MaxOutputLength(hash);
+  if (!max_output_length.has_value()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Unknown hash when constructing HMAC PRF ",
+                                     HashType_Name(key.params().hash())));
+  }
+  return subtle::CreatePrfFromStatefulMacFactory(
+      std::make_unique<internal::StatefulHmacBoringSslFactory>(
+          hash, *max_output_length,
+          util::SecretDataFromStringView(key.key_value())));
+}
 
 absl::Status HmacPrfKeyManager::ValidateKey(const HmacPrfKeyProto& key) const {
   absl::Status status = ValidateVersion(key.version(), get_version());

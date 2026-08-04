@@ -9,6 +9,7 @@ licenses(["notice"])
 
 cc_library(
     name = "hkdf_prf_key_manager",
+    srcs = ["hkdf_prf_key_manager.cc"],
     hdrs = ["hkdf_prf_key_manager.h"],
     include_prefix = "tink/prf",
     deps = [
@@ -32,6 +33,7 @@ cc_library(
         "//tink/util:validation",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -113,6 +115,7 @@ cc_library(
 
 cc_library(
     name = "aes_cmac_prf_key_manager",
+    srcs = ["aes_cmac_prf_key_manager.cc"],
     hdrs = ["aes_cmac_prf_key_manager.h"],
     include_prefix = "tink/prf",
     deps = [
@@ -136,6 +139,7 @@ cc_library(
         "//tink/util:validation",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )

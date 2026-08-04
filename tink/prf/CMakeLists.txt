@@ -5,11 +5,13 @@ add_subdirectory(internal)
 tink_cc_library(
   NAME hkdf_prf_key_manager
   SRCS
+    hkdf_prf_key_manager.cc
     hkdf_prf_key_manager.h
   DEPS
     tink::prf::prf_set
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
@@ -101,11 +103,13 @@ tink_cc_library(
 tink_cc_library(
   NAME aes_cmac_prf_key_manager
   SRCS
+    aes_cmac_prf_key_manager.cc
     aes_cmac_prf_key_manager.h
   DEPS
     tink::prf::prf_set
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util

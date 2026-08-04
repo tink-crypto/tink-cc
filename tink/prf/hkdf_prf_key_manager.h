@@ -54,24 +54,12 @@ class HkdfPrfKeyManager
  public:
   class StreamingPrfFactory : public PrimitiveFactory<StreamingPrf> {
     absl::StatusOr<std::unique_ptr<StreamingPrf>> Create(
-        const google::crypto::tink::HkdfPrfKey& key) const override {
-      return subtle::HkdfStreamingPrf::New(
-          crypto::tink::util::Enums::ProtoToSubtle(key.params().hash()),
-          util::SecretDataFromStringView(key.key_value()), key.params().salt());
-    }
+        const google::crypto::tink::HkdfPrfKey& key) const override;
   };
 
   class PrfSetFactory : public PrimitiveFactory<Prf> {
     absl::StatusOr<std::unique_ptr<Prf>> Create(
-        const google::crypto::tink::HkdfPrfKey& key) const override {
-      auto hkdf_result = subtle::HkdfStreamingPrf::New(
-          crypto::tink::util::Enums::ProtoToSubtle(key.params().hash()),
-          util::SecretDataFromStringView(key.key_value()), key.params().salt());
-      if (!hkdf_result.ok()) {
-        return hkdf_result.status();
-      }
-      return subtle::CreatePrfFromStreamingPrf(std::move(hkdf_result.value()));
-    }
+        const google::crypto::tink::HkdfPrfKey& key) const override;
   };
 
   HkdfPrfKeyManager()

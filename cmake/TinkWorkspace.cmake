@@ -121,11 +121,11 @@ if (NOT TARGET crypto)
     # We save the old value to restore it later
     set(INITIAL_BUILD_TESTING ${BUILD_TESTING})
     set(BUILD_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
-    # Release from 2026-04-13.
+    # Release from 2026-08-03.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/releases/download/0.20260413.0/boringssl-0.20260413.0.tar.gz
-      SHA256 3560f7dd3f08e16b9f84d877a5be21ec62071564783009571af5fcc6fad734d2
+      URL https://github.com/google/boringssl/releases/download/0.20260803.0/boringssl-0.20260803.0.tar.gz
+      SHA256 585c91782fc0651ba6f2376b672acdc30437705d8a50b4967c20e6293e318969
     )
     # Restore the previous value of BUILD_TESTING
     set(BUILD_TESTING ${INITIAL_BUILD_TESTING} CACHE BOOL "Tink dependency override" FORCE)

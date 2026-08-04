@@ -181,7 +181,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
         *Create3072BitTestVector().signature_private_key);
   } else if (key_index == 1) {
     return CloneKeyOrDie<SignaturePrivateKey>(
-        *Create3072BitTestVector2().signature_private_key);
+        *CreateWycheproof3072BitTestVector().signature_private_key);
   }
   ABSL_LOG(FATAL) << "Could not find a 3072-bit RSA Pss key in test vectors";
   return nullptr;
@@ -237,7 +237,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
         *Create4096BitTestVector().signature_private_key);
   } else if (key_index == 1) {
     return CloneKeyOrDie<SignaturePrivateKey>(
-        *Create4096BitTestVector2().signature_private_key);
+        *CreateWycheproof4096BitTestVector().signature_private_key);
   }
   ABSL_LOG(FATAL) << "Could not find a 4096-bit RSA Pss key in test vectors";
   return nullptr;

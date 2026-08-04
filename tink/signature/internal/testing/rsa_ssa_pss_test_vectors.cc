@@ -16,14 +16,17 @@
 
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
@@ -40,15 +43,19 @@
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/util/test_util.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
+namespace crypto::tink::internal {
 
 namespace {
-const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));
+
+// Common RSA public exponent (F4 = 65537).
+const BigInteger& GetF4() {
+  static const absl::NoDestructor<BigInteger> f4(std::string("\x1\0\x1", 3));
+  return *f4;
+}
 
 using ::crypto::tink::test::HexDecodeOrDie;
 
+// Creates a 2048-bit RSA private key from Tink Java RsaSsaPssTestUtil.java.
 RsaSsaPssPrivateKey PrivateKeyFor2048BitParameters(
     const RsaSsaPssParameters& parameters, std::optional<int> id_requirement) {
   std::string public_modulus;
@@ -138,6 +145,7 @@ RsaSsaPssPrivateKey PrivateKeyFor2048BitParameters(
   return *private_key;
 }
 
+// Creates a 3072-bit RSA private key from Tink Java RsaSsaPssTestUtil.java.
 RsaSsaPssPrivateKey PrivateKeyFor3072BitParameters(
     const RsaSsaPssParameters& parameters, std::optional<int> id_requirement) {
   std::string public_modulus;
@@ -234,6 +242,7 @@ RsaSsaPssPrivateKey PrivateKeyFor3072BitParameters(
   return *private_key;
 }
 
+// Creates a 3072-bit RSA private key from Tink Java RsaSsaPssTestUtil.java.
 RsaSsaPssPrivateKey PrivateKeyFor3072BitParameters2(
     const RsaSsaPssParameters& parameters, std::optional<int> id_requirement) {
   std::string public_modulus;
@@ -330,6 +339,7 @@ RsaSsaPssPrivateKey PrivateKeyFor3072BitParameters2(
   return *private_key;
 }
 
+// Creates a 4096-bit RSA private key from Tink Java RsaSsaPssTestUtil.java.
 RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
     const RsaSsaPssParameters& parameters, std::optional<int> id_requirement) {
   std::string d;
@@ -447,6 +457,7 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
   return *private_key;
 }
 
+// Creates a 4096-bit RSA private key from Tink Java RsaSsaPssTestUtil.java.
 RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters2(
     const RsaSsaPssParameters& parameters, std::optional<int> id_requirement) {
   std::string public_modulus;
@@ -566,7 +577,7 @@ const SignatureTestVector& CreateTestVector0() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -596,7 +607,7 @@ const SignatureTestVector& CreateTestVector1() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -626,7 +637,7 @@ const SignatureTestVector& CreateTestVector2() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
             .SetVariant(RsaSsaPssParameters::Variant::kTink)
@@ -657,7 +668,7 @@ const SignatureTestVector& CreateTestVector3() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
             .SetVariant(RsaSsaPssParameters::Variant::kCrunchy)
@@ -688,7 +699,7 @@ const SignatureTestVector& CreateTestVector4() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetVariant(RsaSsaPssParameters::Variant::kLegacy)
@@ -719,7 +730,7 @@ const SignatureTestVector& CreateTestVector5() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -745,6 +756,12 @@ const SignatureTestVector& CreateTestVector5() {
 
 }  // namespace
 
+// Valid 2048-bit RSA-SSA-PSS test vector from Tink Java
+// (RsaSsaPssTestUtil.java).
+const SignatureTestVector& Create2048BitTestVector() {
+  return CreateTestVector0();
+}
+
 // ModulusSize: 3072 bits
 // From
 // https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_3072_test.json.
@@ -753,7 +770,7 @@ const SignatureTestVector& Create3072BitTestVector() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(3072)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -782,12 +799,12 @@ const SignatureTestVector& Create3072BitTestVector() {
 }
 
 // Extracted from third_party/wycheproof/testvectors/rsa_pkcs1_3072_test.json
-const SignatureTestVector& Create3072BitTestVector2() {
+const SignatureTestVector& CreateWycheproof3072BitTestVector() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(3072)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -823,7 +840,7 @@ const SignatureTestVector& Create4096BitTestVector() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(4096)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -856,12 +873,12 @@ const SignatureTestVector& Create4096BitTestVector() {
 }
 
 // Extracted from third_party/wycheproof/testvectors/rsa_pkcs1_4096_test.json
-const SignatureTestVector& Create4096BitTestVector2() {
+const SignatureTestVector& CreateWycheproof4096BitTestVector() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(4096)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -895,13 +912,13 @@ const SignatureTestVector& Create4096BitTestVector2() {
 
 namespace {
 
-// Sha384
+// From Wycheproof and Tink Java (RsaSsaPssTestUtil.java).
 const SignatureTestVector& CreateTestVector6() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -925,13 +942,13 @@ const SignatureTestVector& CreateTestVector6() {
   return *test_vector;
 }
 
-// SaltLength: 0
+// From Wycheproof and Tink Java (RsaSsaPssTestUtil.java).
 const SignatureTestVector& CreateTestVector7() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(2048)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
@@ -955,19 +972,67 @@ const SignatureTestVector& CreateTestVector7() {
   return *test_vector;
 }
 
+using RsaSsaPssTestVectorMap =
+    absl::flat_hash_map<std::tuple<int, RsaSsaPssParameters::HashType,
+                                   RsaSsaPssParameters::Variant>,
+                        const SignatureTestVector*>;
+
+const RsaSsaPssTestVectorMap& CreateRsaSsaPssTestVectorsMap() {
+  static const absl::NoDestructor<RsaSsaPssTestVectorMap> vectors(
+      RsaSsaPssTestVectorMap{
+          {{2048, RsaSsaPssParameters::HashType::kSha256,
+            RsaSsaPssParameters::Variant::kNoPrefix},
+           &CreateTestVector0()},
+          {{2048, RsaSsaPssParameters::HashType::kSha512,
+            RsaSsaPssParameters::Variant::kNoPrefix},
+           &CreateTestVector1()},
+          {{2048, RsaSsaPssParameters::HashType::kSha512,
+            RsaSsaPssParameters::Variant::kTink},
+           &CreateTestVector2()},
+          {{2048, RsaSsaPssParameters::HashType::kSha512,
+            RsaSsaPssParameters::Variant::kCrunchy},
+           &CreateTestVector3()},
+          {{2048, RsaSsaPssParameters::HashType::kSha256,
+            RsaSsaPssParameters::Variant::kLegacy},
+           &CreateTestVector4()},
+          {{2048, RsaSsaPssParameters::HashType::kSha384,
+            RsaSsaPssParameters::Variant::kNoPrefix},
+           &CreateTestVector6()},
+          {{4096, RsaSsaPssParameters::HashType::kSha384,
+            RsaSsaPssParameters::Variant::kNoPrefix},
+           &Create4096BitTestVector()},
+      });
+  return *vectors;
+}
+
 }  // namespace
 
-std::vector<SignatureTestVector> CreateRsaSsaPssTestVectors() {
-  std::vector<SignatureTestVector> test_vectors = {
-      CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-      CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
-      CreateTestVector6(), CreateTestVector7()};
+// Returns static test vectors for RSA-SSA-PSS from Tink Java
+const std::vector<SignatureTestVector>& CreateRsaSsaPssTestVectors() {
+  static const absl::NoDestructor<std::vector<SignatureTestVector>>
+      test_vectors([] {
+        std::vector<SignatureTestVector> vectors = {
+            CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
+            CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
+            CreateTestVector6(), CreateTestVector7()};
 
-  if (!internal::IsFipsModeEnabled()) {
-    test_vectors.push_back(Create4096BitTestVector());
-  }
-  return test_vectors;
+        if (!internal::IsFipsModeEnabled()) {
+          vectors.push_back(Create4096BitTestVector());
+        }
+        return vectors;
+      }());
+  return *test_vectors;
 }
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+
+const SignatureTestVector& GetRsaSsaPssTestVector(
+    int modulus_size_in_bits, RsaSsaPssParameters::HashType sig_hash_type,
+    RsaSsaPssParameters::Variant variant) {
+  const RsaSsaPssTestVectorMap& map = CreateRsaSsaPssTestVectorsMap();
+  auto it = map.find(std::tuple(modulus_size_in_bits, sig_hash_type, variant));
+  ABSL_CHECK(it != map.end())
+      << "No RSA-SSA-PSS test vector found for modulus size, signature hash "
+         "type, and variant.";
+  return *it->second;
+}
+
+}  // namespace crypto::tink::internal

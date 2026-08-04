@@ -19,3 +19,18 @@ cc_library(
         "@abseil-cpp//absl/strings",
     ],
 )
+
+cc_library(
+    name = "jwt_hmac_test_vectors",
+    testonly = 1,
+    srcs = ["jwt_hmac_test_vectors.cc"],
+    hdrs = ["jwt_hmac_test_vectors.h"],
+    include_prefix = "tink/jwt/internal/testing",
+    deps = [
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
+    ],
+)

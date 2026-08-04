@@ -136,3 +136,25 @@ tink_cc_library(
     tink::internal::key_gen_configuration_impl
     tink::util::status
 )
+
+tink_cc_library(
+  NAME aes_siv_test_vectors
+  SRCS
+    aes_siv_test_vectors.cc
+    aes_siv_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::strings
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::util::test_util
+  TESTONLY
+)

@@ -1273,7 +1273,6 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
-        "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],
 )
@@ -1736,6 +1735,24 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
         "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_siv_boringssl_benchmark",
+    srcs = ["aes_siv_boringssl_benchmark.cc"],
+    tags = ["fips"],
+    deps = [
+        ":aes_siv_boringssl",
+        ":random",
+        "//tink:deterministic_aead",
+        "//tink:secret_data",
+        "//tink/config:tink_fips",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],
 )

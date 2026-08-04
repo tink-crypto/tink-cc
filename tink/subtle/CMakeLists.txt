@@ -1200,7 +1200,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    benchmark::benchmark_main
     tink::core::deterministic_aead
     tink::core::secret_data
     tink::config::tink_fips
@@ -1652,4 +1651,21 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
+)
+
+tink_cc_test(
+  NAME aes_siv_boringssl_benchmark
+  SRCS
+    aes_siv_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::aes_siv_boringssl
+    tink::subtle::random
+    gmock
+    absl::absl_check
+    absl::status
+    absl::statusor
+    benchmark::benchmark_main
+    tink::core::deterministic_aead
+    tink::core::secret_data
+    tink::config::tink_fips
 )

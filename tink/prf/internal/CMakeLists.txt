@@ -291,3 +291,24 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME aes_cmac_prf_test_vectors
+  SRCS
+    aes_cmac_prf_test_vectors.cc
+    aes_cmac_prf_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::string_view
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::prf::aes_cmac_prf_key
+    tink::util::test_util
+  TESTONLY
+)

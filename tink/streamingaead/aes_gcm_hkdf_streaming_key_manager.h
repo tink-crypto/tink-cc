@@ -50,20 +50,7 @@ class AesGcmHkdfStreamingKeyManager
   class AesGcmHkdfStreamingKeyManagerFactory
       : public PrimitiveFactory<StreamingAead> {
     absl::StatusOr<std::unique_ptr<StreamingAead>> Create(
-        const google::crypto::tink::AesGcmHkdfStreamingKey& key)
-        const override {
-      subtle::AesGcmHkdfStreaming::Params params;
-      params.ikm = util::SecretDataFromStringView(key.key_value());
-      params.hkdf_hash = crypto::tink::util::Enums::ProtoToSubtle(
-          key.params().hkdf_hash_type());
-      params.derived_key_size = key.params().derived_key_size();
-      params.ciphertext_segment_size = key.params().ciphertext_segment_size();
-      params.ciphertext_offset = 0;
-      auto streaming_result =
-          subtle::AesGcmHkdfStreaming::New(std::move(params));
-      if (!streaming_result.ok()) return streaming_result.status();
-      return {std::move(streaming_result.value())};
-    }
+        const google::crypto::tink::AesGcmHkdfStreamingKey& key) const override;
   };
 
   AesGcmHkdfStreamingKeyManager()

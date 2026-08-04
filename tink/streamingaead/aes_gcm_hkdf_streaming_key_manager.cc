@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "tink/input_stream.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
+#include "tink/subtle/aes_gcm_hkdf_streaming.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
@@ -39,6 +40,21 @@ using ::google::crypto::tink::AesGcmHkdfStreamingKey;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
 using ::google::crypto::tink::AesGcmHkdfStreamingParams;
 using ::google::crypto::tink::HashType;
+
+absl::StatusOr<std::unique_ptr<StreamingAead>>
+AesGcmHkdfStreamingKeyManager::AesGcmHkdfStreamingKeyManagerFactory::Create(
+    const google::crypto::tink::AesGcmHkdfStreamingKey& key) const {
+  subtle::AesGcmHkdfStreaming::Params params;
+  params.ikm = util::SecretDataFromStringView(key.key_value());
+  params.hkdf_hash =
+      crypto::tink::util::Enums::ProtoToSubtle(key.params().hkdf_hash_type());
+  params.derived_key_size = key.params().derived_key_size();
+  params.ciphertext_segment_size = key.params().ciphertext_segment_size();
+  params.ciphertext_offset = 0;
+  auto streaming_result = subtle::AesGcmHkdfStreaming::New(std::move(params));
+  if (!streaming_result.ok()) return streaming_result.status();
+  return {std::move(streaming_result.value())};
+}
 
 namespace {
 

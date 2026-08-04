@@ -1734,3 +1734,45 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "prehash_wrapper",
+    srcs = ["prehash_wrapper.cc"],
+    hdrs = ["prehash_wrapper.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        ":prehash_format",
+        "//proto:tink_cc_proto",
+        "//tink:crypto_format",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//tink/internal:monitoring",
+        "//tink/internal:monitoring_context",
+        "//tink/internal:monitoring_key_set_info",
+        "//tink/internal:monitoring_util",
+        "//tink/internal:registry_impl",
+        "//tink/internal:util",
+        "//tink/signature:prehash",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "prehash_wrapper_test",
+    srcs = ["prehash_wrapper_test.cc"],
+    deps = [
+        ":prehash_wrapper",
+        "//proto:tink_cc_proto",
+        "//tink:primitive_set",
+        "//tink/signature:prehash",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
+    ],
+)

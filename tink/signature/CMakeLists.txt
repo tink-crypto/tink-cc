@@ -1896,10 +1896,13 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
+    tink::internal::secret_buffer
     tink::signature::internal::slh_dsa_parameter_set
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1919,8 +1922,13 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::core::restricted_data
     tink::internal::fips_utils
+    tink::signature::internal::slh_dsa_parameter_set
+    tink::signature::internal::slh_dsa_sign_boringssl
+    tink::signature::internal::slh_dsa_verify_boringssl
     tink::subtle::random
   TAGS
     exclude_if_openssl

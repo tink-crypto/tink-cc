@@ -52,9 +52,22 @@ class SlhDsaPrivateKey final : public SignaturePrivateKey {
   // `parameters`.
   //
   // This function unconditionally returns an error in non-BoringSSL builds.
+  //
+  // Warning: This function assumes that `private_key_bytes` is a valid private
+  // key. In particular, it cannot be filled with random bytes. If you need to
+  // create a private key from a random seed, use `CreateFromSeed` instead.
   static absl::StatusOr<SlhDsaPrivateKey> Create(
       const SlhDsaParameters& parameters,
       const RestrictedData& private_key_bytes,
+      absl::optional<int> id_requirement, PartialKeyAccessToken token);
+
+  // Creates a new SLH-DSA private key from `private_seed_bytes` and
+  // `parameters`.
+  //
+  // This function unconditionally returns an error in non-BoringSSL builds.
+  static absl::StatusOr<SlhDsaPrivateKey> CreateFromSeed(
+      const SlhDsaParameters& parameters,
+      const RestrictedData& private_seed_bytes,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateKeyBytes(PartialKeyAccessToken token) const {

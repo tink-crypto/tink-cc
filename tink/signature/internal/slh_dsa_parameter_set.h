@@ -30,6 +30,9 @@ class SlhDsaParameterSet {
   static SlhDsaParameterSet Shake_256f();
 
   SlhDsaParameters::HashType GetHashType() const { return hash_type_; }
+  int GetPrivateSeedSizeInBytes() const {
+    return private_key_size_in_bytes_ * 3 / 4;
+  }
   int GetPrivateKeySizeInBytes() const { return private_key_size_in_bytes_; }
   int GetPublicKeySizeInBytes() const { return private_key_size_in_bytes_ / 2; }
   SlhDsaParameters::SignatureType GetSignatureType() const {

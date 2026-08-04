@@ -30,10 +30,10 @@
 // OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
 // "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
 #include "openssl/crypto.h"
-#ifdef OPENSSL_IS_BORINGSSL
+#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
+#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
 #include "openssl/slhdsa.h"
-#endif  // OPENSSL_IS_BORINGSSL
-#include "tink/internal/fips_utils.h"
+#endif  // defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
@@ -45,7 +45,7 @@ namespace internal {
 
 namespace {
 
-#ifdef OPENSSL_IS_BORINGSSL
+#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
 // Public Key Verification using SLH-DSA-SHA2-128s implementation from
 // BoringSSL.
 namespace {
@@ -143,15 +143,15 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
  private:
   SlhDsaPublicKey public_key_;
 };
-#endif  // OPENSSL_IS_BORINGSSL
+#endif
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
     const SlhDsaPublicKey& public_key) {
-#ifndef OPENSSL_IS_BORINGSSL
+#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
   return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
+      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
 #else
   auto status = internal::CheckFipsCompatibility<SlhDsaVerifyBoringSsl>();
   if (!status.ok()) {

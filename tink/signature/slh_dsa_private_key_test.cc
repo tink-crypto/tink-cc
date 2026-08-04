@@ -34,7 +34,12 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/internal/slh_dsa_parameter_set.h"
+#include "tink/signature/internal/slh_dsa_sign_boringssl.h"
+#include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/subtle/random.h"
@@ -95,6 +100,40 @@ absl::StatusOr<KeyPair> GenerateKeyPair(SlhDsaParameters::HashType hash_type,
 #endif
 }
 
+absl::StatusOr<KeyPair> GenerateKeyPairFromSeed(
+    SlhDsaParameters::HashType hash_type, RestrictedData seed,
+    int private_key_size_in_bytes, int public_key_size_in_bytes) {
+#ifdef TINK_USE_ONLY_FIPS
+  return absl::UnimplementedError(
+      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
+#else
+  std::string public_key_bytes;
+  public_key_bytes.resize(public_key_size_in_bytes);
+  std::string private_key_bytes;
+  private_key_bytes.resize(private_key_size_in_bytes);
+
+  if (hash_type == SlhDsaParameters::HashType::kSha2) {
+    SLHDSA_SHA2_128S_generate_key_from_seed(
+        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+        reinterpret_cast<uint8_t*>(&private_key_bytes[0]),
+        reinterpret_cast<const uint8_t*>(
+            seed.GetSecret(InsecureSecretKeyAccess::Get()).data()));
+  } else {
+    SLHDSA_SHAKE_256F_generate_key_from_seed(
+        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+        reinterpret_cast<uint8_t*>(&private_key_bytes[0]),
+        reinterpret_cast<const uint8_t*>(
+            seed.GetSecret(InsecureSecretKeyAccess::Get()).data()));
+  }
+
+  RestrictedData restricted_private_key_bytes =
+      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  KeyPair key_pair = {public_key_bytes, restricted_private_key_bytes};
+  return key_pair;
+#endif
+}
+
 using SlhDsaPrivateKeyTest = TestWithParam<TestCase>;
 
 static constexpr int kSlhDsa128sPrivateKeyBytes = 64;
@@ -145,6 +184,28 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFipsFails) {
       StatusIs(absl::StatusCode::kUnimplemented,
                HasSubstr(
                    "SLH-DSA is only supported in non-FIPS BoringSSL builds.")));
+}
+
+TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedFipsFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
+      internal::GetSlhDsaParameterSet(*parameters);
+  ASSERT_THAT(parameter_set, IsOk());
+
+  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+
+  EXPECT_THAT(
+      SlhDsaPrivateKey::CreateFromSeed(
+          *parameters, seed, test_case.id_requirement, GetPartialKeyAccess()),
+      StatusIs(absl::StatusCode::kUnimplemented,
+               HasSubstr("SLH-DSA is only supported in non-FIPS "
+                         "BoringSSL builds.")));
 }
 #else
 TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
@@ -208,6 +269,137 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFromParametersSucceeds) {
               Eq(key_pair->private_key_bytes));
 }
 
+TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedSucceeds) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
+      internal::GetSlhDsaParameterSet(*parameters);
+  ASSERT_THAT(parameter_set, IsOk());
+
+  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+
+  absl::StatusOr<KeyPair> expected_key_pair = GenerateKeyPairFromSeed(
+      test_case.hash_type, seed, test_case.private_key_size_in_bytes,
+      test_case.public_key_size_in_bytes);
+  ASSERT_THAT(expected_key_pair, IsOk());
+
+  absl::StatusOr<SlhDsaPublicKey> expected_public_key =
+      SlhDsaPublicKey::Create(*parameters, expected_key_pair->public_key_bytes,
+                              test_case.id_requirement, GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  absl::StatusOr<SlhDsaPrivateKey> private_key =
+      SlhDsaPrivateKey::CreateFromSeed(
+          *parameters, seed, test_case.id_requirement, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
+  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
+  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+              Eq(expected_key_pair->private_key_bytes));
+}
+
+TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedGeneratesConsistentKeyPair) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
+      internal::GetSlhDsaParameterSet(*parameters);
+  ASSERT_THAT(parameter_set, IsOk());
+
+  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+
+  absl::StatusOr<SlhDsaPrivateKey> private_key =
+      SlhDsaPrivateKey::CreateFromSeed(
+          *parameters, seed, test_case.id_requirement, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign> > signer =
+      internal::NewSlhDsaSignBoringSsl(*private_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify> > verifier =
+      internal::NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+
+  std::string message = "Self-verify test message";
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+
+  EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
+}
+
+TEST(SlhDsaPrivateKeyTest, CreateFromSeedWithInvalidSeedLengthFails) {
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  // General invalid seed length (47 bytes, not 48, 72, or 96 bytes)
+  RestrictedData invalid_seed(47);
+  EXPECT_THAT(
+      SlhDsaPrivateKey::CreateFromSeed(*parameters, invalid_seed,
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess())
+          .status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "SLH-DSA private seed length must be 48, 72, or 96 bytes.")));
+
+  // Mismatched seed size (96 bytes, but parameters expect 48 bytes)
+  RestrictedData mismatched_seed(96);
+  EXPECT_THAT(
+      SlhDsaPrivateKey::CreateFromSeed(*parameters, mismatched_seed,
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Private key size does not match parameters")));
+}
+
+TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedWithMismatchedIdRequirementFails) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      test_case.hash_type, test_case.private_key_size_in_bytes,
+      test_case.signature_type, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
+      internal::GetSlhDsaParameterSet(*parameters);
+  ASSERT_THAT(parameter_set, IsOk());
+
+  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+
+  if (parameters->HasIdRequirement()) {
+    EXPECT_THAT(SlhDsaPrivateKey::CreateFromSeed(
+                    *parameters, seed,
+                    /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+                    .status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  } else {
+    EXPECT_THAT(SlhDsaPrivateKey::CreateFromSeed(*parameters, seed,
+                                                 /*id_requirement=*/123,
+                                                 GetPartialKeyAccess())
+                    .status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
 TEST(SlhDsaPrivateKeyTest,
      CreateFromParametersWithInvalidPrivateKeyLengthFails) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
@@ -217,8 +409,7 @@ TEST(SlhDsaPrivateKeyTest,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData restricted_private_key_bytes = RestrictedData(
-      subtle::Random::GetRandomBytes(63), InsecureSecretKeyAccess::Get());
+  RestrictedData restricted_private_key_bytes(63);
   EXPECT_THAT(
       SlhDsaPrivateKey::Create(*parameters, restricted_private_key_bytes,
                                /*id_requirement=*/123, GetPartialKeyAccess())
@@ -271,8 +462,7 @@ TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
       /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  RestrictedData restricted_private_key_bytes = RestrictedData(
-      subtle::Random::GetRandomBytes(63), InsecureSecretKeyAccess::Get());
+  RestrictedData restricted_private_key_bytes(63);
   EXPECT_THAT(
       SlhDsaPrivateKey::Create(*public_key, restricted_private_key_bytes,
                                GetPartialKeyAccess())

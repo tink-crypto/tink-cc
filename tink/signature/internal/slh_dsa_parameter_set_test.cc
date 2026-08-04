@@ -35,6 +35,7 @@ using ::testing::IsTrue;
 struct TestCase {
   SlhDsaParameterSet parameter_set;
   SlhDsaParameters::HashType hash_type;
+  int private_seed_size_in_bytes;
   int private_key_size_in_bytes;
   int public_key_size_in_bytes;
   SlhDsaParameters::SignatureType signature_type;
@@ -47,16 +48,18 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(
         // SLH-DSA-SHA2-128s
         TestCase{SlhDsaParameterSet::Sha2_128s(),
-                 SlhDsaParameters::HashType::kSha2, 64, 32,
+                 SlhDsaParameters::HashType::kSha2, 48, 64, 32,
                  SlhDsaParameters::SignatureType::kSmallSignature},
         // SLH-DSA-SHAKE-256f
         TestCase{SlhDsaParameterSet::Shake_256f(),
-                 SlhDsaParameters::HashType::kShake, 128, 64,
+                 SlhDsaParameters::HashType::kShake, 96, 128, 64,
                  SlhDsaParameters::SignatureType::kFastSigning}));
 
 TEST_P(SlhDsaParameterSetTest, Getters) {
   const TestCase& test_case = GetParam();
   EXPECT_THAT(test_case.parameter_set.GetHashType(), Eq(test_case.hash_type));
+  EXPECT_THAT(test_case.parameter_set.GetPrivateSeedSizeInBytes(),
+              Eq(test_case.private_seed_size_in_bytes));
   EXPECT_THAT(test_case.parameter_set.GetPrivateKeySizeInBytes(),
               Eq(test_case.private_key_size_in_bytes));
   EXPECT_THAT(test_case.parameter_set.GetPublicKeySizeInBytes(),

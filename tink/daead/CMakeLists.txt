@@ -6,10 +6,12 @@ add_subdirectory(internal)
 tink_cc_library(
   NAME aes_siv_key_manager
   SRCS
+    aes_siv_key_manager.cc
     aes_siv_key_manager.h
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util

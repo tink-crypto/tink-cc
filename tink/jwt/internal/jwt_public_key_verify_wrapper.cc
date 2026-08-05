@@ -129,7 +129,7 @@ JwtPublicKeyVerifyWrapper::Wrap(
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<JwtPublicKeyVerifySetWrapper>(
+    return {std::make_unique<JwtPublicKeyVerifySetWrapper>(
         std::move(jwt_verify_set))};
   }
 
@@ -147,7 +147,7 @@ JwtPublicKeyVerifyWrapper::Wrap(
   }
 
   std::unique_ptr<JwtPublicKeyVerify> jwt_verify =
-      absl::make_unique<JwtPublicKeyVerifySetWrapper>(
+      std::make_unique<JwtPublicKeyVerifySetWrapper>(
           std::move(jwt_verify_set), std::move(*monitoring_verify_client));
   return std::move(jwt_verify);
 }

@@ -73,7 +73,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> BuildJwtMlDsaKey(
   if (!key.ok()) {
     return key.status();
   }
-  return absl::make_unique<JwtMlDsaPrivateKey>(*key);
+  return std::make_unique<JwtMlDsaPrivateKey>(*key);
 }
 
 #ifdef OPENSSL_IS_BORINGSSL

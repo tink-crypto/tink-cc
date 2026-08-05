@@ -161,7 +161,7 @@ absl::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<JwtMacSetWrapper>(std::move(jwt_mac_set))};
+    return {std::make_unique<JwtMacSetWrapper>(std::move(jwt_mac_set))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -184,7 +184,7 @@ absl::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
     return monitoring_verify_client.status();
   }
 
-  std::unique_ptr<JwtMac> jwt_mac = absl::make_unique<JwtMacSetWrapper>(
+  std::unique_ptr<JwtMac> jwt_mac = std::make_unique<JwtMacSetWrapper>(
       std::move(jwt_mac_set), *std::move(monitoring_compute_client),
       *std::move(monitoring_verify_client));
   return std::move(jwt_mac);

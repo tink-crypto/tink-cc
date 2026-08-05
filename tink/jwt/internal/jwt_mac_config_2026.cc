@@ -138,12 +138,12 @@ absl::Status AddJwtMac2026(Configuration& config) {
   }
 
   status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<JwtMacWrapper>(), config);
+      std::make_unique<JwtMacWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   return internal::ConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<JwtHmacKeyManager>(), config);
+      std::make_unique<JwtHmacKeyManager>(), config);
 }
 
 }  // namespace jwt_internal

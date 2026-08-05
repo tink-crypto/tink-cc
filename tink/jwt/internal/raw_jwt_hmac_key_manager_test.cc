@@ -203,7 +203,7 @@ TEST(RawJwtHmacKeyManagerTest, DeriveKeyIsNotImplemented) {
   format.set_version(0);
   format.set_algorithm(JwtHmacAlgorithm::HS256);
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
   absl::StatusOr<JwtHmacKey> key_or =
       RawJwtHmacKeyManager().DeriveKey(format, &input_stream);
@@ -214,7 +214,7 @@ TEST(RawJwtHmacKeyManagerTest, GetPrimitiveFromNewKeysetHandle) {
   Registry::Reset();
   ASSERT_THAT(MacConfig::Register(), IsOk());
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                  absl::make_unique<RawJwtHmacKeyManager>(), true),
+                  std::make_unique<RawJwtHmacKeyManager>(), true),
               IsOk());
 
   JwtHmacKeyFormat key_format;

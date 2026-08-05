@@ -75,7 +75,7 @@ class RawJwtHmacKeyManager
     }
   };
 
-  RawJwtHmacKeyManager() : KeyTypeManager(absl::make_unique<MacFactory>()) {}
+  RawJwtHmacKeyManager() : KeyTypeManager(std::make_unique<MacFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

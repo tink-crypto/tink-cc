@@ -169,7 +169,7 @@ TEST(JwtHmacKeyManagerTest, DeriveKeyIsNotImplemented) {
   format.set_algorithm(JwtHmacAlgorithm::HS256);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
+      std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
   ASSERT_THAT(JwtHmacKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kUnimplemented));

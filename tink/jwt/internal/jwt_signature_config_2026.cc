@@ -654,12 +654,12 @@ NewJwtRsaSsaPssVerifyInternal(
 
 absl::Status AddJwtSignature2026(Configuration& config) {
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<JwtPublicKeySignWrapper>(), config);
+      std::make_unique<JwtPublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::ConfigurationImpl::AddPrimitiveWrapper(
-      absl::make_unique<JwtPublicKeyVerifyWrapper>(), config);
+      std::make_unique<JwtPublicKeyVerifyWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -683,8 +683,8 @@ absl::Status AddJwtSignature2026(Configuration& config) {
     return status;
   }
   status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<JwtEcdsaSignKeyManager>(),
-      absl::make_unique<JwtEcdsaVerifyKeyManager>(), config);
+      std::make_unique<JwtEcdsaSignKeyManager>(),
+      std::make_unique<JwtEcdsaVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -709,8 +709,8 @@ absl::Status AddJwtSignature2026(Configuration& config) {
   }
 
   status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<JwtRsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<JwtRsaSsaPkcs1VerifyKeyManager>(), config);
+      std::make_unique<JwtRsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<JwtRsaSsaPkcs1VerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -735,8 +735,8 @@ absl::Status AddJwtSignature2026(Configuration& config) {
   }
 
   status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<JwtRsaSsaPssSignKeyManager>(),
-      absl::make_unique<JwtRsaSsaPssVerifyKeyManager>(), config);
+      std::make_unique<JwtRsaSsaPssSignKeyManager>(),
+      std::make_unique<JwtRsaSsaPssVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }

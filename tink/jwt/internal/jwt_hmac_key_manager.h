@@ -44,7 +44,7 @@ class JwtHmacKeyManager
         const google::crypto::tink::JwtHmacKey& jwt_hmac_key) const override;
   };
 
-  JwtHmacKeyManager() : KeyTypeManager(absl::make_unique<JwtMacFactory>()) {}
+  JwtHmacKeyManager() : KeyTypeManager(std::make_unique<JwtMacFactory>()) {}
 
   uint32_t get_version() const override;
 

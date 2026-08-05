@@ -124,14 +124,14 @@ class JwtPublicKeyWrappersTest : public ::testing::Test {
  protected:
   void SetUp() override {
     ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                    absl::make_unique<JwtPublicKeySignWrapper>()),
+                    std::make_unique<JwtPublicKeySignWrapper>()),
                 IsOk());
     ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-                    absl::make_unique<JwtPublicKeyVerifyWrapper>()),
+                    std::make_unique<JwtPublicKeyVerifyWrapper>()),
                 IsOk());
     ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                    absl::make_unique<JwtEcdsaSignKeyManager>(),
-                    absl::make_unique<JwtEcdsaVerifyKeyManager>(), true),
+                    std::make_unique<JwtEcdsaSignKeyManager>(),
+                    std::make_unique<JwtEcdsaVerifyKeyManager>(), true),
                 IsOk());
   }
 };
@@ -146,7 +146,7 @@ TEST_F(JwtPublicKeyWrappersTest, WrapNullptrVerify) {
 
 TEST_F(JwtPublicKeyWrappersTest, WrapEmptySign) {
   auto jwt_sign_set =
-      absl::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>();
+      std::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>();
   auto result = JwtPublicKeySignWrapper().Wrap(std::move(jwt_sign_set));
   EXPECT_THAT(result, Not(IsOk()));
 }
@@ -465,9 +465,9 @@ class JwtPublicKeySetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
     auto monitoring_client =
-        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
+        std::make_unique<StrictMock<internal::MockMonitoringClient>>();
     monitoring_client_ = monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
@@ -502,14 +502,14 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   sign_set_builder.AddAnnotations(kAnnotations);
 
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign0 = JwtPublicKeySignImpl::Raw(
-      absl::make_unique<DummyPublicKeySign>("sign0"), "jwtsign0");
+      std::make_unique<DummyPublicKeySign>("sign0"), "jwtsign0");
   sign_set_builder.AddPrimitive(std::move(jwt_sign0), keyset_info.key_info(0));
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign1 = JwtPublicKeySignImpl::Raw(
-      absl::make_unique<DummyPublicKeySign>("sign1"), "jwtsign1");
+      std::make_unique<DummyPublicKeySign>("sign1"), "jwtsign1");
   sign_set_builder.AddPrimitive(std::move(jwt_sign1), keyset_info.key_info(1));
   // Set the last as primary.
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign2 = JwtPublicKeySignImpl::Raw(
-      absl::make_unique<DummyPublicKeySign>("sign2"), "jwtsign2");
+      std::make_unique<DummyPublicKeySign>("sign2"), "jwtsign2");
   sign_set_builder.AddPrimaryPrimitive(std::move(jwt_sign2),
                                        keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<JwtPublicKeySignInternal>>
@@ -592,16 +592,16 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   verify_set_builder.AddAnnotations(kAnnotations);
   verify_set_builder.AddPrimitive(
       JwtPublicKeyVerifyImpl::Raw(
-          absl::make_unique<DummyPublicKeyVerify>("verify0"), "jwtverify0"),
+          std::make_unique<DummyPublicKeyVerify>("verify0"), "jwtverify0"),
       keyset_info.key_info(0));
   verify_set_builder.AddPrimitive(
       JwtPublicKeyVerifyImpl::Raw(
-          absl::make_unique<DummyPublicKeyVerify>("verify1"), "jwtverify1"),
+          std::make_unique<DummyPublicKeyVerify>("verify1"), "jwtverify1"),
       keyset_info.key_info(1));
   // Set the last as primary.
   verify_set_builder.AddPrimaryPrimitive(
       JwtPublicKeyVerifyImpl::Raw(
-          absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
+          std::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>>
       public_key_verify_primitive_set = std::move(verify_set_builder).Build();
@@ -646,16 +646,16 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   verify_set_builder.AddAnnotations(kAnnotations);
   verify_set_builder.AddPrimitive(
       JwtPublicKeyVerifyImpl::Raw(
-          absl::make_unique<DummyPublicKeyVerify>("verify0"), "jwtverify0"),
+          std::make_unique<DummyPublicKeyVerify>("verify0"), "jwtverify0"),
       keyset_info.key_info(0));
   verify_set_builder.AddPrimitive(
       JwtPublicKeyVerifyImpl::Raw(
-          absl::make_unique<DummyPublicKeyVerify>("verify1"), "jwtverify1"),
+          std::make_unique<DummyPublicKeyVerify>("verify1"), "jwtverify1"),
       keyset_info.key_info(1));
   // Set the last as primary.
   verify_set_builder.AddPrimaryPrimitive(
       JwtPublicKeyVerifyImpl::Raw(
-          absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
+          std::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>>
       public_key_verify_primitive_set = std::move(verify_set_builder).Build();

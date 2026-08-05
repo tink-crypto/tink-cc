@@ -28,7 +28,7 @@ namespace jwt_internal {
 
 absl::Status AddJwtMacKeyGen2026(KeyGenConfiguration& config) {
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      absl::make_unique<JwtHmacKeyManager>(), config);
+      std::make_unique<JwtHmacKeyManager>(), config);
 }
 
 }  // namespace jwt_internal

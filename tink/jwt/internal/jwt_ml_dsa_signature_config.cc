@@ -38,13 +38,13 @@ namespace internal {
 absl::Status JwtMlDsaSignatureRegister() {
   // Register primitive wrappers.
   absl::Status status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
+      std::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<jwt_internal::JwtPublicKeyVerifyWrapper>());
+      std::make_unique<jwt_internal::JwtPublicKeyVerifyWrapper>());
   if (!status.ok()) {
     return status;
   }

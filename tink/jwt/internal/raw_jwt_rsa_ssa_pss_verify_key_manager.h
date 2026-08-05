@@ -47,7 +47,7 @@ class RawJwtRsaSsaPssVerifyKeyManager
   };
 
   RawJwtRsaSsaPssVerifyKeyManager()
-      : KeyTypeManager(absl::make_unique<PublicKeyVerifyFactory>()) {}
+      : KeyTypeManager(std::make_unique<PublicKeyVerifyFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

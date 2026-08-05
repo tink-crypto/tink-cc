@@ -118,7 +118,7 @@ absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
     return {
-        absl::make_unique<JwtPublicKeySignSetWrapper>(std::move(jwt_sign_set))};
+        std::make_unique<JwtPublicKeySignSetWrapper>(std::move(jwt_sign_set))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -135,7 +135,7 @@ absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
   }
 
   std::unique_ptr<JwtPublicKeySign> jwt_sign =
-      absl::make_unique<JwtPublicKeySignSetWrapper>(
+      std::make_unique<JwtPublicKeySignSetWrapper>(
           std::move(jwt_sign_set), *std::move(monitoring_sign_client));
   return {std::move(jwt_sign)};
 }

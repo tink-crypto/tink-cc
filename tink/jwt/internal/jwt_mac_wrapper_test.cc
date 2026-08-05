@@ -116,10 +116,10 @@ class JwtMacWrapperTest : public ::testing::Test {
  protected:
   void SetUp() override {
     ASSERT_THAT(
-        Registry::RegisterPrimitiveWrapper(absl::make_unique<JwtMacWrapper>()),
+        Registry::RegisterPrimitiveWrapper(std::make_unique<JwtMacWrapper>()),
         IsOk());
     ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                    absl::make_unique<JwtHmacKeyManager>(), true),
+                    std::make_unique<JwtHmacKeyManager>(), true),
                 IsOk());
   }
 };
@@ -131,7 +131,7 @@ TEST_F(JwtMacWrapperTest, WrapNullptr) {
 }
 
 TEST_F(JwtMacWrapperTest, WrapEmpty) {
-  auto jwt_mac_set = absl::make_unique<PrimitiveSet<JwtMacInternal>>();
+  auto jwt_mac_set = std::make_unique<PrimitiveSet<JwtMacInternal>>();
   absl::StatusOr<std::unique_ptr<crypto::tink::JwtMac>> jwt_mac_result =
       JwtMacWrapper().Wrap(std::move(jwt_mac_set));
   EXPECT_THAT(jwt_mac_result, Not(IsOk()));
@@ -393,12 +393,12 @@ class JwtMacSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<internal::MockMonitoringClientFactory>();
+        std::make_unique<internal::MockMonitoringClientFactory>();
     auto compute_monitoring_client =
-        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
+        std::make_unique<NiceMock<internal::MockMonitoringClient>>();
     compute_monitoring_client_ = compute_monitoring_client.get();
     auto verify_monitoring_client =
-        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
+        std::make_unique<NiceMock<internal::MockMonitoringClient>>();
     verify_monitoring_client_ = verify_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
@@ -438,14 +438,14 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   mac_set_builder.AddAnnotations(annotations);
 
   mac_set_builder.AddPrimitive(
-      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
+      JwtMacImpl::Raw(std::make_unique<DummyMac>("mac0"), "jwtmac0"),
       keyset_info.key_info(0));
   mac_set_builder.AddPrimitive(
-      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
+      JwtMacImpl::Raw(std::make_unique<DummyMac>("mac1"), "jwtmac1"),
       keyset_info.key_info(1));
   // Set the last as primary.
   mac_set_builder.AddPrimaryPrimitive(
-      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
+      JwtMacImpl::Raw(std::make_unique<DummyMac>("mac2"), "jwtmac2"),
       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<JwtMacInternal>> jwt_mac_primitive_set =
       std::move(mac_set_builder).Build();
@@ -484,14 +484,14 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   mac_set_builder.AddAnnotations(annotations);
 
   mac_set_builder.AddPrimitive(
-      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
+      JwtMacImpl::Raw(std::make_unique<DummyMac>("mac0"), "jwtmac0"),
       keyset_info.key_info(0));
   mac_set_builder.AddPrimitive(
-      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
+      JwtMacImpl::Raw(std::make_unique<DummyMac>("mac1"), "jwtmac1"),
       keyset_info.key_info(1));
   // Set the last as primary.
   mac_set_builder.AddPrimaryPrimitive(
-      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
+      JwtMacImpl::Raw(std::make_unique<DummyMac>("mac2"), "jwtmac2"),
       keyset_info.key_info(2));
   absl::StatusOr<PrimitiveSet<JwtMacInternal>> jwt_mac_primitive_set =
       std::move(mac_set_builder).Build();

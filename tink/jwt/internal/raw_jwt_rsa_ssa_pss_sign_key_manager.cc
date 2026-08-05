@@ -52,7 +52,7 @@ using ::google::crypto::tink::JwtRsaSsaPssPublicKey;
 namespace {
 std::unique_ptr<JwtRsaSsaPssPrivateKey> RsaPrivateKeySubtleToProto(
     const internal::RsaPrivateKey& private_key) {
-  auto key_proto = absl::make_unique<JwtRsaSsaPssPrivateKey>();
+  auto key_proto = std::make_unique<JwtRsaSsaPssPrivateKey>();
   key_proto->set_version(RawJwtRsaSsaPssSignKeyManager().get_version());
   key_proto->set_d(util::SecretDataAsStringView(private_key.d));
   key_proto->set_p(util::SecretDataAsStringView(private_key.p));

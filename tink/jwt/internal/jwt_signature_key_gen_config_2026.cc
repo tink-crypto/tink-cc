@@ -44,20 +44,20 @@ namespace jwt_internal {
 absl::Status AddJwtSignatureKeyGen2026(KeyGenConfiguration& config) {
   absl::Status status =
       internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-          absl::make_unique<JwtEcdsaSignKeyManager>(),
-          absl::make_unique<JwtEcdsaVerifyKeyManager>(), config);
+          std::make_unique<JwtEcdsaSignKeyManager>(),
+          std::make_unique<JwtEcdsaVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<JwtRsaSsaPkcs1SignKeyManager>(),
-      absl::make_unique<JwtRsaSsaPkcs1VerifyKeyManager>(), config);
+      std::make_unique<JwtRsaSsaPkcs1SignKeyManager>(),
+      std::make_unique<JwtRsaSsaPkcs1VerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
   status = internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
-      absl::make_unique<JwtRsaSsaPssSignKeyManager>(),
-      absl::make_unique<JwtRsaSsaPssVerifyKeyManager>(), config);
+      std::make_unique<JwtRsaSsaPssSignKeyManager>(),
+      std::make_unique<JwtRsaSsaPssVerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }

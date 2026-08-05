@@ -62,12 +62,12 @@ class JwtMlDsaSignKeyManagerAdaptor
 
     std::unique_ptr<portable_proto::MessageLite>
     GetKeyFormatProtoDefaultInstance() const final {
-      return absl::make_unique<google::crypto::tink::JwtMlDsaKeyFormat>();
+      return std::make_unique<google::crypto::tink::JwtMlDsaKeyFormat>();
     }
 
     std::unique_ptr<portable_proto::MessageLite>
     GetPrivateKeyProtoDefaultInstance() const final {
-      return absl::make_unique<google::crypto::tink::JwtMlDsaPrivateKey>();
+      return std::make_unique<google::crypto::tink::JwtMlDsaPrivateKey>();
     }
 
     absl::StatusOr<std::unique_ptr<Key>> CreateKey(

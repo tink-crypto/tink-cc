@@ -26,3 +26,18 @@ tink_cc_library(
   TESTONLY
 )
 
+tink_cc_library(
+  NAME jwt_ecdsa_test_vectors
+  SRCS
+    jwt_ecdsa_test_vectors.cc
+    jwt_ecdsa_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::string_view
+    tink::subtle::common_enums
+    tink::util::test_util
+  TESTONLY
+)
+

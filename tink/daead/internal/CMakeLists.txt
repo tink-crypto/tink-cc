@@ -143,6 +143,7 @@ tink_cc_library(
     aes_siv_test_vectors.cc
     aes_siv_test_vectors.h
   DEPS
+    absl::core_headers
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check

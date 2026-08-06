@@ -27,6 +27,7 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif

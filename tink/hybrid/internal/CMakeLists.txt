@@ -684,6 +684,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
+    crypto
     tink::core::configuration
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -739,6 +740,7 @@ tink_cc_library(
     tink::hybrid::internal::hpke_public_key_manager
     absl::memory
     absl::status
+    crypto
     tink::core::key_gen_configuration
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager

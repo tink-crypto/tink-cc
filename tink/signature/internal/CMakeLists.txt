@@ -1458,6 +1458,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
+    crypto
     tink::core::configuration
     tink::core::low_level_crypto_access
     tink::core::public_key_sign
@@ -1559,6 +1560,7 @@ tink_cc_library(
     tink::signature::internal::slh_dsa_proto_serialization
     absl::memory
     absl::status
+    crypto
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::signature::composite_ml_dsa_parameters

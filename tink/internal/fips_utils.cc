@@ -21,6 +21,7 @@
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "openssl/crypto.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/util/status.h"
 
 namespace crypto {

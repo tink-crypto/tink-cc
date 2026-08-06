@@ -26,6 +26,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/util.h"
 #include "tink/secret_data.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"

@@ -18,10 +18,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
-// Every header in BoringSSL includes base.h, which in turn defines
-// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
-// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
-#include "openssl/crypto.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
 #endif

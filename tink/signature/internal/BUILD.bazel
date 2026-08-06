@@ -93,6 +93,7 @@ cc_library(
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@boringssl//:crypto",
     ],
 )
 
@@ -128,6 +129,7 @@ cc_library(
         "//tink/signature:slh_dsa_parameters",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@boringssl//:crypto",
     ],
 )
 

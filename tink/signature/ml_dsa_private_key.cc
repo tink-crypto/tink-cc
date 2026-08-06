@@ -26,11 +26,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-// Every header in BoringSSL includes base.h, which in turn defines
-// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
-// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
-#include "openssl/crypto.h"
 #include "tink/internal/fips_utils.h"  // IWYU pragma: keep
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
 #include "openssl/base.h"
 #include "openssl/bytestring.h"

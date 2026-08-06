@@ -31,6 +31,7 @@
 #include "absl/strings/cord_buffer.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/cipher.h"

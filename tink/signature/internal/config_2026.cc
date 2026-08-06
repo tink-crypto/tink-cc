@@ -36,6 +36,7 @@
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/composite_ml_dsa_proto_serialization.h"

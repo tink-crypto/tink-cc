@@ -34,6 +34,7 @@
 #include "absl/types/span.h"
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/aead/internal/aead_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"

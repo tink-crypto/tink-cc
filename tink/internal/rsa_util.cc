@@ -26,6 +26,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"

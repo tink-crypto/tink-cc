@@ -24,6 +24,7 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
 #include "tink/internal/rsa_util.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif

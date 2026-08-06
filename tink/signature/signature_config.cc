@@ -18,10 +18,6 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
-// Every header in BoringSSL includes base.h, which in turn defines
-// OPENSSL_IS_BORINGSSL. So we include this common header upfront here to
-// "force" the definition of OPENSSL_IS_BORINGSSL in case BoringSSL is used.
-#include "openssl/crypto.h"
 #include "tink/config/tink_fips.h"
 #include "tink/registry.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
@@ -30,6 +26,7 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_key_manager.h"

@@ -26,6 +26,7 @@
 #include "openssl/aes.h"
 #include "openssl/evp.h"
 #include "tink/util/statusor.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifndef OPENSSL_IS_BORINGSSL
 // This is needed to use block128_f, which is necessary when OpenSSL is used.
 #include "openssl/modes.h"

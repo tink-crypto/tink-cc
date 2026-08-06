@@ -27,6 +27,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
 #endif

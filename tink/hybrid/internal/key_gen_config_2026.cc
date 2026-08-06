@@ -20,6 +20,7 @@
 #include "absl/status/status.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"

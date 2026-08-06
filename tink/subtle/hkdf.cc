@@ -31,6 +31,7 @@
 // instead provides this functionality over the EVP interface, which in turn
 // doesn't provide means to compute HKDF in BoringSSL. As a consequence, we need
 // to selectively include the correct header and use different implementations.
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/hkdf.h"

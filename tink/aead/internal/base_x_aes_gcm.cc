@@ -29,6 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/cmac.h"
 #include "openssl/evp.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"

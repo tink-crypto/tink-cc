@@ -28,6 +28,7 @@
 #include "tink/hybrid/hybrid_encrypt_wrapper.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_proto_serialization.h"

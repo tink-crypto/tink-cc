@@ -18,6 +18,8 @@
 #define TINK_SIGNATURE_INTERNAL_TESTING_ECDSA_TEST_VECTORS_H_
 
 #include <vector>
+
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 
 namespace crypto {
@@ -27,7 +29,14 @@ namespace internal {
 // Provides some test vectors for Ecdsa. These are the same as in Java,
 // EcdsaTestUtil.createEcdsaTestVectors (and were generated using Tink
 // Java).
-std::vector<SignatureTestVector> CreateEcdsaTestVectors();
+const std::vector<SignatureTestVector>& CreateEcdsaTestVectors();
+
+// Returns static test vector for ECDSA for the given curve type, hash type,
+// signature encoding, and variant.
+const SignatureTestVector& GetEcdsaTestVector(
+    EcdsaParameters::CurveType curve_type, EcdsaParameters::HashType hash_type,
+    EcdsaParameters::SignatureEncoding signature_encoding,
+    EcdsaParameters::Variant variant);
 
 }  // namespace internal
 }  // namespace tink

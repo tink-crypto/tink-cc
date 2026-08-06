@@ -16,14 +16,17 @@
 
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 
+#include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -31,7 +34,6 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -62,73 +64,99 @@ std::string Ed25519PublicKeyBytes() {
       "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025");
 }
 
-SignatureTestVector CreateTestVector0() {
-  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix).value(),
-      Ed25519PublicKeyBytes(), std::nullopt, GetPartialKeyAccess());
+struct Ed25519TestVectorParams {
+  Ed25519Parameters::Variant variant;
+  std::optional<int> id_requirement;
+  absl::string_view signature_hex;
+  absl::string_view message_hex;
+};
+
+SignatureTestVector MakeEd25519TestVector(
+    const Ed25519TestVectorParams& params) {
+  absl::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(params.variant);
+  ABSL_CHECK_OK(parameters.status());
+  absl::StatusOr<Ed25519PublicKey> public_key =
+      Ed25519PublicKey::Create(*parameters, Ed25519PublicKeyBytes(),
+                               params.id_requirement, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, Ed25519PrivateKeyBytes(), GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
-      std::make_unique<Ed25519PrivateKey>(
-          Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
-                                    GetPartialKeyAccess())
-              .value()),
-      HexDecodeOrDie(kSignatureHex), HexDecodeOrDie(kMessageHex));
+      std::make_unique<Ed25519PrivateKey>(*std::move(private_key)),
+      HexDecodeOrDie(params.signature_hex), HexDecodeOrDie(params.message_hex));
 }
 
-// TINK
-SignatureTestVector CreateTestVector1() {
-  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink).value(),
-      Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  return SignatureTestVector(
-      std::make_unique<Ed25519PrivateKey>(
-          Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
-                                    GetPartialKeyAccess())
-              .value()),
-      HexDecodeOrDie(absl::StrCat("0199887766", kSignatureHex)),
-      HexDecodeOrDie(kMessageHex));
-}
+using Ed25519TestVectorMap =
+    absl::flat_hash_map<Ed25519Parameters::Variant, SignatureTestVector>;
 
-// Crunchy
-SignatureTestVector CreateTestVector2() {
-  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kCrunchy).value(),
-      Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  return SignatureTestVector(
-      std::make_unique<Ed25519PrivateKey>(
-          Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
-                                    GetPartialKeyAccess())
-              .value()),
-      HexDecodeOrDie(absl::StrCat("0099887766", kSignatureHex)),
-      HexDecodeOrDie(kMessageHex));
-}
-
-// NOTE: This test vector has been generated adding a `0x00` suffix to the
-// message.
-SignatureTestVector CreateTestVector3() {
-  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kLegacy).value(),
-      Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  return SignatureTestVector(
-      std::make_unique<Ed25519PrivateKey>(
-          Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
-                                    GetPartialKeyAccess())
-              .value()),
-      HexDecodeOrDie(
-          "0099887766"
-          "afeae7a4fcd7d710a03353dfbe11a9906c6918633bb4dfef655d62d21f7535a1"
-          "108ea3ef5bef2b0d0acefbf0e051f62ee2582652ae769df983ad1b11a95d3a08"),
-      HexDecodeOrDie(kMessageHex));
+const Ed25519TestVectorMap& CreateEd25519TestVectorsMap() {
+  static const absl::NoDestructor<Ed25519TestVectorMap> test_vectors(
+      Ed25519TestVectorMap{
+          {Ed25519Parameters::Variant::kNoPrefix,
+           MakeEd25519TestVector(Ed25519TestVectorParams{
+               /*variant=*/Ed25519Parameters::Variant::kNoPrefix,
+               /*id_requirement=*/std::nullopt,
+               /*signature_hex=*/kSignatureHex,
+               /*message_hex=*/kMessageHex,
+           })},
+          {Ed25519Parameters::Variant::kTink,
+           MakeEd25519TestVector(Ed25519TestVectorParams{
+               /*variant=*/Ed25519Parameters::Variant::kTink,
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "01998877666291d657deec24024827e69c3abe01a30ce548a284743a445e3"
+               "680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28d"
+               "c027beceea1ec40a",
+               /*message_hex=*/kMessageHex,
+           })},
+          {Ed25519Parameters::Variant::kCrunchy,
+           MakeEd25519TestVector(Ed25519TestVectorParams{
+               /*variant=*/Ed25519Parameters::Variant::kCrunchy,
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "00998877666291d657deec24024827e69c3abe01a30ce548a284743a445e3"
+               "680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28d"
+               "c027beceea1ec40a",
+               /*message_hex=*/kMessageHex,
+           })},
+          {Ed25519Parameters::Variant::kLegacy,
+           MakeEd25519TestVector(Ed25519TestVectorParams{
+               /*variant=*/Ed25519Parameters::Variant::kLegacy,
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "0099887766afeae7a4fcd7d710a03353dfbe11a9906c6918633bb4dfef655"
+               "d62d21f7535a1108ea3ef5bef2b0d0acefbf0e051f62ee2582652ae769df9"
+               "83ad1b11a95d3a08",
+               /*message_hex=*/kMessageHex,
+           })},
+      });
+  return *test_vectors;
 }
 
 }  // namespace
 
-std::vector<SignatureTestVector> CreateEd25519TestVectors() {
-  return {CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-          CreateTestVector3()};
+const SignatureTestVector& GetEd25519TestVector(
+    Ed25519Parameters::Variant variant) {
+  const Ed25519TestVectorMap& map = CreateEd25519TestVectorsMap();
+  auto it = map.find(variant);
+  ABSL_CHECK(it != map.end()) << "No Ed25519 test vector found.";
+  return it->second;
+}
+
+const std::vector<SignatureTestVector>& CreateEd25519TestVectors() {
+  static const absl::NoDestructor<std::vector<SignatureTestVector>>
+      test_vectors([] {
+        std::vector<SignatureTestVector> result;
+        result.reserve(CreateEd25519TestVectorsMap().size());
+        for (const auto& [unused_params, test_vector] :
+             CreateEd25519TestVectorsMap()) {
+          result.push_back(test_vector);
+        }
+        return result;
+      }());
+  return *test_vectors;
 }
 }  // namespace internal
 }  // namespace tink

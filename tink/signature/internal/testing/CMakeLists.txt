@@ -71,18 +71,17 @@ tink_cc_library(
     ed25519_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
+    absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
-    absl::memory
-    absl::strings
+    absl::statusor
     absl::string_view
-    absl::optional
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )
@@ -94,10 +93,11 @@ tink_cc_library(
     ecdsa_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
+    absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
-    absl::memory
     absl::statusor
-    absl::optional
+    absl::string_view
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access

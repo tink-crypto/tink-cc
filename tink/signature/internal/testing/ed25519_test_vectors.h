@@ -18,6 +18,8 @@
 #define TINK_SIGNATURE_INTERNAL_TESTING_ED25519_TEST_VECTORS_H_
 
 #include <vector>
+
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 
 namespace crypto {
@@ -27,7 +29,11 @@ namespace internal {
 // Provides some test vectors for Ed25519. These are the same as in Java,
 // Ed25519TestUtil.createEd25519TestVectors (and were generated using Tink
 // Java).
-std::vector<SignatureTestVector> CreateEd25519TestVectors();
+const std::vector<SignatureTestVector>& CreateEd25519TestVectors();
+
+// Returns static test vector for Ed25519 for the given variant.
+const SignatureTestVector& GetEd25519TestVector(
+    Ed25519Parameters::Variant variant);
 
 }  // namespace internal
 }  // namespace tink

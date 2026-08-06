@@ -16,12 +16,17 @@
 
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
+#include "absl/strings/string_view.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
@@ -94,234 +99,234 @@ RestrictedData P521SecretValue() {
       InsecureSecretKeyAccess::Get());
 }
 
-SignatureTestVector CreateTestVector0() {
+struct EcdsaTestVectorParams {
+  EcdsaParameters::CurveType curve_type;
+  EcdsaParameters::HashType hash_type;
+  EcdsaParameters::SignatureEncoding signature_encoding;
+  EcdsaParameters::Variant variant;
+  EcPoint public_point;
+  RestrictedData private_key_value;
+  std::optional<int> id_requirement;
+  absl::string_view signature_hex;
+  absl::string_view message_hex;
+};
+
+SignatureTestVector MakeEcdsaTestVector(const EcdsaTestVectorParams& params) {
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
-          .SetHashType(EcdsaParameters::HashType::kSha256)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .SetCurveType(params.curve_type)
+          .SetHashType(params.hash_type)
+          .SetSignatureEncoding(params.signature_encoding)
+          .SetVariant(params.variant)
           .Build();
   ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), std::nullopt, GetPartialKeyAccess());
+  absl::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, params.public_point,
+                             params.id_requirement, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P256SecretValue(), GetPartialKeyAccess());
+      *public_key, params.private_key_value, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "70cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f8ce2855262bb5d"
-          "0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f704271d5189e7a5cf03"),
-      HexDecodeOrDie(""));
+      std::make_unique<EcdsaPrivateKey>(*std::move(private_key)),
+      HexDecodeOrDie(params.signature_hex), HexDecodeOrDie(params.message_hex));
 }
 
-// Signature encoding: DER
-SignatureTestVector CreateTestVector1() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
-          .SetHashType(EcdsaParameters::HashType::kSha256)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P256SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "3046022100baca7d618e43d44f2754a5368f60b4a41925e2c04d27a672b276ae1f4b"
-          "3c63a2022100d404a3"
-          "015cb229f7cb036c2b5f77cc546065eed4b75837cec2883d1e35d5eb9f"),
-      HexDecodeOrDie(""));
-}
+using EcdsaTestVectorMap = absl::flat_hash_map<
+    std::tuple<EcdsaParameters::CurveType, EcdsaParameters::HashType,
+               EcdsaParameters::SignatureEncoding, EcdsaParameters::Variant>,
+    SignatureTestVector>;
 
-// Variant: TINK
-SignatureTestVector CreateTestVector2() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
-          .SetHashType(EcdsaParameters::HashType::kSha256)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kTink)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P256SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "0199887766"
-          "70cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f8ce2855262bb5d"
-          "0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f704271d5189e7a5cf03"),
-      HexDecodeOrDie(""));
-}
-
-// Variant: CRUNCHY
-SignatureTestVector CreateTestVector3() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
-          .SetHashType(EcdsaParameters::HashType::kSha256)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kCrunchy)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P256SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "0099887766"
-          "70cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f8ce2855262bb5d"
-          "0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f704271d5189e7a5cf03"),
-      HexDecodeOrDie(""));
-}
-
-// Variant: CRUNCHY
-SignatureTestVector CreateTestVector4() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
-          .SetHashType(EcdsaParameters::HashType::kSha256)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kLegacy)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P256SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie("0099887766515b67e48efb8ebc12e0ce691cf210b18c1e96409667aae"
-                     "dd8d744c64aff843a4e09ebfb9b6c40a6540dd0d835693ca08da8c1d8"
-                     "e434770511459088243b0bbb"),
-      HexDecodeOrDie(""));
-}
-
-// Non-empty message
-SignatureTestVector CreateTestVector5() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
-          .SetHashType(EcdsaParameters::HashType::kSha256)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P256Point(), std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P256SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "bfec68e554a26e161b657efb368a6cd0ec3499c92f2b6240e1b92fa724366a79ca37"
-          "137274c9125e34c286439c848ce3594a3f9450f4108a2fc287a120dfab4f"),
-      HexDecodeOrDie("001122"));
-}
-
-// NIST_P384, SHA384
-SignatureTestVector CreateTestVector6() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
-          .SetHashType(EcdsaParameters::HashType::kSha384)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P384Point(), std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P384SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "eb19dc251dcbb0aac7634c646b27ccc59a21d6231e08d2b6031ec729ecb0e9927b70"
-          "bfa66d458b5e1b7186355644fa9150602bade9f0c358b9d28263cb427f58bf7d9b89"
-          "2ac75f43ab048360b34ee81653f85ec2f10e6e4f0f0e0cafbe91f883"),
-      HexDecodeOrDie(""));
-}
-
-// NIST_P384, SHA384
-SignatureTestVector CreateTestVector7() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
-          .SetHashType(EcdsaParameters::HashType::kSha512)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P384Point(), std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P384SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "3db99cec1a865909886f8863ccfa3147f21ccad262a41abc8d964fafa55141a9d89e"
-          "fa6bf0acb4e5ec357c6056542e7e016d4a653fde985aad594763900f3f9c4494f45f"
-          "7a4450422640f57b0ad467950f78ddb56641676cb91d392410ed606d"),
-      HexDecodeOrDie(""));
-}
-
-// NIST_P384, SHA384
-SignatureTestVector CreateTestVector8() {
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(EcdsaParameters::CurveType::kNistP521)
-          .SetHashType(EcdsaParameters::HashType::kSha512)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters, P521Point(), std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key.status());
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key, P521SecretValue(), GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key.status());
-  return SignatureTestVector(
-      std::make_unique<EcdsaPrivateKey>(*private_key),
-      HexDecodeOrDie(
-          "00eaf6672f0696a46046d3b1572814b697c7904fe265fece75e33b90833d08af6513"
-          "adfb6cbf0a4971442633c981d11cd068fcf9431cbe49448b4240a067d860f7fb0168"
-          "a8d7bf1602050b2255e844aea1df8d8ad770053d2c915cca2af6e175c2fb0944f6a9"
-          "e3262fb9b99910e7fbd6ef4aca887b901ec78678d3ec48529c7f06e8c815"),
-      HexDecodeOrDie(""));
+const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
+  static const absl::NoDestructor<EcdsaTestVectorMap> test_vectors(
+      EcdsaTestVectorMap{
+          {{EcdsaParameters::CurveType::kNistP256,
+            EcdsaParameters::HashType::kSha256,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kNoPrefix},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP256,
+               /*hash_type=*/EcdsaParameters::HashType::kSha256,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kNoPrefix,
+               /*public_point=*/P256Point(),
+               /*private_key_value=*/P256SecretValue(),
+               /*id_requirement=*/std::nullopt,
+               /*signature_hex=*/
+               "70cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f8ce2855262b"
+               "b"
+               "5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f704271d5189e7a5cf"
+               "03",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP256,
+            EcdsaParameters::HashType::kSha256,
+            EcdsaParameters::SignatureEncoding::kDer,
+            EcdsaParameters::Variant::kNoPrefix},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP256,
+               /*hash_type=*/EcdsaParameters::HashType::kSha256,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kDer,
+               /*variant=*/EcdsaParameters::Variant::kNoPrefix,
+               /*public_point=*/P256Point(),
+               /*private_key_value=*/P256SecretValue(),
+               /*id_requirement=*/std::nullopt,
+               /*signature_hex=*/
+               "3046022100baca7d618e43d44f2754a5368f60b4a41925e2c04d27a672b276a"
+               "e"
+               "1f4b3c63a2022100d404a3015cb229f7cb036c2b5f77cc546065eed4b75837"
+               "cec2883d1e35d5eb9f",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP256,
+            EcdsaParameters::HashType::kSha256,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kTink},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP256,
+               /*hash_type=*/EcdsaParameters::HashType::kSha256,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kTink,
+               /*public_point=*/P256Point(),
+               /*private_key_value=*/P256SecretValue(),
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "019988776670cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f"
+               "8ce2855262bb5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f70427"
+               "1d5189e7a5cf03",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP256,
+            EcdsaParameters::HashType::kSha256,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kCrunchy},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP256,
+               /*hash_type=*/EcdsaParameters::HashType::kSha256,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kCrunchy,
+               /*public_point=*/P256Point(),
+               /*private_key_value=*/P256SecretValue(),
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "009988776670cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f"
+               "8ce2855262bb5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f70427"
+               "1d5189e7a5cf03",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP256,
+            EcdsaParameters::HashType::kSha256,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kLegacy},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP256,
+               /*hash_type=*/EcdsaParameters::HashType::kSha256,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kLegacy,
+               /*public_point=*/P256Point(),
+               /*private_key_value=*/P256SecretValue(),
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "0099887766515b67e48efb8ebc12e0ce691cf210b18c1e96409667aaedd8d7"
+               "44c64aff843a4e09ebfb9b6c40a6540dd0d835693ca08da8c1d8e434770511"
+               "459088243b0bbb",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP384,
+            EcdsaParameters::HashType::kSha384,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kNoPrefix},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP384,
+               /*hash_type=*/EcdsaParameters::HashType::kSha384,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kNoPrefix,
+               /*public_point=*/P384Point(),
+               /*private_key_value=*/P384SecretValue(),
+               /*id_requirement=*/std::nullopt,
+               /*signature_hex=*/
+               "eb19dc251dcbb0aac7634c646b27ccc59a21d6231e08d2b6031ec729ecb0e9"
+               "927b70bfa66d458b5e1b7186355644fa9150602bade9f0c358b9d28263cb42"
+               "7f58bf7d9b892ac75f43ab048360b34ee81653f85ec2f10e6e4f0f0e0cafbe"
+               "91f883",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP384,
+            EcdsaParameters::HashType::kSha512,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kNoPrefix},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP384,
+               /*hash_type=*/EcdsaParameters::HashType::kSha512,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kNoPrefix,
+               /*public_point=*/P384Point(),
+               /*private_key_value=*/P384SecretValue(),
+               /*id_requirement=*/std::nullopt,
+               /*signature_hex=*/
+               "3db99cec1a865909886f8863ccfa3147f21ccad262a41abc8d964fafa55141"
+               "a9d89efa6bf0acb4e5ec357c6056542e7e016d4a653fde985aad594763900f"
+               "3f9c4494f45f7a4450422640f57b0ad467950f78ddb56641676cb91d392410"
+               "ed606d",
+               /*message_hex=*/"",
+           })},
+          {{EcdsaParameters::CurveType::kNistP521,
+            EcdsaParameters::HashType::kSha512,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kNoPrefix},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP521,
+               /*hash_type=*/EcdsaParameters::HashType::kSha512,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kNoPrefix,
+               /*public_point=*/P521Point(),
+               /*private_key_value=*/P521SecretValue(),
+               /*id_requirement=*/std::nullopt,
+               /*signature_hex=*/
+               "00eaf6672f0696a46046d3b1572814b697c7904fe265fece75e33b90833d08"
+               "af6513adfb6cbf0a4971442633c981d11cd068fcf9431cbe49448b4240a067"
+               "d860f7fb0168a8d7bf1602050b2255e844aea1df8d8ad770053d2c915cca2a"
+               "f6e175c2fb0944f6a9e3262fb9b99910e7fbd6ef4aca887b901ec78678d3ec"
+               "48529c7f06e8c815",
+               /*message_hex=*/"",
+           })},
+      });
+  return *test_vectors;
 }
 
 }  // namespace
 
-std::vector<SignatureTestVector> CreateEcdsaTestVectors() {
-  return {CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-          CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
-          CreateTestVector6(), CreateTestVector7(), CreateTestVector8()};
+const SignatureTestVector& GetEcdsaTestVector(
+    EcdsaParameters::CurveType curve_type, EcdsaParameters::HashType hash_type,
+    EcdsaParameters::SignatureEncoding signature_encoding,
+    EcdsaParameters::Variant variant) {
+  const EcdsaTestVectorMap& map = CreateEcdsaTestVectorsMap();
+  auto it = map.find(
+      std::make_tuple(curve_type, hash_type, signature_encoding, variant));
+  ABSL_CHECK(it != map.end()) << "No ECDSA test vector found.";
+  return it->second;
+}
+
+const std::vector<SignatureTestVector>& CreateEcdsaTestVectors() {
+  static const absl::NoDestructor<std::vector<SignatureTestVector>>
+      test_vectors([] {
+        std::vector<SignatureTestVector> result;
+        result.reserve(CreateEcdsaTestVectorsMap().size());
+        for (const auto& [unused_params, test_vector] :
+             CreateEcdsaTestVectorsMap()) {
+          result.push_back(test_vector);
+        }
+        return result;
+      }());
+  return *test_vectors;
 }
 }  // namespace internal
 }  // namespace tink

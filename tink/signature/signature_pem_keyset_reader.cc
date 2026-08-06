@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "openssl/crypto.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -166,6 +167,49 @@ absl::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
   return absl::OkStatus();
 }
 
+// Overwrites the bytes backing `*str` with zeroes in a way that the
+// compiler cannot optimize away, then clears the string. Used to scrub
+// secret key material out of temporary std::string objects (e.g. RSA/ECDSA
+// private key components, and serialized private-key protos) before they
+// are destroyed. std::string's own destructor does not zero memory, so
+// without this, secret bytes can remain readable in freed heap memory after
+// these temporaries go out of scope.
+void CleanseString(std::string* str) {
+  if (str->empty()) return;
+  OPENSSL_cleanse(&(*str)[0], str->size());
+  str->clear();
+}
+
+// Serializes `message` (which may contain secret key material in plain
+// std::string proto fields) into a single buffer sized exactly to the final
+// output, with no intermediate growth/reallocation.
+//
+// google::protobuf::Message::SerializeAsString() returns a freshly
+// constructed std::string that protobuf fills incrementally; as it grows
+// past std::string's small-buffer/capacity thresholds it reallocates one or
+// more times, and each old, smaller backing buffer is freed by the normal
+// (non-cleansing) allocator without being zeroed. Those intermediate
+// buffers contain partial copies of the serialized secret data and are
+// never reachable to the caller, so CleanseString() on the final result
+// cannot reach them. Reserving exact capacity up front (via
+// ByteSizeLong()) before calling SerializeToString() ensures protobuf
+// writes directly into one already-sized buffer instead of growing one,
+// so a single CleanseString() call after use is sufficient.
+std::string SerializeNoGrowth(const google::protobuf::Message& message) {
+  std::string out;
+  out.reserve(message.ByteSizeLong());
+  bool ok = message.SerializeToString(&out);
+  // SerializeToString() only fails for missing required fields or
+  // output sizes exceeding protobuf's 2GB limit; Tink's private-key
+  // protos are always fully populated at this point; in the failure
+  // case the original SerializeAsString() callers below treated this
+  // identically (an empty/partial string was returned without any
+  // separate error check), so an empty `out` here is no worse than the
+  // prior behavior and does not introduce a new failure mode.
+  (void)ok;
+  return out;
+}
+
 // Creates a new Keyset::Key with ID `key_id`. The key has key data
 // `key_data`, key type `key_type`, and key material type
 // `key_material_type`.
@@ -195,8 +239,15 @@ absl::StatusOr<EcdsaPrivateKeyProto> NewEcdsaPrivateKey(
 
   // ECDSA private key parameters.
   private_key_proto.set_version(key_version);
-  private_key_proto.set_key_value(
-      util::SecretDataAsStringView(private_key_subtle.priv));
+  {
+    // set_key_value() may internally copy through a transient std::string
+    // before storing into the field. Build the value in an explicit local
+    // first so we can cleanse it ourselves immediately after use.
+    std::string key_value_tmp(
+        util::SecretDataAsStringView(private_key_subtle.priv));
+    private_key_proto.set_key_value(key_value_tmp);
+    CleanseString(&key_value_tmp);
+  }
 
   // Inner ECDSA public key.
   EcdsaPublicKeyProto* public_key_proto =
@@ -222,20 +273,40 @@ absl::StatusOr<RsaSsaPssPrivateKeyProto> NewRsaSsaPrivateKey(
     const PemKeyParams& parameters) {
   RsaSsaPssPrivateKeyProto private_key_proto;
 
-  // RSA Private key parameters.
+  // RSA Private key parameters. Each value is built in an explicit local
+  // first so it can be cleansed immediately after being copied into the
+  // proto field.
   private_key_proto.set_version(key_version);
-  private_key_proto.set_d(
-      std::string(util::SecretDataAsStringView(private_key_subtle.d)));
-  private_key_proto.set_p(
-      std::string(util::SecretDataAsStringView(private_key_subtle.p)));
-  private_key_proto.set_q(
-      std::string(util::SecretDataAsStringView(private_key_subtle.q)));
-  private_key_proto.set_dp(
-      std::string(util::SecretDataAsStringView(private_key_subtle.dp)));
-  private_key_proto.set_dq(
-      std::string(util::SecretDataAsStringView(private_key_subtle.dq)));
-  private_key_proto.set_crt(
-      std::string(util::SecretDataAsStringView(private_key_subtle.crt)));
+  {
+    std::string d_tmp(util::SecretDataAsStringView(private_key_subtle.d));
+    private_key_proto.set_d(d_tmp);
+    CleanseString(&d_tmp);
+  }
+  {
+    std::string p_tmp(util::SecretDataAsStringView(private_key_subtle.p));
+    private_key_proto.set_p(p_tmp);
+    CleanseString(&p_tmp);
+  }
+  {
+    std::string q_tmp(util::SecretDataAsStringView(private_key_subtle.q));
+    private_key_proto.set_q(q_tmp);
+    CleanseString(&q_tmp);
+  }
+  {
+    std::string dp_tmp(util::SecretDataAsStringView(private_key_subtle.dp));
+    private_key_proto.set_dp(dp_tmp);
+    CleanseString(&dp_tmp);
+  }
+  {
+    std::string dq_tmp(util::SecretDataAsStringView(private_key_subtle.dq));
+    private_key_proto.set_dq(dq_tmp);
+    CleanseString(&dq_tmp);
+  }
+  {
+    std::string crt_tmp(util::SecretDataAsStringView(private_key_subtle.crt));
+    private_key_proto.set_crt(crt_tmp);
+    CleanseString(&crt_tmp);
+  }
 
   // Inner RSA public key.
   RsaSsaPssPublicKeyProto* public_key_proto =
@@ -262,20 +333,39 @@ RsaSsaPkcs1PrivateKeyProto NewRsaSsaPkcs1PrivateKey(
     const PemKeyParams& parameters) {
   RsaSsaPkcs1PrivateKeyProto private_key_proto;
 
-  // RSA Private key parameters.
+  // RSA Private key parameters. See identical comment in
+  // NewRsaSsaPrivateKey above.
   private_key_proto.set_version(key_version);
-  private_key_proto.set_d(
-      std::string(util::SecretDataAsStringView(private_key_subtle.d)));
-  private_key_proto.set_p(
-      std::string(util::SecretDataAsStringView(private_key_subtle.p)));
-  private_key_proto.set_q(
-      std::string(util::SecretDataAsStringView(private_key_subtle.q)));
-  private_key_proto.set_dp(
-      std::string(util::SecretDataAsStringView(private_key_subtle.dp)));
-  private_key_proto.set_dq(
-      std::string(util::SecretDataAsStringView(private_key_subtle.dq)));
-  private_key_proto.set_crt(
-      std::string(util::SecretDataAsStringView(private_key_subtle.crt)));
+  {
+    std::string d_tmp(util::SecretDataAsStringView(private_key_subtle.d));
+    private_key_proto.set_d(d_tmp);
+    CleanseString(&d_tmp);
+  }
+  {
+    std::string p_tmp(util::SecretDataAsStringView(private_key_subtle.p));
+    private_key_proto.set_p(p_tmp);
+    CleanseString(&p_tmp);
+  }
+  {
+    std::string q_tmp(util::SecretDataAsStringView(private_key_subtle.q));
+    private_key_proto.set_q(q_tmp);
+    CleanseString(&q_tmp);
+  }
+  {
+    std::string dp_tmp(util::SecretDataAsStringView(private_key_subtle.dp));
+    private_key_proto.set_dp(dp_tmp);
+    CleanseString(&dp_tmp);
+  }
+  {
+    std::string dq_tmp(util::SecretDataAsStringView(private_key_subtle.dq));
+    private_key_proto.set_dq(dq_tmp);
+    CleanseString(&dq_tmp);
+  }
+  {
+    std::string crt_tmp(util::SecretDataAsStringView(private_key_subtle.crt));
+    private_key_proto.set_crt(crt_tmp);
+    CleanseString(&crt_tmp);
+  }
 
   // Inner RSA Public key parameters.
   RsaSsaPkcs1PublicKeyProto* public_key_proto =
@@ -305,9 +395,18 @@ absl::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       key_manager.ValidateKey(*private_key_proto);
   if (!key_validation_status.ok()) return key_validation_status;
 
-  *keyset.add_key() = NewKeysetKey(
-      GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
-      key_manager.key_material_type(), private_key_proto->SerializeAsString());
+  std::string serialized_private_key = SerializeNoGrowth(*private_key_proto);
+  *keyset.add_key() =
+      NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
+                   key_manager.key_material_type(), serialized_private_key);
+
+  // `serialized_private_key` and `private_key_proto`'s key_value field both
+  // hold a copy of the ECDSA private scalar in a plain (non-cleansing)
+  // std::string. NewKeysetKey() has already copied the bytes it needs into
+  // `keyset`, so scrub these temporaries before they are destroyed to avoid
+  // leaving the private key recoverable in freed heap memory.
+  CleanseString(&serialized_private_key);
+  CleanseString(private_key_proto->mutable_key_value());
 
   return absl::OkStatus();
 }
@@ -336,17 +435,33 @@ absl::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       auto private_key_proto_or = NewRsaSsaPrivateKey(
           *private_key_subtle, key_manager.get_version(), pem_key.parameters);
       if (!private_key_proto_or.ok()) return private_key_proto_or.status();
-      const RsaSsaPssPrivateKeyProto& private_key_proto =
-          private_key_proto_or.value();
+      RsaSsaPssPrivateKeyProto private_key_proto =
+          std::move(private_key_proto_or).value();
 
       // Validate the key.
       auto key_validation_status = key_manager.ValidateKey(private_key_proto);
       if (!key_validation_status.ok()) return key_validation_status;
 
+      std::string serialized_private_key = SerializeNoGrowth(private_key_proto);
       *keyset.add_key() =
           NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
                        key_manager.key_material_type(),
-                       private_key_proto.SerializeAsString());
+                       serialized_private_key);
+
+      // `private_key_proto`'s d/p/q/dp/dq/crt fields and
+      // `serialized_private_key` all hold copies of RSA private key
+      // material (the private exponent and CRT parameters) in plain
+      // (non-cleansing) std::strings. NewKeysetKey() has already copied the
+      // bytes it needs into `keyset`, so scrub these temporaries before they
+      // are destroyed to avoid leaving the private key recoverable in freed
+      // heap memory.
+      CleanseString(&serialized_private_key);
+      CleanseString(private_key_proto.mutable_d());
+      CleanseString(private_key_proto.mutable_p());
+      CleanseString(private_key_proto.mutable_q());
+      CleanseString(private_key_proto.mutable_dp());
+      CleanseString(private_key_proto.mutable_dq());
+      CleanseString(private_key_proto.mutable_crt());
       break;
     }
     case PemAlgorithm::RSASSA_PKCS1: {
@@ -358,10 +473,20 @@ absl::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       auto key_validation_status = key_manager.ValidateKey(private_key_proto);
       if (!key_validation_status.ok()) return key_validation_status;
 
+      std::string serialized_private_key = SerializeNoGrowth(private_key_proto);
       *keyset.add_key() =
           NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
                        key_manager.key_material_type(),
-                       private_key_proto.SerializeAsString());
+                       serialized_private_key);
+
+      // See identical comment in the RSASSA_PSS branch above.
+      CleanseString(&serialized_private_key);
+      CleanseString(private_key_proto.mutable_d());
+      CleanseString(private_key_proto.mutable_p());
+      CleanseString(private_key_proto.mutable_q());
+      CleanseString(private_key_proto.mutable_dp());
+      CleanseString(private_key_proto.mutable_dq());
+      CleanseString(private_key_proto.mutable_crt());
 
       break;
     }

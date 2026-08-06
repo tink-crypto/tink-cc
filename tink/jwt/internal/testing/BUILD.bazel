@@ -50,3 +50,19 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
     ],
 )
+
+cc_library(
+    name = "jwt_ml_dsa_test_vectors",
+    testonly = 1,
+    srcs = ["jwt_ml_dsa_test_vectors.cc"],
+    hdrs = ["jwt_ml_dsa_test_vectors.h"],
+    include_prefix = "tink/jwt/internal/testing",
+    deps = [
+        "//tink/jwt:jwt_ml_dsa_parameters",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 
 #include <cstddef>
 #include <cstdint>

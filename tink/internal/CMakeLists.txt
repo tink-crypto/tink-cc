@@ -2211,3 +2211,40 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME primitive_set
+  SRCS
+    primitive_set.h
+  DEPS
+    absl::core_headers
+    absl::flat_hash_map
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::synchronization
+    tink::core::crypto_format
+    tink::util::errors
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME primitive_set_test
+  SRCS
+    primitive_set_test.cc
+  DEPS
+    tink::internal::primitive_set
+    gmock
+    absl::memory
+    absl::status
+    absl::status_matchers
+    absl::strings
+    absl::string_view
+    tink::core::crypto_format
+    tink::core::mac
+    tink::keyderivation::keyset_deriver
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::tink_cc_proto
+)

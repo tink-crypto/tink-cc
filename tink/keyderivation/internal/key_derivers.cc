@@ -72,8 +72,12 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_parameter_set.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_private_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
@@ -422,6 +426,39 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> DeriveMlDsaPrivateKey(
   return absl::make_unique<MlDsaPrivateKey>(*private_key);
 }
 
+absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> DeriveSlhDsaPrivateKey(
+    const Parameters& generic_params, InputStream* rand_stream) {
+  const SlhDsaParameters* params =
+      dynamic_cast<const SlhDsaParameters*>(&generic_params);
+  if (params == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Parameters is not SlhDsaParameters.");
+  }
+
+  absl::StatusOr<SlhDsaParameterSet> parameter_set =
+      GetSlhDsaParameterSet(*params);
+  if (!parameter_set.ok()) {
+    return parameter_set.status();
+  }
+
+  absl::StatusOr<SecretData> secret_seed_bytes_status =
+      ReadSecretBytesFromStream(parameter_set->GetPrivateSeedSizeInBytes(),
+                                rand_stream);
+  if (!secret_seed_bytes_status.ok()) {
+    return secret_seed_bytes_status.status();
+  }
+  RestrictedData secret_seed_bytes =
+      RestrictedData(*secret_seed_bytes_status, InsecureSecretKeyAccess::Get());
+  absl::StatusOr<SlhDsaPrivateKey> private_key =
+      SlhDsaPrivateKey::CreateFromSeed(*params, secret_seed_bytes,
+                                       /*id_requirement=*/std::nullopt,
+                                       GetPartialKeyAccess());
+  if (!private_key.ok()) {
+    return private_key.status();
+  }
+  return std::make_unique<SlhDsaPrivateKey>(*private_key);
+}
+
 absl::StatusOr<std::unique_ptr<AesCtrHmacStreamingKey>>
 DeriveAesCtrHmacStreamingKey(const Parameters& generic_params,
                              InputStream* rand_stream) {
@@ -509,6 +546,9 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     ABSL_CHECK_OK(RegisterMlDsaProtoSerialization());
     m->insert(
         {std::type_index(typeid(MlDsaParameters)), DeriveMlDsaPrivateKey});
+    ABSL_CHECK_OK(RegisterSlhDsaProtoSerialization());
+    m->insert(
+        {std::type_index(typeid(SlhDsaParameters)), DeriveSlhDsaPrivateKey});
 
     // Streaming AEAD.
     ABSL_CHECK_OK(RegisterAesCtrHmacStreamingProtoSerialization());

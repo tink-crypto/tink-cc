@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -84,8 +85,11 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_private_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
@@ -105,7 +109,7 @@ using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-// The 82 bytes of the output key material (OKM) from the HKDF RFC
+// The first 200 bytes of the output key material (OKM) from the HKDF RFC
 // https://tools.ietf.org/html/rfc5869#appendix-A.2.
 static constexpr absl::string_view kOkmFromRfc =
     "b11e398dc80327a1c8e7f78c596a4934"
@@ -113,7 +117,14 @@ static constexpr absl::string_view kOkmFromRfc =
     "59045a99cac7827271cb41c65e590e09"
     "da3275600c2f09b8367793a9aca3db71"
     "cc30c58179ec3e87c14c01d5c1f3434f"
-    "1d87";
+    "1d8783c7310a8770344b9d6050fe8772"
+    "ce16afe7dbb994f8fb72f5df08c70309"
+    "9e1e3d594a326836564cf64914338f0d"
+    "187a6fbe96b95b14a36e5d35c24c9b7a"
+    "498db45bc9c06c3090e119f90519cf39"
+    "0a71bdf1629352ed6a022fa7c6c70994"
+    "63551e6993dd102e1c334e0d987a6e39"
+    "13996c2f04535d6a";
 
 HkdfPrfKey PrfKeyFromRfc() {
   HkdfPrfParameters params =
@@ -337,6 +348,27 @@ std::unique_ptr<MlDsaPrivateKey> CreateMlDsaPrivateKey(
   return std::make_unique<MlDsaPrivateKey>(*private_key);
 }
 
+std::unique_ptr<SlhDsaPrivateKey> CreateSlhDsaPrivateKey(
+    SlhDsaParameters::HashType hash_type, int private_key_size_in_bytes,
+    SlhDsaParameters::SignatureType signature_type,
+    SlhDsaParameters::Variant variant, absl::string_view seed_bytes,
+    std::optional<int> id_requirement) {
+  absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
+      hash_type, private_key_size_in_bytes, signature_type, variant);
+  if (!params.ok()) {
+    return nullptr;
+  }
+  RestrictedData private_seed_data = RestrictedData(
+      test::HexDecodeOrDie(seed_bytes), InsecureSecretKeyAccess::Get());
+  absl::StatusOr<SlhDsaPrivateKey> private_key =
+      SlhDsaPrivateKey::CreateFromSeed(*params, private_seed_data,
+                                       id_requirement, GetPartialKeyAccess());
+  if (!private_key.ok()) {
+    return nullptr;
+  }
+  return std::make_unique<SlhDsaPrivateKey>(*private_key);
+}
+
 std::unique_ptr<AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey(
     int key_size_in_bytes, int derived_key_size_in_bytes,
     AesCtrHmacStreamingParameters::HashType hkdf_hash_type,
@@ -557,6 +589,31 @@ std::vector<std::shared_ptr<Key>> SignatureMlDsaTestVector() {
   return vectors;
 }
 
+std::vector<std::shared_ptr<Key>> SignatureSlhDsaTestVector() {
+  std::vector<std::shared_ptr<Key>> vectors;
+  if (internal::IsBoringSsl() && !internal::IsFipsModeEnabled()) {
+    // SLHDSA_SHA2_128S
+    vectors.push_back(
+        CreateSlhDsaPrivateKey(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink,
+                               // This is 48 bytes after hex decoding.
+                               kOkmFromRfc.substr(0, 96),
+                               /*id_requirement=*/1010101));
+    // SLHDSA_SHAKE_256F
+    vectors.push_back(
+        CreateSlhDsaPrivateKey(SlhDsaParameters::HashType::kShake,
+                               /*private_key_size_in_bytes=*/128,
+                               SlhDsaParameters::SignatureType::kFastSigning,
+                               SlhDsaParameters::Variant::kNoPrefix,
+                               // This is 96 bytes after hex decoding.
+                               kOkmFromRfc.substr(0, 192),
+                               /*id_requirement=*/std::nullopt));
+  }
+  return vectors;
+}
+
 std::vector<std::shared_ptr<Key>> StreamingAeadTestVector() {
   return {
       CreateAesCtrHmacStreamingKey(
@@ -621,6 +678,7 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   if (internal::IsBoringSsl()) {
     vectors.push_back(SignatureEcdsaTestVector());
     vectors.push_back(SignatureMlDsaTestVector());
+    vectors.push_back(SignatureSlhDsaTestVector());
   }
 
   return vectors;
@@ -698,6 +756,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 

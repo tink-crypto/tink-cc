@@ -103,5 +103,29 @@ tink_cc_library(
   TESTONLY
 )
 
+tink_cc_library(
+  NAME x_aes_gcm_test_vectors
+  SRCS
+    x_aes_gcm_test_vectors.cc
+    x_aes_gcm_test_vectors.h
+  DEPS
+    tink::aead::internal::testing::aead_test_vector
+    absl::absl_check
+    absl::no_destructor
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    tink::aead::internal::cord_x_aes_gcm_boringssl
+    tink::util::test_util
+  TESTONLY
+)
+
+
 
 

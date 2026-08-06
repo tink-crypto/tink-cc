@@ -41,7 +41,7 @@ cc_library(
 
 cc_library(
     name = "aes_eax_test_vectors",
-    testonly = 1,
+    testonly = True,
     srcs = ["aes_eax_test_vectors.cc"],
     hdrs = ["aes_eax_test_vectors.h"],
     include_prefix = "tink/aead/internal/testing",
@@ -64,7 +64,7 @@ cc_library(
 
 cc_library(
     name = "aes_ctr_hmac_aead_test_vectors",
-    testonly = 1,
+    testonly = True,
     srcs = ["aes_ctr_hmac_aead_test_vectors.cc"],
     hdrs = ["aes_ctr_hmac_aead_test_vectors.h"],
     include_prefix = "tink/aead/internal/testing",
@@ -92,7 +92,7 @@ cc_library(
 
 cc_library(
     name = "aes_gcm_siv_test_vectors",
-    testonly = 1,
+    testonly = True,
     srcs = ["aes_gcm_siv_test_vectors.cc"],
     hdrs = ["aes_gcm_siv_test_vectors.h"],
     include_prefix = "tink/aead/internal/testing",
@@ -108,6 +108,31 @@ cc_library(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
+cc_library(
+    name = "x_aes_gcm_test_vectors",
+    testonly = True,
+    srcs = ["x_aes_gcm_test_vectors.cc"],
+    hdrs = ["x_aes_gcm_test_vectors.h"],
+    include_prefix = "tink/aead/internal/testing",
+    deps = [
+        ":aead_test_vector",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/aead:x_aes_gcm_key",
+        "//tink/aead:x_aes_gcm_parameters",
+        "//tink/aead/internal:cord_x_aes_gcm_boringssl",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
     ],

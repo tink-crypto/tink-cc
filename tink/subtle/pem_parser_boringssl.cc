@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/subtle/pem_parser_boringssl.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -362,22 +363,21 @@ PemParser::ParseEd25519PublicKey(absl::string_view pem_serialized_key) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "PEM key is not an Ed25519 public key");
   }
-  const size_t pub_key_size = internal::Ed25519KeyPubKeySize();
-  uint8_t public_key[pub_key_size] = {0};
-  size_t out_len_pub = pub_key_size;
-  if (EVP_PKEY_get_raw_public_key(evp_pub_key.get(), public_key,
+  std::array<uint8_t, internal::Ed25519KeyPubKeySize()> public_key = {};
+  size_t out_len_pub = public_key.size();
+  if (EVP_PKEY_get_raw_public_key(evp_pub_key.get(), public_key.data(),
                                   &out_len_pub) != 1) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "invalid ed25519 public key");
   }
-  if (out_len_pub != pub_key_size) {
+  if (out_len_pub != public_key.size()) {
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Invalid public key size; expected ",
-                                     pub_key_size, " got ", out_len_pub));
+                                     public_key.size(), " got ", out_len_pub));
   }
   auto key = std::make_unique<internal::Ed25519Key>();
-  key->public_key = std::string(reinterpret_cast<char*>(public_key),
-                                      sizeof(public_key));
+  key->public_key = std::string(reinterpret_cast<char*>(public_key.data()),
+                                      public_key.size());
   return std::move(key);
 }
 

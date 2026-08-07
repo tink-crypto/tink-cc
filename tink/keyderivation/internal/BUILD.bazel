@@ -369,6 +369,32 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "prf_based_key_derivation_test_vectors",
+    testonly = 1,
+    srcs = ["prf_based_key_derivation_test_vectors.cc"],
+    hdrs = ["prf_based_key_derivation_test_vectors.h"],
+    include_prefix = "tink/keyderivation/internal",
+    deps = [
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:partial_key_access",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink:secret_key_access_token",
+        "//tink/aead:xchacha20_poly1305_parameters",
+        "//tink/keyderivation:prf_based_key_derivation_key",
+        "//tink/keyderivation:prf_based_key_derivation_parameters",
+        "//tink/prf:aes_cmac_prf_key",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
 cc_test(
     name = "prf_based_key_derivation_proto_serialization_impl_test",
     srcs = ["prf_based_key_derivation_proto_serialization_impl_test.cc"],

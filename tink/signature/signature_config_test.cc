@@ -20,14 +20,9 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/no_destructor.h"
-#include "absl/log/absl_check.h"
-#include "absl/log/absl_log.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -35,15 +30,12 @@
 #include "tink/config/global_registry.h"
 #include "tink/crypto_format.h"
 #include "tink/ec_point.h"
-#include "tink/internal/ec_util.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key_status.h"
-#include "tink/primitive_set.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/subtle/common_enums.h"
-#include "tink/util/secret_data.h"
 #include "proto/rsa_ssa_pss.pb.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -69,6 +61,8 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
@@ -331,29 +325,17 @@ RsaKeyValues GetRsaKeyValues(const RsaSsaPkcs1PrivateKey& key) {
           InsecureSecretKeyAccess::Get()))};
 }
 
-RsaKeyValues GenerateRsaKeyValues(int modulus_size_in_bits) {
-  if (modulus_size_in_bits == 2048) {
-    static const absl::NoDestructor<RsaKeyValues> values([]() {
-      std::vector<internal::SignatureTestVector> vectors =
-          internal::CreateRsaSsaPkcs1TestVectors();
-      const RsaSsaPkcs1PrivateKey* key =
-          dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
-              vectors[0].signature_private_key.get());
-      ABSL_CHECK_NE(key, nullptr);
-      return GetRsaKeyValues(*key);
-    }());
-    return *values;
-  }
-  ABSL_LOG(FATAL) << "Unsupported modulus size: " << modulus_size_in_bits;
-}
-
 TEST_F(SignatureConfigTest, RsaSsaPkcs1ProtoPublicKeySerializationRegistered) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
 
-  RsaKeyValues key_values = GenerateRsaKeyValues(/*modulus_size_in_bits=*/2048);
+  const RsaSsaPkcs1PrivateKey* test_private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          internal::Create2048BitsTestVector().signature_private_key.get());
+  ASSERT_THAT(test_private_key, testing::NotNull());
+  RsaKeyValues key_values = GetRsaKeyValues(*test_private_key);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey key_proto;
   key_proto.set_version(0);
@@ -415,7 +397,11 @@ TEST_F(SignatureConfigTest, RsaSsaPkcs1ProtoPrivateKeySerializationRegistered) {
                     "not available";
   }
 
-  RsaKeyValues key_values = GenerateRsaKeyValues(/*modulus_size_in_bits=*/2048);
+  const RsaSsaPkcs1PrivateKey* test_private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          internal::Create2048BitsTestVector().signature_private_key.get());
+  ASSERT_THAT(test_private_key, testing::NotNull());
+  RsaKeyValues key_values = GetRsaKeyValues(*test_private_key);
 
   google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -551,7 +537,11 @@ TEST_F(SignatureConfigTest, RsaSsaPssProtoPublicKeySerializationRegistered) {
                     "not available";
   }
 
-  RsaKeyValues key_values = GenerateRsaKeyValues(/*modulus_size_in_bits=*/2048);
+  const RsaSsaPkcs1PrivateKey* test_private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          internal::Create2048BitsTestVector().signature_private_key.get());
+  ASSERT_THAT(test_private_key, testing::NotNull());
+  RsaKeyValues key_values = GetRsaKeyValues(*test_private_key);
 
   google::crypto::tink::RsaSsaPssParams params;
   params.set_sig_hash(HashType::SHA256);
@@ -620,7 +610,11 @@ TEST_F(SignatureConfigTest, RsaSsaPssProtoPrivateKeySerializationRegistered) {
                     "not available";
   }
 
-  RsaKeyValues key_values = GenerateRsaKeyValues(/*modulus_size_in_bits=*/2048);
+  const RsaSsaPkcs1PrivateKey* test_private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          internal::Create2048BitsTestVector().signature_private_key.get());
+  ASSERT_THAT(test_private_key, testing::NotNull());
+  RsaKeyValues key_values = GetRsaKeyValues(*test_private_key);
 
   google::crypto::tink::RsaSsaPssParams params;
   params.set_sig_hash(HashType::SHA256);
@@ -764,14 +758,26 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
   params.set_hash_type(google::crypto::tink::HashType::SHA256);
   params.set_encoding(google::crypto::tink::EcdsaSignatureEncoding::DER);
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  const EcdsaPrivateKey* ecdsa_private_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          internal::GetEcdsaTestVector(
+              EcdsaParameters::CurveType::kNistP256,
+              EcdsaParameters::HashType::kSha256,
+              EcdsaParameters::SignatureEncoding::kIeeeP1363,
+              EcdsaParameters::Variant::kNoPrefix)
+              .signature_private_key.get());
+  ASSERT_THAT(ecdsa_private_key, testing::NotNull());
 
   google::crypto::tink::EcdsaPublicKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_x(ec_key->pub_x);
-  key_proto.set_y(ec_key->pub_y);
+  key_proto.set_x(ecdsa_private_key->GetPublicKey()
+                      .GetPublicPoint(GetPartialKeyAccess())
+                      .GetX()
+                      .GetValue());
+  key_proto.set_y(ecdsa_private_key->GetPublicKey()
+                      .GetPublicPoint(GetPartialKeyAccess())
+                      .GetY()
+                      .GetValue());
   *key_proto.mutable_params() = params;
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -798,8 +804,14 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  ASSERT_THAT(ec_key, IsOk());
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  EcPoint public_point(BigInteger(ecdsa_private_key->GetPublicKey()
+                                      .GetPublicPoint(GetPartialKeyAccess())
+                                      .GetX()
+                                      .GetValue()),
+                       BigInteger(ecdsa_private_key->GetPublicKey()
+                                      .GetPublicPoint(GetPartialKeyAccess())
+                                      .GetY()
+                                      .GetValue()));
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              /*id_requirement=*/123, GetPartialKeyAccess());
@@ -840,20 +852,34 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
   params.set_hash_type(google::crypto::tink::HashType::SHA256);
   params.set_encoding(google::crypto::tink::EcdsaSignatureEncoding::DER);
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  const EcdsaPrivateKey* ecdsa_private_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          internal::GetEcdsaTestVector(
+              EcdsaParameters::CurveType::kNistP256,
+              EcdsaParameters::HashType::kSha256,
+              EcdsaParameters::SignatureEncoding::kIeeeP1363,
+              EcdsaParameters::Variant::kNoPrefix)
+              .signature_private_key.get());
+  ASSERT_THAT(ecdsa_private_key, testing::NotNull());
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ecdsa_private_key->GetPublicKey()
+                             .GetPublicPoint(GetPartialKeyAccess())
+                             .GetX()
+                             .GetValue());
+  public_key_proto.set_y(ecdsa_private_key->GetPublicKey()
+                             .GetPublicPoint(GetPartialKeyAccess())
+                             .GetY()
+                             .GetValue());
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(
+      ecdsa_private_key->GetPrivateKey(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -880,11 +906,16 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  ASSERT_THAT(ec_key, IsOk());
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  EcPoint public_point(BigInteger(ecdsa_private_key->GetPublicKey()
+                                      .GetPublicPoint(GetPartialKeyAccess())
+                                      .GetX()
+                                      .GetValue()),
+                       BigInteger(ecdsa_private_key->GetPublicKey()
+                                      .GetPublicPoint(GetPartialKeyAccess())
+                                      .GetY()
+                                      .GetValue()));
   RestrictedData private_key_value =
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
-                     InsecureSecretKeyAccess::Get());
+      ecdsa_private_key->GetPrivateKey(GetPartialKeyAccess());
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
@@ -1017,18 +1048,23 @@ TEST_F(SignatureConfigTest, Ed25519ProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
-      internal::NewEd25519Key();
-  ASSERT_THAT(key_pair, IsOk());
+  const Ed25519PrivateKey* ed25519_private_key =
+      dynamic_cast<const Ed25519PrivateKey*>(
+          internal::GetEd25519TestVector(Ed25519Parameters::Variant::kNoPrefix)
+              .signature_private_key.get());
+  ASSERT_THAT(ed25519_private_key, testing::NotNull());
 
   google::crypto::tink::Ed25519PublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_key_value((*key_pair)->public_key);
+  public_key_proto.set_key_value(
+      ed25519_private_key->GetPublicKey().GetPublicKeyBytes(
+          GetPartialKeyAccess()));
 
   google::crypto::tink::Ed25519PrivateKey private_key_proto;
   private_key_proto.set_version(0);
   private_key_proto.set_key_value(
-      util::SecretDataAsStringView((*key_pair)->private_key));
+      ed25519_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
   *private_key_proto.mutable_public_key() = public_key_proto;
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
@@ -1049,13 +1085,15 @@ TEST_F(SignatureConfigTest, Ed25519ProtoPrivateKeySerializationRegistered) {
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  absl::StatusOr<Ed25519PublicKey> public_key =
-      Ed25519PublicKey::Create(*params, (*key_pair)->public_key,
-                               /*id_requirement=*/123, GetPartialKeyAccess());
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params,
+      ed25519_private_key->GetPublicKey().GetPublicKeyBytes(
+          GetPartialKeyAccess()),
+      /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedData private_key_bytes =
-      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+      ed25519_private_key->GetPrivateKeyBytes(GetPartialKeyAccess());
 
   absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
       *public_key, private_key_bytes, GetPartialKeyAccess());

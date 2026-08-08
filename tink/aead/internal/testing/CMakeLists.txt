@@ -120,3 +120,25 @@ tink_cc_library(
   TESTONLY
 )
 
+tink_cc_library(
+  NAME chacha20_poly1305_test_vectors
+  SRCS
+    chacha20_poly1305_test_vectors.cc
+    chacha20_poly1305_test_vectors.h
+  DEPS
+    tink::aead::internal::testing::aead_test_vector
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+    tink::util::test_util
+  TESTONLY
+)
+

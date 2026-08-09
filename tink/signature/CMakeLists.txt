@@ -1638,19 +1638,19 @@ tink_cc_test(
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key
     gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::string_view
-    absl::optional
     crypto
     tink::core::big_integer
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
-    tink::internal::ec_util
-    tink::subtle::common_enums
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
 )
 
@@ -1663,22 +1663,20 @@ tink_cc_test(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
     gmock
+    absl::absl_check
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::optional
     crypto
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
-    tink::internal::ec_util
-    tink::subtle::common_enums
-    tink::util::secret_data
-    tink::util::test_matchers
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
 )
 

@@ -38,7 +38,9 @@
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
 #endif
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
@@ -48,10 +50,12 @@
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/prehash.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/signature/slh_dsa_parameters.h"
+#include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -60,6 +64,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Eq;
 using ::testing::Not;
@@ -75,6 +80,9 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
 
   EXPECT_THAT((*store)->Get<PublicKeySign>(), IsOk());
   EXPECT_THAT((*store)->Get<PublicKeyVerify>(), IsOk());
+#ifdef OPENSSL_IS_BORINGSSL
+  EXPECT_THAT((*store)->Get<Prehash>(), IsOk());
+#endif
 }
 
 TEST(SignatureV0Test, KeyManagers) {
@@ -262,6 +270,38 @@ TEST(SignatureConfigV0Test, MlDsaVerifyWithWrongMessageFails) {
   absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, "wrong_data"), Not(IsOk()));
+}
+
+TEST(SignatureConfigV0Test, MlDsaPrehashPrimitiveCreatorWorks) {
+  Configuration config;
+  ASSERT_THAT(AddSignature2026(config), IsOk());
+
+  const SignatureTestVector& test_vector =
+      GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                         MlDsaParameters::Variant::kTink);
+
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.signature_private_key->GetPublicKey().Clone(),
+              KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Prehash>> prehash =
+      handle->GetPrimitive<Prehash>(config);
+  ASSERT_THAT(prehash, IsOk());
+
+  absl::StatusOr<std::string> prehash_value =
+      (*prehash)->Compute(test_vector.message);
+  ASSERT_THAT(prehash_value, IsOk());
+  EXPECT_THAT(
+      *prehash_value,
+      Eq(HexDecodeOrDie(
+          "ff080f141a32162a55180e25b893fd1d2e554b1b330dcf73f2f663dd67fb549b86"
+          "ead695535216afe93d6a5d55e21ee24097ae33030a940835d895a1c5594d3238aa"
+          "3bd555")));
 }
 
 TEST(SignatureConfigV0Test,

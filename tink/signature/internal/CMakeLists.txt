@@ -1717,10 +1717,7 @@ tink_cc_test(
     absl::strings
     absl::optional
     crypto
-    tink::core::insecure_secret_key_access
-    tink::core::partial_key_access
     tink::core::public_key_verify
-    tink::core::restricted_data
     tink::internal::fips_utils
     tink::internal::testing::wycheproof_util
     tink::signature::ml_dsa_parameters
@@ -1728,7 +1725,6 @@ tink_cc_test(
     tink::signature::ml_dsa_public_key
     tink::signature::prehash
     tink::signature::sign_prehash
-    tink::util::test_util
   TAGS
     exclude_if_openssl
 )
@@ -1739,6 +1735,7 @@ tink_cc_library(
     prehash_format.cc
     prehash_format.h
   DEPS
+    absl::optional
     tink::internal::endian
 )
 
@@ -1749,7 +1746,6 @@ tink_cc_test(
   DEPS
     tink::signature::internal::prehash_format
     gmock
-    absl::strings
     tink::util::test_util
 )
 

@@ -28,8 +28,11 @@ namespace tink {
 namespace internal {
 
 // Creates a new Prehash primitive using the ML-DSA implementation from
-// BoringSSL with an empty context. Only ML-DSA-44, ML-DSA-65, and ML-DSA-87
-// are supported.
+// BoringSSL with an empty context. It computes the external mu value for
+// ML-DSA-44, ML-DSA-65, or ML-DSA-87, and for keys with output prefix types
+// other than kNoPrefix it also prepends the external mu value with the
+// prefix "0xff || big_endian(key_id)" (5 bytes in total); for kNoPrefix keys,
+// the prefix is an empty string.
 //
 // This function unconditionally returns an error in non-BoringSSL builds.
 absl::StatusOr<std::unique_ptr<Prehash>> NewMlDsaPrehashBoringSsl(

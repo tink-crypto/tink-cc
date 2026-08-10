@@ -19,13 +19,19 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/types/optional.h"
 #include "tink/internal/endian.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-std::string GetPrehashPrefix(uint32_t key_id) {
+std::string GetPrehashPrefix(absl::optional<int32_t> id_requirement) {
+  if (!id_requirement.has_value()) {
+    return std::string("");
+  }
+
+  int32_t key_id = id_requirement.value();
   std::string prefix(kPrehashPrefixSize, '\0');
   prefix[0] = kPrehashStartByte;
   StoreBigEndian32(reinterpret_cast<uint8_t*>(&prefix[1]), key_id);

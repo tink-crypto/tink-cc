@@ -60,7 +60,7 @@ class MlDsa44PrehashBoringSsl : public Prehash {
       std::unique_ptr<MLDSA44_public_key> boringssl_public_key)
       : public_key_(std::move(public_key)),
         boringssl_public_key_(std::move(boringssl_public_key)),
-        prehash_prefix_(GetPrehashPrefix(*public_key_.GetIdRequirement())) {}
+        prehash_prefix_(GetPrehashPrefix(public_key_.GetIdRequirement())) {}
 
  private:
   MlDsaPublicKey public_key_;
@@ -73,12 +73,6 @@ absl::StatusOr<std::unique_ptr<Prehash>> MlDsa44PrehashBoringSsl::New(
   auto status = CheckFipsCompatibility<MlDsa44PrehashBoringSsl>();
   if (!status.ok()) {
     return status;
-  }
-
-  if (public_key.GetParameters().GetVariant() !=
-      MlDsaParameters::Variant::kNoPrefixWithPrehashId) {
-    return absl::InvalidArgumentError(
-        "ML-DSA Prehash requires Variant::kNoPrefixWithPrehashId");
   }
 
   absl::string_view public_key_bytes =
@@ -129,7 +123,7 @@ class MlDsa65PrehashBoringSsl : public Prehash {
       std::unique_ptr<MLDSA65_public_key> boringssl_public_key)
       : public_key_(std::move(public_key)),
         boringssl_public_key_(std::move(boringssl_public_key)),
-        prehash_prefix_(GetPrehashPrefix(*public_key_.GetIdRequirement())) {}
+        prehash_prefix_(GetPrehashPrefix(public_key_.GetIdRequirement())) {}
 
  private:
   MlDsaPublicKey public_key_;
@@ -142,12 +136,6 @@ absl::StatusOr<std::unique_ptr<Prehash>> MlDsa65PrehashBoringSsl::New(
   auto status = CheckFipsCompatibility<MlDsa65PrehashBoringSsl>();
   if (!status.ok()) {
     return status;
-  }
-
-  if (public_key.GetParameters().GetVariant() !=
-      MlDsaParameters::Variant::kNoPrefixWithPrehashId) {
-    return absl::InvalidArgumentError(
-        "ML-DSA Prehash requires Variant::kNoPrefixWithPrehashId");
   }
 
   absl::string_view public_key_bytes =
@@ -198,7 +186,7 @@ class MlDsa87PrehashBoringSsl : public Prehash {
       std::unique_ptr<MLDSA87_public_key> boringssl_public_key)
       : public_key_(std::move(public_key)),
         boringssl_public_key_(std::move(boringssl_public_key)),
-        prehash_prefix_(GetPrehashPrefix(*public_key_.GetIdRequirement())) {}
+        prehash_prefix_(GetPrehashPrefix(public_key_.GetIdRequirement())) {}
 
  private:
   MlDsaPublicKey public_key_;
@@ -211,12 +199,6 @@ absl::StatusOr<std::unique_ptr<Prehash>> MlDsa87PrehashBoringSsl::New(
   auto status = CheckFipsCompatibility<MlDsa87PrehashBoringSsl>();
   if (!status.ok()) {
     return status;
-  }
-
-  if (public_key.GetParameters().GetVariant() !=
-      MlDsaParameters::Variant::kNoPrefixWithPrehashId) {
-    return absl::InvalidArgumentError(
-        "ML-DSA Prehash requires Variant::kNoPrefixWithPrehashId");
   }
 
   absl::string_view public_key_bytes =

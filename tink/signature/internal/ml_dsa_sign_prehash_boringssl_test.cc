@@ -16,6 +16,7 @@
 
 #include "tink/signature/internal/ml_dsa_sign_prehash_boringssl.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -24,16 +25,11 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/mldsa.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/testing/wycheproof_util.h"
-#include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
-#include "tink/restricted_data.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
@@ -42,7 +38,6 @@
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/prehash.h"
 #include "tink/signature/sign_prehash.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -141,23 +136,21 @@ TEST(MlDsaSignPrehashBoringSslNonParamTest, RejectInvalidVariants) {
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  // Test kTink
+  // Test kTink is accepted
   auto tink_params = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
   auto tink_key = CreateMlDsaKey(*tink_params, 0x01020304);
   ASSERT_THAT(tink_key, IsOk());
-  EXPECT_THAT(NewMlDsaSignPrehashBoringSsl(**tink_key).status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(NewMlDsaSignPrehashBoringSsl(**tink_key).status(), IsOk());
 
-  // Test kNoPrefix
+  // Test kNoPrefix is accepted
   auto noprefix_params = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(noprefix_params, IsOk());
   auto noprefix_key = CreateMlDsaKey(*noprefix_params, std::nullopt);
   ASSERT_THAT(noprefix_key, IsOk());
-  EXPECT_THAT(NewMlDsaSignPrehashBoringSsl(**noprefix_key).status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(NewMlDsaSignPrehashBoringSsl(**noprefix_key).status(), IsOk());
 }
 
 // Wycheproof test vectors from mldsa_{44,65,87}_verify_test.json.

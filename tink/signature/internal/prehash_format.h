@@ -20,6 +20,8 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/types/optional.h"
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -32,7 +34,8 @@ constexpr int kPrehashPrefixSize = 5;
 
 // Returns prehash prefix {`kPrehashStartByte` || `key_id` (big endian)}.
 // Every prehash will have the same output prefix (regardless of the key type).
-std::string GetPrehashPrefix(uint32_t key_id);
+// If `id_requirement` is nullopt, returns an empty string.
+std::string GetPrehashPrefix(absl::optional<int32_t> id_requirement);
 
 }  // namespace internal
 }  // namespace tink

@@ -16,9 +16,10 @@
 
 #include "tink/signature/internal/prehash_format.h"
 
+#include <optional>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/escaping.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -38,6 +39,7 @@ TEST(PrehashFormatTest, GetPrehashPrefix) {
   EXPECT_THAT(GetPrehashPrefix(0x00000000), Eq(HexDecodeOrDie("ff00000000")));
   EXPECT_THAT(GetPrehashPrefix(0x12345678), Eq(HexDecodeOrDie("ff12345678")));
   EXPECT_THAT(GetPrehashPrefix(0xffffffff), Eq(HexDecodeOrDie("ffffffffff")));
+  EXPECT_THAT(GetPrehashPrefix(std::nullopt), Eq(""));
 }
 
 }  // namespace

@@ -16,6 +16,7 @@
 
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -42,7 +43,6 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::absl_testing::StatusIs;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -160,22 +160,22 @@ TEST_P(MlDsaPrehashBoringSslTest, DifferentMessagesProduceDifferentPrehashes) {
   EXPECT_NE(*prehash1, *prehash2);
 }
 
-TEST(MlDsaPrehashBoringSslNonParamTest, RejectInvalidVariants) {
+TEST(MlDsaPrehashBoringSslNonParamTest, AcceptsVariants) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  // Test kTink
+  // Test kTink is accepted
   auto tink_params = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
   auto tink_key = CreateMlDsaKey(*tink_params, 0x01020304);
   ASSERT_THAT(tink_key, IsOk());
   EXPECT_THAT(NewMlDsaPrehashBoringSsl((*tink_key)->GetPublicKey()).status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              IsOk());
 
-  // Test kNoPrefix
+  // Test kNoPrefix is accepted
   auto noprefix_params = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(noprefix_params, IsOk());
@@ -183,7 +183,7 @@ TEST(MlDsaPrehashBoringSslNonParamTest, RejectInvalidVariants) {
   ASSERT_THAT(noprefix_key, IsOk());
   EXPECT_THAT(
       NewMlDsaPrehashBoringSsl((*noprefix_key)->GetPublicKey()).status(),
-      StatusIs(absl::StatusCode::kInvalidArgument));
+      IsOk());
 }
 
 // Test values from

@@ -1796,3 +1796,39 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME sign_prehash_wrapper
+  SRCS
+    sign_prehash_wrapper.cc
+    sign_prehash_wrapper.h
+  DEPS
+    tink::signature::internal::prehash_format
+    absl::status
+    absl::statusor
+    absl::strings
+    tink::core::primitive_wrapper
+    tink::internal::endian
+    tink::internal::primitive_set
+    tink::internal::util
+    tink::signature::sign_prehash
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME sign_prehash_wrapper_test
+  SRCS
+    sign_prehash_wrapper_test.cc
+  DEPS
+    tink::signature::internal::sign_prehash_wrapper
+    gmock
+    absl::algorithm_container
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    tink::internal::primitive_set
+    tink::signature::sign_prehash
+    tink::util::test_util
+    tink::proto::tink_cc_proto
+)

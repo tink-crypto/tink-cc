@@ -1452,8 +1452,10 @@ tink_cc_library(
     tink::signature::internal::ml_dsa_prehash_boringssl
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_sign_boringssl
+    tink::signature::internal::ml_dsa_sign_prehash_boringssl
     tink::signature::internal::ml_dsa_verify_boringssl
     tink::signature::internal::prehash_wrapper
+    tink::signature::internal::sign_prehash_wrapper
     tink::signature::internal::slh_dsa_proto_serialization
     tink::signature::internal::slh_dsa_sign_boringssl
     tink::signature::internal::slh_dsa_verify_boringssl
@@ -1494,6 +1496,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_public_key
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
+    tink::signature::sign_prehash
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
     tink::signature::subtle::composite_ml_dsa_sign_boringssl
@@ -1522,6 +1525,7 @@ tink_cc_test(
     absl::absl_check
     absl::status_matchers
     absl::statusor
+    absl::strings
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -1539,6 +1543,7 @@ tink_cc_test(
     tink::signature::prehash
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
+    tink::signature::sign_prehash
     tink::signature::signature_key_templates
     tink::signature::slh_dsa_parameters
     tink::signature::internal::testing::composite_ml_dsa_test_vectors
@@ -1819,7 +1824,10 @@ tink_cc_test(
   NAME sign_prehash_wrapper_test
   SRCS
     sign_prehash_wrapper_test.cc
+  DATA
+    wycheproof::testvectors_v1
   DEPS
+    tink::signature::internal::config_2026
     tink::signature::internal::sign_prehash_wrapper
     gmock
     absl::algorithm_container
@@ -1827,8 +1835,25 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
+    absl::optional
+    crypto
+    tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::core::restricted_data
+    tink::internal::fips_utils
     tink::internal::primitive_set
+    tink::internal::testing::wycheproof_util
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::prehash
     tink::signature::sign_prehash
     tink::util::test_util
     tink::proto::tink_cc_proto
+  TAGS
+    exclude_if_openssl
 )

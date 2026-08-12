@@ -16,6 +16,7 @@
 
 #include "tink/signature/internal/sign_prehash_wrapper.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -28,6 +29,24 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "openssl/opensslv.h"
+#include "tink/key_status.h"
+#ifdef OPENSSL_IS_BORINGSSL
+#include "tink/configuration.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
+#include "tink/internal/testing/wycheproof_util.h"
+#include "tink/keyset_handle.h"
+#include "tink/partial_key_access.h"
+#include "tink/public_key_verify.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/internal/config_2026.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/ml_dsa_public_key.h"
+#include "tink/signature/prehash.h"
+#endif
 #include "tink/internal/primitive_set.h"
 #include "tink/signature/sign_prehash.h"
 #include "tink/util/test_util.h"
@@ -224,6 +243,110 @@ TEST(SignPrehashWrapperTest, WrapWithWithIdRequirementPrimary) {
       (*sign_set_primitive)->Sign(absl::StrCat(prehash_prefix, "abcde")),
       IsOkAndHolds("edcba"));
 }
+
+#ifdef OPENSSL_IS_BORINGSSL
+
+using ::testing::TestWithParam;
+using ::testing::Values;
+
+// Wycheproof test vectors from mldsa_{44,65,87}_sign_seed_test.json.
+struct WycheproofTestCase {
+  MlDsaParameters::Instance instance;
+  std::string filename;
+};
+
+using SignPrehashWrapperWycheproofTest = TestWithParam<WycheproofTestCase>;
+
+INSTANTIATE_TEST_SUITE_P(
+    SignPrehashWrapperWycheproofTestSuite, SignPrehashWrapperWycheproofTest,
+    Values(WycheproofTestCase{MlDsaParameters::Instance::kMlDsa44,
+                              "mldsa_44_sign_seed_test.json"},
+           WycheproofTestCase{MlDsaParameters::Instance::kMlDsa65,
+                              "mldsa_65_sign_seed_test.json"},
+           WycheproofTestCase{MlDsaParameters::Instance::kMlDsa87,
+                              "mldsa_87_sign_seed_test.json"}));
+
+TEST_P(SignPrehashWrapperWycheproofTest,
+       PrehashSignVerifyWycheproofTestVectors) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+
+  WycheproofTestCase test_case = GetParam();
+
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
+      wycheproof_testing::ReadTestVectorsV1(test_case.filename);
+  ASSERT_THAT(parsed_input, IsOk());
+
+  Configuration config;
+  ASSERT_THAT(AddSignature2026(config), IsOk());
+
+  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
+      test_case.instance, MlDsaParameters::Variant::kNoPrefixWithPrehashId);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    std::string private_seed_bytes = wycheproof_testing::GetBytesFromHexValue(
+        test_group.struct_value().fields().at("privateSeed"));
+    RestrictedData private_seed(private_seed_bytes,
+                               InsecureSecretKeyAccess::Get());
+    constexpr uint32_t kKeyId = 0x01020304;
+    absl::StatusOr<MlDsaPrivateKey> private_key =
+        MlDsaPrivateKey::Create(*key_parameters, private_seed,
+                                /*id_requirement=*/kKeyId,
+                                GetPartialKeyAccess());
+    ASSERT_THAT(private_key, IsOk());
+
+    absl::StatusOr<KeysetHandle> private_handle =
+        KeysetHandleBuilder()
+            .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                *private_key, KeyStatus::kEnabled,
+                /*is_primary=*/true))
+            .Build();
+    ASSERT_THAT(private_handle, IsOk());
+
+    absl::StatusOr<KeysetHandle> public_handle =
+        KeysetHandleBuilder()
+            .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                private_key->GetPublicKey(), KeyStatus::kEnabled,
+                /*is_primary=*/true))
+            .Build();
+    ASSERT_THAT(public_handle, IsOk());
+
+    absl::StatusOr<std::unique_ptr<Prehash>> prehasher =
+        public_handle->GetPrimitive<Prehash>(config);
+    ASSERT_THAT(prehasher, IsOk());
+
+    absl::StatusOr<std::unique_ptr<SignPrehash>> prehash_signer =
+        private_handle->GetPrimitive<SignPrehash>(config);
+    ASSERT_THAT(prehash_signer, IsOk());
+
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+        public_handle->GetPrimitive<PublicKeyVerify>(config);
+    ASSERT_THAT(verifier, IsOk());
+
+    for (const google::protobuf::Value& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      auto test_fields = test.struct_value().fields();
+      std::string msg =
+          wycheproof_testing::GetBytesFromHexValue(test_fields.at("msg"));
+
+      absl::StatusOr<std::string> prehash = (*prehasher)->Compute(msg);
+      ASSERT_THAT(prehash, IsOk());
+
+      absl::StatusOr<std::string> signature = (*prehash_signer)->Sign(*prehash);
+      ASSERT_THAT(signature, IsOk());
+
+      EXPECT_THAT((*verifier)->Verify(*signature, msg), IsOk());
+    }
+  }
+}
+
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 }  // namespace internal

@@ -44,14 +44,17 @@
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
+#include "tink/signature/internal/ml_dsa_sign_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
 #include "tink/signature/internal/prehash_wrapper.h"
+#include "tink/signature/internal/sign_prehash_wrapper.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/prehash.h"
+#include "tink/signature/sign_prehash.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
@@ -155,6 +158,11 @@ absl::Status AddSignature2026(Configuration& config) {
 #ifdef OPENSSL_IS_BORINGSSL
   status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<PrehashWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveWrapper(
+      std::make_unique<SignPrehashWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -294,6 +302,11 @@ absl::Status AddSignature2026(Configuration& config) {
   }
   status = ConfigurationImpl::AddPrimitiveGetter<Prehash, MlDsaPublicKey>(
       NewMlDsaPrehashBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<SignPrehash, MlDsaPrivateKey>(
+      NewMlDsaSignPrehashBoringSsl, config);
   if (!status.ok()) {
     return status;
   }

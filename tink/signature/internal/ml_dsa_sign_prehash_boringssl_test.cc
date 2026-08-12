@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -46,6 +47,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -130,7 +132,7 @@ TEST_P(MlDsaSignPrehashBoringSslTest, SignPrehashWithInvalidLengthFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(MlDsaSignPrehashBoringSslNonParamTest, RejectInvalidVariants) {
+TEST(MlDsaSignPrehashBoringSslNonParamTest, AcceptVariants) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
@@ -151,6 +153,53 @@ TEST(MlDsaSignPrehashBoringSslNonParamTest, RejectInvalidVariants) {
   auto noprefix_key = CreateMlDsaKey(*noprefix_params, std::nullopt);
   ASSERT_THAT(noprefix_key, IsOk());
   EXPECT_THAT(NewMlDsaSignPrehashBoringSsl(**noprefix_key).status(), IsOk());
+}
+
+using MlDsaSignPrehashRawTest = TestWithParam<MlDsaParameters::Instance>;
+
+INSTANTIATE_TEST_SUITE_P(
+    MlDsaSignPrehashRawTestSuite, MlDsaSignPrehashRawTest,
+    Values(MlDsaParameters::Instance::kMlDsa44,
+           MlDsaParameters::Instance::kMlDsa65,
+           MlDsaParameters::Instance::kMlDsa87));
+
+TEST_P(MlDsaSignPrehashRawTest, SignVerifyFlowWithRawKeyWorks) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+
+  MlDsaParameters::Instance instance = GetParam();
+
+  absl::StatusOr<MlDsaParameters> key_parameters =
+      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(key_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/std::nullopt);
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Prehash>> prehasher =
+      NewMlDsaPrehashBoringSsl((*private_key)->GetPublicKey());
+  ASSERT_THAT(prehasher, IsOk());
+
+  absl::StatusOr<std::unique_ptr<SignPrehash>> prehash_signer =
+      NewMlDsaSignPrehashBoringSsl(**private_key);
+  ASSERT_THAT(prehash_signer, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+
+  std::string message = "message for prehash signing";
+  absl::StatusOr<std::string> prehash = (*prehasher)->Compute(message);
+  ASSERT_THAT(prehash, IsOk());
+
+  absl::StatusOr<std::string> signature = (*prehash_signer)->Sign(*prehash);
+  ASSERT_THAT(signature, IsOk());
+
+  EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"), Not(IsOk()));
 }
 
 // Wycheproof test vectors from mldsa_{44,65,87}_verify_test.json.

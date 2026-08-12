@@ -254,7 +254,7 @@ class MlDsa87SignPrehashBoringSsl : public SignPrehash {
       : private_key_(std::move(private_key)),
         boringssl_private_key_(std::move(boringssl_private_key)),
         prehash_prefix_(
-            GetPrehashPrefix(*private_key_.GetPublicKey().GetIdRequirement())) {
+            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {
   }
 
  private:

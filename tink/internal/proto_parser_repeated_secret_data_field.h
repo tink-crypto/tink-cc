@@ -18,11 +18,14 @@
 #define TINK_INTERNAL_PROTO_PARSER_REPEATED_SECRET_DATA_FIELD_H_
 
 #include <cstddef>
+#include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/secret_data.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -47,6 +50,26 @@ class RepeatedSecretDataField : public Field {
   bool SerializeWithTagInto(
       SerializationState& serialization_state) const override;
   size_t GetSerializedSizeIncludingTag() const override;
+
+  int values_size() const { return value_.size(); }
+  const std::vector<SecretData>& values() const { return value_; }
+  std::vector<SecretData>* mutable_values() { return &value_; }
+  const SecretData& values(int index) const { return value_[index]; }
+  SecretData* mutable_values(int index) { return &value_[index]; }
+  SecretData* add_values() {
+    value_.emplace_back();
+    return &value_.back();
+  }
+  void add_values(SecretData value) { value_.push_back(std::move(value)); }
+  void add_values(absl::string_view value) {
+    value_.push_back(crypto::tink::util::SecretDataFromStringView(value));
+  }
+  void set_value(int index, SecretData value) {
+    value_[index] = std::move(value);
+  }
+  void set_value(int index, absl::string_view value) {
+    value_[index] = crypto::tink::util::SecretDataFromStringView(value);
+  }
 
   const std::vector<SecretData>& value() const { return value_; }
   std::vector<SecretData>& value() { return value_; }

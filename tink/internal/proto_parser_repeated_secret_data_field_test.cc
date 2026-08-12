@@ -31,7 +31,6 @@
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -44,6 +43,7 @@ using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
+using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
@@ -390,6 +390,91 @@ TEST(RepeatedSecretDataField, MoveAssignment) {
   EXPECT_THAT(HexEncode(buffer),
               Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
                               HexEncode("secret2"))));
+}
+
+TEST(RepeatedSecretDataField, Accessors) {
+  RepeatedSecretDataField field(1);
+
+  // values_size initial
+  EXPECT_THAT(field.values_size(), Eq(0));
+  EXPECT_THAT(field.values(), IsEmpty());
+  EXPECT_THAT(field.value(), IsEmpty());
+
+  // add_values() returning SecretData*
+  SecretData* added1 = field.add_values();
+  ASSERT_NE(added1, nullptr);
+  *added1 = SecretDataFromStringView("secret1");
+  EXPECT_THAT(field.values_size(), Eq(1));
+  EXPECT_THAT(SecretDataAsStringView(field.values(0)), Eq("secret1"));
+
+  // add_values(absl::string_view)
+  field.add_values(absl::string_view("secret2"));
+  EXPECT_THAT(field.values_size(), Eq(2));
+  EXPECT_THAT(SecretDataAsStringView(field.values(1)), Eq("secret2"));
+
+  // add_values(SecretData) with lvalue
+  SecretData lvalue_secret = SecretDataFromStringView("secret3");
+  field.add_values(lvalue_secret);
+  EXPECT_THAT(field.values_size(), Eq(3));
+  EXPECT_THAT(SecretDataAsStringView(field.values(2)), Eq("secret3"));
+
+  // add_values(SecretData) with rvalue
+  field.add_values(SecretDataFromStringView("secret4"));
+  EXPECT_THAT(field.values_size(), Eq(4));
+  EXPECT_THAT(SecretDataAsStringView(field.values(3)), Eq("secret4"));
+
+  // values() const vector ref
+  const std::vector<SecretData>& vals = field.values();
+  ASSERT_THAT(vals, SizeIs(4));
+  EXPECT_THAT(SecretDataAsStringView(vals[0]), Eq("secret1"));
+  EXPECT_THAT(SecretDataAsStringView(vals[1]), Eq("secret2"));
+  EXPECT_THAT(SecretDataAsStringView(vals[2]), Eq("secret3"));
+  EXPECT_THAT(SecretDataAsStringView(vals[3]), Eq("secret4"));
+
+  // value() const ref
+  const std::vector<SecretData>& legacy_vals = field.value();
+  ASSERT_THAT(legacy_vals, SizeIs(4));
+  EXPECT_THAT(SecretDataAsStringView(legacy_vals[0]), Eq("secret1"));
+
+  // mutable_values() vector pointer
+  std::vector<SecretData>* mutable_vals = field.mutable_values();
+  ASSERT_NE(mutable_vals, nullptr);
+  mutable_vals->push_back(SecretDataFromStringView("secret5"));
+  EXPECT_THAT(field.values_size(), Eq(5));
+  EXPECT_THAT(SecretDataAsStringView(field.values(4)), Eq("secret5"));
+
+  // mutable_values(index) SecretData pointer
+  SecretData* mutable_elem = field.mutable_values(1);
+  ASSERT_NE(mutable_elem, nullptr);
+  *mutable_elem = SecretDataFromStringView("updated_secret2");
+  EXPECT_THAT(SecretDataAsStringView(field.values(1)), Eq("updated_secret2"));
+
+  // set_value(index, absl::string_view)
+  field.set_value(0, absl::string_view("updated_secret1"));
+  EXPECT_THAT(SecretDataAsStringView(field.values(0)), Eq("updated_secret1"));
+
+  // set_value(index, SecretData) with lvalue
+  SecretData lvalue_updated = SecretDataFromStringView("updated_secret3");
+  field.set_value(2, lvalue_updated);
+  EXPECT_THAT(SecretDataAsStringView(field.values(2)), Eq("updated_secret3"));
+
+  // set_value(index, SecretData) with rvalue
+  field.set_value(3, SecretDataFromStringView("updated_secret4"));
+  EXPECT_THAT(SecretDataAsStringView(field.values(3)), Eq("updated_secret4"));
+
+  // value() non-const ref
+  field.value().pop_back();
+  EXPECT_THAT(field.values_size(), Eq(4));
+
+  // Verify all updated values
+  EXPECT_THAT(SecretDataAsStringView(field.values(0)), Eq("updated_secret1"));
+  EXPECT_THAT(SecretDataAsStringView(field.values(1)), Eq("updated_secret2"));
+  EXPECT_THAT(SecretDataAsStringView(field.values(2)), Eq("updated_secret3"));
+  EXPECT_THAT(SecretDataAsStringView(field.values(3)), Eq("updated_secret4"));
+
+  // Clear via mutable_values
+  field.mutable_values()->clear();
+  EXPECT_THAT(field.values_size(), Eq(0));
 }
 
 }  // namespace proto_parsing

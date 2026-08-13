@@ -50,22 +50,24 @@ build_and_upload_ccache() {
   local -r config_cache_tar="config_cache.tgz"
   local -r ccache_tar="ccache.tgz"
 
-  # Clean up and recreate directories.
-  rm -rf ccache config_cache out
-  mkdir -p ccache
-  mkdir -p config_cache
-
   # Construct the command to build Tink and update the ccache.
   cat << EOF > /tmp/do_run_test.sh
 set -euo pipefail
+
+# Clean up and recreate directories.
+rm -rf ccache ${config_cache_dir} out
+mkdir -p ccache
+mkdir -p ${config_cache_dir}
+
 export CCACHE_DIR="\$(pwd)/ccache"
+
 set -x
 rm -rf out
 mkdir -p out
 cmake -S . -B out ${cmake_opts[@]@Q}
-tar -C . -czf config_cache/config_cache.tgz out
+tar -C . -czf "${config_cache_dir}/${config_cache_tar}" out
 cmake --build out --parallel \$(nproc)
-tar -C . -czf ccache.tgz ccache
+tar -C . -czf "${ccache_tar}" ccache
 EOF
 
   local run_command_args=()

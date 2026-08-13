@@ -1729,7 +1729,10 @@ tink_cc_test(
     absl::strings
     absl::optional
     crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
     tink::core::public_key_verify
+    tink::core::restricted_data
     tink::internal::fips_utils
     tink::internal::testing::wycheproof_util
     tink::signature::ml_dsa_parameters

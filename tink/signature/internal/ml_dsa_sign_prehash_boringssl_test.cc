@@ -27,10 +27,12 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
@@ -202,7 +204,7 @@ TEST_P(MlDsaSignPrehashRawTest, SignVerifyFlowWithRawKeyWorks) {
   EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"), Not(IsOk()));
 }
 
-// Wycheproof test vectors from mldsa_{44,65,87}_verify_test.json.
+// Wycheproof test vectors from mldsa_{44,65,87}_sign_seed_test.json.
 struct WycheproofTestCase {
   MlDsaParameters::Instance instance;
   std::string filename;
@@ -213,11 +215,11 @@ using MlDsaSignPrehashWycheproofTest = TestWithParam<WycheproofTestCase>;
 INSTANTIATE_TEST_SUITE_P(
     MlDsaSignPrehashWycheproofTestSuite, MlDsaSignPrehashWycheproofTest,
     Values(WycheproofTestCase{MlDsaParameters::Instance::kMlDsa44,
-                              "mldsa_44_verify_test.json"},
+                              "mldsa_44_sign_seed_test.json"},
            WycheproofTestCase{MlDsaParameters::Instance::kMlDsa65,
-                              "mldsa_65_verify_test.json"},
+                              "mldsa_65_sign_seed_test.json"},
            WycheproofTestCase{MlDsaParameters::Instance::kMlDsa87,
-                              "mldsa_87_verify_test.json"}));
+                              "mldsa_87_sign_seed_test.json"}));
 
 TEST_P(MlDsaSignPrehashWycheproofTest, PrehashSignVerifyWycheproofTestVectors) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
@@ -235,27 +237,33 @@ TEST_P(MlDsaSignPrehashWycheproofTest, PrehashSignVerifyWycheproofTestVectors) {
       test_case.instance, MlDsaParameters::Variant::kNoPrefixWithPrehashId);
   ASSERT_THAT(key_parameters, IsOk());
 
-  constexpr uint32_t kKeyId = 0x01020304;
-  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, kKeyId);
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Prehash>> prehasher =
-      NewMlDsaPrehashBoringSsl((*private_key)->GetPublicKey());
-  ASSERT_THAT(prehasher, IsOk());
-
-  absl::StatusOr<std::unique_ptr<SignPrehash>> prehash_signer =
-      NewMlDsaSignPrehashBoringSsl(**private_key);
-  ASSERT_THAT(prehash_signer, IsOk());
-
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
-  ASSERT_THAT(verifier, IsOk());
-
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
   for (const google::protobuf::Value& test_group :
        test_groups.list_value().values()) {
+    std::string private_seed_bytes = wycheproof_testing::GetBytesFromHexValue(
+        test_group.struct_value().fields().at("privateSeed"));
+    RestrictedData private_seed(private_seed_bytes,
+                               InsecureSecretKeyAccess::Get());
+    constexpr uint32_t kKeyId = 0x01020304;
+    absl::StatusOr<MlDsaPrivateKey> private_key =
+        MlDsaPrivateKey::Create(*key_parameters, private_seed,
+                                /*id_requirement=*/kKeyId,
+                                GetPartialKeyAccess());
+    ASSERT_THAT(private_key, IsOk());
+
+    absl::StatusOr<std::unique_ptr<Prehash>> prehasher =
+        NewMlDsaPrehashBoringSsl(private_key->GetPublicKey());
+    ASSERT_THAT(prehasher, IsOk());
+
+    absl::StatusOr<std::unique_ptr<SignPrehash>> prehash_signer =
+        NewMlDsaSignPrehashBoringSsl(*private_key);
+    ASSERT_THAT(prehash_signer, IsOk());
+
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+        NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+    ASSERT_THAT(verifier, IsOk());
+
     for (const google::protobuf::Value& test :
          test_group.struct_value().fields().at("tests").list_value().values()) {
       auto test_fields = test.struct_value().fields();

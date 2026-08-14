@@ -376,6 +376,7 @@ cc_library(
     srcs = ["jwt_rsa_ssa_pkcs1_parameters.cc"],
     hdrs = ["jwt_rsa_ssa_pkcs1_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
         "//tink:big_integer",
@@ -398,6 +399,7 @@ cc_library(
     srcs = ["jwt_rsa_ssa_pkcs1_public_key.cc"],
     hdrs = ["jwt_rsa_ssa_pkcs1_public_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pkcs1_parameters",
         ":jwt_signature_public_key",
@@ -419,6 +421,7 @@ cc_library(
     srcs = ["jwt_rsa_ssa_pkcs1_private_key.cc"],
     hdrs = ["jwt_rsa_ssa_pkcs1_private_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pkcs1_public_key",
         ":jwt_signature_private_key",
@@ -457,6 +460,7 @@ cc_library(
     srcs = ["jwt_rsa_ssa_pss_parameters.cc"],
     hdrs = ["jwt_rsa_ssa_pss_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
         "//tink:big_integer",
@@ -479,6 +483,7 @@ cc_library(
     srcs = ["jwt_rsa_ssa_pss_public_key.cc"],
     hdrs = ["jwt_rsa_ssa_pss_public_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pss_parameters",
         ":jwt_signature_public_key",
@@ -500,6 +505,7 @@ cc_library(
     srcs = ["jwt_rsa_ssa_pss_private_key.cc"],
     hdrs = ["jwt_rsa_ssa_pss_private_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pss_public_key",
         ":jwt_signature_private_key",
@@ -1194,6 +1200,7 @@ cc_library(
     srcs = ["jwt_ml_dsa_parameters.cc"],
     hdrs = ["jwt_ml_dsa_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
         "//tink:parameters",

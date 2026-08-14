@@ -742,6 +742,7 @@ cc_library(
     name = "key",
     hdrs = ["key.h"],
     include_prefix = "tink",
+    visibility = ["//visibility:public"],
     deps = [
         ":parameters",
         "@abseil-cpp//absl/types:optional",
@@ -752,6 +753,7 @@ cc_library(
     name = "private_key",
     hdrs = ["private_key.h"],
     include_prefix = "tink",
+    visibility = ["//visibility:public"],
     deps = [":key"],
 )
 

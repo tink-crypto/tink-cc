@@ -50,7 +50,9 @@ struct SanitizingDeleter {
 
 }  // namespace internal
 
-using SecretData = ::crypto::tink::SecretData;
+using SecretData [[deprecated(
+    "Use ::crypto::tink::SecretData instead")]] ABSL_REFACTOR_INLINE =
+    ::crypto::tink::SecretData;
 
 // Constant-time comparison for SecretData
 // SecretDataEquals should be used instead of regular operator== in most cases.

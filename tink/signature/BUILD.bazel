@@ -10,6 +10,7 @@ cc_library(
     srcs = ["prehash.cc"],
     hdrs = ["prehash.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -21,6 +22,7 @@ cc_library(
     srcs = ["sign_prehash.cc"],
     hdrs = ["sign_prehash.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -739,6 +741,7 @@ cc_library(
     srcs = ["rsa_ssa_pss_parameters.cc"],
     hdrs = ["rsa_ssa_pss_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:big_integer",
@@ -762,6 +765,7 @@ cc_library(
     srcs = ["rsa_ssa_pss_public_key.cc"],
     hdrs = ["rsa_ssa_pss_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pss_parameters",
         ":signature_public_key",
@@ -785,6 +789,7 @@ cc_library(
     srcs = ["rsa_ssa_pss_private_key.cc"],
     hdrs = ["rsa_ssa_pss_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pss_parameters",
         ":rsa_ssa_pss_public_key",
@@ -825,6 +830,7 @@ cc_library(
     srcs = ["ecdsa_parameters.cc"],
     hdrs = ["ecdsa_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:parameters",
@@ -841,6 +847,7 @@ cc_library(
     srcs = ["ecdsa_public_key.cc"],
     hdrs = ["ecdsa_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ecdsa_parameters",
         ":signature_public_key",
@@ -867,6 +874,7 @@ cc_library(
     srcs = ["ecdsa_private_key.cc"],
     hdrs = ["ecdsa_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ecdsa_parameters",
         ":ecdsa_public_key",

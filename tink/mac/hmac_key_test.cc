@@ -17,6 +17,7 @@
 #include "tink/mac/hmac_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -25,13 +26,15 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
+#include "tink/secret_key_access_token.h"
 
 namespace crypto {
 namespace tink {
@@ -44,6 +47,34 @@ using ::testing::Eq;
 using ::testing::Range;
 using ::testing::TestWithParam;
 using ::testing::Values;
+
+// Returns static secret key bytes for the given key size in bytes from
+// internal::GetHmacTestVector.
+RestrictedData GetSecretKeyBytes(int key_size) {
+  switch (key_size) {
+    case 16:
+      return internal::GetHmacTestVector(16, HmacParameters::HashType::kSha256,
+                                         HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
+    case 20:
+      return internal::GetHmacTestVector(20, HmacParameters::HashType::kSha384,
+                                         HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
+    case 32:
+      return internal::GetHmacTestVector(32, HmacParameters::HashType::kSha1,
+                                         HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
+    case 40:
+      return internal::GetHmacTestVector(40, HmacParameters::HashType::kSha256,
+                                         HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
+    case 100:
+      return internal::GetHmacTestVector(100, HmacParameters::HashType::kSha512,
+                                         HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
+  }
+  return RestrictedData();
+}
 
 struct TestCase {
   HmacParameters::Variant variant;
@@ -82,7 +113,7 @@ TEST_P(HmacKeyTest, CreateSucceeds) {
       key_size, cryptographic_tag_size, hash_type, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret = GetSecretKeyBytes(key_size);
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key.status(), IsOk());
@@ -100,7 +131,7 @@ TEST(HmacKeyTest, CreateKeyWithMismatchedKeySizeFails) {
   ASSERT_THAT(params, IsOk());
 
   // Key material is 16 bytes (another valid key length).
-  RestrictedData mismatched_secret = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData mismatched_secret = GetSecretKeyBytes(16);
 
   EXPECT_THAT(HmacKey::Create(*params, mismatched_secret,
                               /*id_requirement=*/123, GetPartialKeyAccess())
@@ -119,7 +150,7 @@ TEST(HmacKeyTest, CreateKeyWithWrongIdRequirementFails) {
       HmacParameters::HashType::kSha512, HmacParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   EXPECT_THAT(HmacKey::Create(*no_prefix_params, secret,
                               /*id_requirement=*/123, GetPartialKeyAccess())
@@ -143,7 +174,7 @@ TEST_P(HmacKeyTest, GetKeyBytes) {
       key_size, cryptographic_tag_size, hash_type, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret = GetSecretKeyBytes(key_size);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
@@ -163,7 +194,7 @@ TEST_P(HmacKeyTest, KeyEquals) {
       key_size, cryptographic_tag_size, hash_type, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret = GetSecretKeyBytes(key_size);
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -189,7 +220,7 @@ TEST(HmacKeyTest, DifferentFormatNotEqual) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key =
       HmacKey::Create(*legacy_params, secret, /*id_requirement=*/0x01020304,
@@ -213,8 +244,18 @@ TEST(HmacKeyTest, DifferentSecretDataNotEqual) {
       HmacParameters::HashType::kSha384, HmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
+  SecretKeyAccessToken ska = InsecureSecretKeyAccess::Get();
+  RestrictedData secret1 =
+      internal::GetHmacTestVector(32, HmacParameters::HashType::kSha1,
+                                  HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
+  RestrictedData secret2 = RestrictedData(
+      internal::GetHmacTestVector(40, HmacParameters::HashType::kSha256,
+                                  HmacParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess())
+          .GetSecret(ska)
+          .substr(0, 32),
+      ska);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *params, secret1, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
@@ -236,7 +277,7 @@ TEST(HmacKeyTest, DifferentIdRequirementNotEqual) {
       HmacParameters::HashType::kSha224, HmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *params, secret, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
@@ -258,7 +299,7 @@ TEST(HmacKeyTest, CopyConstructor) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
@@ -277,7 +318,7 @@ TEST(HmacKeyTest, CopyAssignment) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
@@ -288,7 +329,7 @@ TEST(HmacKeyTest, CopyAssignment) {
       HmacParameters::HashType::kSha224, HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters2, IsOk());
 
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData secret2 = GetSecretKeyBytes(16);
 
   absl::StatusOr<HmacKey> copy =
       HmacKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
@@ -308,7 +349,7 @@ TEST(HmacKeyTest, MoveConstructor) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
@@ -327,7 +368,7 @@ TEST(HmacKeyTest, MoveAssignment) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
@@ -338,7 +379,7 @@ TEST(HmacKeyTest, MoveAssignment) {
       HmacParameters::HashType::kSha224, HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters2, IsOk());
 
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData secret2 = GetSecretKeyBytes(16);
 
   absl::StatusOr<HmacKey> move =
       HmacKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
@@ -358,7 +399,7 @@ TEST(HmacKeyTest, Clone) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = GetSecretKeyBytes(32);
 
   absl::StatusOr<HmacKey> key = HmacKey::Create(
       *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());

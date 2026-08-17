@@ -75,6 +75,17 @@ using HmacTestVectorMap = absl::flat_hash_map<
 const HmacTestVectorMap& CreateHmacTestVectorsMap() {
   static const absl::NoDestructor<HmacTestVectorMap> test_vectors(
       HmacTestVectorMap{
+          {{16, HmacParameters::HashType::kSha256,
+            HmacParameters::Variant::kNoPrefix},
+           MakeHmacTestVector(HmacTestVectorParams{
+               /*tag_size=*/16,
+               /*hash_type=*/HmacParameters::HashType::kSha256,
+               /*variant=*/HmacParameters::Variant::kNoPrefix,
+               /*key_hex=*/"e34f15c7bd819930fe9d66e0c166e61c",
+               /*id_requirement=*/std::nullopt,
+               /*msg_hex=*/"",
+               /*tag_hex=*/"1d765ab9e29892f7bfec2975ad4bc2dc",
+           })},
           {{32, HmacParameters::HashType::kSha1,
             HmacParameters::Variant::kNoPrefix},
            MakeHmacTestVector(HmacTestVectorParams{
@@ -120,8 +131,9 @@ const HmacTestVectorMap& CreateHmacTestVectorsMap() {
                /*key_hex=*/"0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
                /*id_requirement=*/std::nullopt,
                /*msg_hex=*/"4869205468657265",
-               /*tag_hex=*/"afd03944d84895626b0825f4ab46907f15f9dadbe4101ec68"
-                          "2aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6",
+               /*tag_hex=*/
+               "afd03944d84895626b0825f4ab46907f15f9dadbe4101ec68"
+               "2aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6",
            })},
           {{100, HmacParameters::HashType::kSha512,
             HmacParameters::Variant::kNoPrefix},

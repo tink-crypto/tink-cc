@@ -1336,14 +1336,15 @@ tink_cc_test(
     tink::signature::ed25519_parameters
     tink::signature::ed25519_public_key
     gmock
+    absl::no_destructor
+    absl::absl_check
     absl::status
     absl::status_matchers
-    absl::optional
     tink::core::key
     tink::core::partial_key_access
-    tink::subtle::random
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1355,19 +1356,19 @@ tink_cc_test(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     gmock
+    absl::no_destructor
+    absl::absl_check
     absl::status
     absl::status_matchers
-    absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::internal::ec_util
-    tink::internal::secret_buffer
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::random
     tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(

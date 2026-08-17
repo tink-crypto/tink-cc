@@ -379,7 +379,11 @@ tink_cc_library(
     aes_cmac_test_vectors.cc
     aes_cmac_test_vectors.h
   DEPS
-    absl::optional
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    absl::statusor
+    absl::string_view
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::partial_key_access_token

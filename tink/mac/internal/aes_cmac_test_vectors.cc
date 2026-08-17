@@ -16,9 +16,16 @@
 
 #include "tink/mac/internal/aes_cmac_test_vectors.h"
 
+#include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
-#include "absl/types/optional.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/absl_check.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
@@ -34,188 +41,86 @@ namespace internal {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 
-std::vector<TinkAesCmacTestVector> AesCmacTestVectors() {
+namespace {
+
+struct AesCmacTestVectorParams {
+  absl::string_view test_name;
+  absl::string_view key_hex;
+  absl::string_view msg_hex;
+  absl::string_view tag_hex;
+};
+
+TinkAesCmacTestVector MakeAesCmacTestVector(
+    const AesCmacTestVectorParams& params) {
   SecretKeyAccessToken ska = InsecureSecretKeyAccess::Get();
   PartialKeyAccessToken pka = GetPartialKeyAccess();
-  return std::vector<TinkAesCmacTestVector>{
-      // From Java AesCmacTestUtil
-      {"RFC_TEST_VECTOR_0",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("2b7e151628aed2a6abf7158809cf4f3c"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie(""), HexDecodeOrDie("bb1d6929e95937287fa37d129b756746")},
-      // From Java AesCmacTestUtil
-      {"RFC_TEST_VECTOR_1",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("2b7e151628aed2a6abf7158809cf4f3c"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac"
-                      "45af8e5130c81c46a35ce411"),
-       HexDecodeOrDie("dfa66747de9ae63030ca32611497c827")},
-      // From Java AesCmacTestUtil
-      {"RFC_TEST_VECTOR_2",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("2b7e151628aed2a6abf7158809cf4f3c"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie(
-           "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c"
-           "81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710"),
-       HexDecodeOrDie("51f0bebf7e3b9d92fc49741779363cfe")},
-      // From Java AesCmacTestUtil
-      {"NOT_OVERFLOWING_INTERNAL_STATE",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("aaaaaa"),
-       HexDecodeOrDie("97268151a23fcd035a2dd0573d84e6ba")},
-      // From Java AesCmacTestUtil
-      {"FILL_UP_EXACTLY_INTERNAL_STATE",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-       HexDecodeOrDie("70e4648706483f8c5e8e2fab7b190c08")},
-      // From Java AesCmacTestUtil
-      {"FILL_UP_EXACTLY_INTERNAL_STATE_TWICE",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie(
-           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-       HexDecodeOrDie("219db2ebac5416dc2b0d8afcb666fb7a")},
-      // From Java AesCmacTestUtil
-      {"OVERFLOW_INTERNAL_STATE_ONCE",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
-       HexDecodeOrDie("0336c9c4bf8f1bc219b017292af24358")},
-      // From Java AesCmacTestUtil
-      {"OVERFLOW_INTERNAL_STATE_TWICE",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                      "bbbbbbbbbbbbbb"),
-       HexDecodeOrDie("611a1ededd3dfff548ed80b7fd10c0ba")},
-      // From Java AesCmacTestUtil
-      {"SHORTER_TAG",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/15,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                      "bbbbbbbbbbbbbb"),
-       HexDecodeOrDie("611a1ededd3dfff548ed80b7fd10c0")},
-      // From Java AesCmacTestUtil
-      {"TAG_WITH_KEY_PREFIX_TYPE_LEGACY",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kLegacy)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/1877, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                      "bbbbbbbbbbbbbb"),
-       HexDecodeOrDie("00000007554816512e20d15db74f1de942d86a2f7b")},
-      // From Java AesCmacTestUtil
-      {"TAG_WITH_KEY_PREFIX_TYPE_TINK",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kTink)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/1877, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                      "bbbbbbbbbbbbbb"),
-       HexDecodeOrDie("0100000755611a1ededd3dfff548ed80b7fd10c0ba")},
-      {"TAG_WITH_KEY_PREFIX_TYPE_CRUNCHY",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 16,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kCrunchy)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/1877, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                      "bbbbbbbbbbbbbb"),
-       HexDecodeOrDie("0000000755611a1ededd3dfff548ed80b7fd10c0ba")},
-      {"LONG_KEY_TEST_VECTOR",
-       AesCmacKey::Create(
-           AesCmacParameters::Create(/* key_size_in_bytes = */ 32,
-                                     /*cryptographic_tag_size_in_bytes=*/16,
-                                     AesCmacParameters::Variant::kNoPrefix)
-               .value(),
-           RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff00112"
-                                         "233445566778899aabbccddeeff"),
-                          ska),
-           /*id_requirement=*/std::nullopt, pka)
-           .value(),
-       HexDecodeOrDie("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                      "bbbbbbbbbbbbbb"),
-       HexDecodeOrDie("139fce15a6f4a281ad22458d3d3cac26")},
+  std::string key_bytes = HexDecodeOrDie(params.key_hex);
+  absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
+      /*key_size_in_bytes=*/key_bytes.size(),
+      /*cryptographic_tag_size_in_bytes=*/16,
+      AesCmacParameters::Variant::kNoPrefix);
+  ABSL_CHECK_OK(parameters.status());
+  absl::StatusOr<AesCmacKey> key =
+      AesCmacKey::Create(*parameters, RestrictedData(key_bytes, ska),
+                         /*id_requirement=*/std::nullopt, pka);
+  ABSL_CHECK_OK(key.status());
+  return TinkAesCmacTestVector{
+      std::string(params.test_name),
+      *std::move(key),
+      HexDecodeOrDie(params.msg_hex),
+      HexDecodeOrDie(params.tag_hex),
   };
+}
+
+using AesCmacTestVectorMap = absl::flat_hash_map<int, TinkAesCmacTestVector>;
+
+const AesCmacTestVectorMap& CreateAesCmacTestVectorsMap() {
+  static const absl::NoDestructor<AesCmacTestVectorMap> test_vectors(
+      AesCmacTestVectorMap{
+          // From Wycheproof aes_cmac_test.json (tcId: 1)
+          {16, MakeAesCmacTestVector(AesCmacTestVectorParams{
+                   /*test_name=*/"WYCHEPROOF_128_BIT_TEST_VECTOR",
+                   /*key_hex=*/"e34f15c7bd819930fe9d66e0c166e61c",
+                   /*msg_hex=*/"",
+                   /*tag_hex=*/"d47afca1d857a5933405b1eb7a5cb7af",
+               })},
+          // From Wycheproof aes_cmac_test.json (tcId: 205)
+          {32, MakeAesCmacTestVector(AesCmacTestVectorParams{
+                   /*test_name=*/"WYCHEPROOF_256_BIT_TEST_VECTOR",
+                   /*key_hex=*/
+                   "7bf9e536b66a215c22233fe2daaa743a898b9acb9f7802de70b40e3d6e"
+                   "43ef97",
+                   /*msg_hex=*/"",
+                   /*tag_hex=*/"736c7b56957db774c5ddf7c7a70ba8a8",
+               })},
+      });
+  return *test_vectors;
+}
+
+}  // namespace
+
+const std::vector<TinkAesCmacTestVector>& AesCmacTestVectors() {
+  static const absl::NoDestructor<std::vector<TinkAesCmacTestVector>>
+      test_vectors([] {
+        const AesCmacTestVectorMap& test_vectors_map =
+            CreateAesCmacTestVectorsMap();
+        std::vector<TinkAesCmacTestVector> result;
+        result.reserve(test_vectors_map.size());
+        for (const auto& [unused_params, test_vector] : test_vectors_map) {
+          result.push_back(test_vector);
+        }
+        return result;
+      }());
+  return *test_vectors;
+}
+
+const TinkAesCmacTestVector& GetAesCmacTestVector(int key_size_in_bytes) {
+  const AesCmacTestVectorMap& test_vectors_map = CreateAesCmacTestVectorsMap();
+  auto it = test_vectors_map.find(key_size_in_bytes);
+  ABSL_CHECK(it != test_vectors_map.end())
+      << "TinkAesCmacTestVector not found for AES-CMAC key with size "
+      << key_size_in_bytes;
+  return it->second;
 }
 
 }  // namespace internal

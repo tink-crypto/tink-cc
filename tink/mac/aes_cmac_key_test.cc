@@ -17,6 +17,7 @@
 #include "tink/mac/aes_cmac_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -26,12 +27,13 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
+#include "tink/mac/internal/aes_cmac_test_vectors.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -39,6 +41,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::Range;
@@ -75,7 +78,9 @@ TEST_P(AesCmacKeyTest, CreateSucceeds) {
       key_size, cryptographic_tag_size, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret =
+      internal::GetAesCmacTestVector(key_size).key.GetKeyBytes(
+          GetPartialKeyAccess());
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key.status(), IsOk());
@@ -94,7 +99,8 @@ TEST(AesCmacKeyTest, CreateKeyWithMismatchedKeySizeFails) {
   ASSERT_THAT(params, IsOk());
 
   // Key material is 16 bytes (another valid key length).
-  RestrictedData mismatched_secret = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData mismatched_secret =
+      internal::GetAesCmacTestVector(16).key.GetKeyBytes(GetPartialKeyAccess());
 
   EXPECT_THAT(AesCmacKey::Create(*params, mismatched_secret,
                                  /*id_requirement=*/123, GetPartialKeyAccess())
@@ -115,7 +121,8 @@ TEST(AesCmacKeyTest, CreateKeyWithWrongIdRequirementFails) {
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret =
+      internal::GetAesCmacTestVector(32).key.GetKeyBytes(GetPartialKeyAccess());
 
   EXPECT_THAT(AesCmacKey::Create(*no_prefix_params, secret,
                                  /*id_requirement=*/123, GetPartialKeyAccess())
@@ -138,7 +145,9 @@ TEST_P(AesCmacKeyTest, GetAesCmacKey) {
       key_size, cryptographic_tag_size, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret =
+      internal::GetAesCmacTestVector(key_size).key.GetKeyBytes(
+          GetPartialKeyAccess());
 
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
@@ -157,7 +166,9 @@ TEST_P(AesCmacKeyTest, KeyEquals) {
       key_size, cryptographic_tag_size, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret =
+      internal::GetAesCmacTestVector(key_size).key.GetKeyBytes(
+          GetPartialKeyAccess());
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -185,7 +196,8 @@ TEST(AesCmacKeyTest, DifferentFormatNotEqual) {
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret =
+      internal::GetAesCmacTestVector(32).key.GetKeyBytes(GetPartialKeyAccess());
 
   absl::StatusOr<AesCmacKey> key =
       AesCmacKey::Create(*legacy_params, secret, /*id_requirement=*/0x01020304,
@@ -205,13 +217,16 @@ TEST(AesCmacKeyTest, DifferentFormatNotEqual) {
 
 TEST(AesCmacKeyTest, DifferentSecretDataNotEqual) {
   absl::StatusOr<AesCmacParameters> params =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret1 =
+      internal::GetAesCmacTestVector(16).key.GetKeyBytes(GetPartialKeyAccess());
+  RestrictedData secret2 =
+      RestrictedData(HexDecodeOrDie("00112233445566778899aabbccddeeff"),
+                     InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret1, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
@@ -234,7 +249,8 @@ TEST(AesCmacKeyTest, DifferentIdRequirementNotEqual) {
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret =
+      internal::GetAesCmacTestVector(32).key.GetKeyBytes(GetPartialKeyAccess());
 
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
@@ -251,128 +267,59 @@ TEST(AesCmacKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(AesCmacKeyTest, CopyConstructor) {
-  absl::StatusOr<AesCmacParameters> params =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
+  const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  AesCmacKey copy(key);
 
-  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesCmacKey copy(*key);
-
-  EXPECT_THAT(copy.GetParameters(), Eq(*params));
-  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
-  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
-TEST(AesCmacKeyTest, CopyAssigment) {
-  absl::StatusOr<AesCmacParameters> params =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
+TEST(AesCmacKeyTest, CopyAssignment) {
+  const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
+  AesCmacKey copy = internal::GetAesCmacTestVector(16).key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  copy = key;
 
-  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<AesCmacParameters> params2 =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
-                                /*cryptographic_tag_size_in_bytes=*/12,
-                                AesCmacParameters::Variant::kNoPrefix);
-  ASSERT_THAT(params2, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesCmacKey> copy =
-      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/std::nullopt,
-                         GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(copy->GetParameters(), Eq(*params));
-  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
-  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesCmacKeyTest, MoveConstructor) {
-  absl::StatusOr<AesCmacParameters> params =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
+  const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
+  AesCmacKey key_to_move = key;
+  AesCmacKey move(std::move(key_to_move));
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesCmacKey move(std::move(*key));
-
-  EXPECT_THAT(move.GetParameters(), Eq(*params));
-  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
-  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move.GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
-TEST(AesCmacKeyTest, MoveAssigment) {
-  absl::StatusOr<AesCmacParameters> params =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
+TEST(AesCmacKeyTest, MoveAssignment) {
+  const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
+  AesCmacKey key_to_move = key;
+  AesCmacKey move = internal::GetAesCmacTestVector(16).key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  move = std::move(key_to_move);
 
-  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<AesCmacParameters> params2 =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
-                                /*cryptographic_tag_size_in_bytes=*/12,
-                                AesCmacParameters::Variant::kNoPrefix);
-  ASSERT_THAT(params2, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesCmacKey> move =
-      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/std::nullopt,
-                         GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetParameters(), Eq(*params));
-  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
-  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move.GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesCmacKeyTest, Clone) {
-  absl::StatusOr<AesCmacParameters> params =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

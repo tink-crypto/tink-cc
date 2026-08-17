@@ -471,11 +471,12 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::optional
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::mac::internal::aes_cmac_test_vectors
+    tink::util::test_util
 )
 
 tink_cc_test(

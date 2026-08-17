@@ -33,7 +33,13 @@ struct TinkAesCmacTestVector {
   std::string tag;
 };
 
-std::vector<TinkAesCmacTestVector> AesCmacTestVectors();
+// Returns static test vectors for AES-CMAC from Wycheproof
+// (wycheproof/testvectors/aes_cmac_test.json).
+const std::vector<TinkAesCmacTestVector>& AesCmacTestVectors();
+
+// Returns static test vector for AES-CMAC for the given key size in bytes from
+// Wycheproof (wycheproof/testvectors/aes_cmac_test.json).
+const TinkAesCmacTestVector& GetAesCmacTestVector(int key_size_in_bytes);
 
 }  // namespace internal
 }  // namespace tink

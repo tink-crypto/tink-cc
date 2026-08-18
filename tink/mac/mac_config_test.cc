@@ -23,7 +23,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -32,6 +31,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
@@ -45,14 +45,13 @@
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/aes_cmac_test_vectors.h"
+#include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/mac/mac_key_templates.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_cmac.pb.h"
 #include "proto/common.pb.h"
@@ -199,18 +198,23 @@ TEST_F(MacConfigTest, AesCmacProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
+  const internal::TinkAesCmacTestVector& test_vector =
+      internal::GetAesCmacTestVector(32);
+
   google::crypto::tink::AesCmacKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_key_value(subtle::Random::GetRandomBytes(32));
-  key_proto.mutable_params()->set_tag_size(16);
+  key_proto.set_key_value(test_vector.key.GetKeyBytes(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get()));
+  key_proto.mutable_params()->set_tag_size(
+      test_vector.key.GetParameters().CryptographicTagSizeInBytes());
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
-          /*id_requirement=*/123);
+          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+          test_vector.key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -218,22 +222,10 @@ TEST_F(MacConfigTest, AesCmacProtoKeySerializationRegistered) {
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
-      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
-      AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<AesCmacKey> key =
-      AesCmacKey::Create(*params,
-                         RestrictedData(subtle::Random::GetRandomBytes(32),
-                                        InsecureSecretKeyAccess::Get()),
-                         /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              test_vector.key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(MacConfig::Register(), IsOk());
@@ -246,7 +238,7 @@ TEST_F(MacConfigTest, AesCmacProtoKeySerializationRegistered) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              test_vector.key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key2, IsOk());
 }
 
@@ -298,10 +290,15 @@ TEST_F(MacConfigTest, HmacProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
+  const internal::HmacTestVector& test_vector = internal::GetHmacTestVector(
+      40, HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+
   google::crypto::tink::HmacKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_key_value(subtle::Random::GetRandomBytes(32));
-  key_proto.mutable_params()->set_tag_size(32);
+  key_proto.set_key_value(test_vector.key.GetKeyBytes(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get()));
+  key_proto.mutable_params()->set_tag_size(
+      test_vector.key.GetParameters().CryptographicTagSizeInBytes());
   key_proto.mutable_params()->set_hash(HashType::SHA256);
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
@@ -310,7 +307,7 @@ TEST_F(MacConfigTest, HmacProtoKeySerializationRegistered) {
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
-          /*id_requirement=*/123);
+          test_vector.key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -318,22 +315,10 @@ TEST_F(MacConfigTest, HmacProtoKeySerializationRegistered) {
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
-      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/32,
-      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<HmacKey> key =
-      HmacKey::Create(*parameters,
-                      RestrictedData(subtle::Random::GetRandomBytes(32),
-                                     InsecureSecretKeyAccess::Get()),
-                      /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              test_vector.key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   // Register parser and serializer.
@@ -347,7 +332,7 @@ TEST_F(MacConfigTest, HmacProtoKeySerializationRegistered) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              test_vector.key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key2, IsOk());
 }
 

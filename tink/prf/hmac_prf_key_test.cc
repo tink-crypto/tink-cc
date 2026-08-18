@@ -17,19 +17,18 @@
 #include "tink/prf/hmac_prf_key.h"
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hmac_prf_parameters.h"
+#include "tink/prf/internal/hmac_prf_test_vectors.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -40,47 +39,35 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  int key_size;
-  HmacPrfParameters::HashType hash_type;
-};
+using HmacPrfKeyTest = TestWithParam<internal::HmacPrfTestVector>;
 
-using HmacPrfKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    HmacPrfKeyCreateTestSuite, HmacPrfKeyTest,
-    Values(TestCase{/*key_size=*/16, HmacPrfParameters::HashType::kSha1},
-           TestCase{/*key_size=*/16, HmacPrfParameters::HashType::kSha224},
-           TestCase{/*key_size=*/16, HmacPrfParameters::HashType::kSha256},
-           TestCase{/*key_size=*/16, HmacPrfParameters::HashType::kSha384},
-           TestCase{/*key_size=*/32, HmacPrfParameters::HashType::kSha512}));
+INSTANTIATE_TEST_SUITE_P(HmacPrfKeyTestSuite, HmacPrfKeyTest,
+                         ValuesIn(internal::CreateHmacPrfTestVectors()));
 
 TEST_P(HmacPrfKeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
+  const internal::HmacPrfTestVector& test_vector = GetParam();
 
-  absl::StatusOr<HmacPrfParameters> parameters =
-      HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData secret = RestrictedData(test_case.key_size);
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
+  RestrictedData secret = test_vector.key.GetKeyBytes(GetPartialKeyAccess());
+  absl::StatusOr<HmacPrfKey> key = HmacPrfKey::Create(
+      test_vector.key.GetParameters(), secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(key->GetParameters(), Eq(test_vector.key.GetParameters()));
   EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(HmacPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
-  absl::StatusOr<HmacPrfParameters> parameters =
-      HmacPrfParameters::Create(16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::HmacPrfTestVector& test_vector32 =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1);
+  const internal::HmacPrfTestVector& test_vector40 =
+      internal::GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256);
 
   EXPECT_THAT(
-      HmacPrfKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
+      HmacPrfKey::Create(test_vector32.key.GetParameters(),
+                         test_vector40.key.GetKeyBytes(GetPartialKeyAccess()),
                          GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -88,171 +75,104 @@ TEST(HmacPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
 }
 
 TEST_P(HmacPrfKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
+  const internal::HmacPrfTestVector& test_vector = GetParam();
 
-  absl::StatusOr<HmacPrfParameters> parameters =
-      HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
-  ASSERT_THAT(parameters, IsOk());
+  HmacPrfKey copy = test_vector.key;
 
-  RestrictedData secret = RestrictedData(test_case.key_size);
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<HmacPrfKey> other_key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(test_vector.key == copy);
+  EXPECT_TRUE(copy == test_vector.key);
+  EXPECT_FALSE(test_vector.key != copy);
+  EXPECT_FALSE(copy != test_vector.key);
 }
 
 TEST(HmacPrfKeyTest, DifferentSecretDataNotEqual) {
-  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::HmacPrfTestVector& test_vector =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1);
 
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
 
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret1, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<HmacPrfKey> other_key =
-      HmacPrfKey::Create(*parameters, secret2, GetPartialKeyAccess());
+  absl::StatusOr<HmacPrfKey> other_key = HmacPrfKey::Create(
+      test_vector.key.GetParameters(), secret2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(test_vector.key != *other_key);
+  EXPECT_TRUE(*other_key != test_vector.key);
+  EXPECT_FALSE(test_vector.key == *other_key);
+  EXPECT_FALSE(*other_key == test_vector.key);
 }
 
 TEST(HmacPrfKeyTest, DifferentParametersNotEqual) {
-  absl::StatusOr<HmacPrfParameters> parameters1 = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters1, IsOk());
+  const HmacPrfKey& key1 =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1)
+          .key;
+  const HmacPrfKey& key2 =
+      internal::GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256)
+          .key;
 
-  absl::StatusOr<HmacPrfParameters> parameters2 = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha384);
-  ASSERT_THAT(parameters2, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters1, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<HmacPrfKey> other_key =
-      HmacPrfKey::Create(*parameters2, secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(key1 != key2);
+  EXPECT_TRUE(key2 != key1);
+  EXPECT_FALSE(key1 == key2);
+  EXPECT_FALSE(key2 == key1);
 }
 
 TEST(HmacPrfKeyTest, Clone) {
-  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const HmacPrfKey& key =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1)
+          .key;
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 TEST(HmacPrfKeyTest, CopyConstructor) {
-  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
+  const HmacPrfKey& key =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  HmacPrfKey copy(key);
 
-  HmacPrfKey copy(*key);
-
-  EXPECT_THAT(copy, Eq(*key));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(HmacPrfKeyTest, CopyAssignment) {
-  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
+  const HmacPrfKey& key =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1)
+          .key;
+  const HmacPrfKey& other_key =
+      internal::GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  HmacPrfKey copy = other_key;
+  copy = key;
 
-  absl::StatusOr<HmacPrfParameters> other_parameters =
-      HmacPrfParameters::Create(
-          /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha512);
-  ASSERT_THAT(other_parameters, IsOk());
-
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<HmacPrfKey> copy = HmacPrfKey::Create(
-      *other_parameters, other_secret, GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(*copy, Eq(*key));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(HmacPrfKeyTest, MoveConstructor) {
-  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
+  HmacPrfKey key =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  HmacPrfKey expected = *key;
-  HmacPrfKey moved(std::move(*key));
+  HmacPrfKey expected = key;
+  HmacPrfKey moved(std::move(key));
 
   EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(HmacPrfKeyTest, MoveAssignment) {
-  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  ASSERT_THAT(parameters, IsOk());
+  HmacPrfKey key =
+      internal::GetHmacPrfTestVector(32, HmacPrfParameters::HashType::kSha1)
+          .key;
+  HmacPrfKey other_key =
+      internal::GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  HmacPrfKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<HmacPrfParameters> other_parameters =
-      HmacPrfParameters::Create(
-          /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha512);
-  ASSERT_THAT(other_parameters, IsOk());
-
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<HmacPrfKey> moved = HmacPrfKey::Create(
-      *other_parameters, other_secret, GetPartialKeyAccess());
-  ASSERT_THAT(moved, IsOk());
-
-  HmacPrfKey expected = *key;
-  *moved = std::move(*key);
-
-  EXPECT_THAT(*moved, Eq(expected));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 }  // namespace

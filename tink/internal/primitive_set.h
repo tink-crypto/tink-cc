@@ -38,6 +38,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // A container class for a set of primitives (i.e. implementations of
 // cryptographic primitives offered by Tink).  It provides also
@@ -405,6 +406,12 @@ class PrimitiveSet {
 
   absl::flat_hash_map<std::string, std::string> annotations_;
 };
+
+}  // namespace internal
+
+// TODO (b/394566880): Remove this alias
+template <class P>
+using PrimitiveSet = internal::PrimitiveSet<P>;
 
 }  // namespace tink
 }  // namespace crypto

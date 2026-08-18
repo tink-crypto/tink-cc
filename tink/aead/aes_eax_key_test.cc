@@ -17,6 +17,7 @@
 #include "tink/aead/aes_eax_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -26,11 +27,11 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_eax_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_eax_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -40,53 +41,27 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  int key_size;
-  int iv_size;
-  int tag_size;
-  AesEaxParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
+using AesEaxKeyTest = TestWithParam<internal::AeadTestVector>;
 
-using AesEaxKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    AesEaxParametersBuildTestSuite, AesEaxKeyTest,
-    Values(TestCase{/*key_size=*/16,
-                    /*iv_size=*/12, /*tag_size=*/12,
-                    AesEaxParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{/*key_size=*/24,
-                    /*iv_size=*/16, /*tag_size=*/14,
-                    AesEaxParameters::Variant::kCrunchy, 0x01030005,
-                    std::string("\x00\x01\x03\x00\x05", 5)},
-           TestCase{/*key_size=*/32, /*iv_size=*/16, /*tag_size=*/16,
-                    AesEaxParameters::Variant::kNoPrefix, std::nullopt, ""}));
+INSTANTIATE_TEST_SUITE_P(AesEaxParametersBuildTestSuite, AesEaxKeyTest,
+                         ValuesIn(internal::CreateAesEaxTestVectors()));
 
 TEST_P(AesEaxKeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesEaxParameters> parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(test_case.key_size)
-          .SetIvSizeInBytes(test_case.iv_size)
-          .SetTagSizeInBytes(test_case.tag_size)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesEaxKey> created_key = AesEaxKey::Create(
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
-  RestrictedData secret = RestrictedData(test_case.key_size);
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesEaxKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -146,67 +121,34 @@ TEST(AesEaxKeyTest, CreateKeyWithInvalidIdRequirementFails) {
 }
 
 TEST_P(AesEaxKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<AesEaxParameters> parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(test_case.key_size)
-          .SetIvSizeInBytes(test_case.iv_size)
-          .SetTagSizeInBytes(test_case.tag_size)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData secret = RestrictedData(test_case.key_size);
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
 
   absl::StatusOr<AesEaxKey> other_key = AesEaxKey::Create(
-      *parameters, secret, test_case.id_requirement, GetPartialKeyAccess());
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(key == *other_key);
+  EXPECT_TRUE(*other_key == key);
+  EXPECT_FALSE(key != *other_key);
+  EXPECT_FALSE(*other_key != key);
 }
 
 TEST(AesEaxKeyTest, DifferentParametersKeysNotEqual) {
-  absl::StatusOr<AesEaxParameters> crunchy_parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kCrunchy)
-          .Build();
-  ASSERT_THAT(crunchy_parameters, IsOk());
+  const AesEaxKey& key1 = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                     AesEaxParameters::Variant::kTink)
+           .aead_key);
+  const AesEaxKey& key2 = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
+                                     AesEaxParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<AesEaxParameters> tink_parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(tink_parameters, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<AesEaxKey> key =
-      AesEaxKey::Create(*crunchy_parameters, secret,
-                        /*id_requirement=*/0x01020304, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<AesEaxKey> other_key =
-      AesEaxKey::Create(*tink_parameters, secret, /*id_requirement=*/0x01020304,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(key1 != key2);
+  EXPECT_TRUE(key2 != key1);
+  EXPECT_FALSE(key1 == key2);
+  EXPECT_FALSE(key2 == key1);
 }
 
 TEST(AesEaxKeyTest, DifferentSecretDataKeysNotEqual) {
@@ -267,149 +209,70 @@ TEST(AesEaxKeyTest, DifferentIdRequirementKeysNotEqual) {
 }
 
 TEST(AesEaxKeyTest, CopyConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                     AesEaxParameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<AesEaxParameters> parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  AesEaxKey copy(key);
 
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesEaxKey copy(*key);
-
-  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesEaxKeyTest, CopyAssignment) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                     AesEaxParameters::Variant::kTink)
+           .aead_key);
+  const AesEaxKey& other_key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
+                                     AesEaxParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<AesEaxParameters> parameters1 =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters1, IsOk());
+  AesEaxKey copy = other_key;
+  copy = key;
 
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesEaxParameters> parameters2 =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(16)
-          .SetIvSizeInBytes(12)
-          .SetTagSizeInBytes(12)
-          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(parameters2, IsOk());
-
-  absl::StatusOr<AesEaxKey> copy =
-      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
-  EXPECT_THAT(copy->GetParameters(), Eq(*parameters1));
-  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesEaxKeyTest, MoveConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  AesEaxKey key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                     AesEaxParameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<AesEaxParameters> parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  AesEaxKey expected = key;
+  AesEaxKey move(std::move(key));
 
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesEaxKey move(std::move(*key));
-
-  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(move, Eq(expected));
 }
 
 TEST(AesEaxKeyTest, MoveAssignment) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  AesEaxKey key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                     AesEaxParameters::Variant::kTink)
+           .aead_key);
+  AesEaxKey other_key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
+                                     AesEaxParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<AesEaxParameters> parameters1 =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters1, IsOk());
+  AesEaxKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesEaxParameters> parameters2 =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(16)
-          .SetIvSizeInBytes(12)
-          .SetTagSizeInBytes(12)
-          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(parameters2, IsOk());
-
-  absl::StatusOr<AesEaxKey> move =
-      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
-  EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
-  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(AesEaxKeyTest, Clone) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<AesEaxParameters> parameters =
-      AesEaxParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesEaxParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
-      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(
+      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                     AesEaxParameters::Variant::kTink)
+           .aead_key);
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

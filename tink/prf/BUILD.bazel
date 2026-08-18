@@ -156,8 +156,6 @@ cc_library(
         "//tink:core/key_type_manager",
         "//tink:core/template_util",
         "//tink:input_stream",
-        "//tink:key_manager",
-        "//tink/internal:fips_utils",
         "//tink/mac/internal:stateful_hmac_boringssl",
         "//tink/subtle:common_enums",
         "//tink/subtle:random",

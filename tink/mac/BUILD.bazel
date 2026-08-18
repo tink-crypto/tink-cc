@@ -121,7 +121,6 @@ cc_library(
         "//tink:core/template_util",
         "//tink:input_stream",
         "//tink:mac",
-        "//tink/internal:fips_utils",
         "//tink/mac/internal:chunked_mac_impl",
         "//tink/subtle:hmac_boringssl",
         "//tink/subtle:random",

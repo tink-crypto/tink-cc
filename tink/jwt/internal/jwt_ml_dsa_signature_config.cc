@@ -18,6 +18,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/internal/fips_utils.h"
 #include "tink/jwt/internal/jwt_ml_dsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ml_dsa_verify_key_manager.h"
@@ -51,7 +52,6 @@ absl::Status JwtMlDsaSignatureRegister() {
   }
 
   // Tink implements PQC signatures with BoringSSL, not OpenSSL.
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
   // JWT ML-DSA
   status = RegisterJwtMlDsaProtoSerialization();

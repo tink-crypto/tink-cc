@@ -27,7 +27,6 @@
 #include "tink/core/template_util.h"
 #include "tink/deterministic_aead.h"
 #include "tink/input_stream.h"
-#include "tink/subtle/aes_siv_boringssl.h"
 #include "tink/subtle/random.h"
 #include "tink/util/constants.h"
 #include "tink/util/errors.h"

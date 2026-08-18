@@ -28,7 +28,6 @@
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/key_manager.h"
-#include "tink/subtle/aes_eax_boringssl.h"
 #include "tink/subtle/random.h"
 #include "tink/util/constants.h"
 #include "tink/util/secret_data.h"

@@ -25,7 +25,6 @@
 #include "tink/core/key_type_manager.h"
 #include "tink/core/private_key_type_manager.h"
 #include "tink/core/template_util.h"
-#include "tink/hybrid/ecies_aead_hkdf_hybrid_decrypt.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/key_manager.h"
 #include "tink/util/constants.h"

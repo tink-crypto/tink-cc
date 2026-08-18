@@ -24,7 +24,6 @@
 #include "absl/strings/str_cat.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
-#include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/key_manager.h"
 #include "tink/util/constants.h"

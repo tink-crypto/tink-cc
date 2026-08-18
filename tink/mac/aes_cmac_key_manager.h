@@ -30,7 +30,6 @@
 #include "tink/core/template_util.h"
 #include "tink/mac.h"
 #include "tink/mac/internal/chunked_mac_impl.h"
-#include "tink/subtle/aes_cmac_boringssl.h"
 #include "tink/subtle/random.h"
 #include "tink/util/constants.h"
 #include "tink/util/secret_data.h"

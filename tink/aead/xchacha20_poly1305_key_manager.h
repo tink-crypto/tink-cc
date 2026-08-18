@@ -31,7 +31,6 @@
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/subtle/random.h"
-#include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/constants.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"

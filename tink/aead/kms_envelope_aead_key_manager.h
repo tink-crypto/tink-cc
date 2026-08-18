@@ -25,7 +25,6 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/aead.h"
-#include "tink/aead/internal/aead_util.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/internal/fips_utils.h"

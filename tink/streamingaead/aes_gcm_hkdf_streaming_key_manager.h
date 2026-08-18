@@ -28,7 +28,6 @@
 #include "tink/input_stream.h"
 #include "tink/key_manager.h"
 #include "tink/streaming_aead.h"
-#include "tink/subtle/aes_gcm_hkdf_streaming.h"
 #include "tink/util/constants.h"
 #include "tink/util/enums.h"
 #include "tink/util/errors.h"

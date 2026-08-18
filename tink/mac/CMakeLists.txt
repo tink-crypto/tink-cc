@@ -112,7 +112,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::input_stream
     tink::core::mac
-    tink::internal::fips_utils
     tink::mac::internal::chunked_mac_impl
     tink::subtle::hmac_boringssl
     tink::subtle::random

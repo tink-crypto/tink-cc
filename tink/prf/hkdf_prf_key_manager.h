@@ -29,8 +29,6 @@
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/prf/prf_set.h"
-#include "tink/subtle/prf/hkdf_streaming_prf.h"
-#include "tink/subtle/prf/prf_set_util.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/subtle/random.h"
 #include "tink/util/constants.h"

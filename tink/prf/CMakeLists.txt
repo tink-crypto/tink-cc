@@ -145,8 +145,6 @@ tink_cc_library(
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
-    tink::core::key_manager
-    tink::internal::fips_utils
     tink::mac::internal::stateful_hmac_boringssl
     tink::subtle::common_enums
     tink::subtle::random

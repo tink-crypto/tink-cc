@@ -24,12 +24,18 @@
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/hybrid_encrypt.h"
-#include "tink/subtle/ecies_hkdf_sender_kem_boringssl.h"
 #include "tink/util/statusor.h"
 #include "proto/ecies_aead_hkdf.pb.h"
 
 namespace crypto {
 namespace tink {
+
+// Forward declaration to avoid transitively pulling BoringSSL headers
+// (from third_party/tink/cc/subtle/ecies_hkdf_sender_kem_boringssl.h) into
+// this public header.
+namespace subtle {
+class EciesHkdfSenderKemBoringSsl;
+}  // namespace subtle
 
 // ECIES encryption with HKDF-KEM (key encapsulation mechanism) and
 // AEAD-DEM (data encapsulation mechanism).

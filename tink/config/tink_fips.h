@@ -17,7 +17,6 @@
 #define TINK_CONFIG_TINK_FIPS_H_
 
 #include "absl/base/attributes.h"
-#include "openssl/crypto.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/util/status.h"
 

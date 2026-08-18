@@ -36,7 +36,6 @@ tink_cc_library(
     tink_fips.h
   DEPS
     absl::core_headers
-    crypto
     tink::internal::fips_utils
     tink::internal::registry_impl
     tink::util::status

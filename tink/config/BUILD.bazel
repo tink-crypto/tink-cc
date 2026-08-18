@@ -50,7 +50,6 @@ cc_library(
         "//tink/internal:registry_impl",
         "//tink/util:status",
         "@abseil-cpp//absl/base:core_headers",
-        "@boringssl//:crypto",
     ],
 )
 

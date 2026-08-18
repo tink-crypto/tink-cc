@@ -9,6 +9,7 @@ licenses(["notice"])
 
 cc_library(
     name = "aead_test_vector",
+    testonly = 1,
     hdrs = ["aead_test_vector.h"],
     include_prefix = "tink/aead/internal/testing",
     deps = [
@@ -19,6 +20,7 @@ cc_library(
 
 cc_library(
     name = "aes_gcm_test_vectors",
+    testonly = 1,
     srcs = ["aes_gcm_test_vectors.cc"],
     hdrs = ["aes_gcm_test_vectors.h"],
     include_prefix = "tink/aead/internal/testing",

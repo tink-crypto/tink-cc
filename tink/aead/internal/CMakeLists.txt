@@ -1,5 +1,7 @@
 tink_module(aead::internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME aead_util
   SRCS

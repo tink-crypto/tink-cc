@@ -17,8 +17,8 @@
 #include "tink/aead/aes_gcm_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -27,11 +27,11 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -39,53 +39,27 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::testing::Combine;
 using ::testing::Eq;
-using ::testing::Range;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  AesGcmParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
+using AesGcmKeyTest = TestWithParam<internal::AeadTestVector>;
 
-using AesGcmKeyTest = TestWithParam<std::tuple<int, int, TestCase>>;
-
-INSTANTIATE_TEST_SUITE_P(
-    AesGcmKeyTestSuite, AesGcmKeyTest,
-    Combine(Values(16, 24, 32), Range(12, 16),
-            Values(TestCase{AesGcmParameters::Variant::kTink, 0x02030400,
-                            std::string("\x01\x02\x03\x04\x00", 5)},
-                   TestCase{AesGcmParameters::Variant::kCrunchy, 0x01030005,
-                            std::string("\x00\x01\x03\x00\x05", 5)},
-                   TestCase{AesGcmParameters::Variant::kNoPrefix, std::nullopt,
-                            ""})));
+INSTANTIATE_TEST_SUITE_P(AesGcmKeyTestSuite, AesGcmKeyTest,
+                         ValuesIn(internal::CreateAesGcmTestVectors()));
 
 TEST_P(AesGcmKeyTest, CreateSucceeds) {
-  int key_size;
-  int iv_and_tag_size;  // NOTE: There's no requirement for IV size == tag size.
-  TestCase test_case;
-  std::tie(key_size, iv_and_tag_size, test_case) = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesGcmParameters> params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(key_size)
-          .SetIvSizeInBytes(iv_and_tag_size)
-          .SetTagSizeInBytes(iv_and_tag_size)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<AesGcmKey> created_key = AesGcmKey::Create(
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
-  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(key->GetParameters(), Eq(*params));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
 }
 
 TEST(AesGcmKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -141,57 +115,36 @@ TEST(AesGcmKeyTest, CreateKeyWithInvalidIdRequirementFails) {
 }
 
 TEST_P(AesGcmKeyTest, GetKeyBytes) {
-  int key_size;
-  int iv_and_tag_size;  // NOTE: There's no requirement for IV size == tag size.
-  TestCase test_case;
-  std::tie(key_size, iv_and_tag_size, test_case) = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesGcmParameters> params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(key_size)
-          .SetIvSizeInBytes(iv_and_tag_size)
-          .SetTagSizeInBytes(iv_and_tag_size)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<AesGcmKey> created_key = AesGcmKey::Create(
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
-
-  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(AesGcmKeyTest, KeyEquals) {
-  int key_size;
-  int iv_and_tag_size;  // NOTE: There's no requirement for IV size == tag size.
-  TestCase test_case;
-  std::tie(key_size, iv_and_tag_size, test_case) = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesGcmParameters> params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(key_size)
-          .SetIvSizeInBytes(iv_and_tag_size)
-          .SetTagSizeInBytes(iv_and_tag_size)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(key_size);
-  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  absl::StatusOr<AesGcmKey> created_key = AesGcmKey::Create(
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(*created_key == *other_key);
+  EXPECT_TRUE(*other_key == *created_key);
+  EXPECT_FALSE(*created_key != *other_key);
+  EXPECT_FALSE(*other_key != *created_key);
 }
 
 TEST(AesGcmKeyTest, DifferentVariantNotEqual) {

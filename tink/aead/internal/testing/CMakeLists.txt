@@ -7,6 +7,7 @@ tink_cc_library(
   DEPS
     absl::string_view
     tink::aead::aead_key
+  TESTONLY
 )
 
 tink_cc_library(
@@ -28,6 +29,7 @@ tink_cc_library(
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::util::test_util
+  TESTONLY
 )
 
 tink_cc_library(

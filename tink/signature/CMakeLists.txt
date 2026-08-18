@@ -1537,6 +1537,8 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
     gmock
+    absl::no_destructor
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1545,7 +1547,8 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access
-    tink::util::test_matchers
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
 )
 
@@ -1558,6 +1561,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::rsa_ssa_pss_public_key
     gmock
+    absl::no_destructor
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1570,11 +1574,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
-    tink::util::test_matchers
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
 )
 

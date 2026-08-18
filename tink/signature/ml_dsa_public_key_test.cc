@@ -16,14 +16,13 @@
 
 #include "tink/signature/ml_dsa_public_key.h"
 
-#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -31,12 +30,10 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
-#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ml_dsa_parameters.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
+#include "tink/subtle/random.h"
 
 namespace crypto {
 namespace tink {
@@ -89,47 +86,6 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kNoPrefixWithPrehashId,
                     0x02040608, ""}));
 
-using MlDsaPublicKeyTest = TestWithParam<TestCase>;
-
-std::string GeneratePublicKey(MlDsaParameters::Instance instance) {
-  if (instance == MlDsaParameters::Instance::kMlDsa44) {
-    std::string public_key_bytes;
-    public_key_bytes.resize(MLDSA44_PUBLIC_KEY_BYTES);
-    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA44_private_key>();
-
-    ABSL_CHECK_EQ(1, MLDSA44_generate_key(
-                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                         private_seed_bytes.data(), bssl_private_key.get()));
-
-    return public_key_bytes;
-  } else if (instance == MlDsaParameters::Instance::kMlDsa65) {
-    std::string public_key_bytes;
-    public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
-
-    ABSL_CHECK_EQ(1, MLDSA65_generate_key(
-                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                         private_seed_bytes.data(), bssl_private_key.get()));
-
-    return public_key_bytes;
-  } else if (instance == MlDsaParameters::Instance::kMlDsa87) {
-    std::string public_key_bytes;
-    public_key_bytes.resize(MLDSA87_PUBLIC_KEY_BYTES);
-    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA87_private_key>();
-
-    ABSL_CHECK_EQ(1, MLDSA87_generate_key(
-                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                         private_seed_bytes.data(), bssl_private_key.get()));
-
-    return public_key_bytes;
-  } else {
-    ABSL_LOG(FATAL) << "Unsupported ML-DSA instance";
-  }
-}
-
 int PublicKeyBytes(MlDsaParameters::Instance instance) {
   switch (instance) {
     case MlDsaParameters::Instance::kMlDsa44:
@@ -141,6 +97,16 @@ int PublicKeyBytes(MlDsaParameters::Instance instance) {
     default:
       ABSL_LOG(FATAL) << "Unsupported ML-DSA instance";
   }
+}
+
+// Returns ML-DSA public key bytes for the given instance.
+std::string GeneratePublicKey(MlDsaParameters::Instance instance,
+                              int key_index = 0) {
+  std::string result = subtle::Random::GetRandomBytes(PublicKeyBytes(instance));
+  if (key_index != 0) {
+    result[0] ^= 1;
+  }
+  return result;
 }
 
 TEST_P(MlDsaPublicKeyTest, CreatePublicKeyWorks) {
@@ -259,8 +225,10 @@ TEST_P(MlDsaPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
       MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  std::string public_key_bytes1 = GeneratePublicKey(test_case.instance);
-  std::string public_key_bytes2 = GeneratePublicKey(test_case.instance);
+  std::string public_key_bytes1 =
+      GeneratePublicKey(test_case.instance, /*key_index=*/0);
+  std::string public_key_bytes2 =
+      GeneratePublicKey(test_case.instance, /*key_index=*/1);
 
   absl::StatusOr<MlDsaPublicKey> public_key1 =
       MlDsaPublicKey::Create(*parameters, public_key_bytes1,

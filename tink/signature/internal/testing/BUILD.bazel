@@ -134,6 +134,7 @@ cc_library(
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink/internal:fips_utils",
         "//tink/signature:ml_dsa_parameters",
         "//tink/signature:ml_dsa_private_key",
         "//tink/signature:ml_dsa_public_key",
@@ -141,9 +142,11 @@ cc_library(
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
+        "@boringssl//:crypto",
     ],
 )
 

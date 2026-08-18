@@ -16,14 +16,13 @@
 
 #include "tink/signature/ml_dsa_private_key.h"
 
-#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -34,14 +33,14 @@
 #include "openssl/mldsa.h"
 #endif
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
+#include "tink/subtle/random.h"
 
 namespace crypto {
 namespace tink {
@@ -52,192 +51,121 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;
-using ::testing::Values;
-
-struct TestCase {
-  MlDsaParameters::Instance instance;
-  MlDsaParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
-
-using MlDsaPrivateKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
-    Values(TestCase{MlDsaParameters::Instance::kMlDsa44,
-                    MlDsaParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{MlDsaParameters::Instance::kMlDsa65,
-                    MlDsaParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{MlDsaParameters::Instance::kMlDsa65,
-                    MlDsaParameters::Variant::kTink, 0x03050709,
-                    std::string("\x01\x03\x05\x07\x09", 5)},
-           TestCase{MlDsaParameters::Instance::kMlDsa65,
-                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
-           TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kTink, 0x03050709,
-                    std::string("\x01\x03\x05\x07\x09", 5)},
-           TestCase{MlDsaParameters::Instance::kMlDsa87,
-                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
-
-struct KeyPair {
-  std::string public_key_bytes;
-  RestrictedData private_seed_bytes;
-};
-
-absl::StatusOr<KeyPair> GenerateKeyPair(MlDsaParameters::Instance instance) {
-#ifdef TINK_USE_ONLY_FIPS
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
-#else
-  if (instance == MlDsaParameters::Instance::kMlDsa44) {
-    std::string public_key_bytes;
-    public_key_bytes.resize(MLDSA44_PUBLIC_KEY_BYTES);
-    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA44_private_key>();
-
-    ABSL_CHECK_EQ(1, MLDSA44_generate_key(
-                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                         private_seed_bytes.data(), bssl_private_key.get()));
-
-    return KeyPair{
-        public_key_bytes,
-        RestrictedData(
-            util::internal::AsSecretData(std::move(private_seed_bytes)),
-            InsecureSecretKeyAccess::Get()),
-    };
-  } else if (instance == MlDsaParameters::Instance::kMlDsa65) {
-    std::string public_key_bytes;
-    public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
-
-    ABSL_CHECK_EQ(1, MLDSA65_generate_key(
-                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                         private_seed_bytes.data(), bssl_private_key.get()));
-
-    return KeyPair{
-        public_key_bytes,
-        RestrictedData(
-            util::internal::AsSecretData(std::move(private_seed_bytes)),
-            InsecureSecretKeyAccess::Get()),
-    };
-  } else if (instance == MlDsaParameters::Instance::kMlDsa87) {
-    std::string public_key_bytes;
-    public_key_bytes.resize(MLDSA87_PUBLIC_KEY_BYTES);
-    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA87_private_key>();
-
-    ABSL_CHECK_EQ(1, MLDSA87_generate_key(
-                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                         private_seed_bytes.data(), bssl_private_key.get()));
-
-    return KeyPair{
-        public_key_bytes,
-        RestrictedData(
-            util::internal::AsSecretData(std::move(private_seed_bytes)),
-            InsecureSecretKeyAccess::Get()),
-    };
-  } else {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Unsupported instance: ", instance));
-  }
-#endif
-}
+using ::testing::ValuesIn;
 
 #ifdef TINK_USE_ONLY_FIPS
+using MlDsaPrivateKeyTest = TestWithParam<MlDsaParameters::Instance>;
+
+INSTANTIATE_TEST_SUITE_P(MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
+                         testing::Values(MlDsaParameters::Instance::kMlDsa44,
+                                         MlDsaParameters::Instance::kMlDsa65,
+                                         MlDsaParameters::Instance::kMlDsa87));
+
 TEST_P(MlDsaPrivateKeyTest, CreateFipsFails) {
-  TestCase test_case = GetParam();
-
+  MlDsaParameters::Instance instance = GetParam();
   absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
+      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(
-      key_pair,
+  int pub_key_bytes = instance == MlDsaParameters::Instance::kMlDsa44   ? 1312
+                      : instance == MlDsaParameters::Instance::kMlDsa65 ? 1952
+                                                                        : 2592;
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(pub_key_bytes);
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_seed_bytes = RestrictedData(32);
+  EXPECT_THAT(
+      MlDsaPrivateKey::Create(*public_key, private_seed_bytes,
+                              GetPartialKeyAccess())
+          .status(),
+      StatusIs(
+          absl::StatusCode::kUnimplemented,
+          HasSubstr("ML-DSA is only supported in non-FIPS BoringSSL builds.")));
+}
+
+TEST_P(MlDsaPrivateKeyTest, CreateFromSeedFipsFails) {
+  MlDsaParameters::Instance instance = GetParam();
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData private_seed_bytes = RestrictedData(32);
+  EXPECT_THAT(
+      MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
+                              /*id_requirement=*/123, GetPartialKeyAccess())
+          .status(),
       StatusIs(
           absl::StatusCode::kUnimplemented,
           HasSubstr("ML-DSA is only supported in non-FIPS BoringSSL builds.")));
 }
 #else
+using MlDsaPrivateKeyTest = TestWithParam<internal::SignatureTestVector>;
+
+INSTANTIATE_TEST_SUITE_P(MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
+                         ValuesIn(internal::CreateMlDsaTestVectors()));
 TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+      test_private_key->GetPublicKey(),
+      test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
+      GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
-  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPublicKey().GetParameters(),
+              Eq(test_private_key->GetPublicKey().GetParameters()));
+  EXPECT_THAT(private_key->GetIdRequirement(),
+              Eq(test_private_key->GetIdRequirement()));
+  EXPECT_THAT(private_key->GetPublicKey(),
+              Eq(test_private_key->GetPublicKey()));
+  EXPECT_THAT(private_key->GetOutputPrefix(),
+              Eq(test_private_key->GetOutputPrefix()));
   EXPECT_THAT(private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
-              Eq(key_pair->private_seed_bytes));
+              Eq(test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateFromSeedSucceeds) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key =
-      MlDsaPrivateKey::Create(*parameters, key_pair->private_seed_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess());
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      test_private_key->GetPublicKey().GetParameters(),
+      test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
+      test_private_key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  absl::StatusOr<MlDsaPublicKey> expected_public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(expected_public_key, IsOk());
-
-  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
-  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPublicKey().GetParameters(),
+              Eq(test_private_key->GetPublicKey().GetParameters()));
+  EXPECT_THAT(private_key->GetIdRequirement(),
+              Eq(test_private_key->GetIdRequirement()));
+  EXPECT_THAT(private_key->GetPublicKey(),
+              Eq(test_private_key->GetPublicKey()));
+  EXPECT_THAT(private_key->GetOutputPrefix(),
+              Eq(test_private_key->GetOutputPrefix()));
   EXPECT_THAT(private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
-              Eq(key_pair->private_seed_bytes));
+              Eq(test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   RestrictedData private_seed_bytes = RestrictedData(
-      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+      test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get())
           .substr(MLDSA_SEED_BYTES - 1),
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess())
+      MlDsaPrivateKey::Create(
+          test_private_key->GetPublicKey().GetParameters(), private_seed_bytes,
+          test_private_key->GetIdRequirement(), GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat(
@@ -245,13 +173,15 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
                    MLDSA_SEED_BYTES, " bytes."))));
 
   std::string longer_private_seed_bytes(
-      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
+      test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
   longer_private_seed_bytes.push_back(0);
   private_seed_bytes =
       RestrictedData(longer_private_seed_bytes, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess())
+      MlDsaPrivateKey::Create(
+          test_private_key->GetPublicKey().GetParameters(), private_seed_bytes,
+          test_private_key->GetIdRequirement(), GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat(
@@ -260,52 +190,42 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithMismatchedIdRequirementFails) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
-
-  if (parameters->HasIdRequirement()) {
-    EXPECT_THAT(MlDsaPrivateKey::Create(
-                    *parameters, key_pair->private_seed_bytes,
-                    /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
-                    .status(),
-                StatusIs(absl::StatusCode::kInvalidArgument));
+  if (test_private_key->GetPublicKey().GetParameters().HasIdRequirement()) {
+    EXPECT_THAT(
+        MlDsaPrivateKey::Create(
+            test_private_key->GetPublicKey().GetParameters(),
+            test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
+            /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
   } else {
     EXPECT_THAT(
-        MlDsaPrivateKey::Create(*parameters, key_pair->private_seed_bytes,
-                                /*id_requirement=*/123, GetPartialKeyAccess())
+        MlDsaPrivateKey::Create(
+            test_private_key->GetPublicKey().GetParameters(),
+            test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
+            /*id_requirement=*/123, GetPartialKeyAccess())
             .status(),
         StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   RestrictedData private_seed_bytes = RestrictedData(
-      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+      test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get())
           .substr(MLDSA_SEED_BYTES - 1),
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*public_key, private_seed_bytes,
-                              GetPartialKeyAccess())
+      MlDsaPrivateKey::Create(test_private_key->GetPublicKey(),
+                              private_seed_bytes, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat(
@@ -313,13 +233,14 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
                    MLDSA_SEED_BYTES, " bytes."))));
 
   std::string longer_private_seed_bytes(
-      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
+      test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
   longer_private_seed_bytes.push_back(0);
   private_seed_bytes =
       RestrictedData(longer_private_seed_bytes, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*public_key, private_seed_bytes,
-                              GetPartialKeyAccess())
+      MlDsaPrivateKey::Create(test_private_key->GetPublicKey(),
+                              private_seed_bytes, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat(
@@ -328,24 +249,16 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair1, IsOk());
-  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair2, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key1 =
-      MlDsaPublicKey::Create(*parameters, key_pair1->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key1, IsOk());
+  RestrictedData mismatched_seed =
+      RestrictedData(subtle::Random::GetRandomBytes(MLDSA_SEED_BYTES),
+                     InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*public_key1, key_pair2->private_seed_bytes,
+      MlDsaPrivateKey::Create(test_private_key->GetPublicKey(), mismatched_seed,
                               GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -353,122 +266,64 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
+  MlDsaPrivateKey copy = *test_private_key;
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(other_private_key, IsOk());
-
-  EXPECT_TRUE(*private_key == *other_private_key);
-  EXPECT_TRUE(*other_private_key == *private_key);
-  EXPECT_FALSE(*private_key != *other_private_key);
-  EXPECT_FALSE(*other_private_key != *private_key);
+  EXPECT_TRUE(*test_private_key == copy);
+  EXPECT_TRUE(copy == *test_private_key);
+  EXPECT_FALSE(*test_private_key != copy);
+  EXPECT_FALSE(copy != *test_private_key);
 }
 
 TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(test_case.instance, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair1, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key1 =
-      MlDsaPublicKey::Create(*parameters, key_pair1->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key1, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key1 = MlDsaPrivateKey::Create(
-      *public_key1, key_pair1->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key1, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair2, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key2 =
-      MlDsaPublicKey::Create(*parameters, key_pair2->public_key_bytes,
-                             test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key2, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key2 = MlDsaPrivateKey::Create(
-      *public_key2, key_pair2->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key2, IsOk());
-
-  EXPECT_TRUE(*private_key1 != *private_key2);
-  EXPECT_TRUE(*private_key2 != *private_key1);
-  EXPECT_FALSE(*private_key1 == *private_key2);
-  EXPECT_FALSE(*private_key2 == *private_key1);
-}
-
-TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      test_case.instance, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key123 =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key123, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key456 =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/456, GetPartialKeyAccess());
-  ASSERT_THAT(public_key456, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key123, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   absl::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
-      *public_key456, key_pair->private_seed_bytes, GetPartialKeyAccess());
+      test_private_key->GetPublicKey().GetParameters(),
+      RestrictedData(subtle::Random::GetRandomBytes(MLDSA_SEED_BYTES),
+                     InsecureSecretKeyAccess::Get()),
+      test_private_key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
-  EXPECT_TRUE(*private_key != *other_private_key);
-  EXPECT_TRUE(*other_private_key != *private_key);
-  EXPECT_FALSE(*private_key == *other_private_key);
-  EXPECT_FALSE(*other_private_key == *private_key);
+  EXPECT_TRUE(*test_private_key != *other_private_key);
+  EXPECT_TRUE(*other_private_key != *test_private_key);
+  EXPECT_FALSE(*test_private_key == *other_private_key);
+  EXPECT_FALSE(*other_private_key == *test_private_key);
+}
+
+TEST(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
+  const auto* private_key1 = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+
+  absl::StatusOr<MlDsaPublicKey> public_key456 = MlDsaPublicKey::Create(
+      private_key1->GetPublicKey().GetParameters(),
+      private_key1->GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()),
+      /*id_requirement=*/456, GetPartialKeyAccess());
+  ASSERT_THAT(public_key456, IsOk());
+
+  absl::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
+      *public_key456, private_key1->GetPrivateSeedBytes(GetPartialKeyAccess()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(other_private_key, IsOk());
+
+  EXPECT_TRUE(*private_key1 != *other_private_key);
+  EXPECT_TRUE(*other_private_key != *private_key1);
+  EXPECT_FALSE(*private_key1 == *other_private_key);
+  EXPECT_FALSE(*other_private_key == *private_key1);
 }
 
 TEST(MlDsaPrivateKeyTest, Clone) {
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
+  const auto* private_key = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
   // Clone the key.
   std::unique_ptr<Key> cloned_key = private_key->Clone();
@@ -477,22 +332,10 @@ TEST(MlDsaPrivateKeyTest, Clone) {
 }
 
 TEST(MlDsaPrivateKeyTest, CopyConstructor) {
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
+  const auto* private_key = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
   MlDsaPrivateKey copy(*private_key);
 
@@ -500,110 +343,47 @@ TEST(MlDsaPrivateKeyTest, CopyConstructor) {
 }
 
 TEST(MlDsaPrivateKeyTest, CopyAssignment) {
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* private_key = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  const auto* other_private_key = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa87,
+                                   MlDsaParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
-  ASSERT_THAT(key_pair, IsOk());
+  MlDsaPrivateKey copy = *other_private_key;
+  copy = *private_key;
 
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(other_parameters, IsOk());
-
-  absl::StatusOr<KeyPair> other_key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa87);
-  ASSERT_THAT(other_key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> other_public_key = MlDsaPublicKey::Create(
-      *other_parameters, other_key_pair->public_key_bytes,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(other_public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> copy = MlDsaPrivateKey::Create(
-      *other_public_key, other_key_pair->private_seed_bytes,
-      GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *private_key;
-
-  EXPECT_THAT(*copy, Eq(*private_key));
+  EXPECT_THAT(copy, Eq(*private_key));
 }
 
 TEST(MlDsaPrivateKeyTest, MoveConstructor) {
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  MlDsaPrivateKey private_key = *static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  MlDsaPrivateKey expected(*private_key);
-  MlDsaPrivateKey moved(std::move(*private_key));
+  MlDsaPrivateKey expected = private_key;
+  MlDsaPrivateKey moved(std::move(private_key));
 
   EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(MlDsaPrivateKeyTest, MoveAssignment) {
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  MlDsaPrivateKey private_key = *static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  MlDsaPrivateKey other_private_key = *static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa87,
+                                   MlDsaParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa65);
-  ASSERT_THAT(key_pair, IsOk());
+  MlDsaPrivateKey expected = private_key;
+  other_private_key = std::move(private_key);
 
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(other_parameters, IsOk());
-
-  absl::StatusOr<KeyPair> other_key_pair =
-      GenerateKeyPair(MlDsaParameters::Instance::kMlDsa87);
-  ASSERT_THAT(other_key_pair, IsOk());
-
-  absl::StatusOr<MlDsaPublicKey> other_public_key = MlDsaPublicKey::Create(
-      *other_parameters, other_key_pair->public_key_bytes,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(other_public_key, IsOk());
-
-  absl::StatusOr<MlDsaPrivateKey> moved = MlDsaPrivateKey::Create(
-      *other_public_key, other_key_pair->private_seed_bytes,
-      GetPartialKeyAccess());
-  ASSERT_THAT(moved, IsOk());
-
-  MlDsaPrivateKey expected(*private_key);
-  *moved = std::move(*private_key);
-
-  EXPECT_THAT(*moved, Eq(expected));
+  EXPECT_THAT(other_private_key, Eq(expected));
 }
 #endif  // TINK_USE_ONLY_FIPS
 

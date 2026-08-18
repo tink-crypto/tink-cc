@@ -25,7 +25,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
@@ -216,7 +215,8 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentMlDsaPrivateKeyNotEqual) {
       GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance);
 
   MlDsaPrivateKey ml_dsa_private_key2 =
-      GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance);
+      GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance,
+                                          /*key_index=*/1);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,

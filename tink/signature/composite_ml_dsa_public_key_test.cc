@@ -26,7 +26,6 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
@@ -136,8 +135,9 @@ INSTANTIATE_TEST_SUITE_P(
                     std::string("\x01\x02\x03\x04\x00", 5)}));
 
 MlDsaPublicKey GenerateMlDsaPublicKeyOrDie(
-    CompositeMlDsaParameters::MlDsaInstance instance) {
-  return GenerateMlDsaPrivateKeyForTestOrDie(instance).GetPublicKey();
+    CompositeMlDsaParameters::MlDsaInstance instance, int key_index = 0) {
+  return GenerateMlDsaPrivateKeyForTestOrDie(instance, key_index)
+      .GetPublicKey();
 }
 
 std::unique_ptr<SignaturePublicKey> GenerateClassicalPublicKeyOrDie(
@@ -330,7 +330,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentMlDsaPublicKeyNotEqual) {
   MlDsaPublicKey ml_dsa_public_key1 =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   MlDsaPublicKey ml_dsa_public_key2 =
-      GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
+      GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance, /*key_index=*/1);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
                                       /*random=*/false);

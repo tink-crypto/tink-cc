@@ -2034,7 +2034,6 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    absl::optional
     crypto
     tink::core::key
     tink::core::partial_key_access
@@ -2092,7 +2091,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::optional
     crypto
     tink::core::key
     tink::core::partial_key_access

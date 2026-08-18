@@ -167,8 +167,12 @@ tink_cc_library(
     composite_ml_dsa_test_util.cc
     composite_ml_dsa_test_util.h
   DEPS
+    tink::signature::internal::testing::composite_ml_dsa_test_vectors
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     absl::no_destructor
     absl::absl_check
     absl::absl_log
@@ -193,8 +197,6 @@ tink_cc_library(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
     tink::signature::ed25519_parameters
-    tink::signature::ed25519_private_key
-    tink::signature::ed25519_public_key
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key

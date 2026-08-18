@@ -25,13 +25,11 @@
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/signature_private_key.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
+namespace crypto::tink::internal {
 
 // Generates a new ML-DSA private key with the given instance.
 MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
-    CompositeMlDsaParameters::MlDsaInstance instance);
+    CompositeMlDsaParameters::MlDsaInstance instance, int key_index = 0);
 
 // Generates a new classical private key for the given algorithm. If
 // force_random is true, the key is randomly generated. Otherwise, either a
@@ -47,8 +45,6 @@ CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
     const CompositeMlDsaParameters& parameters, bool force_random,
     std::optional<int> id_requirement, int key_index = 0);
 
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+}  // namespace crypto::tink::internal
 
 #endif  // TINK_SIGNATURE_INTERNAL_TESTING_COMPOSITE_ML_DSA_TEST_UTIL_H_

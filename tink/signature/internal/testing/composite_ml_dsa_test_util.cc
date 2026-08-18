@@ -48,10 +48,12 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ed25519_parameters.h"
-#include "tink/signature/ed25519_private_key.h"
-#include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
@@ -65,13 +67,16 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
+namespace crypto::tink::internal {
 namespace {
 
-const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
+// Returns static F4 public exponent (65537).
+const BigInteger& GetF4() {
+  static const absl::NoDestructor<BigInteger> f4(std::string("\x1\0\x1", 3));
+  return *f4;
+}
 
+// Helper to generate a new RSA key pair with public exponent F4.
 absl::Status NewRsaKeyPairF4(int modulus_size_in_bits,
                              internal::RsaPrivateKey* private_key,
                              internal::RsaPublicKey* public_key) {
@@ -84,60 +89,111 @@ absl::Status NewRsaKeyPairF4(int modulus_size_in_bits,
                                  public_key);
 }
 
-std::unique_ptr<SignaturePrivateKey> GenerateEd25519PrivateKeyOrDie() {
-  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
-      internal::NewEd25519Key();
-  ABSL_CHECK_OK(key_pair);
-  absl::StatusOr<Ed25519Parameters> parameters =
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(parameters);
-  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      *parameters, (*key_pair)->public_key,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key);
-  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
-      *public_key,
-      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key);
-  return std::make_unique<Ed25519PrivateKey>(*private_key);
+// Returns static Ed25519 private key from test vectors.
+std::unique_ptr<SignaturePrivateKey> GenerateEd25519PrivateKeyOrDie(
+    int key_index = 0) {
+  if (key_index == 0) {
+    static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+      return *static_cast<const CompositeMlDsaPrivateKey*>(
+          CreateMlDsa65Ed2551TestVector().signature_private_key.get());
+    }());
+    return CloneKeyOrDie<SignaturePrivateKey>(key->GetClassicalPrivateKey());
+  }
+  static const absl::NoDestructor<SignatureTestVector> vector([]() {
+    return GetEd25519TestVector(Ed25519Parameters::Variant::kNoPrefix);
+  }());
+  return CloneKeyOrDie<SignaturePrivateKey>(*vector->signature_private_key);
 }
 
+// Returns static ECDSA private key from test vectors.
 std::unique_ptr<SignaturePrivateKey> GenerateEcdsaPrivateKeyOrDie(
-    subtle::EllipticCurveType subtle_curve_type,
-    EcdsaParameters::CurveType ecdsa_curve_type,
-    EcdsaParameters::HashType hash_type) {
-  absl::StatusOr<internal::EcKey> key_pair =
-      internal::NewEcKey(subtle_curve_type);
-  ABSL_CHECK_OK(key_pair);
-  absl::StatusOr<EcdsaParameters> parameters =
-      EcdsaParameters::Builder()
-          .SetCurveType(ecdsa_curve_type)
-          .SetHashType(hash_type)
-          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
-          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  ABSL_CHECK_OK(parameters);
-  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters,
-      EcPoint(BigInteger(key_pair->pub_x), BigInteger(key_pair->pub_y)),
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key);
-  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(key_pair->priv, InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key);
-  return std::make_unique<EcdsaPrivateKey>(*private_key);
+    EcdsaParameters::CurveType ecdsa_curve_type, int key_index = 0) {
+  switch (ecdsa_curve_type) {
+    case EcdsaParameters::CurveType::kNistP256: {
+      if (key_index == 0) {
+        static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+          return *static_cast<const CompositeMlDsaPrivateKey*>(
+              CreateMlDsa65EcdsaP256TestVector().signature_private_key.get());
+        }());
+        return CloneKeyOrDie<SignaturePrivateKey>(
+            key->GetClassicalPrivateKey());
+      }
+      static const absl::NoDestructor<SignatureTestVector> vector([]() {
+        return GetEcdsaTestVector(EcdsaParameters::CurveType::kNistP256,
+                                  EcdsaParameters::HashType::kSha256,
+                                  EcdsaParameters::SignatureEncoding::kDer,
+                                  EcdsaParameters::Variant::kNoPrefix);
+      }());
+      return CloneKeyOrDie<SignaturePrivateKey>(*vector->signature_private_key);
+    }
+    case EcdsaParameters::CurveType::kNistP384: {
+      if (key_index == 0) {
+        static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+          return *static_cast<const CompositeMlDsaPrivateKey*>(
+              CreateMlDsa65EcdsaP384TestVector().signature_private_key.get());
+        }());
+        return CloneKeyOrDie<SignaturePrivateKey>(
+            key->GetClassicalPrivateKey());
+      }
+      static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+        return *static_cast<const CompositeMlDsaPrivateKey*>(
+            CreateMlDsa87EcdsaP384TestVector().signature_private_key.get());
+      }());
+      return CloneKeyOrDie<SignaturePrivateKey>(key->GetClassicalPrivateKey());
+    }
+    case EcdsaParameters::CurveType::kNistP521: {
+      if (key_index == 0) {
+        static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+          return *static_cast<const CompositeMlDsaPrivateKey*>(
+              CreateMlDsa87EcdsaP521TestVector().signature_private_key.get());
+        }());
+        return CloneKeyOrDie<SignaturePrivateKey>(
+            key->GetClassicalPrivateKey());
+      }
+      static const absl::NoDestructor<std::unique_ptr<SignaturePrivateKey>> key(
+          []() {
+            absl::StatusOr<internal::EcKey> ec_key =
+                internal::NewEcKey(subtle::EllipticCurveType::NIST_P521);
+            ABSL_CHECK_OK(ec_key);
+            absl::StatusOr<EcdsaParameters> parameters =
+                EcdsaParameters::Builder()
+                    .SetCurveType(EcdsaParameters::CurveType::kNistP521)
+                    .SetHashType(EcdsaParameters::HashType::kSha512)
+                    .SetSignatureEncoding(
+                        EcdsaParameters::SignatureEncoding::kDer)
+                    .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+                    .Build();
+            ABSL_CHECK_OK(parameters);
+            absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+                *parameters,
+                EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+                /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+            ABSL_CHECK_OK(public_key);
+            absl::StatusOr<EcdsaPrivateKey> private_key =
+                EcdsaPrivateKey::Create(
+                    *public_key,
+                    RestrictedData(ec_key->priv,
+                                   InsecureSecretKeyAccess::Get()),
+                    GetPartialKeyAccess());
+            ABSL_CHECK_OK(private_key);
+            return std::make_unique<EcdsaPrivateKey>(*private_key);
+          }());
+      return CloneKeyOrDie<SignaturePrivateKey>(**key);
+    }
+    default:
+      ABSL_LOG(FATAL) << "Unsupported curve type";
+  }
 }
 
+// Returns static 3072-bit RSA SSA PSS private key from test vectors or creates
+// a random one.
 std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
     bool force_random, int key_index = 0) {
   static const absl::NoDestructor<RsaSsaPssParameters> parameters([]() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(3072)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
             .SetSaltLengthInBytes(32)
@@ -187,13 +243,15 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
   return nullptr;
 }
 
+// Returns static 4096-bit RSA SSA PSS private key from test vectors or creates
+// a random one.
 std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
     bool force_random, int key_index = 0) {
   static const absl::NoDestructor<RsaSsaPssParameters> parameters([]() {
     absl::StatusOr<RsaSsaPssParameters> parameters =
         RsaSsaPssParameters::Builder()
             .SetModulusSizeInBits(4096)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
             .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
             .SetSaltLengthInBytes(48)
@@ -243,13 +301,15 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
   return nullptr;
 }
 
+// Returns static 3072-bit RSA SSA PKCS1 private key from test vectors or
+// creates a random one.
 std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
     bool force_random, int key_index = 0) {
   static const absl::NoDestructor<RsaSsaPkcs1Parameters> parameters([]() {
     absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
         RsaSsaPkcs1Parameters::Builder()
             .SetModulusSizeInBits(3072)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
             .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
             .Build();
@@ -297,13 +357,15 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
   return nullptr;
 }
 
+// Returns static 4096-bit RSA SSA PKCS1 private key from test vectors or
+// creates a random one.
 std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
     bool force_random, int key_index = 0) {
   static const absl::NoDestructor<RsaSsaPkcs1Parameters> parameters([]() {
     absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
         RsaSsaPkcs1Parameters::Builder()
             .SetModulusSizeInBits(4096)
-            .SetPublicExponent(kF4)
+            .SetPublicExponent(GetF4())
             .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha384)
             .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
             .Build();
@@ -354,7 +416,7 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
 }  // namespace
 
 MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
-    CompositeMlDsaParameters::MlDsaInstance instance) {
+    CompositeMlDsaParameters::MlDsaInstance instance, int key_index) {
   switch (instance) {
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44: {
       std::string public_key_bytes;
@@ -382,54 +444,32 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
       return *private_key;
     }
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65: {
-      std::string public_key_bytes;
-      public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-      internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-      auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
-      ABSL_CHECK_EQ(1, MLDSA65_generate_key(
-                           reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-                           private_seed_bytes.data(), bssl_private_key.get()));
-      absl::StatusOr<MlDsaParameters> parameters =
-          MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
-                                  MlDsaParameters::Variant::kNoPrefix);
-      ABSL_CHECK_OK(parameters);
-      absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
-          *parameters, public_key_bytes, /*id_requirement=*/std::nullopt,
-          GetPartialKeyAccess());
-      ABSL_CHECK_OK(public_key);
-      absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-          *public_key,
-          RestrictedData(
-              util::internal::AsSecretData(std::move(private_seed_bytes)),
-              InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
-      ABSL_CHECK_OK(private_key);
-      return *private_key;
+      if (key_index == 0) {
+        static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+          return *static_cast<const CompositeMlDsaPrivateKey*>(
+              CreateMlDsa65Ed2551TestVector().signature_private_key.get());
+        }());
+        return key->GetMlDsaPrivateKey();
+      }
+      static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+        return *static_cast<const CompositeMlDsaPrivateKey*>(
+            CreateMlDsa65EcdsaP256TestVector().signature_private_key.get());
+      }());
+      return key->GetMlDsaPrivateKey();
     }
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa87: {
-      std::string public_key_bytes;
-      public_key_bytes.resize(MLDSA87_PUBLIC_KEY_BYTES);
-      internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-      auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA87_private_key>();
-      ABSL_CHECK_EQ(1, MLDSA87_generate_key(
-                           reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-                           private_seed_bytes.data(), bssl_private_key.get()));
-      absl::StatusOr<MlDsaParameters> parameters =
-          MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa87,
-                                  MlDsaParameters::Variant::kNoPrefix);
-      ABSL_CHECK_OK(parameters);
-      absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
-          *parameters, public_key_bytes, /*id_requirement=*/std::nullopt,
-          GetPartialKeyAccess());
-      ABSL_CHECK_OK(public_key);
-      absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-          *public_key,
-          RestrictedData(
-              util::internal::AsSecretData(std::move(private_seed_bytes)),
-              InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
-      ABSL_CHECK_OK(private_key);
-      return *private_key;
+      if (key_index == 0) {
+        static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+          return *static_cast<const CompositeMlDsaPrivateKey*>(
+              CreateMlDsa87EcdsaP384TestVector().signature_private_key.get());
+        }());
+        return key->GetMlDsaPrivateKey();
+      }
+      static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+        return *static_cast<const CompositeMlDsaPrivateKey*>(
+            CreateMlDsa87EcdsaP521TestVector().signature_private_key.get());
+      }());
+      return key->GetMlDsaPrivateKey();
     }
     default:
       ABSL_LOG(FATAL) << "Unsupported ML-DSA instance";
@@ -441,19 +481,16 @@ std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
     int key_index) {
   switch (algorithm) {
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519:
-      return GenerateEd25519PrivateKeyOrDie();
+      return GenerateEd25519PrivateKeyOrDie(key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256:
-      return GenerateEcdsaPrivateKeyOrDie(subtle::EllipticCurveType::NIST_P256,
-                                          EcdsaParameters::CurveType::kNistP256,
-                                          EcdsaParameters::HashType::kSha256);
+      return GenerateEcdsaPrivateKeyOrDie(EcdsaParameters::CurveType::kNistP256,
+                                          key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384:
-      return GenerateEcdsaPrivateKeyOrDie(subtle::EllipticCurveType::NIST_P384,
-                                          EcdsaParameters::CurveType::kNistP384,
-                                          EcdsaParameters::HashType::kSha384);
+      return GenerateEcdsaPrivateKeyOrDie(EcdsaParameters::CurveType::kNistP384,
+                                          key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521:
-      return GenerateEcdsaPrivateKeyOrDie(subtle::EllipticCurveType::NIST_P521,
-                                          EcdsaParameters::CurveType::kNistP521,
-                                          EcdsaParameters::HashType::kSha512);
+      return GenerateEcdsaPrivateKeyOrDie(EcdsaParameters::CurveType::kNistP521,
+                                          key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss:
       return GenerateRsaPss3072PrivateKeyOrDie(force_random, key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss:
@@ -483,6 +520,4 @@ CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
   return *private_key;
 }
 
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+}  // namespace crypto::tink::internal

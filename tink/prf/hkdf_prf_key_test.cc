@@ -17,21 +17,18 @@
 #include "tink/prf/hkdf_prf_key.h"
 
 #include <memory>
-#include <string>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/prf/internal/hkdf_prf_test_vectors.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -42,53 +39,35 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  int key_size;
-  HkdfPrfParameters::HashType hash_type;
-  absl::optional<std::string> salt;
-};
+using HkdfPrfKeyTest = TestWithParam<internal::HkdfPrfTestVector>;
 
-using HkdfPrfKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    HkdfPrfKeyCreateTestSuite, HkdfPrfKeyTest,
-    Values(TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha1,
-                    std::nullopt},
-           TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha224,
-                    test::HexDecodeOrDie("00010203040506")},
-           TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha256,
-                    test::HexDecodeOrDie("00010203040506070809")},
-           TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha384,
-                    test::HexDecodeOrDie("000102030405060708090a0b0c")},
-           TestCase{/*key_size=*/32, HkdfPrfParameters::HashType::kSha512,
-                    test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f")}));
+INSTANTIATE_TEST_SUITE_P(HkdfPrfKeyTestSuite, HkdfPrfKeyTest,
+                         ValuesIn(internal::CreateHkdfPrfTestVectors()));
 
 TEST_P(HkdfPrfKeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
+  const internal::HkdfPrfTestVector& test_vector = GetParam();
 
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      test_case.key_size, test_case.hash_type, test_case.salt);
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData secret = RestrictedData(test_case.key_size);
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
+  RestrictedData secret = test_vector.key.GetKeyBytes(GetPartialKeyAccess());
+  absl::StatusOr<HkdfPrfKey> key = HkdfPrfKey::Create(
+      test_vector.key.GetParameters(), secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(key->GetParameters(), Eq(test_vector.key.GetParameters()));
   EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
 TEST(HkdfPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      16, HkdfPrfParameters::HashType::kSha256, /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::HkdfPrfTestVector& test_vector22 =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256);
+  const internal::HkdfPrfTestVector& test_vector80 =
+      internal::GetHkdfPrfTestVector(80, HkdfPrfParameters::HashType::kSha256);
 
   EXPECT_THAT(
-      HkdfPrfKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
+      HkdfPrfKey::Create(test_vector22.key.GetParameters(),
+                         test_vector80.key.GetKeyBytes(GetPartialKeyAccess()),
                          GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -96,181 +75,104 @@ TEST(HkdfPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
 }
 
 TEST_P(HkdfPrfKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
+  const internal::HkdfPrfTestVector& test_vector = GetParam();
 
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      test_case.key_size, test_case.hash_type, test_case.salt);
-  ASSERT_THAT(parameters, IsOk());
+  HkdfPrfKey copy = test_vector.key;
 
-  RestrictedData secret = RestrictedData(test_case.key_size);
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<HkdfPrfKey> other_key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(test_vector.key == copy);
+  EXPECT_TRUE(copy == test_vector.key);
+  EXPECT_FALSE(test_vector.key != copy);
+  EXPECT_FALSE(copy != test_vector.key);
 }
 
 TEST(HkdfPrfKeyTest, DifferentSecretDataNotEqual) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::HkdfPrfTestVector& test_vector =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256);
 
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/22);
 
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret1, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<HkdfPrfKey> other_key =
-      HkdfPrfKey::Create(*parameters, secret2, GetPartialKeyAccess());
+  absl::StatusOr<HkdfPrfKey> other_key = HkdfPrfKey::Create(
+      test_vector.key.GetParameters(), secret2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(test_vector.key != *other_key);
+  EXPECT_TRUE(*other_key != test_vector.key);
+  EXPECT_FALSE(test_vector.key == *other_key);
+  EXPECT_FALSE(*other_key == test_vector.key);
 }
 
 TEST(HkdfPrfKeyTest, DifferentParametersNotEqual) {
-  absl::StatusOr<HkdfPrfParameters> parameters1 = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters1, IsOk());
+  const HkdfPrfKey& key1 =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key;
+  const HkdfPrfKey& key2 =
+      internal::GetHkdfPrfTestVector(80, HkdfPrfParameters::HashType::kSha256)
+          .key;
 
-  absl::StatusOr<HkdfPrfParameters> parameters2 = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha384,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters2, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters1, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<HkdfPrfKey> other_key =
-      HkdfPrfKey::Create(*parameters2, secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(key1 != key2);
+  EXPECT_TRUE(key2 != key1);
+  EXPECT_FALSE(key1 == key2);
+  EXPECT_FALSE(key2 == key1);
 }
 
 TEST(HkdfPrfKeyTest, CopyConstructor) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
+  const HkdfPrfKey& key =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  HkdfPrfKey copy(key);
 
-  HkdfPrfKey copy(*key);
-
-  EXPECT_THAT(copy, Eq(*key));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(HkdfPrfKeyTest, CopyAssignment) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
+  const HkdfPrfKey& key =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key;
+  const HkdfPrfKey& other_key =
+      internal::GetHkdfPrfTestVector(80, HkdfPrfParameters::HashType::kSha256)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  HkdfPrfKey copy = other_key;
+  copy = key;
 
-  absl::StatusOr<HkdfPrfParameters> other_parameters =
-      HkdfPrfParameters::Create(
-          /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
-          /*salt=*/test::HexDecodeOrDie("00010203040506"));
-  ASSERT_THAT(other_parameters, IsOk());
-
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<HkdfPrfKey> copy = HkdfPrfKey::Create(
-      *other_parameters, other_secret, GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(*copy, Eq(*key));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(HkdfPrfKeyTest, MoveConstructor) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
+  HkdfPrfKey key =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  HkdfPrfKey expected = *key;
-  HkdfPrfKey moved(std::move(*key));
+  HkdfPrfKey expected = key;
+  HkdfPrfKey moved(std::move(key));
 
   EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(HkdfPrfKeyTest, MoveAssignment) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
+  HkdfPrfKey key =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key;
+  HkdfPrfKey other_key =
+      internal::GetHkdfPrfTestVector(80, HkdfPrfParameters::HashType::kSha256)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  HkdfPrfKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<HkdfPrfParameters> other_parameters =
-      HkdfPrfParameters::Create(
-          /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
-          /*salt=*/test::HexDecodeOrDie("00010203040506"));
-  ASSERT_THAT(other_parameters, IsOk());
-
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<HkdfPrfKey> moved = HkdfPrfKey::Create(
-      *other_parameters, other_secret, GetPartialKeyAccess());
-  ASSERT_THAT(moved, IsOk());
-
-  HkdfPrfKey expected = *key;
-  *moved = std::move(*key);
-
-  EXPECT_THAT(*moved, Eq(expected));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(HkdfPrfKeyTest, Clone) {
-  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-      /*salt=*/std::nullopt);
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const HkdfPrfKey& key =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key;
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

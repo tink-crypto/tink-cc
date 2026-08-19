@@ -26,11 +26,11 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_ctr_hmac_aead_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -41,72 +41,34 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  int aes_key_size;
-  int hmac_key_size;
-  int iv_size;
-  int tag_size;
-  AesCtrHmacAeadParameters::HashType hash_type;
-  AesCtrHmacAeadParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
+using AesCtrHmacAeadKeyTest = TestWithParam<internal::AeadTestVector>;
 
-using AesCtrHmacAeadKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    AesCtrHmacAeadKeyBuildTestSuite, AesCtrHmacAeadKeyTest,
-    Values(TestCase{/*aes_key_size=*/16, /*hmac_key_size=*/16,
-                    /*iv_size=*/12, /*tag_size=*/28,
-                    AesCtrHmacAeadParameters::HashType::kSha256,
-                    AesCtrHmacAeadParameters::Variant::kTink,
-                    /*id_requirement=*/0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{/*aes_key_size=*/24, /*hmac_key_size=*/32,
-                    /*iv_size=*/16, /*tag_size=*/32,
-                    AesCtrHmacAeadParameters::HashType::kSha384,
-                    AesCtrHmacAeadParameters::Variant::kCrunchy,
-                    /*id_requirement=*/0x01030005,
-                    std::string("\x00\x01\x03\x00\x05", 5)},
-           TestCase{/*aes_key_size=*/32, /*hmac_key_size=*/16,
-                    /*iv_size=*/16, /*tag_size=*/48,
-                    AesCtrHmacAeadParameters::HashType::kSha512,
-                    AesCtrHmacAeadParameters::Variant::kNoPrefix,
-                    /*id_requirement=*/std::nullopt, ""}));
+INSTANTIATE_TEST_SUITE_P(AesCtrHmacAeadKeyBuildTestSuite, AesCtrHmacAeadKeyTest,
+                         ValuesIn(internal::CreateAesCtrHmacAeadTestVectors()));
 
 TEST_P(AesCtrHmacAeadKeyTest, BuildKeySucceeds) {
-  TestCase test_case = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesCtrHmacAeadKey& key =
+      dynamic_cast<const AesCtrHmacAeadKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(test_case.aes_key_size)
-          .SetHmacKeySizeInBytes(test_case.hmac_key_size)
-          .SetIvSizeInBytes(test_case.iv_size)
-          .SetTagSizeInBytes(test_case.tag_size)
-          .SetHashType(test_case.hash_type)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData aes_secret = RestrictedData(test_case.aes_key_size);
-  RestrictedData hmac_secret = RestrictedData(test_case.hmac_key_size);
-
-  absl::StatusOr<AesCtrHmacAeadKey> key =
+  absl::StatusOr<AesCtrHmacAeadKey> created_key =
       AesCtrHmacAeadKey::Builder()
-          .SetParameters(*parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetHmacKeyBytes(hmac_secret)
-          .SetIdRequirement(test_case.id_requirement)
+          .SetParameters(key.GetParameters())
+          .SetAesKeyBytes(key.GetAesKeyBytes(GetPartialKeyAccess()))
+          .SetHmacKeyBytes(key.GetHmacKeyBytes(GetPartialKeyAccess()))
+          .SetIdRequirement(key.GetIdRequirement())
           .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(key->GetAesKeyBytes(GetPartialKeyAccess()), Eq(aes_secret));
-  EXPECT_THAT(key->GetHmacKeyBytes(GetPartialKeyAccess()), Eq(hmac_secret));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetAesKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetAesKeyBytes(GetPartialKeyAccess())));
+  EXPECT_THAT(created_key->GetHmacKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetHmacKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildKeyWithMismatchedAesKeySizeFails) {
@@ -282,94 +244,50 @@ TEST(AesCtrHmacAeadKeyTest, BuildTinkKeyWithoutIdRequirementFails) {
 }
 
 TEST_P(AesCtrHmacAeadKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesCtrHmacAeadKey& key =
+      dynamic_cast<const AesCtrHmacAeadKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(test_case.aes_key_size)
-          .SetHmacKeySizeInBytes(test_case.hmac_key_size)
-          .SetIvSizeInBytes(test_case.iv_size)
-          .SetTagSizeInBytes(test_case.tag_size)
-          .SetHashType(test_case.hash_type)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData aes_secret = RestrictedData(test_case.aes_key_size);
-  RestrictedData hmac_secret = RestrictedData(test_case.hmac_key_size);
-
-  absl::StatusOr<AesCtrHmacAeadKey> key =
+  absl::StatusOr<AesCtrHmacAeadKey> created_key =
       AesCtrHmacAeadKey::Builder()
-          .SetParameters(*parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetHmacKeyBytes(hmac_secret)
-          .SetIdRequirement(test_case.id_requirement)
+          .SetParameters(key.GetParameters())
+          .SetAesKeyBytes(key.GetAesKeyBytes(GetPartialKeyAccess()))
+          .SetHmacKeyBytes(key.GetHmacKeyBytes(GetPartialKeyAccess()))
+          .SetIdRequirement(key.GetIdRequirement())
           .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesCtrHmacAeadKey> other_key =
       AesCtrHmacAeadKey::Builder()
-          .SetParameters(*parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetHmacKeyBytes(hmac_secret)
-          .SetIdRequirement(test_case.id_requirement)
+          .SetParameters(key.GetParameters())
+          .SetAesKeyBytes(key.GetAesKeyBytes(GetPartialKeyAccess()))
+          .SetHmacKeyBytes(key.GetHmacKeyBytes(GetPartialKeyAccess()))
+          .SetIdRequirement(key.GetIdRequirement())
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(*created_key == *other_key);
+  EXPECT_TRUE(*other_key == *created_key);
+  EXPECT_FALSE(*created_key != *other_key);
+  EXPECT_FALSE(*other_key != *created_key);
 }
 
 TEST(AesCtrHmacAeadKeyTest, DifferentParametersKeysNotEqual) {
-  absl::StatusOr<AesCtrHmacAeadParameters> tink_parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(32)
-          .SetHmacKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(tink_parameters, IsOk());
+  const AesCtrHmacAeadKey& key1 = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/32,
+           AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key);
+  const AesCtrHmacAeadKey& key2 = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/16,
+           AesCtrHmacAeadParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<AesCtrHmacAeadParameters> crunchy_parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(32)
-          .SetHmacKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kCrunchy)
-          .Build();
-  ASSERT_THAT(crunchy_parameters, IsOk());
-
-  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/32);
-  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<AesCtrHmacAeadKey> tink_key =
-      AesCtrHmacAeadKey::Builder()
-          .SetParameters(*tink_parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetHmacKeyBytes(hmac_secret)
-          .SetIdRequirement(0x01020304)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(tink_key, IsOk());
-
-  absl::StatusOr<AesCtrHmacAeadKey> crunchy_key =
-      AesCtrHmacAeadKey::Builder()
-          .SetParameters(*crunchy_parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetHmacKeyBytes(hmac_secret)
-          .SetIdRequirement(0x01020304)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(crunchy_key, IsOk());
-
-  EXPECT_TRUE(*tink_key != *crunchy_key);
-  EXPECT_TRUE(*crunchy_key != *tink_key);
-  EXPECT_FALSE(*tink_key == *crunchy_key);
-  EXPECT_FALSE(*crunchy_key == *tink_key);
+  EXPECT_TRUE(key1 != key2);
+  EXPECT_TRUE(key2 != key1);
+  EXPECT_FALSE(key1 == key2);
+  EXPECT_FALSE(key2 == key1);
 }
 
 TEST(AesCtrHmacAeadKeyTest, DifferentAesKeyMaterialNotEqual) {
@@ -489,178 +407,77 @@ TEST(AesCtrHmacAeadKeyTest, DifferentIdRequirementKeysNotEqual) {
 }
 
 TEST(AesCtrHmacAeadKeyTest, CopyConstructor) {
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(16)
-          .SetHmacKeySizeInBytes(16)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  const auto& key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/16,
+           AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key);
 
-  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/16);
+  AesCtrHmacAeadKey copy(key);
 
-  absl::StatusOr<AesCtrHmacAeadKey> key = AesCtrHmacAeadKey::Builder()
-                                              .SetParameters(*parameters)
-                                              .SetAesKeyBytes(aes_secret)
-                                              .SetHmacKeyBytes(hmac_secret)
-                                              .SetIdRequirement(0x01020304)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesCtrHmacAeadKey copy(*key);
-
-  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(copy.GetAesKeyBytes(GetPartialKeyAccess()), Eq(aes_secret));
-  EXPECT_THAT(copy.GetHmacKeyBytes(GetPartialKeyAccess()), Eq(hmac_secret));
-  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x01020304));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesCtrHmacAeadKeyTest, CopyAssignment) {
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(16)
-          .SetHmacKeySizeInBytes(16)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  const auto& key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/16,
+           AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key);
+  const auto& other_key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/32,
+           AesCtrHmacAeadParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/16);
+  AesCtrHmacAeadKey copy = other_key;
+  copy = key;
 
-  absl::StatusOr<AesCtrHmacAeadKey> key = AesCtrHmacAeadKey::Builder()
-                                              .SetParameters(*parameters)
-                                              .SetAesKeyBytes(aes_secret)
-                                              .SetHmacKeyBytes(hmac_secret)
-                                              .SetIdRequirement(0x01020304)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  RestrictedData aes_secret2 = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesCtrHmacAeadKey> copy = AesCtrHmacAeadKey::Builder()
-                                               .SetParameters(*parameters)
-                                               .SetAesKeyBytes(aes_secret2)
-                                               .SetHmacKeyBytes(hmac_secret2)
-                                               .SetIdRequirement(0x05060708)
-                                               .Build(GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(copy->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(copy->GetAesKeyBytes(GetPartialKeyAccess()), Eq(aes_secret));
-  EXPECT_THAT(copy->GetHmacKeyBytes(GetPartialKeyAccess()), Eq(hmac_secret));
-  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x01020304));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesCtrHmacAeadKeyTest, MoveConstructor) {
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(16)
-          .SetHmacKeySizeInBytes(16)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  AesCtrHmacAeadKey key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/16,
+           AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key);
 
-  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/16);
+  AesCtrHmacAeadKey expected = key;
+  AesCtrHmacAeadKey move(std::move(key));
 
-  absl::StatusOr<AesCtrHmacAeadKey> key = AesCtrHmacAeadKey::Builder()
-                                              .SetParameters(*parameters)
-                                              .SetAesKeyBytes(aes_secret)
-                                              .SetHmacKeyBytes(hmac_secret)
-                                              .SetIdRequirement(0x01020304)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesCtrHmacAeadKey move(std::move(*key));
-
-  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move.GetAesKeyBytes(GetPartialKeyAccess()), Eq(aes_secret));
-  EXPECT_THAT(move.GetHmacKeyBytes(GetPartialKeyAccess()), Eq(hmac_secret));
-  EXPECT_THAT(move.GetIdRequirement(), Eq(0x01020304));
+  EXPECT_THAT(move, Eq(expected));
 }
 
 TEST(AesCtrHmacAeadKeyTest, MoveAssignment) {
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(16)
-          .SetHmacKeySizeInBytes(16)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  AesCtrHmacAeadKey key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/16,
+           AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key);
+  AesCtrHmacAeadKey other_key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/32,
+           AesCtrHmacAeadParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  RestrictedData aes_secret1 = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret1 = RestrictedData(/*num_random_bytes=*/16);
+  AesCtrHmacAeadKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<AesCtrHmacAeadKey> key = AesCtrHmacAeadKey::Builder()
-                                              .SetParameters(*parameters)
-                                              .SetAesKeyBytes(aes_secret1)
-                                              .SetHmacKeyBytes(hmac_secret1)
-                                              .SetIdRequirement(0x01020304)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  RestrictedData aes_secret2 = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesCtrHmacAeadKey> move = AesCtrHmacAeadKey::Builder()
-                                               .SetParameters(*parameters)
-                                               .SetAesKeyBytes(aes_secret2)
-                                               .SetHmacKeyBytes(hmac_secret2)
-                                               .SetIdRequirement(0x05060708)
-                                               .Build(GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move->GetAesKeyBytes(GetPartialKeyAccess()), Eq(aes_secret1));
-  EXPECT_THAT(move->GetHmacKeyBytes(GetPartialKeyAccess()), Eq(hmac_secret1));
-  EXPECT_THAT(move->GetIdRequirement(), Eq(0x01020304));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(AesCtrHmacAeadKeyTest, Clone) {
-  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(16)
-          .SetHmacKeySizeInBytes(16)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(32)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesCtrHmacAeadKey> key = AesCtrHmacAeadKey::Builder()
-                                              .SetParameters(*parameters)
-                                              .SetAesKeyBytes(aes_secret)
-                                              .SetHmacKeyBytes(hmac_secret)
-                                              .SetIdRequirement(0x01020304)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const auto& key = dynamic_cast<const AesCtrHmacAeadKey&>(
+      *internal::GetAesCtrHmacAeadTestVector(
+           /*aes_key_size_in_bytes=*/16,
+           AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key);
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

@@ -146,6 +146,69 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                "d5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee3db6"
                "4b84b5e0c653d9e84b80bbf23e1a",
            })},
+          {{24, AesCtrHmacAeadParameters::Variant::kNoPrefix},
+           MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
+               /*aes_key_size_in_bytes=*/24,
+               /*variant=*/AesCtrHmacAeadParameters::Variant::kNoPrefix,
+               /*aes_key_hex=*/
+               "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+               /*hmac_key_hex=*/
+               "000102030405060708090a0b0c0d0e0f10111213141516"
+               "1718191a1b1c1d1e1f",
+               /*id_requirement=*/std::nullopt,
+               /*plaintext_hex=*/
+               "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45"
+               "af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b"
+               "417be66c3710",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff1abc932417521ca24f2b0459fe7e"
+               "6e0b090339ec0aa6faefd5ccc2c6f4ce2896371c5e85d44d65a0b50a068d"
+               "1e37a810f64e6a42054db0d4029ab204d9f58e3dc8e9c60362271f852e9f"
+               "5073a9858af0",
+           })},
+          {{24, AesCtrHmacAeadParameters::Variant::kTink},
+           MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
+               /*aes_key_size_in_bytes=*/24,
+               /*variant=*/AesCtrHmacAeadParameters::Variant::kTink,
+               /*aes_key_hex=*/
+               "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+               /*hmac_key_hex=*/
+               "000102030405060708090a0b0c0d0e0f10111213141516"
+               "1718191a1b1c1d1e1f",
+               /*id_requirement=*/0x01020304,
+               /*plaintext_hex=*/
+               "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45"
+               "af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b"
+               "417be66c3710",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "0101020304f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff1abc932417521ca24f"
+               "2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce2896371c5e85d44d65"
+               "a0b50a068d1e37a810f64e6a42054db0d4029ab204d9f58e3dc8e9c60362"
+               "271f852e9f5073a9858af0",
+           })},
+          {{24, AesCtrHmacAeadParameters::Variant::kCrunchy},
+           MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
+               /*aes_key_size_in_bytes=*/24,
+               /*variant=*/AesCtrHmacAeadParameters::Variant::kCrunchy,
+               /*aes_key_hex=*/
+               "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+               /*hmac_key_hex=*/
+               "000102030405060708090a0b0c0d0e0f10111213141516"
+               "1718191a1b1c1d1e1f",
+               /*id_requirement=*/0x01020304,
+               /*plaintext_hex=*/
+               "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45"
+               "af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b"
+               "417be66c3710",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "0001020304f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff1abc932417521ca24f"
+               "2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce2896371c5e85d44d65"
+               "a0b50a068d1e37a810f64e6a42054db0d4029ab204d9f58e3dc8e9c60362"
+               "271f852e9f5073a9858af0",
+           })},
           {{32, AesCtrHmacAeadParameters::Variant::kNoPrefix},
            MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
                /*aes_key_size_in_bytes=*/32,

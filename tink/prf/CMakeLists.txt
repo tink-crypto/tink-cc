@@ -543,12 +543,10 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    absl::optional
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::prf::internal::aes_cmac_prf_test_vectors
 )
 
 tink_cc_test(

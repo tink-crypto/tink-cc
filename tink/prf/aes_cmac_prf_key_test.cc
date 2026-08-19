@@ -17,19 +17,18 @@
 #include "tink/prf/aes_cmac_prf_key.h"
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
+#include "tink/prf/internal/aes_cmac_prf_test_vectors.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -39,27 +38,23 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-using AesCmacPrfKeyTest = TestWithParam<int>;
+using AesCmacPrfKeyTest = TestWithParam<internal::AesCmacPrfTestVector>;
 
 INSTANTIATE_TEST_SUITE_P(AesCmacPrfKeyTestSuite, AesCmacPrfKeyTest,
-                         Values(16, 32));
+                         ValuesIn(internal::CreateAesCmacPrfTestVectors()));
 
 TEST_P(AesCmacPrfKeyTest, CreateSucceeds) {
-  int key_size = GetParam();
+  const internal::AesCmacPrfTestVector& test_vector = GetParam();
 
-  RestrictedData secret = RestrictedData(key_size);
+  RestrictedData secret = test_vector.key.GetKeyBytes(GetPartialKeyAccess());
   absl::StatusOr<AesCmacPrfKey> key =
       AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  absl::StatusOr<AesCmacPrfParameters> expected_parameters =
-      AesCmacPrfParameters::Create(key_size);
-  ASSERT_THAT(expected_parameters, IsOk());
-
   EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(key->GetParameters(), Eq(*expected_parameters));
+  EXPECT_THAT(key->GetParameters(), Eq(test_vector.key.GetParameters()));
   EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
 }
 
@@ -75,112 +70,86 @@ TEST(AesCmacPrfKeyTest, CreateKeyWithInvalidKeySizeFails) {
 }
 
 TEST_P(AesCmacPrfKeyTest, KeyEquals) {
-  int key_size = GetParam();
+  const internal::AesCmacPrfTestVector& test_vector = GetParam();
 
-  RestrictedData secret = RestrictedData(key_size);
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  AesCmacPrfKey copy = test_vector.key;
 
-  absl::StatusOr<AesCmacPrfKey> other_key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(test_vector.key == copy);
+  EXPECT_TRUE(copy == test_vector.key);
+  EXPECT_FALSE(test_vector.key != copy);
+  EXPECT_FALSE(copy != test_vector.key);
 }
 
 TEST(AesCmacPrfKeyTest, DifferentSecretDataNotEqual) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+  const internal::AesCmacPrfTestVector& test_vector =
+      internal::GetAesCmacPrfTestVector(16);
 
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret1, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
   absl::StatusOr<AesCmacPrfKey> other_key =
       AesCmacPrfKey::Create(secret2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(test_vector.key != *other_key);
+  EXPECT_TRUE(*other_key != test_vector.key);
+  EXPECT_FALSE(test_vector.key == *other_key);
+  EXPECT_FALSE(*other_key == test_vector.key);
+}
+
+TEST(AesCmacPrfKeyTest, DifferentParametersNotEqual) {
+  const AesCmacPrfKey& key1 = internal::GetAesCmacPrfTestVector(16).key;
+  const AesCmacPrfKey& key2 = internal::GetAesCmacPrfTestVector(32).key;
+
+  EXPECT_TRUE(key1 != key2);
+  EXPECT_TRUE(key2 != key1);
+  EXPECT_FALSE(key1 == key2);
+  EXPECT_FALSE(key2 == key1);
 }
 
 TEST(AesCmacPrfKeyTest, CopyConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const AesCmacPrfKey& key = internal::GetAesCmacPrfTestVector(16).key;
 
-  AesCmacPrfKey copy(*key);
+  AesCmacPrfKey copy(key);
 
-  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(copy.GetParameters(), Eq(key->GetParameters()));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesCmacPrfKeyTest, CopyAssignment) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const AesCmacPrfKey& key = internal::GetAesCmacPrfTestVector(16).key;
+  const AesCmacPrfKey& other_key = internal::GetAesCmacPrfTestVector(32).key;
 
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<AesCmacPrfKey> other_key =
-      AesCmacPrfKey::Create(other_secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
+  AesCmacPrfKey copy = other_key;
+  copy = key;
 
-  *other_key = *key;
-
-  EXPECT_THAT(other_key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(other_key->GetParameters(), Eq(key->GetParameters()));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesCmacPrfKeyTest, MoveConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  AesCmacPrfKey key = internal::GetAesCmacPrfTestVector(16).key;
 
-  AesCmacPrfParameters parameters = key->GetParameters();
-  AesCmacPrfKey moved_key(std::move(*key));
+  AesCmacPrfKey expected = key;
+  AesCmacPrfKey moved(std::move(key));
 
-  EXPECT_THAT(moved_key.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(moved_key.GetParameters(), Eq(parameters));
+  EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(AesCmacPrfKeyTest, MoveAssignment) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  AesCmacPrfKey key = internal::GetAesCmacPrfTestVector(16).key;
+  AesCmacPrfKey other_key = internal::GetAesCmacPrfTestVector(32).key;
 
-  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<AesCmacPrfKey> other_key =
-      AesCmacPrfKey::Create(other_secret, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
+  AesCmacPrfKey expected = key;
+  other_key = std::move(key);
 
-  AesCmacPrfParameters parameters = key->GetParameters();
-  *other_key = std::move(*key);
-
-  EXPECT_THAT(other_key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(other_key->GetParameters(), Eq(parameters));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(AesCmacPrfKeyTest, Clone) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const AesCmacPrfKey& key = internal::GetAesCmacPrfTestVector(16).key;
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

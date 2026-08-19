@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SUBTLE_EC_UTIL_H_
-#define TINK_SUBTLE_EC_UTIL_H_
+#include "tink/subtle/ec_util.h"
 
 #include <cstdint>
 
-#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
 #include "tink/internal/ec_util.h"
 #include "tink/subtle/common_enums.h"
@@ -28,20 +26,19 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-class EcUtil {
- public:
-  // Returns the encoding size of a point on the specified elliptic curve
-  // when the given 'point_format' is used.
-  static absl::StatusOr<uint32_t> EncodingSizeInBytes(
-      EllipticCurveType curve_type, EcPointFormat point_format);
+absl::StatusOr<uint32_t> EcUtil::EncodingSizeInBytes(
+    EllipticCurveType curve_type, EcPointFormat point_format) {
+  return internal::EcPointEncodingSizeInBytes(curve_type, point_format);
+}
 
-  // Returns the size (in bytes) of an element of the field over which
-  // the curve is defined.
-  static uint32_t FieldSizeInBytes(EllipticCurveType curve_type);
-};
+uint32_t EcUtil::FieldSizeInBytes(EllipticCurveType curve_type) {
+  absl::StatusOr<int32_t> size = internal::EcFieldSizeInBytes(curve_type);
+  if (!size.ok()) {
+    return 0;
+  }
+  return *size;
+}
 
 }  // namespace subtle
 }  // namespace tink
 }  // namespace crypto
-
-#endif  // TINK_SUBTLE_EC_UTIL_H_

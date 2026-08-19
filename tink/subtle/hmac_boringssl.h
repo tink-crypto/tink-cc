@@ -57,11 +57,10 @@ class HmacBoringSsl : public Mac {
   // Minimum HMAC key size in bytes.
   static constexpr size_t kMinKeySize = 16;
 
-  HmacBoringSsl(const EVP_MD* md, uint32_t tag_size, SecretData key)
-      : md_(md), tag_size_(tag_size), key_(std::move(key)) {}
+  HmacBoringSsl(HashType hash_type, uint32_t tag_size, SecretData key)
+      : hash_type_(hash_type), tag_size_(tag_size), key_(std::move(key)) {}
 
-  // HmacBoringSsl is not owner of md (it is owned by BoringSSL).
-  const EVP_MD* const md_;
+  const HashType hash_type_;
   const uint32_t tag_size_;
   const SecretData key_;
 };

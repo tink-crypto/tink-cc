@@ -46,11 +46,10 @@ class HkdfStreamingPrf : public StreamingPrf {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  HkdfStreamingPrf(const EVP_MD* hash, SecretData secret,
-                   absl::string_view salt)
+  HkdfStreamingPrf(HashType hash, SecretData secret, absl::string_view salt)
       : hash_(hash), secret_(std::move(secret)), salt_(salt) {}
 
-  const EVP_MD* hash_;
+  const HashType hash_;
   const SecretData secret_;
   const std::string salt_;
 };

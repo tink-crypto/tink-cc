@@ -26,6 +26,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -54,13 +55,13 @@ using ::crypto::tink::internal::CallWithCoreDumpProtection;
 
 class HkdfInputStream : public InputStream {
  public:
-  HkdfInputStream(const EVP_MD *digest, const SecretData &secret,
+  HkdfInputStream(const EVP_MD* digest, const SecretData& secret,
                   absl::string_view salt, absl::string_view input)
       : input_(input) {
     stream_status_ = Init(digest, secret, salt);
   }
 
-  absl::StatusOr<int> Next(const void **data) override {
+  absl::StatusOr<int> Next(const void** data) override {
     if (!stream_status_.ok()) {
       return stream_status_;
     }
@@ -89,7 +90,7 @@ class HkdfInputStream : public InputStream {
   }
 
  private:
-  absl::Status Init(const EVP_MD *digest, const SecretData &secret,
+  absl::Status Init(const EVP_MD* digest, const SecretData& secret,
                     absl::string_view salt) {
     // PRK as by RFC 5869, Section 2.2
     internal::SecretBuffer prk(EVP_MAX_MD_SIZE);
@@ -108,10 +109,11 @@ class HkdfInputStream : public InputStream {
     // replace calls to `HKDF_extract` with a direct call to `HMAC` to make this
     // compatible to OpenSSL, which doesn't expose `HKDF*` functions.
     //
-    // [1] https://github.com/google/boringssl/blob/master/crypto/hkdf/hkdf.c#L42
+    // [1]
+    // https://github.com/google/boringssl/blob/master/crypto/hkdf/hkdf.c#L42
     unsigned prk_len;
     int hmac_result = CallWithCoreDumpProtection([&]() {
-      return HMAC(digest, reinterpret_cast<const uint8_t *>(salt.data()),
+      return HMAC(digest, reinterpret_cast<const uint8_t*>(salt.data()),
                   salt.size(), secret.data(), secret.size(), prk.data(),
                   &prk_len) != nullptr &&
              prk_len == digest_size;
@@ -133,7 +135,7 @@ class HkdfInputStream : public InputStream {
     return CallWithCoreDumpProtection([&] { return UpdateTi(); });
   }
 
-  int returnDataFromPosition(const void **data) {
+  int returnDataFromPosition(const void** data) {
     // There's still data in ti to return.
     *data = ti_.data() + position_in_ti_;
     int result = ti_.size() - position_in_ti_;
@@ -154,7 +156,7 @@ class HkdfInputStream : public InputStream {
                           "HMAC_Update failed on ti_");
     }
     if (!HMAC_Update(hmac_ctx_.get(),
-                     reinterpret_cast<const uint8_t *>(&input_[0]),
+                     reinterpret_cast<const uint8_t*>(&input_[0]),
                      input_.size())) {
       return absl::Status(absl::StatusCode::kInternal,
                           "HMAC_Update failed on input_");
@@ -195,7 +197,11 @@ class HkdfInputStream : public InputStream {
 
 std::unique_ptr<InputStream> HkdfStreamingPrf::ComputePrf(
     absl::string_view input) const {
-  return std::make_unique<HkdfInputStream>(hash_, secret_, salt_, input);
+  absl::StatusOr<const EVP_MD*> evp_md = internal::EvpHashFromHashType(hash_);
+  if (!evp_md.ok()) {
+    return nullptr;
+  }
+  return std::make_unique<HkdfInputStream>(*evp_md, secret_, salt_, input);
 }
 
 // static
@@ -214,13 +220,12 @@ absl::StatusOr<std::unique_ptr<StreamingPrf>> HkdfStreamingPrf::New(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Too short secret for HkdfStreamingPrf");
   }
-  absl::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
-  if (!evp_md.ok()) {
-    return absl::Status(absl::StatusCode::kUnimplemented, "Unsupported hash");
-  }
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* evp_md,
+                        internal::EvpHashFromHashType(hash));
+  (void)evp_md;
 
   return {
-      absl::WrapUnique(new HkdfStreamingPrf(*evp_md, std::move(secret), salt))};
+      absl::WrapUnique(new HkdfStreamingPrf(hash, std::move(secret), salt))};
 }
 
 }  // namespace subtle

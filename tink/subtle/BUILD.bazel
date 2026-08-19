@@ -108,6 +108,7 @@ cc_library(
 
 cc_library(
     name = "ec_util",
+    srcs = ["ec_util.cc"],
     hdrs = ["ec_util.h"],
     include_prefix = "tink/subtle",
     visibility = ["//visibility:public"],
@@ -249,6 +250,7 @@ cc_library(
         "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/strings",
         "@boringssl//:crypto",
     ],

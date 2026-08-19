@@ -97,6 +97,7 @@ tink_cc_library(
 tink_cc_library(
   NAME ec_util
   SRCS
+    ec_util.cc
     ec_util.h
   DEPS
     tink::subtle::common_enums
@@ -220,6 +221,7 @@ tink_cc_library(
     tink::subtle::common_enums
     absl::memory
     absl::status
+    absl::status_macros
     absl::strings
     crypto
     tink::core::mac

@@ -23,6 +23,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
@@ -50,11 +51,9 @@ absl::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
   auto status = internal::CheckFipsCompatibility<HmacBoringSsl>();
   if (!status.ok()) return status;
 
-  absl::StatusOr<const EVP_MD*> md = internal::EvpHashFromHashType(hash_type);
-  if (!md.ok()) {
-    return md.status();
-  }
-  if (EVP_MD_size(*md) < tag_size) {
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* md,
+                        internal::EvpHashFromHashType(hash_type));
+  if (EVP_MD_size(md) < tag_size) {
     // The key manager is responsible to security policies.
     // The checks here just ensure the preconditions of the primitive.
     // If this fails then something is wrong with the key manager.
@@ -63,11 +62,15 @@ absl::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
   if (key.size() < kMinKeySize) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
-  return {absl::WrapUnique(new HmacBoringSsl(*md, tag_size, std::move(key)))};
+  return {
+      absl::WrapUnique(new HmacBoringSsl(hash_type, tag_size, std::move(key)))};
 }
 
 absl::StatusOr<std::string> HmacBoringSsl::ComputeMac(
     absl::string_view data) const {
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* md,
+                        internal::EvpHashFromHashType(hash_type_));
+
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
@@ -83,7 +86,7 @@ absl::StatusOr<std::string> HmacBoringSsl::ComputeMac(
       internal::ScopedAssumeRegionCoreDumpSafe(buf, EVP_MAX_MD_SIZE);
 
   const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
-    return HMAC(md_, key_.data(), key_.size(),
+    return HMAC(md, key_.data(), key_.size(),
                 reinterpret_cast<const uint8_t*>(data.data()), data.size(), buf,
                 &out_len);
   });
@@ -103,6 +106,9 @@ absl::StatusOr<std::string> HmacBoringSsl::ComputeMac(
 
 absl::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
                                       absl::string_view data) const {
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* md,
+                        internal::EvpHashFromHashType(hash_type_));
+
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
@@ -114,7 +120,7 @@ absl::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
   internal::SecretBuffer buf(EVP_MAX_MD_SIZE);
   unsigned int out_len;
   const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
-    return HMAC(md_, key_.data(), key_.size(),
+    return HMAC(md, key_.data(), key_.size(),
                 reinterpret_cast<const uint8_t*>(data.data()), data.size(),
                 buf.data(), &out_len);
   });

@@ -17,8 +17,7 @@
 #include "tink/aead/aes_gcm_siv_key.h"
 
 #include <memory>
-#include <string>
-#include <tuple>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -27,11 +26,11 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -39,46 +38,30 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  AesGcmSivParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
+using AesGcmSivKeyTest = TestWithParam<internal::AeadTestVector>;
 
-using AesGcmSivKeyTest = TestWithParam<std::tuple<int, TestCase>>;
-
-INSTANTIATE_TEST_SUITE_P(
-    AesGcmSivKeyTestSuite, AesGcmSivKeyTest,
-    Combine(Values(16, 32),
-            Values(TestCase{AesGcmSivParameters::Variant::kTink, 0x02030400,
-                            std::string("\x01\x02\x03\x04\x00", 5)},
-                   TestCase{AesGcmSivParameters::Variant::kCrunchy, 0x01030005,
-                            std::string("\x00\x01\x03\x00\x05", 5)},
-                   TestCase{AesGcmSivParameters::Variant::kNoPrefix,
-                            std::nullopt, ""})));
+INSTANTIATE_TEST_SUITE_P(AesGcmSivKeyTestSuite, AesGcmSivKeyTest,
+                         ValuesIn(internal::CreateAesGcmSivTestVectors()));
 
 TEST_P(AesGcmSivKeyTest, CreateSucceeds) {
-  int key_size;
-  TestCase test_case;
-  std::tie(key_size, test_case) = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> params =
-      AesGcmSivParameters::Create(key_size, test_case.variant);
-  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<AesGcmSivKey> created_key = AesGcmSivKey::Create(
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
-  RestrictedData secret = RestrictedData(key_size);
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(key->GetParameters(), Eq(*params));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesGcmSivKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -121,74 +104,40 @@ TEST(AesGcmSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_P(AesGcmSivKeyTest, GetKeyBytes) {
-  int key_size;
-  TestCase test_case;
-  std::tie(key_size, test_case) = GetParam();
-
-  absl::StatusOr<AesGcmSivParameters> params =
-      AesGcmSivParameters::Create(key_size, test_case.variant);
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(key_size);
-
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-}
-
 TEST_P(AesGcmSivKeyTest, KeyEquals) {
-  int key_size;
-  TestCase test_case;
-  std::tie(key_size, test_case) = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> params =
-      AesGcmSivParameters::Create(key_size, test_case.variant);
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(key_size);
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  absl::StatusOr<AesGcmSivKey> created_key = AesGcmSivKey::Create(
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
+      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(*created_key == *other_key);
+  EXPECT_TRUE(*other_key == *created_key);
+  EXPECT_FALSE(*created_key != *other_key);
+  EXPECT_FALSE(*other_key != *created_key);
 }
 
 TEST(AesGcmSivKeyTest, DifferentVariantNotEqual) {
-  absl::StatusOr<AesGcmSivParameters> crunchy_params =
-      AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
-                                  AesGcmSivParameters::Variant::kCrunchy);
-  ASSERT_THAT(crunchy_params, IsOk());
+  const AesGcmSivKey& crunchy_key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32,
+                                        AesGcmSivParameters::Variant::kCrunchy)
+           .aead_key);
+  const AesGcmSivKey& tink_key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> tink_params = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
-  ASSERT_THAT(tink_params, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *crunchy_params, secret, /*id_requirement=*/0x01020304,
-      GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<AesGcmSivKey> other_key =
-      AesGcmSivKey::Create(*tink_params, secret, /*id_requirement=*/0x01020304,
-                           GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(crunchy_key != tink_key);
+  EXPECT_TRUE(tink_key != crunchy_key);
+  EXPECT_FALSE(crunchy_key == tink_key);
+  EXPECT_FALSE(tink_key == crunchy_key);
 }
 
 TEST(AesGcmSivKeyTest, DifferentSecretDataNotEqual) {
@@ -235,114 +184,64 @@ TEST(AesGcmSivKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(AesGcmSivKeyTest, CopyConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  const AesGcmSivKey& key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  AesGcmSivKey copy(key);
 
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesGcmSivKey copy(*key);
-
-  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesGcmSivKeyTest, CopyAssignment) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  const AesGcmSivKey& key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+           .aead_key);
+  const AesGcmSivKey& other_key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(16,
+                                        AesGcmSivParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> parameters1 = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters1, IsOk());
+  AesGcmSivKey copy = other_key;
+  copy = key;
 
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesGcmSivParameters> parameters2 = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters2, IsOk());
-
-  absl::StatusOr<AesGcmSivKey> copy = AesGcmSivKey::Create(
-      *parameters2, secret2, /*id_requirement=*/std::nullopt,
-      GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
-  EXPECT_THAT(copy->GetParameters(), Eq(*parameters1));
-  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesGcmSivKeyTest, MoveConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  AesGcmSivKey key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  AesGcmSivKey expected = key;
+  AesGcmSivKey moved(std::move(key));
 
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesGcmSivKey move(std::move(*key));
-
-  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(AesGcmSivKeyTest, MoveAssignment) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  AesGcmSivKey key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+           .aead_key);
+  AesGcmSivKey other_key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(16,
+                                        AesGcmSivParameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> parameters1 = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters1, IsOk());
+  AesGcmSivKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
-
-  absl::StatusOr<AesGcmSivParameters> parameters2 = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters2, IsOk());
-
-  absl::StatusOr<AesGcmSivKey> move = AesGcmSivKey::Create(
-      *parameters2, secret2, /*id_requirement=*/std::nullopt,
-      GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
-  EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
-  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(AesGcmSivKeyTest, Clone) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  const AesGcmSivKey& key = dynamic_cast<const AesGcmSivKey&>(
+      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
-      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
-      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
-
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

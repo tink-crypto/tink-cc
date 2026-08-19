@@ -17,6 +17,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -24,7 +25,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/config/global_registry.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -40,14 +40,14 @@
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/prf/hmac_prf_parameters.h"
-#include "tink/prf/key_gen_config_v0.h"
+#include "tink/prf/internal/aes_cmac_prf_test_vectors.h"
+#include "tink/prf/internal/hkdf_prf_test_vectors.h"
+#include "tink/prf/internal/hmac_prf_test_vectors.h"
+#include "tink/prf/key_gen_config_2026.h"
 #include "tink/prf/prf_key_templates.h"
 #include "tink/prf/prf_set.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -173,10 +173,10 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoKeySerializationRegistered) {
                   (*before_handle)->GetPrimary().GetKey().get()),
               NotNull());
 
+  RestrictedData secret = internal::GetAesCmacPrfTestVector(32).key.GetKeyBytes(
+      GetPartialKeyAccess());
   absl::StatusOr<AesCmacPrfKey> key =
-      AesCmacPrfKey::Create(RestrictedData(subtle::Random::GetRandomBytes(32),
-                                           InsecureSecretKeyAccess::Get()),
-                            GetPartialKeyAccess());
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(KeysetHandleBuilder()
@@ -260,13 +260,13 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
               NotNull());
 
   absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
-      /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
+      /*key_size_in_bytes=*/40, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
+  RestrictedData secret =
+      internal::GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256)
+          .key.GetKeyBytes(GetPartialKeyAccess());
   absl::StatusOr<HmacPrfKey> key =
-      HmacPrfKey::Create(*parameters,
-                         RestrictedData(subtle::Random::GetRandomBytes(32),
-                                        InsecureSecretKeyAccess::Get()),
-                         GetPartialKeyAccess());
+      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(KeysetHandleBuilder()
@@ -351,14 +351,14 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
               NotNull());
 
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
+      /*key_size_in_bytes=*/22, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/std::nullopt);
   ASSERT_THAT(parameters, IsOk());
+  RestrictedData secret =
+      internal::GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256)
+          .key.GetKeyBytes(GetPartialKeyAccess());
   absl::StatusOr<HkdfPrfKey> key =
-      HkdfPrfKey::Create(*parameters,
-                         RestrictedData(subtle::Random::GetRandomBytes(32),
-                                        InsecureSecretKeyAccess::Get()),
-                         GetPartialKeyAccess());
+      HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(KeysetHandleBuilder()

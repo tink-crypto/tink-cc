@@ -137,7 +137,6 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
                                    absl::string_view nonce_prefix,
                                    int ciphertext_segment_size,
                                    int ciphertext_offset, int tag_size,
-                                   const EVP_CIPHER* cipher,
                                    std::unique_ptr<Mac> mac)
       : key_value_(std::move(key_value)),
         header_(header.begin(), header.end()),
@@ -145,7 +144,6 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
         ciphertext_segment_size_(ciphertext_segment_size),
         ciphertext_offset_(ciphertext_offset),
         tag_size_(tag_size),
-        cipher_(cipher),
         mac_(std::move(mac)),
         segment_number_(0) {}
 
@@ -155,7 +153,6 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
   const int ciphertext_segment_size_;
   const int ciphertext_offset_;
   const int tag_size_;
-  const EVP_CIPHER* cipher_;
   const std::unique_ptr<Mac> mac_;
   int64_t segment_number_;
 };
@@ -216,7 +213,6 @@ class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
   bool is_initialized_ = false;
   SecretData key_value_;
   std::string nonce_prefix_;
-  const EVP_CIPHER* cipher_;
   std::unique_ptr<Mac> mac_;
 };
 

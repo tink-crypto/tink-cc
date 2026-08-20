@@ -16,7 +16,6 @@
 
 #include "tink/subtle/aes_ctr_hmac_streaming.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -28,6 +27,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -180,12 +180,6 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
                       params.key_size, &key_value, &hmac_key_value);
   if (!status.ok()) return status;
 
-  absl::StatusOr<const EVP_CIPHER*> cipher =
-      internal::GetAesCtrCipherForKeySize(params.key_size);
-  if (!cipher.ok()) {
-    return cipher.status();
-  }
-
   auto hmac_result = HmacBoringSsl::New(params.tag_algo, params.tag_size,
                                         std::move(hmac_key_value));
   if (!hmac_result.ok()) return hmac_result.status();
@@ -194,7 +188,7 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
   return {absl::WrapUnique(new AesCtrHmacStreamSegmentEncrypter(
       std::move(key_value), header, nonce_prefix,
       params.ciphertext_segment_size, params.ciphertext_offset, params.tag_size,
-      *cipher, std::move(mac)))};
+      std::move(mac)))};
 }
 
 namespace {
@@ -284,24 +278,23 @@ absl::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
   std::string nonce =
       NonceForSegment(nonce_prefix_, segment_number_, is_last_segment);
 
+  ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,
+                        internal::GetAesCtrCipherForKeySize(key_value_.size()));
+
   // Encrypt.
-  if (absl::Status res = Encrypt(
-          key_value_, *cipher_, nonce,
-          absl::string_view(reinterpret_cast<const char*>(plaintext.data()),
-                            plaintext.size()),
-          absl::MakeSpan(reinterpret_cast<char*>(ciphertext_buffer->data()),
-                         plaintext.size()));
-      !res.ok()) {
-    return res;
-  }
+  ABSL_RETURN_IF_ERROR(
+      Encrypt(key_value_, *cipher, nonce,
+              absl::string_view(reinterpret_cast<const char*>(plaintext.data()),
+                                plaintext.size()),
+              absl::MakeSpan(reinterpret_cast<char*>(ciphertext_buffer->data()),
+                             plaintext.size())));
 
   // Add MAC tag.
   absl::string_view ciphertext_string(
       reinterpret_cast<const char*>(ciphertext_buffer->data()),
       plaintext.size());
-  auto tag_result = mac_->ComputeMac(absl::StrCat(nonce, ciphertext_string));
-  if (!tag_result.ok()) return tag_result.status();
-  std::string tag = tag_result.value();
+  ABSL_ASSIGN_OR_RETURN(std::string tag, mac_->ComputeMac(absl::StrCat(
+                                             nonce, ciphertext_string)));
   memcpy(ciphertext_buffer->data() + plaintext.size(),
          reinterpret_cast<const uint8_t*>(tag.data()), tag_size_);
 
@@ -350,14 +343,6 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
   auto status = DeriveKeys(ikm_, hkdf_algo_, salt, associated_data_, key_size_,
                            &key_value_, &hmac_key_value);
   if (!status.ok()) return status;
-
-  absl::StatusOr<const EVP_CIPHER*> cipher =
-      internal::GetAesCtrCipherForKeySize(key_size_);
-  if (!cipher.ok()) {
-    return cipher.status();
-  }
-
-  cipher_ = *cipher;
 
   auto hmac_result =
       HmacBoringSsl::New(tag_algo_, tag_size_, std::move(hmac_key_value));
@@ -450,21 +435,21 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
     return status;
   }
 
+  ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,
+                        internal::GetAesCtrCipherForKeySize(key_value_.size()));
+
   // The following implies that the plaintext region is allowed to leak in core
   // dumps.
   ScopedAssumeRegionCoreDumpSafe scope_object(plaintext_buffer->data(),
                                               plaintext_buffer->size());
-  if (absl::Status status = CallWithCoreDumpProtection([&]() {
-        return DecryptSensitive(
-            key_value_, *cipher_, nonce,
-            absl::string_view(reinterpret_cast<const char*>(ciphertext.data()),
-                              pt_size),
-            absl::MakeSpan(reinterpret_cast<char*>(plaintext_buffer->data()),
-                           plaintext_buffer->size()));
-      });
-      !status.ok()) {
-    return status;
-  }
+  ABSL_RETURN_IF_ERROR(CallWithCoreDumpProtection([&]() {
+    return DecryptSensitive(
+        key_value_, *cipher, nonce,
+        absl::string_view(reinterpret_cast<const char*>(ciphertext.data()),
+                          pt_size),
+        absl::MakeSpan(reinterpret_cast<char*>(plaintext_buffer->data()),
+                       plaintext_buffer->size()));
+  }));
   // Declassify the plaintext: it can depend on the key, but that's
   // intentional.
   DfsanClearLabel(plaintext_buffer->data(), plaintext_buffer->size());

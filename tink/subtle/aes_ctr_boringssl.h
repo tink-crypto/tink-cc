@@ -50,13 +50,11 @@ class AesCtrBoringSsl : public IndCpaCipher {
   static constexpr int kMinIvSizeInBytes = 12;
   static constexpr int kBlockSize = 16;
 
-  AesCtrBoringSsl(SecretData key, int iv_size, const EVP_CIPHER* cipher)
-      : key_(std::move(key)), iv_size_(iv_size), cipher_(cipher) {}
+  AesCtrBoringSsl(SecretData key, int iv_size)
+      : key_(std::move(key)), iv_size_(iv_size) {}
 
   const SecretData key_;
   const int iv_size_;
-  // cipher_ is a singleton owned by BoringSsl.
-  const EVP_CIPHER *cipher_;
 };
 
 }  // namespace subtle

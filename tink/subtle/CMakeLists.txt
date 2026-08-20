@@ -583,6 +583,7 @@ tink_cc_library(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::string_view
     crypto

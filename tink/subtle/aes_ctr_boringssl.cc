@@ -25,6 +25,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
@@ -47,24 +48,23 @@ using ::crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe;
 
 absl::StatusOr<std::unique_ptr<IndCpaCipher>> AesCtrBoringSsl::New(
     SecretData key, int iv_size) {
-  auto status = internal::CheckFipsCompatibility<AesCtrBoringSsl>();
-  if (!status.ok()) return status;
+  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesCtrBoringSsl>());
 
-  absl::StatusOr<const EVP_CIPHER *> cipher =
-      internal::GetAesCtrCipherForKeySize(key.size());
-  if (!cipher.ok()) {
-    return cipher.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,
+                        internal::GetAesCtrCipherForKeySize(key.size()));
+  (void)cipher;
 
   if (iv_size < kMinIvSizeInBytes || iv_size > kBlockSize) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid iv size");
   }
-  return {
-      absl::WrapUnique(new AesCtrBoringSsl(std::move(key), iv_size, *cipher))};
+  return {absl::WrapUnique(new AesCtrBoringSsl(std::move(key), iv_size))};
 }
 
 absl::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
     absl::string_view plaintext) const {
+  ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,
+                        internal::GetAesCtrCipherForKeySize(key_.size()));
+
   // BoringSSL expects a non-null pointer for plaintext, regardless of whether
   // the size is 0.
   plaintext = internal::EnsureStringNonNull(plaintext);
@@ -90,7 +90,7 @@ absl::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
   absl::Status encrypt_result =
       internal::CallWithCoreDumpProtection([&]() -> absl::Status {
         int ret = EVP_EncryptInit_ex(
-            ctx.get(), cipher_, nullptr /* engine */, key_.data(),
+            ctx.get(), cipher, nullptr /* engine */, key_.data(),
             reinterpret_cast<const uint8_t*>(&iv_block[0]));
         if (ret != 1) {
           return absl::Status(absl::StatusCode::kInternal,
@@ -129,6 +129,9 @@ absl::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
                         "ciphertext too short");
   }
 
+  ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,
+                        internal::GetAesCtrCipherForKeySize(key_.size()));
+
   internal::SslUniquePtr<EVP_CIPHER_CTX> ctx(EVP_CIPHER_CTX_new());
   if (ctx.get() == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
@@ -160,7 +163,7 @@ absl::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
   absl::Status result =
       internal::CallWithCoreDumpProtection([&]() -> absl::Status {
         int ret =
-            EVP_DecryptInit_ex(ctx.get(), cipher_, nullptr /* engine */,
+            EVP_DecryptInit_ex(ctx.get(), cipher, nullptr /* engine */,
                                reinterpret_cast<const uint8_t*>(key_.data()),
                                reinterpret_cast<const uint8_t*>(&iv_block[0]));
         if (ret != 1) {

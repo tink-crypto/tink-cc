@@ -18,11 +18,11 @@
 
 #include <list>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -32,9 +32,11 @@
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/daead/aes_siv_parameters.h"
 #include "tink/daead/deterministic_aead_key_templates.h"
+#include "tink/daead/internal/aes_siv_test_vectors.h"
 #include "tink/deterministic_aead.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
@@ -43,11 +45,9 @@
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
+#include "tink/secret_key_access_token.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_siv.pb.h"
 
@@ -190,9 +190,13 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
+  const internal::AesSivTestVector& test_vector =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink);
+
   google::crypto::tink::AesSivKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_key_value(subtle::Random::GetRandomBytes(64));
+  key_proto.set_key_value(test_vector.key.GetKeyBytes(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get()));
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
@@ -200,7 +204,7 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
-          /*id_requirement=*/123);
+          test_vector.key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -208,21 +212,10 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<AesSivParameters> params = AesSivParameters::Create(
-      /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<AesSivKey> key =
-      AesSivKey::Create(*params,
-                        RestrictedData(subtle::Random::GetRandomBytes(64),
-                                       InsecureSecretKeyAccess::Get()),
-                        /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              test_vector.key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(DeterministicAeadConfig::Register(), IsOk());
@@ -235,7 +228,7 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              test_vector.key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key2, IsOk());
 }
 

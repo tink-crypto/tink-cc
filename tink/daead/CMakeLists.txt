@@ -253,7 +253,6 @@ tink_cc_test(
     tink::daead::deterministic_aead_config
     tink::daead::deterministic_aead_key_templates
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -263,18 +262,18 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::parameters
     tink::core::partial_key_access
-    tink::core::primitive_set
     tink::core::registry
     tink::core::restricted_data
+    tink::core::secret_key_access_token
     tink::config::global_registry
     tink::config::tink_fips
+    tink::daead::internal::aes_siv_test_vectors
     tink::internal::mutable_serialization_registry
+    tink::internal::primitive_set
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::subtle::random
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_siv_cc_proto
 )

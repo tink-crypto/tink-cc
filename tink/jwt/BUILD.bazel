@@ -853,14 +853,15 @@ cc_test(
     deps = [
         ":jwt_hmac_key",
         ":jwt_hmac_parameters",
+        "//tink:insecure_secret_key_access",
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink/jwt/internal/testing:jwt_hmac_test_vectors",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

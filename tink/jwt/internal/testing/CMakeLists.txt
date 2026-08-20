@@ -22,7 +22,13 @@ tink_cc_library(
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
+    absl::statusor
     absl::strings
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
   TESTONLY
 )
 

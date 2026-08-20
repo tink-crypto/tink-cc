@@ -17,22 +17,18 @@
 #ifndef TINK_JWT_INTERNAL_TESTING_JWT_HMAC_TEST_VECTORS_H_
 #define TINK_JWT_INTERNAL_TESTING_JWT_HMAC_TEST_VECTORS_H_
 
-#include <string>
+#include <vector>
+
+#include "tink/jwt/jwt_hmac_key.h"
 
 namespace crypto::tink::jwt_internal {
 
 struct JwtHmacTestVector {
-  std::string key;
+  JwtHmacKey key;
 };
 
-// Returns a 256-bit (32-byte) HMAC key from Wycheproof json_web_key_test.json.
-const JwtHmacTestVector& CreateJwtHmacKey32TestVector();
-
-// Returns a 384-bit (48-byte) HMAC key from Go jwt_full_mac_test.go.
-const JwtHmacTestVector& CreateJwtHmacKey48TestVector();
-
-// Returns a 512-bit (64-byte) HMAC key from Go jwt_full_mac_test.go.
-const JwtHmacTestVector& CreateJwtHmacKey64TestVector();
+// Returns static test vectors for JWT HMAC from Wycheproof and Tink Go.
+const std::vector<JwtHmacTestVector>& CreateJwtHmacTestVectors();
 
 // Returns static test vector for JWT HMAC for the given key size in bytes.
 const JwtHmacTestVector& GetJwtHmacTestVector(int key_size_in_bytes);

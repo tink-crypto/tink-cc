@@ -739,10 +739,11 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    absl::optional
+    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::jwt::internal::testing::jwt_hmac_test_vectors
 )
 
 tink_cc_test(

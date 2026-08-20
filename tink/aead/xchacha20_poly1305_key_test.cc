@@ -17,7 +17,7 @@
 #include "tink/aead/xchacha20_poly1305_key.h"
 
 #include <memory>
-#include <string>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -25,12 +25,12 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -40,50 +40,43 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  XChaCha20Poly1305Parameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
-
-using XChaCha20Poly1305KeyTest = TestWithParam<TestCase>;
+using XChaCha20Poly1305KeyTest = TestWithParam<internal::AeadTestVector>;
 
 INSTANTIATE_TEST_SUITE_P(
     XChaCha20Poly1305KeyTestSuite, XChaCha20Poly1305KeyTest,
-    Values(TestCase{XChaCha20Poly1305Parameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{XChaCha20Poly1305Parameters::Variant::kCrunchy, 0x01030005,
-                    std::string("\x00\x01\x03\x00\x05", 5)},
-           TestCase{XChaCha20Poly1305Parameters::Variant::kNoPrefix,
-                    std::nullopt, ""}));
+    ValuesIn(internal::CreateXChaCha20Poly1305TestVectors()));
 
 TEST_P(XChaCha20Poly1305KeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Parameters> params =
-      XChaCha20Poly1305Parameters::Create(test_case.variant);
-  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<XChaCha20Poly1305Key> created_key =
+      XChaCha20Poly1305Key::Create(key.GetParameters().GetVariant(),
+                                   key.GetKeyBytes(GetPartialKeyAccess()),
+                                   key.GetIdRequirement(),
+                                   GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      test_case.variant, secret, test_case.id_requirement,
-      GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(key->GetParameters(), Eq(*params));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
+              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
 }
 
 TEST(XChaCha20Poly1305KeyTest, CreateKeyWithInvalidVariantFails) {
+  RestrictedData secret = dynamic_cast<const XChaCha20Poly1305Key&>(
+                              *internal::GetXChaCha20Poly1305TestVector(
+                                   XChaCha20Poly1305Parameters::Variant::kTink)
+                                   .aead_key)
+                              .GetKeyBytes(GetPartialKeyAccess());
   EXPECT_THAT(XChaCha20Poly1305Key::Create(
                   XChaCha20Poly1305Parameters::Variant::
                       kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements,
-                  /*key_bytes=*/RestrictedData(/*num_random_bytes=*/32),
-                  /*id_requirement=*/123, GetPartialKeyAccess())
+                  secret, /*id_requirement=*/123, GetPartialKeyAccess())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -100,7 +93,12 @@ TEST(XChaCha20Poly1305KeyTest, CreateKeyWithInvalidKeySizeFails) {
 }
 
 TEST(XChaCha20Poly1305KeyTest, CreateKeyWithInvalidIdRequirementFails) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret =
+      dynamic_cast<const XChaCha20Poly1305Key&>(
+          *internal::GetXChaCha20Poly1305TestVector(
+               XChaCha20Poly1305Parameters::Variant::kNoPrefix)
+               .aead_key)
+          .GetKeyBytes(GetPartialKeyAccess());
 
   EXPECT_THAT(XChaCha20Poly1305Key::Create(
                   XChaCha20Poly1305Parameters::Variant::kNoPrefix, secret,
@@ -115,47 +113,52 @@ TEST(XChaCha20Poly1305KeyTest, CreateKeyWithInvalidIdRequirementFails) {
 }
 
 TEST_P(XChaCha20Poly1305KeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
+  const internal::AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      test_case.variant, secret, test_case.id_requirement,
-      GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  absl::StatusOr<XChaCha20Poly1305Key> created_key =
+      XChaCha20Poly1305Key::Create(key.GetParameters().GetVariant(),
+                                   key.GetKeyBytes(GetPartialKeyAccess()),
+                                   key.GetIdRequirement(),
+                                   GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<XChaCha20Poly1305Key> other_key = XChaCha20Poly1305Key::Create(
-      test_case.variant, secret, test_case.id_requirement,
-      GetPartialKeyAccess());
+      key.GetParameters().GetVariant(), key.GetKeyBytes(GetPartialKeyAccess()),
+      key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(*created_key == *other_key);
+  EXPECT_TRUE(*other_key == *created_key);
+  EXPECT_FALSE(*created_key != *other_key);
+  EXPECT_FALSE(*other_key != *created_key);
 }
 
 TEST(XChaCha20Poly1305KeyTest, DifferentVariantNotEqual) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  const XChaCha20Poly1305Key& crunchy_key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(
+          *internal::GetXChaCha20Poly1305TestVector(
+               XChaCha20Poly1305Parameters::Variant::kCrunchy)
+               .aead_key);
+  const XChaCha20Poly1305Key& tink_key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(
+          *internal::GetXChaCha20Poly1305TestVector(
+               XChaCha20Poly1305Parameters::Variant::kTink)
+               .aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kCrunchy, secret,
-      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<XChaCha20Poly1305Key> other_key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink, secret,
-      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(crunchy_key != tink_key);
+  EXPECT_TRUE(tink_key != crunchy_key);
+  EXPECT_FALSE(crunchy_key == tink_key);
+  EXPECT_FALSE(tink_key == crunchy_key);
 }
 
 TEST(XChaCha20Poly1305KeyTest, DifferentSecretDataNotEqual) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret1 = dynamic_cast<const XChaCha20Poly1305Key&>(
+                               *internal::GetXChaCha20Poly1305TestVector(
+                                    XChaCha20Poly1305Parameters::Variant::kTink)
+                                    .aead_key)
+                               .GetKeyBytes(GetPartialKeyAccess());
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
 
   absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
@@ -175,7 +178,11 @@ TEST(XChaCha20Poly1305KeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(XChaCha20Poly1305KeyTest, DifferentIdRequirementNotEqual) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData secret = dynamic_cast<const XChaCha20Poly1305Key&>(
+                              *internal::GetXChaCha20Poly1305TestVector(
+                                   XChaCha20Poly1305Parameters::Variant::kTink)
+                                   .aead_key)
+                              .GetKeyBytes(GetPartialKeyAccess());
 
   absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink, secret,
@@ -194,94 +201,70 @@ TEST(XChaCha20Poly1305KeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(XChaCha20Poly1305KeyTest, CopyConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  const XChaCha20Poly1305Key& key = dynamic_cast<const XChaCha20Poly1305Key&>(
+      *internal::GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink, secret,
-      /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  XChaCha20Poly1305Key copy(key);
 
-  XChaCha20Poly1305Key copy(*key);
-
-  EXPECT_THAT(copy.GetParameters().GetVariant(),
-              Eq(XChaCha20Poly1305Parameters::Variant::kTink));
-  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(XChaCha20Poly1305KeyTest, CopyAssignment) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  const XChaCha20Poly1305Key& key = dynamic_cast<const XChaCha20Poly1305Key&>(
+      *internal::GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kTink)
+           .aead_key);
+  const XChaCha20Poly1305Key& other_key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(
+          *internal::GetXChaCha20Poly1305TestVector(
+               XChaCha20Poly1305Parameters::Variant::kNoPrefix)
+               .aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink, secret1,
-      /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  XChaCha20Poly1305Key copy = other_key;
+  copy = key;
 
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<XChaCha20Poly1305Key> copy = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kNoPrefix, secret2,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(copy->GetParameters().GetVariant(),
-              Eq(XChaCha20Poly1305Parameters::Variant::kTink));
-  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
-  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(XChaCha20Poly1305KeyTest, MoveConstructor) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  XChaCha20Poly1305Key key = dynamic_cast<const XChaCha20Poly1305Key&>(
+      *internal::GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink, secret,
-      /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  XChaCha20Poly1305Key expected = key;
+  XChaCha20Poly1305Key moved(std::move(key));
 
-  XChaCha20Poly1305Key move = std::move(*key);
-
-  EXPECT_THAT(move.GetParameters().GetVariant(),
-              Eq(XChaCha20Poly1305Parameters::Variant::kTink));
-  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(XChaCha20Poly1305KeyTest, MoveAssignment) {
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+  XChaCha20Poly1305Key key = dynamic_cast<const XChaCha20Poly1305Key&>(
+      *internal::GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kTink)
+           .aead_key);
+  XChaCha20Poly1305Key other_key = dynamic_cast<const XChaCha20Poly1305Key&>(
+      *internal::GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kNoPrefix)
+           .aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink, secret1,
-      /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  XChaCha20Poly1305Key expected = key;
+  other_key = std::move(key);
 
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
-
-  absl::StatusOr<XChaCha20Poly1305Key> move = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kNoPrefix, secret2,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetParameters().GetVariant(),
-              Eq(XChaCha20Poly1305Parameters::Variant::kTink));
-  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
-  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(XChaCha20Poly1305KeyTest, Clone) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  const XChaCha20Poly1305Key& key = dynamic_cast<const XChaCha20Poly1305Key&>(
+      *internal::GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kTink)
+           .aead_key);
 
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink, secret,
-      /*id_requirement=*/0x123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  std::unique_ptr<Key> cloned_key = key->Clone();
-
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

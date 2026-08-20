@@ -1421,8 +1421,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
 )
 
 tink_cc_test(

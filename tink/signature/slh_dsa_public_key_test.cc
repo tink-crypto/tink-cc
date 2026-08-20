@@ -17,6 +17,7 @@
 #include "tink/signature/slh_dsa_public_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -31,7 +32,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {

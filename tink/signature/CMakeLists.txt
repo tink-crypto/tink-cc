@@ -1923,6 +1923,8 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_parameter_set
     tink::signature::internal::slh_dsa_sign_boringssl
     tink::signature::internal::slh_dsa_verify_boringssl
+    tink::signature::internal::testing::signature_test_vector
+    tink::signature::internal::testing::slh_dsa_test_vectors
     tink::subtle::random
   TAGS
     exclude_if_openssl
@@ -1964,7 +1966,6 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )

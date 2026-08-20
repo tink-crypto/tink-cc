@@ -16,8 +16,8 @@
 
 #include "tink/signature/slh_dsa_private_key.h"
 
-#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -27,11 +27,8 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
-#ifndef TINK_USE_ONLY_FIPS
-#include "openssl/slhdsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
@@ -40,6 +37,8 @@
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/subtle/random.h"
@@ -53,121 +52,32 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
+#ifdef TINK_USE_ONLY_FIPS
 struct TestCase {
-  SlhDsaParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
   SlhDsaParameters::HashType hash_type;
   int private_key_size_in_bytes;
   int public_key_size_in_bytes;
   SlhDsaParameters::SignatureType signature_type;
+  SlhDsaParameters::Variant variant;
 };
-
-struct KeyPair {
-  std::string public_key_bytes;
-  RestrictedData private_key_bytes;
-};
-
-absl::StatusOr<KeyPair> GenerateKeyPair(SlhDsaParameters::HashType hash_type,
-                                        int private_key_size_in_bytes,
-                                        int public_key_size_in_bytes) {
-#ifdef TINK_USE_ONLY_FIPS
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
-#else
-  std::string public_key_bytes;
-  public_key_bytes.resize(public_key_size_in_bytes);
-  std::string private_key_bytes;
-  private_key_bytes.resize(private_key_size_in_bytes);
-
-  if (hash_type == SlhDsaParameters::HashType::kSha2) {
-    SLHDSA_SHA2_128S_generate_key(
-        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-        reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
-  } else {
-    SLHDSA_SHAKE_256F_generate_key(
-        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-        reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
-  }
-
-  RestrictedData restricted_private_key_bytes =
-      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
-
-  KeyPair key_pair = {public_key_bytes, restricted_private_key_bytes};
-  return key_pair;
-#endif
-}
-
-absl::StatusOr<KeyPair> GenerateKeyPairFromSeed(
-    SlhDsaParameters::HashType hash_type, RestrictedData seed,
-    int private_key_size_in_bytes, int public_key_size_in_bytes) {
-#ifdef TINK_USE_ONLY_FIPS
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
-#else
-  std::string public_key_bytes;
-  public_key_bytes.resize(public_key_size_in_bytes);
-  std::string private_key_bytes;
-  private_key_bytes.resize(private_key_size_in_bytes);
-
-  if (hash_type == SlhDsaParameters::HashType::kSha2) {
-    SLHDSA_SHA2_128S_generate_key_from_seed(
-        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-        reinterpret_cast<uint8_t*>(&private_key_bytes[0]),
-        reinterpret_cast<const uint8_t*>(
-            seed.GetSecret(InsecureSecretKeyAccess::Get()).data()));
-  } else {
-    SLHDSA_SHAKE_256F_generate_key_from_seed(
-        reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-        reinterpret_cast<uint8_t*>(&private_key_bytes[0]),
-        reinterpret_cast<const uint8_t*>(
-            seed.GetSecret(InsecureSecretKeyAccess::Get()).data()));
-  }
-
-  RestrictedData restricted_private_key_bytes =
-      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
-
-  KeyPair key_pair = {public_key_bytes, restricted_private_key_bytes};
-  return key_pair;
-#endif
-}
 
 using SlhDsaPrivateKeyTest = TestWithParam<TestCase>;
 
-static constexpr int kSlhDsa128sPrivateKeyBytes = 64;
-static constexpr int kSlhDsa128sPublicKeyBytes = 32;
-static constexpr int kSlhDsa256fPrivateKeyBytes = 128;
-static constexpr int kSlhDsa256fPublicKeyBytes = 64;
-
 INSTANTIATE_TEST_SUITE_P(
     SlhDsaPrivateKeyTestSuite, SlhDsaPrivateKeyTest,
-    Values(TestCase{SlhDsaParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5),
-                    SlhDsaParameters::HashType::kSha2,
-                    kSlhDsa128sPrivateKeyBytes, kSlhDsa128sPublicKeyBytes,
-                    SlhDsaParameters::SignatureType::kSmallSignature},
-           TestCase{SlhDsaParameters::Variant::kTink, 0x03050709,
-                    std::string("\x01\x03\x05\x07\x09", 5),
-                    SlhDsaParameters::HashType::kSha2,
-                    kSlhDsa128sPrivateKeyBytes, kSlhDsa128sPublicKeyBytes,
-                    SlhDsaParameters::SignatureType::kSmallSignature},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, "",
-                    SlhDsaParameters::HashType::kSha2,
-                    kSlhDsa128sPrivateKeyBytes, kSlhDsa128sPublicKeyBytes,
-                    SlhDsaParameters::SignatureType::kSmallSignature},
-           TestCase{SlhDsaParameters::Variant::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5),
-                    SlhDsaParameters::HashType::kShake,
-                    kSlhDsa256fPrivateKeyBytes, kSlhDsa256fPublicKeyBytes,
-                    SlhDsaParameters::SignatureType::kFastSigning},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, "",
-                    SlhDsaParameters::HashType::kShake,
-                    kSlhDsa256fPrivateKeyBytes, kSlhDsa256fPublicKeyBytes,
-                    SlhDsaParameters::SignatureType::kFastSigning}));
+    testing::Values(TestCase{SlhDsaParameters::HashType::kSha2,
+                             /*private_key_size_in_bytes=*/64,
+                             /*public_key_size_in_bytes=*/32,
+                             SlhDsaParameters::SignatureType::kSmallSignature,
+                             SlhDsaParameters::Variant::kTink},
+                    TestCase{SlhDsaParameters::HashType::kShake,
+                             /*private_key_size_in_bytes=*/128,
+                             /*public_key_size_in_bytes=*/64,
+                             SlhDsaParameters::SignatureType::kFastSigning,
+                             SlhDsaParameters::Variant::kTink}));
 
-#ifdef TINK_USE_ONLY_FIPS
 TEST_P(SlhDsaPrivateKeyTest, CreateFipsFails) {
   TestCase test_case = GetParam();
 
@@ -176,11 +86,20 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFipsFails) {
       test_case.signature_type, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
-                      test_case.public_key_size_in_bytes);
-  ASSERT_THAT(
-      key_pair,
+  std::string public_key_bytes =
+      subtle::Random::GetRandomBytes(test_case.public_key_size_in_bytes);
+  absl::StatusOr<SlhDsaPublicKey> public_key =
+      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
+                              /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes = RestrictedData(
+      subtle::Random::GetRandomBytes(test_case.private_key_size_in_bytes),
+      InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      SlhDsaPrivateKey::Create(*public_key, private_key_bytes,
+                               GetPartialKeyAccess())
+          .status(),
       StatusIs(absl::StatusCode::kUnimplemented,
                HasSubstr(
                    "SLH-DSA is only supported in non-FIPS BoringSSL builds.")));
@@ -198,131 +117,125 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedFipsFails) {
       internal::GetSlhDsaParameterSet(*parameters);
   ASSERT_THAT(parameter_set, IsOk());
 
-  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+  RestrictedData seed =
+      RestrictedData(subtle::Random::GetRandomBytes(
+                         parameter_set->GetPrivateSeedSizeInBytes()),
+                     InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(
-      SlhDsaPrivateKey::CreateFromSeed(
-          *parameters, seed, test_case.id_requirement, GetPartialKeyAccess()),
+      SlhDsaPrivateKey::CreateFromSeed(*parameters, seed,
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess())
+          .status(),
       StatusIs(absl::StatusCode::kUnimplemented,
-               HasSubstr("SLH-DSA is only supported in non-FIPS "
-                         "BoringSSL builds.")));
+               HasSubstr(
+                   "SLH-DSA is only supported in non-FIPS BoringSSL builds.")));
 }
 #else
+using SlhDsaPrivateKeyTest = TestWithParam<internal::SignatureTestVector>;
+
+INSTANTIATE_TEST_SUITE_P(SlhDsaPrivateKeyTestSuite, SlhDsaPrivateKeyTest,
+                         ValuesIn(internal::CreateSlhDsaTestVectors()));
 TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
-                      test_case.public_key_size_in_bytes);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
+      test_private_key->GetPublicKey(),
+      test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+      GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
-  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPublicKey().GetParameters(),
+              Eq(test_private_key->GetPublicKey().GetParameters()));
+  EXPECT_THAT(private_key->GetIdRequirement(),
+              Eq(test_private_key->GetIdRequirement()));
+  EXPECT_THAT(private_key->GetPublicKey(),
+              Eq(test_private_key->GetPublicKey()));
+  EXPECT_THAT(private_key->GetOutputPrefix(),
+              Eq(test_private_key->GetOutputPrefix()));
   EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
-              Eq(key_pair->private_key_bytes));
+              Eq(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(SlhDsaPrivateKeyTest, CreateFromParametersSucceeds) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
-                      test_case.public_key_size_in_bytes);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key =
-      SlhDsaPrivateKey::Create(*parameters, key_pair->private_key_bytes,
-                               test_case.id_requirement, GetPartialKeyAccess());
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+      test_private_key->GetPublicKey().GetParameters(),
+      test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+      test_private_key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  absl::StatusOr<SlhDsaPublicKey> expected_public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(expected_public_key, IsOk());
-
-  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
-  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPublicKey().GetParameters(),
+              Eq(test_private_key->GetPublicKey().GetParameters()));
+  EXPECT_THAT(private_key->GetIdRequirement(),
+              Eq(test_private_key->GetIdRequirement()));
+  EXPECT_THAT(private_key->GetPublicKey(),
+              Eq(test_private_key->GetPublicKey()));
+  EXPECT_THAT(private_key->GetOutputPrefix(),
+              Eq(test_private_key->GetOutputPrefix()));
   EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
-              Eq(key_pair->private_key_bytes));
+              Eq(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedSucceeds) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
-      internal::GetSlhDsaParameterSet(*parameters);
+      internal::GetSlhDsaParameterSet(
+          test_private_key->GetPublicKey().GetParameters());
   ASSERT_THAT(parameter_set, IsOk());
 
-  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
-
-  absl::StatusOr<KeyPair> expected_key_pair = GenerateKeyPairFromSeed(
-      test_case.hash_type, seed, test_case.private_key_size_in_bytes,
-      test_case.public_key_size_in_bytes);
-  ASSERT_THAT(expected_key_pair, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> expected_public_key =
-      SlhDsaPublicKey::Create(*parameters, expected_key_pair->public_key_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(expected_public_key, IsOk());
+  RestrictedData seed =
+      RestrictedData(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
+                         .GetSecret(InsecureSecretKeyAccess::Get())
+                         .substr(0, parameter_set->GetPrivateSeedSizeInBytes()),
+                     InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<SlhDsaPrivateKey> private_key =
       SlhDsaPrivateKey::CreateFromSeed(
-          *parameters, seed, test_case.id_requirement, GetPartialKeyAccess());
+          test_private_key->GetPublicKey().GetParameters(), seed,
+          test_private_key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(*expected_public_key));
-  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(private_key->GetPublicKey().GetParameters(),
+              Eq(test_private_key->GetPublicKey().GetParameters()));
+  EXPECT_THAT(private_key->GetIdRequirement(),
+              Eq(test_private_key->GetIdRequirement()));
+  EXPECT_THAT(private_key->GetPublicKey(),
+              Eq(test_private_key->GetPublicKey()));
+  EXPECT_THAT(private_key->GetOutputPrefix(),
+              Eq(test_private_key->GetOutputPrefix()));
   EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
-              Eq(expected_key_pair->private_key_bytes));
+              Eq(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedGeneratesConsistentKeyPair) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
-      internal::GetSlhDsaParameterSet(*parameters);
+      internal::GetSlhDsaParameterSet(
+          test_private_key->GetPublicKey().GetParameters());
   ASSERT_THAT(parameter_set, IsOk());
 
-  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+  RestrictedData seed =
+      RestrictedData(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
+                         .GetSecret(InsecureSecretKeyAccess::Get())
+                         .substr(0, parameter_set->GetPrivateSeedSizeInBytes()),
+                     InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<SlhDsaPrivateKey> private_key =
       SlhDsaPrivateKey::CreateFromSeed(
-          *parameters, seed, test_case.id_requirement, GetPartialKeyAccess());
+          test_private_key->GetPublicKey().GetParameters(), seed,
+          test_private_key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign> > signer =
@@ -341,11 +254,11 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedGeneratesConsistentKeyPair) {
 }
 
 TEST(SlhDsaPrivateKeyTest, CreateFromSeedWithInvalidSeedLengthFails) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   // General invalid seed length (47 bytes, not 48, 72, or 96 bytes)
@@ -372,44 +285,46 @@ TEST(SlhDsaPrivateKeyTest, CreateFromSeedWithInvalidSeedLengthFails) {
 }
 
 TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedWithMismatchedIdRequirementFails) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
   absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
-      internal::GetSlhDsaParameterSet(*parameters);
+      internal::GetSlhDsaParameterSet(
+          test_private_key->GetPublicKey().GetParameters());
   ASSERT_THAT(parameter_set, IsOk());
 
-  RestrictedData seed(parameter_set->GetPrivateSeedSizeInBytes());
+  RestrictedData seed =
+      RestrictedData(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
+                         .GetSecret(InsecureSecretKeyAccess::Get())
+                         .substr(0, parameter_set->GetPrivateSeedSizeInBytes()),
+                     InsecureSecretKeyAccess::Get());
 
-  if (parameters->HasIdRequirement()) {
+  if (test_private_key->GetParameters().HasIdRequirement()) {
     EXPECT_THAT(SlhDsaPrivateKey::CreateFromSeed(
-                    *parameters, seed,
+                    test_private_key->GetPublicKey().GetParameters(), seed,
                     /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
                     .status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   } else {
-    EXPECT_THAT(SlhDsaPrivateKey::CreateFromSeed(*parameters, seed,
-                                                 /*id_requirement=*/123,
-                                                 GetPartialKeyAccess())
+    EXPECT_THAT(SlhDsaPrivateKey::CreateFromSeed(
+                    test_private_key->GetPublicKey().GetParameters(), seed,
+                    /*id_requirement=*/123, GetPartialKeyAccess())
                     .status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
-TEST(SlhDsaPrivateKeyTest,
-     CreateFromParametersWithInvalidPrivateKeyLengthFails) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
+TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  RestrictedData restricted_private_key_bytes(63);
+  RestrictedData restricted_private_key_bytes = RestrictedData(
+      subtle::Random::GetRandomBytes(63), InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
       SlhDsaPrivateKey::Create(*parameters, restricted_private_key_bytes,
                                /*id_requirement=*/123, GetPartialKeyAccess())
@@ -421,45 +336,38 @@ TEST(SlhDsaPrivateKeyTest,
 
 TEST_P(SlhDsaPrivateKeyTest,
        CreateFromParametersWithMismatchedIdRequirementFails) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
-                      test_case.public_key_size_in_bytes);
-  ASSERT_THAT(key_pair, IsOk());
-
-  if (parameters->HasIdRequirement()) {
+  if (test_private_key->GetParameters().HasIdRequirement()) {
     EXPECT_THAT(SlhDsaPrivateKey::Create(
-                    *parameters, key_pair->private_key_bytes,
+                    test_private_key->GetPublicKey().GetParameters(),
+                    test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
                     /*id_requirement=*/std::nullopt, GetPartialKeyAccess())
                     .status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   } else {
-    EXPECT_THAT(
-        SlhDsaPrivateKey::Create(*parameters, key_pair->private_key_bytes,
-                                 /*id_requirement=*/123, GetPartialKeyAccess())
-            .status(),
-        StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(SlhDsaPrivateKey::Create(
+                    test_private_key->GetPublicKey().GetParameters(),
+                    test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+                    /*id_requirement=*/123, GetPartialKeyAccess())
+                    .status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
-TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
+TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPublicKeyAndPrivateKeyLengthFails) {
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
-      *parameters,
-      subtle::Random::GetRandomBytes(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
-      /*id_requirement=*/123, GetPartialKeyAccess());
+  absl::StatusOr<SlhDsaPublicKey> public_key =
+      SlhDsaPublicKey::Create(*parameters, subtle::Random::GetRandomBytes(32),
+                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedData restricted_private_key_bytes(63);
@@ -473,323 +381,169 @@ TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 }
 
 TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
-  std::string public_key_bytes;
-  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  std::string private_key_bytes;
-  private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
-
-  SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
-
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  // Generate a new key pair.
-  SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
-  RestrictedData restricted_private_key_bytes =
-      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
+  std::string mismatched_private_key_bytes =
+      std::string(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get()));
+  mismatched_private_key_bytes[32] ^= 1;
+  RestrictedData restricted_private_key_bytes = RestrictedData(
+      mismatched_private_key_bytes, InsecureSecretKeyAccess::Get());
 
   // Creating the private key using the different private_key_bytes should fail.
-  EXPECT_THAT(
-      SlhDsaPrivateKey::Create(*public_key, restricted_private_key_bytes,
-                               GetPartialKeyAccess())
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Invalid SLH-DSA key pair")));
+  EXPECT_THAT(SlhDsaPrivateKey::Create(test_private_key->GetPublicKey(),
+                                       restricted_private_key_bytes,
+                                       GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid SLH-DSA key pair")));
 }
 
 TEST(SlhDsaPrivateKeyTest, CreateWithModifiedPrivateKeyFails) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
-  std::string public_key_bytes;
-  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  std::string private_key_bytes;
-  private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
-
-  SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
-
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
+  std::string private_key_bytes =
+      std::string(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get()));
   // Replace last 16 bytes of the private key bytes with random bytes.
   private_key_bytes.replace(/*seed_size=*/48, /*pk_root_size=*/16,
                             subtle::Random::GetRandomBytes(16));
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
 
-  EXPECT_THAT(
-      SlhDsaPrivateKey::Create(*public_key, restricted_private_key_bytes,
-                               GetPartialKeyAccess())
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Invalid SLH-DSA key pair")));
+  EXPECT_THAT(SlhDsaPrivateKey::Create(test_private_key->GetPublicKey(),
+                                       restricted_private_key_bytes,
+                                       GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid SLH-DSA key pair")));
 }
 
 TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
+  const internal::SignatureTestVector& test_vector = GetParam();
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
 
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
+  SlhDsaPrivateKey copy = *test_private_key;
 
-  absl::StatusOr<KeyPair> key_pair =
-      GenerateKeyPair(test_case.hash_type, test_case.private_key_size_in_bytes,
-                      test_case.public_key_size_in_bytes);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> other_private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(other_private_key, IsOk());
-
-  EXPECT_TRUE(*private_key == *other_private_key);
-  EXPECT_TRUE(*other_private_key == *private_key);
-  EXPECT_FALSE(*private_key != *other_private_key);
-  EXPECT_FALSE(*other_private_key != *private_key);
+  EXPECT_TRUE(*test_private_key == copy);
+  EXPECT_TRUE(copy == *test_private_key);
+  EXPECT_FALSE(*test_private_key != copy);
+  EXPECT_FALSE(copy != *test_private_key);
 }
 
 TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* key1 = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  const auto* key2 = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
 
-  std::string public_key_bytes;
-  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  std::string private_key_bytes;
-  private_key_bytes.resize(parameters->GetPrivateKeySizeInBytes());
-
-  SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
-
-  absl::StatusOr<SlhDsaPublicKey> public_key123 =
-      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key123, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> public_key456 =
-      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
-                              /*id_requirement=*/456, GetPartialKeyAccess());
-  ASSERT_THAT(public_key456, IsOk());
-
-  RestrictedData restricted_private_key_bytes =
-      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key123, restricted_private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> other_private_key = SlhDsaPrivateKey::Create(
-      *public_key456, restricted_private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(other_private_key, IsOk());
-
-  EXPECT_TRUE(*private_key != *other_private_key);
-  EXPECT_TRUE(*other_private_key != *private_key);
-  EXPECT_FALSE(*private_key == *other_private_key);
-  EXPECT_FALSE(*other_private_key == *private_key);
+  EXPECT_TRUE(*key1 != *key2);
+  EXPECT_TRUE(*key2 != *key1);
+  EXPECT_FALSE(*key1 == *key2);
+  EXPECT_FALSE(*key2 == *key1);
 }
 
 TEST(SlhDsaPrivateKeyTest, Clone) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(
-      parameters->GetHashType(), parameters->GetPrivateKeySizeInBytes(),
-      SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = private_key->Clone();
+  std::unique_ptr<Key> cloned_key = test_private_key->Clone();
 
-  EXPECT_THAT(*cloned_key, Eq(*private_key));
+  EXPECT_THAT(*cloned_key, Eq(*test_private_key));
 }
 
 TEST(SlhDsaPrivateKeyTest, CopyConstructor) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(
-      parameters->GetHashType(), parameters->GetPrivateKeySizeInBytes(),
-      SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  ASSERT_THAT(key_pair, IsOk());
+  SlhDsaPrivateKey copy(*test_private_key);
 
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  SlhDsaPrivateKey copy(*private_key);
-
-  EXPECT_THAT(copy, Eq(*private_key));
+  EXPECT_THAT(copy, Eq(*test_private_key));
 }
 
 TEST(SlhDsaPrivateKeyTest, CopyAssignment) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* key1 = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  const auto* key2 = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kShake,
+          SlhDsaParameters::SignatureType::kFastSigning,
+          SlhDsaParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(
-      parameters->GetHashType(), parameters->GetPrivateKeySizeInBytes(),
-      SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  ASSERT_THAT(key_pair, IsOk());
+  SlhDsaPrivateKey copy = *key2;
+  copy = *key1;
 
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<SlhDsaParameters> other_parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(other_parameters, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
-      *other_parameters, key_pair->public_key_bytes,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(other_public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> copy = SlhDsaPrivateKey::Create(
-      *other_public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *private_key;
-
-  EXPECT_THAT(*copy, Eq(*private_key));
+  EXPECT_THAT(copy, Eq(*key1));
 }
 
 TEST(SlhDsaPrivateKeyTest, MoveConstructor) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(
-      parameters->GetHashType(), parameters->GetPrivateKeySizeInBytes(),
-      SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  ASSERT_THAT(key_pair, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  SlhDsaPrivateKey expected(*private_key);
-  SlhDsaPrivateKey moved(std::move(*private_key));
+  SlhDsaPrivateKey key = *test_private_key;
+  SlhDsaPrivateKey expected = key;
+  SlhDsaPrivateKey moved(std::move(key));
 
   EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(SlhDsaPrivateKeyTest, MoveAssignment) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const auto* key1 = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  const auto* key2 = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kShake,
+          SlhDsaParameters::SignatureType::kFastSigning,
+          SlhDsaParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(
-      parameters->GetHashType(), parameters->GetPrivateKeySizeInBytes(),
-      SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
-  ASSERT_THAT(key_pair, IsOk());
+  SlhDsaPrivateKey key = *key1;
+  SlhDsaPrivateKey other_key = *key2;
+  SlhDsaPrivateKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<SlhDsaParameters> other_parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(other_parameters, IsOk());
-
-  absl::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
-      *other_parameters, key_pair->public_key_bytes,
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ASSERT_THAT(other_public_key, IsOk());
-
-  absl::StatusOr<SlhDsaPrivateKey> moved = SlhDsaPrivateKey::Create(
-      *other_public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(moved, IsOk());
-
-  SlhDsaPrivateKey expected(*private_key);
-  *moved = std::move(*private_key);
-
-  EXPECT_THAT(*moved, Eq(expected));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 #endif  // TINK_USE_ONLY_FIPS
 

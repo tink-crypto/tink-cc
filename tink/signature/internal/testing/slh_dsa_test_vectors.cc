@@ -24,10 +24,12 @@
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "openssl/opensslv.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
@@ -38,10 +40,7 @@
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/util/test_util.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
-
+namespace crypto::tink::internal {
 namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
@@ -664,6 +663,7 @@ constexpr absl::string_view kShake256fSigHex =
     "f211e79fbfdfa2a15be458d590fca3009edf6906a65676a856121083399794b9a52e5048"
     "ed9331b261f20e77ede1b3a13";
 
+#ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<SlhDsaPrivateKey> CreatePrivateKey(
     SlhDsaParameters::HashType hash_type, int private_key_size_in_bytes,
     SlhDsaParameters::SignatureType signature_type,
@@ -753,6 +753,7 @@ const SignatureTestVector& CreateSlhDsaShake256fFastTinkTestVector() {
   }());
   return *test_vector;
 }
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
@@ -764,11 +765,15 @@ const std::vector<SignatureTestVector>& CreateSlhDsaTestVectors() {
         if (internal::IsFipsModeEnabled()) {
           return std::vector<SignatureTestVector>{};
         }
+#ifndef OPENSSL_IS_BORINGSSL
+        return std::vector<SignatureTestVector>{};
+#else
         return std::vector<SignatureTestVector>{
             CreateSlhDsaSha2128sSmallNoPrefixTestVector(),
             CreateSlhDsaSha2128sSmallTinkTestVector(),
             CreateSlhDsaShake256fFastNoPrefixTestVector(),
             CreateSlhDsaShake256fFastTinkTestVector()};
+#endif
       }());
   return *test_vectors;
 }
@@ -779,6 +784,13 @@ const SignatureTestVector& GetSlhDsaTestVector(
     SlhDsaParameters::HashType hash_type,
     SlhDsaParameters::SignatureType sig_type,
     SlhDsaParameters::Variant variant) {
+  if (internal::IsFipsModeEnabled()) {
+    ABSL_LOG(FATAL) << "SLH-DSA test vectors are not available in FIPS mode.";
+  }
+#ifndef OPENSSL_IS_BORINGSSL
+  ABSL_LOG(FATAL)
+      << "SLH-DSA test vectors are not available in non-BoringSSL builds.";
+#else
   static const absl::NoDestructor<absl::flat_hash_map<
       std::tuple<SlhDsaParameters::HashType, SlhDsaParameters::SignatureType,
                  SlhDsaParameters::Variant>,
@@ -804,8 +816,7 @@ const SignatureTestVector& GetSlhDsaTestVector(
   auto it = vectors->find(std::make_tuple(hash_type, sig_type, variant));
   ABSL_CHECK(it != vectors->end()) << "No SLH-DSA test vector found.";
   return *it->second;
+#endif
 }
 
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+}  // namespace crypto::tink::internal

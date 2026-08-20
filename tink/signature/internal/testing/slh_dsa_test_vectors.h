@@ -22,9 +22,7 @@
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/slh_dsa_parameters.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
+namespace crypto::tink::internal {
 
 // Returns static test vectors for SLH-DSA from BoringSSL slh_dsa.inc and Tink
 // Go.
@@ -37,8 +35,6 @@ const SignatureTestVector& GetSlhDsaTestVector(
     SlhDsaParameters::SignatureType sig_type,
     SlhDsaParameters::Variant variant);
 
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+}  // namespace crypto::tink::internal
 
 #endif  // TINK_SIGNATURE_INTERNAL_TESTING_SLH_DSA_TEST_VECTORS_H_

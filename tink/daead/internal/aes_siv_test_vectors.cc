@@ -24,6 +24,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_key.h"
@@ -86,6 +87,34 @@ const AesSivTestVectorMap& CreateAesSivTestVectorsMap() {
                "85632d07c6e8f37f950acd320a2ecc9340c02b9690c4dc04daef7f6a"
                "fe5c",
            })},
+          {{32, AesSivParameters::Variant::kTink},
+           MakeAesSivTestVector(AesSivTestVectorParams{
+               /*key_size_in_bytes=*/32,
+               /*variant=*/AesSivParameters::Variant::kTink,
+               /*key_hex=*/
+               "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0f0f1f2f3f4f5f6f7"
+               "f8f9fafbfcfdfeff",
+               /*id_requirement=*/0x02030400,
+               /*plaintext_hex=*/"112233445566778899aabbccddee",
+               /*aad_hex=*/"101112131415161718191a1b1c1d1e1f2021222324252627",
+               /*ciphertext_hex=*/
+               "010203040085632d07c6e8f37f950acd320a2ecc9340c02b9690c4dc04"
+               "daef7f6afe5c",
+           })},
+          {{32, AesSivParameters::Variant::kCrunchy},
+           MakeAesSivTestVector(AesSivTestVectorParams{
+               /*key_size_in_bytes=*/32,
+               /*variant=*/AesSivParameters::Variant::kCrunchy,
+               /*key_hex=*/
+               "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0f0f1f2f3f4f5f6f7"
+               "f8f9fafbfcfdfeff",
+               /*id_requirement=*/0x01030005,
+               /*plaintext_hex=*/"112233445566778899aabbccddee",
+               /*aad_hex=*/"101112131415161718191a1b1c1d1e1f2021222324252627",
+               /*ciphertext_hex=*/
+               "000103000585632d07c6e8f37f950acd320a2ecc9340c02b9690c4dc04"
+               "daef7f6afe5c",
+           })},
           {{48, AesSivParameters::Variant::kNoPrefix},
            MakeAesSivTestVector(AesSivTestVectorParams{
                /*key_size_in_bytes=*/48,
@@ -97,6 +126,30 @@ const AesSivTestVectorMap& CreateAesSivTestVectorsMap() {
                /*plaintext_hex=*/"",
                /*aad_hex=*/"",
                /*ciphertext_hex=*/"59e0a9a04cdb1d9d7bee6be8bb06fd61",
+           })},
+          {{48, AesSivParameters::Variant::kTink},
+           MakeAesSivTestVector(AesSivTestVectorParams{
+               /*key_size_in_bytes=*/48,
+               /*variant=*/AesSivParameters::Variant::kTink,
+               /*key_hex=*/
+               "d3d58a2f21e62f5095542e618168ef040922ab7d80b38400"
+               "55eb9caf5726a8d4a7f071dc40ddb320effc094211735090",
+               /*id_requirement=*/0x02030400,
+               /*plaintext_hex=*/"",
+               /*aad_hex=*/"",
+               /*ciphertext_hex=*/"010203040059e0a9a04cdb1d9d7bee6be8bb06fd61",
+           })},
+          {{48, AesSivParameters::Variant::kCrunchy},
+           MakeAesSivTestVector(AesSivTestVectorParams{
+               /*key_size_in_bytes=*/48,
+               /*variant=*/AesSivParameters::Variant::kCrunchy,
+               /*key_hex=*/
+               "d3d58a2f21e62f5095542e618168ef040922ab7d80b38400"
+               "55eb9caf5726a8d4a7f071dc40ddb320effc094211735090",
+               /*id_requirement=*/0x01030005,
+               /*plaintext_hex=*/"",
+               /*aad_hex=*/"",
+               /*ciphertext_hex=*/"000103000559e0a9a04cdb1d9d7bee6be8bb06fd61",
            })},
           {{64, AesSivParameters::Variant::kNoPrefix},
            MakeAesSivTestVector(AesSivTestVectorParams{

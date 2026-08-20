@@ -17,8 +17,7 @@
 #include "tink/daead/aes_siv_key.h"
 
 #include <memory>
-#include <string>
-#include <tuple>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -27,11 +26,10 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/internal/aes_siv_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -39,46 +37,29 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  AesSivParameters::Variant variant;
-  absl::optional<int> id_requirement;
-  std::string output_prefix;
-};
+using AesSivKeyTest = TestWithParam<internal::AesSivTestVector>;
 
-using AesSivKeyTest = TestWithParam<std::tuple<int, TestCase>>;
-
-INSTANTIATE_TEST_SUITE_P(
-    AesSivKeyTestSuite, AesSivKeyTest,
-    Combine(Values(32, 48, 64),
-            Values(TestCase{AesSivParameters::Variant::kTink, 0x02030400,
-                            std::string("\x01\x02\x03\x04\x00", 5)},
-                   TestCase{AesSivParameters::Variant::kCrunchy, 0x01030005,
-                            std::string("\x00\x01\x03\x00\x05", 5)},
-                   TestCase{AesSivParameters::Variant::kNoPrefix, std::nullopt,
-                            ""})));
+INSTANTIATE_TEST_SUITE_P(AesSivKeyTestSuite, AesSivKeyTest,
+                         ValuesIn(internal::CreateAesSivTestVectors()));
 
 TEST_P(AesSivKeyTest, CreateSucceeds) {
-  int key_size;
-  TestCase test_case;
-  std::tie(key_size, test_case) = GetParam();
+  const internal::AesSivTestVector& test_vector = GetParam();
 
-  absl::StatusOr<AesSivParameters> params =
-      AesSivParameters::Create(key_size, test_case.variant);
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(key_size);
   absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
+      test_vector.key.GetParameters(),
+      test_vector.key.GetKeyBytes(GetPartialKeyAccess()),
+      test_vector.key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  EXPECT_THAT(key->GetParameters(), Eq(*params));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT(key->GetParameters(), Eq(test_vector.key.GetParameters()));
+  EXPECT_THAT(key->GetIdRequirement(), Eq(test_vector.key.GetIdRequirement()));
+  EXPECT_THAT(key->GetOutputPrefix(), Eq(test_vector.key.GetOutputPrefix()));
+  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()),
+              Eq(test_vector.key.GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesSivKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -88,7 +69,9 @@ TEST(AesSivKeyTest, CreateKeyWithMismatchedKeySizeFails) {
   ASSERT_THAT(params, IsOk());
 
   // Key material is 32 bytes (another valid key length).
-  RestrictedData mismatched_secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData mismatched_secret =
+      internal::GetAesSivTestVector(32, AesSivParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
 
   EXPECT_THAT(AesSivKey::Create(*params, mismatched_secret,
                                 /*id_requirement=*/123, GetPartialKeyAccess())
@@ -105,7 +88,9 @@ TEST(AesSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/64);
+  RestrictedData secret =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kNoPrefix)
+          .key.GetKeyBytes(GetPartialKeyAccess());
 
   EXPECT_THAT(AesSivKey::Create(*no_prefix_params, secret,
                                 /*id_requirement=*/123, GetPartialKeyAccess())
@@ -118,39 +103,19 @@ TEST(AesSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_P(AesSivKeyTest, GetKeyBytes) {
-  int key_size;
-  TestCase test_case;
-  std::tie(key_size, test_case) = GetParam();
-
-  absl::StatusOr<AesSivParameters> params =
-      AesSivParameters::Create(key_size, test_case.variant);
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(key_size);
-
-  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-}
-
 TEST_P(AesSivKeyTest, KeyEquals) {
-  int key_size;
-  TestCase test_case;
-  std::tie(key_size, test_case) = GetParam();
+  const internal::AesSivTestVector& test_vector = GetParam();
 
-  absl::StatusOr<AesSivParameters> params =
-      AesSivParameters::Create(key_size, test_case.variant);
-  ASSERT_THAT(params, IsOk());
-
-  RestrictedData secret = RestrictedData(key_size);
   absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
+      test_vector.key.GetParameters(),
+      test_vector.key.GetKeyBytes(GetPartialKeyAccess()),
+      test_vector.key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<AesSivKey> other_key = AesSivKey::Create(
-      *params, secret, test_case.id_requirement, GetPartialKeyAccess());
+      test_vector.key.GetParameters(),
+      test_vector.key.GetKeyBytes(GetPartialKeyAccess()),
+      test_vector.key.GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key == *other_key);
@@ -160,30 +125,16 @@ TEST_P(AesSivKeyTest, KeyEquals) {
 }
 
 TEST(AesSivKeyTest, DifferentVariantNotEqual) {
-  absl::StatusOr<AesSivParameters> crunchy_params = AesSivParameters::Create(
-      /*key_size_in_bytes=*/64, AesSivParameters::Variant::kCrunchy);
-  ASSERT_THAT(crunchy_params, IsOk());
+  const AesSivKey& crunchy_key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kCrunchy)
+          .key;
+  const AesSivKey& tink_key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
 
-  absl::StatusOr<AesSivParameters> tink_params = AesSivParameters::Create(
-      /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(tink_params, IsOk());
-
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/64);
-
-  absl::StatusOr<AesSivKey> key =
-      AesSivKey::Create(*crunchy_params, secret, /*id_requirement=*/0x01020304,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<AesSivKey> other_key =
-      AesSivKey::Create(*tink_params, secret, /*id_requirement=*/0x01020304,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(other_key, IsOk());
-
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(crunchy_key != tink_key);
+  EXPECT_TRUE(tink_key != crunchy_key);
+  EXPECT_FALSE(crunchy_key == tink_key);
+  EXPECT_FALSE(tink_key == crunchy_key);
 }
 
 TEST(AesSivKeyTest, DifferentSecretDataNotEqual) {
@@ -191,7 +142,9 @@ TEST(AesSivKeyTest, DifferentSecretDataNotEqual) {
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/64);
+  RestrictedData secret1 =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink)
+          .key.GetKeyBytes(GetPartialKeyAccess());
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/64);
 
   absl::StatusOr<AesSivKey> key = AesSivKey::Create(
@@ -213,7 +166,9 @@ TEST(AesSivKeyTest, DifferentIdRequirementNotEqual) {
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/64);
+  RestrictedData secret =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink)
+          .key.GetKeyBytes(GetPartialKeyAccess());
 
   absl::StatusOr<AesSivKey> key = AesSivKey::Create(
       *params, secret, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
@@ -230,121 +185,57 @@ TEST(AesSivKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(AesSivKeyTest, CopyConstructor) {
-  const int key_size = 64;
-  absl::StatusOr<AesSivParameters> parameters =
-      AesSivParameters::Create(key_size, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const AesSivKey& key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/key_size);
+  AesSivKey copy(key);
 
-  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesSivKey copy(*key);
-
-  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(copy.GetIdRequirement(), Eq(123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesSivKeyTest, CopyAssignment) {
-  const int key_size = 64;
-  absl::StatusOr<AesSivParameters> parameters =
-      AesSivParameters::Create(key_size, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const AesSivKey& key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
+  const AesSivKey& other_key =
+      internal::GetAesSivTestVector(32, AesSivParameters::Variant::kNoPrefix)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/key_size);
+  AesSivKey copy = other_key;
+  copy = key;
 
-  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  const int key_size2 = 32;
-  absl::StatusOr<AesSivParameters> parameters2 =
-      AesSivParameters::Create(key_size2, AesSivParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters2, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/key_size2);
-
-  absl::StatusOr<AesSivKey> copy =
-      AesSivKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *key;
-
-  EXPECT_THAT(copy->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(copy->GetIdRequirement(), Eq(123));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesSivKeyTest, MoveConstructor) {
-  const int key_size = 64;
-  absl::StatusOr<AesSivParameters> parameters =
-      AesSivParameters::Create(key_size, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  AesSivKey key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/key_size);
+  AesSivKey expected = key;
+  AesSivKey moved(std::move(key));
 
-  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesSivKey move(std::move(*key));
-
-  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(move.GetIdRequirement(), Eq(123));
+  EXPECT_THAT(moved, Eq(expected));
 }
 
 TEST(AesSivKeyTest, MoveAssignment) {
-  const int key_size = 64;
-  absl::StatusOr<AesSivParameters> parameters =
-      AesSivParameters::Create(key_size, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  AesSivKey key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
+  AesSivKey other_key =
+      internal::GetAesSivTestVector(32, AesSivParameters::Variant::kNoPrefix)
+          .key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/key_size);
+  AesSivKey expected = key;
+  other_key = std::move(key);
 
-  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  const int key_size2 = 32;
-  absl::StatusOr<AesSivParameters> parameters2 =
-      AesSivParameters::Create(key_size2, AesSivParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters2, IsOk());
-
-  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/key_size2);
-
-  absl::StatusOr<AesSivKey> move =
-      AesSivKey::Create(*parameters2, secret2, /*id_requirement=*/std::nullopt,
-                        GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
-  EXPECT_THAT(move->GetIdRequirement(), Eq(123));
+  EXPECT_THAT(other_key, Eq(expected));
 }
 
 TEST(AesSivKeyTest, Clone) {
-  const int key_size = 64;
-  absl::StatusOr<AesSivParameters> parameters =
-      AesSivParameters::Create(key_size, AesSivParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
+  const AesSivKey& key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
 
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/key_size);
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
-      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
-
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

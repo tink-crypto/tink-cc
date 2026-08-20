@@ -351,14 +351,20 @@ tink_cc_test(
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
     gmock
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
     absl::status
     absl::status_matchers
+    absl::strings
+    absl::string_view
     absl::optional
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::core::secret_key_access_token
+    tink::daead::internal::aes_siv_test_vectors
 )
 
 tink_cc_test(

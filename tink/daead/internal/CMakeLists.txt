@@ -147,6 +147,7 @@ tink_cc_library(
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::insecure_secret_key_access_testonly

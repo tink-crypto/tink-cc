@@ -22,6 +22,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -78,48 +80,160 @@ struct PrivateValues {
 
 constexpr int kModulusSizeInBits = 2048;
 
-const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
-
-PrivateValues GetValidPrivateValues() {
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector2();
-  return PrivateValues{
-      /*p=*/RestrictedData(vector.p, InsecureSecretKeyAccess::Get()),
-      /*q=*/RestrictedData(vector.q, InsecureSecretKeyAccess::Get()),
-      /*dp=*/RestrictedData(vector.dp, InsecureSecretKeyAccess::Get()),
-      /*dq=*/RestrictedData(vector.dq, InsecureSecretKeyAccess::Get()),
-      /*d=*/RestrictedData(vector.d, InsecureSecretKeyAccess::Get()),
-      /*q_inv=*/RestrictedData(vector.q_inv, InsecureSecretKeyAccess::Get())};
+// Returns static F4 public exponent (65537).
+const BigInteger& GetF4() {
+  static const absl::NoDestructor<BigInteger> f4(std::string("\x1\0\x1", 3));
+  return *f4;
 }
 
-JwtRsaSsaPkcs1PublicKey GetValidPublicKey(
+struct KeyParams {
+  JwtRsaSsaPkcs1Parameters::Algorithm algorithm;
+  JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy;
+  std::optional<int> id_requirement;
+  std::optional<std::string> custom_kid;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const KeyParams& params) {
+    return H::combine(std::move(h), params.algorithm, params.kid_strategy,
+                      params.id_requirement, params.custom_kid);
+  }
+
+  bool operator==(const KeyParams& other) const {
+    return algorithm == other.algorithm && kid_strategy == other.kid_strategy &&
+           id_requirement == other.id_requirement &&
+           custom_kid == other.custom_kid;
+  }
+};
+
+using PrivateKeyMap = absl::flat_hash_map<KeyParams, JwtRsaSsaPkcs1PrivateKey>;
+
+JwtRsaSsaPkcs1PrivateKey CreateValidPrivateKey(
     JwtRsaSsaPkcs1Parameters::Algorithm algorithm,
     JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy,
     std::optional<int> id_requirement, std::optional<std::string> custom_kid) {
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(kModulusSizeInBits)
-          .SetPublicExponent(kF4)
+          .SetPublicExponent(GetF4())
           .SetAlgorithm(algorithm)
           .SetKidStrategy(kid_strategy)
           .Build();
   ABSL_CHECK_OK(parameters.status()) << "Failed to create parameters.";
 
-  BigInteger modulus(jwt_internal::GetRsa2048BitVector2().n);
-  JwtRsaSsaPkcs1PublicKey::Builder builder = JwtRsaSsaPkcs1PublicKey::Builder()
-                                                 .SetParameters(*parameters)
-                                                 .SetModulus(modulus);
+  const jwt_internal::RsaSsaTestVector& vector =
+      jwt_internal::GetRsa2048BitVector2();
+
+  JwtRsaSsaPkcs1PublicKey::Builder public_key_builder =
+      JwtRsaSsaPkcs1PublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetModulus(BigInteger(vector.n));
   if (id_requirement.has_value()) {
-    builder.SetIdRequirement(*id_requirement);
+    public_key_builder.SetIdRequirement(*id_requirement);
   }
   if (custom_kid.has_value()) {
-    builder.SetCustomKid(*custom_kid);
+    public_key_builder.SetCustomKid(*custom_kid);
   }
-
   absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
-      builder.Build(GetPartialKeyAccess());
+      public_key_builder.Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status()) << "Failed to create public key.";
-  return *public_key;
+
+  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
+      JwtRsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedData(vector.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(RestrictedData(vector.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(vector.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(vector.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(vector.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(vector.q_inv, InsecureSecretKeyAccess::Get()))
+          .Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key.status()) << "Failed to create private key.";
+  return *private_key;
+}
+
+// Returns static valid private key for testing.
+const JwtRsaSsaPkcs1PrivateKey& GetValidPrivateKey(
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm =
+        JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+    JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy =
+        JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
+    std::optional<int> id_requirement = std::nullopt,
+    std::optional<std::string> custom_kid = std::nullopt) {
+  static const absl::NoDestructor<PrivateKeyMap> keys([]() {
+    PrivateKeyMap map;
+    auto insert_key = [&](JwtRsaSsaPkcs1Parameters::Algorithm alg,
+                          JwtRsaSsaPkcs1Parameters::KidStrategy kid_strat,
+                          std::optional<int> id_req,
+                          std::optional<std::string> custom_k) {
+      map.emplace(KeyParams{alg, kid_strat, id_req, custom_k},
+                  CreateValidPrivateKey(alg, kid_strat, id_req, custom_k));
+    };
+    // Suite test cases.
+    insert_key(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
+               0x1ac6a944, std::nullopt);
+    insert_key(JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom, std::nullopt,
+               "custom_kid");
+    insert_key(JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored, std::nullopt,
+               std::nullopt);
+    // Keys with different ID requirements for DifferentPublicKeyNotEqual.
+    insert_key(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId, 123,
+               std::nullopt);
+    insert_key(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId, 456,
+               std::nullopt);
+    // Key with no ID requirement for DifferentKeyTypesNotEqual and Clone.
+    insert_key(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored, std::nullopt,
+               std::nullopt);
+    return map;
+  }());
+  auto it = keys->find(
+      KeyParams{algorithm, kid_strategy, id_requirement, custom_kid});
+  ABSL_CHECK(it != keys->end()) << "No static private key found.";
+  return it->second;
+}
+
+const JwtRsaSsaPkcs1PrivateKey& GetValidPrivateKey(const TestCase& test_case) {
+  return GetValidPrivateKey(test_case.algorithm, test_case.kid_strategy,
+                            test_case.id_requirement, test_case.custom_kid);
+}
+
+// Returns static valid private key values from GetValidPrivateKey().
+const PrivateValues& GetValidPrivateValues() {
+  static const absl::NoDestructor<PrivateValues> values([]() {
+    const JwtRsaSsaPkcs1PrivateKey& key = GetValidPrivateKey();
+    return PrivateValues{/*p=*/key.GetPrimePData(GetPartialKeyAccess()),
+                         /*q=*/key.GetPrimeQData(GetPartialKeyAccess()),
+                         /*dp=*/key.GetPrimeExponentPData(),
+                         /*dq=*/key.GetPrimeExponentQData(),
+                         /*d=*/key.GetPrivateExponentData(),
+                         /*q_inv=*/key.GetCrtCoefficientData()};
+  }());
+  return *values;
+}
+
+// Returns static valid public key from GetValidPrivateKey().
+const JwtRsaSsaPkcs1PublicKey& GetValidPublicKey(
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm =
+        JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+    JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy =
+        JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
+    std::optional<int> id_requirement = std::nullopt,
+    std::optional<std::string> custom_kid = std::nullopt) {
+  return GetValidPrivateKey(algorithm, kid_strategy, id_requirement, custom_kid)
+      .GetPublicKey();
+}
+
+const JwtRsaSsaPkcs1PublicKey& GetValidPublicKey(const TestCase& test_case) {
+  return GetValidPrivateKey(test_case).GetPublicKey();
 }
 
 std::string Base64WebSafeDecode(absl::string_view base64_string) {
@@ -157,11 +271,8 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeySucceeds) {
   TestCase test_case = GetParam();
 
-  JwtRsaSsaPkcs1PublicKey public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
-
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& public_key = GetValidPublicKey(test_case);
+  const PrivateValues& private_values = GetValidPrivateValues();
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
       JwtRsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(public_key)
@@ -192,11 +303,8 @@ TEST_P(JwtRsaSsaPkcs1PrivateKeyTest,
        BuildPrivateKeyAllowNonConstantTimeSucceeds) {
   TestCase test_case = GetParam();
 
-  JwtRsaSsaPkcs1PublicKey public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
-
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& public_key = GetValidPublicKey(test_case);
+  const PrivateValues& private_values = GetValidPrivateValues();
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
       JwtRsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(public_key)
@@ -225,12 +333,12 @@ TEST_P(JwtRsaSsaPkcs1PrivateKeyTest,
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest,
      BuildPrivateKeyAllowNonConstantTimeSucceedsWithLeadingBytes) {
-  JwtRsaSsaPkcs1PublicKey public_key = GetValidPublicKey(
+  const JwtRsaSsaPkcs1PublicKey& public_key = GetValidPublicKey(
       JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
       JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
       /*id_requirement=*/0x1ac6a944, /*custom_kid=*/std::nullopt);
 
-  PrivateValues private_values = GetValidPrivateValues();
+  const PrivateValues& private_values = GetValidPrivateValues();
   RestrictedData padded_p(
       absl::StrCat(test::HexDecodeOrDie("000000"),
                    private_values.p.GetSecret(InsecureSecretKeyAccess::Get())),
@@ -505,12 +613,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesModulus) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key =
-      GetValidPublicKey(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-                        JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-                        /*id_requirement=*/std::nullopt,
-                        /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key_modified_modulus =
       JwtRsaSsaPkcs1PublicKey::Builder()
@@ -537,11 +641,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesModulus) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeP) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /* id_requirement= */ std::nullopt, /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key_modified_prime_p =
       JwtRsaSsaPkcs1PrivateKey::Builder()
@@ -562,11 +663,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeP) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeQ) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key_modified_prime_q =
       JwtRsaSsaPkcs1PrivateKey::Builder()
@@ -587,11 +685,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeQ) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentP) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
       private_key_modified_prime_exponent_p =
@@ -613,11 +708,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentP) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentQ) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
       private_key_modified_prime_exponent_q =
@@ -639,11 +731,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentQ) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrivateExponent) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
       private_key_modified_private_exponent =
@@ -665,11 +754,8 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesPrivateExponent) {
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyValidatesCrtCoefficient) {
-  JwtRsaSsaPkcs1PublicKey valid_public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
-  PrivateValues private_values = GetValidPrivateValues();
+  const JwtRsaSsaPkcs1PublicKey& valid_public_key = GetValidPublicKey();
+  const PrivateValues& private_values = GetValidPrivateValues();
 
   absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
       private_key_modified_crt_coefficient =
@@ -851,7 +937,7 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, CreateMismatchedKeyPairFails) {
   absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(kModulusSizeInBits)
-          .SetPublicExponent(kF4)
+          .SetPublicExponent(GetF4())
           .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
           .SetKidStrategy(JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored)
           .Build();
@@ -893,154 +979,48 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, CreateMismatchedKeyPairFails) {
 
 TEST_P(JwtRsaSsaPkcs1PrivateKeyTest, PrivateKeyEquals) {
   TestCase test_case = GetParam();
-  JwtRsaSsaPkcs1PublicKey valid_public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
+  const JwtRsaSsaPkcs1PrivateKey& private_key = GetValidPrivateKey(test_case);
+  JwtRsaSsaPkcs1PrivateKey same_private_key = private_key;
 
-  PrivateValues private_values = GetValidPrivateValues();
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(valid_public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.dp)
-          .SetPrimeExponentQ(private_values.dq)
-          .SetPrivateExponent(private_values.d)
-          .SetCrtCoefficient(private_values.q_inv)
-          .Build(GetPartialKeyAccess());
-
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> same_private_key =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(valid_public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.dp)
-          .SetPrimeExponentQ(private_values.dq)
-          .SetPrivateExponent(private_values.d)
-          .SetCrtCoefficient(private_values.q_inv)
-          .Build(GetPartialKeyAccess());
-
-  ASSERT_THAT(same_private_key, IsOk());
-
-  EXPECT_TRUE(*private_key == *same_private_key);
-  EXPECT_TRUE(*same_private_key == *private_key);
-  EXPECT_FALSE(*private_key != *same_private_key);
-  EXPECT_FALSE(*same_private_key != *private_key);
+  EXPECT_TRUE(private_key == same_private_key);
+  EXPECT_TRUE(same_private_key == private_key);
+  EXPECT_FALSE(private_key != same_private_key);
+  EXPECT_FALSE(same_private_key != private_key);
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, DifferentPublicKeyNotEqual) {
-  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
-      JwtRsaSsaPkcs1Parameters::Builder()
-          .SetModulusSizeInBits(kModulusSizeInBits)
-          .SetPublicExponent(kF4)
-          .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
-          .SetKidStrategy(
-              JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  const JwtRsaSsaPkcs1PrivateKey& private_key1 = GetValidPrivateKey(
+      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+      JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
+      /*id_requirement=*/123, /*custom_kid=*/std::nullopt);
+  const JwtRsaSsaPkcs1PrivateKey& private_key2 = GetValidPrivateKey(
+      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+      JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
+      /*id_requirement=*/456, /*custom_kid=*/std::nullopt);
 
-  BigInteger modulus(jwt_internal::GetRsa2048BitVector2().n);
-  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key1 =
-      JwtRsaSsaPkcs1PublicKey::Builder()
-          .SetParameters(*parameters)
-          .SetModulus(modulus)
-          .SetIdRequirement(123)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(public_key1, IsOk());
-
-  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key2 =
-      JwtRsaSsaPkcs1PublicKey::Builder()
-          .SetParameters(*parameters)
-          .SetModulus(modulus)
-          .SetIdRequirement(456)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(public_key2, IsOk());
-
-  PrivateValues private_values = GetValidPrivateValues();
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key1 =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(*public_key1)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.dp)
-          .SetPrimeExponentQ(private_values.dq)
-          .SetPrivateExponent(private_values.d)
-          .SetCrtCoefficient(private_values.q_inv)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(private_key1, IsOk());
-
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key2 =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(*public_key2)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.dp)
-          .SetPrimeExponentQ(private_values.dq)
-          .SetPrivateExponent(private_values.d)
-          .SetCrtCoefficient(private_values.q_inv)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(private_key2, IsOk());
-
-  EXPECT_TRUE(*private_key1 != *private_key2);
-  EXPECT_TRUE(*private_key2 != *private_key1);
-  EXPECT_FALSE(*private_key1 == *private_key2);
-  EXPECT_FALSE(*private_key2 == *private_key1);
+  EXPECT_TRUE(private_key1 != private_key2);
+  EXPECT_TRUE(private_key2 != private_key1);
+  EXPECT_FALSE(private_key1 == private_key2);
+  EXPECT_FALSE(private_key2 == private_key1);
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, DifferentKeyTypesNotEqual) {
-  JwtRsaSsaPkcs1PublicKey public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
+  const JwtRsaSsaPkcs1PrivateKey& private_key = GetValidPrivateKey();
+  const JwtRsaSsaPkcs1PublicKey& public_key = private_key.GetPublicKey();
 
-  PrivateValues private_values = GetValidPrivateValues();
-
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.dp)
-          .SetPrimeExponentQ(private_values.dq)
-          .SetPrivateExponent(private_values.d)
-          .SetCrtCoefficient(private_values.q_inv)
-          .Build(GetPartialKeyAccess());
-
-  ASSERT_THAT(private_key, IsOk());
-
-  EXPECT_TRUE(*private_key != public_key);
-  EXPECT_TRUE(public_key != *private_key);
-  EXPECT_FALSE(*private_key == public_key);
-  EXPECT_FALSE(public_key == *private_key);
+  EXPECT_TRUE(private_key != public_key);
+  EXPECT_TRUE(public_key != private_key);
+  EXPECT_FALSE(private_key == public_key);
+  EXPECT_FALSE(public_key == private_key);
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, Clone) {
-  JwtRsaSsaPkcs1PublicKey public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-      /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt);
-
-  PrivateValues private_values = GetValidPrivateValues();
-
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.dp)
-          .SetPrimeExponentQ(private_values.dq)
-          .SetPrivateExponent(private_values.d)
-          .SetCrtCoefficient(private_values.q_inv)
-          .Build(GetPartialKeyAccess());
-
-  ASSERT_THAT(private_key, IsOk());
+  const JwtRsaSsaPkcs1PrivateKey& private_key = GetValidPrivateKey();
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = private_key->Clone();
+  std::unique_ptr<Key> cloned_key = private_key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*private_key));
+  ASSERT_THAT(*cloned_key, Eq(private_key));
 }
 
 }  // namespace

@@ -17,35 +17,27 @@
 #ifndef TINK_JWT_INTERNAL_TESTING_JWT_ECDSA_TEST_VECTORS_H_
 #define TINK_JWT_INTERNAL_TESTING_JWT_ECDSA_TEST_VECTORS_H_
 
-#include <string>
+#include <vector>
 
+#include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto::tink::jwt_internal {
 
 struct JwtEcdsaTestVector {
-  subtle::EllipticCurveType curve;
-  std::string pub_x;
-  std::string pub_y;
-  std::string priv;
+  JwtEcdsaPrivateKey key;
 };
 
-// Returns P-256 (ES256) test vector from RFC 6979, Appendix A.2.5.
-const JwtEcdsaTestVector& CreateJwtEcdsaP256TestVector();
-
-// Returns valid P-256 (ES256) test vector from Wycheproof
-// ecdsa_secp256r1_sha256_test.json.
-const JwtEcdsaTestVector& CreateJwtEcdsaP256WycheproofTestVector();
-
-// Returns P-384 (ES384) test vector from RFC 6979, Appendix A.2.6.
-const JwtEcdsaTestVector& CreateJwtEcdsaP384TestVector();
-
-// Returns P-521 (ES512) test vector from RFC 6979, Appendix A.2.7.
-const JwtEcdsaTestVector& CreateJwtEcdsaP521TestVector();
+// Returns static test vectors for JWT ECDSA (P-256, P-384, P-521).
+const std::vector<JwtEcdsaTestVector>& CreateJwtEcdsaTestVectors();
 
 // Returns static test vector for JWT ECDSA for the given curve.
 const JwtEcdsaTestVector& GetJwtEcdsaTestVector(
     subtle::EllipticCurveType curve);
+
+// Returns static Wycheproof test vector for JWT ECDSA P-256
+// (third_party/wycheproof/testvectors/json_web_crypto_test.json:165-174).
+const JwtEcdsaTestVector& GetJwtEcdsaWycheproofTestVector();
 
 }  // namespace crypto::tink::jwt_internal
 

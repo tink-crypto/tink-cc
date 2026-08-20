@@ -26,15 +26,14 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
+#include "tink/jwt/internal/testing/jwt_ecdsa_test_vectors.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -48,86 +47,50 @@ using ::testing::HasSubstr;
 using ::testing::Lt;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
-using ::testing::Values;
+using ::testing::ValuesIn;
 
-struct TestCase {
-  JwtEcdsaParameters::KidStrategy kid_strategy;
-  JwtEcdsaParameters::Algorithm algorithm;
-  subtle::EllipticCurveType curve;
-  std::optional<std::string> custom_kid;
-  std::optional<int> id_requirement;
-  std::optional<std::string> expected_kid;
-};
+using JwtEcdsaPublicKeyTest = TestWithParam<jwt_internal::JwtEcdsaTestVector>;
 
-using JwtEcdsaPublicKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    JwtEcdsaPublicKeyTestSuite, JwtEcdsaPublicKeyTest,
-    Values(TestCase{JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-                    JwtEcdsaParameters::Algorithm::kEs256,
-                    subtle::EllipticCurveType::NIST_P256,
-                    /*custom_kid=*/std::nullopt, /*id_requirement=*/123,
-                    /*expected_kid=*/"AAAAew"},
-           TestCase{JwtEcdsaParameters::KidStrategy::kCustom,
-                    JwtEcdsaParameters::Algorithm::kEs384,
-                    subtle::EllipticCurveType::NIST_P384,
-                    /*custom_kid=*/"custom_kid",
-                    /*id_requirement=*/std::nullopt,
-                    /*expected_kid=*/"custom_kid"},
-           TestCase{JwtEcdsaParameters::KidStrategy::kIgnored,
-                    JwtEcdsaParameters::Algorithm::kEs512,
-                    subtle::EllipticCurveType::NIST_P521,
-                    /*custom_kid=*/std::nullopt,
-                    /*id_requirement=*/std::nullopt,
-                    /*expected_kid=*/std::nullopt}));
+INSTANTIATE_TEST_SUITE_P(JwtEcdsaPublicKeyTestSuite, JwtEcdsaPublicKeyTest,
+                         ValuesIn(jwt_internal::CreateJwtEcdsaTestVectors()));
 
 TEST_P(JwtEcdsaPublicKeyTest, CreateSucceeds) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(test_case.kid_strategy, test_case.algorithm);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const jwt_internal::JwtEcdsaTestVector& test_vector = GetParam();
+  const JwtEcdsaPublicKey& key = test_vector.key.GetPublicKey();
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params).SetPublicPoint(
-          public_point);
-  if (test_case.id_requirement.has_value()) {
-    builder.SetIdRequirement(*test_case.id_requirement);
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(key.GetParameters())
+          .SetPublicPoint(key.GetPublicPoint(GetPartialKeyAccess()));
+  if (key.GetIdRequirement().has_value()) {
+    builder.SetIdRequirement(*key.GetIdRequirement());
   }
-  if (test_case.custom_kid.has_value()) {
-    builder.SetCustomKid(*test_case.custom_kid);
+  if (key.GetParameters().GetKidStrategy() ==
+      JwtEcdsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*key.GetKid());
   }
-  absl::StatusOr<JwtEcdsaPublicKey> key = builder.Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  absl::StatusOr<JwtEcdsaPublicKey> created_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(key->GetParameters(), Eq(*params));
-  EXPECT_THAT(key->GetPublicPoint(GetPartialKeyAccess()), Eq(public_point));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetPublicPoint(GetPartialKeyAccess()),
+              Eq(key.GetPublicPoint(GetPartialKeyAccess())));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+  EXPECT_THAT(created_key->GetKid(), Eq(key.GetKid()));
 }
 
 TEST(JwtEcdsaPublicKeyTest, CustomKidPreservesStringViewBounds) {
-  absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
-      JwtEcdsaParameters::KidStrategy::kCustom,
-      JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P384)
+          .key.GetPublicKey();
 
   std::string backing = "custom_kid|secret";
   absl::string_view custom_kid(backing.data(), /*len=*/10);
   absl::StatusOr<JwtEcdsaPublicKey> key =
       JwtEcdsaPublicKey::Builder()
-          .SetParameters(*params)
-          .SetPublicPoint(public_point)
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()))
           .SetCustomKid(custom_kid)
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -137,10 +100,9 @@ TEST(JwtEcdsaPublicKeyTest, CustomKidPreservesStringViewBounds) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateKeyWithInvalidPublicPointFails) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
   // Copied from "public point not on curve" Wycheproof test case in
   //
@@ -167,28 +129,23 @@ TEST(JwtEcdsaPublicKeyTest, CreateKeyWithInvalidPublicPointFails) {
   EcPoint public_point(x, y);
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params).SetPublicPoint(
-          public_point);
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(public_point);
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateBase64EncodedKidWithoutIdRequirementFails) {
-  absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
-      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-      JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params).SetPublicPoint(
-          public_point);
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()));
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -197,22 +154,16 @@ TEST(JwtEcdsaPublicKeyTest, CreateBase64EncodedKidWithoutIdRequirementFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateBase64EncodedKidWithCustomKidFails) {
-  absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
-      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-      JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  JwtEcdsaPublicKey::Builder builder = JwtEcdsaPublicKey::Builder()
-                                           .SetParameters(*params)
-                                           .SetPublicPoint(public_point)
-                                           .SetIdRequirement(123)
-                                           .SetCustomKid("custom_kid");
+  JwtEcdsaPublicKey::Builder builder =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()))
+          .SetIdRequirement(123)
+          .SetCustomKid("custom_kid");
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -221,22 +172,16 @@ TEST(JwtEcdsaPublicKeyTest, CreateBase64EncodedKidWithCustomKidFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateCustomKidWithIdRequirementFails) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P384)
+          .key.GetPublicKey();
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  JwtEcdsaPublicKey::Builder builder = JwtEcdsaPublicKey::Builder()
-                                           .SetParameters(*params)
-                                           .SetPublicPoint(public_point)
-                                           .SetCustomKid("custom_kid")
-                                           .SetIdRequirement(123);
+  JwtEcdsaPublicKey::Builder builder =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()))
+          .SetCustomKid("custom_kid")
+          .SetIdRequirement(123);
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -245,20 +190,14 @@ TEST(JwtEcdsaPublicKeyTest, CreateCustomKidWithIdRequirementFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateCustomKidWithoutCustomKidFails) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P384)
+          .key.GetPublicKey();
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params).SetPublicPoint(
-          public_point);
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()));
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -266,21 +205,15 @@ TEST(JwtEcdsaPublicKeyTest, CreateCustomKidWithoutCustomKidFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateIgnoredKidWithIdRequirementFails) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P521)
+          .key.GetPublicKey();
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  JwtEcdsaPublicKey::Builder builder = JwtEcdsaPublicKey::Builder()
-                                           .SetParameters(*params)
-                                           .SetPublicPoint(public_point)
-                                           .SetIdRequirement(123);
+  JwtEcdsaPublicKey::Builder builder =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()))
+          .SetIdRequirement(123);
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -289,21 +222,15 @@ TEST(JwtEcdsaPublicKeyTest, CreateIgnoredKidWithIdRequirementFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateIgnoredKidWithCustomKidFails) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P521)
+          .key.GetPublicKey();
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  JwtEcdsaPublicKey::Builder builder = JwtEcdsaPublicKey::Builder()
-                                           .SetParameters(*params)
-                                           .SetPublicPoint(public_point)
-                                           .SetCustomKid("custom_kid");
+  JwtEcdsaPublicKey::Builder builder =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(valid_key.GetParameters())
+          .SetPublicPoint(valid_key.GetPublicPoint(GetPartialKeyAccess()))
+          .SetCustomKid("custom_kid");
 
   EXPECT_THAT(
       builder.Build(GetPartialKeyAccess()).status(),
@@ -313,14 +240,13 @@ TEST(JwtEcdsaPublicKeyTest, CreateIgnoredKidWithCustomKidFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateWithMissingParametersFails) {
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetPublicPoint(public_point);
+      JwtEcdsaPublicKey::Builder().SetPublicPoint(
+          valid_key.GetPublicPoint(GetPartialKeyAccess()));
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -328,13 +254,12 @@ TEST(JwtEcdsaPublicKeyTest, CreateWithMissingParametersFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, CreateWithMissingPublicPointFails) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
+  const JwtEcdsaPublicKey& valid_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params);
+      JwtEcdsaPublicKey::Builder().SetParameters(valid_key.GetParameters());
 
   EXPECT_THAT(builder.Build(GetPartialKeyAccess()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -342,178 +267,98 @@ TEST(JwtEcdsaPublicKeyTest, CreateWithMissingPublicPointFails) {
 }
 
 TEST_P(JwtEcdsaPublicKeyTest, KeyEquals) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(test_case.kid_strategy, test_case.algorithm);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const jwt_internal::JwtEcdsaTestVector& test_vector = GetParam();
+  const JwtEcdsaPublicKey& key = test_vector.key.GetPublicKey();
 
   JwtEcdsaPublicKey::Builder builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params).SetPublicPoint(
-          public_point);
-  if (test_case.id_requirement.has_value()) {
-    builder.SetIdRequirement(*test_case.id_requirement);
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(key.GetParameters())
+          .SetPublicPoint(key.GetPublicPoint(GetPartialKeyAccess()));
+  if (key.GetIdRequirement().has_value()) {
+    builder.SetIdRequirement(*key.GetIdRequirement());
   }
-  if (test_case.custom_kid.has_value()) {
-    builder.SetCustomKid(*test_case.custom_kid);
-  }
-  absl::StatusOr<JwtEcdsaPublicKey> key = builder.Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  JwtEcdsaPublicKey::Builder other_builder =
-      JwtEcdsaPublicKey::Builder().SetParameters(*params).SetPublicPoint(
-          public_point);
-  if (test_case.id_requirement.has_value()) {
-    other_builder.SetIdRequirement(*test_case.id_requirement);
-  }
-  if (test_case.custom_kid.has_value()) {
-    other_builder.SetCustomKid(*test_case.custom_kid);
+  if (key.GetParameters().GetKidStrategy() ==
+      JwtEcdsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*key.GetKid());
   }
   absl::StatusOr<JwtEcdsaPublicKey> other_key =
-      other_builder.Build(GetPartialKeyAccess());
+      builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key == *other_key);
-  EXPECT_TRUE(*other_key == *key);
-  EXPECT_FALSE(*key != *other_key);
-  EXPECT_FALSE(*other_key != *key);
+  EXPECT_TRUE(key == *other_key);
+  EXPECT_TRUE(*other_key == key);
+  EXPECT_FALSE(key != *other_key);
+  EXPECT_FALSE(*other_key != key);
 }
 
 TEST(JwtEcdsaPublicKeyTest, DifferentPublicPointNotEqual) {
-  absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
-      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-      JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  absl::StatusOr<internal::EcKey> other_ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(other_ec_key, IsOk());
-
-  EcPoint other_public_point(BigInteger(other_ec_key->pub_x),
-                             BigInteger(other_ec_key->pub_y));
-
-  absl::StatusOr<JwtEcdsaPublicKey> key = JwtEcdsaPublicKey::Builder()
-                                              .SetParameters(*params)
-                                              .SetPublicPoint(public_point)
-                                              .SetIdRequirement(123)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const JwtEcdsaPublicKey& key1 =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
+  const JwtEcdsaPublicKey& wycheproof_key =
+      jwt_internal::GetJwtEcdsaWycheproofTestVector().key.GetPublicKey();
 
   absl::StatusOr<JwtEcdsaPublicKey> other_key =
       JwtEcdsaPublicKey::Builder()
-          .SetParameters(*params)
-          .SetPublicPoint(other_public_point)
-          .SetIdRequirement(123)
+          .SetParameters(key1.GetParameters())
+          .SetPublicPoint(wycheproof_key.GetPublicPoint(GetPartialKeyAccess()))
+          .SetIdRequirement(*key1.GetIdRequirement())
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(key1 != *other_key);
+  EXPECT_TRUE(*other_key != key1);
+  EXPECT_FALSE(key1 == *other_key);
+  EXPECT_FALSE(*other_key == key1);
 }
 
 TEST(JwtEcdsaPublicKeyTest, DifferentIdRequirementNotEqual) {
-  absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
-      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-      JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  absl::StatusOr<JwtEcdsaPublicKey> key = JwtEcdsaPublicKey::Builder()
-                                              .SetParameters(*params)
-                                              .SetPublicPoint(public_point)
-                                              .SetIdRequirement(123)
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const JwtEcdsaPublicKey& key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
   absl::StatusOr<JwtEcdsaPublicKey> other_key =
       JwtEcdsaPublicKey::Builder()
-          .SetParameters(*params)
-          .SetPublicPoint(public_point)
+          .SetParameters(key.GetParameters())
+          .SetPublicPoint(key.GetPublicPoint(GetPartialKeyAccess()))
           .SetIdRequirement(456)
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(key != *other_key);
+  EXPECT_TRUE(*other_key != key);
+  EXPECT_FALSE(key == *other_key);
+  EXPECT_FALSE(*other_key == key);
 }
 
 TEST(JwtEcdsaPublicKeyTest, DifferentCustomKidNotEqual) {
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(params, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  absl::StatusOr<JwtEcdsaPublicKey> key = JwtEcdsaPublicKey::Builder()
-                                              .SetParameters(*params)
-                                              .SetPublicPoint(public_point)
-                                              .SetCustomKid("custom_kid")
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const JwtEcdsaPublicKey& key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P384)
+          .key.GetPublicKey();
 
   absl::StatusOr<JwtEcdsaPublicKey> other_key =
       JwtEcdsaPublicKey::Builder()
-          .SetParameters(*params)
-          .SetPublicPoint(public_point)
+          .SetParameters(key.GetParameters())
+          .SetPublicPoint(key.GetPublicPoint(GetPartialKeyAccess()))
           .SetCustomKid("other_custom_kid")
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(*key != *other_key);
-  EXPECT_TRUE(*other_key != *key);
-  EXPECT_FALSE(*key == *other_key);
-  EXPECT_FALSE(*other_key == *key);
+  EXPECT_TRUE(key != *other_key);
+  EXPECT_TRUE(*other_key != key);
+  EXPECT_FALSE(key == *other_key);
+  EXPECT_FALSE(*other_key == key);
 }
 
 TEST(JwtEcdsaPublicKeyTest, Clone) {
-  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
-      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-      JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-
-  absl::StatusOr<JwtEcdsaPublicKey> public_key =
-      JwtEcdsaPublicKey::Builder()
-          .SetParameters(*parameters)
-          .SetPublicPoint(public_point)
-          .SetIdRequirement(123)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
+  const JwtEcdsaPublicKey& key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = public_key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*public_key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 }  // namespace

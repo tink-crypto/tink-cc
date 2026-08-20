@@ -802,14 +802,13 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    absl::optional
     tink::core::big_integer
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
     tink::internal::ec_util
+    tink::jwt::internal::testing::jwt_ecdsa_test_vectors
     tink::subtle::common_enums
-    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -825,19 +824,14 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::optional
-    crypto
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
-    tink::internal::ec_util
+    tink::jwt::internal::testing::jwt_ecdsa_test_vectors
     tink::subtle::common_enums
-    tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

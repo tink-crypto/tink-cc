@@ -74,6 +74,135 @@ AeadTestVector MakeXAesGcmTestVector(const XAesGcmTestVectorParams& params) {
 const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
   static const absl::NoDestructor<XAesGcmTestVectorMap> test_vectors(
       XAesGcmTestVectorMap{
+          {{8, XAesGcmParameters::Variant::kNoPrefix},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/8,
+               /*variant=*/XAesGcmParameters::Variant::kNoPrefix,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/std::nullopt,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "0000000000000000000000000000000000000000ce10e0e15f77f06bb"
+               "3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{8, XAesGcmParameters::Variant::kTink},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/8,
+               /*variant=*/XAesGcmParameters::Variant::kTink,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/0x01020304,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "01010203040000000000000000000000000000000000000000ce10e0e15"
+               "f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{9, XAesGcmParameters::Variant::kNoPrefix},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/9,
+               /*variant=*/XAesGcmParameters::Variant::kNoPrefix,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/std::nullopt,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "000000000000000000000000000000000000000000ce10e0e15f77f06bb"
+               "3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{9, XAesGcmParameters::Variant::kTink},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/9,
+               /*variant=*/XAesGcmParameters::Variant::kTink,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/0x01020304,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "0101020304000000000000000000000000000000000000000000ce10e0e15"
+               "f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{10, XAesGcmParameters::Variant::kNoPrefix},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/10,
+               /*variant=*/XAesGcmParameters::Variant::kNoPrefix,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/std::nullopt,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "00000000000000000000000000000000000000000000ce10e0e15f77f06"
+               "bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{10, XAesGcmParameters::Variant::kTink},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/10,
+               /*variant=*/XAesGcmParameters::Variant::kTink,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/0x01020304,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "010102030400000000000000000000000000000000000000000000ce10e0"
+               "e15f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{11, XAesGcmParameters::Variant::kNoPrefix},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/11,
+               /*variant=*/XAesGcmParameters::Variant::kNoPrefix,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/std::nullopt,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "0000000000000000000000000000000000000000000000ce10e0e15f77f0"
+               "6bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+           })},
+          {{11, XAesGcmParameters::Variant::kTink},
+           MakeXAesGcmTestVector(XAesGcmTestVectorParams{
+               /*salt_size_in_bytes=*/11,
+               /*variant=*/XAesGcmParameters::Variant::kTink,
+               /*key_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191"
+               "a1b1c1d1e1f",
+               /*id_requirement=*/0x01020304,
+               /*plaintext_hex=*/
+               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1"
+               "c1d1e1f",
+               /*associated_data_hex=*/"",
+               /*ciphertext_hex=*/
+               "01010203040000000000000000000000000000000000000000000000ce10"
+               "e0e15f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008f"
+               "b",
+           })},
           {{12, XAesGcmParameters::Variant::kNoPrefix},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
                /*salt_size_in_bytes=*/12,

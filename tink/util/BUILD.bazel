@@ -342,7 +342,10 @@ cc_library(
     srcs = ["keyset_util.cc"],
     hdrs = ["keyset_util.h"],
     include_prefix = "tink/util",
-    deps = ["//proto:tink_cc_proto"],
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink/subtle:random",
+    ],
 )
 
 cc_library(

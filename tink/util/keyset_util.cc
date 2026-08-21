@@ -20,6 +20,7 @@
 #include <random>
 
 #include "proto/tink.pb.h"
+#include "tink/subtle/random.h"
 
 namespace crypto {
 namespace tink {
@@ -29,10 +30,7 @@ namespace {
 using google::crypto::tink::Keyset;
 
 uint32_t NewKeyId() {
-  std::random_device rd;
-  std::minstd_rand0 gen(rd());
-  std::uniform_int_distribution<uint32_t> dist;
-  return dist(gen);
+  return subtle::Random::GetRandomUInt32();
 }
 
 }  // namespace

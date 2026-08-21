@@ -16,18 +16,29 @@
 
 #include "tink/aead/chacha20_poly1305_key.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#ifdef OPENSSL_IS_BORINGSSL
+#include "openssl/aead.h"
+#endif
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/chacha20_poly1305_test_vectors.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -39,6 +50,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -64,6 +76,44 @@ TEST_P(ChaCha20Poly1305KeyTest, CreateSucceeds) {
   EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
   EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
 }
+
+#ifdef OPENSSL_IS_BORINGSSL
+TEST_P(ChaCha20Poly1305KeyTest, Decrypt) {
+  const internal::AeadTestVector& test_vector = GetParam();
+  const ChaCha20Poly1305Key& key =
+      dynamic_cast<const ChaCha20Poly1305Key&>(*test_vector.aead_key);
+
+  absl::string_view ciphertext = test_vector.ciphertext;
+  absl::string_view output_prefix = key.GetOutputPrefix();
+  ASSERT_TRUE(absl::StartsWith(ciphertext, output_prefix));
+  ciphertext.remove_prefix(output_prefix.size());
+
+  ASSERT_GE(ciphertext.size(), 12 + 16);
+  absl::string_view nonce = ciphertext.substr(0, 12);
+  absl::string_view raw_ct_and_tag = ciphertext.substr(12);
+
+  absl::string_view key_bytes = key.GetKeyBytes(GetPartialKeyAccess())
+                                    .GetSecret(InsecureSecretKeyAccess::Get());
+  internal::SslUniquePtr<EVP_AEAD_CTX> context(
+      EVP_AEAD_CTX_new(EVP_aead_chacha20_poly1305(),
+                       reinterpret_cast<const uint8_t*>(key_bytes.data()),
+                       key_bytes.size(), /*tag_len=*/16));
+  ASSERT_THAT(context, NotNull());
+
+  std::string decrypted;
+  decrypted.resize(raw_ct_and_tag.size());
+  size_t out_len = 0;
+  ASSERT_TRUE(EVP_AEAD_CTX_open(
+      context.get(), reinterpret_cast<uint8_t*>(&decrypted[0]), &out_len,
+      decrypted.size(), reinterpret_cast<const uint8_t*>(nonce.data()),
+      nonce.size(), reinterpret_cast<const uint8_t*>(raw_ct_and_tag.data()),
+      raw_ct_and_tag.size(),
+      reinterpret_cast<const uint8_t*>(test_vector.associated_data.data()),
+      test_vector.associated_data.size()));
+  decrypted.resize(out_len);
+  EXPECT_THAT(decrypted, Eq(test_vector.plaintext));
+}
+#endif
 
 TEST(ChaCha20Poly1305KeyTest, CreateKeyWithInvalidVariantFails) {
   RestrictedData secret = dynamic_cast<const ChaCha20Poly1305Key&>(

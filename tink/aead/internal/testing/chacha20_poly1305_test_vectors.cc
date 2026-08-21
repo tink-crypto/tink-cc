@@ -71,50 +71,53 @@ AeadTestVector MakeChaCha20Poly1305TestVector(
 const ChaCha20Poly1305TestVectorMap& CreateChaCha20Poly1305TestVectorsMap() {
   static const absl::NoDestructor<ChaCha20Poly1305TestVectorMap> test_vectors(
       ChaCha20Poly1305TestVectorMap{
+          // Wycheproof test vector: tcId = 66
           {ChaCha20Poly1305Parameters::Variant::kNoPrefix,
            MakeChaCha20Poly1305TestVector(ChaCha20Poly1305TestVectorParams{
                /*variant=*/ChaCha20Poly1305Parameters::Variant::kNoPrefix,
                /*key_hex=*/
-               "1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cb"
-               "cce17f83a",
+               "e1731d5854e1b70cb3ffe8b786a2b3ebf0994370954757b9dc8c7bc535463"
+               "4a3",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/
-               "f2d814f8a608f824132b772081d80c103fe4f641f21e3a1bf9b2a5d3f4c6"
-               "f7e0",
+               "b9c554cbc36ac18ae897df7beecac1dbeb4eafa156bb60ce2e5d48f05715e"
+               "678",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0000000000000000000000006f208ef1310657962c64b4b88a8d5e8964e"
-               "505f56b68a8b1cb3eb086208a183592185ef8f0b721",
+               "72cfd90ef3026ca22b7e6e6aea29afa49d36e8760f5fe19723b9811ed5d51"
+               "9934a440f5081ac430b953b0e21222541af46b86533c6b68d2ff108a7ea",
            })},
           {ChaCha20Poly1305Parameters::Variant::kTink,
            MakeChaCha20Poly1305TestVector(ChaCha20Poly1305TestVectorParams{
                /*variant=*/ChaCha20Poly1305Parameters::Variant::kTink,
                /*key_hex=*/
-               "1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cb"
-               "cce17f83a",
+               "e1731d5854e1b70cb3ffe8b786a2b3ebf0994370954757b9dc8c7bc535463"
+               "4a3",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "f2d814f8a608f824132b772081d80c103fe4f641f21e3a1bf9b2a5d3f4c6"
-               "f7e0",
+               "b9c554cbc36ac18ae897df7beecac1dbeb4eafa156bb60ce2e5d48f05715e"
+               "678",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "01010203040000000000000000000000006f208ef1310657962c64b4b88"
-               "a8d5e8964e505f56b68a8b1cb3eb086208a183592185ef8f0b721",
+               "010102030472cfd90ef3026ca22b7e6e6aea29afa49d36e8760f5fe19723b"
+               "9811ed5d519934a440f5081ac430b953b0e21222541af46b86533c6b68d2f"
+               "f108a7ea",
            })},
           {ChaCha20Poly1305Parameters::Variant::kCrunchy,
            MakeChaCha20Poly1305TestVector(ChaCha20Poly1305TestVectorParams{
                /*variant=*/ChaCha20Poly1305Parameters::Variant::kCrunchy,
                /*key_hex=*/
-               "1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cb"
-               "cce17f83a",
+               "e1731d5854e1b70cb3ffe8b786a2b3ebf0994370954757b9dc8c7bc535463"
+               "4a3",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "f2d814f8a608f824132b772081d80c103fe4f641f21e3a1bf9b2a5d3f4c6"
-               "f7e0",
+               "b9c554cbc36ac18ae897df7beecac1dbeb4eafa156bb60ce2e5d48f05715e"
+               "678",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "00010203040000000000000000000000006f208ef1310657962c64b4b88"
-               "a8d5e8964e505f56b68a8b1cb3eb086208a183592185ef8f0b721",
+               "000102030472cfd90ef3026ca22b7e6e6aea29afa49d36e8760f5fe19723b"
+               "9811ed5d519934a440f5081ac430b953b0e21222541af46b86533c6b68d2f"
+               "f108a7ea",
            })},
       });
   return *test_vectors;

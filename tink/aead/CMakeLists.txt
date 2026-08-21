@@ -1503,12 +1503,17 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
+    absl::strings
+    absl::string_view
     absl::optional
+    crypto
+    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::chacha20_poly1305_test_vectors
+    tink::internal::ssl_unique_ptr
 )
 
 tink_cc_test(

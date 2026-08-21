@@ -60,7 +60,9 @@ tink_cc_library(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     tink::hybrid::hybrid_private_key
+    tink::internal::ec_util
     tink::subtle::common_enums
+    tink::util::secret_data
     tink::util::test_util
   TESTONLY
 )

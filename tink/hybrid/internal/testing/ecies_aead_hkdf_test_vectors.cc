@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "absl/base/no_destructor.h"
@@ -33,15 +34,16 @@
 #include "tink/hybrid/hybrid_private_key.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ec_util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 
@@ -97,6 +99,8 @@ RestrictedData P521SecretValue() {
           "538"),
       InsecureSecretKeyAccess::Get());
 }
+
+namespace {
 
 HybridTestVector CreateTestVector0() {
   absl::StatusOr<EciesParameters> params =
@@ -568,32 +572,73 @@ const std::vector<HybridTestVector>& CreateEciesTestVectors() {
   return *vectors;
 }
 
+// Returns a valid static ECIES private key for the given curve type from RFC
+// 6979.
+using EciesPrivateKeyMap =
+    absl::flat_hash_map<subtle::EllipticCurveType,
+                        std::shared_ptr<HybridPrivateKey>>;
+
+const EciesPrivateKeyMap& CreateEciesPrivateKeyMap() {
+  static const absl::NoDestructor<EciesPrivateKeyMap> keys(EciesPrivateKeyMap{
+      {subtle::EllipticCurveType::NIST_P256,
+       CreateTestVector0().hybrid_private_key},
+      {subtle::EllipticCurveType::NIST_P384,
+       CreateTestVector12().hybrid_private_key},
+      {subtle::EllipticCurveType::NIST_P521,
+       CreateTestVector13().hybrid_private_key},
+      {subtle::EllipticCurveType::CURVE25519,
+       CreateTestVector14().hybrid_private_key},
+  });
+  return *keys;
+}
 const EciesPrivateKey* GetEciesPrivateKey(
     subtle::EllipticCurveType curve_type) {
-  static const absl::NoDestructor<absl::flat_hash_map<
-      subtle::EllipticCurveType, std::shared_ptr<HybridPrivateKey>>>
-      keys([]() {
-        absl::flat_hash_map<subtle::EllipticCurveType,
-                            std::shared_ptr<HybridPrivateKey>>
-            map;
-        map.reserve(4);
-        // NIST_P256
-        map[subtle::EllipticCurveType::NIST_P256] =
-            CreateTestVector0().hybrid_private_key;
-        // NIST_P384
-        map[subtle::EllipticCurveType::NIST_P384] =
-            CreateTestVector12().hybrid_private_key;
-        // NIST_P521
-        map[subtle::EllipticCurveType::NIST_P521] =
-            CreateTestVector13().hybrid_private_key;
-        // CURVE25519
-        map[subtle::EllipticCurveType::CURVE25519] =
-            CreateTestVector14().hybrid_private_key;
-        return map;
-      }());
-  auto it = keys->find(curve_type);
-  ABSL_CHECK(it != keys->end()) << "No vector found for curve: " << curve_type;
+  const EciesPrivateKeyMap& keys = CreateEciesPrivateKeyMap();
+  auto it = keys.find(curve_type);
+  ABSL_CHECK(it != keys.end()) << "No vector found for curve: " << curve_type;
   return static_cast<const EciesPrivateKey*>(it->second.get());
+}
+
+// Returns a valid static EC key for the given curve type from RFC 6979.
+using EcKeyMap =
+    absl::flat_hash_map<subtle::EllipticCurveType, internal::EcKey>;
+
+const EcKeyMap& CreateEcKeyMap() {
+  static const absl::NoDestructor<EcKeyMap> ec_keys(EcKeyMap{
+      {subtle::EllipticCurveType::NIST_P256,
+       internal::EcKey{
+           subtle::EllipticCurveType::NIST_P256,
+           std::string(P256Point().GetX().GetValue()),
+           std::string(P256Point().GetY().GetValue()),
+           util::SecretDataFromStringView(
+               P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+       }},
+      {subtle::EllipticCurveType::NIST_P384,
+       internal::EcKey{
+           subtle::EllipticCurveType::NIST_P384,
+           std::string(P384Point().GetX().GetValue()),
+           std::string(P384Point().GetY().GetValue()),
+           util::SecretDataFromStringView(
+               P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+       }},
+      {subtle::EllipticCurveType::NIST_P521,
+       internal::EcKey{
+           subtle::EllipticCurveType::NIST_P521,
+           std::string(P521Point().GetX().GetValue()),
+           std::string(P521Point().GetY().GetValue()),
+           util::SecretDataFromStringView(
+               P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+       }},
+  });
+  return *ec_keys;
+}
+
+const internal::EcKey& GetEcKey(subtle::EllipticCurveType curve_type) {
+  const EcKeyMap& ec_keys = CreateEcKeyMap();
+  auto it = ec_keys.find(curve_type);
+  ABSL_CHECK(it != ec_keys.end())
+      << "No EC key found for curve: " << curve_type;
+  return it->second;
 }
 
 }  // namespace internal

@@ -1132,11 +1132,10 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    absl::optional
     crypto
     tink::core::key
     tink::core::partial_key_access
-    tink::util::test_util
+    tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
   TAGS
     exclude_if_openssl
 )
@@ -1185,7 +1184,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::test_util
+    tink::internal::fips_utils
+    tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
   TAGS
     exclude_if_openssl
 )

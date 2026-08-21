@@ -28,7 +28,10 @@ struct JwtEcdsaTestVector {
   JwtEcdsaPrivateKey key;
 };
 
-// Returns static test vectors for JWT ECDSA (P-256, P-384, P-521).
+// Returns static test vectors for JWT ECDSA:
+// - P-256 (ES256): RFC 6979, Appendix A.2.5
+// - P-384 (ES384): RFC 6979, Appendix A.2.6
+// - P-521 (ES512): RFC 6979, Appendix A.2.7
 const std::vector<JwtEcdsaTestVector>& CreateJwtEcdsaTestVectors();
 
 // Returns static test vector for JWT ECDSA for the given curve.

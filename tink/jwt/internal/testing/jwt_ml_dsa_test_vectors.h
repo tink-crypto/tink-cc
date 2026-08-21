@@ -29,13 +29,16 @@ struct JwtMlDsaTestVector {
   std::string private_seed_bytes;
 };
 
-// Returns ML-DSA-44 test vector from jwt_ml_dsa_signer_verifier_test.cc.
+// Returns ML-DSA-44 test vector from NIST ACVP ML-DSA-keyGen-FIPS204:
+// third_party/openssl/boringssl/src/crypto/mldsa/mldsa_nist_keygen_44_tests.txt:4-6
 const JwtMlDsaTestVector& CreateJwtMlDsa44TestVector();
 
-// Returns ML-DSA-65 test vector from jwt_ml_dsa_signer_verifier_test.cc.
+// Returns ML-DSA-65 test vector from NIST ACVP ML-DSA-keyGen-FIPS204:
+// third_party/openssl/boringssl/src/crypto/mldsa/mldsa_nist_keygen_65_tests.txt:4-6
 const JwtMlDsaTestVector& CreateJwtMlDsa65TestVector();
 
-// Returns ML-DSA-87 test vector from jwt_ml_dsa_signer_verifier_test.cc.
+// Returns ML-DSA-87 test vector from NIST ACVP ML-DSA-keyGen-FIPS204:
+// third_party/openssl/boringssl/src/crypto/mldsa/mldsa_nist_keygen_87_tests.txt:4-6
 const JwtMlDsaTestVector& CreateJwtMlDsa87TestVector();
 
 // Returns static test vector for JWT ML-DSA for the given algorithm.

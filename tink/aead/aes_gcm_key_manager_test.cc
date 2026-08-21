@@ -27,9 +27,18 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/cord.h"
 #include "tink/aead.h"
+#include "tink/aead/aead_config.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/cord_aead_wrapper.h"
 #include "tink/aead/internal/cord_aes_gcm_boringssl.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
+#include "tink/config/global_registry.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
+#include "tink/registry.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/util/istream_input_stream.h"
@@ -268,6 +277,60 @@ TEST(AesGcmKeyManagerTest, DeriveKeyWrongVersion) {
       AesGcmKeyManager().DeriveKey(format, &input_stream).status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("version")));
 }
+
+using AesGcmKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::AeadTestVector>;
+
+TEST_P(AesGcmKeyManagerTestVectorTest, DecryptAead) {
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(ConfigGlobalRegistry());
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(test_vector.plaintext));
+}
+
+TEST_P(AesGcmKeyManagerTestVectorTest, DecryptCordAead) {
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(
+      Registry::RegisterPrimitiveWrapper(std::make_unique<CordAeadWrapper>()),
+      IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<CordAead>> cord_aead =
+      handle->GetPrimitive<CordAead>(ConfigGlobalRegistry());
+  ASSERT_THAT(cord_aead, IsOk());
+
+  absl::StatusOr<absl::Cord> plaintext =
+      (*cord_aead)
+          ->Decrypt(absl::Cord(test_vector.ciphertext),
+                    absl::Cord(test_vector.associated_data));
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(absl::Cord(test_vector.plaintext)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AesGcmKeyManagerTestVectorTestSuite, AesGcmKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateAesGcmTestVectors()));
 
 }  // namespace
 }  // namespace tink

@@ -1019,14 +1019,23 @@ tink_cc_test(
   SRCS
     aes_gcm_key_manager_test.cc
   DEPS
+    tink::aead::aead_config
     tink::aead::aes_gcm_key_manager
     tink::aead::cord_aead
+    tink::aead::cord_aead_wrapper
     gmock
     absl::memory
     absl::status
     absl::status_matchers
+    absl::cord
     tink::core::aead
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::registry
     tink::aead::internal::cord_aes_gcm_boringssl
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_test_vectors
+    tink::config::global_registry
     tink::subtle::aead_test_util
     tink::subtle::aes_gcm_boringssl
     tink::util::istream_input_stream

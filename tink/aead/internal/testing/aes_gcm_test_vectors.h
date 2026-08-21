@@ -24,12 +24,10 @@
 
 namespace crypto::tink::internal {
 
-// Returns static test vectors for AES-GCM from Wycheproof
-// (wycheproof/testvectors/aes_gcm_test.json).
+// Returns static test vectors for AES-GCM.
 const std::vector<AeadTestVector>& CreateAesGcmTestVectors();
 
-// Returns static test vector for AES-GCM for the given key size in bytes and
-// variant from Wycheproof (wycheproof/testvectors/aes_gcm_test.json).
+// Returns a test vectors for AES-GCM, with the given size and variant.
 const AeadTestVector& GetAesGcmTestVector(int key_size_in_bytes,
                                           AesGcmParameters::Variant variant);
 

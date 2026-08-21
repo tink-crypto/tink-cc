@@ -82,115 +82,109 @@ const AesGcmTestVectorMap& CreateAesGcmTestVectorsMap() {
            MakeAesGcmTestVector(AesGcmTestVectorParams{
                /*key_size_in_bytes=*/16,
                /*variant=*/AesGcmParameters::Variant::kNoPrefix,
-               /*key_hex=*/"5b9604fe14eadba931b0ccf3484344dd",
+               /*key_hex=*/"feffe9928665731c6d6a8f9467308308",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/
-               "f1cc30e8ecdf0ec03a5204c2108cc013de8f0519445d45e14f62a8f49b34"
-               "2e9e",
+               "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a31"
+               "8a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39"
+               "1aafd255",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "001c4021235b8cf973a21680199d7010f3c5f4b069d80d24177d6118d0cc"
-               "ec0c5ec76985cb961608670b86a8a53ae63ea25ebcbbd84197db3ea8003f"
-               "0b2f5673620f4f9ffa3d339e144a2b251a37c95cf89617bdf75ec7a6ec0b"
-               "2b8003f5db9bbce6092db560a6a02b37c0500bf8db9a8ee88f910ea098ce"
-               "1b29a21e64177894a86496a32431cf4663efd07fa918b958c2b5ecceca2d"
-               "f5da8f8df4ea85b46e3cb5ca16c1fb854ec7fb9217b1897f2596ea35ca3b"
-               "bba0fb69c9b4e9f50f2ff4ee9f3d9dca77ab7d9f7831f2dcfaafb1dfc3ea"
-               "1db2418e24fa2ebfb6b00b0ef8f9d784a0d9e26ffb54cb43dbab3cf1b294"
-               "3e88fa2cc45b0a3c9b7dafcfaae00c88bc61ce02b9264c8d5fe6ca2df4da"
-               "fb1df4caef1db17ae69fb3de6b9a89c9339ff7b065ff",
+               "cafebabefacedbaddecaf88842831ec2217774244b7221b784d0d49ce3aa"
+               "212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa05"
+               "1ba30b396a0aac973d58e091473f59854d5c2af327cd64a62cf35abd2ba6"
+               "fab4",
            })},
           {{16, AesGcmParameters::Variant::kTink},
            MakeAesGcmTestVector(AesGcmTestVectorParams{
                /*key_size_in_bytes=*/16,
                /*variant=*/AesGcmParameters::Variant::kTink,
-               /*key_hex=*/"5b9604fe14eadba931b0ccf3484344dd",
+               /*key_hex=*/"feffe9928665731c6d6a8f9467308308",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "f1cc30e8ecdf0ec03a5204c2108cc013de8f0519445d45e14f62a8f49b34"
-               "2e9e",
+               "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a31"
+               "8a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39"
+               "1aafd255",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0101020304001c4021235b8cf973a21680199d7010f3c5f4b069d80d2417"
-               "7d6118d0ccec0c5ec76985cb961608670b86a8a53ae63ea25ebcbbd84197"
-               "db3ea8003f0b2f5673620f4f9ffa3d339e144a2b251a37c95cf89617bdf7"
-               "5ec7a6ec0b2b8003f5db9bbce6092db560a6a02b37c0500bf8db9a8ee88f"
-               "910ea098ce1b29a21e64177894a86496a32431cf4663efd07fa918b958c2"
-               "b5ecceca2df5da8f8df4ea85b46e3cb5ca16c1fb854ec7fb9217b1897f25"
-               "96ea35ca3bbba0fb69c9b4e9f50f2ff4ee9f3d9dca77ab7d9f7831f2dcfa"
-               "afb1dfc3ea1db2418e24fa2ebfb6b00b0ef8f9d784a0d9e26ffb54cb43db"
-               "abab3cf1b2943e88fa2cc45b0a3c9b7dafcfaae00c88bc61ce02b9264c8d"
-               "5fe6ca2df4dafb1df4caef1db17ae69fb3de6b9a89c9339ff7b065ff",
+               "0101020304cafebabefacedbaddecaf88842831ec2217774244b7221b784"
+               "d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a"
+               "5aac84aa051ba30b396a0aac973d58e091473f59854d5c2af327cd64a62c"
+               "f35abd2ba6fab4",
            })},
           {{16, AesGcmParameters::Variant::kCrunchy},
            MakeAesGcmTestVector(AesGcmTestVectorParams{
                /*key_size_in_bytes=*/16,
                /*variant=*/AesGcmParameters::Variant::kCrunchy,
-               /*key_hex=*/"5b9604fe14eadba931b0ccf3484344dd",
+               /*key_hex=*/"feffe9928665731c6d6a8f9467308308",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "f1cc30e8ecdf0ec03a5204c2108cc013de8f0519445d45e14f62a8f49b34"
-               "2e9e",
+               "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a31"
+               "8a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39"
+               "1aafd255",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0001020304001c4021235b8cf973a21680199d7010f3c5f4b069d80d2417"
-               "7d6118d0ccec0c5ec76985cb961608670b86a8a53ae63ea25ebcbbd84197"
-               "db3ea8003f0b2f5673620f4f9ffa3d339e144a2b251a37c95cf89617bdf7"
-               "5ec7a6ec0b2b8003f5db9bbce6092db560a6a02b37c0500bf8db9a8ee88f"
-               "910ea098ce1b29a21e64177894a86496a32431cf4663efd07fa918b958c2"
-               "b5ecceca2df5da8f8df4ea85b46e3cb5ca16c1fb854ec7fb9217b1897f25"
-               "96ea35ca3bbba0fb69c9b4e9f50f2ff4ee9f3d9dca77ab7d9f7831f2dcfa"
-               "afb1dfc3ea1db2418e24fa2ebfb6b00b0ef8f9d784a0d9e26ffb54cb43db"
-               "abab3cf1b2943e88fa2cc45b0a3c9b7dafcfaae00c88bc61ce02b9264c8d"
-               "5fe6ca2df4dafb1df4caef1db17ae69fb3de6b9a89c9339ff7b065ff",
+               "0001020304cafebabefacedbaddecaf88842831ec2217774244b7221b784"
+               "d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a"
+               "5aac84aa051ba30b396a0aac973d58e091473f59854d5c2af327cd64a62c"
+               "f35abd2ba6fab4",
            })},
           {{32, AesGcmParameters::Variant::kNoPrefix},
            MakeAesGcmTestVector(AesGcmTestVectorParams{
                /*key_size_in_bytes=*/32,
                /*variant=*/AesGcmParameters::Variant::kNoPrefix,
                /*key_hex=*/
-               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1"
-               "e1f",
+               "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f946730"
+               "8308",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/
-               "000000000000000000000000000000000000000000000000000000000000"
-               "0000",
+               "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a31"
+               "8a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39"
+               "1aafd255",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "000000000000000000000000cea7403d4d606b6e074ec5d3baf39d18"
-               "9a4a2579529301bcfb71c78d4060f52c",
+               "cafebabefacedbaddecaf888522dc1f099567d07f47f37a32a84427d643a"
+               "8cdcbfe5c0c97598a2bd2555d1aa8cb08e48590dbb3da7b08b1056828838"
+               "c5f61e6393ba7a0abcc9f662898015adb094dac5d93471bdec1a502270e3"
+               "cc6c",
            })},
           {{32, AesGcmParameters::Variant::kTink},
            MakeAesGcmTestVector(AesGcmTestVectorParams{
                /*key_size_in_bytes=*/32,
                /*variant=*/AesGcmParameters::Variant::kTink,
                /*key_hex=*/
-               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1"
-               "e1f",
+               "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f946730"
+               "8308",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "000000000000000000000000000000000000000000000000000000000000"
-               "0000",
+               "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a31"
+               "8a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39"
+               "1aafd255",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0101020304000000000000000000000000cea7403d4d606b6e074ec5d3ba"
-               "f39d189a4a2579529301bcfb71c78d4060f52c",
+               "0101020304cafebabefacedbaddecaf888522dc1f099567d07f47f37a32a"
+               "84427d643a8cdcbfe5c0c97598a2bd2555d1aa8cb08e48590dbb3da7b08b"
+               "1056828838c5f61e6393ba7a0abcc9f662898015adb094dac5d93471bdec"
+               "1a502270e3cc6c",
            })},
           {{32, AesGcmParameters::Variant::kCrunchy},
            MakeAesGcmTestVector(AesGcmTestVectorParams{
                /*key_size_in_bytes=*/32,
                /*variant=*/AesGcmParameters::Variant::kCrunchy,
                /*key_hex=*/
-               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1"
-               "e1f",
+               "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f946730"
+               "8308",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "000000000000000000000000000000000000000000000000000000000000"
-               "0000",
+               "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a31"
+               "8a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39"
+               "1aafd255",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0001020304000000000000000000000000cea7403d4d606b6e074ec5d3ba"
-               "f39d189a4a2579529301bcfb71c78d4060f52c",
+               "0001020304cafebabefacedbaddecaf888522dc1f099567d07f47f37a32a"
+               "84427d643a8cdcbfe5c0c97598a2bd2555d1aa8cb08e48590dbb3da7b08b"
+               "1056828838c5f61e6393ba7a0abcc9f662898015adb094dac5d93471bdec"
+               "1a502270e3cc6c",
            })},
       });
   return *test_vectors;

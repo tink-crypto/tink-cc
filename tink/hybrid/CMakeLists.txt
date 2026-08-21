@@ -478,13 +478,11 @@ tink_cc_test(
   DEPS
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
-    tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     tink::hybrid::hybrid_config
     tink::hybrid::hybrid_key_templates
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -499,20 +497,18 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::parameters
     tink::core::partial_key_access
-    tink::core::primitive_set
     tink::core::registry
     tink::core::restricted_data
     tink::config::global_registry
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::fips_utils
     tink::internal::mutable_serialization_registry
+    tink::internal::primitive_set
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::subtle::random
-    tink::util::secret_data
-    tink::util::test_matchers
+    tink::subtle::common_enums
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::common_cc_proto
@@ -547,15 +543,12 @@ tink_cc_test(
     tink::config::tink_fips
     tink::hybrid::internal::hpke_private_key_manager
     tink::hybrid::internal::hpke_public_key_manager
-    tink::internal::ec_util
+    tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::subtle::random
-    tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
   TAGS

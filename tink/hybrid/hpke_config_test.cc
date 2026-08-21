@@ -33,10 +33,10 @@
 #include "tink/hybrid/hybrid_key_templates.h"
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
+#include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
@@ -48,9 +48,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
 #include "proto/tink.pb.h"
 
@@ -105,10 +102,18 @@ TEST_F(HpkeConfigTest, HpkeProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
+  const HpkePrivateKey& key = dynamic_cast<const HpkePrivateKey&>(
+      *internal::GetHpkeTestVector(
+           HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+           HpkeParameters::KdfId::kHkdfSha256,
+           HpkeParameters::AeadId::kAesGcm128,
+           HpkeParameters::Variant::kNoPrefix)
+           .hybrid_private_key);
+
   absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
-              HybridKeyTemplates::HpkeX25519HkdfSha256Aes256Gcm());
+              HybridKeyTemplates::HpkeX25519HkdfSha256Aes128GcmRaw());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
@@ -116,18 +121,10 @@ TEST_F(HpkeConfigTest, HpkeProtoParamsSerializationRegistered) {
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<HpkeParameters> params =
-      HpkeParameters::Builder()
-          .SetVariant(HpkeParameters::Variant::kTink)
-          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
-          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
-          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeParameters<internal::ProtoParametersSerialization>(*params);
+          .SerializeParameters<internal::ProtoParametersSerialization>(
+              key.GetPublicKey().GetParameters());
   ASSERT_THAT(serialized_params.status(),
               StatusIs(absl::StatusCode::kNotFound));
 
@@ -140,7 +137,8 @@ TEST_F(HpkeConfigTest, HpkeProtoParamsSerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeParameters<internal::ProtoParametersSerialization>(*params);
+          .SerializeParameters<internal::ProtoParametersSerialization>(
+              key.GetPublicKey().GetParameters());
   ASSERT_THAT(serialized_params2, IsOk());
 }
 
@@ -149,15 +147,22 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  const std::string raw_key = subtle::Random::GetRandomBytes(32);
+  const HpkePrivateKey& private_key = dynamic_cast<const HpkePrivateKey&>(
+      *internal::GetHpkeTestVector(
+           HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+           HpkeParameters::KdfId::kHkdfSha256,
+           HpkeParameters::AeadId::kAesGcm128,
+           HpkeParameters::Variant::kNoPrefix)
+           .hybrid_private_key);
+  const HpkePublicKey& public_key = private_key.GetPublicKey();
 
   HpkeParams params;
   params.set_kem(HpkeKem::DHKEM_X25519_HKDF_SHA256);
   params.set_kdf(HpkeKdf::HKDF_SHA256);
-  params.set_aead(HpkeAead::AES_256_GCM);
+  params.set_aead(HpkeAead::AES_128_GCM);
   google::crypto::tink::HpkePublicKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_public_key(raw_key);
+  key_proto.set_public_key(public_key.GetPublicKeyBytes(GetPartialKeyAccess()));
   *key_proto.mutable_params() = params;
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
@@ -165,8 +170,8 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
-          /*id_requirement=*/123);
+          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
+          public_key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -174,23 +179,10 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<HpkeParameters> parameters =
-      HpkeParameters::Builder()
-          .SetVariant(HpkeParameters::Variant::kTink)
-          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
-          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
-          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<HpkePublicKey> key = HpkePublicKey::Create(
-      *parameters, raw_key, /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              public_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(RegisterHpke(), IsOk());
@@ -203,7 +195,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
+              public_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key2, IsOk());
 }
 
@@ -212,25 +204,29 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  absl::StatusOr<std::unique_ptr<internal::X25519Key>> key_pair =
-      internal::NewX25519Key();
-  ASSERT_THAT(key_pair, IsOk());
+  const HpkePrivateKey& private_key = dynamic_cast<const HpkePrivateKey&>(
+      *internal::GetHpkeTestVector(
+           HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+           HpkeParameters::KdfId::kHkdfSha256,
+           HpkeParameters::AeadId::kAesGcm128,
+           HpkeParameters::Variant::kNoPrefix)
+           .hybrid_private_key);
 
   HpkeParams params;
   params.set_kem(HpkeKem::DHKEM_X25519_HKDF_SHA256);
   params.set_kdf(HpkeKdf::HKDF_SHA256);
-  params.set_aead(HpkeAead::AES_256_GCM);
+  params.set_aead(HpkeAead::AES_128_GCM);
   google::crypto::tink::HpkePublicKey public_key_proto;
   public_key_proto.set_version(0);
   public_key_proto.set_public_key(
-      std::string(reinterpret_cast<const char*>((*key_pair)->public_value),
-                  internal::X25519KeyPubKeySize()));
+      private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::HpkePrivateKey private_key_proto;
   private_key_proto.set_version(0);
   private_key_proto.set_private_key(
-      util::SecretDataAsStringView((*key_pair)->private_key));
+      private_key.GetPrivateKeyBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
   *private_key_proto.mutable_public_key() = public_key_proto;
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
@@ -238,8 +234,8 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
-          /*id_requirement=*/123);
+          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
+          private_key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -247,33 +243,10 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<HpkeParameters> parameters =
-      HpkeParameters::Builder()
-          .SetVariant(HpkeParameters::Variant::kTink)
-          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
-          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
-          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters,
-      std::string(reinterpret_cast<const char*>((*key_pair)->public_value),
-                  internal::X25519KeyPubKeySize()),
-      /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  RestrictedData private_key_bytes =
-      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
-      *public_key, private_key_bytes, GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, InsecureSecretKeyAccess::Get());
+              private_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(RegisterHpke(), IsOk());
@@ -286,7 +259,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, InsecureSecretKeyAccess::Get());
+              private_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key2, IsOk());
 }
 

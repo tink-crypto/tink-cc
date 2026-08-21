@@ -23,7 +23,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -33,16 +32,16 @@
 #include "tink/crypto_format.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
-#include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/ecies_public_key.h"
 #include "tink/hybrid/hybrid_key_templates.h"
+#include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
@@ -51,12 +50,9 @@
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/common.pb.h"
@@ -84,6 +80,8 @@ using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
+using ::testing::IsNull;
+using ::testing::Not;
 
 class HybridConfigTest : public ::testing::Test {
  protected:
@@ -190,10 +188,14 @@ TEST_F(HybridConfigTest, EciesProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
+  const EciesPrivateKey* private_key =
+      internal::GetEciesPrivateKey(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(private_key, Not(IsNull()));
+
   absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
-              HybridKeyTemplates::EciesX25519HkdfHmacSha256Aes256Gcm());
+              HybridKeyTemplates::EciesX25519HkdfHmacSha256Aes128Gcm());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
@@ -201,18 +203,10 @@ TEST_F(HybridConfigTest, EciesProtoParamsSerializationRegistered) {
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<EciesParameters> params =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256GcmRaw)
-          .SetVariant(EciesParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeParameters<internal::ProtoParametersSerialization>(*params);
+          .SerializeParameters<internal::ProtoParametersSerialization>(
+              private_key->GetPublicKey().GetParameters());
   ASSERT_THAT(serialized_params.status(),
               StatusIs(absl::StatusCode::kNotFound));
 
@@ -225,10 +219,12 @@ TEST_F(HybridConfigTest, EciesProtoParamsSerializationRegistered) {
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeParameters<internal::ProtoParametersSerialization>(*params);
+          .SerializeParameters<internal::ProtoParametersSerialization>(
+              private_key->GetPublicKey().GetParameters());
   ASSERT_THAT(serialized_params2, IsOk());
 }
 
+// Returns test parameters for ECIES-AEAD-HKDF.
 EciesAeadHkdfParams CreateParams() {
   EciesHkdfKemParams kem_params;
   kem_params.set_curve_type(EllipticCurveType::CURVE25519);
@@ -236,7 +232,7 @@ EciesAeadHkdfParams CreateParams() {
 
   EciesAeadDemParams dem_params;
   AesGcmKeyFormat format;
-  format.set_key_size(32);
+  format.set_key_size(16);
   format.set_version(0);
   KeyTemplate key_template;
   key_template.set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
@@ -257,12 +253,15 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  const std::string public_key_bytes =
-      subtle::Random::GetRandomBytes(internal::X25519KeyPubKeySize());
+  const EciesPrivateKey* private_key =
+      internal::GetEciesPrivateKey(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(private_key, Not(IsNull()));
+  const EciesPublicKey& public_key = private_key->GetPublicKey();
 
   EciesAeadHkdfPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(public_key_bytes);
+  public_key_proto.set_x(
+      std::string(*public_key.GetX25519CurvePointBytes(GetPartialKeyAccess())));
   *public_key_proto.mutable_params() = CreateParams();
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
@@ -271,7 +270,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/std::nullopt);
+          public_key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -279,25 +278,10 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  absl::StatusOr<EciesParameters> parameters =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*parameters, public_key_bytes,
-                                           /*id_requirement=*/std::nullopt,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *public_key, InsecureSecretKeyAccess::Get());
+              public_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   ASSERT_THAT(HybridConfig::Register(), IsOk());
@@ -310,7 +294,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
-              *public_key, InsecureSecretKeyAccess::Get());
+              public_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key2, IsOk());
 }
 
@@ -319,25 +303,23 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
-      internal::NewX25519Key();
-  ASSERT_THAT(x25519_key, IsOk());
-
-  const std::string public_key_bytes =
-      std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
-                  internal::X25519KeyPubKeySize());
-  const std::string private_key_bytes =
-      std::string(util::SecretDataAsStringView((*x25519_key)->private_key));
+  const EciesPrivateKey* private_key =
+      internal::GetEciesPrivateKey(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(private_key, Not(IsNull()));
 
   EciesAeadHkdfPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(public_key_bytes);
+  public_key_proto.set_x(
+      std::string(*private_key->GetPublicKey().GetX25519CurvePointBytes(
+          GetPartialKeyAccess())));
   *public_key_proto.mutable_params() = CreateParams();
 
   EciesAeadHkdfPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(private_key_bytes);
+  private_key_proto.set_key_value(
+      private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess())
+          ->GetSecret(InsecureSecretKeyAccess::Get()));
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
@@ -345,35 +327,13 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
           KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          /*id_requirement=*/std::nullopt);
+          private_key->GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
-
-  absl::StatusOr<EciesParameters> parameters =
-      EciesParameters::Builder()
-          .SetCurveType(EciesParameters::CurveType::kX25519)
-          .SetHashType(EciesParameters::HashType::kSha256)
-          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
-          .SetVariant(EciesParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<EciesPublicKey> public_key =
-      EciesPublicKey::CreateForCurveX25519(*parameters, public_key_bytes,
-                                           /*id_requirement=*/std::nullopt,
-                                           GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<EciesPrivateKey> private_key =
-      EciesPrivateKey::CreateForCurveX25519(
-          *public_key,
-          RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()

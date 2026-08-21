@@ -20,6 +20,7 @@
 #include <cstring>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -32,8 +33,15 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/aead/aes_gcm_key.h"
+#include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
@@ -50,6 +58,7 @@ using ::absl_testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -86,6 +95,17 @@ TEST_F(ZeroCopyAesGcmBoringSslTest,
   // Check i == MaxDecryptionSize(MaxEncryptionSize(i)).
   EXPECT_EQ(kMessage.size(), cipher_->MaxDecryptionSize(
                                  cipher_->MaxEncryptionSize(kMessage.size())));
+}
+
+TEST_F(ZeroCopyAesGcmBoringSslTest, MaxEncryptionSizeEqualsCiphertextSize) {
+  EXPECT_EQ(cipher_->MaxEncryptionSize(kMessage.size()),
+            test::HexDecodeOrDie(kEncodedCiphertext).size());
+}
+
+TEST_F(ZeroCopyAesGcmBoringSslTest, MaxDecryptionSizeEqualsPlaintextSize) {
+  EXPECT_EQ(cipher_->MaxDecryptionSize(
+                test::HexDecodeOrDie(kEncodedCiphertext).size()),
+            kMessage.size());
 }
 
 TEST_F(ZeroCopyAesGcmBoringSslTest, EncryptDecrypt) {
@@ -213,6 +233,155 @@ INSTANTIATE_TEST_SUITE_P(ZeroCopyAesGcmBoringSslWycheproofTests,
                          ZeroCopyAesGcmBoringSslWycheproofTest,
                          ValuesIn(ReadWycheproofTestVectors(
                              /*file_name=*/"aes_gcm_test.json")));
+
+using ZeroCopyAesGcmBoringSslTestVectorTest = TestWithParam<AeadTestVector>;
+
+TEST_P(ZeroCopyAesGcmBoringSslTestVectorTest, Decrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size =
+      (*cipher)->Decrypt(test_vector.ciphertext, test_vector.associated_data,
+                         absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyAesGcmBoringSslTestVectorTest, EncryptDecrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, (*cipher)->MaxEncryptionSize(test_vector.plaintext.size()));
+  absl::StatusOr<int64_t> ciphertext_size =
+      (*cipher)->Encrypt(test_vector.plaintext, test_vector.associated_data,
+                         absl::MakeSpan(ciphertext));
+  ASSERT_THAT(ciphertext_size, IsOk());
+  ciphertext.resize(*ciphertext_size);
+  if (!key.GetOutputPrefix().empty()) {
+    EXPECT_THAT(ciphertext, StartsWith(key.GetOutputPrefix()));
+  }
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size = (*cipher)->Decrypt(
+      ciphertext, test_vector.associated_data, absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyAesGcmBoringSslTestVectorTest,
+       MaxEncryptionSizeEqualsCiphertextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxEncryptionSize(test_vector.plaintext.size()),
+            test_vector.ciphertext.size());
+}
+
+TEST_P(ZeroCopyAesGcmBoringSslTestVectorTest,
+       MaxDecryptionSizeEqualsPlaintextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()),
+            test_vector.plaintext.size());
+}
+
+INSTANTIATE_TEST_SUITE_P(ZeroCopyAesGcmBoringSslTestVectorTests,
+                         ZeroCopyAesGcmBoringSslTestVectorTest,
+                         ValuesIn(CreateAesGcmTestVectors()));
+
+TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidIvSizeFails) {
+  absl::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesGcmKey> key =
+      AesGcmKey::Create(*parameters,
+                        RestrictedData(test::HexDecodeOrDie(kKey128Hex),
+                                       InsecureSecretKeyAccess::Get()),
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidTagSizeFails) {
+  absl::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesGcmKey> key =
+      AesGcmKey::Create(*parameters,
+                        RestrictedData(test::HexDecodeOrDie(kKey128Hex),
+                                       InsecureSecretKeyAccess::Get()),
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidKeySizeFails) {
+  absl::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(24)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+      *parameters,
+      RestrictedData(std::string(24, 'a'), InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(ZeroCopyAesGcmBoringSslKeyTest, DecryptWithBadPrefixFails) {
+  const AeadTestVector& test_vector =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  std::string bad_ciphertext = test_vector.ciphertext;
+  bad_ciphertext[0] ^= 0x01;  // Corrupt prefix
+
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(bad_ciphertext.size()));
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(bad_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
 
 }  // namespace
 }  // namespace internal

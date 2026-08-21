@@ -152,8 +152,12 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    absl::str_format
     absl::span
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::secret_data
+    tink::aead::aes_gcm_key
     tink::internal::util
     tink::subtle::random
     tink::util::secret_data
@@ -297,7 +301,14 @@ tink_cc_test(
     absl::strings
     absl::span
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_test_vectors
     tink::subtle::subtle_util
     tink::util::secret_data
     tink::util::test_matchers

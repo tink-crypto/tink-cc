@@ -16,6 +16,7 @@
 
 #include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -25,12 +26,17 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 
@@ -51,9 +57,35 @@ absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
   return {absl::WrapUnique(new ZeroCopyAesGcmBoringSsl(*std::move(aead)))};
 }
 
+absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
+    const AesGcmKey& key) {
+  if (key.GetParameters().IvSizeInBytes() != kIvSizeInBytes) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrFormat("Invalid IV size: expected %d bytes, got %d",
+                        kIvSizeInBytes, key.GetParameters().IvSizeInBytes()));
+  }
+  if (key.GetParameters().TagSizeInBytes() != kTagSizeInBytes) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrFormat("Invalid tag size: expected %d bytes, got %d",
+                        kTagSizeInBytes, key.GetParameters().TagSizeInBytes()));
+  }
+  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
+      internal::CreateAesGcmOneShotCrypter(
+          key.GetKeyBytes(GetPartialKeyAccess())
+              .Get(InsecureSecretKeyAccess::Get()));
+  if (!aead.ok()) {
+    return aead.status();
+  }
+  return {absl::WrapUnique(
+      new ZeroCopyAesGcmBoringSsl(*std::move(aead), key.GetOutputPrefix()))};
+}
+
 int64_t ZeroCopyAesGcmBoringSsl::MaxEncryptionSize(
     int64_t plaintext_size) const {
-  return kIvSizeInBytes + aead_->CiphertextSize(plaintext_size);
+  return output_prefix_.size() + kIvSizeInBytes +
+         aead_->CiphertextSize(plaintext_size);
 }
 
 absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
@@ -74,25 +106,32 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
         "Plaintext and ciphertext buffers overlap; this is disallowed");
   }
 
-  absl::Status res =
-      subtle::Random::GetRandomBytes(buffer.subspan(0, kIvSizeInBytes));
+  if (!output_prefix_.empty()) {
+    std::copy(output_prefix_.begin(), output_prefix_.end(), buffer.begin());
+  }
+
+  absl::Span<char> buffer_after_prefix = buffer.subspan(output_prefix_.size());
+  absl::Status res = subtle::Random::GetRandomBytes(
+      buffer_after_prefix.subspan(0, kIvSizeInBytes));
   if (!res.ok()) {
     return res;
   }
-  absl::string_view iv = buffer_string.substr(0, kIvSizeInBytes);
-  absl::Span<char> raw_cipher_and_tag_buffer = buffer.subspan(kIvSizeInBytes);
+  absl::string_view iv(buffer_after_prefix.data(), kIvSizeInBytes);
+  absl::Span<char> raw_cipher_and_tag_buffer =
+      buffer_after_prefix.subspan(kIvSizeInBytes);
 
   absl::StatusOr<int64_t> written_bytes =
       aead_->Encrypt(plaintext, associated_data, iv, raw_cipher_and_tag_buffer);
   if (!written_bytes.ok()) {
     return written_bytes.status();
   }
-  return kIvSizeInBytes + *written_bytes;
+  return output_prefix_.size() + kIvSizeInBytes + *written_bytes;
 }
 
 int64_t ZeroCopyAesGcmBoringSsl::MaxDecryptionSize(
     int64_t ciphertext_size) const {
-  const int64_t size = ciphertext_size - kIvSizeInBytes - kTagSizeInBytes;
+  const int64_t size = ciphertext_size - output_prefix_.size() -
+                       kIvSizeInBytes - kTagSizeInBytes;
   if (size <= 0) {
     return 0;
   }
@@ -102,7 +141,8 @@ int64_t ZeroCopyAesGcmBoringSsl::MaxDecryptionSize(
 absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data,
     absl::Span<char> buffer) const {
-  const size_t min_ciphertext_size = kIvSizeInBytes + kTagSizeInBytes;
+  const size_t min_ciphertext_size =
+      output_prefix_.size() + kIvSizeInBytes + kTagSizeInBytes;
   if (ciphertext.size() < min_ciphertext_size) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -126,8 +166,16 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
         "Plaintext and ciphertext buffers overlap; this is disallowed");
   }
 
-  auto iv = ciphertext.substr(0, kIvSizeInBytes);
-  auto ciphertext_and_tag =
+  if (!output_prefix_.empty()) {
+    if (!absl::StartsWith(ciphertext, output_prefix_)) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Prefix mismatch");
+    }
+    ciphertext.remove_prefix(output_prefix_.size());
+  }
+
+  absl::string_view iv = ciphertext.substr(0, kIvSizeInBytes);
+  absl::string_view ciphertext_and_tag =
       ciphertext.substr(kIvSizeInBytes, ciphertext.size() - kIvSizeInBytes);
   return aead_->Decrypt(ciphertext_and_tag, associated_data, iv, buffer);
 }

@@ -19,11 +19,13 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/base/macros.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/util/secret_data.h"
@@ -38,6 +40,9 @@ class ZeroCopyAesGcmBoringSsl : public ZeroCopyAead {
   static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
       const SecretData &key);
 
+  static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
+      const AesGcmKey& key);
+
   int64_t MaxEncryptionSize(int64_t plaintext_size) const override;
 
   absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
@@ -51,10 +56,12 @@ class ZeroCopyAesGcmBoringSsl : public ZeroCopyAead {
                                   absl::Span<char> buffer) const override;
 
  private:
-  explicit ZeroCopyAesGcmBoringSsl(std::unique_ptr<SslOneShotAead> aead)
-      : aead_(std::move(aead)) {}
+  explicit ZeroCopyAesGcmBoringSsl(std::unique_ptr<SslOneShotAead> aead,
+                                   absl::string_view output_prefix = "")
+      : aead_(std::move(aead)), output_prefix_(output_prefix) {}
 
   const std::unique_ptr<SslOneShotAead> aead_;
+  const std::string output_prefix_;
 };
 
 }  // namespace internal

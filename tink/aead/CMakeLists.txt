@@ -873,7 +873,7 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_parameters
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
-    tink::aead::key_gen_config_v0
+    tink::aead::key_gen_config_2026
     tink::aead::kms_aead_key_manager
     tink::aead::kms_envelope_aead_key_manager
     tink::aead::legacy_kms_aead_key
@@ -886,7 +886,6 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     gmock
     absl::absl_check
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -901,6 +900,13 @@ tink_cc_test(
     tink::core::proto_parameters_format
     tink::core::registry
     tink::core::restricted_data
+    tink::aead::internal::testing::aes_ctr_hmac_aead_test_vectors
+    tink::aead::internal::testing::aes_eax_test_vectors
+    tink::aead::internal::testing::aes_gcm_siv_test_vectors
+    tink::aead::internal::testing::aes_gcm_test_vectors
+    tink::aead::internal::testing::chacha20_poly1305_test_vectors
+    tink::aead::internal::testing::x_aes_gcm_test_vectors
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
     tink::config::global_registry
     tink::config::tink_fips
     tink::internal::fips_utils
@@ -911,8 +917,6 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::subtle::random
-    tink::util::test_matchers
     tink::proto::aes_eax_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::aes_gcm_siv_cc_proto

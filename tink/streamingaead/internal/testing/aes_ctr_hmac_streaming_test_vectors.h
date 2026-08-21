@@ -25,7 +25,14 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-std::vector<StreamingAeadTestVector> CreateAesCtrHmacStreamingTestVectors();
+// Returns static test vectors for AES-CTR-HMAC Streaming AEAD.
+const std::vector<StreamingAeadTestVector>&
+CreateAesCtrHmacStreamingTestVectors();
+
+// Returns a static test vector for AES-CTR-HMAC Streaming AEAD for the given
+// key size in bytes.
+const StreamingAeadTestVector& GetAesCtrHmacStreamingTestVector(
+    int key_size_in_bytes);
 
 }  // namespace internal
 }  // namespace tink

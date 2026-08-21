@@ -7,6 +7,8 @@ tink_cc_library(
     aes_ctr_hmac_streaming_test_vectors.h
   DEPS
     tink::streamingaead::internal::testing::streamingaead_test_vector
+    absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
     absl::statusor
     absl::strings

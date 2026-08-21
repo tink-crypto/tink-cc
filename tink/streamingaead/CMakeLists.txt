@@ -615,12 +615,12 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::optional
+    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
+    tink::streamingaead::internal::testing::streamingaead_test_vector
 )
 
 tink_cc_test(

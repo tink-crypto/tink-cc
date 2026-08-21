@@ -21,6 +21,8 @@ cc_library(
         "//tink/streamingaead:aes_ctr_hmac_streaming_key",
         "//tink/streamingaead:aes_ctr_hmac_streaming_parameters",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

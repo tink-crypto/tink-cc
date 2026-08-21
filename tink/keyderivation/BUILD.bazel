@@ -351,11 +351,9 @@ cc_test(
         "//tink/aead:xchacha20_poly1305_parameters",
         "//tink/prf:aes_cmac_prf_key",
         "//tink/prf:aes_cmac_prf_parameters",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
+        "//tink/prf/internal:aes_cmac_prf_test_vectors",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
-        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

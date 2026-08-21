@@ -336,7 +336,6 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    absl::optional
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -344,8 +343,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::prf::internal::aes_cmac_prf_test_vectors
 )
 
 tink_cc_test(

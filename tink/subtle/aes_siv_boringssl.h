@@ -60,74 +60,17 @@ namespace subtle {
 // Since 192-bit AES keys are not supported by tink for voodoo reasons
 // and RFC 5297 only supports same size encryption and MAC keys this
 // implies that keys must be 64 bytes (2*256 bits) long.
-class AesSivBoringSsl : public DeterministicAead {
+class AesSivBoringSsl {
  public:
   static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(
       const SecretData& key);
-
-  absl::StatusOr<std::string> EncryptDeterministically(
-      absl::string_view plaintext,
-      absl::string_view associated_data) const override;
-
-  absl::StatusOr<std::string> DecryptDeterministically(
-      absl::string_view ciphertext,
-      absl::string_view associated_data) const override;
 
   static bool IsValidKeySizeInBytes(size_t size) { return size == 64; }
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
- private:
-  static constexpr size_t kBlockSize = internal::AesBlockSize();
-
-  AesSivBoringSsl(util::SecretUniquePtr<AES_KEY> k1,
-                  util::SecretUniquePtr<AES_KEY> k2)
-      : k1_(std::move(k1)),
-        k2_(std::move(k2)),
-        cmac_k1_(ComputeCmacK1()),
-        cmac_k2_(ComputeCmacK2()) {}
-
-  // Precomputes cmac_k1
-  SecretData ComputeCmacK1() const;
-  // Precomputes cmac_k2
-  SecretData ComputeCmacK2() const;
-
-  // Encrypts a single block using k2_.
-  // This is used for CMACs.
-  void EncryptBlock(const uint8_t in[kBlockSize],
-                    uint8_t out[kBlockSize]) const;
-
-  // Computes a CMAC of some data.
-  void Cmac(absl::Span<const uint8_t> data, uint8_t mac[kBlockSize]) const;
-
-  // Computes CMAC(XorEnd(data, last)), where XorEnd
-  // xors the bytes in last to the last bytes in data.
-  // The size of the data must be at least 16 bytes.
-  void CmacLong(absl::Span<const uint8_t> data, const uint8_t last[kBlockSize],
-                uint8_t mac[kBlockSize]) const;
-
-  // Multiplying an element in GF(2^128) by its generator.
-  // This functions is incorrectly named "doubling" in section 2.3 of RFC 5297.
-  static void MultiplyByX(uint8_t block[kBlockSize]);
-
-  // Xors a block
-  // res = x ^ y
-  static void XorBlock(const uint8_t x[kBlockSize], const uint8_t y[kBlockSize],
-                       uint8_t res[kBlockSize]);
-
-  void S2v(absl::Span<const uint8_t> aad, absl::Span<const uint8_t> msg,
-           uint8_t siv[kBlockSize]) const;
-
-  // Encrypts (or decrypts) `in` using an SIV `siv` and key `key`, and writes
-  // the result to `out`.
-  absl::Status AesCtrCrypt(absl::string_view in, const uint8_t siv[kBlockSize],
-                           const AES_KEY* key, absl::Span<char> out) const;
-
-  const util::SecretUniquePtr<AES_KEY> k1_;
-  const util::SecretUniquePtr<AES_KEY> k2_;
-  const SecretData cmac_k1_;
-  const SecretData cmac_k2_;
+  AesSivBoringSsl() = delete;
 };
 
 }  // namespace subtle

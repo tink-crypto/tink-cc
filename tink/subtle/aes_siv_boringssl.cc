@@ -24,13 +24,12 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/aes.h"
-#include "openssl/crypto.h"
 #include "tink/deterministic_aead.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -48,6 +47,8 @@ namespace {
 using ::crypto::tink::internal::CallWithCoreDumpProtection;
 using ::crypto::tink::internal::SafeCryptoMemEquals;
 
+constexpr size_t kBlockSize = internal::AesBlockSize();
+
 absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {
   util::SecretUniquePtr<AES_KEY> aes_key = util::MakeSecretUniquePtr<AES_KEY>();
@@ -61,32 +62,46 @@ absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
   return std::move(aes_key);
 }
 
-}  // namespace
+class AesSivBoringSslImpl : public DeterministicAead {
+ public:
+  AesSivBoringSslImpl(util::SecretUniquePtr<AES_KEY> k1,
+                      util::SecretUniquePtr<AES_KEY> k2)
+      : k1_(std::move(k1)),
+        k2_(std::move(k2)),
+        cmac_k1_(ComputeCmacK1()),
+        cmac_k2_(ComputeCmacK2()) {}
 
-// static
-absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
-    const SecretData& key) {
-  auto status = internal::CheckFipsCompatibility<AesSivBoringSsl>();
-  if (!status.ok()) return status;
+  SecretData ComputeCmacK1() const;
+  SecretData ComputeCmacK2() const;
 
-  if (!IsValidKeySizeInBytes(key.size())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
-  }
-  auto k1_or = InitializeAesKey(absl::MakeSpan(key).subspan(0, key.size() / 2));
-  if (!k1_or.ok()) {
-    return k1_or.status();
-  }
-  util::SecretUniquePtr<AES_KEY> k1 = std::move(k1_or).value();
-  auto k2_or = InitializeAesKey(absl::MakeSpan(key).subspan(key.size() / 2));
-  if (!k2_or.ok()) {
-    return k2_or.status();
-  }
+  void EncryptBlock(const uint8_t in[kBlockSize],
+                    uint8_t out[kBlockSize]) const;
+  void Cmac(absl::Span<const uint8_t> data, uint8_t mac[kBlockSize]) const;
+  void CmacLong(absl::Span<const uint8_t> data, const uint8_t last[kBlockSize],
+                uint8_t mac[kBlockSize]) const;
+  static void MultiplyByX(uint8_t block[kBlockSize]);
+  static void XorBlock(const uint8_t x[kBlockSize], const uint8_t y[kBlockSize],
+                       uint8_t res[kBlockSize]);
+  void S2v(absl::Span<const uint8_t> aad, absl::Span<const uint8_t> msg,
+           uint8_t* siv) const;
+  absl::Status AesCtrCrypt(absl::string_view in, const uint8_t siv[kBlockSize],
+                           const AES_KEY* key, absl::Span<char> out) const;
 
-  util::SecretUniquePtr<AES_KEY> k2 = std::move(k2_or).value();
-  return {absl::WrapUnique(new AesSivBoringSsl(std::move(k1), std::move(k2)))};
-}
+  absl::StatusOr<std::string> EncryptDeterministically(
+      absl::string_view plaintext,
+      absl::string_view associated_data) const override;
+  absl::StatusOr<std::string> DecryptDeterministically(
+      absl::string_view ciphertext,
+      absl::string_view associated_data) const override;
 
-SecretData AesSivBoringSsl::ComputeCmacK1() const {
+ private:
+  const util::SecretUniquePtr<AES_KEY> k1_;
+  const util::SecretUniquePtr<AES_KEY> k2_;
+  const SecretData cmac_k1_;
+  const SecretData cmac_k2_;
+};
+
+SecretData AesSivBoringSslImpl::ComputeCmacK1() const {
   internal::SecretBuffer cmac_k1(kBlockSize, 0);
   CallWithCoreDumpProtection([&]() {
     EncryptBlock(cmac_k1.data(), cmac_k1.data());
@@ -95,19 +110,19 @@ SecretData AesSivBoringSsl::ComputeCmacK1() const {
   return util::internal::AsSecretData(std::move(cmac_k1));
 }
 
-SecretData AesSivBoringSsl::ComputeCmacK2() const {
+SecretData AesSivBoringSslImpl::ComputeCmacK2() const {
   internal::SecretBuffer cmac_k2 = util::internal::AsSecretBuffer(cmac_k1_);
   CallWithCoreDumpProtection([&]() { MultiplyByX(cmac_k2.data()); });
   return util::internal::AsSecretData(cmac_k2);
 }
 
-void AesSivBoringSsl::EncryptBlock(const uint8_t in[kBlockSize],
-                                   uint8_t out[kBlockSize]) const {
+void AesSivBoringSslImpl::EncryptBlock(const uint8_t in[kBlockSize],
+                                       uint8_t out[kBlockSize]) const {
   AES_encrypt(in, out, k1_.get());
 }
 
 // static
-void AesSivBoringSsl::MultiplyByX(uint8_t block[kBlockSize]) {
+void AesSivBoringSslImpl::MultiplyByX(uint8_t block[kBlockSize]) {
   // Carry over 0x87 if msb is 1 0x00 if msb is 0.
   uint8_t carry = 0x87 & -(block[0] >> 7);
   for (size_t i = 0; i < kBlockSize - 1; ++i) {
@@ -117,16 +132,16 @@ void AesSivBoringSsl::MultiplyByX(uint8_t block[kBlockSize]) {
 }
 
 // static
-void AesSivBoringSsl::XorBlock(const uint8_t x[kBlockSize],
-                               const uint8_t y[kBlockSize],
-                               uint8_t res[kBlockSize]) {
+void AesSivBoringSslImpl::XorBlock(const uint8_t x[kBlockSize],
+                                   const uint8_t y[kBlockSize],
+                                   uint8_t res[kBlockSize]) {
   for (size_t i = 0; i < kBlockSize; ++i) {
     res[i] = x[i] ^ y[i];
   }
 }
 
-void AesSivBoringSsl::Cmac(absl::Span<const uint8_t> data,
-                           uint8_t mac[kBlockSize]) const {
+void AesSivBoringSslImpl::Cmac(absl::Span<const uint8_t> data,
+                               uint8_t mac[kBlockSize]) const {
   const size_t blocks =
       std::max(size_t{1}, (data.size() + kBlockSize - 1) / kBlockSize);
   const size_t last_block_idx = kBlockSize * (blocks - 1);
@@ -150,11 +165,11 @@ void AesSivBoringSsl::Cmac(absl::Span<const uint8_t> data,
 }
 
 // Computes Cmac(XorEnd(data, last))
-void AesSivBoringSsl::CmacLong(absl::Span<const uint8_t> data,
-                               const uint8_t last[kBlockSize],
-                               uint8_t mac[kBlockSize]) const {
+void AesSivBoringSslImpl::CmacLong(absl::Span<const uint8_t> data,
+                                   const uint8_t last[kBlockSize],
+                                   uint8_t mac[kBlockSize]) const {
   uint8_t block[kBlockSize];
-  absl::c_copy_n(data, kBlockSize, block);
+  std::copy_n(data.begin(), kBlockSize, block);
   size_t idx = kBlockSize;
   while (kBlockSize <= data.size() - idx) {
     EncryptBlock(block, block);
@@ -179,9 +194,9 @@ void AesSivBoringSsl::CmacLong(absl::Span<const uint8_t> data,
   EncryptBlock(block, mac);
 }
 
-void AesSivBoringSsl::S2v(absl::Span<const uint8_t> aad,
-                          absl::Span<const uint8_t> msg,
-                          uint8_t* siv) const {
+void AesSivBoringSslImpl::S2v(absl::Span<const uint8_t> aad,
+                              absl::Span<const uint8_t> msg,
+                              uint8_t* siv) const {
   // This stuff could be precomputed.
   uint8_t block[kBlockSize];
   absl::c_fill(block, 0);
@@ -204,10 +219,10 @@ void AesSivBoringSsl::S2v(absl::Span<const uint8_t> aad,
   }
 }
 
-absl::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
-                                          const uint8_t siv[kBlockSize],
-                                          const AES_KEY* key,
-                                          absl::Span<char> out) const {
+absl::Status AesSivBoringSslImpl::AesCtrCrypt(absl::string_view in,
+                                              const uint8_t siv[kBlockSize],
+                                              const AES_KEY* key,
+                                              absl::Span<char> out) const {
   uint8_t iv[kBlockSize];
   std::copy_n(siv, kBlockSize, iv);
   iv[8] &= 0x7f;
@@ -215,7 +230,7 @@ absl::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
   return internal::AesCtr128Crypt(in, iv, key, out);
 }
 
-absl::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
+absl::StatusOr<std::string> AesSivBoringSslImpl::EncryptDeterministically(
     absl::string_view plaintext, absl::string_view associated_data) const {
   size_t ciphertext_size = plaintext.size() + kBlockSize;
   std::string ciphertext;
@@ -246,7 +261,7 @@ absl::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
   return ciphertext;
 }
 
-absl::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
+absl::StatusOr<std::string> AesSivBoringSslImpl::DecryptDeterministically(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() < kBlockSize) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -267,24 +282,21 @@ absl::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
   // useful). Hence, we declare this to be sufficiently safe at the moment.
   internal::ScopedAssumeRegionCoreDumpSafe scope(&plaintext[0], plaintext_size);
   const uint8_t* siv = reinterpret_cast<const uint8_t*>(&ciphertext[0]);
-  absl::Status res = CallWithCoreDumpProtection([&]() {
+  ABSL_RETURN_IF_ERROR(CallWithCoreDumpProtection([&]() {
     return AesCtrCrypt(ciphertext.substr(kBlockSize), siv, k2_.get(),
                        absl::MakeSpan(plaintext));
-  });
-  if (!res.ok()) {
-    return res;
-  }
+  }));
 
   internal::SecretBuffer s2v(kBlockSize);
 
   // Note that we very much need to protect the calculation of the IV even when
   // the plaintext may be leaked.
   CallWithCoreDumpProtection([&]() {
-  S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
-                     associated_data.size()),
-      absl::MakeSpan(reinterpret_cast<const uint8_t*>(plaintext.data()),
-                     plaintext_size),
-      s2v.data());
+    S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
+                       associated_data.size()),
+        absl::MakeSpan(reinterpret_cast<const uint8_t*>(plaintext.data()),
+                       plaintext_size),
+        s2v.data());
   });
 
   if (!SafeCryptoMemEquals(siv, s2v.data(), kBlockSize)) {
@@ -296,6 +308,26 @@ absl::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
   // can leak so the user is responsible for this).
   crypto::tink::internal::DfsanClearLabel(&plaintext[0], plaintext_size);
   return plaintext;
+}
+
+}  // namespace
+
+// static
+absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
+    const SecretData& key) {
+  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesSivBoringSsl>());
+
+  if (!IsValidKeySizeInBytes(key.size())) {
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
+  }
+  ABSL_ASSIGN_OR_RETURN(
+      util::SecretUniquePtr<AES_KEY> k1,
+      InitializeAesKey(absl::MakeSpan(key).subspan(0, key.size() / 2)));
+  ABSL_ASSIGN_OR_RETURN(
+      util::SecretUniquePtr<AES_KEY> k2,
+      InitializeAesKey(absl::MakeSpan(key).subspan(key.size() / 2)));
+
+  return std::make_unique<AesSivBoringSslImpl>(std::move(k1), std::move(k2));
 }
 
 }  // namespace subtle

@@ -643,8 +643,8 @@ tink_cc_library(
   DEPS
     tink::subtle::subtle_util
     absl::algorithm_container
-    absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::span

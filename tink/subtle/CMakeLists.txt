@@ -537,8 +537,8 @@ tink_cc_library(
     absl::algorithm_container
     absl::config
     absl::nullability
-    absl::memory
     absl::status
+    absl::status_macros
     absl::strings
     absl::span
     crypto
@@ -549,7 +549,6 @@ tink_cc_library(
     tink::internal::fips_utils
     tink::internal::secret_buffer
     tink::internal::util
-    tink::util::errors
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

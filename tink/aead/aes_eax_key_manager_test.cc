@@ -25,6 +25,12 @@
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "tink/aead.h"
+#include "tink/aead/aead_config.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_eax_test_vectors.h"
+#include "tink/config/global_registry.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_eax_boringssl.h"
 #include "tink/util/secret_data.h"
@@ -195,6 +201,34 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
                                  "message", "aad"),
               IsOk());
 }
+
+using AesEaxKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::AeadTestVector>;
+
+TEST_P(AesEaxKeyManagerTestVectorTest, DecryptAead) {
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(ConfigGlobalRegistry());
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AesEaxKeyManagerTestVectorTestSuite, AesEaxKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateAesEaxTestVectors()));
 
 }  // namespace
 }  // namespace tink

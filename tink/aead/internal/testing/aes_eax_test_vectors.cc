@@ -78,6 +78,7 @@ using AesEaxTestVectorMap =
 const AesEaxTestVectorMap& CreateAesEaxTestVectorsMap() {
   static const absl::NoDestructor<AesEaxTestVectorMap> test_vectors(
       AesEaxTestVectorMap{
+          // Wycheproof test vector: tcId = 1 (128-bit key)
           {{16, AesEaxParameters::Variant::kNoPrefix},
            MakeAesEaxTestVector(AesEaxTestVectorParams{
                /*key_size_in_bytes=*/16,
@@ -85,10 +86,10 @@ const AesEaxTestVectorMap& CreateAesEaxTestVectorsMap() {
                /*key_hex=*/"233952dee4d5ed5f9b9c6d6ff80ff478",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/"",
-               /*associated_data_hex=*/"6bfb914dff77786af9a8b00daeedab",
+               /*associated_data_hex=*/"6bfb914fd07eae6b",
                /*ciphertext_hex=*/
-               "62ec67f9c3a4a407fcb2a8c49031a8b3e6cd5894b8e4e941199341026"
-               "cb6f40b",
+               "62ec67f9c3a4a407fcb2a8c49031a8b3e037830e8389f27b025a2d6527e79d"
+               "01",
            })},
           {{16, AesEaxParameters::Variant::kTink},
            MakeAesEaxTestVector(AesEaxTestVectorParams{
@@ -97,10 +98,10 @@ const AesEaxTestVectorMap& CreateAesEaxTestVectorsMap() {
                /*key_hex=*/"233952dee4d5ed5f9b9c6d6ff80ff478",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/"",
-               /*associated_data_hex=*/"6bfb914dff77786af9a8b00daeedab",
+               /*associated_data_hex=*/"6bfb914fd07eae6b",
                /*ciphertext_hex=*/
-               "010102030462ec67f9c3a4a407fcb2a8c49031a8b3e6cd5894b8e4e94"
-               "1199341026cb6f40b",
+               "010102030462ec67f9c3a4a407fcb2a8c49031a8b3e037830e8389f27b025a"
+               "2d6527e79d01",
            })},
           {{16, AesEaxParameters::Variant::kCrunchy},
            MakeAesEaxTestVector(AesEaxTestVectorParams{
@@ -109,52 +110,53 @@ const AesEaxTestVectorMap& CreateAesEaxTestVectorsMap() {
                /*key_hex=*/"233952dee4d5ed5f9b9c6d6ff80ff478",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/"",
-               /*associated_data_hex=*/"6bfb914dff77786af9a8b00daeedab",
+               /*associated_data_hex=*/"6bfb914fd07eae6b",
                /*ciphertext_hex=*/
-               "000102030462ec67f9c3a4a407fcb2a8c49031a8b3e6cd5894b8e4e94"
-               "1199341026cb6f40b",
+               "000102030462ec67f9c3a4a407fcb2a8c49031a8b3e037830e8389f27b025a"
+               "2d6527e79d01",
            })},
+          // Wycheproof test vector: tcId = 114 (256-bit key)
           {{32, AesEaxParameters::Variant::kNoPrefix},
            MakeAesEaxTestVector(AesEaxTestVectorParams{
                /*key_size_in_bytes=*/32,
                /*variant=*/AesEaxParameters::Variant::kNoPrefix,
                /*key_hex=*/
-               "840742f36eed1b74a2a16d860e0d5ad15f20db1e967a3f89bab"
-               "8e5033bf9ebbc",
+               "7517c973a9de3614431e3198f4ddc0f8dc33862654649e9ff7838635bb2782"
+               "31",
                /*id_requirement=*/std::nullopt,
-               /*plaintext_hex=*/"",
-               /*associated_data_hex=*/"4e6f6e2d456d707479",
+               /*plaintext_hex=*/"d17fbed25ad5f72477580b9e82a7b883",
+               /*associated_data_hex=*/"e9ee894ad5b0781d",
                /*ciphertext_hex=*/
-               "9be0d1e1f744e83ba5abfa43c683b5fa2f05b0a39fb5eec780e81e3a4"
-               "bb192bb",
+               "42f82085c08afd5b19a9491a79cd81190b70b24253b2e1c3ef1165925b5c5e"
+               "5745009a2a101877ed70e58f2e5910004f",
            })},
           {{32, AesEaxParameters::Variant::kTink},
            MakeAesEaxTestVector(AesEaxTestVectorParams{
                /*key_size_in_bytes=*/32,
                /*variant=*/AesEaxParameters::Variant::kTink,
                /*key_hex=*/
-               "840742f36eed1b74a2a16d860e0d5ad15f20db1e967a3f89bab"
-               "8e5033bf9ebbc",
+               "7517c973a9de3614431e3198f4ddc0f8dc33862654649e9ff7838635bb2782"
+               "31",
                /*id_requirement=*/0x01020304,
-               /*plaintext_hex=*/"",
-               /*associated_data_hex=*/"4e6f6e2d456d707479",
+               /*plaintext_hex=*/"d17fbed25ad5f72477580b9e82a7b883",
+               /*associated_data_hex=*/"e9ee894ad5b0781d",
                /*ciphertext_hex=*/
-               "01010203049be0d1e1f744e83ba5abfa43c683b5fa2f05b0a39fb5eec"
-               "780e81e3a4bb192bb",
+               "010102030442f82085c08afd5b19a9491a79cd81190b70b24253b2e1c3ef11"
+               "65925b5c5e5745009a2a101877ed70e58f2e5910004f",
            })},
           {{32, AesEaxParameters::Variant::kCrunchy},
            MakeAesEaxTestVector(AesEaxTestVectorParams{
                /*key_size_in_bytes=*/32,
                /*variant=*/AesEaxParameters::Variant::kCrunchy,
                /*key_hex=*/
-               "840742f36eed1b74a2a16d860e0d5ad15f20db1e967a3f89bab"
-               "8e5033bf9ebbc",
+               "7517c973a9de3614431e3198f4ddc0f8dc33862654649e9ff7838635bb2782"
+               "31",
                /*id_requirement=*/0x01020304,
-               /*plaintext_hex=*/"",
-               /*associated_data_hex=*/"4e6f6e2d456d707479",
+               /*plaintext_hex=*/"d17fbed25ad5f72477580b9e82a7b883",
+               /*associated_data_hex=*/"e9ee894ad5b0781d",
                /*ciphertext_hex=*/
-               "00010203049be0d1e1f744e83ba5abfa43c683b5fa2f05b0a39fb5eec"
-               "780e81e3a4bb192bb",
+               "000102030442f82085c08afd5b19a9491a79cd81190b70b24253b2e1c3ef11"
+               "65925b5c5e5745009a2a101877ed70e58f2e5910004f",
            })},
       });
   return *test_vectors;

@@ -1000,10 +1000,16 @@ tink_cc_test(
   SRCS
     aes_eax_key_manager_test.cc
   DEPS
+    tink::aead::aead_config
     tink::aead::aes_eax_key_manager
     gmock
     absl::status_matchers
     tink::core::aead
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_eax_test_vectors
+    tink::config::global_registry
     tink::subtle::aead_test_util
     tink::subtle::aes_eax_boringssl
     tink::util::secret_data

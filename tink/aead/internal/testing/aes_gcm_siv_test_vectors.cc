@@ -75,6 +75,7 @@ using AesGcmSivTestVectorMap =
 const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
   static const absl::NoDestructor<AesGcmSivTestVectorMap> test_vectors(
       AesGcmSivTestVectorMap{
+          // Wycheproof test vector: tcId = 5 (128-bit key)
           {{16, AesGcmSivParameters::Variant::kNoPrefix},
            MakeAesGcmSivTestVector(AesGcmSivTestVectorParams{
                /*key_size_in_bytes=*/16,
@@ -82,12 +83,13 @@ const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
                /*key_hex=*/"01000000000000000000000000000000",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/
-               "0100000000000000000000000000000000000000000000000000000000"
+               "0100000000000000000000000000000002000000000000000000000000"
                "000000",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "00000000000000000000000073a6e60b29ff07d1dc3bf84c3116df8253"
-               "dbab65b1111dc5462cf6c54c330c6a",
+               "03000000000000000000000084e07e62ba83a6585417245d7ec413a9fe"
+               "427d6315c09b57ce45f2e3936a94451a8e45dcd4578c667cd86847bf61"
+               "55ff",
            })},
           {{16, AesGcmSivParameters::Variant::kTink},
            MakeAesGcmSivTestVector(AesGcmSivTestVectorParams{
@@ -96,12 +98,13 @@ const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
                /*key_hex=*/"01000000000000000000000000000000",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "0100000000000000000000000000000000000000000000000000000000"
+               "0100000000000000000000000000000002000000000000000000000000"
                "000000",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "010102030400000000000000000000000073a6e60b29ff07d1dc3bf84c"
-               "3116df8253dbab65b1111dc5462cf6c54c330c6a",
+               "010102030403000000000000000000000084e07e62ba83a6585417245d"
+               "7ec413a9fe427d6315c09b57ce45f2e3936a94451a8e45dcd4578c667c"
+               "d86847bf6155ff",
            })},
           {{16, AesGcmSivParameters::Variant::kCrunchy},
            MakeAesGcmSivTestVector(AesGcmSivTestVectorParams{
@@ -110,13 +113,15 @@ const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
                /*key_hex=*/"01000000000000000000000000000000",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "0100000000000000000000000000000000000000000000000000000000"
+               "0100000000000000000000000000000002000000000000000000000000"
                "000000",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "000102030400000000000000000000000073a6e60b29ff07d1dc3bf84c"
-               "3116df8253dbab65b1111dc5462cf6c54c330c6a",
+               "000102030403000000000000000000000084e07e62ba83a6585417245d"
+               "7ec413a9fe427d6315c09b57ce45f2e3936a94451a8e45dcd4578c667c"
+               "d86847bf6155ff",
            })},
+          // Wycheproof test vector: tcId = 80 (256-bit key)
           {{32, AesGcmSivParameters::Variant::kNoPrefix},
            MakeAesGcmSivTestVector(AesGcmSivTestVectorParams{
                /*key_size_in_bytes=*/32,
@@ -126,12 +131,13 @@ const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
                "0000000000000",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/
-               "0100000000000000000000000000000000000000000000000000000000"
+               "0100000000000000000000000000000002000000000000000000000000"
                "000000",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0000000000000000000000003005a7caec2cf75f3a097ce891ec2e0d3c"
-               "dfb10115c5e5fb20b8f60f64c67eb2",
+               "0300000000000000000000004a6a9db4c8c6549201b9edb53006cba821"
+               "ec9cf850948a7c86c68ac7539d027fe819e63abcd020b006a976397632"
+               "eb5d",
            })},
           {{32, AesGcmSivParameters::Variant::kTink},
            MakeAesGcmSivTestVector(AesGcmSivTestVectorParams{
@@ -142,12 +148,13 @@ const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
                "0000000000000",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "0100000000000000000000000000000000000000000000000000000000"
+               "0100000000000000000000000000000002000000000000000000000000"
                "000000",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "01010203040000000000000000000000003005a7caec2cf75f3a097ce8"
-               "91ec2e0d3cdfb10115c5e5fb20b8f60f64c67eb2",
+               "01010203040300000000000000000000004a6a9db4c8c6549201b9edb5"
+               "3006cba821ec9cf850948a7c86c68ac7539d027fe819e63abcd020b006"
+               "a976397632eb5d",
            })},
           {{32, AesGcmSivParameters::Variant::kCrunchy},
            MakeAesGcmSivTestVector(AesGcmSivTestVectorParams{
@@ -158,12 +165,13 @@ const AesGcmSivTestVectorMap& CreateAesGcmSivTestVectorsMap() {
                "0000000000000",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "0100000000000000000000000000000000000000000000000000000000"
+               "0100000000000000000000000000000002000000000000000000000000"
                "000000",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "00010203040000000000000000000000003005a7caec2cf75f3a097ce8"
-               "91ec2e0d3cdfb10115c5e5fb20b8f60f64c67eb2",
+               "00010203040300000000000000000000004a6a9db4c8c6549201b9edb5"
+               "3006cba821ec9cf850948a7c86c68ac7539d027fe819e63abcd020b006"
+               "a976397632eb5d",
            })},
       });
   return *test_vectors;

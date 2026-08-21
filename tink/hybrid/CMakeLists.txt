@@ -807,6 +807,7 @@ tink_cc_test(
     hpke_public_key_test.cc
   DEPS
     tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     gmock
     absl::status
@@ -819,7 +820,6 @@ tink_cc_test(
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::ec_util
     tink::subtle::common_enums
-    tink::subtle::random
     tink::util::test_util
   TAGS
     exclude_if_openssl
@@ -838,7 +838,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    absl::string_view
     absl::optional
     crypto
     tink::core::insecure_secret_key_access
@@ -846,11 +845,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::hybrid::internal::testing::hpke_test_vectors
-    tink::internal::mlkem_util
     tink::internal::secret_buffer
-    tink::internal::xwing_util
-    tink::subtle::common_enums
-    tink::subtle::random
     tink::util::secret_data
     tink::util::test_util
   TAGS
@@ -879,7 +874,6 @@ tink_cc_test(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::core::secret_data
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
@@ -889,8 +883,6 @@ tink_cc_test(
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     tink::subtle::common_enums
-    tink::util::secret_data
-    tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS
     exclude_if_openssl

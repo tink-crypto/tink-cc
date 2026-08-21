@@ -302,7 +302,7 @@ class PrimitiveSet {
   absl::StatusOr<const Primitives*> get_primitives(
       absl::string_view identifier) const {
     absl::MutexLockMaybe lock(primitives_mutex_.get());
-    auto found = primitives_.find(std::string(identifier));
+    auto found = primitives_.find(identifier);
     if (found == primitives_.end()) {
       return ToStatusF(absl::StatusCode::kNotFound,
                        "No primitives found for identifier '%s'.", identifier);

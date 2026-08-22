@@ -57,12 +57,12 @@ absl::StatusOr<int> BufferedInputStream::Next(const void** data) {
     after_rewind_ = false;
     *data = buffer_.data();
     position_ = count_in_buffer_;
-    return count_in_buffer_;
+    return static_cast<int>(count_in_buffer_);
   }
   if (count_backedup_ > 0) {  // Return the backed-up bytes.
     buffer_offset_ = count_in_buffer_ - count_backedup_;
     *data = buffer_.data() + buffer_offset_;
-    int backedup = count_backedup_;
+    int backedup = static_cast<int>(count_backedup_);
     count_backedup_ = 0;
     position_ = count_in_buffer_;
     return backedup;
@@ -109,8 +109,8 @@ void BufferedInputStream::BackUp(int count) {
       count_backedup_ == (count_in_buffer_ - buffer_offset_)) {
     return;
   }
-  int actual_count = std::min(
-      count, count_in_buffer_ - buffer_offset_ - count_backedup_);
+  int actual_count = static_cast<int>(std::min<int64_t>(
+      count, count_in_buffer_ - buffer_offset_ - count_backedup_));
   count_backedup_ += actual_count;
   position_ = position_ - actual_count;
 }

@@ -1108,12 +1108,19 @@ tink_cc_test(
   SRCS
     xchacha20_poly1305_key_manager_test.cc
   DEPS
+    tink::aead::aead_config
     tink::aead::xchacha20_poly1305_key_manager
     gmock
     absl::memory
     absl::status
     absl::status_matchers
+    crypto
     tink::core::aead
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
+    tink::config::global_registry
     tink::internal::ssl_util
     tink::subtle::aead_test_util
     tink::subtle::xchacha20_poly1305_boringssl

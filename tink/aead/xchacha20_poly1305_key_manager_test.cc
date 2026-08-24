@@ -25,8 +25,15 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/aead.h"
+#include "tink/aead/aead_config.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
+#include "tink/config/global_registry.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/istream_input_stream.h"
@@ -208,6 +215,37 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
   EXPECT_THAT(EncryptThenDecrypt(**aead, **direct_aead, "message", "aad"),
               IsOk());
 }
+
+#ifdef OPENSSL_IS_BORINGSSL
+using XChaCha20Poly1305KeyManagerTestVectorTest =
+    testing::TestWithParam<internal::AeadTestVector>;
+
+TEST_P(XChaCha20Poly1305KeyManagerTestVectorTest, DecryptAead) {
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(ConfigGlobalRegistry());
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    XChaCha20Poly1305KeyManagerTestVectorTestSuite,
+    XChaCha20Poly1305KeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateXChaCha20Poly1305TestVectors()));
+#endif
 
 }  // namespace
 }  // namespace tink

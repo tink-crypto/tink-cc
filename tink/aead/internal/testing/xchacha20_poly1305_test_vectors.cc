@@ -39,6 +39,8 @@ namespace crypto::tink::internal {
 namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
+using XChaCha20Poly1305TestVectorMap =
+    absl::flat_hash_map<XChaCha20Poly1305Parameters::Variant, AeadTestVector>;
 
 struct XChaCha20Poly1305TestVectorParams {
   XChaCha20Poly1305Parameters::Variant variant;
@@ -63,59 +65,57 @@ AeadTestVector MakeXChaCha20Poly1305TestVector(
                         HexDecodeOrDie(params.ciphertext_hex));
 }
 
-using XChaCha20Poly1305TestVectorMap =
-    absl::flat_hash_map<XChaCha20Poly1305Parameters::Variant, AeadTestVector>;
-
 const XChaCha20Poly1305TestVectorMap& CreateXChaCha20Poly1305TestVectorsMap() {
   static const absl::NoDestructor<XChaCha20Poly1305TestVectorMap> test_vectors(
       XChaCha20Poly1305TestVectorMap{
+          // Wycheproof test vector: tcId = 66
           {XChaCha20Poly1305Parameters::Variant::kNoPrefix,
            MakeXChaCha20Poly1305TestVector(XChaCha20Poly1305TestVectorParams{
                /*variant=*/XChaCha20Poly1305Parameters::Variant::kNoPrefix,
                /*key_hex=*/
-               "2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7"
-               "158809cf4f3c",
+               "2ed460a56867ee1a2877a8f3d2d98fb886cfcc8913e31c3d08f42374ba37e"
+               "bb1",
                /*id_requirement=*/std::nullopt,
                /*plaintext_hex=*/
-               "f1cc30e8ecdf0ec03a5204c2108cc013de8f0519445d45e14f62a8f49b34"
-               "2e9e",
+               "318cc4bf151c3baaee5a783ec091ab618f2ecacf38c962ba9c32c323696c"
+               "c94c",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "00000000000000000000000000000000000000000000000062f8b5a0ff8"
-               "9c12b7be5cfd4df9ae1ccba586dbfcabf828a2a5e4d2576b5d9297a7371"
-               "be96b34d9a5b39922a",
+               "0140f2791eb81fd4b69edf2d9ba4b2d62eab1d296741583fd34c1778d105d"
+               "0e80d429c86b879d52835cf8aebc5a04a9084cff1f9646e040aac8a68605a"
+               "0567c559442342b764b964",
            })},
           {XChaCha20Poly1305Parameters::Variant::kTink,
            MakeXChaCha20Poly1305TestVector(XChaCha20Poly1305TestVectorParams{
                /*variant=*/XChaCha20Poly1305Parameters::Variant::kTink,
                /*key_hex=*/
-               "2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7"
-               "158809cf4f3c",
+               "2ed460a56867ee1a2877a8f3d2d98fb886cfcc8913e31c3d08f42374ba37e"
+               "bb1",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "f1cc30e8ecdf0ec03a5204c2108cc013de8f0519445d45e14f62a8f49b34"
-               "2e9e",
+               "318cc4bf151c3baaee5a783ec091ab618f2ecacf38c962ba9c32c323696c"
+               "c94c",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "01010203040000000000000000000000000000000000000000000000006"
-               "2f8b5a0ff89c12b7be5cfd4df9ae1ccba586dbfcabf828a2a5e4d2576b5"
-               "d9297a7371be96b34d9a5b39922a",
+               "01010203040140f2791eb81fd4b69edf2d9ba4b2d62eab1d296741583fd34"
+               "c1778d105d0e80d429c86b879d52835cf8aebc5a04a9084cff1f9646e040a"
+               "ac8a68605a0567c559442342b764b964",
            })},
           {XChaCha20Poly1305Parameters::Variant::kCrunchy,
            MakeXChaCha20Poly1305TestVector(XChaCha20Poly1305TestVectorParams{
                /*variant=*/XChaCha20Poly1305Parameters::Variant::kCrunchy,
                /*key_hex=*/
-               "2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7"
-               "158809cf4f3c",
+               "2ed460a56867ee1a2877a8f3d2d98fb886cfcc8913e31c3d08f42374ba37e"
+               "bb1",
                /*id_requirement=*/0x01020304,
                /*plaintext_hex=*/
-               "f1cc30e8ecdf0ec03a5204c2108cc013de8f0519445d45e14f62a8f49b34"
-               "2e9e",
+               "318cc4bf151c3baaee5a783ec091ab618f2ecacf38c962ba9c32c323696c"
+               "c94c",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "00010203040000000000000000000000000000000000000000000000006"
-               "2f8b5a0ff89c12b7be5cfd4df9ae1ccba586dbfcabf828a2a5e4d2576b5"
-               "d9297a7371be96b34d9a5b39922a",
+               "00010203040140f2791eb81fd4b69edf2d9ba4b2d62eab1d296741583fd34"
+               "c1778d105d0e80d429c86b879d52835cf8aebc5a04a9084cff1f9646e040a"
+               "ac8a68605a0567c559442342b764b964",
            })},
       });
   return *test_vectors;

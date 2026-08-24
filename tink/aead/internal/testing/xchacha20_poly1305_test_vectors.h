@@ -25,11 +25,11 @@
 namespace crypto::tink::internal {
 
 // Returns static test vectors for XChaCha20-Poly1305 from Wycheproof
-// (wycheproof/testvectors/xchacha20_poly1305_test.json).
+// (wycheproof/testvectors_v1/xchacha20_poly1305_test.json).
 const std::vector<AeadTestVector>& CreateXChaCha20Poly1305TestVectors();
 
 // Returns static test vector for XChaCha20-Poly1305 for the given variant from
-// Wycheproof (wycheproof/testvectors/xchacha20_poly1305_test.json).
+// Wycheproof (wycheproof/testvectors_v1/xchacha20_poly1305_test.json).
 const AeadTestVector& GetXChaCha20Poly1305TestVector(
     XChaCha20Poly1305Parameters::Variant variant);
 

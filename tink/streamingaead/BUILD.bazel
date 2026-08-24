@@ -746,12 +746,10 @@ cc_test(
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
+        "//tink/streamingaead/internal/testing:aes_gcm_hkdf_streaming_test_vectors",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

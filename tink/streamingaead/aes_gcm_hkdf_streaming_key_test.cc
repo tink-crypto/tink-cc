@@ -17,6 +17,7 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -24,13 +25,11 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
+#include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
 
 namespace crypto {
 namespace tink {
@@ -182,131 +181,62 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, Clone) {
-  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      AesGcmHkdfStreamingParameters::Builder()
-          .SetKeySizeInBytes(35)
-          .SetDerivedKeySizeInBytes(32)
-          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
-          .SetCiphertextSegmentSizeInBytes(1024)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
-
-  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
-      *parameters, initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  const AesGcmHkdfStreamingKey& key =
+      dynamic_cast<const AesGcmHkdfStreamingKey&>(
+          *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key->Clone();
+  std::unique_ptr<Key> cloned_key = key.Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(*key));
+  ASSERT_THAT(*cloned_key, Eq(key));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, CopyConstructor) {
-  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      AesGcmHkdfStreamingParameters::Builder()
-          .SetKeySizeInBytes(35)
-          .SetDerivedKeySizeInBytes(32)
-          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
-          .SetCiphertextSegmentSizeInBytes(1024)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  const AesGcmHkdfStreamingKey& key =
+      dynamic_cast<const AesGcmHkdfStreamingKey&>(
+          *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
 
-  RestrictedData initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
+  AesGcmHkdfStreamingKey copy(key);
 
-  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
-      *parameters, initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesGcmHkdfStreamingKey copy(*key);
-
-  EXPECT_THAT(copy, Eq(*key));
+  EXPECT_THAT(copy, Eq(key));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, CopyAssignment) {
-  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      AesGcmHkdfStreamingParameters::Builder()
-          .SetKeySizeInBytes(35)
-          .SetDerivedKeySizeInBytes(32)
-          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
-          .SetCiphertextSegmentSizeInBytes(1024)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  const AesGcmHkdfStreamingKey& key1 =
+      dynamic_cast<const AesGcmHkdfStreamingKey&>(
+          *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
+  const AesGcmHkdfStreamingKey& key2 =
+      dynamic_cast<const AesGcmHkdfStreamingKey&>(
+          *internal::GetAesGcmHkdfStreamingTestVector(32).streamingaead_key);
 
-  RestrictedData initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
-  RestrictedData other_initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
+  AesGcmHkdfStreamingKey copy = key2;
+  ASSERT_THAT(copy, Not(Eq(key1)));
 
-  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
-      *parameters, initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
+  copy = key1;
 
-  absl::StatusOr<AesGcmHkdfStreamingKey> copy = AesGcmHkdfStreamingKey::Create(
-      *parameters, other_initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(copy, IsOk());
-  ASSERT_THAT(copy, Not(Eq(key)));
-
-  *copy = *key;
-
-  EXPECT_THAT(*copy, Eq(*key));
+  EXPECT_THAT(copy, Eq(key1));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, MoveConstructor) {
-  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      AesGcmHkdfStreamingParameters::Builder()
-          .SetKeySizeInBytes(35)
-          .SetDerivedKeySizeInBytes(32)
-          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
-          .SetCiphertextSegmentSizeInBytes(1024)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  AesGcmHkdfStreamingKey key = dynamic_cast<const AesGcmHkdfStreamingKey&>(
+      *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
 
-  RestrictedData initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
+  AesGcmHkdfStreamingKey expected = key;
+  AesGcmHkdfStreamingKey move(std::move(key));
 
-  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
-      *parameters, initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  AesGcmHkdfStreamingKey move(std::move(*key));
-
-  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
-  EXPECT_THAT(move.GetInitialKeyMaterial(GetPartialKeyAccess()),
-              Eq(initial_key_material));
+  EXPECT_THAT(move, Eq(expected));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, MoveAssignment) {
-  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      AesGcmHkdfStreamingParameters::Builder()
-          .SetKeySizeInBytes(35)
-          .SetDerivedKeySizeInBytes(32)
-          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
-          .SetCiphertextSegmentSizeInBytes(1024)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
+  AesGcmHkdfStreamingKey key1 = dynamic_cast<const AesGcmHkdfStreamingKey&>(
+      *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
+  AesGcmHkdfStreamingKey key2 = dynamic_cast<const AesGcmHkdfStreamingKey&>(
+      *internal::GetAesGcmHkdfStreamingTestVector(32).streamingaead_key);
 
-  RestrictedData initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
-  RestrictedData other_initial_key_material =
-      RestrictedData(parameters->KeySizeInBytes());
+  AesGcmHkdfStreamingKey expected = key1;
+  key2 = std::move(key1);
 
-  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
-      *parameters, initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<AesGcmHkdfStreamingKey> move = AesGcmHkdfStreamingKey::Create(
-      *parameters, other_initial_key_material, GetPartialKeyAccess());
-  ASSERT_THAT(move, IsOk());
-  ASSERT_THAT(move, Not(Eq(key)));
-
-  *move = std::move(*key);
-
-  EXPECT_THAT(move->GetInitialKeyMaterial(GetPartialKeyAccess()),
-              Eq(initial_key_material));
+  EXPECT_THAT(key2, Eq(expected));
 }
 
 }  // namespace

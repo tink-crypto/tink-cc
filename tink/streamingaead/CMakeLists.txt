@@ -680,12 +680,10 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::optional
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::streamingaead::internal::testing::aes_gcm_hkdf_streaming_test_vectors
 )
 
 tink_cc_test(

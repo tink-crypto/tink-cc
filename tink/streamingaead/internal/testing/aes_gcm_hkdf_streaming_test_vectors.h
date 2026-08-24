@@ -25,7 +25,21 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-std::vector<StreamingAeadTestVector> CreateAesGcmHkdfStreamingTestVectors();
+// Returns static test vectors for AES-GCM-HKDF Streaming AEAD from Tink's cross
+// language tests
+// (testing/cross_language/cross_language/streaming_aead/aes_gcm_hkdf_streaming_key_test.py)
+// and Java tests
+// (java_src/src/main/java/com/google/crypto/tink/streamingaead/internal/testing/AesGcmHkdfStreamingTestUtil.java).
+const std::vector<StreamingAeadTestVector>&
+CreateAesGcmHkdfStreamingTestVectors();
+
+// Returns a static test vector for AES-GCM-HKDF Streaming AEAD for the given
+// key size in bytes from Tink's cross language tests
+// (testing/cross_language/cross_language/streaming_aead/aes_gcm_hkdf_streaming_key_test.py)
+// and Java tests
+// (java_src/src/main/java/com/google/crypto/tink/streamingaead/internal/testing/AesGcmHkdfStreamingTestUtil.java).
+const StreamingAeadTestVector& GetAesGcmHkdfStreamingTestVector(
+    int key_size_in_bytes);
 
 }  // namespace internal
 }  // namespace tink

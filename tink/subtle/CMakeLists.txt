@@ -245,8 +245,8 @@ tink_cc_library(
   DEPS
     tink::subtle::common_enums
     tink::subtle::subtle_util_boringssl
-    absl::memory
     absl::status
+    absl::status_macros
     absl::strings
     crypto
     tink::core::insecure_secret_key_access
@@ -259,7 +259,6 @@ tink_cc_library(
     tink::signature::ecdsa_private_key
     tink::signature::internal::ecdsa_raw_sign_boringssl
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 

@@ -48,32 +48,21 @@ class EcdsaSignBoringSsl : public PublicKeySign {
   }
 
   // Computes the signature for 'data'.
-  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override = 0;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
+
+  ~EcdsaSignBoringSsl() override = default;
+
+ protected:
+  EcdsaSignBoringSsl() = default;
 
  private:
   static absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> New(
       const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
       absl::string_view message_suffix);
-
-  explicit EcdsaSignBoringSsl(
-      const EVP_MD* hash,
-      std::unique_ptr<internal::EcdsaRawSignBoringSsl> raw_signer,
-      absl::string_view output_prefix, absl::string_view message_suffix)
-      : hash_(hash),
-        raw_signer_(std::move(raw_signer)),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
-
-  const EVP_MD* hash_;  // Owned by BoringSSL.
-  std::unique_ptr<internal::EcdsaRawSignBoringSsl> raw_signer_;
-  std::string output_prefix_;
-  std::string message_suffix_;
 };
 
 }  // namespace subtle

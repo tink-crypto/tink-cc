@@ -1654,19 +1654,21 @@ tink_cc_test(
   SRCS
     x_aes_gcm_key_manager_test.cc
   DEPS
+    tink::aead::config_2026
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key_manager
+    tink::aead::x_aes_gcm_proto_serialization
     gmock
     absl::status
     absl::status_matchers
     absl::cord
-    tink::core::aead
     tink::core::key_type_manager
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::x_aes_gcm_test_vectors
     tink::internal::fips_utils
     tink::subtle::random
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::proto::tink_cc_proto
     tink::proto::x_aes_gcm_cc_proto
 )

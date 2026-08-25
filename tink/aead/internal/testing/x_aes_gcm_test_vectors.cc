@@ -87,8 +87,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0000000000000000000000000000000000000000ce10e0e15f77f06bb"
-               "3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "00000000000000000000000000000000000000002027543e40c614db79de"
+               "d8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff73494092e7164"
+               "29224d7b4a0f85cf",
            })},
           {{8, XAesGcmParameters::Variant::kTink},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -103,8 +104,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "01010203040000000000000000000000000000000000000000ce10e0e15"
-               "f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "010102030400000000000000000000000000000000000000002027543e40"
+               "c614db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff734"
+               "94092e716429224d7b4a0f85cf",
            })},
           {{9, XAesGcmParameters::Variant::kNoPrefix},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -119,8 +121,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "000000000000000000000000000000000000000000ce10e0e15f77f06bb"
-               "3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "0000000000000000000000000000000000000000002027543e40c614db79"
+               "ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff73494092e71"
+               "6429224d7b4a0f85cf",
            })},
           {{9, XAesGcmParameters::Variant::kTink},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -135,8 +138,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0101020304000000000000000000000000000000000000000000ce10e0e15"
-               "f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "01010203040000000000000000000000000000000000000000002027543e"
+               "40c614db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff7"
+               "3494092e716429224d7b4a0f85cf",
            })},
           {{10, XAesGcmParameters::Variant::kNoPrefix},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -151,8 +155,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "00000000000000000000000000000000000000000000ce10e0e15f77f06"
-               "bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "000000000000000000000000000000000000000000002027543e40c614db"
+               "79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff73494092e"
+               "716429224d7b4a0f85cf",
            })},
           {{10, XAesGcmParameters::Variant::kTink},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -167,8 +172,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "010102030400000000000000000000000000000000000000000000ce10e0"
-               "e15f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "010102030400000000000000000000000000000000000000000000202754"
+               "3e40c614db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bf"
+               "f73494092e716429224d7b4a0f85cf",
            })},
           {{11, XAesGcmParameters::Variant::kNoPrefix},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -183,8 +189,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "0000000000000000000000000000000000000000000000ce10e0e15f77f0"
-               "6bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "00000000000000000000000000000000000000000000002027543e40c614"
+               "db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff7349409"
+               "2e716429224d7b4a0f85cf",
            })},
           {{11, XAesGcmParameters::Variant::kTink},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -199,9 +206,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "01010203040000000000000000000000000000000000000000000000ce10"
-               "e0e15f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008f"
-               "b",
+               "010102030400000000000000000000000000000000000000000000002027"
+               "543e40c614db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1"
+               "bff73494092e716429224d7b4a0f85cf",
            })},
           {{12, XAesGcmParameters::Variant::kNoPrefix},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -216,8 +223,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "000000000000000000000000000000000000000000000000ce10e0e15"
-               "f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a116b6008fb",
+               "0000000000000000000000000000000000000000000000002027543e40c6"
+               "14db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9ccb1bff73494"
+               "092e716429224d7b4a0f85cf",
            })},
           {{12, XAesGcmParameters::Variant::kTink},
            MakeXAesGcmTestVector(XAesGcmTestVectorParams{
@@ -232,9 +240,9 @@ const XAesGcmTestVectorMap& CreateXAesGcmTestVectorsMap() {
                "c1d1e1f",
                /*associated_data_hex=*/"",
                /*ciphertext_hex=*/
-               "010102030400000000000000000000000000000000000000000000000"
-               "0ce10e0e15f77f06bb3b7d3e691238e8ec434eb05581e7d0bbd603a11"
-               "6b6008fb",
+               "010102030400000000000000000000000000000000000000000000000020"
+               "27543e40c614db79ded8879635424e25deea5ff88bc14be3f2e0bdd5a9cc"
+               "b1bff73494092e716429224d7b4a0f85cf",
            })},
       });
   return *test_vectors;

@@ -24,14 +24,16 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/cord.h"
-#include "tink/aead.h"
+#include "tink/aead/config_2026.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
+#include "tink/aead/x_aes_gcm_proto_serialization.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 #include "proto/x_aes_gcm.pb.h"
 
@@ -46,6 +48,8 @@ using ::crypto::tink::internal::FipsCompatibility;
 using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::KeyData;
 using XAesGcmKeyProto = ::google::crypto::tink::XAesGcmKey;
+using XAesGcmKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::AeadTestVector>;
 using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::testing::Eq;
 using ::testing::Not;
@@ -263,6 +267,54 @@ TEST(XAesGcmKeyManagerTest, CordAndAeadCompatibility) {
           ->Decrypt(absl::Cord(*aead_ciphertext), absl::Cord(associated_data));
   EXPECT_THAT(cord_aead_plaintext, IsOkAndHolds(Eq(absl::Cord(plaintext))));
 }
+
+TEST_P(XAesGcmKeyManagerTestVectorTest, DecryptAead) {
+  ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(ConfigAead2026());
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(test_vector.plaintext));
+}
+
+TEST_P(XAesGcmKeyManagerTestVectorTest, DecryptCordAead) {
+  ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<CordAead>> cord_aead =
+      handle->GetPrimitive<CordAead>(ConfigAead2026());
+  ASSERT_THAT(cord_aead, IsOk());
+
+  absl::StatusOr<absl::Cord> plaintext =
+      (*cord_aead)
+          ->Decrypt(absl::Cord(test_vector.ciphertext),
+                    absl::Cord(test_vector.associated_data));
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(absl::Cord(test_vector.plaintext)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    XAesGcmKeyManagerTestVectorTestSuite, XAesGcmKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateXAesGcmTestVectors()));
 
 }  // namespace
 }  // namespace tink

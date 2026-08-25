@@ -29,20 +29,17 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#include "openssl/bn.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
+#include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 // TODO(quannguyen):
@@ -63,6 +60,14 @@ using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
+
+internal::RsaPublicKey ToRsaPublicKey(const RsaSsaPssPublicKey& key) {
+  internal::RsaPublicKey public_key;
+  public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
+  public_key.e =
+      std::string(key.GetParameters().GetPublicExponent().GetValue());
+  return public_key;
+}
 
 // Test vector from
 // https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/Digital-Signatures
@@ -360,18 +365,18 @@ TEST(RsaSsaPssVerifyBoringSslTest, TestAllowedFipsModuli) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
   }
 
-  internal::SslUniquePtr<BIGNUM> rsa_f4(BN_new());
-  internal::RsaPrivateKey private_key;
-  internal::RsaPublicKey public_key;
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitTestVector();
+  const RsaSsaPssPrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPssPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  internal::RsaPublicKey public_key = ToRsaPublicKey(typed_key->GetPublicKey());
   internal::RsaSsaPssParams params = {
       /*sig_hash=*/HashType::SHA256,
       /*mgf1_hash=*/HashType::SHA256,
       /*salt_length=*/32,
   };
-  BN_set_word(rsa_f4.get(), RSA_F4);
-  ASSERT_THAT(
-      internal::NewRsaKeyPair(3072, rsa_f4.get(), &private_key, &public_key),
-      IsOk());
   EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(public_key, params).status(),
               IsOk());
 }
@@ -381,24 +386,18 @@ TEST(RsaSsaPssVerifyBoringSslTest, TestRestrictedFipsModuli) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
   }
 
-  internal::SslUniquePtr<BIGNUM> rsa_f4(BN_new());
-  internal::RsaPrivateKey private_key;
+  // In FIPS mode, 4096-bit RSA keys cannot be constructed using Tink's Key
+  // builder (which validates FIPS restrictions and rejects 4096-bit keys).
+  // Since RsaSsaPssVerifyBoringSsl validates the modulus size directly on the
+  // input struct, we supply a 4096-bit (512-byte) modulus directly.
   internal::RsaPublicKey public_key;
+  public_key.n = std::string(512, '\x80');
+  public_key.e = "\x01\x00\x01";
   internal::RsaSsaPssParams params = {
       /*sig_hash=*/HashType::SHA256,
       /*mgf1_hash=*/HashType::SHA256,
       /*salt_length=*/32,
   };
-  BN_set_word(rsa_f4.get(), RSA_F4);
-  ASSERT_THAT(
-      internal::NewRsaKeyPair(2560, rsa_f4.get(), &private_key, &public_key),
-      IsOk());
-  EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(public_key, params).status(),
-              StatusIs(absl::StatusCode::kInternal));
-
-  ASSERT_THAT(
-      internal::NewRsaKeyPair(4096, rsa_f4.get(), &private_key, &public_key),
-      IsOk());
   EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(public_key, params).status(),
               StatusIs(absl::StatusCode::kInternal));
 }

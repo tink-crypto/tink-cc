@@ -1330,18 +1330,16 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     crypto
+    tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
     tink::internal::testing::wycheproof_util
     tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1354,23 +1352,23 @@ tink_cc_test(
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::strings
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::secret_buffer
-    tink::internal::ssl_unique_ptr
     tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_test(

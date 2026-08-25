@@ -27,6 +27,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
@@ -36,10 +37,6 @@
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/subtle/subtle_util_boringssl.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -60,8 +57,8 @@ TEST_F(EcdsaSignBoringSslTest, testBasicSigning) {
   subtle::EcdsaSignatureEncoding encodings[2] = {
       EcdsaSignatureEncoding::DER, EcdsaSignatureEncoding::IEEE_P1363};
   for (EcdsaSignatureEncoding encoding : encodings) {
-    auto ec_key =
-        SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
+    const internal::EcKey& ec_key =
+        internal::GetEcKey(EllipticCurveType::NIST_P256);
     auto signer_result =
         EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
     ASSERT_THAT(signer_result, IsOk());
@@ -101,8 +98,8 @@ TEST_F(EcdsaSignBoringSslTest, testEncodingsMismatch) {
   subtle::EcdsaSignatureEncoding encodings[2] = {
       EcdsaSignatureEncoding::DER, EcdsaSignatureEncoding::IEEE_P1363};
   for (EcdsaSignatureEncoding encoding : encodings) {
-    auto ec_key =
-        SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
+    const internal::EcKey& ec_key =
+        internal::GetEcKey(EllipticCurveType::NIST_P256);
     auto signer_result =
         EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
     ASSERT_THAT(signer_result, IsOk());
@@ -133,7 +130,7 @@ TEST_F(EcdsaSignBoringSslTest, testSignatureSizesWithIEEE_P1364Encoding) {
                                  EllipticCurveType::NIST_P384,
                                  EllipticCurveType::NIST_P521};
   for (EllipticCurveType curve : curves) {
-    auto ec_key = SubtleUtilBoringSSL::GetNewEcKey(curve).value();
+    const internal::EcKey& ec_key = internal::GetEcKey(curve);
     auto signer_result = EcdsaSignBoringSsl::New(
         ec_key, HashType::SHA256, EcdsaSignatureEncoding::IEEE_P1363);
     ASSERT_THAT(signer_result, IsOk());
@@ -163,8 +160,8 @@ TEST_F(EcdsaSignBoringSslTest, testNewErrors) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
-  auto ec_key =
-      SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(EllipticCurveType::NIST_P256);
   auto signer_result = EcdsaSignBoringSsl::New(ec_key, HashType::SHA1,
                                                EcdsaSignatureEncoding::DER);
   EXPECT_THAT(signer_result, Not(IsOk()));
@@ -179,23 +176,23 @@ TEST_F(EcdsaSignBoringSslTest, TestFipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  auto ec_key =
-      SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256).value();
-  EXPECT_THAT(EcdsaSignBoringSsl::New(ec_key, HashType::SHA256,
+  const internal::EcKey& ec_key_256 =
+      internal::GetEcKey(EllipticCurveType::NIST_P256);
+  EXPECT_THAT(EcdsaSignBoringSsl::New(ec_key_256, HashType::SHA256,
                                       EcdsaSignatureEncoding::DER)
                   .status(),
               StatusIs(absl::StatusCode::kInternal));
 
-  ec_key =
-      SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P384).value();
-  EXPECT_THAT(EcdsaSignBoringSsl::New(ec_key, HashType::SHA256,
+  const internal::EcKey& ec_key_384 =
+      internal::GetEcKey(EllipticCurveType::NIST_P384);
+  EXPECT_THAT(EcdsaSignBoringSsl::New(ec_key_384, HashType::SHA256,
                                       EcdsaSignatureEncoding::DER)
                   .status(),
               StatusIs(absl::StatusCode::kInternal));
 
-  ec_key =
-      SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P521).value();
-  EXPECT_THAT(EcdsaSignBoringSsl::New(ec_key, HashType::SHA256,
+  const internal::EcKey& ec_key_521 =
+      internal::GetEcKey(EllipticCurveType::NIST_P521);
+  EXPECT_THAT(EcdsaSignBoringSsl::New(ec_key_521, HashType::SHA256,
                                       EcdsaSignatureEncoding::DER)
                   .status(),
               StatusIs(absl::StatusCode::kInternal));

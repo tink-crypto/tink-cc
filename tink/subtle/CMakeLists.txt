@@ -1219,7 +1219,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    tink::subtle::subtle_util_boringssl
     gmock
     absl::status
     absl::status_matchers
@@ -1227,14 +1226,12 @@ tink_cc_test(
     absl::string_view
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::signature::ecdsa_private_key
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(
@@ -1254,13 +1251,13 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::public_key_verify
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
+    tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::testing::wycheproof_util
     tink::signature::ecdsa_private_key
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(

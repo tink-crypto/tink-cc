@@ -911,8 +911,6 @@ tink_cc_test(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     gmock
-    absl::log
-    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
@@ -938,7 +936,6 @@ tink_cc_test(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     gmock
-    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor

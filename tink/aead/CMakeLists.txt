@@ -1081,21 +1081,24 @@ tink_cc_test(
   SRCS
     aes_ctr_hmac_aead_key_manager_test.cc
   DEPS
+    tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_ctr_hmac_aead_proto_serialization
+    tink::aead::config_2026
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     tink::core::aead
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_ctr_hmac_aead_test_vectors
     tink::subtle::subtle
     tink::subtle::aead_test_util
     tink::subtle::aes_ctr_boringssl
     tink::util::enums
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::common_cc_proto

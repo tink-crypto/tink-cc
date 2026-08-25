@@ -103,8 +103,8 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                /*ciphertext_hex=*/
                "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff874d6191b620e3261bef686499"
                "0db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f"
-               "09020db03eab1e031dda2fbe03d1792170a0f3009cee0d662e088bb97e"
-               "14285adabfa9a37a90",
+               "09020db03eab1e031dda2fbe03d1792170a0f3009cee44c94780653c7b"
+               "5bbfb7c07b3a8c4da5",
            })},
           {{16, AesCtrHmacAeadParameters::Variant::kTink},
            MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
@@ -123,8 +123,8 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                /*ciphertext_hex=*/
                "0101020304f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff874d6191b620e326"
                "1bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edb"
-               "d5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee3db6"
-               "4b84b5e0c653d9e84b80bbf23e1a",
+               "d5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee44c9"
+               "4780653c7b5bbfb7c07b3a8c4da5",
            })},
           {{16, AesCtrHmacAeadParameters::Variant::kCrunchy},
            MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
@@ -143,8 +143,8 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                /*ciphertext_hex=*/
                "0001020304f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff874d6191b620e326"
                "1bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edb"
-               "d5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee3db6"
-               "4b84b5e0c653d9e84b80bbf23e1a",
+               "d5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee44c9"
+               "4780653c7b5bbfb7c07b3a8c4da5",
            })},
           {{24, AesCtrHmacAeadParameters::Variant::kNoPrefix},
            MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
@@ -228,8 +228,8 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                /*ciphertext_hex=*/
                "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff601ec313775789a5b7a7f504bb"
                "f3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce870"
-               "dc99a0c2d70ab708d4303b9e50130618a508b03d2abd97669d08479e0a"
-               "e9ce2d56a319ca7f37",
+               "17ba2d84988ddfc9c58db67aada613c2dd08457941a6cf5fe859652142"
+               "daea9def01abd443b6",
            })},
           {{32, AesCtrHmacAeadParameters::Variant::kTink},
            MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
@@ -250,8 +250,8 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                /*ciphertext_hex=*/
                "0101020304f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff601ec313775789a5"
                "b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa2"
-               "3de94ce870dc99a0c2d70ab708d4303b9e50130618a508b03d2abd9755"
-               "3bb79a952674e79eb00dca0a4309",
+               "3de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6cf5f"
+               "e859652142daea9def01abd443b6",
            })},
           {{32, AesCtrHmacAeadParameters::Variant::kCrunchy},
            MakeAesCtrHmacAeadTestVector(AesCtrHmacAeadTestVectorParams{
@@ -272,8 +272,8 @@ const AesCtrHmacAeadTestVectorMap& CreateAesCtrHmacAeadTestVectorsMap() {
                /*ciphertext_hex=*/
                "0001020304f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff601ec313775789a5"
                "b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa2"
-               "3de94ce870dc99a0c2d70ab708d4303b9e50130618a508b03d2abd9755"
-               "3bb79a952674e79eb00dca0a4309",
+               "3de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6cf5f"
+               "e859652142daea9def01abd443b6",
            })},
       });
   return *test_vectors;

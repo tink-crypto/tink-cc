@@ -25,21 +25,23 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_ctr_hmac_aead_key.h"
+#include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
+#include "tink/aead/config_2026.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_ctr_hmac_aead_test_vectors.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_ctr_boringssl.h"
 #include "tink/subtle/encrypt_then_authenticate.h"
 #include "tink/subtle/hmac_boringssl.h"
-#include "tink/subtle/ind_cpa_cipher.h"
 #include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/common.pb.h"
@@ -53,6 +55,8 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using AesCtrHmacAeadKeyProto = ::google::crypto::tink::AesCtrHmacAeadKey;
+using AesCtrHmacAeadKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::AeadTestVector>;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using ::google::crypto::tink::HashType;
 using ::testing::Eq;
@@ -329,6 +333,37 @@ TEST(AesCtrHmacAeadKeyManagerTest, DeriveKeyNotEnoughRandomnessForHmacKey) {
       AesCtrHmacAeadKeyManager().DeriveKey(format, &input_stream).status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
+
+TEST_P(AesCtrHmacAeadKeyManagerTestVectorTest, DecryptAead) {
+  const internal::AeadTestVector& test_vector = GetParam();
+  const AesCtrHmacAeadKey& key =
+      dynamic_cast<const AesCtrHmacAeadKey&>(*test_vector.aead_key);
+  if (key.GetParameters().GetAesKeySizeInBytes() == 24) {
+    GTEST_SKIP() << "24-byte AES keys are not supported by KeyManager";
+  }
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(ConfigAead2026());
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AesCtrHmacAeadKeyManagerTestVectorTestSuite,
+    AesCtrHmacAeadKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateAesCtrHmacAeadTestVectors()));
 
 }  // namespace
 }  // namespace tink

@@ -97,6 +97,10 @@ const HybridTestVector& GetHpkeTestVector(HpkeParameters::KemId kem_id,
 // Returns static test cases for HPKE NIST curves (P-256, P-384, P-521).
 const std::vector<HpkeNistCurveTestCase>& CreateHpkeNistCurveTestCases();
 
+// Returns static test case for the given NIST curve.
+const HpkeNistCurveTestCase& GetHpkeNistCurveTestCase(
+    subtle::EllipticCurveType curve);
+
 // Returns static test cases for HPKE ML-KEM (ML-KEM-768, ML-KEM-1024).
 const std::vector<HpkeMlKemTestCase>& CreateHpkeMlKemTestCases();
 

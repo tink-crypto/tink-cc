@@ -758,6 +758,19 @@ const std::vector<HpkeNistCurveTestCase>& CreateHpkeNistCurveTestCases() {
   return *test_cases;
 }
 
+const HpkeNistCurveTestCase& GetHpkeNistCurveTestCase(
+    subtle::EllipticCurveType curve) {
+  const std::vector<HpkeNistCurveTestCase>& test_cases =
+      CreateHpkeNistCurveTestCases();
+  for (const auto& test_case : test_cases) {
+    if (test_case.curve == curve) {
+      return test_case;
+    }
+  }
+  ABSL_CHECK(false) << "No HPKE NIST curve test case found for curve: "
+                    << static_cast<int>(curve);
+}
+
 const std::vector<HpkeMlKemTestCase>& CreateHpkeMlKemTestCases() {
   static const absl::NoDestructor<std::vector<HpkeMlKemTestCase>> test_cases(
       []() {

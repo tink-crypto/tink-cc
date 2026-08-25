@@ -296,17 +296,13 @@ tink_cc_test(
     absl::optional
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
-    tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_data
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS
@@ -336,8 +332,6 @@ tink_cc_test(
     tink::hybrid::hpke_public_key
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
-    tink::util::test_matchers
-    tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS
     exclude_if_openssl

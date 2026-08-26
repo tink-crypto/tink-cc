@@ -923,14 +923,13 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
     gmock
+    absl::no_destructor
     absl::status
     absl::status_matchers
+    tink::core::secret_data
     tink::config::tink_fips
     tink::internal::secret_buffer
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -943,13 +942,14 @@ tink_cc_test(
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
     tink::subtle::ecies_hkdf_sender_kem_boringssl
     gmock
+    absl::no_destructor
     absl::status
     absl::status_matchers
     absl::statusor
     tink::config::tink_fips
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

@@ -17,6 +17,7 @@
 #ifndef TINK_HYBRID_INTERNAL_TESTING_ECIES_AEAD_HKDF_TEST_VECTORS_H_
 #define TINK_HYBRID_INTERNAL_TESTING_ECIES_AEAD_HKDF_TEST_VECTORS_H_
 
+#include <string>
 #include <vector>
 
 #include "tink/ec_point.h"
@@ -26,9 +27,7 @@
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 
-namespace crypto {
-namespace tink {
-namespace internal {
+namespace crypto::tink::internal {
 
 // Returns P-256 public point from RFC 6979, Appendix A.2.5.
 EcPoint P256Point();
@@ -42,6 +41,8 @@ RestrictedData P384SecretValue();
 EcPoint P521Point();
 // Returns P-521 private key from RFC 6979, Appendix A.2.7.
 RestrictedData P521SecretValue();
+std::string X25519PublicValue();
+RestrictedData X25519SecretValue();
 
 // Returns static test vectors for ECIES-AEAD-HKDF from RFC 6979 and Wycheproof.
 const std::vector<HybridTestVector>& CreateEciesTestVectors();
@@ -53,8 +54,6 @@ const EciesPrivateKey* GetEciesPrivateKey(subtle::EllipticCurveType curve_type);
 // Returns a valid static EC key for the given curve type from RFC 6979.
 const internal::EcKey& GetEcKey(subtle::EllipticCurveType curve_type);
 
-}  // namespace internal
-}  // namespace tink
-}  // namespace crypto
+}  // namespace crypto::tink::internal
 
 #endif  // TINK_HYBRID_INTERNAL_TESTING_ECIES_AEAD_HKDF_TEST_VECTORS_H_

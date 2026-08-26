@@ -100,6 +100,18 @@ RestrictedData P521SecretValue() {
       InsecureSecretKeyAccess::Get());
 }
 
+std::string X25519PublicValue() {
+  return HexDecodeOrDie(
+      "90c5b6d9b337cc6c9c2e8ac44f1c0e7c41f23bdf7a04df3b9c8081c0c278352a");
+}
+
+RestrictedData X25519SecretValue() {
+  return RestrictedData(
+      HexDecodeOrDie(
+          "97d2e385c9968fbe2dc0b85a182199ed7e0b5b4bb6060f76583c0893241f698d"),
+      InsecureSecretKeyAccess::Get());
+}
+
 namespace {
 
 HybridTestVector CreateTestVector0() {
@@ -628,6 +640,14 @@ const EcKeyMap& CreateEcKeyMap() {
            std::string(P521Point().GetY().GetValue()),
            util::SecretDataFromStringView(
                P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+       }},
+      {subtle::EllipticCurveType::CURVE25519,
+       internal::EcKey{
+           subtle::EllipticCurveType::CURVE25519,
+           X25519PublicValue(),
+           "",
+           util::SecretDataFromStringView(
+               X25519SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
        }},
   });
   return *ec_keys;

@@ -22,15 +22,14 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -55,6 +54,7 @@ struct TestVector {
   std::string out_key_hex;
 };
 
+// Test parameters for ECIES HKDF recipient KEM.
 static const char kSaltHex[] = "0b0b0b0b";
 static const char kInfoHex[] = "0b0b0b0b0b0b0b0b";
 
@@ -73,19 +73,23 @@ static const char kX25519PrivateKeyHex[] =
 static const char kX25519SharedKeyHex[] =
     "4c77c4d086e2d267052bad906f8c00092f8ea944fc1dc69eb2fe8bb29df400cc";
 
-static const std::vector<TestVector> test_vector(
-    {{EllipticCurveType::NIST_P256, HashType::SHA256,
-      EcPointFormat::UNCOMPRESSED, kNistP256PublicValueHex,
-      kNistP256PrivateKeyHex, kSaltHex, kInfoHex, 32, kNistP256SharedKeyHex},
-     {EllipticCurveType::CURVE25519, HashType::SHA256,
-      EcPointFormat::COMPRESSED, kX25519PublicValueHex, kX25519PrivateKeyHex,
-      kSaltHex, kInfoHex, 32, kX25519SharedKeyHex}});
+// Returns static test vectors for ECIES HKDF recipient KEM.
+const std::vector<TestVector>& GetTestVectors() {
+  static const absl::NoDestructor<std::vector<TestVector>> test_vector(
+      {{EllipticCurveType::NIST_P256, HashType::SHA256,
+        EcPointFormat::UNCOMPRESSED, kNistP256PublicValueHex,
+        kNistP256PrivateKeyHex, kSaltHex, kInfoHex, 32, kNistP256SharedKeyHex},
+       {EllipticCurveType::CURVE25519, HashType::SHA256,
+        EcPointFormat::COMPRESSED, kX25519PublicValueHex, kX25519PrivateKeyHex,
+        kSaltHex, kInfoHex, 32, kX25519SharedKeyHex}});
+  return *test_vector;
+}
 
 TEST_F(EciesHkdfRecipientKemBoringSslTest, TestBasic) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  for (const TestVector& test : test_vector) {
+  for (const TestVector& test : GetTestVectors()) {
     auto ecies_kem_or = EciesHkdfRecipientKemBoringSsl::New(
         test.curve,
         util::SecretDataFromStringView(test::HexDecodeOrDie(test.priv_hex)));

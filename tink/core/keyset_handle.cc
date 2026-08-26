@@ -81,7 +81,7 @@ absl::StatusOr<std::unique_ptr<EncryptedKeyset>> Encrypt(
   auto encrypt_result =
       master_key_aead.Encrypt(keyset.SerializeAsString(), associated_data);
   if (!encrypt_result.ok()) return encrypt_result.status();
-  auto enc_keyset = absl::make_unique<EncryptedKeyset>();
+  auto enc_keyset = std::make_unique<EncryptedKeyset>();
   enc_keyset->set_encrypted_keyset(encrypt_result.value());
   return std::move(enc_keyset);
 }
@@ -119,7 +119,7 @@ absl::Status ValidateNoSecret(const Keyset& keyset) {
 
 absl::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
     const Keyset::Key& key) {
-  absl::optional<int> id_requirement = absl::nullopt;
+  absl::optional<int> id_requirement = std::nullopt;
   if (key.output_prefix_type() != OutputPrefixType::RAW) {
     id_requirement = key.key_id();
   }
@@ -236,7 +236,7 @@ bool KeysetHandle::Entry::operator==(const Entry& other) const {
 absl::Status KeysetHandle::ValidateAt(int index) const {
   const Keyset::Key& proto_key = keyset_->key(index);
   OutputPrefixType output_prefix_type = proto_key.output_prefix_type();
-  absl::optional<int> id_requirement = absl::nullopt;
+  absl::optional<int> id_requirement = std::nullopt;
   if (output_prefix_type != OutputPrefixType::RAW) {
     id_requirement = proto_key.key_id();
   }
@@ -396,7 +396,7 @@ KeysetHandle::ReadWithAssociatedData(
       annotations_map;
   if (!monitoring_annotations.empty()) {
     annotations_map[typeid(internal::LegacyAnnotations)] =
-        absl::make_unique<internal::LegacyAnnotations>(
+        std::make_unique<internal::LegacyAnnotations>(
             std::move(monitoring_annotations));
   }
 
@@ -431,7 +431,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
       annotations_map;
   if (!monitoring_annotations.empty()) {
     annotations_map[typeid(internal::LegacyAnnotations)] =
-        absl::make_unique<internal::LegacyAnnotations>(
+        std::make_unique<internal::LegacyAnnotations>(
             std::move(monitoring_annotations));
   }
   return absl::WrapUnique(new KeysetHandle(std::move(keyset),
@@ -479,7 +479,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
       annotations_map;
   if (!monitoring_annotations.empty()) {
     annotations_map[typeid(internal::LegacyAnnotations)] =
-        absl::make_unique<internal::LegacyAnnotations>(
+        std::make_unique<internal::LegacyAnnotations>(
             std::move(monitoring_annotations));
   }
   auto handle = absl::WrapUnique(new KeysetHandle(
@@ -534,7 +534,7 @@ absl::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
     return key_data.status();
   }
 
-  auto public_key = absl::make_unique<Keyset::Key>();
+  auto public_key = std::make_unique<Keyset::Key>();
   public_key->set_key_id(key.key_id());
   public_key->set_status(key.status());
   public_key->set_output_prefix_type(key.output_prefix_type());

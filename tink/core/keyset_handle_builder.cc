@@ -82,7 +82,7 @@ KeysetHandleBuilder::KeysetHandleBuilder(const KeysetHandle& handle) {
 KeysetHandleBuilder::Entry KeysetHandleBuilder::Entry::CreateFromKey(
     std::shared_ptr<const Key> key, KeyStatus status, bool is_primary) {
   absl::optional<int> id_requirement = key->GetIdRequirement();
-  auto imported_entry = absl::make_unique<internal::KeyEntry>(std::move(key));
+  auto imported_entry = std::make_unique<internal::KeyEntry>(std::move(key));
   KeysetHandleBuilder::Entry entry(std::move(imported_entry));
   SetBuilderEntryAttributes(status, is_primary, id_requirement, &entry);
   return entry;
@@ -92,7 +92,7 @@ KeysetHandleBuilder::Entry KeysetHandleBuilder::Entry::CreateFromParams(
     std::shared_ptr<const Parameters> parameters, KeyStatus status,
     bool is_primary, absl::optional<int> id) {
   auto generated_entry =
-      absl::make_unique<internal::ParametersEntry>(std::move(parameters));
+      std::make_unique<internal::ParametersEntry>(std::move(parameters));
   KeysetHandleBuilder::Entry entry(std::move(generated_entry));
   SetBuilderEntryAttributes(status, is_primary, id, &entry);
   return entry;
@@ -164,7 +164,7 @@ KeysetHandleBuilder& KeysetHandleBuilder::SetMonitoringAnnotations(
     const absl::flat_hash_map<std::string, std::string>&
         monitoring_annotations) {
   return AddAnnotations(
-      absl::make_unique<crypto::tink::internal::LegacyAnnotations>(
+      std::make_unique<crypto::tink::internal::LegacyAnnotations>(
           monitoring_annotations));
 }
 
@@ -180,7 +180,7 @@ absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
 
   build_called_ = true;
   util::SecretProto<Keyset> keyset;
-  absl::optional<int> primary_id = absl::nullopt;
+  absl::optional<int> primary_id = std::nullopt;
 
   absl::Status assigned_ids_status = CheckIdAssignments();
   if (!assigned_ids_status.ok()) return assigned_ids_status;

@@ -39,49 +39,33 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-// static
-absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
-EciesHkdfSenderKemBoringSsl::New(subtle::EllipticCurveType curve,
-                                 const std::string& pubx,
-                                 const std::string& puby) {
-  switch (curve) {
-    case EllipticCurveType::NIST_P256:
-    case EllipticCurveType::NIST_P384:
-    case EllipticCurveType::NIST_P521:
-      return EciesHkdfNistPCurveSendKemBoringSsl::New(curve, pubx, puby);
-    case EllipticCurveType::CURVE25519:
-      return EciesHkdfX25519SendKemBoringSsl::New(curve, pubx, puby);
-    default:
-      return absl::Status(absl::StatusCode::kUnimplemented,
-                          "Unsupported elliptic curve");
-  }
-}
+namespace {
 
-EciesHkdfNistPCurveSendKemBoringSsl::EciesHkdfNistPCurveSendKemBoringSsl(
-    subtle::EllipticCurveType curve, const std::string& pubx,
-    const std::string& puby, internal::SslUniquePtr<EC_POINT> peer_pub_key)
-    : curve_(curve),
-      pubx_(pubx),
-      puby_(puby),
-      peer_pub_key_(std::move(peer_pub_key)) {}
+class EciesHkdfNistPCurveSendKemBoringSslImpl
+    : public EciesHkdfNistPCurveSendKemBoringSsl {
+ public:
+  EciesHkdfNistPCurveSendKemBoringSslImpl(
+      subtle::EllipticCurveType curve, const std::string& pubx,
+      const std::string& puby, internal::SslUniquePtr<EC_POINT> peer_pub_key)
+      : curve_(curve),
+        pubx_(pubx),
+        puby_(puby),
+        peer_pub_key_(std::move(peer_pub_key)) {}
 
-// static
-absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
-EciesHkdfNistPCurveSendKemBoringSsl::New(subtle::EllipticCurveType curve,
-                                         const std::string& pubx,
-                                         const std::string& puby) {
-  auto status =
-      internal::CheckFipsCompatibility<EciesHkdfNistPCurveSendKemBoringSsl>();
-  if (!status.ok()) return status;
+  absl::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
+      subtle::HashType hash, absl::string_view hkdf_salt,
+      absl::string_view hkdf_info, uint32_t key_size_in_bytes,
+      subtle::EcPointFormat point_format) const override;
 
-  auto status_or_ec_point = internal::GetEcPoint(curve, pubx, puby);
-  if (!status_or_ec_point.ok()) return status_or_ec_point.status();
-  return absl::WrapUnique(new EciesHkdfNistPCurveSendKemBoringSsl(
-      curve, pubx, puby, std::move(status_or_ec_point.value())));
-}
+ private:
+  EllipticCurveType curve_;
+  std::string pubx_;
+  std::string puby_;
+  internal::SslUniquePtr<EC_POINT> peer_pub_key_;
+};
 
 absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl::KemKey>>
-EciesHkdfNistPCurveSendKemBoringSsl::GenerateKey(
+EciesHkdfNistPCurveSendKemBoringSslImpl::GenerateKey(
     subtle::HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
     subtle::EcPointFormat point_format) const {
@@ -128,46 +112,24 @@ EciesHkdfNistPCurveSendKemBoringSsl::GenerateKey(
                                          std::move(symmetric_key));
 }
 
-EciesHkdfX25519SendKemBoringSsl::EciesHkdfX25519SendKemBoringSsl(
-    internal::SslUniquePtr<EVP_PKEY> peer_public_key)
-    : peer_public_key_(std::move(peer_public_key)) {}
+class EciesHkdfX25519SendKemBoringSslImpl
+    : public EciesHkdfX25519SendKemBoringSsl {
+ public:
+  explicit EciesHkdfX25519SendKemBoringSslImpl(
+      internal::SslUniquePtr<EVP_PKEY> peer_public_key)
+      : peer_public_key_(std::move(peer_public_key)) {}
 
-// static
-absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
-EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
-                                     const std::string& pubx,
-                                     const std::string& puby) {
-  auto status =
-      internal::CheckFipsCompatibility<EciesHkdfX25519SendKemBoringSsl>();
-  if (!status.ok()) return status;
+  absl::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
+      subtle::HashType hash, absl::string_view hkdf_salt,
+      absl::string_view hkdf_info, uint32_t key_size_in_bytes,
+      subtle::EcPointFormat point_format) const override;
 
-  if (curve != CURVE25519) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "curve is not CURVE25519");
-  }
-  if (pubx.size() != static_cast<size_t>(internal::X25519KeyPubKeySize())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "pubx has unexpected length");
-  }
-  if (!puby.empty()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "puby is not empty");
-  }
-
-  internal::SslUniquePtr<EVP_PKEY> peer_public_key(EVP_PKEY_new_raw_public_key(
-      /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
-      /*in=*/reinterpret_cast<const uint8_t*>(pubx.data()),
-      /*len=*/internal::Ed25519KeyPubKeySize()));
-  if (peer_public_key == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EVP_PKEY_new_raw_public_key failed");
-  }
-  return absl::WrapUnique(
-      new EciesHkdfX25519SendKemBoringSsl(std::move(peer_public_key)));
-}
+ private:
+  const internal::SslUniquePtr<EVP_PKEY> peer_public_key_;
+};
 
 absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl::KemKey>>
-EciesHkdfX25519SendKemBoringSsl::GenerateKey(
+EciesHkdfX25519SendKemBoringSslImpl::GenerateKey(
     subtle::HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
     subtle::EcPointFormat point_format) const {
@@ -212,6 +174,75 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
   }
   return std::make_unique<const KemKey>(std::string(public_key),
                                         *symmetric_key);
+}
+
+}  // namespace
+
+// static
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+EciesHkdfSenderKemBoringSsl::New(subtle::EllipticCurveType curve,
+                                 const std::string& pubx,
+                                 const std::string& puby) {
+  switch (curve) {
+    case EllipticCurveType::NIST_P256:
+    case EllipticCurveType::NIST_P384:
+    case EllipticCurveType::NIST_P521:
+      return EciesHkdfNistPCurveSendKemBoringSsl::New(curve, pubx, puby);
+    case EllipticCurveType::CURVE25519:
+      return EciesHkdfX25519SendKemBoringSsl::New(curve, pubx, puby);
+    default:
+      return absl::Status(absl::StatusCode::kUnimplemented,
+                          "Unsupported elliptic curve");
+  }
+}
+
+// static
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+EciesHkdfNistPCurveSendKemBoringSsl::New(subtle::EllipticCurveType curve,
+                                         const std::string& pubx,
+                                         const std::string& puby) {
+  auto status =
+      internal::CheckFipsCompatibility<EciesHkdfNistPCurveSendKemBoringSsl>();
+  if (!status.ok()) return status;
+
+  auto status_or_ec_point = internal::GetEcPoint(curve, pubx, puby);
+  if (!status_or_ec_point.ok()) return status_or_ec_point.status();
+  return std::make_unique<const EciesHkdfNistPCurveSendKemBoringSslImpl>(
+      curve, pubx, puby, std::move(status_or_ec_point.value()));
+}
+
+// static
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
+                                     const std::string& pubx,
+                                     const std::string& puby) {
+  auto status =
+      internal::CheckFipsCompatibility<EciesHkdfX25519SendKemBoringSsl>();
+  if (!status.ok()) return status;
+
+  if (curve != CURVE25519) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "curve is not CURVE25519");
+  }
+  if (pubx.size() != static_cast<size_t>(internal::X25519KeyPubKeySize())) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "pubx has unexpected length");
+  }
+  if (!puby.empty()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "puby is not empty");
+  }
+
+  internal::SslUniquePtr<EVP_PKEY> peer_public_key(EVP_PKEY_new_raw_public_key(
+      /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
+      /*in=*/reinterpret_cast<const uint8_t*>(pubx.data()),
+      /*len=*/internal::Ed25519KeyPubKeySize()));
+  if (peer_public_key == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "EVP_PKEY_new_raw_public_key failed");
+  }
+  return std::make_unique<const EciesHkdfX25519SendKemBoringSslImpl>(
+      std::move(peer_public_key));
 }
 
 }  // namespace subtle

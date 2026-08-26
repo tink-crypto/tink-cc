@@ -87,20 +87,16 @@ class EciesHkdfNistPCurveSendKemBoringSsl : public EciesHkdfSenderKemBoringSsl {
   // hkdf_salt.
   absl::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
       HashType hash, absl::string_view hkdf_salt, absl::string_view hkdf_info,
-      uint32_t key_size_in_bytes, EcPointFormat point_format) const override;
+      uint32_t key_size_in_bytes,
+      EcPointFormat point_format) const override = 0;
+
+  ~EciesHkdfNistPCurveSendKemBoringSsl() override = default;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
- private:
-  EciesHkdfNistPCurveSendKemBoringSsl(
-      EllipticCurveType curve, const std::string& pubx, const std::string& puby,
-      internal::SslUniquePtr<EC_POINT> peer_pub_key);
-
-  EllipticCurveType curve_;
-  std::string pubx_;
-  std::string puby_;
-  internal::SslUniquePtr<EC_POINT> peer_pub_key_;
+ protected:
+  EciesHkdfNistPCurveSendKemBoringSsl() = default;
 };
 
 // Implementation of EciesHkdfSenderKemBoringSsl for curve25519.
@@ -118,16 +114,16 @@ class EciesHkdfX25519SendKemBoringSsl : public EciesHkdfSenderKemBoringSsl {
   // hkdf_salt.
   absl::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
       HashType hash, absl::string_view hkdf_salt, absl::string_view hkdf_info,
-      uint32_t key_size_in_bytes, EcPointFormat point_format) const override;
+      uint32_t key_size_in_bytes,
+      EcPointFormat point_format) const override = 0;
+
+  ~EciesHkdfX25519SendKemBoringSsl() override = default;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
- private:
-  explicit EciesHkdfX25519SendKemBoringSsl(
-      internal::SslUniquePtr<EVP_PKEY> peer_public_key);
-
-  const internal::SslUniquePtr<EVP_PKEY> peer_public_key_;
+ protected:
+  EciesHkdfX25519SendKemBoringSsl() = default;
 };
 
 }  // namespace subtle

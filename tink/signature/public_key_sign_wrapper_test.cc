@@ -31,8 +31,8 @@
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_client_mocks.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/primitive_set.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/registry.h"
@@ -46,6 +46,7 @@
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::crypto::tink::test::DummyPublicKeySign;
 using ::crypto::tink::test::DummyPublicKeyVerify;
 using ::google::crypto::tink::KeysetInfo;

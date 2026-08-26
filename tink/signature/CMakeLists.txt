@@ -34,13 +34,13 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::public_key_verify
     tink::internal::monitoring
     tink::internal::monitoring_context
     tink::internal::monitoring_key_set_info
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
     tink::util::status
@@ -74,11 +74,11 @@ tink_cc_library(
     absl::status
     absl::strings
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::public_key_sign
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
     tink::util::status
@@ -849,12 +849,12 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::string_view
-    tink::core::primitive_set
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor
@@ -897,12 +897,12 @@ tink_cc_test(
     absl::status_matchers
     absl::string_view
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor

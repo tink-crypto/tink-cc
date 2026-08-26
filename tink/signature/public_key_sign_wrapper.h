@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/public_key_sign.h"
 #include "tink/util/statusor.h"
@@ -40,7 +40,7 @@ class PublicKeySignWrapper
   // PublicKeySign-instance provided in 'public_key_sign_set',
   // which must be non-NULL (and must contain a primary instance).
   absl::StatusOr<std::unique_ptr<PublicKeySign>> Wrap(
-      std::unique_ptr<PrimitiveSet<PublicKeySign>> primitive_set)
+      std::unique_ptr<internal::PrimitiveSet<PublicKeySign>> primitive_set)
       const override;
 };
 

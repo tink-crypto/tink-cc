@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/signature/prehash.h"
 

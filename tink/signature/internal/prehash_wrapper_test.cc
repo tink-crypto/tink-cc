@@ -28,7 +28,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/signature/prehash.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"

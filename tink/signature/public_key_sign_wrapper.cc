@@ -26,9 +26,9 @@
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/primitive_set.h"
 #include "tink/public_key_sign.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -37,14 +37,15 @@
 namespace crypto {
 namespace tink {
 
-using google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::OutputPrefixType;
 
 namespace {
 
 constexpr absl::string_view kPrimitive = "public_key_sign";
 constexpr absl::string_view kSignApi = "sign";
 
-absl::Status Validate(PrimitiveSet<PublicKeySign>* public_key_sign_set) {
+absl::Status Validate(
+    internal::PrimitiveSet<PublicKeySign>* public_key_sign_set) {
   if (public_key_sign_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "public_key_sign_set must be non-NULL");
@@ -59,7 +60,8 @@ absl::Status Validate(PrimitiveSet<PublicKeySign>* public_key_sign_set) {
 class PublicKeySignSetWrapper : public PublicKeySign {
  public:
   explicit PublicKeySignSetWrapper(
-      std::unique_ptr<PrimitiveSet<PublicKeySign>> public_key_sign_set,
+      std::unique_ptr<internal::PrimitiveSet<PublicKeySign>>
+          public_key_sign_set,
       std::unique_ptr<internal::MonitoringClient> monitoring_sign_client =
           nullptr)
       : public_key_sign_set_(std::move(public_key_sign_set)),
@@ -70,7 +72,7 @@ class PublicKeySignSetWrapper : public PublicKeySign {
   ~PublicKeySignSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<PublicKeySign>> public_key_sign_set_;
+  std::unique_ptr<internal::PrimitiveSet<PublicKeySign>> public_key_sign_set_;
   std::unique_ptr<internal::MonitoringClient> monitoring_sign_client_;
 };
 
@@ -105,7 +107,8 @@ absl::StatusOr<std::string> PublicKeySignSetWrapper::Sign(
 }  // anonymous namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<PublicKeySign>> primitive_set) const {
+    std::unique_ptr<internal::PrimitiveSet<PublicKeySign>> primitive_set)
+    const {
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 

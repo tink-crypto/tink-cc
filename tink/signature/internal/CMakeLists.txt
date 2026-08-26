@@ -1775,13 +1775,8 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
-    tink::internal::monitoring
-    tink::internal::monitoring_context
-    tink::internal::monitoring_key_set_info
-    tink::internal::monitoring_util
-    tink::internal::registry_impl
+    tink::internal::primitive_set
     tink::internal::util
     tink::signature::prehash
     tink::proto::tink_cc_proto
@@ -1799,7 +1794,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::core::primitive_set
+    tink::internal::primitive_set
     tink::signature::prehash
     tink::util::test_util
     tink::proto::tink_cc_proto

@@ -31,9 +31,9 @@
 #include "tink/internal/monitoring_context.h"
 #include "tink/internal/monitoring_key_set_info.h"
 #include "tink/internal/monitoring_util.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/primitive_set.h"
 #include "tink/public_key_verify.h"
 #include "proto/tink.pb.h"
 
@@ -47,7 +47,8 @@ constexpr absl::string_view kVerifyApi = "verify";
 
 using ::google::crypto::tink::OutputPrefixType;
 
-absl::Status Validate(PrimitiveSet<PublicKeyVerify>* public_key_verify_set) {
+absl::Status Validate(
+    internal::PrimitiveSet<PublicKeyVerify>* public_key_verify_set) {
   if (public_key_verify_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "public_key_verify_set must be non-NULL");
@@ -144,8 +145,8 @@ absl::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
 }
 
 std::vector<VerifyEntry> UnpackPrimitives(
-    std::vector<
-        std::unique_ptr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>>>
+    std::vector<std::unique_ptr<
+        internal::PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>>>
         set_entries) {
   std::vector<VerifyEntry> entries;
   entries.reserve(set_entries.size());
@@ -169,8 +170,8 @@ std::vector<VerifyEntry> UnpackPrimitives(
 }  // anonymous namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set)
-    const {
+    std::unique_ptr<internal::PrimitiveSet<PublicKeyVerify>>
+        public_key_verify_set) const {
   absl::Status status = Validate(public_key_verify_set.get());
   if (!status.ok()) return status;
 

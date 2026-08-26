@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/public_key_verify.h"
 #include "tink/util/status.h"
@@ -41,8 +41,8 @@ class PublicKeyVerifyWrapper
   // PublicKeyVerify-instance provided in 'public_key_verify_set',
   // which must be non-NULL (and must contain a primary instance).
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Wrap(
-      std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set)
-      const override;
+      std::unique_ptr<internal::PrimitiveSet<PublicKeyVerify>>
+          public_key_verify_set) const override;
 };
 
 }  // namespace tink

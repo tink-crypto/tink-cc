@@ -64,6 +64,24 @@ std::string Ed25519PublicKeyBytes() {
       "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025");
 }
 
+// Test vector from
+// https://datatracker.ietf.org/doc/html/rfc8032#section-7.1 - TEST 1.
+constexpr absl::string_view kEmptyMessageSignatureHex =
+    "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155"
+    "5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b";
+
+RestrictedData Ed25519EmptyMessagePrivateKeyBytes() {
+  return RestrictedData(
+      HexDecodeOrDie(
+          "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"),
+      InsecureSecretKeyAccess::Get());
+}
+
+std::string Ed25519EmptyMessagePublicKeyBytes() {
+  return HexDecodeOrDie(
+      "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a");
+}
+
 struct Ed25519TestVectorParams {
   Ed25519Parameters::Variant variant;
   std::optional<int> id_requirement;
@@ -158,6 +176,27 @@ const std::vector<SignatureTestVector>& CreateEd25519TestVectors() {
       }());
   return *test_vectors;
 }
+
+const SignatureTestVector& CreateEd25519EmptyMessageTestVector() {
+  static const absl::NoDestructor<SignatureTestVector> test_vector([] {
+    absl::StatusOr<Ed25519Parameters> parameters =
+        Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+    ABSL_CHECK_OK(parameters.status());
+    absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+        *parameters, Ed25519EmptyMessagePublicKeyBytes(), std::nullopt,
+        GetPartialKeyAccess());
+    ABSL_CHECK_OK(public_key.status());
+    absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+        *public_key, Ed25519EmptyMessagePrivateKeyBytes(),
+        GetPartialKeyAccess());
+    ABSL_CHECK_OK(private_key.status());
+    return SignatureTestVector(
+        std::make_unique<Ed25519PrivateKey>(*std::move(private_key)),
+        HexDecodeOrDie(kEmptyMessageSignatureHex), "");
+  }());
+  return *test_vector;
+}
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

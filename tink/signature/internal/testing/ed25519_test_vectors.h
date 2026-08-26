@@ -35,6 +35,10 @@ const std::vector<SignatureTestVector>& CreateEd25519TestVectors();
 const SignatureTestVector& GetEd25519TestVector(
     Ed25519Parameters::Variant variant);
 
+// Returns static test vector for Ed25519 with an empty message (RFC 8032 Test
+// 1).
+const SignatureTestVector& CreateEd25519EmptyMessageTestVector();
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

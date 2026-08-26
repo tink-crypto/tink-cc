@@ -1268,12 +1268,16 @@ tink_cc_test(
     tink::subtle::ed25519_verify_boringssl
     tink::subtle::random
     gmock
+    absl::no_destructor
     absl::status
     absl::status_matchers
     absl::strings
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::core::secret_data
     tink::config::tink_fips
     tink::internal::ec_util
     tink::internal::fips_utils
@@ -1281,9 +1285,6 @@ tink_cc_test(
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1296,6 +1297,7 @@ tink_cc_test(
   DEPS
     tink::subtle::ed25519_verify_boringssl
     gmock
+    absl::no_destructor
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1309,8 +1311,6 @@ tink_cc_test(
     tink::signature::ed25519_private_key
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

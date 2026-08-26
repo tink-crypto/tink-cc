@@ -21,16 +21,18 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "tink/input_stream.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
+#include "tink/prf/config_2026.h"
+#include "tink/prf/internal/aes_cmac_prf_test_vectors.h"
+#include "tink/prf/prf_config.h"
 #include "tink/prf/prf_set.h"
 #include "tink/subtle/aes_cmac_boringssl.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "proto/aes_cmac_prf.pb.h"
 #include "proto/tink.pb.h"
 
@@ -191,6 +193,37 @@ TEST(AesCmacPrfKeyManagerTest, DeriveKeyInvalidVersion) {
       AesCmacPrfKeyManager().DeriveKey(format, inputstream.get());
   EXPECT_THAT(key_or, Not(IsOk()));
 }
+
+using AesCmacPrfKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::AesCmacPrfTestVector>;
+
+TEST_P(AesCmacPrfKeyManagerTestVectorTest, ComputePrfSet) {
+  const internal::AesCmacPrfTestVector& test_vector = GetParam();
+  if (test_vector.key.GetParameters().KeySizeInBytes() != 32) {
+    GTEST_SKIP() << "KeyManager only supports 32-byte keys";
+  }
+  ASSERT_THAT(PrfConfig::Register(), IsOk());
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+              test_vector.key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set =
+      handle->GetPrimitive<PrfSet>(ConfigPrf2026());
+  ASSERT_THAT(prf_set, IsOk());
+
+  absl::StatusOr<std::string> output = (*prf_set)->ComputePrimary(
+      test_vector.message, test_vector.output.size());
+  ASSERT_THAT(output, IsOk());
+  EXPECT_THAT(*output, Eq(test_vector.output));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AesCmacPrfKeyManagerTestVectorTestSuite, AesCmacPrfKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateAesCmacPrfTestVectors()));
 
 }  // namespace
 }  // namespace tink

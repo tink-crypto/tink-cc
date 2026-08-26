@@ -71,7 +71,7 @@ const AesCmacPrfTestVectorMap& CreateAesCmacPrfTestVectorsMap() {
                    "8899aabbccddeeff",
                    /*msg_hex=*/
                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                   "bbbbbbbbbbbbbb",
+                   "bbbbbbbbbbbbbbbbbb",
                    /*output_hex=*/"139fce15a6f4a281ad22458d3d3cac26",
                })},
       });

@@ -430,17 +430,19 @@ tink_cc_test(
     aes_cmac_prf_key_manager_test.cc
   DEPS
     tink::prf::aes_cmac_prf_key_manager
+    tink::prf::config_2026
+    tink::prf::prf_config
     tink::prf::prf_set
     gmock
-    absl::memory
     absl::status_matchers
+    absl::statusor
     tink::core::input_stream
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::prf::internal::aes_cmac_prf_test_vectors
     tink::subtle::aes_cmac_boringssl
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::proto::aes_cmac_prf_cc_proto
     tink::proto::tink_cc_proto
 )

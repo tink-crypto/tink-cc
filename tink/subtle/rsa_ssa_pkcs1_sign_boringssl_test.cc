@@ -16,28 +16,27 @@
 
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 
-#include <cstdint>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "openssl/bn.h"
-#include "openssl/crypto.h"
-#include "openssl/rsa.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/secret_buffer.h"
-#include "tink/internal/ssl_unique_ptr.h"
+#include "tink/partial_key_access.h"
+#include "tink/public_key_sign.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -51,18 +50,49 @@ using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::NotNull;
 
+internal::RsaPrivateKey ToRsaPrivateKey(const RsaSsaPkcs1PrivateKey& key) {
+  internal::RsaPrivateKey private_key;
+  private_key.n = std::string(
+      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
+  private_key.e = std::string(
+      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
+  private_key.d =
+      key.GetPrivateExponentData().Get(InsecureSecretKeyAccess::Get());
+  private_key.p = key.GetPrimePData(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get());
+  private_key.q = key.GetPrimeQData(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get());
+  private_key.dp =
+      key.GetPrimeExponentPData().Get(InsecureSecretKeyAccess::Get());
+  private_key.dq =
+      key.GetPrimeExponentQData().Get(InsecureSecretKeyAccess::Get());
+  private_key.crt =
+      key.GetCrtCoefficientData().Get(InsecureSecretKeyAccess::Get());
+  return private_key;
+}
+
+internal::RsaPublicKey ToRsaPublicKey(const RsaSsaPkcs1PublicKey& key) {
+  internal::RsaPublicKey public_key;
+  public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
+  public_key.e =
+      std::string(key.GetParameters().GetPublicExponent().GetValue());
+  return public_key;
+}
+
 class RsaPkcs1SignBoringsslTest : public ::testing::Test {
  public:
-  RsaPkcs1SignBoringsslTest() : rsa_f4_(BN_new()) {
-    EXPECT_TRUE(BN_set_word(rsa_f4_.get(), RSA_F4));
-    EXPECT_THAT(
-        internal::NewRsaKeyPair(/*modulus_size_in_bits=*/2048, rsa_f4_.get(),
-                                &private_key_, &public_key_),
-        IsOk());
+  RsaPkcs1SignBoringsslTest() {
+    const internal::SignatureTestVector& test_vector =
+        internal::Create2048BitsTestVector();
+    const RsaSsaPkcs1PrivateKey* typed_key =
+        dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+            test_vector.signature_private_key.get());
+    ABSL_CHECK(typed_key != nullptr);
+    private_key_ = ToRsaPrivateKey(*typed_key);
+    public_key_ = ToRsaPublicKey(typed_key->GetPublicKey());
   }
 
  protected:
-  internal::SslUniquePtr<BIGNUM> rsa_f4_;
   internal::RsaPrivateKey private_key_;
   internal::RsaPublicKey public_key_;
 };
@@ -175,11 +205,9 @@ TEST_F(RsaPkcs1SignBoringsslTest, TestRestrictedFipsModuli) {
   }
 
   internal::RsaPrivateKey private_key;
-  internal::RsaPublicKey public_key;
-
-  EXPECT_THAT(internal::NewRsaKeyPair(/*modulus_size_in_bits=*/4096,
-                                      rsa_f4_.get(), &private_key, &public_key),
-              IsOk());
+  // Any arbitrary 4096-bit modulus is sufficient here.
+  private_key.n = std::string(512, '\x80');
+  private_key.e = "\x01\x00\x01";
 
   internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
   EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(private_key, params).status(),
@@ -191,12 +219,13 @@ TEST_F(RsaPkcs1SignBoringsslTest, TestAllowedFipsModuli) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
   }
 
-  internal::RsaPrivateKey private_key;
-  internal::RsaPublicKey public_key;
-
-  EXPECT_THAT(internal::NewRsaKeyPair(/*modulus_size_in_bits=*/3072,
-                                      rsa_f4_.get(), &private_key, &public_key),
-              IsOk());
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitsTestVector();
+  const RsaSsaPkcs1PrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  internal::RsaPrivateKey private_key = ToRsaPrivateKey(*typed_key);
 
   internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
   EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(private_key, params).status(),

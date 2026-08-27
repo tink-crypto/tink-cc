@@ -24,22 +24,22 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
-#include "openssl/bn.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -58,6 +58,14 @@ using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::testing::Not;
 using ::testing::NotNull;
 
+internal::RsaPublicKey ToRsaPublicKey(const RsaSsaPkcs1PublicKey& key) {
+  internal::RsaPublicKey public_key;
+  public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
+  public_key.e =
+      std::string(key.GetParameters().GetPublicExponent().GetValue());
+  return public_key;
+}
+
 // Test vector from
 // https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/Digital-Signatures
 struct NistTestVector {
@@ -68,38 +76,44 @@ struct NistTestVector {
   HashType sig_hash;
 };
 
-static const NistTestVector nist_test_vector{
-    test::HexDecodeOrDie(
-        "c47abacc2a84d56f3614d92fd62ed36ddde459664b9301dcd1d61781cfcc026bcb2399"
-        "bee7e75681a80b7bf500e2d08ceae1c42ec0b707927f2b2fe92ae852087d25f1d260cc"
-        "74905ee5f9b254ed05494a9fe06732c3680992dd6f0dc634568d11542a705f83ae96d2"
-        "a49763d5fbb24398edf3702bc94bc168190166492b8671de874bb9cecb058c6c8344aa"
-        "8c93754d6effcd44a41ed7de0a9dcd9144437f212b18881d042d331a4618a9e630ef9b"
-        "b66305e4fdf8f0391b3b2313fe549f0189ff968b92f33c266a4bc2cffc897d1937eeb9"
-        "e406f5d0eaa7a14782e76af3fce98f54ed237b4a04a4159a5f6250a296a902880204e6"
-        "1d891c4da29f2d65f34cbb"),
-    test::HexDecodeOrDie("49d2a1"),
-    test::HexDecodeOrDie(
-        "95123c8d1b236540b86976a11cea31f8bd4e6c54c235147d20ce722b03a6ad756fbd91"
-        "8c27df8ea9ce3104444c0bbe877305bc02e35535a02a58dcda306e632ad30b3dc3ce0b"
-        "a97fdf46ec192965dd9cd7f4a71b02b8cba3d442646eeec4af590824ca98d74fbca934"
-        "d0b6867aa1991f3040b707e806de6e66b5934f05509bea"),
-    test::HexDecodeOrDie(
-        "51265d96f11ab338762891cb29bf3f1d2b3305107063f5f3245af376dfcc7027d39365"
-        "de70a31db05e9e10eb6148cb7f6425f0c93c4fb0e2291adbd22c77656afc196858a11e"
-        "1c670d9eeb592613e69eb4f3aa501730743ac4464486c7ae68fd509e896f63884e9424"
-        "f69c1c5397959f1e52a368667a598a1fc90125273d9341295d2f8e1cc4969bf228c860"
-        "e07a3546be2eeda1cde48ee94d062801fe666e4a7ae8cb9cd79262c017b081af874ff0"
-        "0453ca43e34efdb43fffb0bb42a4e2d32a5e5cc9e8546a221fe930250e5f5333e0efe5"
-        "8ffebf19369a3b8ae5a67f6a048bc9ef915bda25160729b508667ada84a0c27e7e26cf"
-        "2abca413e5e4693f4a9405"),
-    HashType::SHA256};
+const NistTestVector& GetNistTestVector() {
+  static const absl::NoDestructor<NistTestVector> nist_test_vector([] {
+    return NistTestVector{
+        test::HexDecodeOrDie(
+            "c47abacc2a84d56f3614d92fd62ed36ddde459664b9301dcd1d61781cfcc026bcb"
+            "2399bee7e75681a80b7bf500e2d08ceae1c42ec0b707927f2b2fe92ae852087d25"
+            "f1d260cc74905ee5f9b254ed05494a9fe06732c3680992dd6f0dc634568d11542a"
+            "705f83ae96d2a49763d5fbb24398edf3702bc94bc168190166492b8671de874bb9"
+            "cecb058c6c8344aa8c93754d6effcd44a41ed7de0a9dcd9144437f212b18881d04"
+            "2d331a4618a9e630ef9bb66305e4fdf8f0391b3b2313fe549f0189ff968b92f33c"
+            "266a4bc2cffc897d1937eeb9e406f5d0eaa7a14782e76af3fce98f54ed237b4a04"
+            "a4159a5f6250a296a902880204e61d891c4da29f2d65f34cbb"),
+        test::HexDecodeOrDie("49d2a1"),
+        test::HexDecodeOrDie(
+            "95123c8d1b236540b86976a11cea31f8bd4e6c54c235147d20ce722b03a6ad756f"
+            "bd918c27df8ea9ce3104444c0bbe877305bc02e35535a02a58dcda306e632ad30b"
+            "3dc3ce0ba97fdf46ec192965dd9cd7f4a71b02b8cba3d442646eeec4af590824ca"
+            "98d74fbca934d0b6867aa1991f3040b707e806de6e66b5934f05509bea"),
+        test::HexDecodeOrDie(
+            "51265d96f11ab338762891cb29bf3f1d2b3305107063f5f3245af376dfcc7027d3"
+            "9365de70a31db05e9e10eb6148cb7f6425f0c93c4fb0e2291adbd22c77656afc19"
+            "6858a11e1c670d9eeb592613e69eb4f3aa501730743ac4464486c7ae68fd509e89"
+            "6f63884e9424f69c1c5397959f1e52a368667a598a1fc90125273d9341295d2f8e"
+            "1cc4969bf228c860e07a3546be2eeda1cde48ee94d062801fe666e4a7ae8cb9cd7"
+            "9262c017b081af874ff00453ca43e34efdb43fffb0bb42a4e2d32a5e5cc9e8546a"
+            "221fe930250e5f5333e0efe58ffebf19369a3b8ae5a67f6a048bc9ef915bda2516"
+            "0729b508667ada84a0c27e7e26cf2abca413e5e4693f4a9405"),
+        HashType::SHA256};
+  }());
+  return *nist_test_vector;
+}
 
 TEST_F(RsaSsaPkcs1VerifyBoringSslTest, BasicVerify) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
+  const NistTestVector& nist_test_vector = GetNistTestVector();
   internal::RsaPublicKey pub_key{nist_test_vector.n, nist_test_vector.e};
   internal::RsaSsaPkcs1Params params{nist_test_vector.sig_hash};
 
@@ -116,6 +130,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
+  const NistTestVector& nist_test_vector = GetNistTestVector();
   internal::RsaPublicKey nist_pub_key{nist_test_vector.n, nist_test_vector.e};
   internal::RsaSsaPkcs1Params nist_params{nist_test_vector.sig_hash};
   internal::RsaPublicKey small_pub_key{std::string("\x23"), std::string("\x3")};
@@ -150,6 +165,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
+  const NistTestVector& nist_test_vector = GetNistTestVector();
   internal::RsaPublicKey pub_key{nist_test_vector.n, nist_test_vector.e};
   internal::RsaSsaPkcs1Params params{nist_test_vector.sig_hash};
 
@@ -299,6 +315,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, TestFipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
+  const NistTestVector& nist_test_vector = GetNistTestVector();
   internal::RsaPublicKey pub_key{nist_test_vector.n, nist_test_vector.e};
   internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
   EXPECT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(pub_key, params).status(),
@@ -310,14 +327,13 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, TestAllowedFipsModuli) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
   }
 
-  internal::SslUniquePtr<BIGNUM> rsa_f4(BN_new());
-  internal::RsaPrivateKey private_key;
-  internal::RsaPublicKey public_key;
-  BN_set_word(rsa_f4.get(), RSA_F4);
-
-  EXPECT_THAT(
-      internal::NewRsaKeyPair(3072, rsa_f4.get(), &private_key, &public_key),
-      IsOk());
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitsTestVector();
+  const RsaSsaPkcs1PrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  internal::RsaPublicKey public_key = ToRsaPublicKey(typed_key->GetPublicKey());
 
   internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
   EXPECT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(public_key, params).status(),
@@ -329,22 +345,11 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, TestRestrictedFipsModuli) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
   }
 
-  internal::SslUniquePtr<BIGNUM> rsa_f4(BN_new());
-  internal::RsaPrivateKey private_key;
   internal::RsaPublicKey public_key;
+  // Any arbitrary 4096-bit modulus is sufficient here.
+  public_key.n = std::string(512, '\x80');
+  public_key.e = "\x01\x00\x01";
   internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
-  BN_set_word(rsa_f4.get(), RSA_F4);
-
-  EXPECT_THAT(
-      internal::NewRsaKeyPair(2560, rsa_f4.get(), &private_key, &public_key),
-      IsOk());
-
-  EXPECT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(public_key, params).status(),
-              StatusIs(absl::StatusCode::kInternal));
-
-  EXPECT_THAT(
-      internal::NewRsaKeyPair(4096, rsa_f4.get(), &private_key, &public_key),
-      IsOk());
 
   EXPECT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(public_key, params).status(),
               StatusIs(absl::StatusCode::kInternal));

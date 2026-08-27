@@ -26,12 +26,8 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/internal/fips_utils.h"  // IWYU pragma: keep
-#ifndef TINK_USE_ONLY_FIPS
-#include "openssl/mldsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
@@ -160,17 +156,17 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
   RestrictedData private_seed_bytes = RestrictedData(
       test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get())
-          .substr(MLDSA_SEED_BYTES - 1),
+          .substr(32 - 1),
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
       MlDsaPrivateKey::Create(
           test_private_key->GetPublicKey().GetParameters(), private_seed_bytes,
           test_private_key->GetIdRequirement(), GetPartialKeyAccess())
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(absl::StrCat(
-                   "Invalid ML-DSA private seed size. The seed must be ",
-                   MLDSA_SEED_BYTES, " bytes."))));
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Invalid ML-DSA private seed size. The seed must be 32 "
+                    "bytes.")));
 
   std::string longer_private_seed_bytes(
       test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
@@ -183,10 +179,10 @@ TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithInvalidPrivateKeyLengthFails) {
           test_private_key->GetPublicKey().GetParameters(), private_seed_bytes,
           test_private_key->GetIdRequirement(), GetPartialKeyAccess())
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(absl::StrCat(
-                   "Invalid ML-DSA private seed size. The seed must be ",
-                   MLDSA_SEED_BYTES, " bytes."))));
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Invalid ML-DSA private seed size. The seed must be 32 "
+                    "bytes.")));
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateFromSeedWithMismatchedIdRequirementFails) {
@@ -221,16 +217,16 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   RestrictedData private_seed_bytes = RestrictedData(
       test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get())
-          .substr(MLDSA_SEED_BYTES - 1),
+          .substr(32 - 1),
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
       MlDsaPrivateKey::Create(test_private_key->GetPublicKey(),
                               private_seed_bytes, GetPartialKeyAccess())
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(absl::StrCat(
-                   "Invalid ML-DSA private seed size. The seed must be ",
-                   MLDSA_SEED_BYTES, " bytes."))));
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Invalid ML-DSA private seed size. The seed must be 32 "
+                    "bytes.")));
 
   std::string longer_private_seed_bytes(
       test_private_key->GetPrivateSeedBytes(GetPartialKeyAccess())
@@ -242,10 +238,10 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
       MlDsaPrivateKey::Create(test_private_key->GetPublicKey(),
                               private_seed_bytes, GetPartialKeyAccess())
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(absl::StrCat(
-                   "Invalid ML-DSA private seed size. The seed must be ",
-                   MLDSA_SEED_BYTES, " bytes."))));
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Invalid ML-DSA private seed size. The seed must be 32 "
+                    "bytes.")));
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
@@ -253,9 +249,8 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
   const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
       test_vector.signature_private_key.get());
 
-  RestrictedData mismatched_seed =
-      RestrictedData(subtle::Random::GetRandomBytes(MLDSA_SEED_BYTES),
-                     InsecureSecretKeyAccess::Get());
+  RestrictedData mismatched_seed = RestrictedData(
+      subtle::Random::GetRandomBytes(32), InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(
       MlDsaPrivateKey::Create(test_private_key->GetPublicKey(), mismatched_seed,
@@ -285,7 +280,7 @@ TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
 
   absl::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
       test_private_key->GetPublicKey().GetParameters(),
-      RestrictedData(subtle::Random::GetRandomBytes(MLDSA_SEED_BYTES),
+      RestrictedData(subtle::Random::GetRandomBytes(32),
                      InsecureSecretKeyAccess::Get()),
       test_private_key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());

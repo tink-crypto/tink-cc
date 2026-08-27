@@ -1785,7 +1785,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::strings
     absl::optional
     crypto
     tink::core::insecure_secret_key_access

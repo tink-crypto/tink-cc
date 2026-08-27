@@ -78,7 +78,7 @@ absl::StatusOr<Ed25519Key> ParseEd25519PrivateKey(
                         absl::StrCat("Invalid private key size; expected ",
                                      priv_key_size, " got ", out_len_priv));
   }
-  crypto::tink::util::SecretData private_key =
+  SecretData private_key =
       crypto::tink::util::internal::AsSecretData(raw_private_key);
   crypto::tink::util::SafeZeroMemory(raw_private_key.data(), priv_key_size);
 

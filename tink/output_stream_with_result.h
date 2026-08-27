@@ -40,9 +40,9 @@ auto ExtractStatus(const ResultType& result)
 // Closes the OutputStream and returns the status,
 // for when ResultType is Status
 template <class ResultType>
-auto ExtractStatus(ResultType result) ->
-    typename std::enable_if<std::is_same<ResultType, absl::Status>::value,
-                            absl::Status>::type {
+auto ExtractStatus(ResultType result)
+    -> std::enable_if_t<std::is_same_v<ResultType, absl::Status>,
+                        absl::Status> {
   return result;
 }
 }  // namespace internal
@@ -62,9 +62,8 @@ class OutputStreamWithResult : public OutputStream {
   ~OutputStreamWithResult() override = default;
 
   // The return type is StatusOr<T> if T != Status, and Status otherwise.
-  using ResultType =
-      typename std::conditional<std::is_same<T, absl::Status>::value,
-                                absl::Status, absl::StatusOr<T>>::type;
+  using ResultType = std::conditional_t<std::is_same_v<T, absl::Status>,
+                                        absl::Status, absl::StatusOr<T>>;
 
   // Get the result associated with this OutputStream. Can only be called on
   // closed streams, and will otherwise fail with FAILED_PRECONDITION as error

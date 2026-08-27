@@ -667,7 +667,7 @@ KeysetHandle::GenerateNewFromParameters(
     const P& parameters, const crypto::tink::KeyGenConfiguration& config,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   // Check that `parameters` is a valid type.
-  static_assert(std::is_base_of<Parameters, P>::value, "");
+  static_assert(std::is_base_of_v<Parameters, P>, "");
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromParams(parameters.Clone(),

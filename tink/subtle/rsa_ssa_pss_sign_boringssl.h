@@ -53,37 +53,19 @@ class RsaSsaPssSignBoringSsl : public PublicKeySign {
 
   ~RsaSsaPssSignBoringSsl() override = default;
 
-  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override = 0;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
+
+ protected:
+  RsaSsaPssSignBoringSsl() = default;
 
  private:
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const crypto::tink::internal::RsaPrivateKey& private_key,
       const crypto::tink::internal::RsaSsaPssParams& params,
       absl::string_view output_prefix, absl::string_view message_suffix);
-
-  RsaSsaPssSignBoringSsl(crypto::tink::internal::SslUniquePtr<RSA> private_key,
-                         const EVP_MD* sig_hash, const EVP_MD* mgf1_hash,
-                         int32_t salt_length, absl::string_view output_prefix,
-                         absl::string_view message_suffix)
-      : private_key_(std::move(private_key)),
-        sig_hash_(sig_hash),
-        mgf1_hash_(mgf1_hash),
-        salt_length_(salt_length),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
-
-  const crypto::tink::internal::SslUniquePtr<RSA> private_key_;
-  // Pointers to singletons owned by OpenSSL/BoringSSL.
-  const EVP_MD* sig_hash_;
-  const EVP_MD* mgf1_hash_;
-  const int32_t salt_length_;
-  const std::string output_prefix_;
-  const std::string message_suffix_;
 };
 
 }  // namespace subtle

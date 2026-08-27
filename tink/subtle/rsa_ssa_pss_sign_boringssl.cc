@@ -21,8 +21,8 @@
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -127,6 +127,64 @@ absl::StatusOr<subtle::HashType> ToSubtle(
   }
 }
 
+class RsaSsaPssSignBoringSslImpl : public RsaSsaPssSignBoringSsl {
+ public:
+  RsaSsaPssSignBoringSslImpl(
+      crypto::tink::internal::SslUniquePtr<RSA> private_key,
+      const EVP_MD* sig_hash, const EVP_MD* mgf1_hash, int32_t salt_length,
+      absl::string_view output_prefix, absl::string_view message_suffix)
+      : private_key_(std::move(private_key)),
+        sig_hash_(sig_hash),
+        mgf1_hash_(mgf1_hash),
+        salt_length_(salt_length),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
+
+ private:
+  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
+
+  const crypto::tink::internal::SslUniquePtr<RSA> private_key_;
+  const EVP_MD* sig_hash_;
+  const EVP_MD* mgf1_hash_;
+  const int32_t salt_length_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
+};
+
+absl::StatusOr<std::string> RsaSsaPssSignBoringSslImpl::SignWithoutPrefix(
+    absl::string_view data) const {
+  data = internal::EnsureStringNonNull(data);
+  ABSL_ASSIGN_OR_RETURN(std::string digest,
+                        internal::ComputeHash(data, *sig_hash_));
+
+  ABSL_ASSIGN_OR_RETURN(
+      std::string signature, internal::CallWithCoreDumpProtection([&]() {
+        return SslRsaSsaPssSign(private_key_.get(), digest, sig_hash_,
+                                mgf1_hash_, salt_length_);
+      }));
+  return signature;
+}
+
+absl::StatusOr<std::string> RsaSsaPssSignBoringSslImpl::Sign(
+    absl::string_view data) const {
+  absl::StatusOr<std::string> signature_without_prefix_;
+  if (message_suffix_.empty()) {
+    signature_without_prefix_ = SignWithoutPrefix(data);
+  } else {
+    signature_without_prefix_ =
+        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
+  }
+  if (!signature_without_prefix_.ok()) {
+    return signature_without_prefix_.status();
+  }
+  if (output_prefix_.empty()) {
+    return signature_without_prefix_;
+  }
+  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+}
+
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
@@ -208,46 +266,9 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
     return rsa.status();
   }
 
-  return {absl::WrapUnique(new RsaSsaPssSignBoringSsl(
+  return std::make_unique<RsaSsaPssSignBoringSslImpl>(
       *std::move(rsa), *sig_hash, *mgf1_hash, params.salt_length, output_prefix,
-      message_suffix))};
-}
-
-absl::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
-    absl::string_view data) const {
-  data = internal::EnsureStringNonNull(data);
-  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
-  if (!digest.ok()) {
-    return digest.status();
-  }
-
-  absl::StatusOr<std::string> signature =
-      internal::CallWithCoreDumpProtection([&]() {
-        return SslRsaSsaPssSign(private_key_.get(), *digest, sig_hash_,
-                                mgf1_hash_, salt_length_);
-      });
-  if (!signature.ok()) {
-    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
-  }
-  return signature;
-}
-
-absl::StatusOr<std::string> RsaSsaPssSignBoringSsl::Sign(
-    absl::string_view data) const {
-  absl::StatusOr<std::string> signature_without_prefix_;
-  if (message_suffix_.empty()) {
-    signature_without_prefix_ = SignWithoutPrefix(data);
-  } else {
-    signature_without_prefix_ =
-        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
-  }
-  if (!signature_without_prefix_.ok()) {
-    return signature_without_prefix_.status();
-  }
-  if (output_prefix_.empty()) {
-    return signature_without_prefix_;
-  }
-  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+      message_suffix);
 }
 
 }  // namespace subtle

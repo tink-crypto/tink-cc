@@ -21,13 +21,24 @@ echo "==========================================================================
 
 set -euo pipefail
 
+# Disable Homebrew auto-updates and cleanup to speed up builds and avoid
+# pulling rolling HEAD package changes on Kokoro VMs.
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+# Enable retry-all-errors for curl in Homebrew so that connection resets
+# and timeouts to ghcr.io are retried alongside HTTP errors.
+export HOMEBREW_CURLRC="${HOME}/.homebrew_curlrc"
+echo "retry-all-errors" > "${HOMEBREW_CURLRC}"
+
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
 # Install cmake if not available
-cmake --version || brew install cmake
+if ! command -v cmake &> /dev/null; then
+  brew install cmake
+fi
 
 ./kokoro/testutils/run_cmake_tests.sh .
 ./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF

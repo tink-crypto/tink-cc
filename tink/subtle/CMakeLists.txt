@@ -268,6 +268,7 @@ tink_cc_library(
     tink::subtle::common_enums
     tink::subtle::subtle_util_boringssl
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     crypto
@@ -281,9 +282,6 @@ tink_cc_library(
     tink::internal::util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key
-    tink::util::errors
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

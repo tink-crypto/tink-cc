@@ -22,14 +22,21 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "openssl/bn.h"
-#include "openssl/ec.h"
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#ifdef OPENSSL_IS_BORINGSSL
+#include "openssl/base.h"
+#include "openssl/ec_key.h"
+#else
+#include "openssl/ec.h"
+#endif
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
@@ -37,14 +44,10 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
-#include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util_boringssl.h"
-#include "tink/util/errors.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -62,10 +65,8 @@ absl::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
     case EcdsaParameters::CurveType::kNistP521:
       return NIST_P521;
     default:
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Invalid curve in EcdsaVerifyBoringSsl::New: ",
-                       curve_type));
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Invalid curve in EcdsaVerifyBoringSsl::New: ", curve_type));
   }
 }
 
@@ -78,10 +79,8 @@ absl::StatusOr<HashType> ConvertHashType(EcdsaParameters::HashType hash_type) {
     case EcdsaParameters::HashType::kSha512:
       return SHA512;
     default:
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Invalid hash type in EcdsaVerifyBoringSsl::New: ",
-                       hash_type));
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Invalid hash type in EcdsaVerifyBoringSsl::New: ", hash_type));
   }
 }
 
@@ -93,11 +92,9 @@ absl::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
     case EcdsaParameters::SignatureEncoding::kDer:
       return DER;
     default:
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat(
-              "Invalid signature encoding in EcdsaVerifyBoringSsl::New: ",
-              signature_encoding));
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Invalid signature encoding in EcdsaVerifyBoringSsl::New: ",
+          signature_encoding));
   }
 }
 
@@ -138,19 +135,14 @@ absl::Status EcdsaVerifyBoringSslImpl::VerifyWithoutPrefix(
   uint8_t digest[EVP_MAX_MD_SIZE];
   if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
                       nullptr)) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Could not compute digest.");
+    return absl::InternalError("Could not compute digest.");
   }
 
   std::string derSig(signature);
   if (encoding_ == subtle::EcdsaSignatureEncoding::IEEE_P1363) {
     const EC_GROUP* group = EC_KEY_get0_group(key_.get());
-    auto status_or_der = internal::EcSignatureIeeeToDer(group, signature);
-
-    if (!status_or_der.ok()) {
-      return status_or_der.status();
-    }
-    derSig = status_or_der.value();
+    ABSL_ASSIGN_OR_RETURN(derSig,
+                          internal::EcSignatureIeeeToDer(group, signature));
   }
 
   // Verify the signature.
@@ -158,8 +150,7 @@ absl::Status EcdsaVerifyBoringSslImpl::VerifyWithoutPrefix(
                         reinterpret_cast<const uint8_t*>(derSig.data()),
                         derSig.size(), key_.get())) {
     // signature is invalid
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Signature is not valid.");
+    return absl::InvalidArgumentError("Signature is not valid.");
   }
   // signature is valid
   return absl::OkStatus();
@@ -171,8 +162,7 @@ absl::Status EcdsaVerifyBoringSslImpl::Verify(absl::string_view signature,
     return VerifyWithoutPrefix(signature, data);
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "OutputPrefix does not match");
+    return absl::InvalidArgumentError("OutputPrefix does not match");
   }
   // Creates a copy of the data with the message_suffix_ appended if not empty.
   // Needs to stay alive until this method is done, as data will point to it.
@@ -195,27 +185,20 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
   subtle_ec_key.pub_y = std::string(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue());
 
-  absl::StatusOr<subtle::EllipticCurveType> converted_curve_type =
-      ConvertCurveType(public_key.GetParameters().GetCurveType());
-  if (!converted_curve_type.ok()) {
-    return converted_curve_type.status();
-  }
-  subtle_ec_key.curve = *converted_curve_type;
+  ABSL_ASSIGN_OR_RETURN(
+      subtle::EllipticCurveType converted_curve_type,
+      ConvertCurveType(public_key.GetParameters().GetCurveType()));
+  subtle_ec_key.curve = converted_curve_type;
 
-  absl::StatusOr<HashType> converted_hash_type =
-      ConvertHashType(public_key.GetParameters().GetHashType());
-  if (!converted_hash_type.ok()) {
-    return converted_hash_type.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(
+      HashType converted_hash_type,
+      ConvertHashType(public_key.GetParameters().GetHashType()));
 
-  absl::StatusOr<EcdsaSignatureEncoding> converted_signature_encoding =
-      ConvertSignatureEncoding(
-          public_key.GetParameters().GetSignatureEncoding());
-  if (!converted_signature_encoding.ok()) {
-    return converted_signature_encoding.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(EcdsaSignatureEncoding converted_signature_encoding,
+                        ConvertSignatureEncoding(
+                            public_key.GetParameters().GetSignatureEncoding()));
 
-  return New(subtle_ec_key, *converted_hash_type, *converted_signature_encoding,
+  return New(subtle_ec_key, converted_hash_type, converted_signature_encoding,
              public_key.GetOutputPrefix(),
              public_key.GetParameters().GetVariant() ==
                      EcdsaParameters::Variant::kLegacy
@@ -228,20 +211,17 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
     absl::string_view message_suffix) {
   // Check curve.
-  auto group_result = internal::EcGroupFromCurveType(ec_key.curve);
-  if (!group_result.ok()) return group_result.status();
-  internal::SslUniquePtr<EC_GROUP> group = std::move(group_result.value());
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
+                        internal::EcGroupFromCurveType(ec_key.curve));
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
   EC_KEY_set_group(key.get(), group.get());
 
   // Check key.
-  auto ec_point_result =
-      internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y);
-  if (!ec_point_result.ok()) return ec_point_result.status();
-  internal::SslUniquePtr<EC_POINT> pub_key = std::move(ec_point_result.value());
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SslUniquePtr<EC_POINT> pub_key,
+      internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y));
   if (!EC_KEY_set_public_key(key.get(), pub_key.get())) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
   return New(std::move(key), hash_type, encoding, output_prefix,
@@ -252,23 +232,15 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
     EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
     absl::string_view message_suffix) {
-  absl::Status status =
-      internal::CheckFipsCompatibility<EcdsaVerifyBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<EcdsaVerifyBoringSsl>());
 
   // Check if the hash type is safe to use.
-  absl::Status is_safe = internal::IsHashTypeSafeForSignature(hash_type);
-  if (!is_safe.ok()) {
-    return is_safe;
-  }
-  absl::StatusOr<const EVP_MD*> hash = internal::EvpHashFromHashType(hash_type);
-  if (!hash.ok()) {
-    return hash.status();
-  }
+  ABSL_RETURN_IF_ERROR(internal::IsHashTypeSafeForSignature(hash_type));
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* hash,
+                        internal::EvpHashFromHashType(hash_type));
   return std::make_unique<EcdsaVerifyBoringSslImpl>(
-      std::move(ec_key), *hash, encoding, output_prefix, message_suffix);
+      std::move(ec_key), hash, encoding, output_prefix, message_suffix);
 }
 
 }  // namespace subtle

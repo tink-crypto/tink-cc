@@ -59,7 +59,6 @@ absl::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
       return NIST_P256;
     case EcdsaParameters::CurveType::kNistP384:
       return NIST_P384;
-      break;
     case EcdsaParameters::CurveType::kNistP521:
       return NIST_P521;
     default:
@@ -76,7 +75,6 @@ absl::StatusOr<HashType> ConvertHashType(EcdsaParameters::HashType hash_type) {
       return SHA256;
     case EcdsaParameters::HashType::kSha384:
       return SHA384;
-      break;
     case EcdsaParameters::HashType::kSha512:
       return SHA512;
     default:
@@ -103,9 +101,93 @@ absl::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
   }
 }
 
+class EcdsaVerifyBoringSslImpl : public EcdsaVerifyBoringSsl {
+ public:
+  EcdsaVerifyBoringSslImpl(internal::SslUniquePtr<EC_KEY> key,
+                           const EVP_MD* hash, EcdsaSignatureEncoding encoding,
+                           absl::string_view output_prefix,
+                           absl::string_view message_suffix)
+      : key_(std::move(key)),
+        hash_(hash),
+        encoding_(encoding),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
+
+ private:
+  absl::Status VerifyWithoutPrefix(absl::string_view signature,
+                                   absl::string_view data) const;
+
+  internal::SslUniquePtr<EC_KEY> key_;
+  const EVP_MD* hash_;  // Owned by BoringSSL.
+  EcdsaSignatureEncoding encoding_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
+};
+
+absl::Status EcdsaVerifyBoringSslImpl::VerifyWithoutPrefix(
+    absl::string_view signature, absl::string_view data) const {
+  // BoringSSL expects a non-null pointer for data,
+  // regardless of whether the size is 0.
+  data = internal::EnsureStringNonNull(data);
+
+  // Compute the digest.
+  unsigned int digest_size;
+  uint8_t digest[EVP_MAX_MD_SIZE];
+  if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
+                      nullptr)) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Could not compute digest.");
+  }
+
+  std::string derSig(signature);
+  if (encoding_ == subtle::EcdsaSignatureEncoding::IEEE_P1363) {
+    const EC_GROUP* group = EC_KEY_get0_group(key_.get());
+    auto status_or_der = internal::EcSignatureIeeeToDer(group, signature);
+
+    if (!status_or_der.ok()) {
+      return status_or_der.status();
+    }
+    derSig = status_or_der.value();
+  }
+
+  // Verify the signature.
+  if (1 != ECDSA_verify(0 /* unused */, digest, digest_size,
+                        reinterpret_cast<const uint8_t*>(derSig.data()),
+                        derSig.size(), key_.get())) {
+    // signature is invalid
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Signature is not valid.");
+  }
+  // signature is valid
+  return absl::OkStatus();
+}
+
+absl::Status EcdsaVerifyBoringSslImpl::Verify(absl::string_view signature,
+                                              absl::string_view data) const {
+  if (output_prefix_.empty() && message_suffix_.empty()) {
+    return VerifyWithoutPrefix(signature, data);
+  }
+  if (!absl::StartsWith(signature, output_prefix_)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "OutputPrefix does not match");
+  }
+  // Creates a copy of the data with the message_suffix_ appended if not empty.
+  // Needs to stay alive until this method is done, as data will point to it.
+  std::string data_with_suffix;
+  if (!message_suffix_.empty()) {
+    data_with_suffix = absl::StrCat(data, message_suffix_);
+    data = data_with_suffix;
+  }
+  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
+                             data);
+}
+
 }  // namespace
 
-absl::StatusOr<std::unique_ptr<PublicKeyVerify>> EcdsaVerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     const EcdsaPublicKey& public_key) {
   SubtleUtilBoringSSL::EcKey subtle_ec_key;
   subtle_ec_key.pub_x = std::string(
@@ -185,67 +267,8 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
   if (!hash.ok()) {
     return hash.status();
   }
-  std::unique_ptr<EcdsaVerifyBoringSsl> verify(new EcdsaVerifyBoringSsl(
-      std::move(ec_key), *hash, encoding, output_prefix, message_suffix));
-  return std::move(verify);
-}
-
-absl::Status EcdsaVerifyBoringSsl::VerifyWithoutPrefix(
-    absl::string_view signature, absl::string_view data) const {
-  // BoringSSL expects a non-null pointer for data,
-  // regardless of whether the size is 0.
-  data = internal::EnsureStringNonNull(data);
-
-  // Compute the digest.
-  unsigned int digest_size;
-  uint8_t digest[EVP_MAX_MD_SIZE];
-  if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
-                      nullptr)) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Could not compute digest.");
-  }
-
-  std::string derSig(signature);
-  if (encoding_ == subtle::EcdsaSignatureEncoding::IEEE_P1363) {
-    const EC_GROUP* group = EC_KEY_get0_group(key_.get());
-    auto status_or_der = internal::EcSignatureIeeeToDer(group, signature);
-
-    if (!status_or_der.ok()) {
-      return status_or_der.status();
-    }
-    derSig = status_or_der.value();
-  }
-
-  // Verify the signature.
-  if (1 != ECDSA_verify(0 /* unused */, digest, digest_size,
-                        reinterpret_cast<const uint8_t*>(derSig.data()),
-                        derSig.size(), key_.get())) {
-    // signature is invalid
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Signature is not valid.");
-  }
-  // signature is valid
-  return absl::OkStatus();
-}
-
-absl::Status EcdsaVerifyBoringSsl::Verify(absl::string_view signature,
-                                          absl::string_view data) const {
-  if (output_prefix_.empty() && message_suffix_.empty()) {
-    return VerifyWithoutPrefix(signature, data);
-  }
-  if (!absl::StartsWith(signature, output_prefix_)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "OutputPrefix does not match");
-  }
-  // Creates a copy of the data with the message_suffix_ appended if not empty.
-  // Needs to stay alive until this method is done, as data will point to it.
-  std::string data_with_suffix;
-  if (!message_suffix_.empty()) {
-    data_with_suffix = absl::StrCat(data, message_suffix_);
-    data = data_with_suffix;
-  }
-  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
-                             data);
+  return std::make_unique<EcdsaVerifyBoringSslImpl>(
+      std::move(ec_key), *hash, encoding, output_prefix, message_suffix);
 }
 
 }  // namespace subtle

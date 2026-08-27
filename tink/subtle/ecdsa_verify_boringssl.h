@@ -40,7 +40,7 @@ namespace subtle {
 // ECDSA verification using Boring SSL, accepting signatures in DER-encoding.
 class EcdsaVerifyBoringSsl : public PublicKeyVerify {
  public:
-  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
       const EcdsaPublicKey& public_key);
 
   static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
@@ -57,10 +57,15 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
 
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
-                      absl::string_view data) const override;
+                      absl::string_view data) const override = 0;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
+
+  ~EcdsaVerifyBoringSsl() override = default;
+
+ protected:
+  EcdsaVerifyBoringSsl() = default;
 
  private:
   static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
@@ -71,25 +76,6 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
       internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
       absl::string_view message_suffix);
-
-  EcdsaVerifyBoringSsl(internal::SslUniquePtr<EC_KEY> key, const EVP_MD* hash,
-                       EcdsaSignatureEncoding encoding,
-                       absl::string_view output_prefix,
-                       absl::string_view message_suffix)
-      : key_(std::move(key)),
-        hash_(hash),
-        encoding_(encoding),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::Status VerifyWithoutPrefix(absl::string_view signature,
-                                   absl::string_view data) const;
-
-  internal::SslUniquePtr<EC_KEY> key_;
-  const EVP_MD* hash_;  // Owned by BoringSSL.
-  EcdsaSignatureEncoding encoding_;
-  const std::string output_prefix_;
-  const std::string message_suffix_;
 };
 
 }  // namespace subtle

@@ -21,9 +21,10 @@
 #include <memory>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/ec.h"
@@ -35,11 +36,107 @@
 #include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
-#include "tink/util/errors.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
+
+namespace {
+
+class EciesHkdfNistPCurveRecipientKemBoringSslImpl
+    : public EciesHkdfRecipientKemBoringSsl {
+ public:
+  EciesHkdfNistPCurveRecipientKemBoringSslImpl(
+      EllipticCurveType curve, SecretData priv_key_value,
+      internal::SslUniquePtr<EC_GROUP> ec_group)
+      : curve_(curve),
+        priv_key_value_(std::move(priv_key_value)),
+        ec_group_(std::move(ec_group)) {}
+
+  absl::StatusOr<SecretData> GenerateKey(
+      absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
+      absl::string_view hkdf_info, uint32_t key_size_in_bytes,
+      EcPointFormat point_format) const override;
+
+ private:
+  EllipticCurveType curve_;
+  SecretData priv_key_value_;
+  internal::SslUniquePtr<EC_GROUP> ec_group_;
+};
+
+absl::StatusOr<SecretData>
+EciesHkdfNistPCurveRecipientKemBoringSslImpl::GenerateKey(
+    absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
+    absl::string_view hkdf_info, uint32_t key_size_in_bytes,
+    EcPointFormat point_format) const {
+  auto status_or_ec_point =
+      internal::EcPointDecode(curve_, point_format, kem_bytes);
+  if (!status_or_ec_point.ok()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Invalid KEM bytes: ", status_or_ec_point.status().message()));
+  }
+  internal::SslUniquePtr<EC_POINT> pub_key =
+      std::move(status_or_ec_point.value());
+  internal::SslUniquePtr<BIGNUM> priv_key =
+      internal::CallWithCoreDumpProtection([&]() {
+        return internal::SslUniquePtr<BIGNUM>(
+            BN_bin2bn(priv_key_value_.data(), priv_key_value_.size(), nullptr));
+      });
+  ABSL_ASSIGN_OR_RETURN(
+      SecretData shared_secret,
+      internal::ComputeEcdhSharedSecret(curve_, priv_key.get(), pub_key.get()));
+  return Hkdf::ComputeEciesHkdfSymmetricKey(
+      hash, kem_bytes, shared_secret, hkdf_salt, hkdf_info, key_size_in_bytes);
+}
+
+class EciesHkdfX25519RecipientKemBoringSslImpl
+    : public EciesHkdfRecipientKemBoringSsl {
+ public:
+  explicit EciesHkdfX25519RecipientKemBoringSslImpl(
+      internal::SslUniquePtr<EVP_PKEY> private_key)
+      : private_key_(std::move(private_key)) {}
+
+  absl::StatusOr<SecretData> GenerateKey(
+      absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
+      absl::string_view hkdf_info, uint32_t key_size_in_bytes,
+      EcPointFormat point_format) const override;
+
+ private:
+  const internal::SslUniquePtr<EVP_PKEY> private_key_;
+};
+
+absl::StatusOr<SecretData>
+EciesHkdfX25519RecipientKemBoringSslImpl::GenerateKey(
+    absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
+    absl::string_view hkdf_info, uint32_t key_size_in_bytes,
+    EcPointFormat point_format) const {
+  if (point_format != EcPointFormat::COMPRESSED) {
+    return absl::InvalidArgumentError(
+        "X25519 only supports compressed elliptic curve points");
+  }
+
+  if (kem_bytes.size() !=
+      static_cast<size_t>(internal::X25519KeyPubKeySize())) {
+    return absl::InvalidArgumentError("kem_bytes has unexpected size");
+  }
+
+  internal::SslUniquePtr<EVP_PKEY> peer_key(EVP_PKEY_new_raw_public_key(
+      /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
+      /*in=*/reinterpret_cast<const uint8_t*>(kem_bytes.data()),
+      /*len=*/internal::Ed25519KeyPubKeySize()));
+  if (peer_key == nullptr) {
+    return absl::InternalError("EVP_PKEY_new_raw_public_key failed");
+  }
+
+  ABSL_ASSIGN_OR_RETURN(
+      SecretData shared_secret,
+      internal::ComputeX25519SharedSecret(private_key_.get(), peer_key.get()));
+
+  return Hkdf::ComputeEciesHkdfSymmetricKey(
+      hash, kem_bytes, shared_secret, hkdf_salt, hkdf_info, key_size_in_bytes);
+}
+
+}  // namespace
 
 // static
 absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
@@ -64,77 +161,30 @@ EciesHkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
 absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
 EciesHkdfNistPCurveRecipientKemBoringSsl::New(EllipticCurveType curve,
                                               SecretData priv_key) {
-  auto status = internal::CheckFipsCompatibility<
-      EciesHkdfNistPCurveRecipientKemBoringSsl>();
-  if (!status.ok()) return status;
+  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<
+                       EciesHkdfNistPCurveRecipientKemBoringSsl>());
 
   if (priv_key.empty()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument, "empty priv_key");
+    return absl::InvalidArgumentError("empty priv_key");
   }
-  auto status_or_ec_group = internal::EcGroupFromCurveType(curve);
-  if (!status_or_ec_group.ok()) return status_or_ec_group.status();
-  // TODO(przydatek): consider refactoring internal/ec_util,
-  //     so that the saved group can be used for KEM operations.
-  return {absl::WrapUnique(new EciesHkdfNistPCurveRecipientKemBoringSsl(
-      curve, std::move(priv_key), std::move(status_or_ec_group.value())))};
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> ec_group,
+                        internal::EcGroupFromCurveType(curve));
+  return std::make_unique<EciesHkdfNistPCurveRecipientKemBoringSslImpl>(
+      curve, std::move(priv_key), std::move(ec_group));
 }
-
-EciesHkdfNistPCurveRecipientKemBoringSsl::
-    EciesHkdfNistPCurveRecipientKemBoringSsl(
-        EllipticCurveType curve, SecretData priv_key_value,
-        internal::SslUniquePtr<EC_GROUP> ec_group)
-    : curve_(curve),
-      priv_key_value_(std::move(priv_key_value)),
-      ec_group_(std::move(ec_group)) {}
-
-absl::StatusOr<SecretData>
-EciesHkdfNistPCurveRecipientKemBoringSsl::GenerateKey(
-    absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
-    absl::string_view hkdf_info, uint32_t key_size_in_bytes,
-    EcPointFormat point_format) const {
-  auto status_or_ec_point =
-      internal::EcPointDecode(curve_, point_format, kem_bytes);
-  if (!status_or_ec_point.ok()) {
-    return ToStatusF(absl::StatusCode::kInvalidArgument,
-                     "Invalid KEM bytes: %s",
-                     status_or_ec_point.status().message());
-  }
-  internal::SslUniquePtr<EC_POINT> pub_key =
-      std::move(status_or_ec_point.value());
-  internal::SslUniquePtr<BIGNUM> priv_key =
-      internal::CallWithCoreDumpProtection([&]() {
-        return internal::SslUniquePtr<BIGNUM>(
-            BN_bin2bn(priv_key_value_.data(), priv_key_value_.size(), nullptr));
-      });
-  auto shared_secret_or =
-      internal::ComputeEcdhSharedSecret(curve_, priv_key.get(), pub_key.get());
-  if (!shared_secret_or.ok()) {
-    return shared_secret_or.status();
-  }
-  SecretData shared_secret = shared_secret_or.value();
-  return Hkdf::ComputeEciesHkdfSymmetricKey(
-      hash, kem_bytes, shared_secret, hkdf_salt, hkdf_info, key_size_in_bytes);
-}
-
-EciesHkdfX25519RecipientKemBoringSsl::EciesHkdfX25519RecipientKemBoringSsl(
-    internal::SslUniquePtr<EVP_PKEY> private_key)
-    : private_key_(std::move(private_key)) {}
 
 // static
 absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
 EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
                                           SecretData priv_key) {
-  auto status =
-      internal::CheckFipsCompatibility<EciesHkdfX25519RecipientKemBoringSsl>();
-  if (!status.ok()) return status;
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<EciesHkdfX25519RecipientKemBoringSsl>());
 
   if (curve != CURVE25519) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "curve is not CURVE25519");
+    return absl::InvalidArgumentError("curve is not CURVE25519");
   }
   if (priv_key.size() != static_cast<size_t>(internal::X25519KeyPubKeySize())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "pubx has unexpected length");
+    return absl::InvalidArgumentError("pubx has unexpected length");
   }
 
   internal::SslUniquePtr<EVP_PKEY> ssl_priv_key(
@@ -145,47 +195,11 @@ EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
             /*len=*/internal::Ed25519KeyPrivKeySize());
       }));
   if (ssl_priv_key == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EVP_PKEY_new_raw_private_key failed");
+    return absl::InternalError("EVP_PKEY_new_raw_private_key failed");
   }
 
-  return {absl::WrapUnique(
-      new EciesHkdfX25519RecipientKemBoringSsl(std::move(ssl_priv_key)))};
-}
-
-absl::StatusOr<SecretData> EciesHkdfX25519RecipientKemBoringSsl::GenerateKey(
-    absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
-    absl::string_view hkdf_info, uint32_t key_size_in_bytes,
-    EcPointFormat point_format) const {
-  if (point_format != EcPointFormat::COMPRESSED) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        "X25519 only supports compressed elliptic curve points");
-  }
-
-  if (kem_bytes.size() !=
-      static_cast<size_t>(internal::X25519KeyPubKeySize())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "kem_bytes has unexpected size");
-  }
-
-  internal::SslUniquePtr<EVP_PKEY> peer_key(EVP_PKEY_new_raw_public_key(
-      /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
-      /*in=*/reinterpret_cast<const uint8_t*>(kem_bytes.data()),
-      /*len=*/internal::Ed25519KeyPubKeySize()));
-  if (peer_key == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EVP_PKEY_new_raw_public_key failed");
-  }
-
-  absl::StatusOr<SecretData> shared_secret =
-      internal::ComputeX25519SharedSecret(private_key_.get(), peer_key.get());
-  if (!shared_secret.ok()) {
-    return shared_secret.status();
-  }
-
-  return Hkdf::ComputeEciesHkdfSymmetricKey(
-      hash, kem_bytes, *shared_secret, hkdf_salt, hkdf_info, key_size_in_bytes);
+  return std::make_unique<EciesHkdfX25519RecipientKemBoringSslImpl>(
+      std::move(ssl_priv_key));
 }
 
 }  // namespace subtle

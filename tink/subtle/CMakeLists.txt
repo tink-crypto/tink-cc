@@ -58,8 +58,8 @@ tink_cc_library(
   DEPS
     tink::subtle::common_enums
     tink::subtle::hkdf
-    absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     crypto
@@ -68,7 +68,6 @@ tink_cc_library(
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
-    tink::util::errors
     tink::util::secret_data
     tink::util::statusor
 )

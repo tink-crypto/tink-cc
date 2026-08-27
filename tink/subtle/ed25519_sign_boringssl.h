@@ -49,28 +49,20 @@ class Ed25519SignBoringSsl : public PublicKeySign {
       const Ed25519PrivateKey& key);
 
   // Computes the signature for 'data'.
-  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override = 0;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
+
+  ~Ed25519SignBoringSsl() override = default;
+
+ protected:
+  Ed25519SignBoringSsl() = default;
 
  private:
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       SecretData private_key, absl::string_view output_prefix,
       absl::string_view message_suffix);
-
-  explicit Ed25519SignBoringSsl(internal::SslUniquePtr<EVP_PKEY> priv_key,
-                                absl::string_view output_prefix,
-                                absl::string_view message_suffix)
-      : priv_key_(std::move(priv_key)),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
-
-  const internal::SslUniquePtr<EVP_PKEY> priv_key_;
-  const std::string output_prefix_;
-  const std::string message_suffix_;
 };
 
 }  // namespace subtle

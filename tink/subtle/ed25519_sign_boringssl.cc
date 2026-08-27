@@ -16,16 +16,13 @@
 
 #include "tink/subtle/ed25519_sign_boringssl.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -43,14 +40,85 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 
+namespace {
+
 constexpr int kEd25519SignatureLenInBytes = 64;
+
+class Ed25519SignBoringSslImpl : public Ed25519SignBoringSsl {
+ public:
+  explicit Ed25519SignBoringSslImpl(internal::SslUniquePtr<EVP_PKEY> priv_key,
+                                    absl::string_view output_prefix,
+                                    absl::string_view message_suffix)
+      : priv_key_(std::move(priv_key)),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
+
+ private:
+  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
+
+  const internal::SslUniquePtr<EVP_PKEY> priv_key_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
+};
+
+absl::StatusOr<std::string> Ed25519SignBoringSslImpl::SignWithoutPrefix(
+    absl::string_view data) const {
+  data = internal::EnsureStringNonNull(data);
+
+  std::string out_sig;
+  out_sig.resize(kEd25519SignatureLenInBytes);
+  // We ignore writes in the out_sig for core dump safety  -- after all, the
+  // signature is what can be leaked to the adversary anyhow.
+  internal::ScopedAssumeRegionCoreDumpSafe scope(out_sig.data(),
+                                                 kEd25519SignatureLenInBytes);
+  internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
+  size_t sig_len = kEd25519SignatureLenInBytes;
+  // type must be set to nullptr with Ed25519.
+  // See https://www.openssl.org/docs/man1.1.1/man3/EVP_DigestSignInit.html.
+  bool success = internal::CallWithCoreDumpProtection([&]() {
+    return EVP_DigestSignInit(md_ctx.get(), /*pctx=*/nullptr, /*type=*/nullptr,
+                              /*e=*/nullptr, priv_key_.get()) == 1 &&
+           EVP_DigestSign(
+               md_ctx.get(), reinterpret_cast<uint8_t *>(&out_sig[0]),
+               &sig_len,
+               /*data=*/reinterpret_cast<const uint8_t *>(data.data()),
+               data.size()) == 1;
+  });
+  if (!success) {
+    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
+  }
+  // It is fine to leak the signature to the adversary so we can now clear the
+  // label.
+  internal::DfsanClearLabel(out_sig.data(), kEd25519SignatureLenInBytes);
+  return out_sig;
+}
+
+absl::StatusOr<std::string> Ed25519SignBoringSslImpl::Sign(
+    absl::string_view data) const {
+  absl::StatusOr<std::string> signature_without_prefix_;
+  if (message_suffix_.empty()) {
+    signature_without_prefix_ = SignWithoutPrefix(data);
+  } else {
+    signature_without_prefix_ =
+        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
+  }
+  if (!signature_without_prefix_.ok()) {
+    return signature_without_prefix_.status();
+  }
+  if (output_prefix_.empty()) {
+    return signature_without_prefix_;
+  }
+  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+}
+
+}  // namespace
 
 // static
 absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
@@ -83,58 +151,8 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
                         "EVP_PKEY_new_raw_private_key failed");
   }
 
-  return {absl::WrapUnique(new Ed25519SignBoringSsl(
-      std::move(ssl_priv_key), output_prefix, message_suffix))};
-}
-
-absl::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
-    absl::string_view data) const {
-  data = internal::EnsureStringNonNull(data);
-
-  std::string out_sig;
-  out_sig.resize(kEd25519SignatureLenInBytes);
-  // We ignore writes in the out_sig for core dump safety  -- after all, the
-  // signature is what can be leaked to the adversary anyhow.
-  internal::ScopedAssumeRegionCoreDumpSafe scope(out_sig.data(),
-                                                 kEd25519SignatureLenInBytes);
-  internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
-  size_t sig_len = kEd25519SignatureLenInBytes;
-  // type must be set to nullptr with Ed25519.
-  // See https://www.openssl.org/docs/man1.1.1/man3/EVP_DigestSignInit.html.
-  bool success = internal::CallWithCoreDumpProtection([&]() {
-    return EVP_DigestSignInit(md_ctx.get(), /*pctx=*/nullptr, /*type=*/nullptr,
-                              /*e=*/nullptr, priv_key_.get()) == 1 &&
-           EVP_DigestSign(
-               md_ctx.get(), reinterpret_cast<uint8_t *>(&out_sig[0]),
-               &sig_len,
-               /*data=*/reinterpret_cast<const uint8_t *>(data.data()),
-               data.size()) == 1;
-  });
-  if (!success) {
-    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
-  }
-  // It is fine to leak the signature to the adversary so we can now clear the
-  // label.
-  internal::DfsanClearLabel(out_sig.data(), kEd25519SignatureLenInBytes);
-  return out_sig;
-}
-
-absl::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
-    absl::string_view data) const {
-  absl::StatusOr<std::string> signature_without_prefix_;
-  if (message_suffix_.empty()) {
-    signature_without_prefix_ = SignWithoutPrefix(data);
-  } else {
-    signature_without_prefix_ =
-        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
-  }
-  if (!signature_without_prefix_.ok()) {
-    return signature_without_prefix_.status();
-  }
-  if (output_prefix_.empty()) {
-    return signature_without_prefix_;
-  }
-  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+  return std::make_unique<Ed25519SignBoringSslImpl>(
+      std::move(ssl_priv_key), output_prefix, message_suffix);
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(

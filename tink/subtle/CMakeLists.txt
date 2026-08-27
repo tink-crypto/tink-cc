@@ -112,7 +112,6 @@ tink_cc_library(
     ed25519_sign_boringssl.cc
     ed25519_sign_boringssl.h
   DEPS
-    absl::memory
     absl::status
     absl::strings
     absl::str_format
@@ -130,7 +129,6 @@ tink_cc_library(
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 

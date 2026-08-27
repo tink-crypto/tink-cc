@@ -423,7 +423,7 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> DeriveMlDsaPrivateKey(
   if (!private_key.ok()) {
     return private_key.status();
   }
-  return absl::make_unique<MlDsaPrivateKey>(*private_key);
+  return std::make_unique<MlDsaPrivateKey>(*private_key);
 }
 
 absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> DeriveSlhDsaPrivateKey(

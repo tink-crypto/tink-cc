@@ -236,7 +236,7 @@ TEST(AesGcmHkdfStreamingTest, SizeIsUnauthenticated) {
   absl::StatusOr<std::unique_ptr<RandomAccessStream>> plaintext_stream =
       (*streaming_aead)
           ->NewDecryptingRandomAccessStream(
-              absl::make_unique<internal::TestRandomAccessStream>(
+              std::make_unique<internal::TestRandomAccessStream>(
                   wrong_ciphertext),
               associated_data);
   ASSERT_THAT(plaintext_stream, IsOk());

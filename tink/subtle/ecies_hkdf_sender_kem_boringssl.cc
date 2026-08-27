@@ -108,8 +108,8 @@ EciesHkdfNistPCurveSendKemBoringSslImpl::GenerateKey(
     return symmetric_key_or.status();
   }
   SecretData symmetric_key = symmetric_key_or.value();
-  return absl::make_unique<const KemKey>(std::move(kem_bytes),
-                                         std::move(symmetric_key));
+  return std::make_unique<const KemKey>(std::move(kem_bytes),
+                                        std::move(symmetric_key));
 }
 
 class EciesHkdfX25519SendKemBoringSslImpl

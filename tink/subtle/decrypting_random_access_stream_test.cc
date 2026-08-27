@@ -85,13 +85,13 @@ class DummyRandomAccessStream : public RandomAccessStream {
 std::string GetCiphertext(StreamingAead* saead, absl::string_view pt,
                           absl::string_view aad, int ct_offset) {
   // Prepare ciphertext destination stream.
-  auto ct_stream = absl::make_unique<std::stringstream>();
+  auto ct_stream = std::make_unique<std::stringstream>();
   // Write ct_offset 'o'-characters for the ciphertext offset.
   *ct_stream << std::string(ct_offset, 'o');
   // A reference to the ciphertext buffer.
   auto ct_buf = ct_stream->rdbuf();
   std::unique_ptr<OutputStream> ct_destination(
-      absl::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
+      std::make_unique<util::OstreamOutputStream>(std::move(ct_stream)));
 
   // Compute the ciphertext.
   auto enc_stream_result =
@@ -116,14 +116,14 @@ TEST(DecryptingRandomAccessStreamTest, NegativeCiphertextOffset) {
   int pt_segment_size = 100;
   int header_size = 20;
   int ct_offset = -1;
-  auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+  auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
       pt_segment_size, header_size, ct_offset);
   int64_t ciphertext_size = 100;
 
   EXPECT_THAT(
       DecryptingRandomAccessStream::New(
-          std::move(seg_decrypter), absl::make_unique<DummyRandomAccessStream>(
-                                        ciphertext_size, ct_offset))
+          std::move(seg_decrypter),
+          std::make_unique<DummyRandomAccessStream>(ciphertext_size, ct_offset))
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("The ciphertext offset must be non-negative")));
@@ -136,14 +136,14 @@ TEST(DecryptingRandomAccessStreamTest,
   // Make pt_segment_size equal to ct_offset + header_size. This means size of
   // the first segment is zero.
   int pt_segment_size = ct_offset + header_size;
-  auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+  auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
       pt_segment_size, header_size, ct_offset);
   int64_t ciphertext_size = 100;
 
   EXPECT_THAT(
       DecryptingRandomAccessStream::New(
-          std::move(seg_decrypter), absl::make_unique<DummyRandomAccessStream>(
-                                        ciphertext_size, ct_offset))
+          std::move(seg_decrypter),
+          std::make_unique<DummyRandomAccessStream>(ciphertext_size, ct_offset))
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("greater than 0")));
@@ -154,7 +154,7 @@ TEST(DecryptingRandomAccessStreamTest, TooManySegments) {
   int ct_offset = 0;
   // Use a valid pt_segment_size which is larger than ct_offset + header_size.
   int pt_segment_size = ct_offset + header_size + 1;
-  auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+  auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
       pt_segment_size, header_size, ct_offset);
 
   // Use an invalid segment_count larger than 2^32.
@@ -167,7 +167,7 @@ TEST(DecryptingRandomAccessStreamTest, TooManySegments) {
       segment_count * seg_decrypter->get_ciphertext_segment_size();
   auto dec_stream_result = DecryptingRandomAccessStream::New(
       std::move(seg_decrypter),
-      absl::make_unique<DummyRandomAccessStream>(ciphertext_size, ct_offset));
+      std::make_unique<DummyRandomAccessStream>(ciphertext_size, ct_offset));
   EXPECT_THAT(dec_stream_result, IsOk());
   auto dec_stream = std::move(dec_stream_result.value());
 
@@ -191,7 +191,7 @@ TEST(DecryptingRandomAccessStreamTest, BasicDecryption) {
           auto ciphertext =
               GetCiphertextSource(&saead, plaintext, "some aad", ct_offset);
           // Check the decryption of the pre-computed ciphertext.
-          auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+          auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
               pt_segment_size, header_size, ct_offset);
           auto dec_stream_result = DecryptingRandomAccessStream::New(
               std::move(seg_decrypter), std::move(ciphertext));
@@ -224,7 +224,7 @@ TEST(DecryptingRandomAccessStreamTest, SelectiveDecryption) {
           auto ciphertext =
               GetCiphertextSource(&saead, plaintext, "some aad", ct_offset);
           // Check the decryption of the pre-computed ciphertext.
-          auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+          auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
               pt_segment_size, header_size, ct_offset);
           auto dec_stream_result = DecryptingRandomAccessStream::New(
               std::move(seg_decrypter), std::move(ciphertext));
@@ -271,7 +271,7 @@ TEST(DecryptingRandomAccessStreamTest, TruncatedCiphertextDecryption) {
           // Pre-compute the ciphertext.
           auto ct = GetCiphertext(&saead, plaintext, "some aad", ct_offset);
           // Check the decryption of a truncated ciphertext.
-          auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+          auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
               pt_segment_size, header_size, ct_offset);
           for (int trunc_ct_size : {header_size + ct_offset,
                   static_cast<int>(ct.size()) - 1,
@@ -286,7 +286,7 @@ TEST(DecryptingRandomAccessStreamTest, TruncatedCiphertextDecryption) {
                   ct.substr(0, trunc_ct_size));
               int position = 0;
               auto per_stream_seg_decrypter =
-                  absl::make_unique<DummyStreamSegmentDecrypter>(
+                  std::make_unique<DummyStreamSegmentDecrypter>(
                       pt_segment_size, header_size, ct_offset);
               auto dec_stream_result = DecryptingRandomAccessStream::New(
                   std::move(per_stream_seg_decrypter), std::move(trunc_ct));
@@ -318,7 +318,7 @@ TEST(DecryptingRandomAccessStreamTest, OutOfRangeDecryption) {
         auto ciphertext =
             GetCiphertextSource(&saead, plaintext, "some aad", ct_offset);
         // Check the decryption of the pre-computed ciphertext.
-        auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+        auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
             pt_segment_size, header_size, ct_offset);
         auto dec_stream_result = DecryptingRandomAccessStream::New(
             std::move(seg_decrypter), std::move(ciphertext));
@@ -356,7 +356,7 @@ TEST(DecryptingRandomAccessStreamTest, WrongCiphertext) {
     // Try decrypting a wrong ciphertext.
     auto wrong_ct = std::make_unique<TestRandomAccessStream>(
         subtle::Random::GetRandomBytes(ct_size));
-    auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+    auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
         pt_segment_size, header_size, ct_offset);
     auto dec_stream_result = DecryptingRandomAccessStream::New(
         std::move(seg_decrypter), std::move(wrong_ct));
@@ -385,7 +385,7 @@ TEST(DecryptingRandomAccessStreamTest, NullCiphertextSource) {
   int pt_segment_size = 42;
   int header_size = 10;
   int ct_offset = 0;
-  auto seg_decrypter = absl::make_unique<DummyStreamSegmentDecrypter>(
+  auto seg_decrypter = std::make_unique<DummyStreamSegmentDecrypter>(
       pt_segment_size, header_size, ct_offset);
   auto dec_stream_result =
       DecryptingRandomAccessStream::New(std::move(seg_decrypter), nullptr);

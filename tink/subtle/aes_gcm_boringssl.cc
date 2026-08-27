@@ -45,8 +45,8 @@ absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
   if (!zero_copy_aead.ok()) {
     return zero_copy_aead.status();
   }
-  return {absl::make_unique<internal::AeadFromZeroCopy>(
-      *std::move(zero_copy_aead))};
+  return {
+      std::make_unique<internal::AeadFromZeroCopy>(*std::move(zero_copy_aead))};
 }
 
 }  // namespace subtle

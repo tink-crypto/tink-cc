@@ -219,7 +219,7 @@ PemParser::ParseRsaPublicKey(absl::string_view pem_serialized_key) {
   if (!e_str.ok()) {
     return e_str.status();
   }
-  auto rsa_public_key = absl::make_unique<internal::RsaPublicKey>();
+  auto rsa_public_key = std::make_unique<internal::RsaPublicKey>();
   rsa_public_key->e = *std::move(e_str);
   rsa_public_key->n = *std::move(n_str);
 
@@ -255,7 +255,7 @@ PemParser::ParseRsaPrivateKey(absl::string_view pem_serialized_key) {
   RSA_get0_key(bssl_rsa_key, &n_bn, &e_bn, &d_bn);
 
   // Save exponents.
-  auto rsa_private_key = absl::make_unique<internal::RsaPrivateKey>();
+  auto rsa_private_key = std::make_unique<internal::RsaPrivateKey>();
   auto n_str = internal::BignumToString(n_bn, BN_num_bytes(n_bn));
   auto e_str = internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   auto d_str = internal::BignumToSecretData(d_bn, BN_num_bytes(d_bn));
@@ -428,7 +428,7 @@ PemParser::ParseEcPublicKey(absl::string_view pem_serialized_key) {
     return curve.status();
   }
 
-  auto ecdsa_public_key = absl::make_unique<SubtleUtilBoringSSL::EcKey>();
+  auto ecdsa_public_key = std::make_unique<SubtleUtilBoringSSL::EcKey>();
   ecdsa_public_key->pub_x = *std::move(x_string);
   ecdsa_public_key->pub_y = *std::move(y_string);
   ecdsa_public_key->curve = *std::move(curve);
@@ -487,7 +487,7 @@ PemParser::ParseEcPrivateKey(absl::string_view pem_serialized_key) {
     return curve.status();
   }
 
-  auto ecdsa_private_key = absl::make_unique<SubtleUtilBoringSSL::EcKey>();
+  auto ecdsa_private_key = std::make_unique<SubtleUtilBoringSSL::EcKey>();
   ecdsa_private_key->pub_x = *std::move(x_string);
   ecdsa_private_key->pub_y = *std::move(y_string);
   ecdsa_private_key->priv = *std::move(priv);

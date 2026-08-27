@@ -25,6 +25,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
@@ -52,7 +53,86 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
+namespace {
+
 using ::crypto::tink::util::SecretDataFromStringView;
+
+class RsaSsaPkcs1SignBoringSslImpl : public RsaSsaPkcs1SignBoringSsl {
+ public:
+  RsaSsaPkcs1SignBoringSslImpl(internal::SslUniquePtr<RSA> private_key,
+                               const EVP_MD* sig_hash,
+                               absl::string_view output_prefix,
+                               absl::string_view message_suffix)
+      : private_key_(std::move(private_key)),
+        sig_hash_(sig_hash),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
+
+ private:
+  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
+
+  const internal::SslUniquePtr<RSA> private_key_;
+  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+  const std::string output_prefix_;
+  const std::string message_suffix_;
+};
+
+absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSslImpl::SignWithoutPrefix(
+    absl::string_view data) const {
+  data = internal::EnsureStringNonNull(data);
+  ABSL_ASSIGN_OR_RETURN(std::string digest,
+                        internal::ComputeHash(data, *sig_hash_));
+
+  std::string signature;
+  size_t signature_buffer_size = RSA_size(private_key_.get());
+  ResizeStringUninitialized(&signature, signature_buffer_size);
+
+  absl::Status s = internal::CallWithCoreDumpProtection([&]() {
+    unsigned int signature_length = 0;
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
+                                                   signature_buffer_size);
+    if (RSA_sign(/*hash_nid=*/EVP_MD_type(sig_hash_),
+                 /*digest=*/reinterpret_cast<const uint8_t*>(digest.data()),
+                 /*digest_len=*/digest.size(),
+                 /*out=*/reinterpret_cast<uint8_t*>(&signature[0]),
+                 /*out_len=*/&signature_length,
+                 /*rsa=*/private_key_.get()) != 1) {
+      // TODO(b/112581512): Decide if it's safe to propagate the BoringSSL
+      // error. For now, just empty the error stack.
+      internal::GetSslErrors();
+      return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
+    }
+    internal::DfsanClearLabel(&signature[0], signature_buffer_size);
+    signature.resize(signature_length);
+    return absl::OkStatus();
+  });
+  if (!s.ok()) {
+    return s;
+  }
+  return signature;
+}
+
+absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSslImpl::Sign(
+    absl::string_view data) const {
+  absl::StatusOr<std::string> signature_without_prefix_;
+  if (message_suffix_.empty()) {
+    signature_without_prefix_ = SignWithoutPrefix(data);
+  } else {
+    signature_without_prefix_ =
+        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
+  }
+  if (!signature_without_prefix_.ok()) {
+    return signature_without_prefix_.status();
+  }
+  if (output_prefix_.empty()) {
+    return signature_without_prefix_;
+  }
+  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+}
+
+}  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const RsaSsaPkcs1PrivateKey& key) {
@@ -145,63 +225,8 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     return rsa.status();
   }
 
-  return {absl::WrapUnique(new RsaSsaPkcs1SignBoringSsl(
-      *std::move(rsa), *sig_hash, output_prefix, message_suffix))};
-}
-
-absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
-    absl::string_view data) const {
-  data = internal::EnsureStringNonNull(data);
-  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
-  if (!digest.ok()) {
-    return digest.status();
-  }
-
-  std::string signature;
-  size_t signature_buffer_size = RSA_size(private_key_.get());
-  ResizeStringUninitialized(&signature, signature_buffer_size);
-
-  absl::Status s = internal::CallWithCoreDumpProtection([&]() {
-    unsigned int signature_length = 0;
-    internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
-                                                   signature_buffer_size);
-    if (RSA_sign(/*hash_nid=*/EVP_MD_type(sig_hash_),
-                 /*digest=*/reinterpret_cast<const uint8_t*>(digest->data()),
-                 /*digest_len=*/digest->size(),
-                 /*out=*/reinterpret_cast<uint8_t*>(&signature[0]),
-                 /*out_len=*/&signature_length,
-                 /*rsa=*/private_key_.get()) != 1) {
-      // TODO(b/112581512): Decide if it's safe to propagate the BoringSSL
-      // error. For now, just empty the error stack.
-      internal::GetSslErrors();
-      return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
-    }
-    internal::DfsanClearLabel(&signature[0], signature_buffer_size);
-    signature.resize(signature_length);
-    return absl::OkStatus();
-  });
-  if (!s.ok()) {
-    return s;
-  }
-  return signature;
-}
-
-absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::Sign(
-    absl::string_view data) const {
-  absl::StatusOr<std::string> signature_without_prefix_;
-  if (message_suffix_.empty()) {
-    signature_without_prefix_ = SignWithoutPrefix(data);
-  } else {
-    signature_without_prefix_ =
-        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
-  }
-  if (!signature_without_prefix_.ok()) {
-    return signature_without_prefix_.status();
-  }
-  if (output_prefix_.empty()) {
-    return signature_without_prefix_;
-  }
-  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+  return std::make_unique<RsaSsaPkcs1SignBoringSslImpl>(
+      *std::move(rsa), *sig_hash, output_prefix, message_suffix);
 }
 
 }  // namespace subtle

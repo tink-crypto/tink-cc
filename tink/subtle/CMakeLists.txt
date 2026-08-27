@@ -383,6 +383,7 @@ tink_cc_library(
     tink::subtle::subtle_util
     absl::memory
     absl::status
+    absl::status_macros
     absl::strings
     crypto
     tink::core::insecure_secret_key_access

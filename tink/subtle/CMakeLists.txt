@@ -296,7 +296,6 @@ tink_cc_library(
   DEPS
     tink::subtle::common_enums
     absl::absl_check
-    absl::memory
     absl::status
     absl::statusor
     absl::strings

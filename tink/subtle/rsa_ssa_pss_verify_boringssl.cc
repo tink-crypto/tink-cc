@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
@@ -122,6 +121,67 @@ absl::StatusOr<subtle::HashType> ToSubtle(
   }
 }
 
+class RsaSsaPssVerifyBoringSslImpl : public RsaSsaPssVerifyBoringSsl {
+ public:
+  RsaSsaPssVerifyBoringSslImpl(internal::SslUniquePtr<RSA> rsa,
+                               const EVP_MD* sig_hash, const EVP_MD* mgf1_hash,
+                               int salt_length, absl::string_view output_prefix,
+                               absl::string_view message_suffix)
+      : rsa_(std::move(rsa)),
+        sig_hash_(sig_hash),
+        mgf1_hash_(mgf1_hash),
+        salt_length_(salt_length),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
+
+ private:
+  absl::Status VerifyWithoutPrefix(absl::string_view signature,
+                                   absl::string_view data) const;
+
+  const internal::SslUniquePtr<RSA> rsa_;
+  const EVP_MD* const sig_hash_;   // Owned by BoringSSL.
+  const EVP_MD* const mgf1_hash_;  // Owned by BoringSSL.
+  int salt_length_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
+};
+
+absl::Status RsaSsaPssVerifyBoringSslImpl::VerifyWithoutPrefix(
+    absl::string_view signature, absl::string_view data) const {
+  // BoringSSL expects a non-null pointer for data,
+  // regardless of whether the size is 0.
+  data = internal::EnsureStringNonNull(data);
+  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
+  if (!digest.ok()) {
+    return digest.status();
+  }
+  return SslRsaSsaPssVerify(rsa_.get(), signature, *digest, sig_hash_,
+                            mgf1_hash_, salt_length_);
+}
+
+absl::Status RsaSsaPssVerifyBoringSslImpl::Verify(
+    absl::string_view signature, absl::string_view data) const {
+  if (output_prefix_.empty() && message_suffix_.empty()) {
+    return VerifyWithoutPrefix(signature, data);
+  }
+  if (!absl::StartsWith(signature, output_prefix_)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "OutputPrefix does not match");
+  }
+  // Stores a copy of the data in case message_suffix_ is not empty.
+  // Needs to stay alive until this method is done.
+  std::string data_copy_holder;
+  if (!message_suffix_.empty()) {
+    data_copy_holder = absl::StrCat(data, message_suffix_);
+    data = data_copy_holder;
+  }
+  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
+                             data);
+}
+
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> RsaSsaPssVerifyBoringSsl::New(
@@ -199,42 +259,9 @@ RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
     return rsa.status();
   }
 
-  return {absl::WrapUnique(new RsaSsaPssVerifyBoringSsl(
+  return std::make_unique<RsaSsaPssVerifyBoringSslImpl>(
       *std::move(rsa), *sig_hash, *mgf1_hash, params.salt_length, output_prefix,
-      message_suffix))};
-}
-
-absl::Status RsaSsaPssVerifyBoringSsl::VerifyWithoutPrefix(
-    absl::string_view signature, absl::string_view data) const {
-  // BoringSSL expects a non-null pointer for data,
-  // regardless of whether the size is 0.
-  data = internal::EnsureStringNonNull(data);
-  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
-  if (!digest.ok()) {
-    return digest.status();
-  }
-  return SslRsaSsaPssVerify(rsa_.get(), signature, *digest, sig_hash_,
-                            mgf1_hash_, salt_length_);
-}
-
-absl::Status RsaSsaPssVerifyBoringSsl::Verify(absl::string_view signature,
-                                              absl::string_view data) const {
-  if (output_prefix_.empty() && message_suffix_.empty()) {
-    return VerifyWithoutPrefix(signature, data);
-  }
-  if (!absl::StartsWith(signature, output_prefix_)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "OutputPrefix does not match");
-  }
-  // Stores a copy of the data in case message_suffix_ is not empty.
-  // Needs to stay alive until this method is done.
-  std::string data_copy_holder;
-  if (!message_suffix_.empty()) {
-    data_copy_holder = absl::StrCat(data, message_suffix_);
-    data = data_copy_holder;
-  }
-  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
-                             data);
+      message_suffix);
 }
 
 }  // namespace subtle

@@ -35,7 +35,7 @@
 #include "tink/aead/internal/mock_zero_copy_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/crypto_format.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
@@ -47,7 +47,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::PrimitiveSet;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
@@ -61,7 +61,7 @@ constexpr absl::string_view kAad = "Some data to authenticate.";
 constexpr absl::string_view kCiphertext = "iv:Some data to encrypt.:tag";
 
 using ZeroCopyAeadEntry =
-    crypto::tink::PrimitiveSet<ZeroCopyAead>::Entry<ZeroCopyAead>;
+    crypto::tink::internal::PrimitiveSet<ZeroCopyAead>::Entry<ZeroCopyAead>;
 
 TEST(ZeroCopyAeadWrapperEmptyTest, Nullptr) {
   ZeroCopyAeadWrapper wrapper;

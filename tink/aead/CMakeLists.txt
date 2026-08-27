@@ -13,10 +13,10 @@ tink_cc_library(
     absl::strings
     tink::core::aead
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
     tink::util::status
@@ -42,8 +42,8 @@ tink_cc_library(
     absl::status
     absl::cord
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::primitive_set
     tink::util::status
     tink::util::statusor
 )
@@ -845,10 +845,10 @@ tink_cc_test(
     absl::strings
     tink::core::aead
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::test_matchers
     tink::util::test_util
@@ -1228,7 +1228,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::cord
-    tink::core::primitive_set
+    tink::internal::primitive_set
     tink::util::status
     tink::util::test_matchers
     tink::util::test_util

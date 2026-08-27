@@ -29,7 +29,7 @@
 #include "tink/aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/crypto_format.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -40,7 +40,7 @@ namespace internal {
 
 namespace {
 
-typedef crypto::tink::PrimitiveSet<ZeroCopyAead>::Entry<ZeroCopyAead>
+typedef crypto::tink::internal::PrimitiveSet<ZeroCopyAead>::Entry<ZeroCopyAead>
     ZeroCopyAeadEntry;
 
 absl::Status Validate(PrimitiveSet<ZeroCopyAead>* aead_set) {

@@ -36,8 +36,8 @@
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_client_mocks.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -49,6 +49,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::crypto::tink::test::DummyAead;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;

@@ -28,9 +28,9 @@
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -42,7 +42,7 @@ constexpr absl::string_view kPrimitive = "aead";
 constexpr absl::string_view kEncryptApi = "encrypt";
 constexpr absl::string_view kDecryptApi = "decrypt";
 
-absl::Status Validate(PrimitiveSet<Aead>* aead_set) {
+absl::Status Validate(internal::PrimitiveSet<Aead>* aead_set) {
   if (aead_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "aead_set must be non-NULL");
@@ -58,7 +58,7 @@ absl::Status Validate(PrimitiveSet<Aead>* aead_set) {
 class AeadSetWrapper : public Aead {
  public:
   explicit AeadSetWrapper(
-      std::unique_ptr<PrimitiveSet<Aead>> aead_set,
+      std::unique_ptr<internal::PrimitiveSet<Aead>> aead_set,
       std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client =
           nullptr,
       std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client =
@@ -76,8 +76,10 @@ class AeadSetWrapper : public Aead {
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 
+  ~AeadSetWrapper() override = default;
+
  private:
-  std::unique_ptr<PrimitiveSet<Aead>> aead_set_;
+  std::unique_ptr<internal::PrimitiveSet<Aead>> aead_set_;
   std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client_;
   std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client_;
 };
@@ -111,13 +113,13 @@ absl::StatusOr<std::string> AeadSetWrapper::Decrypt(
   if (ciphertext.length() > CryptoFormat::kNonRawPrefixSize) {
     absl::string_view key_id =
         ciphertext.substr(0, CryptoFormat::kNonRawPrefixSize);
-    absl::StatusOr<const PrimitiveSet<Aead>::Primitives*> primitives =
+    absl::StatusOr<const internal::PrimitiveSet<Aead>::Primitives*> primitives =
         aead_set_->get_primitives(key_id);
     if (primitives.ok()) {
       absl::string_view raw_ciphertext =
           ciphertext.substr(CryptoFormat::kNonRawPrefixSize);
-      for (const std::unique_ptr<PrimitiveSet<Aead>::Entry<Aead>>& aead_entry :
-           **primitives) {
+      for (const std::unique_ptr<internal::PrimitiveSet<Aead>::Entry<Aead>>&
+               aead_entry : **primitives) {
         Aead& aead = aead_entry->get_primitive();
         absl::StatusOr<std::string> plaintext =
             aead.Decrypt(raw_ciphertext, associated_data);
@@ -133,11 +135,11 @@ absl::StatusOr<std::string> AeadSetWrapper::Decrypt(
   }
 
   // No matching key succeeded with decryption, try all RAW keys.
-  absl::StatusOr<const PrimitiveSet<Aead>::Primitives*> raw_primitives =
-      aead_set_->get_raw_primitives();
+  absl::StatusOr<const internal::PrimitiveSet<Aead>::Primitives*>
+      raw_primitives = aead_set_->get_raw_primitives();
   if (raw_primitives.ok()) {
-    for (const std::unique_ptr<PrimitiveSet<Aead>::Entry<Aead>>& aead_entry :
-         **raw_primitives) {
+    for (const std::unique_ptr<internal::PrimitiveSet<Aead>::Entry<Aead>>&
+             aead_entry : **raw_primitives) {
       Aead& aead = aead_entry->get_primitive();
       absl::StatusOr<std::string> plaintext =
           aead.Decrypt(ciphertext, associated_data);
@@ -159,7 +161,7 @@ absl::StatusOr<std::string> AeadSetWrapper::Decrypt(
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<Aead>> aead_set) const {
+    std::unique_ptr<internal::PrimitiveSet<Aead>> aead_set) const {
   absl::Status status = Validate(aead_set.get());
   if (!status.ok()) {
     return status;

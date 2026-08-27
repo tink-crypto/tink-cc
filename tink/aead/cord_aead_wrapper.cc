@@ -24,7 +24,7 @@
 #include "absl/strings/cord.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/crypto_format.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -33,7 +33,7 @@ namespace tink {
 
 namespace {
 
-absl::Status Validate(PrimitiveSet<CordAead>* aead_set) {
+absl::Status Validate(internal::PrimitiveSet<CordAead>* aead_set) {
   if (aead_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "aead_set must be non-NULL");
@@ -47,7 +47,8 @@ absl::Status Validate(PrimitiveSet<CordAead>* aead_set) {
 
 class CordAeadSetWrapper : public CordAead {
  public:
-  explicit CordAeadSetWrapper(std::unique_ptr<PrimitiveSet<CordAead>> aead_set)
+  explicit CordAeadSetWrapper(
+      std::unique_ptr<internal::PrimitiveSet<CordAead>> aead_set)
       : aead_set_(std::move(aead_set)) {}
 
   absl::StatusOr<absl::Cord> Encrypt(absl::Cord plaintext,
@@ -59,7 +60,7 @@ class CordAeadSetWrapper : public CordAead {
   ~CordAeadSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<CordAead>> aead_set_;
+  std::unique_ptr<internal::PrimitiveSet<CordAead>> aead_set_;
 };
 
 absl::StatusOr<absl::Cord> CordAeadSetWrapper::Encrypt(
@@ -108,7 +109,7 @@ absl::StatusOr<absl::Cord> CordAeadSetWrapper::Decrypt(
 }  // anonymous namespace
 
 absl::StatusOr<std::unique_ptr<CordAead>> CordAeadWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<CordAead>> aead_set) const {
+    std::unique_ptr<internal::PrimitiveSet<CordAead>> aead_set) const {
   absl::Status status = Validate(aead_set.get());
   if (!status.ok()) return status;
   std::unique_ptr<CordAead> aead(new CordAeadSetWrapper(std::move(aead_set)));

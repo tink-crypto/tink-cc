@@ -131,8 +131,8 @@ tink_cc_library(
     absl::span
     tink::core::aead
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::primitive_set
     tink::subtle::subtle_util
     tink::util::status
     tink::util::statusor
@@ -353,7 +353,7 @@ tink_cc_test(
     absl::span
     tink::core::aead
     tink::core::crypto_format
-    tink::core::primitive_set
+    tink::internal::primitive_set
     tink::subtle::subtle_util
     tink::util::test_matchers
     tink::proto::tink_cc_proto

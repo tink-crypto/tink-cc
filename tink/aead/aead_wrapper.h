@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "tink/aead.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/statusor.h"
 
@@ -37,7 +37,7 @@ class AeadWrapper : public PrimitiveWrapper<Aead, Aead> {
   // Returns an Aead-primitive that uses Aead-instances provided in 'aead_set',
   // which must be non-NULL and must contain a primary instance.
   absl::StatusOr<std::unique_ptr<Aead>> Wrap(
-      std::unique_ptr<PrimitiveSet<Aead>> aead_set) const override;
+      std::unique_ptr<internal::PrimitiveSet<Aead>> aead_set) const override;
 };
 
 }  // namespace tink

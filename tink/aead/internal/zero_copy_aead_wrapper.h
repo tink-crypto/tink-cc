@@ -21,7 +21,7 @@
 
 #include "tink/aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/statusor.h"
 

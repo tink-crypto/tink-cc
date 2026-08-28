@@ -1636,6 +1636,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     crypto
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::bn_util
     tink::internal::ec_util
     tink::internal::err_util
@@ -1643,8 +1644,6 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::internal::ssl_util
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

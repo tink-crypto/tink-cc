@@ -138,7 +138,6 @@ tink_cc_library(
     ed25519_verify_boringssl.cc
     ed25519_verify_boringssl.h
   DEPS
-    absl::memory
     absl::status
     absl::statusor
     absl::strings

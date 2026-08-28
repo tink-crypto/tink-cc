@@ -46,29 +46,20 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
 
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
-                      absl::string_view data) const override;
+                      absl::string_view data) const override = 0;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
+
+  ~Ed25519VerifyBoringSsl() override = default;
+
+ protected:
+  Ed25519VerifyBoringSsl() = default;
 
  private:
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       absl::string_view public_key, absl::string_view output_prefix,
       absl::string_view message_suffix);
-
-  explicit Ed25519VerifyBoringSsl(internal::SslUniquePtr<EVP_PKEY> public_key,
-                                  absl::string_view output_prefix,
-                                  absl::string_view message_suffix)
-      : public_key_(std::move(public_key)),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::Status VerifyWithoutPrefix(absl::string_view signature,
-                                   absl::string_view data) const;
-
-  const internal::SslUniquePtr<EVP_PKEY> public_key_;
-  const std::string output_prefix_;
-  const std::string message_suffix_;
 };
 
 }  // namespace subtle

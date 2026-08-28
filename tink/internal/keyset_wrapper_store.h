@@ -90,7 +90,7 @@ class KeysetWrapperStore {
                       const google::crypto::tink::KeyData& key_data) const>
                       primitive_getter,
                   PrimitiveGetterFn<P, Key> primitive_getter_from_key)
-        : is_same_primitive_wrapping_(std::is_same<P, Q>::value),
+        : is_same_primitive_wrapping_(std::is_same_v<P, Q>),
           wrapper_type_index_(std::type_index(typeid(*wrapper))),
           q_type_index_(std::type_index(typeid(Q))) {
       keyset_wrapper_ = absl::make_unique<KeysetWrapperImpl<P, Q>>(

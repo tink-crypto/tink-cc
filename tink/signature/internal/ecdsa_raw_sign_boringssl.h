@@ -40,6 +40,10 @@ namespace internal {
 class EcdsaRawSignBoringSsl : public PublicKeySign {
  public:
   static absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> New(
+      internal::SslUniquePtr<EC_KEY> key,
+      subtle::EcdsaSignatureEncoding encoding);
+
+  static absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> New(
       const crypto::tink::internal::EcKey& ec_key,
       subtle::EcdsaSignatureEncoding encoding);
 

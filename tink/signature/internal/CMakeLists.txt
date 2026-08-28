@@ -10,6 +10,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::status_macros
     absl::strings
     crypto
     tink::core::public_key_sign

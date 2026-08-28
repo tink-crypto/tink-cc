@@ -262,6 +262,24 @@ TEST(EcdsaRawSignBoringSslTest, CreateFailsWithBadPublicKey) {
       Not(IsOk()));
 }
 
+TEST(EcdsaRawSignBoringSslTest, NewWithEcKeySuccess) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+      internal::EcGroupFromCurveType(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(group, IsOk());
+  internal::SslUniquePtr<EC_KEY> ec_key(EC_KEY_new());
+  ASSERT_THAT(EC_KEY_set_group(ec_key.get(), group->get()), Eq(1));
+  ASSERT_THAT(EC_KEY_generate_key(ec_key.get()), Eq(1));
+
+  absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
+      EcdsaRawSignBoringSsl::New(std::move(ec_key),
+                                 subtle::EcdsaSignatureEncoding::DER);
+  EXPECT_THAT(signer, IsOk());
+}
+
 // TODO(bleichen): add Wycheproof tests.
 
 // FIPS-only mode test

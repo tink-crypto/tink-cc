@@ -25,6 +25,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
@@ -95,29 +96,38 @@ absl::StatusOr<std::string> DerToIeee(absl::string_view der,
 
 // static
 absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
+EcdsaRawSignBoringSsl::New(internal::SslUniquePtr<EC_KEY> key,
+                           subtle::EcdsaSignatureEncoding encoding) {
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<EcdsaRawSignBoringSsl>());
+  if (key == nullptr) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Key cannot be null");
+  }
+  return {
+      absl::WrapUnique(new EcdsaRawSignBoringSsl(std::move(key), encoding))};
+}
+
+// static
+absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
 EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
                            subtle::EcdsaSignatureEncoding encoding) {
-  auto status = internal::CheckFipsCompatibility<EcdsaRawSignBoringSsl>();
-  if (!status.ok()) return status;
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<EcdsaRawSignBoringSsl>());
 
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
   absl::Status result = CallWithCoreDumpProtection([&]() -> absl::Status {
     // Check curve.
-    absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
-        internal::EcGroupFromCurveType(ec_key.curve);
-    if (!group.ok()) {
-      return group.status();
-    }
-    EC_KEY_set_group(key.get(), group->get());
+    ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
+                          internal::EcGroupFromCurveType(ec_key.curve));
+    EC_KEY_set_group(key.get(), group.get());
 
     // Check key.
-    absl::StatusOr<internal::SslUniquePtr<EC_POINT>> pub_key =
-        internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y);
-    if (!pub_key.ok()) {
-      return pub_key.status();
-    }
+    ABSL_ASSIGN_OR_RETURN(
+        internal::SslUniquePtr<EC_POINT> pub_key,
+        internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y));
 
-    if (!EC_KEY_set_public_key(key.get(), pub_key->get())) {
+    if (!EC_KEY_set_public_key(key.get(), pub_key.get())) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
@@ -132,11 +142,8 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
     }
     return absl::OkStatus();
   });
-  if (!result.ok()) {
-    return result;
-  }
-  return {
-      absl::WrapUnique(new EcdsaRawSignBoringSsl(std::move(key), encoding))};
+  ABSL_RETURN_IF_ERROR(result);
+  return New(std::move(key), encoding);
 }
 
 absl::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(

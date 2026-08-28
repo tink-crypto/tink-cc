@@ -350,6 +350,7 @@ tink_cc_library(
     tink::subtle::common_enums
     absl::algorithm_container
     absl::status
+    absl::status_macros
     absl::strings
     crypto
     tink::core::partial_key_access
@@ -363,7 +364,6 @@ tink_cc_library(
     tink::internal::util
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
-    tink::util::errors
     tink::util::status
     tink::util::statusor
 )

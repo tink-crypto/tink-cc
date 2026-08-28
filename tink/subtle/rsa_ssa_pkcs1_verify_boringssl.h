@@ -17,7 +17,6 @@
 #ifndef TINK_SUBTLE_RSA_SSA_PKCS1_VERIFY_BORINGSSL_H_
 #define TINK_SUBTLE_RSA_SSA_PKCS1_VERIFY_BORINGSSL_H_
 
-#include <array>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -56,40 +55,21 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
 
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
-                      absl::string_view data) const override;
+                      absl::string_view data) const override = 0;
 
   ~RsaSsaPkcs1VerifyBoringSsl() override = default;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
- private:
-  // To reach 128-bit security strength, RSA's modulus must be at least 3072-bit
-  // while 2048-bit RSA key only has 112-bit security. Nevertheless, a 2048-bit
-  // RSA key is considered safe by NIST until 2030 (see
-  // https://www.keylength.com/en/4/).
-  static constexpr size_t kMinModulusSizeInBits = 2048;
+ protected:
+  RsaSsaPkcs1VerifyBoringSsl() = default;
 
+ private:
   static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> New(
       const internal::RsaPublicKey& pub_key,
       const internal::RsaSsaPkcs1Params& params,
       absl::string_view output_prefix, absl::string_view message_suffix);
-
-  RsaSsaPkcs1VerifyBoringSsl(internal::SslUniquePtr<RSA> rsa,
-                             const EVP_MD* sig_hash,
-                             absl::string_view output_prefix,
-                             absl::string_view message_suffix);
-
-  absl::Status VerifyWithoutPrefix(absl::string_view signature,
-                                   absl::string_view data) const;
-
-  internal::InlineBignum modulus_;
-  internal::InlineBignum public_exponent_;
-  const internal::SslUniquePtr<RSA> rsa_;
-  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
-  std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
-  bool has_output_prefix_;
-  bool has_legacy_message_suffix_;
 };
 
 }  // namespace subtle

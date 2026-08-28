@@ -16,7 +16,7 @@
 
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 
-#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -24,6 +24,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -31,8 +32,10 @@
 #include "openssl/bn.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
+#include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/output_prefix_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
@@ -41,13 +44,94 @@
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
+
+namespace {
+
+class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
+ public:
+  RsaSsaPkcs1VerifyBoringSslImpl(internal::SslUniquePtr<RSA> rsa,
+                                 const EVP_MD* sig_hash,
+                                 absl::string_view output_prefix,
+                                 absl::string_view message_suffix)
+      : rsa_(std::move(rsa)),
+        sig_hash_(sig_hash),
+        has_output_prefix_(!output_prefix.empty()),
+        has_legacy_message_suffix_(message_suffix ==
+                                   absl::string_view("\0", 1)) {
+    if (has_output_prefix_) {
+      absl::c_copy(output_prefix, output_prefix_data_.begin());
+    }
+  }
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
+
+  internal::InlineBignum modulus_;
+  internal::InlineBignum public_exponent_;
+  internal::SslUniquePtr<RSA> rsa_;
+  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+  std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
+  bool has_output_prefix_;
+  bool has_legacy_message_suffix_;
+
+ private:
+  absl::Status VerifyWithoutPrefix(absl::string_view signature,
+                                   absl::string_view data) const;
+};
+
+absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
+    absl::string_view signature, absl::string_view data) const {
+  // BoringSSL expects a non-null pointer for data,
+  // regardless of whether the size is 0.
+  data = internal::EnsureStringNonNull(data);
+
+  ABSL_ASSIGN_OR_RETURN(std::string digest,
+                        internal::ComputeHash(data, *sig_hash_));
+
+  if (RSA_verify(EVP_MD_type(sig_hash_),
+                 /*digest=*/reinterpret_cast<const uint8_t*>(digest.data()),
+                 /*digest_len=*/digest.size(),
+                 /*sig=*/reinterpret_cast<const uint8_t*>(signature.data()),
+                 /*sig_len=*/signature.length(),
+                 /*rsa=*/rsa_.get()) != 1) {
+    // Signature is invalid.
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Signature is not valid.");
+  }
+
+  return absl::OkStatus();
+}
+
+absl::Status RsaSsaPkcs1VerifyBoringSslImpl::Verify(
+    absl::string_view signature, absl::string_view data) const {
+  if (!has_output_prefix_ && !has_legacy_message_suffix_) {
+    return VerifyWithoutPrefix(signature, data);
+  }
+  absl::string_view output_prefix(
+      output_prefix_data_.data(),
+      has_output_prefix_ ? output_prefix_data_.size() : 0);
+  if (has_output_prefix_ && !absl::StartsWith(signature, output_prefix)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "OutputPrefix does not match");
+  }
+  // Stores a copy of the data in case has_legacy_message_suffix_ is true.
+  // Needs to stay alive until this method is done.
+  std::string data_copy_holder;
+  if (has_legacy_message_suffix_) {
+    data_copy_holder = absl::StrCat(data, absl::string_view("\0", 1));
+    data = data_copy_holder;
+  }
+  return VerifyWithoutPrefix(has_output_prefix_
+                                 ? absl::StripPrefix(signature, output_prefix)
+                                 : signature,
+                             data);
+}
+
+}  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
@@ -76,18 +160,6 @@ RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
                      RsaSsaPkcs1Parameters::Variant::kLegacy
                  ? std::string(1, 0)
                  : "");
-}
-
-RsaSsaPkcs1VerifyBoringSsl::RsaSsaPkcs1VerifyBoringSsl(
-    internal::SslUniquePtr<RSA> rsa, const EVP_MD* sig_hash,
-    absl::string_view output_prefix, absl::string_view message_suffix)
-    : rsa_(std::move(rsa)),
-      sig_hash_(sig_hash),
-      has_output_prefix_(!output_prefix.empty()),
-      has_legacy_message_suffix_(message_suffix == absl::string_view("\0", 1)) {
-  if (has_output_prefix_) {
-    absl::c_copy(output_prefix, output_prefix_data_.begin());
-  }
 }
 
 absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
@@ -136,9 +208,9 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
     return absl::Status(absl::StatusCode::kInternal, "RSA allocation error");
   }
 
-  std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl> verify(
-      new RsaSsaPkcs1VerifyBoringSsl(std::move(rsa), *sig_hash, output_prefix,
-                                     message_suffix));
+  std::unique_ptr<RsaSsaPkcs1VerifyBoringSslImpl> verify(
+      new RsaSsaPkcs1VerifyBoringSslImpl(std::move(rsa), *sig_hash,
+                                         output_prefix, message_suffix));
   if (!BN_bin2bn(reinterpret_cast<const uint8_t*>(pub_key.n.data()),
                  pub_key.n.size(), verify->modulus_.get())) {
     return absl::Status(absl::StatusCode::kInternal,
@@ -163,57 +235,7 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
   // release them here.
   verify->modulus_.release();
   verify->public_exponent_.release();
-  return std::move(verify);
-}
-
-absl::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
-    absl::string_view signature, absl::string_view data) const {
-  // BoringSSL expects a non-null pointer for data,
-  // regardless of whether the size is 0.
-  data = internal::EnsureStringNonNull(data);
-
-  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
-  if (!digest.ok()) {
-    return digest.status();
-  }
-
-  if (RSA_verify(EVP_MD_type(sig_hash_),
-                 /*digest=*/reinterpret_cast<const uint8_t*>(digest->data()),
-                 /*digest_len=*/digest->size(),
-                 /*sig=*/reinterpret_cast<const uint8_t*>(signature.data()),
-                 /*sig_len=*/signature.length(),
-                 /*rsa=*/rsa_.get()) != 1) {
-    // Signature is invalid.
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Signature is not valid.");
-  }
-
-  return absl::OkStatus();
-}
-
-absl::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
-                                                absl::string_view data) const {
-  if (!has_output_prefix_ && !has_legacy_message_suffix_) {
-    return VerifyWithoutPrefix(signature, data);
-  }
-  absl::string_view output_prefix(
-      output_prefix_data_.data(),
-      has_output_prefix_ ? output_prefix_data_.size() : 0);
-  if (has_output_prefix_ && !absl::StartsWith(signature, output_prefix)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "OutputPrefix does not match");
-  }
-  // Stores a copy of the data in case has_legacy_message_suffix_ is true.
-  // Needs to stay alive until this method is done.
-  std::string data_copy_holder;
-  if (has_legacy_message_suffix_) {
-    data_copy_holder = absl::StrCat(data, absl::string_view("\0", 1));
-    data = data_copy_holder;
-  }
-  return VerifyWithoutPrefix(has_output_prefix_
-                                 ? absl::StripPrefix(signature, output_prefix)
-                                 : signature,
-                             data);
+  return verify;
 }
 
 }  // namespace subtle

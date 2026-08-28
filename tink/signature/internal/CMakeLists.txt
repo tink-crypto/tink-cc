@@ -601,6 +601,8 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto

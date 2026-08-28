@@ -359,9 +359,7 @@ KeyValues GetKeyValuesFromTestVector(
 KeyValues GenerateKeyValues(int modulus_size_in_bits) {
   if (modulus_size_in_bits == 2048) {
     static const absl::NoDestructor<KeyValues> values([]() {
-      std::vector<internal::SignatureTestVector> vectors =
-          internal::CreateRsaSsaPkcs1TestVectors();
-      return GetKeyValuesFromTestVector(vectors[0]);
+      return GetKeyValuesFromTestVector(internal::Create2048BitsTestVector());
     }());
     return *values;
   }

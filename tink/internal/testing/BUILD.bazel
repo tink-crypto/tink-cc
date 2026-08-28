@@ -101,6 +101,38 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "ec_test_vectors",
+    testonly = 1,
+    srcs = ["ec_test_vectors.cc"],
+    hdrs = ["ec_test_vectors.h"],
+    include_prefix = "tink/internal/testing",
+    deps = [
+        "//tink:big_integer",
+        "//tink:ec_point",
+        "//tink:insecure_secret_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:ec_util",
+        "//tink/subtle:common_enums",
+        "//tink/util:secret_data",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+    ],
+)
+
+cc_test(
+    name = "ec_test_vectors_test",
+    srcs = ["ec_test_vectors_test.cc"],
+    deps = [
+        ":ec_test_vectors",
+        "//tink/internal:ec_util",
+        "//tink/subtle:common_enums",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "wycheproof_util_test",
     srcs = ["wycheproof_util_test.cc"],

@@ -922,6 +922,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::test_util

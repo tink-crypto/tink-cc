@@ -51,8 +51,6 @@ tink_cc_library(
     absl::absl_check
     absl::statusor
     absl::optional
-    tink::core::big_integer
-    tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -60,9 +58,8 @@ tink_cc_library(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     tink::hybrid::hybrid_private_key
-    tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
-    tink::util::secret_data
     tink::util::test_util
   TESTONLY
 )

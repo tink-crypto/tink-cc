@@ -34,6 +34,7 @@
 #include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"

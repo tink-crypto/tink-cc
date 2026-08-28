@@ -942,8 +942,8 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::config::tink_fips
-    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::util::secret_data
     tink::util::test_util
 )
@@ -1220,9 +1220,9 @@ tink_cc_test(
     absl::string_view
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
     tink::internal::fips_utils
+    tink::internal::testing::ec_test_vectors
     tink::signature::ecdsa_private_key
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
@@ -1245,9 +1245,9 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::public_key_verify
-    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
     tink::internal::fips_utils
+    tink::internal::testing::ec_test_vectors
     tink::internal::testing::wycheproof_util
     tink::signature::ecdsa_private_key
     tink::signature::internal::testing::ecdsa_test_vectors
@@ -1635,13 +1635,13 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     crypto
-    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::bn_util
     tink::internal::ec_util
     tink::internal::err_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::internal::ssl_util
+    tink::internal::testing::ec_test_vectors
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

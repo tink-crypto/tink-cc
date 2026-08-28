@@ -90,6 +90,37 @@ tink_cc_library(
   TESTONLY
 )
 
+tink_cc_library(
+  NAME ec_test_vectors
+  SRCS
+    ec_test_vectors.cc
+    ec_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::flat_hash_map
+    absl::absl_check
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::restricted_data
+    tink::internal::ec_util
+    tink::subtle::common_enums
+    tink::util::secret_data
+    tink::util::test_util
+  TESTONLY
+)
+
+tink_cc_test(
+  NAME ec_test_vectors_test
+  SRCS
+    ec_test_vectors_test.cc
+  DEPS
+    tink::internal::testing::ec_test_vectors
+    gmock
+    tink::internal::ec_util
+    tink::subtle::common_enums
+)
+
 tink_cc_test(
   NAME wycheproof_util_test
   SRCS

@@ -246,6 +246,7 @@ cc_test(
         "//tink/internal:ec_util",
         "//tink/internal:fips_utils",
         "//tink/internal:md_util",
+        "//tink/internal/testing:ec_test_vectors",
         "//tink/subtle:common_enums",
         "//tink/subtle:ecdsa_verify_boringssl",
         "//tink/subtle:subtle_util_boringssl",
@@ -254,7 +255,6 @@ cc_test(
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
-        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
 )

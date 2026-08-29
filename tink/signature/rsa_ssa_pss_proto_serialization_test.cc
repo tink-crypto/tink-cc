@@ -464,10 +464,8 @@ KeyValues GetKeyValues(const RsaSsaPssPrivateKey& key) {
 KeyValues GenerateKeyValues(int modulus_size_in_bits) {
   if (modulus_size_in_bits == 2048) {
     static const absl::NoDestructor<KeyValues> values([]() {
-      std::vector<internal::SignatureTestVector> vectors =
-          internal::CreateRsaSsaPssTestVectors();
       const RsaSsaPssPrivateKey* key = dynamic_cast<const RsaSsaPssPrivateKey*>(
-          vectors[0].signature_private_key.get());
+          internal::Create2048BitTestVector().signature_private_key.get());
       ABSL_CHECK_NE(key, nullptr);
       return GetKeyValues(*key);
     }());

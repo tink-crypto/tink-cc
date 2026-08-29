@@ -847,6 +847,8 @@ cc_test(
         "//tink/signature:rsa_ssa_pss_parameters",
         "//tink/signature:rsa_ssa_pss_private_key",
         "//tink/signature:rsa_ssa_pss_public_key",
+        "//tink/signature/internal/testing:rsa_ssa_pss_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",

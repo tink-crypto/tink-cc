@@ -38,6 +38,23 @@ tink_cc_library(
 )
 
 tink_cc_library(
+  NAME ecdsa_test_utils
+  SRCS
+    ecdsa_test_utils.cc
+    ecdsa_test_utils.h
+  DEPS
+    absl::absl_check
+    absl::statusor
+    tink::internal::ec_util
+    tink::subtle::common_enums
+    tink::util::enums
+    tink::util::secret_data
+    tink::proto::common_cc_proto
+    tink::proto::ecdsa_cc_proto
+  TESTONLY
+)
+
+tink_cc_library(
   NAME rsa_ssa_pss_test_vectors
   SRCS
     rsa_ssa_pss_test_vectors.cc

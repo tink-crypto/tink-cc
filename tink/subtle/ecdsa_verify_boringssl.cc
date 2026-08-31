@@ -179,26 +179,34 @@ absl::Status EcdsaVerifyBoringSslImpl::Verify(absl::string_view signature,
 
 absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     const EcdsaPublicKey& public_key) {
-  SubtleUtilBoringSSL::EcKey subtle_ec_key;
-  subtle_ec_key.pub_x = std::string(
-      public_key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue());
-  subtle_ec_key.pub_y = std::string(
-      public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue());
-
   ABSL_ASSIGN_OR_RETURN(
       subtle::EllipticCurveType converted_curve_type,
       ConvertCurveType(public_key.GetParameters().GetCurveType()));
-  subtle_ec_key.curve = converted_curve_type;
-
   ABSL_ASSIGN_OR_RETURN(
       HashType converted_hash_type,
       ConvertHashType(public_key.GetParameters().GetHashType()));
-
   ABSL_ASSIGN_OR_RETURN(EcdsaSignatureEncoding converted_signature_encoding,
                         ConvertSignatureEncoding(
                             public_key.GetParameters().GetSignatureEncoding()));
 
-  return New(subtle_ec_key, converted_hash_type, converted_signature_encoding,
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
+                        internal::EcGroupFromCurveType(converted_curve_type));
+  internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
+  EC_KEY_set_group(key.get(), group.get());
+
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SslUniquePtr<EC_POINT> pub_key,
+      internal::GetEcPoint(
+          converted_curve_type,
+          public_key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue(),
+          public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue()));
+  if (!EC_KEY_set_public_key(key.get(), pub_key.get())) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
+  }
+
+  return New(std::move(key), converted_hash_type, converted_signature_encoding,
              public_key.GetOutputPrefix(),
              public_key.GetParameters().GetVariant() ==
                      EcdsaParameters::Variant::kLegacy

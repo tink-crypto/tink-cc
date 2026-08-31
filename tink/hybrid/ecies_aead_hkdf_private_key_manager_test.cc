@@ -21,7 +21,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -35,10 +34,15 @@
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
+#include "tink/internal/ec_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/registry.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/subtle/hybrid_test_util.h"
+#include "tink/util/enums.h"
+#include "tink/util/secret_data.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
@@ -52,8 +56,10 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::HybridTestVector;
 using ::google::crypto::tink::EciesAeadHkdfKeyFormat;
+using ::google::crypto::tink::EciesAeadHkdfParams;
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;
+using ::google::crypto::tink::EciesHkdfKemParams;
 using ::google::crypto::tink::EcPointFormat;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
@@ -154,13 +160,24 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, CreateKey) {
 
 EciesAeadHkdfPrivateKey CreateValidKey(
     EllipticCurveType curve_type = EllipticCurveType::NIST_P256) {
-  auto key_or = EciesAeadHkdfPrivateKeyManager().CreateKey(
-      CreateValidKeyFormat(curve_type));
-  if (!key_or.ok()) {
-    ADD_FAILURE() << "Failed to create key: " << key_or.status();
-    return EciesAeadHkdfPrivateKey();
-  }
-  return *key_or;
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(util::Enums::ProtoToSubtle(curve_type));
+  EciesAeadHkdfPrivateKey key;
+  key.set_version(0);
+  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  EciesAeadHkdfPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_x(ec_key.pub_x);
+  public_key->set_y(ec_key.pub_y);
+  EciesAeadHkdfParams* params = public_key->mutable_params();
+  params->set_ec_point_format(EcPointFormat::UNCOMPRESSED);
+  params->mutable_dem_params()->mutable_aead_dem()->CopyFrom(
+      AeadKeyTemplates::Aes128Gcm());
+  EciesHkdfKemParams* kem_params = params->mutable_kem_params();
+  kem_params->set_curve_type(curve_type);
+  kem_params->set_hkdf_hash_type(HashType::SHA256);
+  kem_params->set_hkdf_salt("");
+  return key;
 }
 
 TEST(EciesAeadHkdfPrivateKeyManagerTest, ValidateKeyEmpty) {
@@ -349,9 +366,8 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, CreateDifferentKey) {
               IsOk());
 
   EciesAeadHkdfPrivateKey private_key = CreateValidKey();
-  // Note: we create a new private key in the next line.
   EciesAeadHkdfPublicKey public_key =
-      EciesAeadHkdfPrivateKeyManager().GetPublicKey(CreateValidKey()).value();
+      CreateValidKey(EllipticCurveType::NIST_P384).public_key();
 
   auto decrypt_or =
       EciesAeadHkdfPrivateKeyManager().GetPrimitive<HybridDecrypt>(private_key);

@@ -21,14 +21,9 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/aead/aead_key_templates.h"
-#include "tink/aead/aes_gcm_key_manager.h"
-#include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
-#include "tink/hybrid_encrypt.h"
-#include "tink/registry.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
+#include "tink/internal/ec_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
+#include "tink/subtle/common_enums.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecies_aead_hkdf.pb.h"
@@ -40,9 +35,9 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::google::crypto::tink::EciesAeadHkdfKeyFormat;
 using ::google::crypto::tink::EciesAeadHkdfParams;
 using ::google::crypto::tink::EciesAeadHkdfPublicKey;
+using ::google::crypto::tink::EciesHkdfKemParams;
 using ::google::crypto::tink::EcPointFormat;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
@@ -65,18 +60,21 @@ TEST(EciesAeadHkdfPublicKeyManagerTest, ValidateEmptyKey) {
 }
 
 EciesAeadHkdfPublicKey CreatePublicKey() {
-  EciesAeadHkdfKeyFormat key_format;
-  key_format.mutable_params()->set_ec_point_format(EcPointFormat::UNCOMPRESSED);
-  auto dem_params = key_format.mutable_params()->mutable_dem_params();
-  *(dem_params->mutable_aead_dem()) = AeadKeyTemplates::Aes128Gcm();
-  auto kem_params = key_format.mutable_params()->mutable_kem_params();
+  EciesAeadHkdfPublicKey public_key;
+  public_key.set_version(0);
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  public_key.set_x(ec_key.pub_x);
+  public_key.set_y(ec_key.pub_y);
+  EciesAeadHkdfParams* params = public_key.mutable_params();
+  params->set_ec_point_format(EcPointFormat::UNCOMPRESSED);
+  params->mutable_dem_params()->mutable_aead_dem()->CopyFrom(
+      AeadKeyTemplates::Aes128Gcm());
+  EciesHkdfKemParams* kem_params = params->mutable_kem_params();
   kem_params->set_curve_type(EllipticCurveType::NIST_P256);
   kem_params->set_hkdf_hash_type(HashType::SHA256);
   kem_params->set_hkdf_salt("");
-  auto private_key_manager = EciesAeadHkdfPrivateKeyManager();
-  return private_key_manager
-      .GetPublicKey(private_key_manager.CreateKey(key_format).value())
-      .value();
+  return public_key;
 }
 
 TEST(EciesAeadHkdfPublicKeyManagerTest, ValidateParams) {

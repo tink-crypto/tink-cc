@@ -82,7 +82,7 @@ inline bool IsWindows() {
 
 // Wraps Abseil's LOG(FATAL) macro and sets the [noreturn] attribute, which is
 // useful for avoiding false positive [-Werror=return-type] compiler errors.
-ABSL_ATTRIBUTE_NORETURN void LogFatal(absl::string_view msg);
+[[noreturn]] void LogFatal(absl::string_view msg);
 
 // Converts a serialized big integer to a data of fixed length, padding or
 // truncating leading zeros if needed. Returns an error if the integer encoded

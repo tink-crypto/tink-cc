@@ -1012,23 +1012,23 @@ tink_cc_test(
   SRCS
     rsa_ssa_pss_verify_key_manager_test.cc
   DEPS
-    tink::signature::rsa_ssa_pss_sign_key_manager
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
     tink::signature::rsa_ssa_pss_verify_key_manager
     gmock
     absl::status
     absl::status_matchers
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::internal::bn_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto

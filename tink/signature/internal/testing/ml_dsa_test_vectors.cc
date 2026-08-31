@@ -29,7 +29,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
@@ -550,7 +549,7 @@ constexpr absl::string_view kHexSignatureWithTinkPrefix87 =
     "E2F808BCD0E3F4FC495E8CACCFD2DFEBF1F7F908445D96B1B4C5C91D637175BC00000000"
     "00000000000000000000000000000000050911191F2A3237";
 
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#ifndef TINK_USE_ONLY_FIPS
 // Creates an ML-DSA private key for test vectors.
 MlDsaPrivateKey CreatePrivateKey(MlDsaParameters::Instance instance,
                                  MlDsaParameters::Variant variant,
@@ -650,7 +649,7 @@ const MlDsaTestVectorMap& CreateMlDsaTestVectorsMap() {
 const std::vector<SignatureTestVector>& CreateMlDsaTestVectors() {
   static const absl::NoDestructor<std::vector<SignatureTestVector>>
       test_vectors([] {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#ifdef TINK_USE_ONLY_FIPS
         return std::vector<SignatureTestVector>{};
 #else
         if (internal::IsFipsModeEnabled()) {
@@ -672,9 +671,8 @@ const std::vector<SignatureTestVector>& CreateMlDsaTestVectors() {
 // NIST FIPS 204.
 const SignatureTestVector& GetMlDsaTestVector(
     MlDsaParameters::Instance instance, MlDsaParameters::Variant variant) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
-  ABSL_LOG(FATAL) << "ML-DSA test vectors are not available in FIPS or "
-                     "non-BoringSSL builds.";
+#ifdef TINK_USE_ONLY_FIPS
+  ABSL_LOG(FATAL) << "ML-DSA test vectors are not available in FIPS mode.";
 #else
   if (internal::IsFipsModeEnabled()) {
     ABSL_LOG(FATAL) << "ML-DSA test vectors are not available in FIPS mode.";

@@ -28,22 +28,22 @@ namespace {
 
 TEST(PartialKeyAccessTokenTest, CopyConstructor) {
   PartialKeyAccessToken token = GetPartialKeyAccess();
-  PartialKeyAccessToken copy ABSL_ATTRIBUTE_UNUSED(token);
+  PartialKeyAccessToken copy [[maybe_unused]] (token);
 }
 
 TEST(PartialKeyAccessTokenTest, CopyAssignment) {
   PartialKeyAccessToken token = GetPartialKeyAccess();
-  PartialKeyAccessToken copy ABSL_ATTRIBUTE_UNUSED = token;
+  PartialKeyAccessToken copy [[maybe_unused]] = token;
 }
 
 TEST(PartialKeyAccessTokenTest, MoveConstructor) {
   PartialKeyAccessToken token = GetPartialKeyAccess();
-  PartialKeyAccessToken move ABSL_ATTRIBUTE_UNUSED(std::move(token));
+  PartialKeyAccessToken move [[maybe_unused]] (std::move(token));
 }
 
 TEST(PartialKeyAccessTokenTest, MoveAssignment) {
   PartialKeyAccessToken token = GetPartialKeyAccess();
-  PartialKeyAccessToken move ABSL_ATTRIBUTE_UNUSED = std::move(token);
+  PartialKeyAccessToken move [[maybe_unused]] = std::move(token);
 }
 
 }  // namespace

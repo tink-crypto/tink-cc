@@ -28,22 +28,22 @@ namespace {
 
 TEST(LowLevelCryptoAccessTokenTest, CopyConstructor) {
   LowLevelCryptoAccessToken token = GetLowLevelCryptoAccess();
-  LowLevelCryptoAccessToken copy ABSL_ATTRIBUTE_UNUSED(token);
+  LowLevelCryptoAccessToken copy [[maybe_unused]] (token);
 }
 
 TEST(LowLevelCryptoAccessTokenTest, CopyAssignment) {
   LowLevelCryptoAccessToken token = GetLowLevelCryptoAccess();
-  LowLevelCryptoAccessToken copy ABSL_ATTRIBUTE_UNUSED = token;
+  LowLevelCryptoAccessToken copy [[maybe_unused]] = token;
 }
 
 TEST(LowLevelCryptoAccessTokenTest, MoveConstructor) {
   LowLevelCryptoAccessToken token = GetLowLevelCryptoAccess();
-  LowLevelCryptoAccessToken move ABSL_ATTRIBUTE_UNUSED(std::move(token));
+  LowLevelCryptoAccessToken move [[maybe_unused]] (std::move(token));
 }
 
 TEST(LowLevelCryptoAccessTokenTest, MoveAssignment) {
   LowLevelCryptoAccessToken token = GetLowLevelCryptoAccess();
-  LowLevelCryptoAccessToken move ABSL_ATTRIBUTE_UNUSED = std::move(token);
+  LowLevelCryptoAccessToken move [[maybe_unused]] = std::move(token);
 }
 
 }  // namespace

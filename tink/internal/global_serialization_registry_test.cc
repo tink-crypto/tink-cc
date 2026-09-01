@@ -17,11 +17,11 @@
 #include "tink/internal/global_serialization_registry.h"
 
 #include <memory>
+#include <optional>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
@@ -49,6 +49,7 @@
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
@@ -67,13 +68,12 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -215,10 +215,8 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
           .Build();
   ABSL_CHECK_OK(parameters);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ABSL_CHECK_OK(ec_key);
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const EcKey& ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  EcPoint public_point(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
@@ -226,7 +224,7 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
   ABSL_CHECK_OK(public_key);
 
   RestrictedData private_key_value =
-      RestrictedData(ec_key->priv, GetInsecureSecretKeyAccessInternal());
+      RestrictedData(ec_key.priv, GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);
@@ -244,10 +242,8 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
           .Build();
   ABSL_CHECK_OK(parameters);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ABSL_CHECK_OK(ec_key);
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  const EcKey& ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  EcPoint public_point(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
@@ -258,39 +254,19 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
 }
 
 std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
-  absl::StatusOr<Ed25519Parameters> parameters =
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
-  ABSL_CHECK_OK(parameters);
-
-  absl::StatusOr<std::unique_ptr<Ed25519Key>> key_pair = NewEd25519Key();
-  ABSL_CHECK_OK(key_pair);
-
-  absl::StatusOr<Ed25519PublicKey> public_key =
-      Ed25519PublicKey::Create(*parameters, (*key_pair)->public_key,
-                               /*id_requirement=*/123, GetPartialKeyAccess());
-  ABSL_CHECK_OK(public_key);
-
-  RestrictedData private_key_bytes = RestrictedData(
-      (*key_pair)->private_key, GetInsecureSecretKeyAccessInternal());
-
-  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
-      *public_key, private_key_bytes, GetPartialKeyAccess());
-  ABSL_CHECK_OK(private_key);
-
+  const Ed25519PrivateKey* private_key = dynamic_cast<const Ed25519PrivateKey*>(
+      GetEd25519TestVector(Ed25519Parameters::Variant::kTink)
+          .signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr);
   return std::make_unique<const Ed25519PrivateKey>(*private_key);
 }
 
 std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
-  absl::StatusOr<Ed25519Parameters> parameters =
-      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
-  ABSL_CHECK_OK(parameters);
-
-  absl::StatusOr<Ed25519PublicKey> key =
-      Ed25519PublicKey::Create(*parameters, subtle::Random::GetRandomBytes(32),
-                               /*id_requirement=*/123, GetPartialKeyAccess());
-  ABSL_CHECK_OK(key);
-
-  return std::make_unique<const Ed25519PublicKey>(*key);
+  const Ed25519PrivateKey* private_key = dynamic_cast<const Ed25519PrivateKey*>(
+      GetEd25519TestVector(Ed25519Parameters::Variant::kTink)
+          .signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr);
+  return std::make_unique<const Ed25519PublicKey>(private_key->GetPublicKey());
 }
 
 std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {

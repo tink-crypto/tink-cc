@@ -1623,7 +1623,6 @@ tink_cc_test(
     tink::internal::serialization
     gmock
     absl::absl_check
-    absl::memory
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1650,6 +1649,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
+    tink::internal::testing::ec_test_vectors
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
     tink::mac::hmac_key
@@ -1665,13 +1665,12 @@ tink_cc_test(
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
+    tink::signature::internal::testing::ed25519_test_vectors
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::subtle::common_enums
-    tink::subtle::random
-    tink::util::test_matchers
 )
 
 tink_cc_library(

@@ -20,6 +20,7 @@
 #include <cstdint>
 
 #include "absl/status/statusor.h"
+#include "tink/hybrid/hpke_parameters.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -65,6 +66,9 @@ absl::StatusOr<HpkeParams> HpkeParamsProtoToStruct(
 // Returns the encapsulated key length (in bytes) for the specified `kem`.
 absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
     google::crypto::tink::HpkeKem kem);
+
+// Returns the encapsulated key length (in bytes) for the specified `kem_id`.
+absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(HpkeParameters::KemId kem_id);
 
 }  // namespace internal
 }  // namespace tink

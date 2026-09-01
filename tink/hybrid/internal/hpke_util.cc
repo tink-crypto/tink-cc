@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "tink/hybrid/hpke_parameters.h"
 #include "tink/internal/ec_util.h"
 #include "tink/subtle/common_enums.h"
 #include "proto/hpke.pb.h"
@@ -120,6 +121,30 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to determine KEM-encoding length for ", kem));
+  }
+}
+
+absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
+    HpkeParameters::KemId kem_id) {
+  switch (kem_id) {
+    case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
+      return internal::EcPointEncodingSizeInBytes(
+          subtle::EllipticCurveType::CURVE25519,
+          subtle::EcPointFormat::UNCOMPRESSED);
+    case HpkeParameters::KemId::kDhkemP256HkdfSha256:
+      return internal::EcPointEncodingSizeInBytes(
+          subtle::EllipticCurveType::NIST_P256,
+          subtle::EcPointFormat::UNCOMPRESSED);
+    case HpkeParameters::KemId::kXWing:
+      return kXWingEncapsulatedKeyLength;
+    case HpkeParameters::KemId::kMlKem768:
+      return kMlKem768EncapsulatedKeyLength;
+    case HpkeParameters::KemId::kMlKem1024:
+      return kMlKem1024EncapsulatedKeyLength;
+    default:
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unable to determine KEM-encoding length for ", kem_id));
   }
 }
 

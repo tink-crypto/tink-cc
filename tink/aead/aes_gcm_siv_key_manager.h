@@ -45,7 +45,7 @@ class AesGcmSivKeyManager
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
     absl::StatusOr<std::unique_ptr<Aead>> Create(
-        const google::crypto::tink::AesGcmSivKey& key) const;
+        const google::crypto::tink::AesGcmSivKey& key) const override;
   };
 
   AesGcmSivKeyManager() : KeyTypeManager(std::make_unique<AeadFactory>()) {}

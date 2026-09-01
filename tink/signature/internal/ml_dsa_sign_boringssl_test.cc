@@ -26,7 +26,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "openssl/mldsa.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
@@ -55,7 +54,12 @@ using MlDsaSignBoringSslTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaSignBoringSslTestSuite, MlDsaSignBoringSslTest,
-    Values(TestCase{MlDsaParameters::Instance::kMlDsa65,
+    Values(TestCase{MlDsaParameters::Instance::kMlDsa44,
+                    MlDsaParameters::Variant::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa44,
+                    MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
                     MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{MlDsaParameters::Instance::kMlDsa65,
@@ -66,12 +70,15 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{MlDsaParameters::Instance::kMlDsa87,
                     MlDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
+// Returns the expected signature length in bytes specified in NIST FIPS 204.
 int SignatureBytes(MlDsaParameters::Instance instance) {
   switch (instance) {
+    case MlDsaParameters::Instance::kMlDsa44:
+      return 2420;
     case MlDsaParameters::Instance::kMlDsa65:
-      return MLDSA65_SIGNATURE_BYTES;
+      return 3309;
     case MlDsaParameters::Instance::kMlDsa87:
-      return MLDSA87_SIGNATURE_BYTES;
+      return 4627;
     default:
       ABSL_LOG(FATAL) << "Unsupported ML-DSA instance";
   }

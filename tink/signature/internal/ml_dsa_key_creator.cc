@@ -21,10 +21,6 @@
 #include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/mldsa.h"
-#endif
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ml_dsa_parameters.h"
@@ -36,18 +32,15 @@ namespace internal {
 
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     const MlDsaParameters& params, absl::optional<int> id_requirement) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
-  absl::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
-      params, RestrictedData(MLDSA_SEED_BYTES), id_requirement,
-      GetPartialKeyAccess());
+  // ML-DSA private key seed length is 32 bytes (NIST FIPS 204).
+  constexpr int kSeedSizeBytes = 32;
+  absl::StatusOr<MlDsaPrivateKey> key =
+      MlDsaPrivateKey::Create(params, RestrictedData(kSeedSizeBytes),
+                              id_requirement, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
   }
   return std::make_unique<MlDsaPrivateKey>(*key);
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

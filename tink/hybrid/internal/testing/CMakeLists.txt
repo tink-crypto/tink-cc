@@ -63,3 +63,31 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME ecies_test_util
+  SRCS
+    ecies_test_util.cc
+    ecies_test_util.h
+  DEPS
+    absl::absl_check
+    absl::statusor
+    tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_gcm_key_manager
+    tink::aead::xchacha20_poly1305_key_manager
+    tink::daead::aes_siv_key_manager
+    tink::internal::ec_util
+    tink::subtle::common_enums
+    tink::util::enums
+    tink::util::secret_data
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_siv_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::ecies_aead_hkdf_cc_proto
+    tink::proto::hmac_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+  TESTONLY
+)
+

@@ -87,6 +87,15 @@ absl::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
   }
 }
 
+// Impl class for `EcdsaSignBoringSsl`. This allows us to not expose the
+// BoringSsl hash function type in the public header.
+// Given:
+// - the hash function h (given by `hash_`),
+// - the signer S (given by `raw_signer_`, which signs the digest),
+// - the output prefix o of the key (given by `output_prefix_`),
+// - and the message suffix s (given by `message_suffix),
+// EcdsaSignBoringSsl::Sign(data) computes:
+// o || S(h( data || s))
 class EcdsaSignBoringSslImpl : public EcdsaSignBoringSsl {
  public:
   EcdsaSignBoringSslImpl(

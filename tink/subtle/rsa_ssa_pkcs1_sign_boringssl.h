@@ -22,11 +22,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "openssl/ec.h"
-#include "openssl/rsa.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/subtle/common_enums.h"
@@ -34,6 +30,10 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
+struct RsaPrivateKey;
+struct RsaSsaPkcs1Params;
+}  // namespace internal
 namespace subtle {
 
 // The RSA SSA (Signature Schemes with Appendix) using PKCS1 (Public-Key

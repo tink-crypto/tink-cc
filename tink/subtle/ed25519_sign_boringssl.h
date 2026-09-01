@@ -22,10 +22,8 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "openssl/evp.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/util/secret_data.h"

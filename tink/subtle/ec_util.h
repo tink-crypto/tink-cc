@@ -21,7 +21,6 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
-#include "tink/internal/ec_util.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {

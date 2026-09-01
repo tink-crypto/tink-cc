@@ -22,7 +22,6 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "openssl/evp.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/subtle/common_enums.h"

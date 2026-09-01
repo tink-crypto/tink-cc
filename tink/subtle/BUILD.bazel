@@ -354,7 +354,6 @@ cc_library(
         "//tink/signature:rsa_ssa_pss_parameters",
         "//tink/signature:rsa_ssa_pss_private_key",
         "//tink/util:statusor",
-        "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:statusor",

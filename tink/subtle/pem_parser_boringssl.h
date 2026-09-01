@@ -20,13 +20,19 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "tink/internal/ec_util.h"
-#include "tink/internal/rsa_util.h"
 #include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
+
+// Forward declarations for internal key types to avoid transitively pulling
+// BoringSSL headers into translation units that include this header.
+namespace internal {
+struct RsaPublicKey;
+struct RsaPrivateKey;
+struct Ed25519Key;
+}  // namespace internal
 namespace subtle {
 
 // Parses keys in in PEM format (RFC 7468).

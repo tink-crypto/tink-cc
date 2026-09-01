@@ -23,7 +23,6 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "openssl/evp.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/ind_cpa_cipher.h"

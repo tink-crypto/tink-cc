@@ -1111,6 +1111,7 @@ tink_cc_test(
     tink::core::public_key_verify
     tink::config::global_registry
     tink::internal::bn_util
+    tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector

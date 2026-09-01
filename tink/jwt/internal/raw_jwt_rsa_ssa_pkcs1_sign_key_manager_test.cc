@@ -27,6 +27,7 @@
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_sign.h"
 #include "tink/subtle/common_enums.h"

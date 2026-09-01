@@ -317,7 +317,6 @@ tink_cc_library(
   DEPS
     tink::subtle::common_enums
     tink::subtle::subtle_util
-    absl::memory
     absl::status
     absl::status_macros
     absl::statusor

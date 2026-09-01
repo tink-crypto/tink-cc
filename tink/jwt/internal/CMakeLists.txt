@@ -420,6 +420,7 @@ tink_cc_test(
     crypto
     tink::core::public_key_sign
     tink::internal::bn_util
+    tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl

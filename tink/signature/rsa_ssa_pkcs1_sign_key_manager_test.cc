@@ -29,6 +29,7 @@
 #include "openssl/rsa.h"
 #include "tink/config/global_registry.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"

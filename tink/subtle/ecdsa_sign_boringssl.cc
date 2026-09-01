@@ -91,10 +91,10 @@ class EcdsaSignBoringSslImpl : public EcdsaSignBoringSsl {
  public:
   EcdsaSignBoringSslImpl(
       const EVP_MD* hash,
-      std::unique_ptr<internal::EcdsaRawSignBoringSsl> raw_signer,
+      std::unique_ptr<internal::EcdsaRawSignBoringSsl> digest_signer,
       absl::string_view output_prefix, absl::string_view message_suffix)
       : hash_(hash),
-        raw_signer_(std::move(raw_signer)),
+        digest_signer_(std::move(digest_signer)),
         output_prefix_(output_prefix),
         message_suffix_(message_suffix) {}
 
@@ -104,7 +104,7 @@ class EcdsaSignBoringSslImpl : public EcdsaSignBoringSsl {
   absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
 
   const EVP_MD* hash_;  // Owned by BoringSSL.
-  std::unique_ptr<internal::EcdsaRawSignBoringSsl> raw_signer_;
+  std::unique_ptr<internal::EcdsaRawSignBoringSsl> digest_signer_;
   std::string output_prefix_;
   std::string message_suffix_;
 };
@@ -124,7 +124,7 @@ absl::StatusOr<std::string> EcdsaSignBoringSslImpl::SignWithoutPrefix(
   }
 
   // Compute the signature.
-  return raw_signer_->Sign(
+  return digest_signer_->SignDigest(
       absl::string_view(reinterpret_cast<char*>(digest), digest_size));
 }
 

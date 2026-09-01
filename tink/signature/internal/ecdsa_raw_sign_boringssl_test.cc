@@ -92,7 +92,8 @@ TEST(EcdsaRawSignBoringSslTest, VerifySignature) {
     absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature =
+        (*signer)->SignDigest(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
   }
@@ -125,7 +126,7 @@ TEST(EcdsaRawSignBoringSslTest, VerifySignatureWithEmptyMessage) {
         ComputeDigest(subtle::HashType::SHA256, empty_message);
     ASSERT_THAT(empty_message_digest, IsOk());
     absl::StatusOr<std::string> empty_msg_signature =
-        (*signer)->Sign(*empty_message_digest);
+        (*signer)->SignDigest(*empty_message_digest);
     ASSERT_THAT(empty_msg_signature, IsOkAndHolds(Not(Eq(empty_message))));
     EXPECT_THAT((*verifier)->Verify(*empty_msg_signature, empty_message),
                 IsOk());
@@ -157,7 +158,8 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWithInvalidMessageOrSignature) {
     absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature =
+        (*signer)->SignDigest(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 
@@ -196,7 +198,8 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWhenEncodingDoesNotMatch) {
     absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature =
+        (*signer)->SignDigest(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), Not(IsOk()));
   }
@@ -230,7 +233,8 @@ TEST(EcdsaRawSignBoringSslTest,
     absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature =
+        (*signer)->SignDigest(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 

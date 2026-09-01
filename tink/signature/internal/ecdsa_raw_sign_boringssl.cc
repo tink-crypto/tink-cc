@@ -146,7 +146,7 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
   return New(std::move(key), encoding);
 }
 
-absl::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(
+absl::StatusOr<std::string> EcdsaRawSignBoringSsl::SignDigest(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.

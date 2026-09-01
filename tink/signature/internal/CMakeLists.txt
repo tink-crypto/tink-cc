@@ -11,6 +11,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::status_macros
+    absl::statusor
     absl::strings
     crypto
     tink::core::public_key_sign

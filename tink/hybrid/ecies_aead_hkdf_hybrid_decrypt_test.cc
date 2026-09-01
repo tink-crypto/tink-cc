@@ -32,6 +32,7 @@
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
+#include "tink/hybrid/internal/testing/ecies_test_util.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/internal/ssl_util.h"
@@ -93,7 +94,7 @@ class EciesAeadHkdfHybridDecryptTest : public ::testing::Test {
   EciesAeadHkdfPrivateKey GetEciesPrivateKeyFromHexString(
       absl::string_view private_key_hex_string,
       CommonHybridKeyParams& key_params) {
-    auto ecies_key = test::GetEciesAesSivHkdfTestKey(
+    EciesAeadHkdfPrivateKey ecies_key = internal::GetEciesAesSivHkdfTestKey(
         key_params.ec_curve, key_params.ec_point_format, key_params.hash_type);
     ecies_key.set_key_value(test::HexDecodeOrDie(private_key_hex_string));
     return ecies_key;
@@ -228,10 +229,11 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesGcmHybridDecryption) {
 
   int i = 0;
   // Generate and test many keys with various parameters.
-  for (auto key_params : GetCommonHybridKeyParamsList()) {
+  for (const CommonHybridKeyParams& key_params :
+       GetCommonHybridKeyParamsList()) {
     for (uint32_t aes_gcm_key_size : {16, 32}) {
       ++i;
-      auto ecies_key = test::GetEciesAesGcmHkdfTestKey(
+      EciesAeadHkdfPrivateKey ecies_key = internal::GetEciesAesGcmHkdfTestKey(
           key_params.ec_curve, key_params.ec_point_format, key_params.hash_type,
           aes_gcm_key_size);
       TestValidKey(ecies_key);
@@ -249,15 +251,17 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesCtrAeadHybridDecryption) {
 
   uint32_t aes_ctr_iv_size = 16;
   // Generate and test many keys with various parameters.
-  for (auto key_params : GetCommonHybridKeyParamsList()) {
+  for (const CommonHybridKeyParams& key_params :
+       GetCommonHybridKeyParamsList()) {
     for (uint32_t aes_ctr_key_size : {16, 32}) {
-      for (auto hmac_hash_type : {HashType::SHA256, HashType::SHA512}) {
+      for (HashType hmac_hash_type : {HashType::SHA256, HashType::SHA512}) {
         for (uint32_t hmac_tag_size : {16, 32}) {
           for (uint32_t hmac_key_size : {16, 32}) {
-            auto ecies_key = test::GetEciesAesCtrHmacHkdfTestKey(
-                key_params.ec_curve, key_params.ec_point_format,
-                key_params.hash_type, aes_ctr_key_size, aes_ctr_iv_size,
-                hmac_hash_type, hmac_tag_size, hmac_key_size);
+            EciesAeadHkdfPrivateKey ecies_key =
+                internal::GetEciesAesCtrHmacHkdfTestKey(
+                    key_params.ec_curve, key_params.ec_point_format,
+                    key_params.hash_type, aes_ctr_key_size, aes_ctr_iv_size,
+                    hmac_hash_type, hmac_tag_size, hmac_key_size);
             TestValidKey(ecies_key);
           }
         }
@@ -277,9 +281,12 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testXChaCha20Poly1305HybridDecryption) {
                   .ok());
 
   // Generate and test many keys with various parameters.
-  for (auto key_params : GetCommonHybridKeyParamsList()) {
-    auto ecies_key = test::GetEciesXChaCha20Poly1305HkdfTestKey(
-        key_params.ec_curve, key_params.ec_point_format, key_params.hash_type);
+  for (const CommonHybridKeyParams& key_params :
+       GetCommonHybridKeyParamsList()) {
+    EciesAeadHkdfPrivateKey ecies_key =
+        internal::GetEciesXChaCha20Poly1305HkdfTestKey(
+            key_params.ec_curve, key_params.ec_point_format,
+            key_params.hash_type);
     TestValidKey(ecies_key);
   }
 }
@@ -292,8 +299,9 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesSivHybridDecryption) {
                   .ok());
 
   // Generate and test many keys with various parameters.
-  for (auto key_params : GetCommonHybridKeyParamsList()) {
-    auto ecies_key = test::GetEciesAesSivHkdfTestKey(
+  for (const CommonHybridKeyParams& key_params :
+       GetCommonHybridKeyParamsList()) {
+    EciesAeadHkdfPrivateKey ecies_key = internal::GetEciesAesSivHkdfTestKey(
         key_params.ec_curve, key_params.ec_point_format, key_params.hash_type);
     TestValidKey(ecies_key);
   }

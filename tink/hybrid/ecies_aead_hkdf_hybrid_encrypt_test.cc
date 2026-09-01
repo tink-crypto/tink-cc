@@ -26,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "tink/hybrid/internal/testing/ecies_test_util.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/subtle/random.h"
 #include "tink/util/test_util.h"
@@ -107,28 +108,30 @@ TEST_F(EciesAeadHkdfHybridEncryptTest, testInvalidKeys) {
 
 TEST_F(EciesAeadHkdfHybridEncryptTest, testBasic) {
   // Prepare an ECIES key.
-  auto ecies_key = test::GetEciesAesGcmHkdfTestKey(EllipticCurveType::NIST_P256,
-                                                   EcPointFormat::UNCOMPRESSED,
-                                                   HashType::SHA256, 32);
+  EciesAeadHkdfPrivateKey ecies_key = internal::GetEciesAesGcmHkdfTestKey(
+      EllipticCurveType::NIST_P256, EcPointFormat::UNCOMPRESSED,
+      HashType::SHA256, 32);
 
   // Generate and test many keys with various parameters.
   std::string plaintext = "some plaintext";
   std::string context_info = "some context info";
-  for (auto curve : {EllipticCurveType::NIST_P256, EllipticCurveType::NIST_P384,
-                     EllipticCurveType::NIST_P521}) {
-    for (auto ec_point_format :
+  for (EllipticCurveType curve :
+       {EllipticCurveType::NIST_P256, EllipticCurveType::NIST_P384,
+        EllipticCurveType::NIST_P521}) {
+    for (EcPointFormat ec_point_format :
          {EcPointFormat::UNCOMPRESSED, EcPointFormat::COMPRESSED}) {
-      for (auto hash_type : {HashType::SHA256, HashType::SHA512}) {
+      for (HashType hash_type : {HashType::SHA256, HashType::SHA512}) {
         for (uint32_t aes_gcm_key_size : {16, 32}) {
-          ecies_key = test::GetEciesAesGcmHkdfTestKey(
+          ecies_key = internal::GetEciesAesGcmHkdfTestKey(
               curve, ec_point_format, hash_type, aes_gcm_key_size);
-          auto result(EciesAeadHkdfHybridEncrypt::New(ecies_key.public_key()));
+          absl::StatusOr<std::unique_ptr<HybridEncrypt>> result =
+              EciesAeadHkdfHybridEncrypt::New(ecies_key.public_key());
           ASSERT_THAT(result, IsOk()) << ecies_key.SerializeAsString();
-          std::unique_ptr<HybridEncrypt> hybrid_encrypt(
-              std::move(result.value()));
+          std::unique_ptr<HybridEncrypt> hybrid_encrypt =
+              std::move(result.value());
 
           // Use the primitive.
-          auto encrypt_result =
+          absl::StatusOr<std::string> encrypt_result =
               hybrid_encrypt->Encrypt(plaintext, context_info);
           EXPECT_THAT(encrypt_result, IsOk());
         }
@@ -138,7 +141,7 @@ TEST_F(EciesAeadHkdfHybridEncryptTest, testBasic) {
 }
 
 TEST_F(EciesAeadHkdfHybridEncryptTest, EncryptWithBadX25519PublicKey) {
-  EciesAeadHkdfPrivateKey ecies_key = test::GetEciesAesGcmHkdfTestKey(
+  EciesAeadHkdfPrivateKey ecies_key = internal::GetEciesAesGcmHkdfTestKey(
       EllipticCurveType::CURVE25519, EcPointFormat::COMPRESSED,
       HashType::SHA256, 32);
   // Set a bad X25519 public key value.

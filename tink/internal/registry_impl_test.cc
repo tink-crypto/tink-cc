@@ -42,6 +42,7 @@
 #include "tink/core/template_util.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
+#include "tink/hybrid/internal/testing/ecies_test_util.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
@@ -617,9 +618,10 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   ASSERT_THAT(status, IsOk());
 
   // Get a test private key.
-  auto ecies_key = test::GetEciesAesGcmHkdfTestKey(
-      EllipticCurveType::NIST_P256, EcPointFormat::UNCOMPRESSED,
-      HashType::SHA256, /* aes_gcm_key_size= */ 32);
+  google::crypto::tink::EciesAeadHkdfPrivateKey ecies_key =
+      internal::GetEciesAesGcmHkdfTestKey(
+          EllipticCurveType::NIST_P256, EcPointFormat::UNCOMPRESSED,
+          HashType::SHA256, /* aes_gcm_key_size= */ 32);
 
   // Extract public key data and check.
   auto public_key_data_result = Registry::GetPublicKeyData(

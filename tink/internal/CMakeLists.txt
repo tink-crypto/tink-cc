@@ -320,6 +320,7 @@ tink_cc_test(
     tink::aead::aes_gcm_key_manager
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
+    tink::hybrid::internal::testing::ecies_test_util
     tink::subtle::aes_gcm_boringssl
     tink::subtle::random
     tink::util::input_stream_util

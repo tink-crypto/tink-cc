@@ -276,25 +276,11 @@ TEST(RsaUtilTest, GeneratesDifferentPrivateKeys) {
 }
 
 TEST(RsaUtilTest, ValidateRsaModulusSize) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  {
-    const RsaPrivateKey& private_key = keys->second;
-
-    absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
-        internal::StringToBignum(private_key.n);
-    EXPECT_THAT(ValidateRsaModulusSize(BN_num_bits(n->get())), IsOk());
-  }
-  keys = GetKeyPair(/*modulus_size_in_bits=*/1024);
-  ASSERT_THAT(keys, IsOk());
-  {
-    const RsaPrivateKey& private_key = keys->second;
-
-    absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
-        internal::StringToBignum(private_key.n);
-    EXPECT_THAT(ValidateRsaModulusSize(BN_num_bits(n->get())), Not(IsOk()));
-  }
+  EXPECT_THAT(ValidateRsaModulusSize(2048), IsOk());
+  EXPECT_THAT(ValidateRsaModulusSize(3072), IsOk());
+  EXPECT_THAT(ValidateRsaModulusSize(4096), IsOk());
+  EXPECT_THAT(ValidateRsaModulusSize(1024), Not(IsOk()));
+  EXPECT_THAT(ValidateRsaModulusSize(2047), Not(IsOk()));
 }
 
 TEST(RsaUtilTest, ValidateRsaPublicExponent) {
@@ -335,10 +321,7 @@ void ExpectBignumEquals(const BIGNUM* bn, const SecretData& data) {
 }
 
 TEST(RsaUtilTest, GetRsaModAndExponents) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPrivateKey& private_key = keys->second;
+  const RsaPrivateKey& private_key = GetValidKeyPair().second;
   internal::SslUniquePtr<RSA> rsa(RSA_new());
   absl::Status result = GetRsaModAndExponents(private_key, rsa.get());
   ASSERT_THAT(result, IsOk());
@@ -352,10 +335,7 @@ TEST(RsaUtilTest, GetRsaModAndExponents) {
 }
 
 TEST(RsaUtilTest, GetRsaPrimeFactors) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPrivateKey& private_key = keys->second;
+  const RsaPrivateKey& private_key = GetValidKeyPair().second;
   internal::SslUniquePtr<RSA> rsa(RSA_new());
   absl::Status result = GetRsaPrimeFactors(private_key, rsa.get());
   ASSERT_THAT(result, IsOk());
@@ -367,10 +347,7 @@ TEST(RsaUtilTest, GetRsaPrimeFactors) {
 }
 
 TEST(RsaUtilTest, GetRsaCrtParams) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPrivateKey& private_key = keys->second;
+  const RsaPrivateKey& private_key = GetValidKeyPair().second;
   internal::SslUniquePtr<RSA> rsa(RSA_new());
   const BIGNUM* dp = nullptr;
   const BIGNUM* dq = nullptr;
@@ -384,10 +361,7 @@ TEST(RsaUtilTest, GetRsaCrtParams) {
 }
 
 TEST(RsaUtilTest, RsaPrivateKeyAdjustEncodingLengthsWorks) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPrivateKey& private_key = keys->second;
+  const RsaPrivateKey& private_key = GetValidKeyPair().second;
 
   absl::StatusOr<RsaPrivateKey> adjusted_private_key =
       RsaPrivateKeyAdjustEncodingLengths(private_key);
@@ -404,10 +378,7 @@ TEST(RsaUtilTest, RsaPrivateKeyAdjustEncodingLengthsWorks) {
 }
 
 TEST(RsaUtilTest, CopiesRsaPrivateKey) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPrivateKey& private_key = keys->second;
+  const RsaPrivateKey& private_key = GetValidKeyPair().second;
 
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPrivateKeyToRsa(private_key);

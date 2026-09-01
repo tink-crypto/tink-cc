@@ -50,7 +50,7 @@ bazel_dep(
 )
 bazel_dep(
     name = "boringssl",
-    version = "0.20260803.0",
+    version = "0.20260813.0",
 )
 bazel_dep(
     name = "abseil-cpp",

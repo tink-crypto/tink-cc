@@ -195,6 +195,7 @@ cc_library(
         "//proto:hpke_cc_proto",
         "//tink/hybrid:hpke_parameters",
         "//tink/internal:ec_util",
+        "//tink/internal:output_prefix_util",
         "//tink/subtle:common_enums",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

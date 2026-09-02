@@ -23,6 +23,7 @@
 #include "absl/strings/str_cat.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/output_prefix_util.h"
 #include "tink/subtle/common_enums.h"
 #include "proto/hpke.pb.h"
 
@@ -87,6 +88,36 @@ absl::StatusOr<HpkeAead> HpkeAeadProtoToEnum(
   }
 }
 
+constexpr int kAeadTagLength = 16;
+
+absl::StatusOr<int32_t> AeadTagLength(HpkeParameters::AeadId aead_id) {
+  switch (aead_id) {
+    case HpkeParameters::AeadId::kAesGcm128:
+    case HpkeParameters::AeadId::kAesGcm256:
+    case HpkeParameters::AeadId::kChaCha20Poly1305:
+      return kAeadTagLength;
+    default:
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unable to determine AEAD tag length for ", aead_id));
+  }
+}
+
+absl::StatusOr<int32_t> OutputPrefixLength(HpkeParameters::Variant variant) {
+  switch (variant) {
+    case HpkeParameters::Variant::kNoPrefix:
+      return 0;
+    case HpkeParameters::Variant::kTink:
+    case HpkeParameters::Variant::kCrunchy:
+      return internal::kOutputPrefixSize;
+    default:
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unable to determine output prefix length for ",
+                       variant));
+  }
+}
+
 }  // namespace
 
 absl::StatusOr<HpkeParams> HpkeParamsProtoToStruct(
@@ -146,6 +177,24 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to determine KEM-encoding length for ", kem_id));
   }
+}
+
+absl::StatusOr<int32_t> GetEncryptionOverhead(const HpkeParameters& params) {
+  absl::StatusOr<int32_t> kem_length =
+      HpkeEncapsulatedKeyLength(params.GetKemId());
+  if (!kem_length.ok()) {
+    return kem_length.status();
+  }
+  absl::StatusOr<int32_t> aead_overhead = AeadTagLength(params.GetAeadId());
+  if (!aead_overhead.ok()) {
+    return aead_overhead.status();
+  }
+  absl::StatusOr<int32_t> output_prefix_size =
+      OutputPrefixLength(params.GetVariant());
+  if (!output_prefix_size.ok()) {
+    return output_prefix_size.status();
+  }
+  return *kem_length + *aead_overhead + *output_prefix_size;
 }
 
 }  // namespace internal

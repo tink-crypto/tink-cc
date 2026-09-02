@@ -195,6 +195,7 @@ tink_cc_library(
     absl::strings
     tink::hybrid::hpke_parameters
     tink::internal::ec_util
+    tink::internal::output_prefix_util
     tink::subtle::common_enums
     tink::proto::hpke_cc_proto
   TAGS

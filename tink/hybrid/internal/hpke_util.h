@@ -70,6 +70,9 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
 // Returns the encapsulated key length (in bytes) for the specified `kem_id`.
 absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(HpkeParameters::KemId kem_id);
 
+// Returns the encryption overhead (in bytes) for the specified `params`.
+absl::StatusOr<int32_t> GetEncryptionOverhead(const HpkeParameters& params);
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

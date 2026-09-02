@@ -529,11 +529,11 @@ tink_cc_test(
     tink::util::secret_proto
     tink::util::statusor
     tink::util::test_matchers
-    protobuf::libprotobuf
     gmock
     absl::memory
     absl::status_matchers
     absl::statusor
+    protobuf::libprotobuf
     tink::core::secret_data
     tink::internal::secret_buffer
     tink::proto::test_proto_cc_proto

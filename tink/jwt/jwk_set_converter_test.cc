@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "google/protobuf/struct.pb.h"
-#include "google/protobuf/util/message_differencer.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
@@ -32,6 +31,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/util/message_differencer.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
 #include "tink/json/json_keyset_reader.h"

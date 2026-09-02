@@ -1449,6 +1449,59 @@ TEST_F(JwkSetToPublicKeysetHandleTest,
   EXPECT_THAT(re_exported_y, IsOkAndHolds(Eq(kCanonY)));
 }
 
+TEST_F(JwkSetToPublicKeysetHandleTest, StrippedLeadingZeroCoordinateRejected) {
+  // RFC 7518 §6.2.1.2 mandates that coordinate octet
+  // sequences MUST be the full size of a coordinate for the curve (32 octets
+  // for P-256). JwkSetToPublicKeysetHandle must reject a 31-byte coordinate.
+  std::string raw_x;
+  ASSERT_TRUE(absl::WebSafeBase64Unescape(kCanonX, &raw_x));
+  ASSERT_THAT(raw_x.size(), Eq(32));
+  ASSERT_THAT(raw_x[0], Eq('\0'));
+
+  std::string x_31 = raw_x.substr(1);  // 31 bytes
+  std::string x_31_b64;
+  x_31_b64 = absl::WebSafeBase64Escape(x_31);
+
+  EXPECT_THAT(
+      JwkSetToPublicKeysetHandle(MakeEs256Jwk(x_31_b64, kCanonY)).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("invalid length of x")));
+}
+
+TEST_F(JwkSetToPublicKeysetHandleTest, ExtraLeadingZeroCoordinateRejected) {
+  // Extra leading 0x00 byte yields 33 bytes for P-256.
+  // RFC 7518 §6.2.1.2 requires exactly 32 octets. JwkSetToPublicKeysetHandle
+  // must reject a 33-byte coordinate.
+  std::string raw_x;
+  ASSERT_TRUE(absl::WebSafeBase64Unescape(kCanonX, &raw_x));
+  ASSERT_THAT(raw_x.size(), Eq(32));
+
+  std::string x_33 = absl::StrCat(std::string(1, '\0'), raw_x);  // 33 bytes
+  std::string x_33_b64;
+  x_33_b64 = absl::WebSafeBase64Escape(x_33);
+
+  EXPECT_THAT(
+      JwkSetToPublicKeysetHandle(MakeEs256Jwk(x_33_b64, kCanonY)).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("invalid length of x")));
+}
+
+TEST_F(JwkSetToPublicKeysetHandleTest, WrongLengthYCoordinateRejected) {
+  // Verifies that coordinate length validation is also strictly enforced for y.
+  std::string raw_y;
+  ASSERT_TRUE(absl::WebSafeBase64Unescape(kCanonY, &raw_y));
+  ASSERT_THAT(raw_y.size(), Eq(32));
+
+  std::string y_31 = raw_y.substr(1);  // 31 bytes
+  std::string y_31_b64;
+  y_31_b64 = absl::WebSafeBase64Escape(y_31);
+
+  EXPECT_THAT(
+      JwkSetToPublicKeysetHandle(MakeEs256Jwk(kCanonX, y_31_b64)).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("invalid length of y")));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

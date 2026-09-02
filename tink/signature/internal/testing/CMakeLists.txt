@@ -43,9 +43,8 @@ tink_cc_library(
     ecdsa_test_utils.cc
     ecdsa_test_utils.h
   DEPS
-    absl::absl_check
-    absl::statusor
     tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::util::enums
     tink::util::secret_data

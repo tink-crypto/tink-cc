@@ -57,11 +57,10 @@ cc_library(
         "//proto:common_cc_proto",
         "//proto:ecdsa_cc_proto",
         "//tink/internal:ec_util",
+        "//tink/internal/testing:ec_test_vectors",
         "//tink/subtle:common_enums",
         "//tink/util:enums",
         "//tink/util:secret_data",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/status:statusor",
     ],
 )
 

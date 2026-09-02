@@ -16,9 +16,8 @@
 
 #include "tink/signature/internal/testing/ecdsa_test_utils.h"
 
-#include "absl/log/absl_check.h"
-#include "absl/status/statusor.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
@@ -43,18 +42,17 @@ EcdsaPrivateKey GetEcdsaTestPrivateKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::HashType hash_type,
     google::crypto::tink::EcdsaSignatureEncoding encoding) {
-  absl::StatusOr<internal::EcKey> test_key =
-      internal::NewEcKey(util::Enums::ProtoToSubtle(curve_type));
-  ABSL_CHECK_OK(test_key);
+  const internal::EcKey& test_key =
+      internal::GetEcKey(util::Enums::ProtoToSubtle(curve_type));
   EcdsaPrivateKey ecdsa_key;
   ecdsa_key.set_version(0);
-  ecdsa_key.set_key_value(util::SecretDataAsStringView(test_key->priv));
+  ecdsa_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
 
   google::crypto::tink::EcdsaPublicKey* public_key =
       ecdsa_key.mutable_public_key();
   public_key->set_version(0);
-  public_key->set_x(test_key->pub_x);
-  public_key->set_y(test_key->pub_y);
+  public_key->set_x(test_key.pub_x);
+  public_key->set_y(test_key.pub_y);
 
   google::crypto::tink::EcdsaParams* params = public_key->mutable_params();
   params->set_curve(curve_type);

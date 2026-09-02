@@ -113,12 +113,15 @@ cc_library(
         "//tink:insecure_secret_key_access",
         "//tink:restricted_data",
         "//tink/internal:ec_util",
+        "//tink/internal:util",
         "//tink/subtle:common_enums",
         "//tink/util:secret_data",
         "//tink/util:test_util",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 

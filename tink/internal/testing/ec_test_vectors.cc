@@ -21,10 +21,13 @@
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/util.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
@@ -103,31 +106,47 @@ RestrictedData X25519SecretValue() {
 using EcKeyMap =
     absl::flat_hash_map<subtle::EllipticCurveType, internal::EcKey>;
 
+namespace {
+
+SecretData ParseBigIntOrDie(absl::string_view val, int length) {
+  absl::StatusOr<SecretData> result = ParseBigIntToFixedLength(val, length);
+  ABSL_CHECK_OK(result);
+  return *result;
+}
+
+}  // namespace
+
 const EcKeyMap& CreateEcKeyMap() {
   static const absl::NoDestructor<EcKeyMap> ec_keys(EcKeyMap{
       {subtle::EllipticCurveType::NIST_P256,
        internal::EcKey{
            subtle::EllipticCurveType::NIST_P256,
-           std::string(P256Point().GetX().GetValue()),
-           std::string(P256Point().GetY().GetValue()),
-           util::SecretDataFromStringView(
-               P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+           std::string(util::SecretDataAsStringView(
+               ParseBigIntOrDie(P256Point().GetX().GetValue(), 32))),
+           std::string(util::SecretDataAsStringView(
+               ParseBigIntOrDie(P256Point().GetY().GetValue(), 32))),
+           ParseBigIntOrDie(
+               P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()), 32),
        }},
       {subtle::EllipticCurveType::NIST_P384,
        internal::EcKey{
            subtle::EllipticCurveType::NIST_P384,
-           std::string(P384Point().GetX().GetValue()),
-           std::string(P384Point().GetY().GetValue()),
-           util::SecretDataFromStringView(
-               P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+           std::string(util::SecretDataAsStringView(
+               ParseBigIntOrDie(P384Point().GetX().GetValue(), 48))),
+           std::string(util::SecretDataAsStringView(
+               ParseBigIntOrDie(P384Point().GetY().GetValue(), 48))),
+           ParseBigIntOrDie(
+               P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()), 48),
        }},
       {subtle::EllipticCurveType::NIST_P521,
        internal::EcKey{
            subtle::EllipticCurveType::NIST_P521,
-           std::string(P521Point().GetX().GetValue()),
-           std::string(P521Point().GetY().GetValue()),
-           util::SecretDataFromStringView(
-               P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get())),
+           std::string(util::SecretDataAsStringView(
+               ParseBigIntOrDie(P521Point().GetX().GetValue(), 66))),
+           std::string(util::SecretDataAsStringView(
+               ParseBigIntOrDie(P521Point().GetY().GetValue(), 66))),
+           ParseBigIntOrDie(
+               P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()), 66),
        }},
       {subtle::EllipticCurveType::CURVE25519,
        internal::EcKey{
@@ -143,7 +162,7 @@ const EcKeyMap& CreateEcKeyMap() {
 
 const internal::EcKey& GetEcKey(subtle::EllipticCurveType curve_type) {
   const EcKeyMap& ec_keys = CreateEcKeyMap();
-  auto it = ec_keys.find(curve_type);
+  EcKeyMap::const_iterator it = ec_keys.find(curve_type);
   ABSL_CHECK(it != ec_keys.end())
       << "No EC key found for curve: " << curve_type;
   return it->second;

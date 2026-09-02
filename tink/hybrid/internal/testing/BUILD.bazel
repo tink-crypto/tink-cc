@@ -93,10 +93,9 @@ cc_library(
         "//tink/aead:xchacha20_poly1305_key_manager",
         "//tink/daead:aes_siv_key_manager",
         "//tink/internal:ec_util",
+        "//tink/internal/testing:ec_test_vectors",
         "//tink/subtle:common_enums",
         "//tink/util:enums",
         "//tink/util:secret_data",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/status:statusor",
     ],
 )

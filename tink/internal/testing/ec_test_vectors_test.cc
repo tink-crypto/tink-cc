@@ -32,32 +32,32 @@ using ::testing::IsFalse;
 TEST(EcTestVectorsTest, GetEcKeyP256) {
   const EcKey& key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
   EXPECT_THAT(key.curve, Eq(subtle::EllipticCurveType::NIST_P256));
-  EXPECT_THAT(key.pub_x.empty(), IsFalse());
-  EXPECT_THAT(key.pub_y.empty(), IsFalse());
-  EXPECT_THAT(key.priv.empty(), IsFalse());
+  EXPECT_THAT(key.pub_x.size(), Eq(32));
+  EXPECT_THAT(key.pub_y.size(), Eq(32));
+  EXPECT_THAT(key.priv.size(), Eq(32));
 }
 
 TEST(EcTestVectorsTest, GetEcKeyP384) {
   const EcKey& key = GetEcKey(subtle::EllipticCurveType::NIST_P384);
   EXPECT_THAT(key.curve, Eq(subtle::EllipticCurveType::NIST_P384));
-  EXPECT_THAT(key.pub_x.empty(), IsFalse());
-  EXPECT_THAT(key.pub_y.empty(), IsFalse());
-  EXPECT_THAT(key.priv.empty(), IsFalse());
+  EXPECT_THAT(key.pub_x.size(), Eq(48));
+  EXPECT_THAT(key.pub_y.size(), Eq(48));
+  EXPECT_THAT(key.priv.size(), Eq(48));
 }
 
 TEST(EcTestVectorsTest, GetEcKeyP521) {
   const EcKey& key = GetEcKey(subtle::EllipticCurveType::NIST_P521);
   EXPECT_THAT(key.curve, Eq(subtle::EllipticCurveType::NIST_P521));
-  EXPECT_THAT(key.pub_x.empty(), IsFalse());
-  EXPECT_THAT(key.pub_y.empty(), IsFalse());
-  EXPECT_THAT(key.priv.empty(), IsFalse());
+  EXPECT_THAT(key.pub_x.size(), Eq(66));
+  EXPECT_THAT(key.pub_y.size(), Eq(66));
+  EXPECT_THAT(key.priv.size(), Eq(66));
 }
 
 TEST(EcTestVectorsTest, GetEcKeyCurve25519) {
   const EcKey& key = GetEcKey(subtle::EllipticCurveType::CURVE25519);
   EXPECT_THAT(key.curve, Eq(subtle::EllipticCurveType::CURVE25519));
-  EXPECT_THAT(key.pub_x.empty(), IsFalse());
-  EXPECT_THAT(key.priv.empty(), IsFalse());
+  EXPECT_THAT(key.pub_x.size(), Eq(32));
+  EXPECT_THAT(key.priv.size(), Eq(32));
 }
 
 TEST(EcTestVectorsTest, PointsAndSecrets) {

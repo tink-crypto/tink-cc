@@ -154,18 +154,22 @@ google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesSivHkdfTestKey(
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type);
 
-// Generates a fresh test key for EC DSA for the given 'curve_type', 'hash_type'
-// and 'encoding'.
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
+// Generates a fresh test key for EC DSA for the given 'curve_type',
+// 'hash_type' and 'encoding'.
 google::crypto::tink::EcdsaPrivateKey GetEcdsaTestPrivateKey(
     subtle::EllipticCurveType curve_type, subtle::HashType hash_type,
     subtle::EcdsaSignatureEncoding encoding);
 
-// Generates a fresh test key for EC DSA for the given 'curve_type', 'hash_type'
-// and 'encoding'.
+// Generates a fresh test key for EC DSA for the given 'curve_type',
+// 'hash_type' and 'encoding'.
 google::crypto::tink::EcdsaPrivateKey GetEcdsaTestPrivateKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::HashType hash_type,
     google::crypto::tink::EcdsaSignatureEncoding encoding);
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 // Embeds the given Proto into a KeyData proto.
 template <typename Proto>

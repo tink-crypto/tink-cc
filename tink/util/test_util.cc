@@ -64,7 +64,11 @@
 
 using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::AesGcmKeyFormat;
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::OutputPrefixType;
@@ -322,6 +326,8 @@ google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesSivHkdfTestKey(
   return ecies_key;
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 EcdsaPrivateKeyProto GetEcdsaTestPrivateKey(
     subtle::EllipticCurveType curve_type, subtle::HashType hash_type,
     subtle::EcdsaSignatureEncoding encoding) {
@@ -334,20 +340,24 @@ EcdsaPrivateKeyProto GetEcdsaTestPrivateKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::HashType hash_type,
     google::crypto::tink::EcdsaSignatureEncoding encoding) {
-  auto test_key = internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
+  internal::EcKey test_key =
+      internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
   EcdsaPrivateKeyProto ecdsa_key;
   ecdsa_key.set_version(0);
   ecdsa_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
-  auto public_key = ecdsa_key.mutable_public_key();
+  google::crypto::tink::EcdsaPublicKey* public_key =
+      ecdsa_key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_x(test_key.pub_x);
   public_key->set_y(test_key.pub_y);
-  auto params = public_key->mutable_params();
+  google::crypto::tink::EcdsaParams* params = public_key->mutable_params();
   params->set_hash_type(hash_type);
   params->set_curve(curve_type);
   params->set_encoding(encoding);
   return ecdsa_key;
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// NOLINTEND(whitespace/line_length)
 
 absl::Status ZTestUniformString(absl::string_view bytes) {
   double expected = bytes.size() * 8.0 / 2.0;

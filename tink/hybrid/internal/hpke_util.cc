@@ -179,7 +179,7 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
   }
 }
 
-absl::StatusOr<int32_t> GetEncryptionOverhead(const HpkeParameters& params) {
+absl::StatusOr<int32_t> HpkeEncryptionOverhead(const HpkeParameters& params) {
   absl::StatusOr<int32_t> kem_length =
       HpkeEncapsulatedKeyLength(params.GetKemId());
   if (!kem_length.ok()) {

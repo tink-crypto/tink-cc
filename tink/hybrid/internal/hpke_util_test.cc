@@ -225,11 +225,11 @@ struct EncryptionOverheadTestCase {
   int expected_overhead;
 };
 
-using GetEncryptionOverheadTest =
+using HpkeEncryptionOverheadTest =
     testing::TestWithParam<EncryptionOverheadTestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
-    GetEncryptionOverheadTestSuite, GetEncryptionOverheadTest,
+    HpkeEncryptionOverheadTestSuite, HpkeEncryptionOverheadTest,
     Values(
         EncryptionOverheadTestCase{
             HpkeParameters::KemId::kDhkemX25519HkdfSha256,
@@ -238,41 +238,35 @@ INSTANTIATE_TEST_SUITE_P(
             /*expected_overhead=*/32 + 16 + 0},
         EncryptionOverheadTestCase{
             HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-            HpkeParameters::AeadId::kAesGcm128,
-            HpkeParameters::Variant::kTink,
+            HpkeParameters::AeadId::kAesGcm128, HpkeParameters::Variant::kTink,
             /*expected_overhead=*/32 + 16 + 5},
         EncryptionOverheadTestCase{
             HpkeParameters::KemId::kDhkemX25519HkdfSha256,
             HpkeParameters::AeadId::kChaCha20Poly1305,
             HpkeParameters::Variant::kCrunchy,
             /*expected_overhead=*/32 + 16 + 5},
-        EncryptionOverheadTestCase{
-            HpkeParameters::KemId::kDhkemP256HkdfSha256,
-            HpkeParameters::AeadId::kAesGcm256,
-            HpkeParameters::Variant::kTink,
-            /*expected_overhead=*/65 + 16 + 5},
-        EncryptionOverheadTestCase{
-            HpkeParameters::KemId::kDhkemP256HkdfSha256,
-            HpkeParameters::AeadId::kAesGcm128,
-            HpkeParameters::Variant::kNoPrefix,
-            /*expected_overhead=*/65 + 16 + 0},
-        EncryptionOverheadTestCase{
-            HpkeParameters::KemId::kXWing,
-            HpkeParameters::AeadId::kAesGcm128,
-            HpkeParameters::Variant::kTink,
-            /*expected_overhead=*/1120 + 16 + 5},
-        EncryptionOverheadTestCase{
-            HpkeParameters::KemId::kMlKem768,
-            HpkeParameters::AeadId::kAesGcm256,
-            HpkeParameters::Variant::kNoPrefix,
-            /*expected_overhead=*/1088 + 16 + 0},
-        EncryptionOverheadTestCase{
-            HpkeParameters::KemId::kMlKem1024,
-            HpkeParameters::AeadId::kChaCha20Poly1305,
-            HpkeParameters::Variant::kTink,
-            /*expected_overhead=*/1568 + 16 + 5}));
+        EncryptionOverheadTestCase{HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                                   HpkeParameters::AeadId::kAesGcm256,
+                                   HpkeParameters::Variant::kTink,
+                                   /*expected_overhead=*/65 + 16 + 5},
+        EncryptionOverheadTestCase{HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                                   HpkeParameters::AeadId::kAesGcm128,
+                                   HpkeParameters::Variant::kNoPrefix,
+                                   /*expected_overhead=*/65 + 16 + 0},
+        EncryptionOverheadTestCase{HpkeParameters::KemId::kXWing,
+                                   HpkeParameters::AeadId::kAesGcm128,
+                                   HpkeParameters::Variant::kTink,
+                                   /*expected_overhead=*/1120 + 16 + 5},
+        EncryptionOverheadTestCase{HpkeParameters::KemId::kMlKem768,
+                                   HpkeParameters::AeadId::kAesGcm256,
+                                   HpkeParameters::Variant::kNoPrefix,
+                                   /*expected_overhead=*/1088 + 16 + 0},
+        EncryptionOverheadTestCase{HpkeParameters::KemId::kMlKem1024,
+                                   HpkeParameters::AeadId::kChaCha20Poly1305,
+                                   HpkeParameters::Variant::kTink,
+                                   /*expected_overhead=*/1568 + 16 + 5}));
 
-TEST_P(GetEncryptionOverheadTest, GetEncryptionOverheadWithHpkeParameters) {
+TEST_P(HpkeEncryptionOverheadTest, HpkeEncryptionOverheadWithHpkeParameters) {
   EncryptionOverheadTestCase test_case = GetParam();
   absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
@@ -282,7 +276,7 @@ TEST_P(GetEncryptionOverheadTest, GetEncryptionOverheadWithHpkeParameters) {
           .SetVariant(test_case.variant)
           .Build();
   ASSERT_THAT(params, IsOk());
-  EXPECT_THAT(GetEncryptionOverhead(*params),
+  EXPECT_THAT(HpkeEncryptionOverhead(*params),
               IsOkAndHolds(test_case.expected_overhead));
 }
 

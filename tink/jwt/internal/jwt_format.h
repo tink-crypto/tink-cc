@@ -32,6 +32,8 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
+bool StrictWebSafeBase64Unescape(absl::string_view src, std::string* dest);
+
 std::string EncodeHeader(absl::string_view json_header);
 bool DecodeHeader(absl::string_view header, std::string* json_header);
 

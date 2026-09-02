@@ -174,7 +174,7 @@ absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return e.status();
   }
   std::string decoded_e;
-  if (!absl::WebSafeBase64Unescape(*e, &decoded_e)) {
+  if (!jwt_internal::StrictWebSafeBase64Unescape(*e, &decoded_e)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode e");
   }
@@ -185,7 +185,7 @@ absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return n.status();
   }
   std::string decoded_n;
-  if (!absl::WebSafeBase64Unescape(*n, &decoded_n)) {
+  if (!jwt_internal::StrictWebSafeBase64Unescape(*n, &decoded_n)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode n");
   }
@@ -248,7 +248,7 @@ absl::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return e.status();
   }
   std::string decoded_e;
-  if (!absl::WebSafeBase64Unescape(*e, &decoded_e)) {
+  if (!jwt_internal::StrictWebSafeBase64Unescape(*e, &decoded_e)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode e");
   }
@@ -259,7 +259,7 @@ absl::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return n.status();
   }
   std::string decoded_n;
-  if (!absl::WebSafeBase64Unescape(*n, &decoded_n)) {
+  if (!jwt_internal::StrictWebSafeBase64Unescape(*n, &decoded_n)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode n");
   }
@@ -336,7 +336,7 @@ absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return x.status();
   }
   std::string decoded_x;
-  if (!absl::WebSafeBase64Unescape(*x, &decoded_x)) {
+  if (!jwt_internal::StrictWebSafeBase64Unescape(*x, &decoded_x)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode x");
   }
@@ -347,7 +347,7 @@ absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return y.status();
   }
   std::string decoded_y;
-  if (!absl::WebSafeBase64Unescape(*y, &decoded_y)) {
+  if (!jwt_internal::StrictWebSafeBase64Unescape(*y, &decoded_y)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode y");
   }

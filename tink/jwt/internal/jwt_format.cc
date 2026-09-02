@@ -42,15 +42,6 @@ bool isValidUrlsafeBase64Char(char c) {
           ((c >= '0') && (c <= '9')) || ((c == '-') || (c == '_')));
 }
 
-bool StrictWebSafeBase64Unescape(absl::string_view src, std::string* dest) {
-  for (char c : src) {
-    if (!isValidUrlsafeBase64Char(c)) {
-      return false;
-    }
-  }
-  return absl::WebSafeBase64Unescape(src, dest);
-}
-
 absl::Status ValidateKidInHeader(const google::protobuf::Value& kid_in_header,
                                  absl::string_view kid) {
   if (kid_in_header.kind_case() != google::protobuf::Value::kStringValue) {
@@ -65,6 +56,15 @@ absl::Status ValidateKidInHeader(const google::protobuf::Value& kid_in_header,
 }
 
 }  // namespace
+
+bool StrictWebSafeBase64Unescape(absl::string_view src, std::string* dest) {
+  for (char c : src) {
+    if (!isValidUrlsafeBase64Char(c)) {
+      return false;
+    }
+  }
+  return absl::WebSafeBase64Unescape(src, dest);
+}
 
 std::string EncodeHeader(absl::string_view json_header) {
   return absl::WebSafeBase64Escape(json_header);

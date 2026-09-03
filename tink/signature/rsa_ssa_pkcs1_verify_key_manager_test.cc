@@ -23,20 +23,18 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "openssl/bn.h"
-#include "openssl/rsa.h"
-#include "tink/internal/bn_util.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
-#include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
@@ -48,7 +46,6 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
 using RsaSsaPkcs1PrivateKeyProto =
     ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
 using RsaSsaPkcs1PublicKeyProto = ::google::crypto::tink::RsaSsaPkcs1PublicKey;
@@ -73,35 +70,48 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, ValidateEmptyKey) {
       Not(IsOk()));
 }
 
-RsaSsaPkcs1KeyFormat CreateKeyFormat(HashType hash_type,
-                                     int modulus_size_in_bits,
-                                     int public_exponent) {
-  RsaSsaPkcs1KeyFormat key_format;
-  auto params = key_format.mutable_params();
-  params->set_hash_type(hash_type);
-  key_format.set_modulus_size_in_bits(modulus_size_in_bits);
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  BN_set_word(e.get(), public_exponent);
-  key_format.set_public_exponent(
-      internal::BignumToString(e.get(), BN_num_bytes(e.get())).value());
-  return key_format;
-}
-
-RsaSsaPkcs1KeyFormat ValidKeyFormat() {
-  return CreateKeyFormat(HashType::SHA256, 3072, RSA_F4);
+RsaSsaPkcs1PublicKeyProto CreateValidPublicKey() {
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitsTestVector();
+  const RsaSsaPkcs1PrivateKey& private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey&>(
+          *test_vector.signature_private_key);
+  const RsaSsaPkcs1PublicKey& public_key = private_key.GetPublicKey();
+  RsaSsaPkcs1PublicKeyProto proto;
+  proto.set_version(0);
+  proto.set_n(
+      std::string(public_key.GetModulus(GetPartialKeyAccess()).GetValue()));
+  proto.set_e(
+      std::string(public_key.GetParameters().GetPublicExponent().GetValue()));
+  proto.mutable_params()->set_hash_type(HashType::SHA256);
+  return proto;
 }
 
 RsaSsaPkcs1PrivateKeyProto CreateValidPrivateKey() {
-  return RsaSsaPkcs1SignKeyManager().CreateKey(ValidKeyFormat()).value();
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitsTestVector();
+  const RsaSsaPkcs1PrivateKey& private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey&>(
+          *test_vector.signature_private_key);
+  RsaSsaPkcs1PrivateKeyProto proto;
+  proto.set_version(0);
+  proto.set_d(std::string(private_key.GetPrivateExponentData().GetSecret(
+      InsecureSecretKeyAccess::Get())));
+  proto.set_p(std::string(private_key.GetPrimePData(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get())));
+  proto.set_q(std::string(private_key.GetPrimeQData(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get())));
+  proto.set_dp(std::string(private_key.GetPrimeExponentPData().GetSecret(
+      InsecureSecretKeyAccess::Get())));
+  proto.set_dq(std::string(private_key.GetPrimeExponentQData().GetSecret(
+      InsecureSecretKeyAccess::Get())));
+  proto.set_crt(std::string(private_key.GetCrtCoefficientData().GetSecret(
+      InsecureSecretKeyAccess::Get())));
+  *proto.mutable_public_key() = CreateValidPublicKey();
+  return proto;
 }
 
-RsaSsaPkcs1PublicKeyProto CreateValidPublicKey() {
-  return RsaSsaPkcs1SignKeyManager()
-      .GetPublicKey(CreateValidPrivateKey())
-      .value();
-}
-
-// Checks that a public key generaed by the SignKeyManager is considered valid.
+// Checks that a public key is considered valid.
 TEST(RsaSsaPkcs1VerifyKeyManagerTest, PublicKeyValid) {
   RsaSsaPkcs1PublicKeyProto key = CreateValidPublicKey();
   EXPECT_THAT(RsaSsaPkcs1VerifyKeyManager().ValidateKey(key), IsOk());
@@ -128,15 +138,9 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, ValidateKeyFormatSmallModulusDisallowed) {
                        HasSubstr("only modulus size >= 2048")));
 }
 
-TEST(RsaSsaPkcs1SignKeyManagerTest, Create) {
-  RsaSsaPkcs1KeyFormat key_format =
-      CreateKeyFormat(HashType::SHA256, 3072, RSA_F4);
-  absl::StatusOr<RsaSsaPkcs1PrivateKeyProto> private_key_or =
-      RsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(private_key_or, IsOk());
-  RsaSsaPkcs1PrivateKeyProto private_key = private_key_or.value();
-  RsaSsaPkcs1PublicKeyProto public_key =
-      RsaSsaPkcs1SignKeyManager().GetPublicKey(private_key).value();
+TEST(RsaSsaPkcs1VerifyKeyManagerTest, Create) {
+  RsaSsaPkcs1PrivateKeyProto private_key = CreateValidPrivateKey();
+  RsaSsaPkcs1PublicKeyProto public_key = private_key.public_key();
 
   internal::RsaPrivateKey private_key_subtle;
   private_key_subtle.n = private_key.public_key().n();
@@ -150,6 +154,7 @@ TEST(RsaSsaPkcs1SignKeyManagerTest, Create) {
 
   auto direct_signer_or = subtle::RsaSsaPkcs1SignBoringSsl::New(
       private_key_subtle, {crypto::tink::subtle::HashType::SHA256});
+  ASSERT_THAT(direct_signer_or, IsOk());
 
   auto verifier_or =
       RsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(public_key);

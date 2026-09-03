@@ -945,14 +945,12 @@ tink_cc_test(
     tink::core::keyset_reader
     tink::core::parameters
     tink::core::partial_key_access
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::registry
     tink::core::restricted_data
     gmock
     absl::flat_hash_map
     absl::absl_check
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -975,15 +973,15 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::legacy_annotations
     tink::internal::mutable_serialization_registry
+    tink::internal::primitive_set
     tink::internal::ssl_util
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
-    tink::signature::signature_key_templates
+    tink::signature::internal::testing::ecdsa_test_utils
     tink::subtle::random
     tink::subtle::xchacha20_poly1305_boringssl
     tink::util::test_keyset_handle
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::aes_gcm_siv_cc_proto

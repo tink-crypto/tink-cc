@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -27,7 +28,6 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -61,24 +61,23 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/legacy_annotations.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_reader.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
-#include "tink/signature/signature_key_templates.h"
+#include "tink/signature/internal/testing/ecdsa_test_utils.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/test_keyset_handle.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/aes_gcm_siv.pb.h"
@@ -99,7 +98,6 @@ using ::crypto::tink::test::DummyAead;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using AesGcmSivKeyProto = ::google::crypto::tink::AesGcmSivKey;
-using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
@@ -114,7 +112,6 @@ using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::SizeIs;
-using ::testing::TestWithParam;
 using ::testing::Values;
 
 namespace {
@@ -975,33 +972,29 @@ void CompareKeyMetadata(const Keyset::Key& expected,
 
 absl::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
   Keyset keyset;
-  EcdsaSignKeyManager key_manager;
-  EcdsaKeyFormat key_format;
 
-  if (!key_format.ParseFromString(SignatureKeyTemplates::EcdsaP256().value())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse EcdsaP256 key template");
-  }
   AddTinkKey(EcdsaSignKeyManager().get_key_type(),
-             /* key_id= */ 623628, key_manager.CreateKey(key_format).value(),
+             /* key_id= */ 623628,
+             internal::GetEcdsaTestPrivateKey(
+                 google::crypto::tink::EllipticCurveType::NIST_P256,
+                 google::crypto::tink::HashType::SHA256,
+                 google::crypto::tink::EcdsaSignatureEncoding::DER),
              KeyStatusType::ENABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
 
-  if (!key_format.ParseFromString(
-          SignatureKeyTemplates::EcdsaP384Sha384().value())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse EcdsaP384Sha384 key template");
-  }
   AddLegacyKey(EcdsaSignKeyManager().get_key_type(),
-               /* key_id= */ 36285, key_manager.CreateKey(key_format).value(),
+               /* key_id= */ 36285,
+               internal::GetEcdsaTestPrivateKey(
+                   google::crypto::tink::EllipticCurveType::NIST_P384,
+                   google::crypto::tink::HashType::SHA384,
+                   google::crypto::tink::EcdsaSignatureEncoding::DER),
                KeyStatusType::DISABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
 
-  if (!key_format.ParseFromString(
-          SignatureKeyTemplates::EcdsaP384Sha512().value())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse EcdsaP384Sha512 key template");
-  }
   AddRawKey(EcdsaSignKeyManager().get_key_type(),
-            /* key_id= */ 42, key_manager.CreateKey(key_format).value(),
+            /* key_id= */ 42,
+            internal::GetEcdsaTestPrivateKey(
+                google::crypto::tink::EllipticCurveType::NIST_P384,
+                google::crypto::tink::HashType::SHA512,
+                google::crypto::tink::EcdsaSignatureEncoding::DER),
             KeyStatusType::ENABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
   keyset.set_primary_key_id(42);
 
@@ -1011,14 +1004,20 @@ absl::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
 // TODO(b/265865177): Modernize existing GetPublicKeysetHandle tests.
 TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
   {  // A keyset with a single key.
-    auto handle_result = KeysetHandle::GenerateNew(
-        SignatureKeyTemplates::EcdsaP256(), TestKeyGenConfig());
-    ASSERT_THAT(handle_result, IsOk());
-    auto handle = std::move(handle_result.value());
+    Keyset keyset;
+    AddTinkKey(EcdsaSignKeyManager().get_key_type(),
+               /* key_id= */ 623628,
+               internal::GetEcdsaTestPrivateKey(
+                   google::crypto::tink::EllipticCurveType::NIST_P256,
+                   google::crypto::tink::HashType::SHA256,
+                   google::crypto::tink::EcdsaSignatureEncoding::DER),
+               KeyStatusType::ENABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
+    keyset.set_primary_key_id(623628);
+    std::unique_ptr<KeysetHandle> handle =
+        TestKeysetHandle::GetKeysetHandle(keyset);
     auto public_handle_result =
         handle->GetPublicKeysetHandle(TestKeyGenConfig());
     ASSERT_THAT(public_handle_result, IsOk());
-    auto keyset = TestKeysetHandle::GetKeyset(*handle);
     auto public_keyset =
         TestKeysetHandle::GetKeyset(*(public_handle_result.value()));
     EXPECT_EQ(keyset.primary_key_id(), public_keyset.primary_key_id());
@@ -1063,14 +1062,14 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleErrors) {
   {  // A keyset with multiple keys.
     Keyset keyset;
 
-    EcdsaKeyFormat ecdsa_key_format;
-    ASSERT_TRUE(ecdsa_key_format.ParseFromString(
-        SignatureKeyTemplates::EcdsaP256().value()));
     google::crypto::tink::AesGcmKeyFormat aead_key_format;
     aead_key_format.set_key_size(16);
     AddTinkKey(EcdsaSignKeyManager().get_key_type(),
                /* key_id= */ 623628,
-               EcdsaSignKeyManager().CreateKey(ecdsa_key_format).value(),
+               internal::GetEcdsaTestPrivateKey(
+                   google::crypto::tink::EllipticCurveType::NIST_P256,
+                   google::crypto::tink::HashType::SHA256,
+                   google::crypto::tink::EcdsaSignatureEncoding::DER),
                KeyStatusType::ENABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
     AddLegacyKey(AesGcmKeyManager().get_key_type(),
                  /* key_id= */ 42,
@@ -1537,7 +1536,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveNullptrKeyManager) {
   std::unique_ptr<KeysetHandle> keyset_handle =
       TestKeysetHandle::GetKeysetHandle(keyset);
   ASSERT_THAT(keyset_handle->GetPrimitive<Aead>(nullptr).status(),
-              test::StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
@@ -1553,7 +1552,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveCustomKeyManager) {
   std::unique_ptr<KeysetHandle> handle = std::move(handle_result.value());
   Registry::Reset();
   ASSERT_TRUE(
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
+      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>())
           .ok());
   // Without custom key manager it now fails.
   ASSERT_FALSE(

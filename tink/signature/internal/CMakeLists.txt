@@ -1610,6 +1610,7 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
+    crypto
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle

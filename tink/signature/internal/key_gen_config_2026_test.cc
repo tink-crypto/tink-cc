@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "openssl/opensslv.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
@@ -38,6 +39,25 @@ namespace {
 
 using ::absl_testing::IsOk;
 
+TEST(MlDsaSignatureKeyGenConfigV0Test, MlDsaCreateKeysetHandleWorks) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
+
+  absl::StatusOr<MlDsaParameters> mldsa_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(mldsa_parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*mldsa_parameters,
+                                              key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      (*handle)->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+}
+
+#ifdef OPENSSL_IS_BORINGSSL
 TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
@@ -94,6 +114,7 @@ TEST(CompositeMlDsaSignatureKeyGenConfigV0Test,
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 }
+#endif
 
 }  // namespace
 }  // namespace internal

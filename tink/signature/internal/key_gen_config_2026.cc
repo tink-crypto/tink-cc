@@ -18,6 +18,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
@@ -27,21 +28,20 @@
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
-#include "tink/signature/internal/slh_dsa_key_creator.h"
-#include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
-#include "tink/signature/rsa_ssa_pss_proto_serialization.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/ml_dsa_parameters.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/composite_ml_dsa_key_creator.h"
-#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
-#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #endif
+#include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 
@@ -91,6 +91,20 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
 
+#if defined(OPENSSL_IS_BORINGSSL) || \
+    (defined(OPENSSL_API_LEVEL) && OPENSSL_API_LEVEL >= 30500)
+  // ML-DSA
+  status = RegisterMlDsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(
+      CreateMlDsaKey, config);
+  if (!status.ok()) {
+    return status;
+  }
+#endif
+
   // Tink implements PQC signatures with BoringSSL, not OpenSSL.
 #ifdef OPENSSL_IS_BORINGSSL
   // SLH-DSA
@@ -103,16 +117,7 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
-  // ML-DSA
-  status = RegisterMlDsaProtoSerialization();
-  if (!status.ok()) {
-    return status;
-  }
-  status = KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(
-      CreateMlDsaKey, config);
-  if (!status.ok()) {
-    return status;
-  }
+
   // Composite ML-DSA
   status = RegisterCompositeMlDsaProtoSerialization();
   if (!status.ok()) {

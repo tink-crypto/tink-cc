@@ -1096,17 +1096,20 @@ tink_cc_test(
   SRCS
     rsa_ssa_pkcs1_sign_key_manager_test.cc
   DEPS
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
-    tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::signature_config
     gmock
     absl::flat_hash_set
     absl::status_matchers
     absl::statusor
-    absl::optional
     crypto
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::config::global_registry
@@ -1117,10 +1120,7 @@ tink_cc_test(
     tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
+    tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -1130,17 +1130,21 @@ tink_cc_test(
   SRCS
     rsa_ssa_pss_sign_key_manager_test.cc
   DEPS
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_public_key
     tink::signature::rsa_ssa_pss_sign_key_manager
-    tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::signature_config
-    tink::signature::signature_key_templates
     gmock
     absl::flat_hash_set
     absl::status_matchers
+    absl::statusor
     absl::strings
     crypto
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::config::global_registry
@@ -1151,10 +1155,7 @@ tink_cc_test(
     tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
+    tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )

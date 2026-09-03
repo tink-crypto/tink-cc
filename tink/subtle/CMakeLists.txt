@@ -1215,19 +1215,18 @@ tink_cc_test(
   SRCS
     ecdsa_sign_boringssl_test.cc
   DEPS
-    tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::strings
     absl::string_view
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::internal::ec_util
     tink::internal::fips_utils
-    tink::internal::testing::ec_test_vectors
+    tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector

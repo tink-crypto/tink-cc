@@ -33,6 +33,7 @@
 # defined by calls to tink_module(). Please don't alter it directly.
 
 include(CMakeParseArguments)
+include(GNUInstallDirs)
 
 # We currently explicitly declare our libraries static below (in add_library).
 # We might remove this, but I'm not confident enough in how this works to
@@ -69,6 +70,15 @@ endif()
 list(APPEND TINK_INCLUDE_DIRS "${TINK_GENFILE_DIR}")
 
 set(TINK_IDE_FOLDER "Tink")
+
+# Global properties for tracking targets to install.
+define_property(GLOBAL PROPERTY TINK_ALL_TARGETS
+  BRIEF_DOCS "All non-test Tink library targets for installation")
+set_property(GLOBAL PROPERTY TINK_ALL_TARGETS "")
+
+define_property(GLOBAL PROPERTY TINK_ALIAS_MAP
+  BRIEF_DOCS "List of alias=real target name pairs")
+set_property(GLOBAL PROPERTY TINK_ALIAS_MAP "")
 
 set(TINK_TARGET_EXCLUDE_IF_BORINGSSL "exclude_if_boringssl")
 set(TINK_TARGET_EXCLUDE_IF_OPENSSL "exclude_if_openssl")
@@ -166,7 +176,14 @@ function(tink_cc_library)
   if(NOT _is_headers_only_lib)
     add_library(${_target_name} STATIC "")
     target_sources(${_target_name} PRIVATE ${tink_cc_library_SRCS})
-    target_include_directories(${_target_name} PUBLIC ${TINK_INCLUDE_DIRS})
+    foreach(_tink_inc_dir IN LISTS TINK_INCLUDE_DIRS)
+      target_include_directories(${_target_name} PUBLIC
+        "$<BUILD_INTERFACE:${_tink_inc_dir}>")
+    endforeach()
+    if(TINK_INSTALL)
+      target_include_directories(${_target_name} PUBLIC
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+    endif()
     target_link_libraries(${_target_name} PUBLIC ${tink_cc_library_DEPS})
     target_compile_options(${_target_name} PRIVATE ${TINK_DEFAULT_COPTS})
     set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${TINK_CXX_STANDARD})
@@ -180,12 +197,26 @@ function(tink_cc_library)
     endif()
   else()
     add_library(${_target_name} INTERFACE)
-    target_include_directories(${_target_name} INTERFACE ${TINK_INCLUDE_DIRS})
+    foreach(_tink_inc_dir IN LISTS TINK_INCLUDE_DIRS)
+      target_include_directories(${_target_name} INTERFACE
+        "$<BUILD_INTERFACE:${_tink_inc_dir}>")
+    endforeach()
+    if(TINK_INSTALL)
+      target_include_directories(${_target_name} INTERFACE
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+    endif()
     target_link_libraries(${_target_name} INTERFACE ${tink_cc_library_DEPS})
   endif()
 
   add_library(
     tink::${TINK_MODULE}::${tink_cc_library_NAME} ALIAS ${_target_name})
+
+  # Track target for installation.
+  if(NOT tink_cc_library_TESTONLY)
+    set_property(GLOBAL APPEND PROPERTY TINK_ALL_TARGETS "${_target_name}")
+    set_property(GLOBAL APPEND PROPERTY TINK_ALIAS_MAP
+      "tink::${TINK_MODULE}::${tink_cc_library_NAME}=${_target_name}")
+  endif()
 endfunction(tink_cc_library)
 
 # Declare a Tink test using googletest, with a syntax similar to Bazel.

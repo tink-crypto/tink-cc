@@ -25,10 +25,24 @@
 #include "absl/status/status_macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "openssl/bn.h"
 #include "openssl/evp.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#ifdef OPENSSL_IS_BORINGSSL
+#include "openssl/base.h"
+#include "openssl/ec_key.h"
+#else
+#include "openssl/ec.h"
+#endif
+#include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/bn_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/ec_util.h"
+#include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ecdsa_parameters.h"
@@ -36,7 +50,6 @@
 #include "tink/signature/internal/ecdsa_raw_sign_boringssl.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util_boringssl.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -176,30 +189,60 @@ absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
 
 absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
     const EcdsaPrivateKey& key) {
-  SubtleUtilBoringSSL::EcKey subtle_ec_key;
-  const EcPoint& ec_point =
-      key.GetPublicKey().GetPublicPoint(GetPartialKeyAccess());
-  subtle_ec_key.pub_x = std::string(ec_point.GetX().GetValue());
-  subtle_ec_key.pub_y = std::string(ec_point.GetY().GetValue());
-  subtle_ec_key.priv = util::SecretDataFromStringView(
-      key.GetPrivateKey(GetPartialKeyAccess())
-          .GetSecret(InsecureSecretKeyAccess::Get()));
+  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<EcdsaSignBoringSsl>());
+
   ABSL_ASSIGN_OR_RETURN(
       subtle::EllipticCurveType converted_curve_type,
       ConvertCurveType(key.GetPublicKey().GetParameters().GetCurveType()));
-  subtle_ec_key.curve = converted_curve_type;
-
   ABSL_ASSIGN_OR_RETURN(
       HashType converted_hash_type,
       ConvertHashType(key.GetPublicKey().GetParameters().GetHashType()));
-
   ABSL_ASSIGN_OR_RETURN(
       EcdsaSignatureEncoding converted_signature_encoding,
       ConvertSignatureEncoding(
           key.GetPublicKey().GetParameters().GetSignatureEncoding()));
-  return New(
-      subtle_ec_key, converted_hash_type, converted_signature_encoding,
-      key.GetPublicKey().GetOutputPrefix(),
+
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
+                        internal::EcGroupFromCurveType(converted_curve_type));
+  internal::SslUniquePtr<EC_KEY> ec_key(EC_KEY_new());
+  EC_KEY_set_group(ec_key.get(), group.get());
+
+  const EcPoint& public_point =
+      key.GetPublicKey().GetPublicPoint(GetPartialKeyAccess());
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SslUniquePtr<EC_POINT> pub_key,
+      internal::GetEcPoint(converted_curve_type, public_point.GetX().GetValue(),
+                           public_point.GetY().GetValue()));
+  if (!EC_KEY_set_public_key(ec_key.get(), pub_key.get())) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
+  }
+
+  ABSL_RETURN_IF_ERROR(
+      internal::CallWithCoreDumpProtection([&]() -> absl::Status {
+        ABSL_ASSIGN_OR_RETURN(
+            internal::SslUniquePtr<BIGNUM> priv,
+            internal::StringToBignum(
+                key.GetPrivateKey(GetPartialKeyAccess())
+                    .GetSecret(InsecureSecretKeyAccess::Get())));
+        if (1 != EC_KEY_set_private_key(ec_key.get(), priv.get())) {
+          return absl::InternalError(absl::StrCat(
+              "EC_KEY_set_private_key failed: ", internal::GetSslErrors()));
+        }
+        return absl::OkStatus();
+      }));
+
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<internal::EcdsaRawSignBoringSsl> raw_sign,
+      internal::EcdsaRawSignBoringSsl::New(std::move(ec_key),
+                                           converted_signature_encoding));
+
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* hash,
+                        internal::EvpHashFromHashType(converted_hash_type));
+
+  return std::make_unique<EcdsaSignBoringSslImpl>(
+      hash, std::move(raw_sign), key.GetPublicKey().GetOutputPrefix(),
       key.GetParameters().GetVariant() == EcdsaParameters::Variant::kLegacy
           ? std::string(1, 0)
           : "");

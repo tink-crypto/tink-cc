@@ -243,18 +243,24 @@ tink_cc_library(
     tink::subtle::subtle_util_boringssl
     absl::status
     absl::status_macros
+    absl::statusor
     absl::strings
     crypto
+    tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::internal::bn_util
+    tink::internal::call_with_core_dump_protection
+    tink::internal::ec_util
+    tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::md_util
+    tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::internal::ecdsa_raw_sign_boringssl
-    tink::util::secret_data
     tink::util::statusor
 )
 

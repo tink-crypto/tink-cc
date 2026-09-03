@@ -46,13 +46,12 @@
 #include "tink/keyset_writer.h"
 #include "tink/kms_client.h"
 #include "tink/mac.h"
-#include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
-#include "tink/subtle/common_enums.h"
+#include "tink/subtle/common_enums.h"  // IWYU pragma: keep
 #include "tink/util/buffer.h"
 #include "tink/util/constants.h"
 #include "proto/common.pb.h"
@@ -117,14 +116,18 @@ void AddRawKey(const std::string& key_type, uint32_t key_id,
                google::crypto::tink::KeyData::KeyMaterialType material_type,
                google::crypto::tink::Keyset* keyset);
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 // Generates a fresh test key for ECIES-AEAD-HKDF for the given curve,
-// using AesGcm with the specified key size as AEAD, and HKDF with 'hash_type'.
+// using AesGcm with the specified key size as AEAD, and HKDF with
+// 'hash_type'.
 google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesGcmHkdfTestKey(
-    subtle::EllipticCurveType curve_type, subtle::EcPointFormat ec_point_format,
-    subtle::HashType hash_type, uint32_t aes_gcm_key_size);
+    subtle::EllipticCurveType curve_type, subtle::EcPointFormat
+    ec_point_format, subtle::HashType hash_type, uint32_t aes_gcm_key_size);
 
 // Generates a fresh test key for ECIES-AEAD-HKDF for the given curve,
-// using AesGcm with the specified key size as AEAD, and HKDF with 'hash_type'.
+// using AesGcm with the specified key size as AEAD, and HKDF with
+// 'hash_type'.
 google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesGcmHkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
@@ -139,7 +142,8 @@ GetEciesXChaCha20Poly1305HkdfTestKey(
     google::crypto::tink::HashType hash_type);
 
 // Generates a fresh test key for ECIES-AEAD-HKDF for the given curve,
-// using AesCtrHmac with the specified AEAD params, and HKDF with 'hash_type'.
+// using AesCtrHmac with the specified AEAD params, and HKDF with
+// 'hash_type'.
 google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesCtrHmacHkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
@@ -154,8 +158,6 @@ google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesSivHkdfTestKey(
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type);
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
 // Generates a fresh test key for EC DSA for the given 'curve_type',
 // 'hash_type' and 'encoding'.
 google::crypto::tink::EcdsaPrivateKey GetEcdsaTestPrivateKey(

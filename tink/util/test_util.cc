@@ -25,31 +25,27 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
-#include <memory>
+#include <memory>  // IWYU pragma: keep
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "absl/base/no_destructor.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
-#include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
-#include "tink/aead/aes_gcm_key_manager.h"
-#include "tink/aead/xchacha20_poly1305_key_manager.h"
-#include "tink/daead/aes_siv_key_manager.h"
-#include "tink/internal/ec_util.h"
-#include "tink/subtle/common_enums.h"
-#include "tink/util/enums.h"
+#include "tink/aead/aes_ctr_hmac_aead_key_manager.h"  // IWYU pragma: keep
+#include "tink/aead/aes_gcm_key_manager.h"  // IWYU pragma: keep
+#include "tink/aead/xchacha20_poly1305_key_manager.h"  // IWYU pragma: keep
+#include "tink/daead/aes_siv_key_manager.h"  // IWYU pragma: keep
+#include "tink/internal/ec_util.h"           // IWYU pragma: keep
+#include "tink/subtle/common_enums.h"        // IWYU pragma: keep
+#include "tink/util/enums.h"                 // IWYU pragma: keep
 #include "tink/util/protobuf_helper.h"
-#include "tink/util/secret_data.h"
+#include "tink/util/secret_data.h"  // IWYU pragma: keep
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -62,51 +58,20 @@
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
-using ::crypto::tink::util::Enums;
-using ::google::crypto::tink::AesGcmKeyFormat;
 // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
+using ::crypto::tink::util::Enums;
+using ::google::crypto::tink::AesGcmKeyFormat;
+using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)
-using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::OutputPrefixType;
 
 namespace crypto {
 namespace tink {
 namespace test {
-namespace {
-
-const crypto::tink::internal::EcKey& GetCachedEcKey(
-    crypto::tink::subtle::EllipticCurveType curve_type) {
-  static const absl::NoDestructor<absl::flat_hash_map<
-      crypto::tink::subtle::EllipticCurveType, crypto::tink::internal::EcKey>>
-      key_cache([]() {
-        absl::flat_hash_map<crypto::tink::subtle::EllipticCurveType,
-                            crypto::tink::internal::EcKey>
-            map;
-        map.reserve(4);
-        for (crypto::tink::subtle::EllipticCurveType curve : {
-                 crypto::tink::subtle::EllipticCurveType::NIST_P256,
-                 crypto::tink::subtle::EllipticCurveType::NIST_P384,
-                 crypto::tink::subtle::EllipticCurveType::NIST_P521,
-                 crypto::tink::subtle::EllipticCurveType::CURVE25519,
-             }) {
-          absl::StatusOr<crypto::tink::internal::EcKey> test_key =
-              crypto::tink::internal::NewEcKey(curve);
-          ABSL_CHECK_OK(test_key.status());
-          map[curve] = *std::move(test_key);
-        }
-        return map;
-      }());
-  auto it = key_cache->find(curve_type);
-  ABSL_CHECK(it != key_cache->end()) << "No cached EC key found for curve "
-                                     << subtle::EnumToString(curve_type);
-  return it->second;
-}
-
-}  // namespace
 
 std::string ReadTestFile(absl::string_view filename) {
   std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
@@ -212,29 +177,34 @@ void AddRawKey(const std::string& key_type, uint32_t key_id,
          material_type, keyset);
 }
 
+// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 EciesAeadHkdfPrivateKey GetEciesAesGcmHkdfTestKey(
-    subtle::EllipticCurveType curve_type, subtle::EcPointFormat ec_point_format,
-    subtle::HashType hash_type, uint32_t aes_gcm_key_size) {
+    subtle::EllipticCurveType curve_type, subtle::EcPointFormat
+    ec_point_format, subtle::HashType hash_type, uint32_t aes_gcm_key_size) {
   return GetEciesAesGcmHkdfTestKey(
-      Enums::SubtleToProto(curve_type), Enums::SubtleToProto(ec_point_format),
-      Enums::SubtleToProto(hash_type), aes_gcm_key_size);
+      Enums::SubtleToProto(curve_type),
+      Enums::SubtleToProto(ec_point_format), Enums::SubtleToProto(hash_type),
+      aes_gcm_key_size);
 }
 
 EciesAeadHkdfPrivateKey GetEciesAeadHkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type) {
-  const internal::EcKey& test_key =
-      GetCachedEcKey(Enums::ProtoToSubtle(curve_type));
+  internal::EcKey test_key =
+      internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
 
   EciesAeadHkdfPrivateKey ecies_key;
   ecies_key.set_version(0);
   ecies_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
-  auto public_key = ecies_key.mutable_public_key();
+  google::crypto::tink::EciesAeadHkdfPublicKey* public_key =
+      ecies_key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_x(test_key.pub_x);
   public_key->set_y(test_key.pub_y);
-  auto params = public_key->mutable_params();
+  google::crypto::tink::EciesAeadHkdfParams* params =
+      public_key->mutable_params();
   params->set_ec_point_format(ec_point_format);
   params->mutable_kem_params()->set_curve_type(curve_type);
   params->mutable_kem_params()->set_hkdf_hash_type(hash_type);
@@ -246,14 +216,17 @@ EciesAeadHkdfPrivateKey GetEciesAesGcmHkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type, uint32_t aes_gcm_key_size) {
-  auto ecies_key =
+  EciesAeadHkdfPrivateKey ecies_key =
       GetEciesAeadHkdfTestKey(curve_type, ec_point_format, hash_type);
-  auto params = ecies_key.mutable_public_key()->mutable_params();
+  google::crypto::tink::EciesAeadHkdfParams* params =
+      ecies_key.mutable_public_key()->mutable_params();
 
   AesGcmKeyFormat key_format;
   key_format.set_key_size(aes_gcm_key_size);
-  auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
-  auto key_manager = std::make_unique<AesGcmKeyManager>();
+  google::crypto::tink::KeyTemplate* aead_dem =
+      params->mutable_dem_params()->mutable_aead_dem();
+  std::unique_ptr<AesGcmKeyManager> key_manager =
+      std::make_unique<AesGcmKeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
   aead_dem->set_type_url(dem_key_type);
   aead_dem->set_value(key_format.SerializeAsString());
@@ -266,25 +239,32 @@ EciesAeadHkdfPrivateKey GetEciesAesCtrHmacHkdfTestKey(
     google::crypto::tink::HashType hash_type, uint32_t aes_ctr_key_size,
     uint32_t aes_ctr_iv_size, google::crypto::tink::HashType hmac_hash_type,
     uint32_t hmac_tag_size, uint32_t hmac_key_size) {
-  auto ecies_key =
+  EciesAeadHkdfPrivateKey ecies_key =
       GetEciesAeadHkdfTestKey(curve_type, ec_point_format, hash_type);
 
   google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
-  auto aes_ctr_key_format = key_format.mutable_aes_ctr_key_format();
-  auto aes_ctr_params = aes_ctr_key_format->mutable_params();
+  google::crypto::tink::AesCtrKeyFormat* aes_ctr_key_format =
+      key_format.mutable_aes_ctr_key_format();
+  google::crypto::tink::AesCtrParams* aes_ctr_params =
+      aes_ctr_key_format->mutable_params();
   aes_ctr_params->set_iv_size(aes_ctr_iv_size);
   aes_ctr_key_format->set_key_size(aes_ctr_key_size);
 
-  auto hmac_key_format = key_format.mutable_hmac_key_format();
-  auto hmac_params = hmac_key_format->mutable_params();
+  google::crypto::tink::HmacKeyFormat* hmac_key_format =
+      key_format.mutable_hmac_key_format();
+  google::crypto::tink::HmacParams* hmac_params =
+      hmac_key_format->mutable_params();
   hmac_params->set_hash(hmac_hash_type);
   hmac_params->set_tag_size(hmac_tag_size);
   hmac_key_format->set_key_size(hmac_key_size);
 
-  auto params = ecies_key.mutable_public_key()->mutable_params();
-  auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
+  google::crypto::tink::EciesAeadHkdfParams* params =
+      ecies_key.mutable_public_key()->mutable_params();
+  google::crypto::tink::KeyTemplate* aead_dem =
+      params->mutable_dem_params()->mutable_aead_dem();
 
-  auto key_manager = std::make_unique<AesCtrHmacAeadKeyManager>();
+  std::unique_ptr<AesCtrHmacAeadKeyManager> key_manager =
+      std::make_unique<AesCtrHmacAeadKeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
   aead_dem->set_type_url(dem_key_type);
   aead_dem->set_value(key_format.SerializeAsString());
@@ -295,13 +275,16 @@ EciesAeadHkdfPrivateKey GetEciesXChaCha20Poly1305HkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type) {
-  auto ecies_key =
+  EciesAeadHkdfPrivateKey ecies_key =
       GetEciesAeadHkdfTestKey(curve_type, ec_point_format, hash_type);
-  auto params = ecies_key.mutable_public_key()->mutable_params();
+  google::crypto::tink::EciesAeadHkdfParams* params =
+      ecies_key.mutable_public_key()->mutable_params();
 
   google::crypto::tink::XChaCha20Poly1305KeyFormat key_format;
-  auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
-  auto key_manager = std::make_unique<XChaCha20Poly1305KeyManager>();
+  google::crypto::tink::KeyTemplate* aead_dem =
+      params->mutable_dem_params()->mutable_aead_dem();
+  std::unique_ptr<XChaCha20Poly1305KeyManager> key_manager =
+      std::make_unique<XChaCha20Poly1305KeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
   aead_dem->set_type_url(dem_key_type);
   aead_dem->set_value(key_format.SerializeAsString());
@@ -312,13 +295,15 @@ google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesSivHkdfTestKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::EcPointFormat ec_point_format,
     google::crypto::tink::HashType hash_type) {
-  auto ecies_key =
+  EciesAeadHkdfPrivateKey ecies_key =
       GetEciesAeadHkdfTestKey(curve_type, ec_point_format, hash_type);
-  auto params = ecies_key.mutable_public_key()->mutable_params();
+  google::crypto::tink::EciesAeadHkdfParams* params =
+      ecies_key.mutable_public_key()->mutable_params();
 
   google::crypto::tink::AesSivKeyFormat key_format;
   key_format.set_key_size(64);
-  auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
+  google::crypto::tink::KeyTemplate* aead_dem =
+      params->mutable_dem_params()->mutable_aead_dem();
   AesSivKeyManager key_manager;
   std::string dem_key_type = key_manager.get_key_type();
   aead_dem->set_type_url(dem_key_type);
@@ -326,8 +311,6 @@ google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesSivHkdfTestKey(
   return ecies_key;
 }
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
 EcdsaPrivateKeyProto GetEcdsaTestPrivateKey(
     subtle::EllipticCurveType curve_type, subtle::HashType hash_type,
     subtle::EcdsaSignatureEncoding encoding) {

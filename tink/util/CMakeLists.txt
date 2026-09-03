@@ -169,8 +169,6 @@ tink_cc_library(
     tink::util::protobuf_helper
     tink::util::secret_data
     absl::core_headers
-    absl::no_destructor
-    absl::flat_hash_map
     absl::absl_check
     absl::memory
     absl::status
@@ -200,7 +198,6 @@ tink_cc_library(
     tink::daead::aes_siv_key_manager
     tink::internal::ec_util
     tink::keyderivation::keyset_deriver
-    tink::mac::internal::stateful_mac
     tink::subtle::common_enums
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto

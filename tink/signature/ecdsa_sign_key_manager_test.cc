@@ -23,18 +23,23 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
@@ -161,9 +166,76 @@ TEST(EcdsaSignKeyManagerTest, CreateKeyValid) {
   EXPECT_THAT(EcdsaSignKeyManager().ValidateKey(key_or.value()), IsOk());
 }
 
+HashType ToProtoHashType(EcdsaParameters::HashType hash_type) {
+  switch (hash_type) {
+    case EcdsaParameters::HashType::kSha256:
+      return HashType::SHA256;
+    case EcdsaParameters::HashType::kSha384:
+      return HashType::SHA384;
+    case EcdsaParameters::HashType::kSha512:
+      return HashType::SHA512;
+    default:
+      return HashType::UNKNOWN_HASH;
+  }
+}
+
+EllipticCurveType ToProtoCurveType(EcdsaParameters::CurveType curve_type) {
+  switch (curve_type) {
+    case EcdsaParameters::CurveType::kNistP256:
+      return EllipticCurveType::NIST_P256;
+    case EcdsaParameters::CurveType::kNistP384:
+      return EllipticCurveType::NIST_P384;
+    case EcdsaParameters::CurveType::kNistP521:
+      return EllipticCurveType::NIST_P521;
+    default:
+      return EllipticCurveType::UNKNOWN_CURVE;
+  }
+}
+
+EcdsaSignatureEncoding ToProtoSignatureEncoding(
+    EcdsaParameters::SignatureEncoding encoding) {
+  switch (encoding) {
+    case EcdsaParameters::SignatureEncoding::kDer:
+      return EcdsaSignatureEncoding::DER;
+    case EcdsaParameters::SignatureEncoding::kIeeeP1363:
+      return EcdsaSignatureEncoding::IEEE_P1363;
+    default:
+      return EcdsaSignatureEncoding::UNKNOWN_ENCODING;
+  }
+}
+
+EcdsaPublicKeyProto ToEcdsaPublicKeyProto(const EcdsaPublicKey& public_key) {
+  EcdsaPublicKeyProto proto;
+  proto.set_version(0);
+  proto.set_x(std::string(
+      public_key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue()));
+  proto.set_y(std::string(
+      public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue()));
+  EcdsaParams* params = proto.mutable_params();
+  params->set_hash_type(
+      ToProtoHashType(public_key.GetParameters().GetHashType()));
+  params->set_curve(
+      ToProtoCurveType(public_key.GetParameters().GetCurveType()));
+  params->set_encoding(ToProtoSignatureEncoding(
+      public_key.GetParameters().GetSignatureEncoding()));
+  return proto;
+}
+
 EcdsaPrivateKeyProto CreateValidKey() {
-  EcdsaKeyFormat format = CreateValidKeyFormat();
-  return EcdsaSignKeyManager().CreateKey(format).value();
+  const internal::SignatureTestVector& test_vector =
+      internal::GetEcdsaTestVector(EcdsaParameters::CurveType::kNistP256,
+                                   EcdsaParameters::HashType::kSha256,
+                                   EcdsaParameters::SignatureEncoding::kDer,
+                                   EcdsaParameters::Variant::kNoPrefix);
+  const EcdsaPrivateKey& private_key =
+      dynamic_cast<const EcdsaPrivateKey&>(*test_vector.signature_private_key);
+  EcdsaPrivateKeyProto proto;
+  proto.set_version(0);
+  proto.set_key_value(private_key.GetPrivateKey(GetPartialKeyAccess())
+                          .GetSecret(InsecureSecretKeyAccess::Get()));
+  *proto.mutable_public_key() =
+      ToEcdsaPublicKeyProto(private_key.GetPublicKey());
+  return proto;
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKey) {
@@ -247,9 +319,16 @@ TEST(EcdsaSignKeyManagerTest, Create) {
 
 TEST(EcdsaSignKeyManagerTest, CreateDifferentKey) {
   EcdsaPrivateKeyProto private_key = CreateValidKey();
-  // Note: we create a new key in the next line.
+  const internal::SignatureTestVector& test_vector_p384 =
+      internal::GetEcdsaTestVector(
+          EcdsaParameters::CurveType::kNistP384,
+          EcdsaParameters::HashType::kSha384,
+          EcdsaParameters::SignatureEncoding::kIeeeP1363,
+          EcdsaParameters::Variant::kNoPrefix);
+  const auto& private_key_p384 = dynamic_cast<const EcdsaPrivateKey&>(
+      *test_vector_p384.signature_private_key);
   EcdsaPublicKeyProto public_key =
-      EcdsaSignKeyManager().GetPublicKey(CreateValidKey()).value();
+      ToEcdsaPublicKeyProto(private_key_p384.GetPublicKey());
 
   auto signer_or =
       EcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);

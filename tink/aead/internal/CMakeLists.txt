@@ -1284,3 +1284,66 @@ tink_cc_library(
     tink::aead::xchacha20_poly1305_key_manager
     tink::internal::key_gen_configuration_impl
 )
+
+tink_cc_library(
+  NAME cord_aes_gcm_siv_boringssl
+  SRCS
+    cord_aes_gcm_siv_boringssl.cc
+    cord_aes_gcm_siv_boringssl.h
+  DEPS
+    tink::aead::internal::aead_util
+    tink::aead::internal::cord_utils
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::cord
+    absl::string_view
+    absl::span
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::aead::aes_gcm_siv_key
+    tink::aead::cord_aead
+    tink::internal::call_with_core_dump_protection
+    tink::internal::err_util
+    tink::internal::fips_utils
+    tink::internal::ssl_unique_ptr
+    tink::internal::ssl_util
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME cord_aes_gcm_siv_boringssl_test
+  SRCS
+    cord_aes_gcm_siv_boringssl_test.cc
+  DATA
+    wycheproof::testvectors_v1
+  DEPS
+    tink::aead::internal::cord_aes_gcm_siv_boringssl
+    tink::aead::internal::wycheproof_aead
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::cord
+    absl::string_view
+    crypto
+    tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aes_gcm_siv_key
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::cord_aead
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_siv_test_vectors
+    tink::internal::fips_utils
+    tink::internal::ssl_util
+    tink::subtle::aes_gcm_siv_boringssl
+    tink::subtle::random
+    tink::util::test_matchers
+    tink::util::test_util
+)

@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,10 +37,10 @@
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/util/test_matchers.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
 
@@ -160,16 +161,30 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
               Not(IsOk()));
 }
 
+JwtRsaSsaPkcs1PrivateKey CreateValidRs256PrivateKey(
+    const RsaSsaTestVector& test_vector = GetRsa2048BitVector1()) {
+  JwtRsaSsaPkcs1PrivateKey key;
+  key.set_version(0);
+  key.set_d(test_vector.d);
+  key.set_p(test_vector.p);
+  key.set_q(test_vector.q);
+  key.set_dp(test_vector.dp);
+  key.set_dq(test_vector.dq);
+  key.set_crt(test_vector.q_inv);
+  JwtRsaSsaPkcs1PublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtRsaSsaPkcs1Algorithm::RS256);
+  public_key->set_n(test_vector.n);
+  public_key->set_e(test_vector.e);
+  return key;
+}
+
 TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
-  JwtRsaSsaPkcs1KeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPkcs1Algorithm::RS256, 2048, RSA_F4);
-  absl::StatusOr<google::crypto::tink::JwtRsaSsaPkcs1PrivateKey> key =
-      JwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
+  JwtRsaSsaPkcs1PrivateKey key = CreateValidRs256PrivateKey();
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign =
       JwtRsaSsaPkcs1SignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(
-          *key);
+          key);
   ASSERT_THAT(sign, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -187,7 +202,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify =
       JwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
@@ -230,17 +245,13 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitives) {
 }
 
 TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
-  JwtRsaSsaPkcs1KeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPkcs1Algorithm::RS256, 2048, RSA_F4);
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> key =
-      JwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
-  key->mutable_public_key()->mutable_custom_kid()->set_value(
+  JwtRsaSsaPkcs1PrivateKey key = CreateValidRs256PrivateKey();
+  key.mutable_public_key()->mutable_custom_kid()->set_value(
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit");
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign =
       JwtRsaSsaPkcs1SignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(
-          *key);
+          key);
   ASSERT_THAT(sign, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -272,7 +283,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify =
       JwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
@@ -291,11 +302,11 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
               Not(IsOk()));
 
   // Test that custom kid is verified: validation should fail with other kid.
-  key->mutable_public_key()->mutable_custom_kid()->set_value("other kid");
+  key.mutable_public_key()->mutable_custom_kid()->set_value("other kid");
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> other_verify =
       JwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(other_verify, IsOk());
   EXPECT_THAT(
       (*other_verify)
@@ -305,19 +316,14 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
 }
 
 TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
-  JwtRsaSsaPkcs1KeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPkcs1Algorithm::RS256, 2048, RSA_F4);
-  absl::StatusOr<google::crypto::tink::JwtRsaSsaPkcs1PrivateKey> key1 =
-      JwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key1, IsOk());
-
-  absl::StatusOr<google::crypto::tink::JwtRsaSsaPkcs1PrivateKey> key2 =
-      JwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key2, IsOk());
+  JwtRsaSsaPkcs1PrivateKey key1 =
+      CreateValidRs256PrivateKey(GetRsa2048BitVector1());
+  JwtRsaSsaPkcs1PrivateKey key2 =
+      CreateValidRs256PrivateKey(GetRsa2048BitVector2());
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign1 =
       JwtRsaSsaPkcs1SignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(
-          *key1);
+          key1);
   ASSERT_THAT(sign1, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -333,7 +339,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify2 =
       JwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key2->public_key());
+          key2.public_key());
   ASSERT_THAT(verify2, IsOk());
 
   EXPECT_THAT(

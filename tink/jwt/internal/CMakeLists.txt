@@ -638,15 +638,14 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::time
-    absl::optional
     tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    tink::util::test_matchers
 )
 
 tink_cc_library(
@@ -875,7 +874,7 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::test_matchers
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -1207,12 +1206,12 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::internal::testing::ec_test_vectors
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_public_key
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto

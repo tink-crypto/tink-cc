@@ -864,9 +864,9 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
 )

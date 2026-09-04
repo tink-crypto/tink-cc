@@ -44,6 +44,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -508,13 +509,12 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   google::crypto::tink::EcdsaPublicKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_x(ec_key->pub_x);
-  key_proto.set_y(ec_key->pub_y);
+  key_proto.set_x(ec_key.pub_x);
+  key_proto.set_y(ec_key.pub_y);
   *key_proto.mutable_params() = params;
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -543,8 +543,8 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
 
   absl::StatusOr<EcdsaPublicKey> expected_key = EcdsaPublicKey::Create(
       *expected_parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
-      test_case.id, GetPartialKeyAccess());
+      EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)), test_case.id,
+      GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
 
   EXPECT_THAT(**key, Eq(*expected_key));
@@ -562,13 +562,12 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   google::crypto::tink::EcdsaPublicKey key_proto;
   key_proto.set_version(0);
-  key_proto.set_x(ec_key->pub_x);
-  key_proto.set_y(ec_key->pub_y);
+  key_proto.set_x(ec_key.pub_x);
+  key_proto.set_y(ec_key.pub_y);
   *key_proto.mutable_params() = params;
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -597,8 +596,8 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
 
   absl::StatusOr<EcdsaPublicKey> expected_key = EcdsaPublicKey::Create(
       *expected_parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
-      test_case.id, GetPartialKeyAccess());
+      EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)), test_case.id,
+      GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
 
   EXPECT_THAT(**key, Eq(*expected_key));
@@ -637,12 +636,11 @@ TEST_F(EcdsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
   google::crypto::tink::EcdsaPublicKey key_proto;
   key_proto.set_version(1);
-  key_proto.set_x(ec_key->pub_x);
-  key_proto.set_y(ec_key->pub_y);
+  key_proto.set_x(ec_key.pub_x);
+  key_proto.set_y(ec_key.pub_y);
   *key_proto.mutable_params() = params;
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -676,12 +674,10 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   absl::StatusOr<EcdsaPublicKey> key = EcdsaPublicKey::Create(
-      *parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+      *parameters, EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -709,8 +705,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.version(), Eq(0));
   // We currently encode with one extra 0 byte at the beginning, to make sure
   // that parsing is correct. See also b/264525021.
-  EXPECT_THAT(proto_key.x(), Eq('\0' + ec_key->pub_x));
-  EXPECT_THAT(proto_key.y(), Eq('\0' + ec_key->pub_y));
+  EXPECT_THAT(proto_key.x(), Eq('\0' + ec_key.pub_x));
+  EXPECT_THAT(proto_key.y(), Eq('\0' + ec_key.pub_y));
   EXPECT_THAT(proto_key.has_params(), IsTrue());
   EXPECT_THAT(proto_key.params().curve(), Eq(test_case.curve));
   EXPECT_THAT(proto_key.params().hash_type(), Eq(test_case.hash));
@@ -733,12 +729,10 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   absl::StatusOr<EcdsaPublicKey> key = EcdsaPublicKey::Create(
-      *parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+      *parameters, EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -766,8 +760,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
   EXPECT_THAT(proto_key.version(), Eq(0));
   // We currently encode with one extra 0 byte at the beginning, to make sure
   // that parsing is correct. See also b/264525021.
-  EXPECT_THAT(proto_key.x(), Eq('\0' + ec_key->pub_x));
-  EXPECT_THAT(proto_key.y(), Eq('\0' + ec_key->pub_y));
+  EXPECT_THAT(proto_key.x(), Eq('\0' + ec_key.pub_x));
+  EXPECT_THAT(proto_key.y(), Eq('\0' + ec_key.pub_y));
   EXPECT_THAT(proto_key.has_params(), IsTrue());
   EXPECT_THAT(proto_key.params().curve(), Eq(test_case.curve));
   EXPECT_THAT(proto_key.params().hash_type(), Eq(test_case.hash));
@@ -785,19 +779,18 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -826,14 +819,14 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
 
   absl::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
       *expected_parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
-      test_case.id, GetPartialKeyAccess());
+      EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)), test_case.id,
+      GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+          RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
 
@@ -852,19 +845,18 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -893,14 +885,14 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
 
   absl::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
       *expected_parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
-      test_case.id, GetPartialKeyAccess());
+      EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)), test_case.id,
+      GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+          RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
 
@@ -935,12 +927,11 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -967,19 +958,18 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersionFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(1);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -1009,19 +999,18 @@ TEST_F(EcdsaProtoSerializationTest,
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(1);  // invalid version
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -1050,20 +1039,19 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
   *public_key_proto.mutable_params() = params;
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   ;
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -1186,18 +1174,16 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+      *parameters, EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
@@ -1228,7 +1214,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   // that parsing is correct.
   EXPECT_THAT(
       proto_key.key_value(),
-      Eq('\0' + std::string(util::SecretDataAsStringView(ec_key->priv))));
+      Eq('\0' + std::string(util::SecretDataAsStringView(ec_key.priv))));
   EXPECT_THAT(proto_key.has_public_key(), IsTrue());
   EXPECT_THAT(proto_key.public_key().version(), Eq(0));
   EXPECT_THAT(proto_key.public_key().has_params(), IsTrue());
@@ -1236,8 +1222,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.public_key().params().curve(), Eq(test_case.curve));
   EXPECT_THAT(proto_key.public_key().params().encoding(),
               Eq(test_case.encoding));
-  EXPECT_THAT(proto_key.public_key().x(), Eq('\0' + ec_key->pub_x));
-  EXPECT_THAT(proto_key.public_key().y(), Eq('\0' + ec_key->pub_y));
+  EXPECT_THAT(proto_key.public_key().x(), Eq('\0' + ec_key.pub_x));
+  EXPECT_THAT(proto_key.public_key().y(), Eq('\0' + ec_key.pub_y));
 }
 
 TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
@@ -1256,18 +1242,16 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(test_case.subtle_curve);
 
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+      *parameters, EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
@@ -1298,7 +1282,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
   // that parsing is correct.
   EXPECT_THAT(
       proto_key.key_value(),
-      Eq('\0' + std::string(util::SecretDataAsStringView(ec_key->priv))));
+      Eq('\0' + std::string(util::SecretDataAsStringView(ec_key.priv))));
   EXPECT_THAT(proto_key.has_public_key(), IsTrue());
   EXPECT_THAT(proto_key.public_key().version(), Eq(0));
   EXPECT_THAT(proto_key.public_key().has_params(), IsTrue());
@@ -1306,8 +1290,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
   EXPECT_THAT(proto_key.public_key().params().curve(), Eq(test_case.curve));
   EXPECT_THAT(proto_key.public_key().params().encoding(),
               Eq(test_case.encoding));
-  EXPECT_THAT(proto_key.public_key().x(), Eq('\0' + ec_key->pub_x));
-  EXPECT_THAT(proto_key.public_key().y(), Eq('\0' + ec_key->pub_y));
+  EXPECT_THAT(proto_key.public_key().x(), Eq('\0' + ec_key.pub_x));
+  EXPECT_THAT(proto_key.public_key().y(), Eq('\0' + ec_key.pub_y));
 }
 
 TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
@@ -1324,18 +1308,16 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-      *parameters,
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+      *parameters, EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y)),
       /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());

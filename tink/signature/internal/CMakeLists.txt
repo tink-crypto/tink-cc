@@ -70,7 +70,6 @@ tink_cc_test(
     tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::subtle::ecdsa_verify_boringssl
-    tink::subtle::subtle_util_boringssl
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

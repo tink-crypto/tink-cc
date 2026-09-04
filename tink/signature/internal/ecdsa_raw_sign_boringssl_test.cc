@@ -33,7 +33,6 @@
 #include "tink/public_key_verify.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -76,8 +75,7 @@ TEST(EcdsaRawSignBoringSslTest, VerifySignature) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    const subtle::SubtleUtilBoringSSL::EcKey& ec_key =
-        internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+    const EcKey& ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
     absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(ec_key, encoding);
@@ -108,8 +106,7 @@ TEST(EcdsaRawSignBoringSslTest, VerifySignatureWithEmptyMessage) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    const subtle::SubtleUtilBoringSSL::EcKey& ec_key =
-        internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+    const EcKey& ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
     absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(ec_key, encoding);
@@ -142,8 +139,7 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWithInvalidMessageOrSignature) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    const subtle::SubtleUtilBoringSSL::EcKey& ec_key =
-        internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+    const EcKey& ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
     absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(ec_key, encoding);
@@ -179,8 +175,7 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWhenEncodingDoesNotMatch) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    const subtle::SubtleUtilBoringSSL::EcKey& ec_key =
-        internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+    const EcKey& ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
     absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(ec_key, encoding);
@@ -215,8 +210,7 @@ TEST(EcdsaRawSignBoringSslTest,
                                          subtle::EllipticCurveType::NIST_P384,
                                          subtle::EllipticCurveType::NIST_P521};
   for (subtle::EllipticCurveType curve : curves) {
-    const subtle::SubtleUtilBoringSSL::EcKey& ec_key =
-        internal::GetEcKey(curve);
+    const EcKey& ec_key = GetEcKey(curve);
 
     absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(ec_key,
@@ -251,8 +245,7 @@ TEST(EcdsaRawSignBoringSslTest, CreateFailsWithBadPublicKey) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
-  subtle::SubtleUtilBoringSSL::EcKey ec_key =
-      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  EcKey ec_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   ec_key.pub_x += "corrupted public key x coordinate";
   EXPECT_THAT(
@@ -287,22 +280,19 @@ TEST(EcdsaRawSignBoringSslTest, FipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  const subtle::SubtleUtilBoringSSL::EcKey& p256_key =
-      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  const EcKey& p256_key = GetEcKey(subtle::EllipticCurveType::NIST_P256);
   EXPECT_THAT(
       EcdsaRawSignBoringSsl::New(p256_key, subtle::EcdsaSignatureEncoding::DER)
           .status(),
       StatusIs(absl::StatusCode::kInternal));
 
-  const subtle::SubtleUtilBoringSSL::EcKey& p384_key =
-      internal::GetEcKey(subtle::EllipticCurveType::NIST_P384);
+  const EcKey& p384_key = GetEcKey(subtle::EllipticCurveType::NIST_P384);
   EXPECT_THAT(
       EcdsaRawSignBoringSsl::New(p384_key, subtle::EcdsaSignatureEncoding::DER)
           .status(),
       StatusIs(absl::StatusCode::kInternal));
 
-  const subtle::SubtleUtilBoringSSL::EcKey& p521_key =
-      internal::GetEcKey(subtle::EllipticCurveType::NIST_P521);
+  const EcKey& p521_key = GetEcKey(subtle::EllipticCurveType::NIST_P521);
   EXPECT_THAT(
       EcdsaRawSignBoringSsl::New(p521_key, subtle::EcdsaSignatureEncoding::DER)
           .status(),

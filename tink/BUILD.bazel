@@ -840,6 +840,7 @@ cc_library(
     srcs = ["core/big_integer.cc"],
     hdrs = ["big_integer.h"],
     include_prefix = "tink",
+    visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/strings:string_view",
         "@boringssl//:crypto",

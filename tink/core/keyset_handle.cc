@@ -34,15 +34,21 @@
 #include "absl/types/optional.h"
 #include "tink/aead.h"
 #include "tink/annotations.h"
+#include "tink/configuration.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_info.h"
 #include "tink/internal/key_status_util.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/keyset_wrapper.h"
+#include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/legacy_annotations.h"
 #include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/internal/util.h"
@@ -692,6 +698,26 @@ KeysetHandle::GetLegacyAnnotations() const {
     return monitoring_annotations->GetMap();
   }
   return *empty_annotations;
+}
+
+absl::StatusOr<void*> KeysetHandle::GetPrimitiveVoid(
+    const Configuration& config, std::type_index type_index) const {
+  if (internal::ConfigurationImpl::IsInGlobalRegistryMode(config)) {
+    return internal::RegistryImpl::GlobalInstance().WrapKeyset(
+        *keyset_, GetLegacyAnnotations(), type_index);
+  }
+
+  absl::StatusOr<const internal::KeysetWrapperStore*> wrapper_store =
+      internal::ConfigurationImpl::GetKeysetWrapperStore(config);
+  if (!wrapper_store.ok()) {
+    return wrapper_store.status();
+  }
+  absl::StatusOr<const internal::UntypedKeysetWrapper*> wrapper =
+      (*wrapper_store)->Get(type_index);
+  if (!wrapper.ok()) {
+    return wrapper.status();
+  }
+  return (*wrapper)->WrapVoid(*keyset_, GetLegacyAnnotations());
 }
 
 }  // namespace tink

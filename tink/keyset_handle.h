@@ -339,6 +339,13 @@ class KeysetHandle {
   friend absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
       absl::string_view serialized_keyset, SecretKeyAccessToken token);
 
+  // Helper for `GetPrimitive<P>(config)` that performs type-erased primitive
+  // resolution and wrapping. Returns an untyped pointer to the created
+  // primitive corresponding to `type_index`. The caller takes ownership of the
+  // returned object.
+  absl::StatusOr<void*> GetPrimitiveVoid(const Configuration& config,
+                                         std::type_index type_index) const;
+
   // Creates a handle that contains the given keyset.
   explicit KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset)
       : keyset_(std::move(keyset)) {}
@@ -634,25 +641,12 @@ KeysetHandle::GetPrimitives(const KeyManager<P>* custom_manager) const {
 template <class P>
 absl::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
     const Configuration& config) const {
-  if (crypto::tink::internal::ConfigurationImpl::IsInGlobalRegistryMode(
-          config)) {
-    return crypto::tink::internal::RegistryImpl::GlobalInstance().WrapKeyset<P>(
-        *keyset_, GetLegacyAnnotations());
+  absl::StatusOr<void*> primitive =
+      GetPrimitiveVoid(config, std::type_index(typeid(P)));
+  if (!primitive.ok()) {
+    return primitive.status();
   }
-
-  absl::StatusOr<const crypto::tink::internal::KeysetWrapperStore*>
-      wrapper_store =
-          crypto::tink::internal::ConfigurationImpl::GetKeysetWrapperStore(
-              config);
-  if (!wrapper_store.ok()) {
-    return wrapper_store.status();
-  }
-  absl::StatusOr<const crypto::tink::internal::KeysetWrapper<P>*> wrapper =
-      (*wrapper_store)->Get<P>();
-  if (!wrapper.ok()) {
-    return wrapper.status();
-  }
-  return (*wrapper)->Wrap(*keyset_, GetLegacyAnnotations());
+  return std::unique_ptr<P>(static_cast<P*>(*primitive));
 }
 
 // Returns a KeysetHandle containing one new key generated according to

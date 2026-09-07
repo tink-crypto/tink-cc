@@ -38,21 +38,18 @@
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_keyset_handle.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
@@ -65,6 +62,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::test::AddKeyData;
 using ::google::crypto::tink::Keyset;
 using ::testing::Eq;
@@ -499,6 +497,93 @@ TEST(KeysetWrapperImplTest, WrapWithAnnotationCorrectlyWrittenToPrimitiveSet) {
               IsOkAndHolds(Pointee(UnorderedElementsAre(
                   Pair(111, "one"), Pair(222, "two (primary)"),
                   Pair(333, "three"), Pair(444, "four")))));
+}
+
+// A test keyset wrapper implementation that returns a configured primitive or
+//  error.
+class TestKeysetWrapper : public KeysetWrapper<std::string> {
+ public:
+  explicit TestKeysetWrapper(
+      absl::StatusOr<std::string> result = std::string("wrapped_primitive"))
+      : result_(std::move(result)) {}
+
+  absl::StatusOr<std::unique_ptr<std::string>> Wrap(
+      const google::crypto::tink::Keyset& keyset,
+      const absl::flat_hash_map<std::string, std::string>& annotations)
+      const override {
+    if (!result_.ok()) {
+      return result_.status();
+    }
+    return std::make_unique<std::string>(*result_);
+  }
+
+ private:
+  absl::StatusOr<std::string> result_;
+};
+
+TEST(UntypedKeysetWrapperImplTest, GetTypedWrapperReturnsUnderlyingWrapper) {
+  auto wrapper = std::make_unique<TestKeysetWrapper>("wrapped_primitive");
+  const KeysetWrapper<std::string>* raw_wrapper = wrapper.get();
+  UntypedKeysetWrapperImpl<std::string> untyped_wrapper(std::move(wrapper));
+
+  EXPECT_EQ(untyped_wrapper.GetTypedWrapper(), raw_wrapper);
+}
+
+TEST(UntypedKeysetWrapperImplTest, WrapVoidSuccess) {
+  auto wrapper = std::make_unique<TestKeysetWrapper>("wrapped_primitive");
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "val1"}};
+  google::crypto::tink::Keyset keyset;
+  keyset.set_primary_key_id(42);
+
+  UntypedKeysetWrapperImpl<std::string> untyped_wrapper(std::move(wrapper));
+
+  absl::StatusOr<void*> result = untyped_wrapper.WrapVoid(keyset, kAnnotations);
+  ASSERT_THAT(result, IsOk());
+  ASSERT_NE(*result, nullptr);
+
+  std::unique_ptr<std::string> primitive(static_cast<std::string*>(*result));
+  EXPECT_EQ(*primitive, "wrapped_primitive");
+}
+
+TEST(UntypedKeysetWrapperImplTest, WrapVoidPropagatesError) {
+  auto failing_wrapper = std::make_unique<TestKeysetWrapper>(
+      absl::Status(absl::StatusCode::kInvalidArgument, "wrapping failed"));
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "val1"}};
+  google::crypto::tink::Keyset keyset;
+
+  UntypedKeysetWrapperImpl<std::string> untyped_wrapper(
+      std::move(failing_wrapper));
+
+  absl::StatusOr<void*> result = untyped_wrapper.WrapVoid(keyset, kAnnotations);
+  EXPECT_THAT(result, StatusIs(absl::StatusCode::kInvalidArgument,
+                               HasSubstr("wrapping failed")));
+}
+
+TEST(UntypedKeysetWrapperImplTest, WrapVoidWithConcreteKeysetWrapperImpl) {
+  Wrapper wrapper;
+  auto wrapper_impl =
+      std::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
+          &wrapper, &CreateIn, &CreateInFromKeyFailing);
+  UntypedKeysetWrapperImpl<OutputPrimitive> untyped_wrapper(
+      std::move(wrapper_impl));
+
+  std::vector<std::pair<int, std::string>> keydata = {
+      {111, "one"}, {222, "two"}, {333, "three"}};
+  google::crypto::tink::Keyset keyset = CreateKeyset(keydata);
+  keyset.set_primary_key_id(222);
+
+  absl::StatusOr<void*> wrapped_void =
+      untyped_wrapper.WrapVoid(keyset, /*annotations=*/{});
+  ASSERT_THAT(wrapped_void, IsOk());
+  ASSERT_NE(*wrapped_void, nullptr);
+
+  std::unique_ptr<OutputPrimitive> wrapped(
+      static_cast<OutputPrimitive*>(*wrapped_void));
+  EXPECT_THAT(*wrapped,
+              UnorderedElementsAre(Pair(111, "one"), Pair(222, "two (primary)"),
+                                   Pair(333, "three")));
 }
 
 }  // namespace

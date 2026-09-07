@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <typeindex>
 #include <utility>
 
 #include "absl/base/thread_annotations.h"
@@ -124,6 +125,15 @@ class RegistryImpl {
       const google::crypto::tink::Keyset& keyset,
       const absl::flat_hash_map<std::string, std::string>& annotations) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
+
+  // Type-erased overload of `WrapKeyset`. Wraps a `keyset` and annotates it
+  // with `annotations` into a primitive corresponding to `type_index`. Returns
+  // an untyped pointer to the created primitive, or an error status. The caller
+  // takes ownership of the returned pointer.
+  absl::StatusOr<void*> WrapKeyset(
+      const google::crypto::tink::Keyset& keyset,
+      const absl::flat_hash_map<std::string, std::string>& annotations,
+      std::type_index type_index) const ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   absl::StatusOr<google::crypto::tink::KeyData> DeriveKey(
       const google::crypto::tink::KeyTemplate& key_template,
@@ -295,15 +305,15 @@ absl::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
   return wrapper->Wrap(std::move(primitive_set));
 }
 
-template <class P>
-absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
+inline absl::StatusOr<void*> RegistryImpl::WrapKeyset(
     const google::crypto::tink::Keyset& keyset,
-    const absl::flat_hash_map<std::string, std::string>& annotations) const {
-  const KeysetWrapper<P>* keyset_wrapper = nullptr;
+    const absl::flat_hash_map<std::string, std::string>& annotations,
+    std::type_index type_index) const {
+  const UntypedKeysetWrapper* keyset_wrapper = nullptr;
   {
     absl::MutexLock lock(maps_mutex_);
-    absl::StatusOr<const KeysetWrapper<P>*> keyset_wrapper_status =
-        keyset_wrapper_store_.Get<P>();
+    absl::StatusOr<const UntypedKeysetWrapper*> keyset_wrapper_status =
+        keyset_wrapper_store_.Get(type_index);
     if (!keyset_wrapper_status.ok()) {
       return keyset_wrapper_status.status();
     }
@@ -311,7 +321,19 @@ absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
   }
   // `maps_mutex_` must be released before calling Wrap or this will deadlock,
   // as Wrap calls get_key_manager.
-  return keyset_wrapper->Wrap(keyset, annotations);
+  return keyset_wrapper->WrapVoid(keyset, annotations);
+}
+
+template <class P>
+absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
+    const google::crypto::tink::Keyset& keyset,
+    const absl::flat_hash_map<std::string, std::string>& annotations) const {
+  absl::StatusOr<void*> primitive =
+      WrapKeyset(keyset, annotations, std::type_index(typeid(P)));
+  if (!primitive.ok()) {
+    return primitive.status();
+  }
+  return std::unique_ptr<P>(static_cast<P*>(*primitive));
 }
 
 inline absl::Status RegistryImpl::RestrictToFipsIfEmpty() const {

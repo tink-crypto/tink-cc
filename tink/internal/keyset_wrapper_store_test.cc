@@ -20,11 +20,11 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <typeindex>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
@@ -36,12 +36,8 @@
 #include "tink/key.h"
 #include "tink/mac.h"
 #include "tink/mac/mac_wrapper.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
@@ -409,6 +405,57 @@ TEST(KeysetWrapperStoreTest, GetNonexistentWrapperFails) {
               IsOk());
 
   EXPECT_THAT(store.Get<Mac>().status(), StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST(KeysetWrapperStoreTest, GetUntypedWrapperByTypeIndex) {
+  RegistryImpl registry;
+  absl::StatusOr<std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
+      primitive_getter = PrimitiveGetter(registry);
+  ASSERT_THAT(primitive_getter, IsOk());
+
+  KeysetWrapperStore store;
+  ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  FakePrimitiveGetterFromKey())),
+              IsOk());
+
+  absl::StatusOr<const UntypedKeysetWrapper*> untyped_wrapper =
+      store.Get(std::type_index(typeid(FakePrimitive)));
+  ASSERT_THAT(untyped_wrapper, IsOk());
+  ASSERT_NE(*untyped_wrapper, nullptr);
+
+  Keyset keyset;
+  std::string raw_key = AddAesGcmKeyToKeyset(keyset, 13, OutputPrefixType::TINK,
+                                             KeyStatusType::ENABLED);
+  keyset.set_primary_key_id(13);
+
+  absl::StatusOr<void*> primitive_void =
+      (*untyped_wrapper)->WrapVoid(keyset, /*annotations=*/{});
+  ASSERT_THAT(primitive_void, IsOk());
+  ASSERT_NE(*primitive_void, nullptr);
+
+  std::unique_ptr<FakePrimitive> fake_primitive(
+      static_cast<FakePrimitive*>(*primitive_void));
+  EXPECT_THAT(fake_primitive->get(), Eq(raw_key));
+}
+
+TEST(KeysetWrapperStoreTest,
+     GetUntypedWrapperByTypeIndexNonexistentWrapperFails) {
+  RegistryImpl registry;
+  absl::StatusOr<std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
+      primitive_getter = PrimitiveGetter(registry);
+  ASSERT_THAT(primitive_getter, IsOk());
+
+  KeysetWrapperStore store;
+  ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
+                  std::make_unique<FakePrimitiveWrapper>(), *primitive_getter,
+                  FakePrimitiveGetterFromKey())),
+              IsOk());
+
+  EXPECT_THAT(store.Get(std::type_index(typeid(Mac))).status(),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST(KeysetWrapperStoreTest, IsEmpty) {

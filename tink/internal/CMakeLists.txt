@@ -243,6 +243,7 @@ tink_cc_test(
     keyset_wrapper_impl_test.cc
   DEPS
     tink::internal::key_gen_configuration_impl
+    tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_impl
     tink::internal::ssl_util
     gmock
@@ -260,7 +261,6 @@ tink_cc_test(
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::restricted_data
     tink::aead::aead_config
@@ -269,10 +269,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::subtle::xchacha20_poly1305_boringssl
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_keyset_handle
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
@@ -1275,7 +1272,6 @@ tink_cc_test(
     tink::internal::keyset_wrapper_store
     tink::internal::registry_impl
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::string_view
@@ -1284,13 +1280,9 @@ tink_cc_test(
     tink::core::input_stream
     tink::core::key
     tink::core::mac
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::mac::mac_wrapper
     tink::subtle::random
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto

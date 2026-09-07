@@ -79,6 +79,12 @@ class KeysetWrapperStore {
   template <class Q>
   absl::StatusOr<const KeysetWrapper<Q>*> Get() const;
 
+  // Gets the untyped KeysetWrapper that produces the primitive associated with
+  // `type_index`. Returns a NOT_FOUND status if no wrapper is registered for
+  // the given type.
+  absl::StatusOr<const UntypedKeysetWrapper*> Get(
+      std::type_index type_index) const;
+
   bool IsEmpty() const { return primitive_to_info_.empty(); }
 
  private:
@@ -93,9 +99,11 @@ class KeysetWrapperStore {
         : is_same_primitive_wrapping_(std::is_same_v<P, Q>),
           wrapper_type_index_(std::type_index(typeid(*wrapper))),
           q_type_index_(std::type_index(typeid(Q))) {
-      keyset_wrapper_ = absl::make_unique<KeysetWrapperImpl<P, Q>>(
+      auto typed_wrapper = absl::make_unique<KeysetWrapperImpl<P, Q>>(
           wrapper.get(), std::move(primitive_getter),
           std::move(primitive_getter_from_key));
+      keyset_wrapper_ = absl::make_unique<UntypedKeysetWrapperImpl<Q>>(
+          std::move(typed_wrapper));
       original_wrapper_ = std::move(wrapper);
     }
 
@@ -106,7 +114,14 @@ class KeysetWrapperStore {
             absl::StatusCode::kInternal,
             "RegistryImpl::KeysetWrapper() called with wrong type");
       }
-      return static_cast<KeysetWrapper<Q>*>(keyset_wrapper_.get());
+      auto* impl = static_cast<const UntypedKeysetWrapperImpl<Q>*>(
+          keyset_wrapper_.get());
+      return impl->GetTypedWrapper();
+    }
+
+    // Returns the untyped keyset wrapper for type-erased primitive creation.
+    absl::StatusOr<const UntypedKeysetWrapper*> GetUntyped() const {
+      return keyset_wrapper_.get();
     }
 
     // TODO(b/171021679): Deprecate this and upstream functions.
@@ -147,9 +162,8 @@ class KeysetWrapperStore {
     // The primitive_wrapper passed in. We use a shared_ptr because
     // unique_ptr<void> is invalid.
     std::shared_ptr<void> original_wrapper_;
-    // The keyset_wrapper_. We use a shared_ptr because unique_ptr<void> is
-    // invalid.
-    std::shared_ptr<void> keyset_wrapper_;
+    // The keyset_wrapper_.
+    std::shared_ptr<UntypedKeysetWrapper> keyset_wrapper_;
   };
 
   // Map from primitive type_index to Info.
@@ -205,6 +219,17 @@ absl::StatusOr<const KeysetWrapper<P>*> KeysetWrapperStore::Get() const {
         absl::StrCat("No wrapper registered for type ", typeid(P).name()));
   }
   return it->second.Get<P>();
+}
+
+inline absl::StatusOr<const UntypedKeysetWrapper*> KeysetWrapperStore::Get(
+    std::type_index type_index) const {
+  auto it = primitive_to_info_.find(type_index);
+  if (it == primitive_to_info_.end()) {
+    return absl::Status(
+        absl::StatusCode::kNotFound,
+        absl::StrCat("No wrapper registered for type ", type_index.name()));
+  }
+  return it->second.GetUntyped();
 }
 
 }  // namespace internal

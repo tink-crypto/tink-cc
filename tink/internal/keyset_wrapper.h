@@ -28,18 +28,36 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// A Keyset wrapper wraps a Tink Keyset into a set of primitives. This is a
-// Tink internal object, which is created from a PrimitiveWrapper.
+// Keyset wrappers wrap a Tink Keyset into a set of primitives. These are
+// internal Tink objects created from a PrimitiveWrapper<P, Q>.
 //
-// The KeysetWrapper is used because the only moment during compilation in which
-// the registry knows the input primitive type of a PrimitiveWrapper<P, Q> is
-// when RegisterPrimitiveWrapper(transforming_wrapper) is called. (There, the
-// compiler infers the template arguments. This means that all the work which
-// handles Q needs to be done in that compilation unit, and when creating the
-// primitive we cannot refer to Q.
+// In `PrimitiveWrapper<P, Q>`, `P` is the intermediate primitive created from
+// each individual key, and `Q` is the wrapped primitive returned to the caller.
 //
-// Hence, when registering the object, we first use type erasure to forget about
-// Q and create a subclass (KeysetWrapperImpl<P,Q>) of this object.
+// `KeysetWrapperImpl<P, Q>` implements `KeysetWrapper<Q>`, performing type
+// erasure on `P` when the wrapper is registered.
+//
+// `UntypedKeysetWrapperImpl<Primitive>` implements `UntypedKeysetWrapper`,
+// further type-erasing `Primitive` into `void*` so that keyset primitive
+// resolution and wrapping can be performed without template instantiation at
+// call sites.
+
+// A non-templated base interface for keyset wrappers that allows type-erased
+// execution of primitive wrapping without knowing the primitive type at compile
+// time.
+class UntypedKeysetWrapper {
+ public:
+  virtual ~UntypedKeysetWrapper() = default;
+
+  // Wraps a given `keyset` with annotations `annotations`, returning an untyped
+  // pointer to the wrapped primitive. Caller takes ownership of the pointer.
+  virtual absl::StatusOr<void*> WrapVoid(
+      const google::crypto::tink::Keyset& keyset,
+      const absl::flat_hash_map<std::string, std::string>& annotations)
+      const = 0;
+};
+
+// Strongly-typed interface for wrapping a Keyset into a specific primitive.
 template <typename Primitive>
 class KeysetWrapper {
  public:
@@ -50,6 +68,39 @@ class KeysetWrapper {
       const google::crypto::tink::Keyset& keyset,
       const absl::flat_hash_map<std::string, std::string>& annotations)
       const = 0;
+};
+
+// Adapter that wraps a typed `KeysetWrapper<Primitive>` into an
+// `UntypedKeysetWrapper` to enable type-erased primitive creation.
+template <typename Primitive>
+class UntypedKeysetWrapperImpl : public UntypedKeysetWrapper {
+ public:
+  explicit UntypedKeysetWrapperImpl(
+      std::unique_ptr<KeysetWrapper<Primitive>> keyset_wrapper)
+      : keyset_wrapper_(std::move(keyset_wrapper)) {}
+
+  // Wraps `keyset` into a primitive of type `Primitive` using the underlying
+  // typed wrapper and returns the allocated primitive as an untyped `void*`.
+  // The caller takes ownership of the returned pointer.
+  absl::StatusOr<void*> WrapVoid(
+      const google::crypto::tink::Keyset& keyset,
+      const absl::flat_hash_map<std::string, std::string>& annotations)
+      const override {
+    absl::StatusOr<std::unique_ptr<Primitive>> primitive =
+        keyset_wrapper_->Wrap(keyset, annotations);
+    if (!primitive.ok()) {
+      return primitive.status();
+    }
+    return static_cast<void*>(primitive->release());
+  }
+
+  // Returns a pointer to the underlying typed `KeysetWrapper<Primitive>`.
+  const KeysetWrapper<Primitive>* GetTypedWrapper() const {
+    return keyset_wrapper_.get();
+  }
+
+ private:
+  std::unique_ptr<KeysetWrapper<Primitive>> keyset_wrapper_;
 };
 
 }  // namespace internal

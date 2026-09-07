@@ -33,12 +33,11 @@
 #include "openssl/mldsa.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
-#include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -64,7 +63,6 @@
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto::tink::internal {
@@ -152,9 +150,6 @@ std::unique_ptr<SignaturePrivateKey> GenerateEcdsaPrivateKeyOrDie(
       }
       static const absl::NoDestructor<std::unique_ptr<SignaturePrivateKey>> key(
           []() {
-            absl::StatusOr<internal::EcKey> ec_key =
-                internal::NewEcKey(subtle::EllipticCurveType::NIST_P521);
-            ABSL_CHECK_OK(ec_key);
             absl::StatusOr<EcdsaParameters> parameters =
                 EcdsaParameters::Builder()
                     .SetCurveType(EcdsaParameters::CurveType::kNistP521)
@@ -165,16 +160,12 @@ std::unique_ptr<SignaturePrivateKey> GenerateEcdsaPrivateKeyOrDie(
                     .Build();
             ABSL_CHECK_OK(parameters);
             absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
-                *parameters,
-                EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
+                *parameters, P521Point(),
                 /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
             ABSL_CHECK_OK(public_key);
             absl::StatusOr<EcdsaPrivateKey> private_key =
-                EcdsaPrivateKey::Create(
-                    *public_key,
-                    RestrictedData(ec_key->priv,
-                                   InsecureSecretKeyAccess::Get()),
-                    GetPartialKeyAccess());
+                EcdsaPrivateKey::Create(*public_key, P521SecretValue(),
+                                        GetPartialKeyAccess());
             ABSL_CHECK_OK(private_key);
             return std::make_unique<EcdsaPrivateKey>(*private_key);
           }());

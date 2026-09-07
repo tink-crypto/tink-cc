@@ -203,15 +203,14 @@ tink_cc_library(
     absl::optional
     crypto
     tink::core::big_integer
-    tink::core::ec_point
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::ec_util
     tink::internal::rsa_util
     tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    tink::internal::testing::ec_test_vectors
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_private_key
     tink::signature::ecdsa_parameters
@@ -228,7 +227,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::rsa_ssa_pss_public_key
     tink::signature::signature_private_key
-    tink::subtle::common_enums
     tink::util::secret_data
   TESTONLY
   TAGS

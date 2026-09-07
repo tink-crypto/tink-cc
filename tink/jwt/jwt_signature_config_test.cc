@@ -16,6 +16,7 @@
 
 #include "tink/jwt/jwt_signature_config.h"
 
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -36,6 +37,7 @@
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
@@ -50,11 +52,9 @@
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
 #include "tink/registry.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
@@ -163,15 +163,14 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
   public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
@@ -194,7 +193,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
   ASSERT_THAT(parameters, IsOk());
 
   EcPoint public_point =
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+      EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
   absl::StatusOr<JwtEcdsaPublicKey> public_key =
       JwtEcdsaPublicKey::Builder()
           .SetParameters(*parameters)
@@ -225,20 +224,19 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
 
   google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
   public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.set_x(ec_key.pub_x);
+  public_key_proto.set_y(ec_key.pub_y);
 
   google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
@@ -261,7 +259,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
   ASSERT_THAT(parameters, IsOk());
 
   EcPoint public_point =
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+      EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
   absl::StatusOr<JwtEcdsaPublicKey> public_key =
       JwtEcdsaPublicKey::Builder()
           .SetParameters(*parameters)
@@ -271,7 +269,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());

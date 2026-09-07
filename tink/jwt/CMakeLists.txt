@@ -663,7 +663,6 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::registry
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::config::global_registry
     tink::internal::ec_util
@@ -672,9 +671,9 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto

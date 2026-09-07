@@ -25,11 +25,12 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/public_key_sign.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/util/enums.h"
-#include "tink/util/test_matchers.h"
+#include "tink/util/secret_data.h"
 #include "proto/ecdsa.pb.h"
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/tink.pb.h"
@@ -115,8 +116,31 @@ TEST(RawJwtEcdsaSignKeyManagerTest, CreateKeyValid) {
 }
 
 JwtEcdsaPrivateKey CreateValidEs256Key() {
-  JwtEcdsaKeyFormat format = CreateValidEs256KeyFormat();
-  return RawJwtEcdsaSignKeyManager().CreateKey(format).value();
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  JwtEcdsaPrivateKey key;
+  key.set_version(0);
+  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key->set_x(ec_key.pub_x);
+  public_key->set_y(ec_key.pub_y);
+  return key;
+}
+
+JwtEcdsaPrivateKey CreateValidEs384Key() {
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P384);
+  JwtEcdsaPrivateKey key;
+  key.set_version(0);
+  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtEcdsaAlgorithm::ES384);
+  public_key->set_x(ec_key.pub_x);
+  public_key->set_y(ec_key.pub_y);
+  return key;
 }
 
 TEST(RawJwtEcdsaSignKeyManagerTest, ValidateKey) {
@@ -175,21 +199,22 @@ TEST(RawJwtEcdsaSignKeyManagerTest, Create) {
 
 TEST(RawJwtEcdsaSignKeyManagerTest, CreateDifferentKey) {
   JwtEcdsaPrivateKey private_key = CreateValidEs256Key();
-  // Note: we create a new key in the next line.
+  // Note: we create a different key in the next line.
   absl::StatusOr<JwtEcdsaPublicKey> public_key =
-      RawJwtEcdsaSignKeyManager().GetPublicKey(CreateValidEs256Key());
+      RawJwtEcdsaSignKeyManager().GetPublicKey(CreateValidEs384Key());
+  ASSERT_THAT(public_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RawJwtEcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer, IsOk());
 
   internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P256);
+  ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P384);
   ec_key.pub_x = public_key->x();
   ec_key.pub_y = public_key->y();
   absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
       direct_verifier = subtle::EcdsaVerifyBoringSsl::New(
-          ec_key, Enums::ProtoToSubtle(HashType::SHA256),
+          ec_key, Enums::ProtoToSubtle(HashType::SHA384),
           subtle::EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(direct_verifier, IsOk());
 

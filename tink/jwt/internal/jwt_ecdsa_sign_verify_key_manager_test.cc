@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,8 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/ec_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
@@ -35,7 +38,8 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/util/test_matchers.h"
+#include "tink/subtle/common_enums.h"
+#include "tink/util/secret_data.h"
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/tink.pb.h"
 
@@ -136,15 +140,39 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
   EXPECT_THAT(JwtEcdsaVerifyKeyManager().ValidateKey(*public_key), Not(IsOk()));
 }
 
+JwtEcdsaPrivateKey CreateValidEs256PrivateKey() {
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  JwtEcdsaPrivateKey key;
+  key.set_version(0);
+  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key->set_x(ec_key.pub_x);
+  public_key->set_y(ec_key.pub_y);
+  return key;
+}
+
+JwtEcdsaPrivateKey CreateValidEs384PrivateKey() {
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P384);
+  JwtEcdsaPrivateKey key;
+  key.set_version(0);
+  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtEcdsaAlgorithm::ES384);
+  public_key->set_x(ec_key.pub_x);
+  public_key->set_y(ec_key.pub_y);
+  return key;
+}
+
 TEST(JwtEcdsaSignVerifyKeyManagerTest, GetAndUsePrimitive) {
-  JwtEcdsaKeyFormat key_format;
-  key_format.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  absl::StatusOr<JwtEcdsaPrivateKey> key =
-      JwtEcdsaSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
+  JwtEcdsaPrivateKey key = CreateValidEs256PrivateKey();
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign =
-      JwtEcdsaSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(*key);
+      JwtEcdsaSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(key);
   ASSERT_THAT(sign, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -162,7 +190,7 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, GetAndUsePrimitive) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify =
       JwtEcdsaVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
@@ -207,16 +235,12 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, GetAndUsePrimitive) {
 }
 
 TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
-  JwtEcdsaKeyFormat key_format;
-  key_format.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  absl::StatusOr<JwtEcdsaPrivateKey> key =
-      JwtEcdsaSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
-  key->mutable_public_key()->mutable_custom_kid()->set_value(
+  JwtEcdsaPrivateKey key = CreateValidEs256PrivateKey();
+  key.mutable_public_key()->mutable_custom_kid()->set_value(
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit");
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign =
-      JwtEcdsaSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(*key);
+      JwtEcdsaSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(key);
   ASSERT_THAT(sign, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -248,7 +272,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify =
       JwtEcdsaVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
@@ -267,11 +291,11 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
               Not(IsOk()));
 
   // Test that custom kid is verified: validation should fail with other kid.
-  key->mutable_public_key()->mutable_custom_kid()->set_value("other kid");
+  key.mutable_public_key()->mutable_custom_kid()->set_value("other kid");
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> other_verify =
       JwtEcdsaVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(other_verify, IsOk());
   EXPECT_THAT(
       (*other_verify)
@@ -281,18 +305,11 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
 }
 
 TEST(JwtEcdsaSignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
-  JwtEcdsaKeyFormat key_format;
-  key_format.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  absl::StatusOr<JwtEcdsaPrivateKey> key1 =
-      JwtEcdsaSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key1, IsOk());
-
-  absl::StatusOr<JwtEcdsaPrivateKey> key2 =
-      JwtEcdsaSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key2, IsOk());
+  JwtEcdsaPrivateKey key1 = CreateValidEs256PrivateKey();
+  JwtEcdsaPrivateKey key2 = CreateValidEs384PrivateKey();
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign1 =
-      JwtEcdsaSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(*key1);
+      JwtEcdsaSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(key1);
   ASSERT_THAT(sign1, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -307,7 +324,7 @@ TEST(JwtEcdsaSignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify2 =
       JwtEcdsaVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key2->public_key());
+          key2.public_key());
   ASSERT_THAT(verify2, IsOk());
 
   EXPECT_THAT(

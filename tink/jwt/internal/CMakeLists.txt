@@ -317,10 +317,11 @@ tink_cc_test(
     absl::statusor
     tink::core::public_key_sign
     tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::subtle::ecdsa_verify_boringssl
     tink::util::enums
-    tink::util::test_matchers
+    tink::util::secret_data
     tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
@@ -366,11 +367,11 @@ tink_cc_test(
     absl::statusor
     tink::core::public_key_verify
     tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::util::enums
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
@@ -422,6 +423,7 @@ tink_cc_test(
     tink::internal::bn_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::util::test_matchers
@@ -526,6 +528,7 @@ tink_cc_test(
     tink::internal::bn_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::test_matchers
@@ -710,10 +713,13 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
+    tink::internal::ec_util
+    tink::internal::testing::ec_test_vectors
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::test_matchers
+    tink::subtle::common_enums
+    tink::util::secret_data
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -875,6 +881,7 @@ tink_cc_test(
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
+    tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -947,6 +954,7 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto

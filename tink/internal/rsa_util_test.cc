@@ -567,10 +567,7 @@ TEST(RsaUtilTest, RsaPrivateKeyFixedSizeInputEqualsRsaPrivateKey) {
 }
 
 TEST(RsaUtilTest, CopiesRsaPublicKey) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPublicKey& public_key = keys->first;
+  const RsaPublicKey& public_key = GetValidKeyPair().first;
 
   absl::StatusOr<internal::SslUniquePtr<RSA>> rsa_result =
       RsaPublicKeyToRsa(public_key);

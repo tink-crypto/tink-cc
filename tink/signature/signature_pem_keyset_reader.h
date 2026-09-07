@@ -14,6 +14,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// NOLINTBEGIN
+// clang-format off
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
+
 #ifndef TINK_SIGNATURE_SIGNATURE_PEM_KEYSET_READER_H_
 #define TINK_SIGNATURE_SIGNATURE_PEM_KEYSET_READER_H_
 
@@ -225,3 +229,7 @@ class ABSL_DEPRECATED(
 }  // namespace crypto
 
 #endif  // TINK_SIGNATURE_SIGNATURE_PEM_KEYSET_READER_H_
+
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// clang-format on
+// NOLINTEND

@@ -13,6 +13,11 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+// NOLINTBEGIN
+// clang-format off
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
+
 #include "tink/signature/signature_pem_keyset_reader.h"
 
 #include <cstddef>
@@ -2062,3 +2067,7 @@ TEST(SignaturePemKeysetReaderTest, BuildKeysetHandleSuccess) {
 }  // namespace
 }  // namespace tink
 }  // namespace crypto
+
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+// clang-format on
+// NOLINTEND

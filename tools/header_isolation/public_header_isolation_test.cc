@@ -358,7 +358,6 @@
 #include "tink/signature/signature_config.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/signature/signature_parameters.h"
-#include "tink/signature/signature_pem_keyset_reader.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/signature/signature_public_key.h"
 #include "tink/signature/slh_dsa_parameters.h"

@@ -61,17 +61,14 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    tink::core::public_key_sign
-    tink::core::public_key_verify
+    absl::string_view
+    crypto
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::subtle::ecdsa_verify_boringssl
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(

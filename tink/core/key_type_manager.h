@@ -145,7 +145,15 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
   template <typename Primitive>
   absl::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
       const KeyProto& key) const {
-    return GetPrimitiveImpl<Primitive>(key);
+    if constexpr ((std::is_same_v<Primitive, Primitives> || ...)) {
+      return std::get<std::unique_ptr<PrimitiveFactory<Primitive>>>(
+                 primitive_factories_)
+          ->Create(key);
+    } else {
+      return absl::InvalidArgumentError(
+          absl::StrCat("No PrimitiveFactory was registered for type ",
+                       typeid(Primitive).name()));
+    }
   }
 
   // Returns the FIPS compatibility of this KeyTypeManager.
@@ -154,28 +162,6 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
   }
 
  private:
-  // TODO(C++17) replace with `constexpr if` after migration
-  template <typename Primitive>
-  typename std::enable_if<
-      !internal::OccursInTuple<Primitive, std::tuple<Primitives...>>::value,
-      absl::StatusOr<std::unique_ptr<Primitive>>>::type
-  GetPrimitiveImpl(const KeyProto& key) const {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("No PrimitiveFactory was registered for type ",
-                     typeid(Primitive).name()));
-  }
-  template <typename Primitive>
-  typename std::enable_if<
-      internal::OccursInTuple<Primitive, std::tuple<Primitives...>>::value,
-      absl::StatusOr<std::unique_ptr<Primitive>>>::type
-  GetPrimitiveImpl(const KeyProto& key) const {
-    // TODO(C++14) replace with std::get<T> after migration
-    constexpr size_t index =
-        internal::IndexOf<Primitive, List<Primitives...>>::value;
-    return std::get<index>(primitive_factories_)->Create(key);
-  }
-
   std::tuple<std::unique_ptr<PrimitiveFactory<Primitives>>...>
       primitive_factories_;
 };

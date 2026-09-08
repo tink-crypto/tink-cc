@@ -16,6 +16,8 @@
 
 #include "tink/core/template_util.h"
 
+#include <tuple>
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -27,6 +29,13 @@ class C2 {};
 class C3 {};
 class C4 {};
 }  // namespace
+
+static_assert(!OccursInTuple<C0, std::tuple<>>::value, "");
+static_assert(!OccursInTuple<C0, std::tuple<C1, C2, C3>>::value, "");
+static_assert(OccursInTuple<C0, std::tuple<C0>>::value, "");
+static_assert(OccursInTuple<C0, std::tuple<C0, C1, C2>>::value, "");
+static_assert(OccursInTuple<C0, std::tuple<C1, C0, C2>>::value, "");
+static_assert(OccursInTuple<C0, std::tuple<C1, C2, C0>>::value, "");
 
 static_assert(!HasDuplicates<>::value, "");
 static_assert(!HasDuplicates<C0>::value, "");

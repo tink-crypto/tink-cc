@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,10 +37,10 @@
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/util/test_matchers.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
 #include "proto/tink.pb.h"
 
@@ -159,15 +160,29 @@ TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, CreatePublicKeyAndValidate) {
               Not(IsOk()));
 }
 
+JwtRsaSsaPssPrivateKey CreateValidPs256PrivateKey(
+    const RsaSsaTestVector& test_vector = GetRsa2048BitVector1()) {
+  JwtRsaSsaPssPrivateKey key;
+  key.set_version(0);
+  key.set_d(test_vector.d);
+  key.set_p(test_vector.p);
+  key.set_q(test_vector.q);
+  key.set_dp(test_vector.dp);
+  key.set_dq(test_vector.dq);
+  key.set_crt(test_vector.q_inv);
+  JwtRsaSsaPssPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtRsaSsaPssAlgorithm::PS256);
+  public_key->set_n(test_vector.n);
+  public_key->set_e(test_vector.e);
+  return key;
+}
+
 TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, GetAndUsePrimitives) {
-  JwtRsaSsaPssKeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPssAlgorithm::PS256, 2048, RSA_F4);
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key =
-      JwtRsaSsaPssSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
+  JwtRsaSsaPssPrivateKey key = CreateValidPs256PrivateKey();
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign =
-      JwtRsaSsaPssSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(*key);
+      JwtRsaSsaPssSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(key);
   ASSERT_THAT(sign, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -185,7 +200,7 @@ TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, GetAndUsePrimitives) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify =
       JwtRsaSsaPssVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
@@ -229,17 +244,13 @@ TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, GetAndUsePrimitives) {
       Not(IsOk()));
 }
 
-TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
-  JwtRsaSsaPssKeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPssAlgorithm::PS256, 2048, RSA_F4);
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key =
-      JwtRsaSsaPssSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
-  key->mutable_public_key()->mutable_custom_kid()->set_value(
+TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
+  JwtRsaSsaPssPrivateKey key = CreateValidPs256PrivateKey();
+  key.mutable_public_key()->mutable_custom_kid()->set_value(
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit");
 
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign =
-      JwtRsaSsaPssSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(*key);
+      JwtRsaSsaPssSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(key);
   ASSERT_THAT(sign, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -271,7 +282,7 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify =
       JwtRsaSsaPssVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(verify, IsOk());
 
   absl::StatusOr<VerifiedJwt> verified_jwt = (*verify)->VerifyAndDecodeWithKid(
@@ -290,11 +301,11 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
               Not(IsOk()));
 
   // Test that custom kid is verified: validation should fail with other kid.
-  key->mutable_public_key()->mutable_custom_kid()->set_value("other kid");
+  key.mutable_public_key()->mutable_custom_kid()->set_value("other kid");
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> other_verify =
       JwtRsaSsaPssVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key->public_key());
+          key.public_key());
   ASSERT_THAT(other_verify, IsOk());
   EXPECT_THAT(
       (*other_verify)
@@ -304,18 +315,13 @@ TEST(JwtRsaSsaPkcs1SignVerifyKeyManagerTest, GetAndUsePrimitivesWithCustomKid) {
 }
 
 TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
-  JwtRsaSsaPssKeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPssAlgorithm::PS256, 2048, RSA_F4);
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key1 =
-      JwtRsaSsaPssSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key1, IsOk());
+  JwtRsaSsaPssPrivateKey key1 =
+      CreateValidPs256PrivateKey(GetRsa2048BitVector1());
+  JwtRsaSsaPssPrivateKey key2 =
+      CreateValidPs256PrivateKey(GetRsa2048BitVector2());
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key2 =
-      JwtRsaSsaPssSignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key2, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> sign1 =
-      JwtRsaSsaPssSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(
-          *key1);
+      JwtRsaSsaPssSignKeyManager().GetPrimitive<JwtPublicKeySignInternal>(key1);
   ASSERT_THAT(sign1, IsOk());
 
   absl::StatusOr<RawJwt> raw_jwt =
@@ -331,7 +337,7 @@ TEST(JwtRsaSsaPssSignVerifyKeyManagerTest, VerifyFailsWithDifferentKey) {
   ASSERT_THAT(validator, IsOk());
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verify2 =
       JwtRsaSsaPssVerifyKeyManager().GetPrimitive<JwtPublicKeyVerifyInternal>(
-          key2->public_key());
+          key2.public_key());
   ASSERT_THAT(verify2, IsOk());
 
   ASSERT_THAT(

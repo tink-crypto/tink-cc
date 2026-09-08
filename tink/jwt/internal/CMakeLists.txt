@@ -426,7 +426,6 @@ tink_cc_test(
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
@@ -531,7 +530,6 @@ tink_cc_test(
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -955,7 +953,6 @@ tink_cc_test(
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
-    tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )

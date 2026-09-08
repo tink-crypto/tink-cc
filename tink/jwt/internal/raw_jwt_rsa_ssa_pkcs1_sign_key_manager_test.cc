@@ -29,10 +29,10 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #include "tink/public_key_sign.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
-#include "tink/util/test_matchers.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
@@ -218,36 +218,50 @@ TEST(JwtRsaSsaPkcs1SignKeyManagerTest, CreateKeyAlwaysNewRsaPair) {
   EXPECT_THAT(keys, SizeIs(2 * num_generated_keys));
 }
 
+JwtRsaSsaPkcs1PrivateKey CreateValidRs256PrivateKey(
+    const jwt_internal::RsaSsaTestVector& test_vector =
+        jwt_internal::GetRsa2048BitVector1()) {
+  JwtRsaSsaPkcs1PrivateKey key;
+  key.set_version(0);
+  key.set_d(test_vector.d);
+  key.set_p(test_vector.p);
+  key.set_q(test_vector.q);
+  key.set_dp(test_vector.dp);
+  key.set_dq(test_vector.dq);
+  key.set_crt(test_vector.q_inv);
+  JwtRsaSsaPkcs1PublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(JwtRsaSsaPkcs1Algorithm::RS256);
+  public_key->set_n(test_vector.n);
+  public_key->set_e(test_vector.e);
+  return key;
+}
+
 TEST(JwtRsaSsaPkcs1SignKeyManagerTest, GetPublicKey) {
-  JwtRsaSsaPkcs1KeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPkcs1Algorithm::RS256, 2048, RSA_F4);
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> key =
-      RawJwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
+  JwtRsaSsaPkcs1PrivateKey key =
+      CreateValidRs256PrivateKey(jwt_internal::GetRsa3072BitVector());
   absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
-      RawJwtRsaSsaPkcs1SignKeyManager().GetPublicKey(*key);
+      RawJwtRsaSsaPkcs1SignKeyManager().GetPublicKey(key);
   ASSERT_THAT(public_key, IsOk());
-  EXPECT_THAT(public_key->version(), Eq(key->public_key().version()));
-  EXPECT_THAT(public_key->algorithm(), Eq(key->public_key().algorithm()));
-  EXPECT_THAT(public_key->n(), Eq(key->public_key().n()));
-  EXPECT_THAT(public_key->e(), Eq(key->public_key().e()));
+  EXPECT_THAT(public_key->version(), Eq(key.public_key().version()));
+  EXPECT_THAT(public_key->algorithm(), Eq(key.public_key().algorithm()));
+  EXPECT_THAT(public_key->n(), Eq(key.public_key().n()));
+  EXPECT_THAT(public_key->e(), Eq(key.public_key().e()));
 }
 
 TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
-  JwtRsaSsaPkcs1KeyFormat key_format =
-      CreateKeyFormat(JwtRsaSsaPkcs1Algorithm::RS256, 3072, RSA_F4);
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> key =
-      RawJwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(key, IsOk());
+  JwtRsaSsaPkcs1PrivateKey key =
+      CreateValidRs256PrivateKey(jwt_internal::GetRsa3072BitVector());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      RawJwtRsaSsaPkcs1SignKeyManager().GetPrimitive<PublicKeySign>(*key);
+      RawJwtRsaSsaPkcs1SignKeyManager().GetPrimitive<PublicKeySign>(key);
   ASSERT_THAT(signer, IsOk());
 
+  internal::RsaSsaPkcs1Params params;
+  params.hash_type = subtle::HashType::SHA256;
   absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> direct_verifier =
       subtle::RsaSsaPkcs1VerifyBoringSsl::New(
-          {key->public_key().n(), key->public_key().e()},
-          {subtle::HashType::SHA256});
+          {key.public_key().n(), key.public_key().e()}, params);
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";

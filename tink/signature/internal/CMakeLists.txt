@@ -25,7 +25,6 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums
-    tink::subtle::subtle_util_boringssl
     tink::util::errors
     tink::util::status
     tink::util::statusor

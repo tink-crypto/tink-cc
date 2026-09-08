@@ -42,7 +42,6 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/errors.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -110,7 +109,7 @@ EcdsaRawSignBoringSsl::New(internal::SslUniquePtr<EC_KEY> key,
 
 // static
 absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
-EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
+EcdsaRawSignBoringSsl::New(const internal::EcKey& ec_key,
                            subtle::EcdsaSignatureEncoding encoding) {
   ABSL_RETURN_IF_ERROR(
       internal::CheckFipsCompatibility<EcdsaRawSignBoringSsl>());

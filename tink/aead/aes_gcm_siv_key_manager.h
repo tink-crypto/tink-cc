@@ -24,6 +24,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "tink/aead.h"
+#include "tink/aead/cord_aead.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/subtle/random.h"
@@ -41,14 +42,21 @@ namespace tink {
 class AesGcmSivKeyManager
     : public KeyTypeManager<google::crypto::tink::AesGcmSivKey,
                             google::crypto::tink::AesGcmSivKeyFormat,
-                            List<Aead>> {
+                            List<Aead, CordAead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
     absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::AesGcmSivKey& key) const override;
   };
+  class CordAeadFactory : public PrimitiveFactory<CordAead> {
+    absl::StatusOr<std::unique_ptr<CordAead>> Create(
+        const google::crypto::tink::AesGcmSivKey& key) const override;
+  };
 
-  AesGcmSivKeyManager() : KeyTypeManager(std::make_unique<AeadFactory>()) {}
+  AesGcmSivKeyManager()
+      : KeyTypeManager(
+            std::make_unique<AesGcmSivKeyManager::AeadFactory>(),
+            std::make_unique<AesGcmSivKeyManager::CordAeadFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

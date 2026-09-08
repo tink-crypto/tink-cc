@@ -179,12 +179,19 @@ tink_cc_library(
     aes_gcm_siv_key_manager.cc
     aes_gcm_siv_key_manager.h
   DEPS
+    tink::aead::aes_gcm_siv_key
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::cord_aead
     absl::memory
     absl::statusor
     absl::strings
     tink::core::aead
     tink::core::key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::internal::cord_aes_gcm_siv_boringssl
     tink::subtle::aes_gcm_siv_boringssl
     tink::subtle::random
     tink::util::constants
@@ -1057,16 +1064,28 @@ tink_cc_test(
     aes_gcm_siv_key_manager_test.cc
   DEPS
     tink::aead::aead_config
+    tink::aead::aes_gcm_siv_key
     tink::aead::aes_gcm_siv_key_manager
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::cord_aead
+    tink::aead::cord_aead_wrapper
     gmock
     absl::status
     absl::status_matchers
+    absl::strings
+    absl::cord
     tink::core::aead
+    tink::core::insecure_secret_key_access
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::registry
+    tink::core::restricted_data
+    tink::aead::internal::cord_aes_gcm_siv_boringssl
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::config::global_registry
+    tink::internal::fips_utils
     tink::internal::ssl_util
     tink::subtle::aead_test_util
     tink::subtle::aes_gcm_siv_boringssl

@@ -19,20 +19,35 @@
 #include <stdint.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/cord_test_helpers.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
+#include "tink/aead/aes_gcm_siv_key.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/cord_aead.h"
+#include "tink/aead/cord_aead_wrapper.h"
+#include "tink/aead/internal/cord_aes_gcm_siv_boringssl.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/config/global_registry.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/partial_key_access.h"
+#include "tink/registry.h"
+#include "tink/restricted_data.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
 #include "tink/util/secret_data.h"
@@ -58,6 +73,8 @@ TEST(AesGcmSivKeyManagerTest, Basics) {
               Eq("type.googleapis.com/google.crypto.tink.AesGcmSivKey"));
   EXPECT_THAT(AesGcmSivKeyManager().key_material_type(),
               Eq(google::crypto::tink::KeyData::SYMMETRIC));
+  EXPECT_THAT(AesGcmSivKeyManager().FipsStatus(),
+              Eq(internal::FipsCompatibility::kNotFips));
 }
 
 TEST(AesGcmSivKeyManagerTest, ValidateEmptyKey) {
@@ -207,6 +224,65 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
               IsOk());
 }
 
+TEST(AesGcmSivKeyManagerTest, CreateCordAeadFailsWithOpenSsl) {
+  if (internal::IsBoringSsl()) {
+    GTEST_SKIP() << "OpenSSL-only test, skipping because Tink uses BoringSSL";
+  }
+  AesGcmSivKeyFormat format;
+  format.set_key_size(32);
+  absl::StatusOr<AesGcmSivKeyProto> key =
+      AesGcmSivKeyManager().CreateKey(format);
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<CordAead>(*key).status(),
+              StatusIs(absl::StatusCode::kUnimplemented));
+}
+
+TEST(AesGcmSivKeyManagerTest, CreateCordAeadFailsWithInvalidKeySize) {
+  for (int invalid_size : {0, 1, 15, 17, 24, 31, 33}) {
+    AesGcmSivKeyProto key;
+    key.set_version(0);
+    key.set_key_value(subtle::Random::GetRandomBytes(invalid_size));
+    EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<CordAead>(key).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
+TEST(AesGcmSivKeyManagerTest, CreateCordAeadSucceedsWithBoringSsl) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "AES-GCM-SIV is not supported when OpenSSL is used";
+  }
+  for (int key_size : {16, 32}) {
+    AesGcmSivKeyFormat format;
+    format.set_key_size(key_size);
+    absl::StatusOr<AesGcmSivKeyProto> key =
+        AesGcmSivKeyManager().CreateKey(format);
+    ASSERT_THAT(key, IsOk());
+
+    absl::StatusOr<std::unique_ptr<CordAead>> aead =
+        AesGcmSivKeyManager().GetPrimitive<CordAead>(*key);
+    ASSERT_THAT(aead, IsOk());
+
+    absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+        key->key_value().size(), AesGcmSivParameters::Variant::kNoPrefix);
+    ASSERT_THAT(params, IsOk());
+    absl::StatusOr<crypto::tink::AesGcmSivKey> siv_key =
+        crypto::tink::AesGcmSivKey::Create(
+            *params,
+            RestrictedData(key->key_value(), InsecureSecretKeyAccess::Get()),
+            /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+    ASSERT_THAT(siv_key, IsOk());
+
+    absl::StatusOr<std::unique_ptr<CordAead>> boring_ssl_aead =
+        internal::NewCordAesGcmSivBoringSsl(*siv_key);
+    ASSERT_THAT(boring_ssl_aead, IsOk());
+    EXPECT_THAT(EncryptThenDecrypt(**aead, **boring_ssl_aead, "message", "aad"),
+                IsOk());
+    EXPECT_THAT(EncryptThenDecrypt(**boring_ssl_aead, **aead, "message", "aad"),
+                IsOk());
+  }
+}
+
 using AesGcmSivKeyManagerTestVectorTest =
     testing::TestWithParam<internal::AeadTestVector>;
 
@@ -232,6 +308,56 @@ TEST_P(AesGcmSivKeyManagerTestVectorTest, DecryptAead) {
       (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data);
   ASSERT_THAT(plaintext, IsOk());
   EXPECT_THAT(*plaintext, Eq(test_vector.plaintext));
+}
+
+TEST_P(AesGcmSivKeyManagerTestVectorTest, DecryptCordAead) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "AES-GCM-SIV is not supported when OpenSSL is used";
+  }
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(
+      Registry::RegisterPrimitiveWrapper(std::make_unique<CordAeadWrapper>()),
+      IsOk());
+  const internal::AeadTestVector& test_vector = GetParam();
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.aead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<CordAead>> cord_aead =
+      handle->GetPrimitive<CordAead>(ConfigGlobalRegistry());
+  ASSERT_THAT(cord_aead, IsOk());
+
+  absl::StatusOr<absl::Cord> plaintext =
+      (*cord_aead)
+          ->Decrypt(absl::Cord(test_vector.ciphertext),
+                    absl::Cord(test_vector.associated_data));
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_THAT(*plaintext, Eq(absl::Cord(test_vector.plaintext)));
+
+  absl::Cord fragmented_ciphertext =
+      test_vector.ciphertext.empty()
+          ? absl::Cord()
+          : absl::MakeFragmentedCord(
+                absl::StrSplit(test_vector.ciphertext, absl::ByLength(3)));
+  absl::Cord fragmented_aad =
+      test_vector.associated_data.empty()
+          ? absl::Cord()
+          : absl::MakeFragmentedCord(
+                absl::StrSplit(test_vector.associated_data, absl::ByLength(3)));
+  absl::StatusOr<absl::Cord> plaintext_fragmented =
+      (*cord_aead)->Decrypt(fragmented_ciphertext, fragmented_aad);
+  ASSERT_THAT(plaintext_fragmented, IsOk());
+  EXPECT_THAT(*plaintext_fragmented, Eq(absl::Cord(test_vector.plaintext)));
+
+  EXPECT_THAT((*cord_aead)
+                  ->Decrypt(absl::Cord(test_vector.ciphertext),
+                            absl::Cord(absl::StrCat(test_vector.associated_data,
+                                                    "invalid"))),
+              Not(IsOk()));
 }
 
 INSTANTIATE_TEST_SUITE_P(

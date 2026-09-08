@@ -32,7 +32,9 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/opensslv.h"
-#ifdef OPENSSL_IS_BORINGSSL
+#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS) && \
+    !defined(BORINGSSL_FIPS) &&                                      \
+    (!defined(BORINGSSL_API_VERSION) || BORINGSSL_API_VERSION >= 42)
 #include "openssl/aead.h"
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
@@ -308,7 +310,7 @@ absl::StatusOr<std::unique_ptr<CordAead>> NewCordAesGcmSivBoringSsl(
 }  // namespace tink
 }  // namespace crypto
 
-#else  // !OPENSSL_IS_BORINGSSL
+#else
 
 namespace crypto {
 namespace tink {
@@ -316,18 +318,22 @@ namespace internal {
 
 absl::StatusOr<std::unique_ptr<CordAead>> NewCordAesGcmSivBoringSsl(
     const SecretData& key, absl::string_view output_prefix) {
-  return absl::Status(absl::StatusCode::kUnimplemented,
-                      "AES-GCM-SIV is unimplemented for OpenSSL");
+  return absl::Status(
+      absl::StatusCode::kUnimplemented,
+      "AES-GCM-SIV is not supported when using OpenSSL, BoringCrypto FIPS, or "
+      "an older BoringSSL version");
 }
 
 absl::StatusOr<std::unique_ptr<CordAead>> NewCordAesGcmSivBoringSsl(
     const AesGcmSivKey& key) {
-  return absl::Status(absl::StatusCode::kUnimplemented,
-                      "AES-GCM-SIV is unimplemented for OpenSSL");
+  return absl::Status(
+      absl::StatusCode::kUnimplemented,
+      "AES-GCM-SIV is not supported when using OpenSSL, BoringCrypto FIPS, or "
+      "an older BoringSSL version");
 }
 
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // OPENSSL_IS_BORINGSSL
+#endif

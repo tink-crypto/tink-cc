@@ -786,24 +786,39 @@ tink_cc_test(
     protobuf::libprotobuf
     gmock
     absl::flat_hash_map
-    absl::memory
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::core::cleartext_keyset_handle
-    tink::core::keyset_manager
-    tink::core::primitive_set
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::partial_key_access
     tink::core::registry
+    tink::core::restricted_data
     tink::config::global_registry
+    tink::internal::ec_util
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::mutable_serialization_registry
+    tink::internal::primitive_set
     tink::internal::registry_impl
+    tink::internal::testing::ec_test_vectors
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_ecdsa_proto_serialization
+    tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_signature_config_2026
+    tink::jwt::jwt_signature_key_gen_config_2026
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::signature::failing_signature
+    tink::subtle::common_enums
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_ecdsa_cc_proto

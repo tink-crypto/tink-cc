@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_scalar_fields.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -21,10 +21,8 @@
 
 #include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/proto_parser_field.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"

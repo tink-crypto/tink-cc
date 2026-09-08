@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_scalar_fields.h"
 
 #include <cstdint>
 #include <string>

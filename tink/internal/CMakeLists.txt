@@ -1919,30 +1919,46 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME proto_parser_fields
+  NAME proto_parser_field
   SRCS
-    proto_parser_fields.cc
-    proto_parser_fields.h
+    proto_parser_field.h
   DEPS
-    tink::internal::proto_parser_options
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     absl::core_headers
+)
+
+tink_cc_library(
+  NAME proto_parser_scalar_fields
+  SRCS
+    proto_parser_scalar_fields.cc
+    proto_parser_scalar_fields.h
+  DEPS
+    tink::internal::proto_parser_field
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
     absl::no_destructor
     absl::absl_check
-    absl::status
-    absl::statusor
-    absl::strings
     absl::string_view
 )
 
-tink_cc_test(
-  NAME proto_parser_fields_test
+tink_cc_library(
+  NAME proto_parser_fields
   SRCS
-    proto_parser_fields_test.cc
+    proto_parser_fields.h
   DEPS
-    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_field
+    tink::internal::proto_parser_scalar_fields
+)
+
+tink_cc_test(
+  NAME proto_parser_scalar_fields_test
+  SRCS
+    proto_parser_scalar_fields_test.cc
+  DEPS
     tink::internal::proto_parser_options
+    tink::internal::proto_parser_scalar_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     gmock

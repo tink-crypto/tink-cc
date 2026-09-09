@@ -47,12 +47,11 @@ class Field {
 
   // Consumes the serialized data and parses it into the field. Returns true if
   // the parsing was successful.
-  virtual ABSL_MUST_USE_RESULT bool ConsumeIntoMember(
-      ParsingState& serialized) = 0;
+  [[nodiscard]] virtual bool ConsumeIntoMember(ParsingState& serialized) = 0;
 
   // Serializes the field into the given serialization state. Returns true if
   // the serialization was successful.
-  virtual ABSL_MUST_USE_RESULT bool SerializeWithTagInto(
+  [[nodiscard]] virtual bool SerializeWithTagInto(
       SerializationState& out) const = 0;
 
   // Returns the size of the serialized field, including the tag.

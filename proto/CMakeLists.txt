@@ -223,3 +223,16 @@ tink_target_group(
     tink::proto::config_cc_proto
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME tink_cc_tinkpb
+  SRCS tink.tinkpb.h
+  DEPS
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_scalar_fields
+    tink::internal::proto_parser_secret_data_field
+    absl::string_view
+)

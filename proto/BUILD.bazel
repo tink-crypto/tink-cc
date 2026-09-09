@@ -1,5 +1,6 @@
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 package(default_visibility = ["//:__subpackages__"])
 
@@ -479,5 +480,19 @@ filegroup(
     srcs = [
         ":config_cc_proto",
         ":tink_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "tink_cc_tinkpb",
+    hdrs = ["tink.tinkpb.h"],
+    deps = [
+        "//tink/internal:proto_parser_enum_field",
+        "//tink/internal:proto_parser_field",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
+        "//tink/internal:proto_parser_scalar_fields",
+        "//tink/internal:proto_parser_secret_data_field",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )

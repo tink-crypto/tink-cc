@@ -93,6 +93,7 @@ TEST(Aead2026Test, KeyManagers) {
 using Aead2026KeyTypesTest = TestWithParam<KeyTemplate>;
 using Aead2026BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
 using CordAead2026KeyTypesTest = TestWithParam<KeyTemplate>;
+using CordAead2026BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
 
 // For key type support when using BoringSSL or OpenSSL, see
 // https://developers.google.com/tink/supported-key-types#aead.
@@ -109,6 +110,10 @@ INSTANTIATE_TEST_SUITE_P(CordAead2026KeyTypesTestSuite,
                          Values(AeadKeyTemplates::Aes256Gcm(),
                                 AeadKeyTemplates::XAes256Gcm160BitNonce(),
                                 AeadKeyTemplates::XAes256Gcm192BitNonce()));
+INSTANTIATE_TEST_SUITE_P(CordAead2026BoringSslKeyTypesTestSuite,
+                         CordAead2026BoringSslKeyTypesTest,
+                         Values(AeadKeyTemplates::Aes128GcmSiv(),
+                                AeadKeyTemplates::Aes256GcmSiv()));
 
 TEST_P(Aead2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
@@ -165,6 +170,33 @@ TEST_P(CordAead2026KeyTypesTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<CordAead>> aead =
+      (*handle)->GetPrimitive<CordAead>(config);
+  ASSERT_THAT(aead, IsOk());
+
+  absl::Cord plaintext("plaintext");
+  absl::Cord aad("ad");
+  absl::StatusOr<absl::Cord> ciphertext = (*aead)->Encrypt(plaintext, aad);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT((*aead)->Decrypt(*ciphertext, aad), IsOkAndHolds(plaintext));
+}
+
+TEST_P(CordAead2026BoringSslKeyTypesTest, GetPrimitive) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddAead2026(config), IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNew(GetParam(), key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+
+  // Fails if using OpenSSL.
+  if (!IsBoringSsl()) {
+    EXPECT_THAT((*handle)->GetPrimitive<CordAead>(config), Not(IsOk()));
+    return;
+  }
 
   absl::StatusOr<std::unique_ptr<CordAead>> aead =
       (*handle)->GetPrimitive<CordAead>(config);

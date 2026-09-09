@@ -461,33 +461,27 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
-    tink::streamingaead::key_gen_config_v0
+    tink::streamingaead::key_gen_config_2026
     tink::streamingaead::streaming_aead_config
     tink::streamingaead::streaming_aead_key_templates
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
-    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
-    tink::core::partial_key_access
-    tink::core::primitive_set
     tink::core::registry
-    tink::core::restricted_data
     tink::core::streaming_aead
     tink::config::global_registry
     tink::config::tink_fips
     tink::internal::fips_utils
     tink::internal::legacy_proto_key
     tink::internal::mutable_serialization_registry
-    tink::internal::proto_key_serialization
+    tink::internal::primitive_set
     tink::internal::proto_parameters_serialization
-    tink::subtle::random
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
+    tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
+    tink::streamingaead::internal::testing::aes_gcm_hkdf_streaming_test_vectors
+    tink::streamingaead::internal::testing::streamingaead_test_vector
     tink::util::test_util
     tink::proto::tink_cc_proto
 )

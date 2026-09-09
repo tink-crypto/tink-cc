@@ -17,17 +17,23 @@
 #include "tink/signature/internal/slh_dsa_sign_key_manager.h"
 
 #include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/key_manager.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/signature/internal/slh_dsa_verify_key_manager.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
 #include "tink/signature/signature_config.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/test_matchers.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_private_key.h"
 #include "proto/slh_dsa.pb.h"
 
 namespace crypto {
@@ -37,7 +43,6 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::testing::Eq;
-using ::testing::NotNull;
 
 class SlhDsaSignKeyManagerTest : public ::testing::Test {
  protected:
@@ -49,19 +54,32 @@ class SlhDsaSignKeyManagerTest : public ::testing::Test {
   std::unique_ptr<KeyManager<PublicKeySign>> key_manager_;
 };
 
-google::crypto::tink::SlhDsaKeyFormat CreateValidKeyFormat() {
-  google::crypto::tink::SlhDsaKeyFormat format;
-  format.set_version(0);
-  format.mutable_params()->set_key_size(64);
-  format.mutable_params()->set_hash_type(google::crypto::tink::SHA2);
-  format.mutable_params()->set_sig_type(google::crypto::tink::SMALL_SIGNATURE);
-  return format;
-}
+google::crypto::tink::SlhDsaPrivateKey CreateValidPrivateKeyProto() {
+  const SignatureTestVector& test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kNoPrefix);
+  const auto& slh_dsa_private_key =
+      dynamic_cast<const SlhDsaPrivateKey&>(*test_vector.signature_private_key);
 
-absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> CreateValidKey(
-    const KeyManager<PublicKeySign>& key_manager) {
-  auto format = CreateValidKeyFormat();
-  return key_manager.get_key_factory().NewKey(format);
+  google::crypto::tink::SlhDsaPrivateKey proto;
+  proto.set_version(0);
+  proto.set_key_value(
+      slh_dsa_private_key.GetPrivateKeyBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
+  auto* public_key_proto = proto.mutable_public_key();
+  public_key_proto->set_version(0);
+  public_key_proto->set_key_value(
+      slh_dsa_private_key.GetPublicKey().GetPublicKeyBytes(
+          GetPartialKeyAccess()));
+  public_key_proto->mutable_params()->set_key_size(
+      slh_dsa_private_key.GetPublicKey()
+          .GetParameters()
+          .GetPrivateKeySizeInBytes());
+  public_key_proto->mutable_params()->set_hash_type(google::crypto::tink::SHA2);
+  public_key_proto->mutable_params()->set_sig_type(
+      google::crypto::tink::SMALL_SIGNATURE);
+  return proto;
 }
 
 TEST_F(SlhDsaSignKeyManagerTest, Basic) {
@@ -79,18 +97,14 @@ TEST_F(SlhDsaSignKeyManagerTest, Basic) {
 TEST_F(SlhDsaSignKeyManagerTest, GetPrimitive) {
   auto public_key_manager = MakeSlhDsaVerifyKeyManager();
 
-  auto private_key = CreateValidKey(*key_manager_);
-  ASSERT_THAT(private_key, IsOk());
-  auto signer = key_manager_->GetPrimitive(**private_key);
+  google::crypto::tink::SlhDsaPrivateKey private_key =
+      CreateValidPrivateKeyProto();
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      key_manager_->GetPrimitive(private_key);
   ASSERT_THAT(signer, IsOk());
 
-  const google::crypto::tink::SlhDsaPrivateKey* slh_dsa_private_key =
-      portable_proto::DynamicCastMessage<
-          google::crypto::tink::SlhDsaPrivateKey>(private_key->get());
-  ASSERT_THAT(slh_dsa_private_key, NotNull());
-
-  auto verifier =
-      public_key_manager->GetPrimitive(slh_dsa_private_key->public_key());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      public_key_manager->GetPrimitive(private_key.public_key());
   ASSERT_THAT(verifier, IsOk());
 
   auto signature = (*signer)->Sign("message");

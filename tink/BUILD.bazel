@@ -1156,6 +1156,7 @@ cc_test(
     deps = [
         ":binary_keyset_reader",
         ":cleartext_keyset_handle",
+        ":insecure_secret_key_access_testonly",
         ":keyset_handle",
         "//proto:tink_cc_proto",
         "//tink/util:status",
@@ -1165,6 +1166,7 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
+        "@protobuf",
     ],
 )
 

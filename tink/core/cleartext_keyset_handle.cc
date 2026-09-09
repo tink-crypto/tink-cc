@@ -85,6 +85,20 @@ absl::Status CleartextKeysetHandle::Write(KeysetWriter* writer,
 }
 
 // static
+absl::StatusOr<KeysetHandle> CleartextKeysetHandle::GetKeysetHandleOrError(
+    const Keyset& keyset, SecretKeyAccessToken token) {
+  // Note: this can not error yet, but will later. Do not rely on this fact.
+  return KeysetHandle(util::SecretProto<Keyset>(keyset));
+}
+
+// static
+absl::StatusOr<Keyset> CleartextKeysetHandle::GetKeysetOrError(
+    const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
+  // Note: this can not error yet, but will later. Do not rely on this fact.
+  return keyset_handle.get_keyset();
+}
+
+// static
 std::unique_ptr<KeysetHandle> CleartextKeysetHandle::GetKeysetHandle(
     const Keyset& keyset) {
   std::unique_ptr<KeysetHandle> handle =

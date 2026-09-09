@@ -19,13 +19,16 @@
 #include <istream>
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "google/protobuf/util/message_differencer.h"
 #include "tink/binary_keyset_reader.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/keyset_handle.h"
 #include "tink/util/status.h"
 #include "tink/util/test_keyset_handle.h"
@@ -44,6 +47,7 @@ using ::crypto::tink::test::AddTinkKey;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
+using ::google::protobuf::util::MessageDifferencer;
 
 class CleartextKeysetHandleTest : public ::testing::Test {
  protected:
@@ -98,6 +102,89 @@ TEST_F(CleartextKeysetHandleTest, testWrite) {
   // Null writer.
   EXPECT_NE(CleartextKeysetHandle::Write(nullptr, *(handle.get())),
             absl::OkStatus());
+}
+
+TEST_F(CleartextKeysetHandleTest, GetKeysetHandleOrError) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  absl::StatusOr<KeysetHandle> handle =
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          keyset, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(handle, IsOk());
+  std::string differences;
+  MessageDifferencer message_differencer;
+  message_differencer.ReportDifferencesToString(&differences);
+  EXPECT_TRUE(message_differencer.Compare(
+      CleartextKeysetHandle::GetKeyset(*handle), keyset))
+      << differences;
+}
+
+TEST_F(CleartextKeysetHandleTest, GetKeysetOrError) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  absl::StatusOr<KeysetHandle> handle =
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          keyset, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(handle, IsOk());
+  absl::StatusOr<Keyset> got_keyset = CleartextKeysetHandle::GetKeysetOrError(
+      *handle, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(got_keyset, IsOk());
+  std::string differences;
+  MessageDifferencer message_differencer;
+  message_differencer.ReportDifferencesToString(&differences);
+  EXPECT_TRUE(message_differencer.Compare(*got_keyset, keyset)) << differences;
+}
+
+TEST_F(CleartextKeysetHandleTest, GetKeysetHandle) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  std::unique_ptr<KeysetHandle> handle =
+      CleartextKeysetHandle::GetKeysetHandle(keyset);
+  ASSERT_NE(handle, nullptr);
+  std::string differences;
+  MessageDifferencer message_differencer;
+  message_differencer.ReportDifferencesToString(&differences);
+  EXPECT_TRUE(message_differencer.Compare(
+      CleartextKeysetHandle::GetKeyset(*handle), keyset))
+      << differences;
+}
+
+TEST_F(CleartextKeysetHandleTest, GetKeyset) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  absl::StatusOr<KeysetHandle> handle =
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          keyset, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(handle, IsOk());
+  Keyset got_keyset = CleartextKeysetHandle::GetKeyset(*handle);
+  std::string differences;
+  MessageDifferencer message_differencer;
+  message_differencer.ReportDifferencesToString(&differences);
+  EXPECT_TRUE(message_differencer.Compare(got_keyset, keyset)) << differences;
 }
 
 }  // namespace

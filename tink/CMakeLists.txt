@@ -1083,10 +1083,12 @@ tink_cc_test(
   DEPS
     tink::core::binary_keyset_reader
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access_testonly
     tink::core::keyset_handle
     gmock
     absl::status
     absl::status_matchers
+    protobuf::libprotobuf
     tink::util::status
     tink::util::test_keyset_handle
     tink::util::test_matchers

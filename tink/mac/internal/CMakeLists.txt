@@ -350,14 +350,8 @@ tink_cc_library(
   SRCS
     hmac_proto_structs.h
   DEPS
-    absl::string_view
-    tink::core::secret_data
-    tink::internal::common_proto_enums
-    tink::internal::proto_parser_enum_field
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_message
-    tink::internal::proto_parser_secret_data_field
-    tink::util::secret_data
+    absl::core_headers
+    tink::proto::hmac_cc_tinkpb
 )
 
 tink_cc_test(

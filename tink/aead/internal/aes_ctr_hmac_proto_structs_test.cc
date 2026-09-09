@@ -234,7 +234,8 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyTP) {
   key.mutable_hmac_key()->set_version(1);
   key.mutable_hmac_key()->mutable_params()->set_hash(HashTypeEnum::kSha256);
   key.mutable_hmac_key()->mutable_params()->set_tag_size(16);
-  key.mutable_hmac_key()->set_key_value("01234567890123456789012345678901");
+  key.mutable_hmac_key()->set_key_value(
+      util::SecretDataFromStringView("01234567890123456789012345678901"));
 
   auto serialized_key = key.SerializeAsSecretData();
   const std::string expected_serialized_key = GetSerializedAesCtrHmacAeadKey();

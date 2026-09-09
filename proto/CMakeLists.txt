@@ -241,3 +241,17 @@ tink_cc_library(
   NAME common_cc_tinkpb
   SRCS common.tinkpb.h
 )
+
+tink_cc_library(
+  NAME hmac_cc_tinkpb
+  SRCS hmac.tinkpb.h
+  DEPS
+    tink::core::secret_data
+    tink::proto::common_cc_tinkpb
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_scalar_fields
+    tink::internal::proto_parser_secret_data_field
+)

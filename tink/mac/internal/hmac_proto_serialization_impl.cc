@@ -232,7 +232,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.mutable_params()->set_tag_size(
       key.GetParameters().CryptographicTagSizeInBytes());
   proto_key.set_version(0);
-  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  proto_key.set_key_value(restricted_input->Get(*token));
 
   absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());

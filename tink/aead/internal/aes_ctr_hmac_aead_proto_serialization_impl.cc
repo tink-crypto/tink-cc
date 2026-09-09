@@ -311,7 +311,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.mutable_hmac_key()->mutable_params()->set_tag_size(
       key.GetParameters().GetTagSizeInBytes());
   proto_key.mutable_hmac_key()->set_key_value(
-      restricted_hmac_input->GetSecret(*token));
+      restricted_hmac_input->Get(*token));
 
   absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());

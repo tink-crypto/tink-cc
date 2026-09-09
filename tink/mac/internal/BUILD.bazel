@@ -422,14 +422,8 @@ cc_library(
     hdrs = ["hmac_proto_structs.h"],
     include_prefix = "tink/mac/internal",
     deps = [
-        "//tink:secret_data",
-        "//tink/internal:common_proto_enums",
-        "//tink/internal:proto_parser_enum_field",
-        "//tink/internal:proto_parser_fields",
-        "//tink/internal:proto_parser_message",
-        "//tink/internal:proto_parser_secret_data_field",
-        "//tink/util:secret_data",
-        "@abseil-cpp//absl/strings:string_view",
+        "//proto:hmac_cc_tinkpb",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 

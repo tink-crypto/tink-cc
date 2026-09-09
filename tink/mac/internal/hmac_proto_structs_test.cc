@@ -130,7 +130,8 @@ TEST(ProtoHmacMessagesTest, SerializeHmacKeyTP) {
   HmacKeyTP key;
   key.mutable_params()->set_hash(HashTypeEnum::kSha256);
   key.mutable_params()->set_tag_size(16);
-  key.set_key_value("01234567890123456789012345678901");
+  key.set_key_value(
+      util::SecretDataFromStringView("01234567890123456789012345678901"));
   key.set_version(1);
 
   auto serialized_hmac_key = key.SerializeAsSecretData();

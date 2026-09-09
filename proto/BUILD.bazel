@@ -496,3 +496,8 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
     ],
 )
+
+cc_library(
+    name = "common_cc_tinkpb",
+    hdrs = ["common.tinkpb.h"],
+)

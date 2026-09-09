@@ -236,3 +236,8 @@ tink_cc_library(
     tink::internal::proto_parser_secret_data_field
     absl::string_view
 )
+
+tink_cc_library(
+  NAME common_cc_tinkpb
+  SRCS common.tinkpb.h
+)

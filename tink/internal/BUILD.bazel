@@ -1808,6 +1808,10 @@ cc_library(
     name = "common_proto_enums",
     hdrs = ["common_proto_enums.h"],
     include_prefix = "tink/internal",
+    deps = [
+        "//proto:common_cc_tinkpb",
+        "@abseil-cpp//absl/base:core_headers",
+    ],
 )
 
 cc_library(

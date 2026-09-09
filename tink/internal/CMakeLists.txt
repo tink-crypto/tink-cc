@@ -1738,6 +1738,9 @@ tink_cc_library(
   NAME common_proto_enums
   SRCS
     common_proto_enums.h
+  DEPS
+    absl::core_headers
+    tink::proto::common_cc_tinkpb
 )
 
 tink_cc_library(

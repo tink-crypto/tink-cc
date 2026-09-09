@@ -16,49 +16,46 @@
 #ifndef TINK_INTERNAL_COMMON_PROTO_ENUMS_H_
 #define TINK_INTERNAL_COMMON_PROTO_ENUMS_H_
 
-#include <cstdint>
+#include "absl/base/macros.h"
+#include "proto/common.tinkpb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-// Enum representing the elliptic curve type of a key.
-// It represents the proto enum `google.crypto.tink.EllipticCurveType`.
-enum class EllipticCurveTypeEnum : uint32_t {
-  kUnknownCurve = 0,
-  kNistP256 = 2,
-  kNistP384 = 3,
-  kNistP521 = 4,
-  kCurve25519 = 5,
-};
+using EllipticCurveTypeEnum
+    [[deprecated("Use google::crypto::tink::internal::EllipticCurveType "
+                 "instead.")]] ABSL_REFACTOR_INLINE =
+        ::google::crypto::tink::internal::EllipticCurveTypeTP;
 
-inline bool EllipticCurveTypeEnumIsValid(int c) {
-  return 0 <= c && c != 1 && c <= 5;
+[[deprecated(
+    "Use google::crypto::tink::internal::EllipticCurveTypeTP_IsValid "
+    "instead.")]]
+ABSL_REFACTOR_INLINE inline bool EllipticCurveTypeEnumIsValid(int value) {
+  return ::google::crypto::tink::internal::EllipticCurveTypeTP_IsValid(value);
 }
 
-// Enum representing the elliptic curve point format of a key.
-// It represents the proto enum `google.crypto.tink.EcPointFormat`.
-enum class EcPointFormatEnum : uint32_t {
-  kUnknownFormat,
-  kUncompressed,
-  kCompressed,
-  kDoNotUseCrunchyUncompressed,
-};
+using EcPointFormatEnum
+    [[deprecated("Use google::crypto::tink::internal::EcPointFormat "
+                 "instead.")]] ABSL_REFACTOR_INLINE =
+        ::google::crypto::tink::internal::EcPointFormatTP;
 
-inline bool EcPointFormatEnumIsValid(int c) { return 0 <= c && c <= 3; }
+[[deprecated(
+    "Use google::crypto::tink::internal::EcPointFormatTP_IsValid instead.")]]
+ABSL_REFACTOR_INLINE inline bool EcPointFormatEnumIsValid(int c) {
+  return ::google::crypto::tink::internal::EcPointFormatTP_IsValid(c);
+}
 
-// Enum representing the hash type of a key.
-// It represents the proto enum `google.crypto.tink.HashType`.
-enum class HashTypeEnum : uint32_t {
-  kUnknownHash,
-  kSha1,
-  kSha384,
-  kSha256,
-  kSha512,
-  kSha224,
-};
+using HashTypeEnum
+    [[deprecated("Use google::crypto::tink::internal::HashType "
+                 "instead.")]] ABSL_REFACTOR_INLINE =
+        ::google::crypto::tink::internal::HashTypeTP;
 
-inline bool HashTypeEnumIsValid(int c) { return 0 <= c && c <= 5; }
+[[deprecated(
+    "Use google::crypto::tink::internal::HashTypeTP_IsValid instead.")]]
+ABSL_REFACTOR_INLINE inline bool HashTypeEnumIsValid(int c) {
+  return ::google::crypto::tink::internal::HashTypeTP_IsValid(c);
+}
 
 }  // namespace internal
 }  // namespace tink

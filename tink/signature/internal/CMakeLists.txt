@@ -83,6 +83,7 @@ tink_cc_test(
     absl::statusor
     tink::core::configuration
     tink::core::key_gen_configuration
+    tink::core::key_status
     tink::core::keyset_handle
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -91,11 +92,15 @@ tink_cc_test(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_parameters
     tink::signature::ed25519_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::signature::signature_key_templates
-    tink::proto::tink_cc_proto
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
   TAGS
     exclude_if_openssl
 )

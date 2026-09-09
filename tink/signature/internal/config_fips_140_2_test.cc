@@ -29,16 +29,21 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
+#include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
-#include "tink/signature/signature_key_templates.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -46,7 +51,6 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::google::crypto::tink::KeyTemplate;
 using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -95,33 +99,32 @@ TEST(SignatureV0Test, KeyManagers) {
               Not(IsOk()));
 }
 
-using SignatureV0Test = TestWithParam<KeyTemplate>;
-
-INSTANTIATE_TEST_SUITE_P(
-    SignatureV0TestSuite, SignatureV0Test,
-    Values(SignatureKeyTemplates::EcdsaP256(),
-           SignatureKeyTemplates::RsaSsaPkcs13072Sha256F4(),
-           SignatureKeyTemplates::RsaSsaPss3072Sha256Sha256F4()));
+using SignatureV0Test = TestWithParam<internal::SignatureTestVector>;
 
 TEST_P(SignatureV0Test, GetPrimitive) {
   if (!IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
+  const internal::SignatureTestVector& param = GetParam();
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), key_gen_config);
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
-      (*handle)->GetPrimitive<PublicKeySign>(config);
+      handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
@@ -133,6 +136,14 @@ TEST_P(SignatureV0Test, GetPrimitive) {
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    SignatureV0TestSuite, SignatureV0Test,
+    Values(GetEcdsaTestVector(EcdsaParameters::CurveType::kNistP256,
+                              EcdsaParameters::HashType::kSha256,
+                              EcdsaParameters::SignatureEncoding::kDer,
+                              EcdsaParameters::Variant::kNoPrefix),
+           Create3072BitsTestVector(), Create3072BitTestVector()));
+
 TEST(SignatureV0Test, GetPrimitiveNonFips1402KeyTypeFails) {
   if (!IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Only test in FIPS mode";
@@ -143,15 +154,20 @@ TEST(SignatureV0Test, GetPrimitiveNonFips1402KeyTypeFails) {
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(SignatureKeyTemplates::Ed25519(),
-                                key_gen_config);
+  const internal::SignatureTestVector& test_vector =
+      internal::GetEd25519TestVector(Ed25519Parameters::Variant::kTink);
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  EXPECT_THAT((*handle)->GetPrimitive<PublicKeySign>(config), Not(IsOk()));
+  EXPECT_THAT(handle->GetPrimitive<PublicKeySign>(config), Not(IsOk()));
   EXPECT_THAT((*public_handle)->GetPrimitive<PublicKeyVerify>(config),
               Not(IsOk()));
 }

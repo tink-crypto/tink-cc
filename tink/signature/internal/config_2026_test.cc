@@ -50,11 +50,12 @@
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/prehash.h"
-#include "tink/signature/sign_prehash.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
+#include "tink/signature/sign_prehash.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/util/test_util.h"
@@ -67,11 +68,8 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::google::crypto::tink::KeyTemplate;
 using ::testing::Eq;
 using ::testing::Not;
-using ::testing::TestWithParam;
-using ::testing::Values;
 
 TEST(SignatureV0Test, PrimitiveWrappers) {
   Configuration config;
@@ -107,172 +105,6 @@ TEST(SignatureV0Test, KeyManagers) {
     EXPECT_THAT(s->Get(RsaSsaPkcs1VerifyKeyManager().get_key_type()), IsOk());
     EXPECT_THAT(s->Get(RsaSsaPssVerifyKeyManager().get_key_type()), IsOk());
   }
-}
-
-using SignatureV0KeyTypesTest = TestWithParam<KeyTemplate>;
-
-INSTANTIATE_TEST_SUITE_P(
-    SignatureV0KeyTypesTestSuite, SignatureV0KeyTypesTest,
-    Values(SignatureKeyTemplates::EcdsaP256(), SignatureKeyTemplates::Ed25519(),
-           SignatureKeyTemplates::RsaSsaPkcs13072Sha256F4(),
-           SignatureKeyTemplates::RsaSsaPss3072Sha256Sha256F4()));
-
-TEST_P(SignatureV0KeyTypesTest, GetPrimitiveSignVerify) {
-  KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
-  Configuration config;
-  ASSERT_THAT(AddSignature2026(config), IsOk());
-
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), key_gen_config);
-  ASSERT_THAT(handle, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
-  ASSERT_THAT(public_handle, IsOk());
-
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
-      (*handle)->GetPrimitive<PublicKeySign>(config);
-  ASSERT_THAT(sign, IsOk());
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
-  ASSERT_THAT(verify, IsOk());
-
-  std::string data = "data";
-  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
-  ASSERT_THAT(signature, IsOk());
-  EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
-}
-
-#ifdef OPENSSL_IS_BORINGSSL
-SlhDsaParameters GetSlhDsaParameters(SlhDsaParameters::Variant variant) {
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
-      SlhDsaParameters::SignatureType::kSmallSignature, variant);
-  ABSL_CHECK_OK(parameters);
-  return *parameters;
-}
-
-MlDsaParameters GetMlDsaParameters(MlDsaParameters::Variant variant) {
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
-  ABSL_CHECK_OK(parameters);
-  return *parameters;
-}
-
-TEST(SignatureConfigV0Test, SlhDsaGetPrimitiveSignVerifyWorks) {
-  KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
-  Configuration config;
-  ASSERT_THAT(AddSignature2026(config), IsOk());
-
-  absl::StatusOr<SlhDsaParameters> parameters =
-      GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
-  ASSERT_THAT(handle, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
-  ASSERT_THAT(public_handle, IsOk());
-
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
-      (*handle)->GetPrimitive<PublicKeySign>(config);
-  ASSERT_THAT(sign, IsOk());
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
-  ASSERT_THAT(verify, IsOk());
-
-  std::string data = "data";
-  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
-  ASSERT_THAT(signature, IsOk());
-  EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
-}
-
-TEST(SignatureConfigV0Test, SlhDsaVerifyWithWrongMessageFails) {
-  KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
-  Configuration config;
-  ASSERT_THAT(AddSignature2026(config), IsOk());
-
-  absl::StatusOr<SlhDsaParameters> parameters =
-      GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
-  ASSERT_THAT(handle, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
-  ASSERT_THAT(public_handle, IsOk());
-
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
-      (*handle)->GetPrimitive<PublicKeySign>(config);
-  ASSERT_THAT(sign, IsOk());
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
-  ASSERT_THAT(verify, IsOk());
-
-  std::string data = "data";
-  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
-  ASSERT_THAT(signature, IsOk());
-  EXPECT_THAT((*verify)->Verify(*signature, "wrong_data"), Not(IsOk()));
-}
-
-TEST(SignatureConfigV0Test, MlDsaGetPrimitiveSignVerifyWorks) {
-  KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
-  Configuration config;
-  ASSERT_THAT(AddSignature2026(config), IsOk());
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      GetMlDsaParameters(MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
-  ASSERT_THAT(handle, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
-  ASSERT_THAT(public_handle, IsOk());
-
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
-      (*handle)->GetPrimitive<PublicKeySign>(config);
-  ASSERT_THAT(sign, IsOk());
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
-  ASSERT_THAT(verify, IsOk());
-
-  std::string data = "data";
-  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
-  ASSERT_THAT(signature, IsOk());
-  EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
-}
-
-TEST(SignatureConfigV0Test, MlDsaVerifyWithWrongMessageFails) {
-  KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
-  Configuration config;
-  ASSERT_THAT(AddSignature2026(config), IsOk());
-
-  absl::StatusOr<MlDsaParameters> parameters =
-      GetMlDsaParameters(MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
-  ASSERT_THAT(handle, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(key_gen_config);
-  ASSERT_THAT(public_handle, IsOk());
-
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
-      (*handle)->GetPrimitive<PublicKeySign>(config);
-  ASSERT_THAT(sign, IsOk());
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
-  ASSERT_THAT(verify, IsOk());
-
-  std::string data = "data";
-  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
-  ASSERT_THAT(signature, IsOk());
-  EXPECT_THAT((*verify)->Verify(*signature, "wrong_data"), Not(IsOk()));
 }
 
 TEST(SignatureConfigV0Test, MlDsaPrehashPrimitiveCreatorWorks) {
@@ -339,7 +171,6 @@ TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
       (*sign_prehash)->Sign(absl::StrCat(prehash_prefix, mu));
   ASSERT_THAT(signature, IsOk());
 }
-#endif
 
 TEST(SignatureConfigV0Test,
      MultipleEntriesKeysetHandleSignVerifyWithSlhDsaPrimaryWorks) {
@@ -348,28 +179,22 @@ TEST(SignatureConfigV0Test,
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
-  absl::StatusOr<SlhDsaParameters> slhdsa_parameters =
-      GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(slhdsa_parameters, IsOk());
+  const SignatureTestVector& slh_test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kTink);
+  const SignatureTestVector& ml_test_vector = GetMlDsaTestVector(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
 
-  absl::StatusOr<MlDsaParameters> mldsa_parameters =
-      GetMlDsaParameters(MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(mldsa_parameters, IsOk());
-
-  KeysetHandleBuilder builder;
-  KeysetHandleBuilder::Entry entry1 =
-      KeysetHandleBuilder::Entry::CreateFromCopyableParams(*slhdsa_parameters,
-                                                           KeyStatus::kEnabled,
-                                                           /*is_primary=*/true);
-  KeysetHandleBuilder::Entry entry2 =
-      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
-          *mldsa_parameters, KeyStatus::kEnabled,
-          /*is_primary=*/false);
-
-  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
-                                            .AddEntry(std::move(entry1))
-                                            .AddEntry(std::move(entry2))
-                                            .Build(key_gen_config);
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              slh_test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              ml_test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/false))
+          .Build();
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
@@ -396,28 +221,22 @@ TEST(SignatureConfigV0Test,
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
-  absl::StatusOr<SlhDsaParameters> slhdsa_parameters =
-      GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
-  ASSERT_THAT(slhdsa_parameters, IsOk());
+  const SignatureTestVector& slh_test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kTink);
+  const SignatureTestVector& ml_test_vector = GetMlDsaTestVector(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
 
-  absl::StatusOr<MlDsaParameters> mldsa_parameters =
-      GetMlDsaParameters(MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(mldsa_parameters, IsOk());
-
-  KeysetHandleBuilder builder;
-  KeysetHandleBuilder::Entry entry1 =
-      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
-          *slhdsa_parameters, KeyStatus::kEnabled,
-          /*is_primary=*/false);
-  KeysetHandleBuilder::Entry entry2 =
-      KeysetHandleBuilder::Entry::CreateFromCopyableParams(*mldsa_parameters,
-                                                           KeyStatus::kEnabled,
-                                                           /*is_primary=*/true);
-
-  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
-                                            .AddEntry(std::move(entry1))
-                                            .AddEntry(std::move(entry2))
-                                            .Build(key_gen_config);
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              slh_test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/false))
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              ml_test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
@@ -438,7 +257,6 @@ TEST(SignatureConfigV0Test,
 }
 #endif
 
-// TODO(b/372241762) Add similar tests for SLH-DSA.
 using DeterministicSignatureTests =
     testing::TestWithParam<internal::SignatureTestVector>;
 
@@ -574,8 +392,7 @@ TEST_P(RandomizedSignaturesTest, VerifyWrongMessageInTestVectorFails) {
   absl::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
   ASSERT_THAT(signature, IsOk());
 
-  EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"),
-              testing::Not(IsOk()));
+  EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"), Not(IsOk()));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -594,6 +411,10 @@ INSTANTIATE_TEST_SUITE_P(EcdsaTest, RandomizedSignaturesTest,
                          testing::ValuesIn(internal::CreateEcdsaTestVectors()));
 
 #ifdef OPENSSL_IS_BORINGSSL
+INSTANTIATE_TEST_SUITE_P(
+    SlhDsaTest, RandomizedSignaturesTest,
+    testing::ValuesIn(internal::CreateSlhDsaTestVectors()));
+
 INSTANTIATE_TEST_SUITE_P(MlDsaTest, RandomizedSignaturesTest,
                          testing::ValuesIn(internal::CreateMlDsaTestVectors()));
 

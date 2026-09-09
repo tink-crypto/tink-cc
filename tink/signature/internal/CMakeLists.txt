@@ -1564,6 +1564,7 @@ tink_cc_test(
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
+    tink::signature::internal::testing::slh_dsa_test_vectors
     tink::util::test_util
     tink::proto::tink_cc_proto
   TAGS

@@ -220,8 +220,7 @@ absl::StatusOr<KeyDataTP> PrfKeyToKeyData(const PrfKey& prf_key,
   }
 
   KeyDataTP key_data;
-  key_data.set_value(
-      proto_serialization->SerializedKeyProto().GetSecret(token));
+  key_data.set_value(proto_serialization->SerializedKeyProto().Get(token));
   key_data.set_type_url(proto_serialization->TypeUrl());
   key_data.set_key_material_type(proto_serialization->GetKeyMaterialTypeTP());
 

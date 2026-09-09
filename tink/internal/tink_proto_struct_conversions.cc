@@ -50,7 +50,7 @@ KeyTemplateTP ToKeyTemplateTP(
 KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data) {
   KeyDataTP key_data_tp;
   key_data_tp.set_type_url(std::move(*key_data.mutable_type_url()));
-  key_data_tp.set_value(key_data.value());
+  key_data_tp.set_value(util::SecretDataFromStringView(key_data.value()));
   key_data_tp.set_key_material_type(
       static_cast<KeyMaterialTypeTP>(key_data.key_material_type()));
   return key_data_tp;

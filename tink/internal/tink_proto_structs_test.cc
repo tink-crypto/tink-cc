@@ -108,13 +108,13 @@ TEST(KeyDataTPTest, ParseKeyDataTPInvalidKeyMaterialType) {
   KeyDataTP params;
   EXPECT_THAT(params.ParseFromString(serialized_hmac_key_data), IsTrue());
   EXPECT_THAT(params.key_material_type(),
-              Eq(KeyMaterialTypeTP::kUnknownKeyMaterial));
+              Eq(KeyMaterialTypeTP::kUnknownKeymaterial));
 }
 
 TEST(KeyDataTPTest, SerializeKeyDataTP) {
   KeyDataTP key_data;
   key_data.set_type_url("type_url");
-  key_data.set_value("value");
+  key_data.set_value(util::SecretDataFromStringView("value"));
   key_data.set_key_material_type(KeyMaterialTypeTP::kAsymmetricPrivate);
 
   auto serialized_hmac_key_data = key_data.SerializeAsSecretData();
@@ -169,7 +169,7 @@ TEST(KeyTPTest, ParseOutputPrefixType) {
 TEST(KeyTPTest, RoundTrip) {
   KeysetTP::KeyTP key;
   key.mutable_key_data()->set_type_url("type_url");
-  key.mutable_key_data()->set_value("value");
+  key.mutable_key_data()->set_value(util::SecretDataFromStringView("value"));
   key.mutable_key_data()->set_key_material_type(KeyMaterialTypeTP::kSymmetric);
   key.set_status(KeyStatusTypeTP::kEnabled);
   key.set_key_id(12345);

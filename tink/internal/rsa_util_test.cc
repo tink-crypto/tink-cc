@@ -66,21 +66,6 @@ constexpr absl::string_view k2048BitRsaModulus =
     "298f0b613d85f2bf1df03da44aee0784a1a20a15ee0c38a0f8e84962f1f61b18bd43781c73"
     "85f3c2b8e2aebd3c560b4faad208ad3938bad27ddda9ed9e933dba0880212dd9e28d";
 
-// Utility function to create an RSA key pair.
-absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> GetKeyPair(
-    size_t modulus_size_in_bits) {
-  RsaPublicKey public_key;
-  RsaPrivateKey private_key;
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  BN_set_word(e.get(), RSA_F4);
-  absl::Status res =
-      NewRsaKeyPair(modulus_size_in_bits, e.get(), &private_key, &public_key);
-  if (!res.ok()) {
-    return res;
-  }
-  return {{public_key, private_key}};
-}
-
 // Hardcoded test key pair with valid encoding lengths.
 std::pair<RsaPublicKey, RsaPrivateKey> GetValidKeyPair() {
   const std::string p = test::HexDecodeOrDie(
@@ -151,11 +136,9 @@ std::pair<RsaPublicKey, RsaPrivateKey> GetValidKeyPair() {
 }
 
 TEST(RsaUtilTest, BasicSanityChecks) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPublicKey& public_key = keys->first;
-  const RsaPrivateKey& private_key = keys->second;
+  const std::pair<RsaPublicKey, RsaPrivateKey> keys = GetValidKeyPair();
+  const RsaPublicKey& public_key = keys.first;
+  const RsaPrivateKey& private_key = keys.second;
 
   EXPECT_THAT(private_key.n, Not(IsEmpty()));
   EXPECT_THAT(private_key.e, Not(IsEmpty()));
@@ -187,10 +170,8 @@ TEST(RsaUtilTest, FailsOnLargeE) {
 }
 
 TEST(RsaUtilTest, KeyIsWellFormed) {
-  absl::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> keys =
-      GetKeyPair(/*modulus_size_in_bits=*/2048);
-  ASSERT_THAT(keys, IsOk());
-  const RsaPrivateKey& private_key = keys->second;
+  const std::pair<RsaPublicKey, RsaPrivateKey> keys = GetValidKeyPair();
+  const RsaPrivateKey& private_key = keys.second;
 
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(private_key.n);

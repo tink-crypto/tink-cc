@@ -59,6 +59,8 @@ include(TinkUtil)
 set(TINK_INCLUDE_ALIAS_DIR "${CMAKE_CURRENT_BINARY_DIR}/__include_alias")
 add_directory_alias(
   "${CMAKE_CURRENT_SOURCE_DIR}/tink" "${TINK_INCLUDE_ALIAS_DIR}/tink")
+add_directory_alias(
+  "${CMAKE_CURRENT_SOURCE_DIR}/proto" "${TINK_INCLUDE_ALIAS_DIR}/proto")
 list(APPEND TINK_INCLUDE_DIRS "${TINK_INCLUDE_ALIAS_DIR}")
 
 add_subdirectory(tink)

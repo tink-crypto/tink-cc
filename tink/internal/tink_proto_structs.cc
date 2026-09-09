@@ -20,12 +20,14 @@
 #include <vector>
 
 #include "absl/base/no_destructor.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeTP type) {
+std::string_view OutputPrefixTypeEnumName(
+    google::crypto::tink::internal::OutputPrefixTypeTP type) {
   static const absl::NoDestructor<std::vector<std::string_view>>
       kOutputPrefixTypeEnumNames{{
           "UNKNOWN_PREFIX",
@@ -38,7 +40,8 @@ std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeTP type) {
   return (*kOutputPrefixTypeEnumNames)[static_cast<size_t>(type)];
 }
 
-std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeTP type) {
+std::string_view KeyMaterialTypeEnumName(
+    google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP type) {
   static const absl::NoDestructor<std::vector<std::string_view>>
       kKeyMaterialTypeEnumNames{{"UNKNOWN_KEYMATERIAL", "SYMMETRIC",
                                  "ASYMMETRIC_PRIVATE", "ASYMMETRIC_PUBLIC",

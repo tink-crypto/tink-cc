@@ -1785,16 +1785,9 @@ cc_library(
     hdrs = ["tink_proto_structs.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":proto_parser_enum_field",
-        ":proto_parser_fields",
-        ":proto_parser_message",
-        ":proto_parser_options",
-        ":proto_parser_secret_data_field",
-        "//tink:secret_data",
-        "//tink/util:secret_data",
+        "//proto:tink_cc_tinkpb",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:no_destructor",
-        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 

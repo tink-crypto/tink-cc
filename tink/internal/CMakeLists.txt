@@ -1716,16 +1716,9 @@ tink_cc_library(
     tink_proto_structs.cc
     tink_proto_structs.h
   DEPS
-    tink::internal::proto_parser_enum_field
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_message
-    tink::internal::proto_parser_options
-    tink::internal::proto_parser_secret_data_field
     absl::core_headers
     absl::no_destructor
-    absl::string_view
-    tink::core::secret_data
-    tink::util::secret_data
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(

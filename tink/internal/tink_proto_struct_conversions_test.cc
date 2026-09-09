@@ -121,7 +121,7 @@ TEST(ToKeyDataTPTest, WorksWithAsymmetric) {
 TEST(FromKeyDataTPTest, Works) {
   KeyDataTP key_data_tp;
   key_data_tp.set_type_url("type_url");
-  key_data_tp.set_value("value");
+  key_data_tp.set_value(util::SecretDataFromStringView("value"));
   key_data_tp.set_key_material_type(KeyMaterialTypeTP::kSymmetric);
 
   KeyData key_data = ToProtoKeyData(key_data_tp);
@@ -168,7 +168,7 @@ TEST(ToKeyTPTest, Works) {
 TEST(ToProtoKeyTest, Works) {
   KeysetTP::KeyTP key_tp;
   key_tp.mutable_key_data()->set_type_url("type_url");
-  key_tp.mutable_key_data()->set_value("value");
+  key_tp.mutable_key_data()->set_value(util::SecretDataFromStringView("value"));
   key_tp.mutable_key_data()->set_key_material_type(
       KeyMaterialTypeTP::kSymmetric);
   key_tp.set_status(KeyStatusTypeTP::kEnabled);

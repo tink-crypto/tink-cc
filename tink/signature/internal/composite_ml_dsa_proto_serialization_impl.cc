@@ -686,7 +686,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeTP());
   ml_dsa_key_data.set_value((*ml_dsa_proto_key_serialization)
                                 ->SerializedKeyProto()
-                                .GetSecret(InsecureSecretKeyAccess::Get()));
+                                .Get(InsecureSecretKeyAccess::Get()));
 
   // Serialize Classical Public Key
   absl::StatusOr<std::unique_ptr<Serialization>> classical_serialization =
@@ -718,7 +718,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       (*classical_proto_key_serialization)->GetKeyMaterialTypeTP());
   classical_key_data.set_value((*classical_proto_key_serialization)
                                    ->SerializedKeyProto()
-                                   .GetSecret(InsecureSecretKeyAccess::Get()));
+                                   .Get(InsecureSecretKeyAccess::Get()));
 
   CompositeMlDsaPublicKeyTP proto_key;
   proto_key.set_version(0);
@@ -786,9 +786,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   ml_dsa_key_data.set_type_url((*ml_dsa_proto_key_serialization)->TypeUrl());
   ml_dsa_key_data.set_key_material_type(
       (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeTP());
-  ml_dsa_key_data.set_value((*ml_dsa_proto_key_serialization)
-                                ->SerializedKeyProto()
-                                .GetSecret(*token));
+  ml_dsa_key_data.set_value(
+      (*ml_dsa_proto_key_serialization)->SerializedKeyProto().Get(*token));
 
   // Serialize Classical Private Key
   absl::StatusOr<std::unique_ptr<Serialization>> classical_serialization =
@@ -818,9 +817,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       (*classical_proto_key_serialization)->TypeUrl());
   classical_key_data.set_key_material_type(
       (*classical_proto_key_serialization)->GetKeyMaterialTypeTP());
-  classical_key_data.set_value((*classical_proto_key_serialization)
-                                   ->SerializedKeyProto()
-                                   .GetSecret(*token));
+  classical_key_data.set_value(
+      (*classical_proto_key_serialization)->SerializedKeyProto().Get(*token));
 
   CompositeMlDsaPrivateKeyTP proto_key;
   proto_key.set_version(0);

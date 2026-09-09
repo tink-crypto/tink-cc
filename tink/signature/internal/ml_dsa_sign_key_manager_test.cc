@@ -17,17 +17,22 @@
 #include "tink/signature/internal/ml_dsa_sign_key_manager.h"
 
 #include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/key_manager.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
+#include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/signature_config.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/test_matchers.h"
 #include "proto/ml_dsa.pb.h"
 
 namespace crypto {
@@ -37,7 +42,6 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::testing::Eq;
-using ::testing::NotNull;
 
 class MlDsaSignKeyManagerTest : public ::testing::Test {
  protected:
@@ -49,18 +53,26 @@ class MlDsaSignKeyManagerTest : public ::testing::Test {
   std::unique_ptr<KeyManager<PublicKeySign>> key_manager_;
 };
 
-google::crypto::tink::MlDsaKeyFormat CreateValidKeyFormat() {
-  google::crypto::tink::MlDsaKeyFormat format;
-  format.set_version(0);
-  format.mutable_params()->set_ml_dsa_instance(
-      google::crypto::tink::MlDsaInstance::ML_DSA_65);
-  return format;
-}
+google::crypto::tink::MlDsaPrivateKey CreateValidPrivateKeyProto() {
+  const SignatureTestVector& test_vector = GetMlDsaTestVector(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+  const auto& ml_dsa_private_key =
+      dynamic_cast<const MlDsaPrivateKey&>(*test_vector.signature_private_key);
 
-absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> CreateValidKey(
-    const KeyManager<PublicKeySign>& key_manager) {
-  auto format = CreateValidKeyFormat();
-  return key_manager.get_key_factory().NewKey(format);
+  google::crypto::tink::MlDsaPrivateKey proto;
+  proto.set_version(0);
+  proto.set_key_value(
+      ml_dsa_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
+  google::crypto::tink::MlDsaPublicKey* public_key_proto =
+      proto.mutable_public_key();
+  public_key_proto->set_version(0);
+  public_key_proto->set_key_value(
+      ml_dsa_private_key.GetPublicKey().GetPublicKeyBytes(
+          GetPartialKeyAccess()));
+  public_key_proto->mutable_params()->set_ml_dsa_instance(
+      google::crypto::tink::MlDsaInstance::ML_DSA_65);
+  return proto;
 }
 
 TEST_F(MlDsaSignKeyManagerTest, Basic) {
@@ -78,18 +90,13 @@ TEST_F(MlDsaSignKeyManagerTest, Basic) {
 TEST_F(MlDsaSignKeyManagerTest, GetPrimitive) {
   auto public_key_manager = MakeMlDsaVerifyKeyManager();
 
-  auto private_key = CreateValidKey(*key_manager_);
-  ASSERT_THAT(private_key, IsOk());
-  auto signer = key_manager_->GetPrimitive(**private_key);
+  google::crypto::tink::MlDsaPrivateKey private_key =
+      CreateValidPrivateKeyProto();
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      key_manager_->GetPrimitive(private_key);
   ASSERT_THAT(signer, IsOk());
 
-  const google::crypto::tink::MlDsaPrivateKey* ml_dsa_private_key =
-      portable_proto::DynamicCastMessage<google::crypto::tink::MlDsaPrivateKey>(
-          private_key->get());
-  ASSERT_THAT(ml_dsa_private_key, NotNull());
-
-  auto verifier =
-      public_key_manager->GetPrimitive(ml_dsa_private_key->public_key());
+  auto verifier = public_key_manager->GetPrimitive(private_key.public_key());
   ASSERT_THAT(verifier, IsOk());
 
   auto signature = (*signer)->Sign("message");

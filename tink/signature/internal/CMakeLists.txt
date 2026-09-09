@@ -1007,11 +1007,15 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key_manager
+    tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
     tink::signature::signature_config
-    tink::util::protobuf_helper
-    tink::util::test_matchers
+    tink::signature::internal::testing::ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::proto::ml_dsa_cc_proto
   TAGS
     exclude_if_openssl

@@ -670,10 +670,6 @@ absl::StatusOr<uint32_t> KeysetHandle::AddKey(
   return *id;
 }
 
-KeysetInfo KeysetHandle::GetKeysetInfo() const {
-  return KeysetInfoFromKeyset(*keyset_);
-}
-
 absl::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
 KeysetHandle::GetEntriesFromKeyset(const Keyset& keyset) {
   std::vector<std::shared_ptr<const Entry>> entries;

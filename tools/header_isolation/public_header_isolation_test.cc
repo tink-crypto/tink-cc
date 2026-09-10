@@ -243,6 +243,7 @@
 #include "tink/keyset_writer.h"
 #include "tink/kms_client.h"
 #include "tink/kms_clients.h"
+#include "tink/legacy_get_keyset_info.h"
 #include "tink/low_level_crypto_access.h"
 #include "tink/low_level_crypto_access_token.h"
 #include "tink/mac.h"

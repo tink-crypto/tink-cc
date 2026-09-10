@@ -54,6 +54,7 @@
 #include "tink/key_status.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
+#include "tink/legacy_get_keyset_info.h"
 #include "tink/parameters.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
@@ -116,8 +117,7 @@ class KeysetHandle {
 
   KeysetHandle() = default;
   KeysetHandle(const KeysetHandle& other)
-      : keyset_(other.keyset_),
-        entries_(other.entries_) {
+      : keyset_(other.keyset_), entries_(other.entries_) {
     for (const auto& pair : other.annotations_) {
       annotations_[pair.first] =
           std::unique_ptr<Annotations>(pair.second->Clone());
@@ -252,7 +252,11 @@ class KeysetHandle {
 
   // Returns KeysetInfo, a "safe" Keyset that doesn't contain any actual
   // key material, thus can be used for logging or monitoring.
-  google::crypto::tink::KeysetInfo GetKeysetInfo() const;
+  [[deprecated("Use LegacyGetKeysetInfo() instead")]] ABSL_REFACTOR_INLINE
+      google::crypto::tink::KeysetInfo
+      GetKeysetInfo() const {
+    return LegacyGetKeysetInfo(*this);
+  }
 
   // Writes the underlying keyset to `writer` only if the keyset does not
   // contain any secret key material.
@@ -326,9 +330,11 @@ class KeysetHandle {
   }
 
  private:
-  // The classes below need access to get_keyset();
+  // The classes and functions below need access to get_keyset();
   friend class CleartextKeysetHandle;
   friend class KeysetManager;
+  friend google::crypto::tink::KeysetInfo LegacyGetKeysetInfo(
+      const KeysetHandle& keyset_handle);
 
   // TestKeysetHandle::GetKeyset() provides access to get_keyset().
   friend class TestKeysetHandle;

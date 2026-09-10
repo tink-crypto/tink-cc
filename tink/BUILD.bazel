@@ -473,10 +473,12 @@ cc_library(
     srcs = [
         "core/keyset_handle.cc",
         "core/keyset_handle_builder.cc",
+        "core/legacy_get_keyset_info.cc",
     ],
     hdrs = [
         "keyset_handle.h",
         "keyset_handle_builder.h",
+        "legacy_get_keyset_info.h",
     ],
     include_prefix = "tink",
     visibility = ["//visibility:public"],
@@ -538,6 +540,12 @@ cc_library(
 
 alias(
     name = "keyset_handle_builder",
+    actual = ":keyset_handle",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "legacy_get_keyset_info",
     actual = ":keyset_handle",
     visibility = ["//visibility:public"],
 )
@@ -1167,6 +1175,21 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@googletest//:gtest_main",
         "@protobuf",
+    ],
+)
+
+cc_test(
+    name = "legacy_get_keyset_info_test",
+    size = "small",
+    srcs = ["core/legacy_get_keyset_info_test.cc"],
+    deps = [
+        ":keyset_handle",
+        ":legacy_get_keyset_info",
+        "//proto:tink_cc_proto",
+        "//tink/util:test_keyset_handle",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
     ],
 )
 

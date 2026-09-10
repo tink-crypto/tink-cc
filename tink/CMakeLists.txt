@@ -58,6 +58,7 @@ tink_cc_library(
     key_manager.h
     keyset_handle.h
     keyset_manager.h
+    legacy_get_keyset_info.h
     keyset_reader.h
     keyset_writer.h
     kms_client.h
@@ -434,8 +435,10 @@ tink_cc_library(
   SRCS
     core/keyset_handle.cc
     core/keyset_handle_builder.cc
+    core/legacy_get_keyset_info.cc
     keyset_handle.h
     keyset_handle_builder.h
+    legacy_get_keyset_info.h
   DEPS
     tink::core::aead
     tink::core::annotations
@@ -492,6 +495,7 @@ tink_cc_library(
 )
 
 add_library(tink::core::keyset_handle_builder ALIAS tink_internal_core_keyset_handle)
+add_library(tink::core::legacy_get_keyset_info ALIAS tink_internal_core_keyset_handle)
 
 tink_cc_library(
   NAME cleartext_keyset_handle
@@ -1092,6 +1096,20 @@ tink_cc_test(
     tink::util::status
     tink::util::test_keyset_handle
     tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME legacy_get_keyset_info_test
+  SRCS
+    core/legacy_get_keyset_info_test.cc
+  DEPS
+    tink::core::keyset_handle
+    tink::core::legacy_get_keyset_info
+    gmock
+    absl::strings
+    tink::util::test_keyset_handle
     tink::util::test_util
     tink::proto::tink_cc_proto
 )

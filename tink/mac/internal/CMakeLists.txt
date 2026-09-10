@@ -38,8 +38,8 @@ tink_cc_library(
     absl::strings
     tink::core::chunked_mac
     tink::core::crypto_format
-    tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::primitive_set
     tink::internal::util
     tink::util::status
     tink::util::statusor
@@ -175,8 +175,8 @@ tink_cc_test(
     absl::statusor
     absl::strings
     tink::core::chunked_mac
-    tink::core::primitive_set
     tink::core::secret_data
+    tink::internal::primitive_set
     tink::util::secret_data
     tink::util::test_matchers
     tink::proto::tink_cc_proto

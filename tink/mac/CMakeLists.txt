@@ -13,10 +13,10 @@ tink_cc_library(
     absl::strings
     tink::core::crypto_format
     tink::core::mac
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
     tink::util::status
@@ -293,10 +293,10 @@ tink_cc_test(
     absl::strings
     tink::core::crypto_format
     tink::core::mac
-    tink::core::primitive_set
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor

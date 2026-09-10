@@ -27,10 +27,10 @@
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
 #include "tink/mac.h"
-#include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
@@ -49,7 +49,7 @@ constexpr absl::string_view kVerifyApi = "verify";
 class MacSetWrapper : public Mac {
  public:
   explicit MacSetWrapper(
-      std::unique_ptr<PrimitiveSet<Mac>> mac_set,
+      std::unique_ptr<internal::PrimitiveSet<Mac>> mac_set,
       std::unique_ptr<internal::MonitoringClient> monitoring_compute_client =
           nullptr,
       std::unique_ptr<internal::MonitoringClient> monitoring_verify_client =
@@ -66,12 +66,12 @@ class MacSetWrapper : public Mac {
   ~MacSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<Mac>> mac_set_;
+  std::unique_ptr<internal::PrimitiveSet<Mac>> mac_set_;
   std::unique_ptr<internal::MonitoringClient> monitoring_compute_client_;
   std::unique_ptr<internal::MonitoringClient> monitoring_verify_client_;
 };
 
-absl::Status Validate(PrimitiveSet<Mac>* mac_set) {
+absl::Status Validate(internal::PrimitiveSet<Mac>* mac_set) {
   if (mac_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "mac_set must be non-NULL");
@@ -169,7 +169,7 @@ absl::Status MacSetWrapper::VerifyMac(absl::string_view mac_value,
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<Mac>> mac_set) const {
+    std::unique_ptr<internal::PrimitiveSet<Mac>> mac_set) const {
   absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;
 

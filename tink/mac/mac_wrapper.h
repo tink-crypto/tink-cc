@@ -20,8 +20,8 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/mac.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -38,7 +38,7 @@ namespace tink {
 class MacWrapper : public PrimitiveWrapper<Mac, Mac> {
  public:
   absl::StatusOr<std::unique_ptr<Mac>> Wrap(
-      std::unique_ptr<PrimitiveSet<Mac>> mac_set) const override;
+      std::unique_ptr<internal::PrimitiveSet<Mac>> mac_set) const override;
 };
 
 }  // namespace tink

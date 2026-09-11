@@ -61,6 +61,7 @@ if [[ "${IS_KOKORO:-false}" == "true" || -n "${KOKORO_ARTIFACTS_DIR:-}" ]] && \
   set +x
 fi
 
+mkdir -p "${CCACHE_DIR}"
 # This variable can be passed to CMake: cmake ${EXTRA_CMAKE_ARGS[@]} ...
 if [[ -d "${CCACHE_DIR}" ]]; then
   if [[ "$(declare -p EXTRA_CMAKE_ARGS 2>/dev/null)" == "declare -a"* ]]; then

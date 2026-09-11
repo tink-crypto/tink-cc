@@ -2220,6 +2220,24 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME primitive_set_base
+  SRCS
+    primitive_set_base.cc
+    primitive_set_base.h
+  DEPS
+    absl::core_headers
+    absl::flat_hash_map
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::synchronization
+    tink::core::crypto_format
+    tink::util::errors
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
   NAME primitive_set
   SRCS
     primitive_set.h
@@ -2233,6 +2251,40 @@ tink_cc_library(
     absl::synchronization
     tink::core::crypto_format
     tink::util::errors
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME primitive_set_base_test
+  SRCS
+    primitive_set_base_test.cc
+  DEPS
+    tink::internal::primitive_set_base
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::strings
+    absl::string_view
+    tink::core::crypto_format
+    tink::core::mac
+    tink::util::test_util
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME primitive_set_base_entry_test
+  SRCS
+    primitive_set_base_entry_test.cc
+  DEPS
+    tink::internal::primitive_set_base
+    gmock
+    absl::flat_hash_map
+    absl::status
+    absl::status_matchers
+    absl::string_view
+    tink::core::crypto_format
+    tink::core::mac
+    tink::util::test_util
     tink::proto::tink_cc_proto
 )
 
@@ -2255,3 +2307,4 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
+

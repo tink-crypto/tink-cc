@@ -2303,6 +2303,25 @@ cc_test(
 )
 
 cc_library(
+    name = "primitive_set_base",
+    srcs = ["primitive_set_base.cc"],
+    hdrs = ["primitive_set_base.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink:crypto_format",
+        "//tink/util:errors",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/synchronization",
+    ],
+)
+
+cc_library(
     name = "primitive_set",
     hdrs = ["primitive_set.h"],
     include_prefix = "tink/internal",
@@ -2317,6 +2336,40 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/synchronization",
+    ],
+)
+
+cc_test(
+    name = "primitive_set_base_test",
+    srcs = ["primitive_set_base_test.cc"],
+    deps = [
+        ":primitive_set_base",
+        "//proto:tink_cc_proto",
+        "//tink:crypto_format",
+        "//tink:mac",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "primitive_set_base_entry_test",
+    srcs = ["primitive_set_base_entry_test.cc"],
+    deps = [
+        ":primitive_set_base",
+        "//proto:tink_cc_proto",
+        "//tink:crypto_format",
+        "//tink:mac",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
     ],
 )
 

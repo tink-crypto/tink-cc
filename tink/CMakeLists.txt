@@ -853,6 +853,7 @@ tink_cc_library(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::internal::call_with_core_dump_protection

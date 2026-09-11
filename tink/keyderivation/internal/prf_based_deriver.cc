@@ -21,6 +21,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
@@ -28,6 +29,7 @@
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -80,7 +82,10 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
   *keyset.add_key() = key;
   keyset.set_primary_key_id(0);
 
-  return CleartextKeysetHandle::GetKeysetHandle(keyset);
+  ABSL_ASSIGN_OR_RETURN(KeysetHandle handle,
+                        CleartextKeysetHandle::GetKeysetHandleOrError(
+                            keyset, InsecureSecretKeyAccess::Get()));
+  return std::make_unique<KeysetHandle>(std::move(handle));
 }
 
 absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(

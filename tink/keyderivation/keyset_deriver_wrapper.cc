@@ -21,8 +21,10 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/keyderivation/keyset_deriver.h"
 #include "tink/keyset_handle.h"
 #include "tink/primitive_set.h"
@@ -69,8 +71,9 @@ absl::StatusOr<KeyData> DeriveAndGetKeyData(absl::string_view salt,
                                             const KeysetDeriver& deriver) {
   auto keyset_handle_or = deriver.DeriveKeyset(salt);
   if (!keyset_handle_or.ok()) return keyset_handle_or.status();
-  const Keyset& keyset =
-      CleartextKeysetHandle::GetKeyset(*keyset_handle_or.value());
+  ABSL_ASSIGN_OR_RETURN(Keyset keyset, CleartextKeysetHandle::GetKeysetOrError(
+                                           *keyset_handle_or.value(),
+                                           InsecureSecretKeyAccess::Get()));
   if (keyset.key_size() != 1) {
     return absl::Status(
         absl::StatusCode::kInternal,
@@ -94,7 +97,10 @@ KeysetDeriverSetWrapper::DeriveKeyset(absl::string_view salt) const {
     key->set_key_id(entry->get_key_id());
   }
   keyset.set_primary_key_id(deriver_set_->get_primary()->get_key_id());
-  return CleartextKeysetHandle::GetKeysetHandle(keyset);
+  ABSL_ASSIGN_OR_RETURN(KeysetHandle handle,
+                        CleartextKeysetHandle::GetKeysetHandleOrError(
+                            keyset, InsecureSecretKeyAccess::Get()));
+  return std::make_unique<KeysetHandle>(std::move(handle));
 }
 
 }  // namespace

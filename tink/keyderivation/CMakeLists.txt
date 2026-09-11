@@ -22,8 +22,10 @@ tink_cc_library(
     tink::keyderivation::keyset_deriver
     absl::memory
     absl::status
+    absl::status_macros
     absl::string_view
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::primitive_set
     tink::core::primitive_wrapper

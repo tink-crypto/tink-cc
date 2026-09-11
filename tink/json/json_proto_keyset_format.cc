@@ -20,11 +20,13 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "google/protobuf/json/json.h"
 #include "tink/cleartext_keyset_handle.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/json/internal/tink_type_resolver.h"
@@ -89,8 +91,9 @@ absl::Status ValidateNoSecret(const google::crypto::tink::Keyset& keyset) {
 absl::StatusOr<std::string> SerializeKeysetToJsonProtoKeysetFormatWithOptional(
     const KeysetHandle& keyset_handle,
     std::optional<SecretKeyAccessToken> token) {
-  const google::crypto::tink::Keyset& keyset =
-      CleartextKeysetHandle::GetKeyset(keyset_handle);
+  ABSL_ASSIGN_OR_RETURN(google::crypto::tink::Keyset keyset,
+                        CleartextKeysetHandle::GetKeysetOrError(
+                            keyset_handle, InsecureSecretKeyAccess::Get()));
   if (!token.has_value()) {
     absl::Status status = ValidateNoSecret(keyset);
     if (!status.ok()) {

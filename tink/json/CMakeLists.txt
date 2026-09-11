@@ -42,11 +42,13 @@ tink_cc_library(
     json_proto_keyset_format.h
   DEPS
     absl::status
+    absl::status_macros
     absl::statusor
     absl::string_view
     absl::optional
     protobuf::libprotobuf
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::proto_keyset_format
     tink::core::secret_data

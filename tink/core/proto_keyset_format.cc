@@ -29,6 +29,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -76,8 +77,7 @@ absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
 
 absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
     const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
-  const google::crypto::tink::Keyset& keyset =
-      CleartextKeysetHandle::GetKeyset(keyset_handle);
+  const google::crypto::tink::Keyset& keyset = keyset_handle.get_keyset();
   SecretBuffer result(keyset.ByteSizeLong());
   bool serialized = internal::CallWithCoreDumpProtection(
       [&]() { return keyset.SerializeToArray(result.data(), result.size()); });

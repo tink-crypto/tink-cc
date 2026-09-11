@@ -342,8 +342,13 @@ class KeysetHandle {
   // KeysetHandleBuilder::Build() needs access to KeysetHandle(Keyset).
   friend class KeysetHandleBuilder;
 
+  // ParseKeysetFromProtoKeysetFormat needs access to GetEntriesFromKeyset().
   friend absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
       absl::string_view serialized_keyset, SecretKeyAccessToken token);
+
+  // SerializeKeysetToProtoKeysetFormat needs access to get_keyset().
+  friend absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
+      const KeysetHandle& keyset_handle, SecretKeyAccessToken token);
 
   // Helper for `GetPrimitive<P>(config)` that performs type-erased primitive
   // resolution and wrapping. Returns an untyped pointer to the created

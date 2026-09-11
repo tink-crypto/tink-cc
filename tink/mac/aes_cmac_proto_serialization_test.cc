@@ -447,8 +447,7 @@ KeyAndSerialization CanonicalKeyAndSerialization0() {
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
       KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink, 104);
 
-  return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
-                             serialization);
+  return KeyAndSerialization(std::make_unique<AesCmacKey>(*key), serialization);
 }
 
 KeyAndSerialization CanonicalKeyAndSerialization1() {
@@ -467,8 +466,7 @@ KeyAndSerialization CanonicalKeyAndSerialization1() {
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
       KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, std::nullopt);
 
-  return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
-                             serialization);
+  return KeyAndSerialization(std::make_unique<AesCmacKey>(*key), serialization);
 }
 
 KeyAndSerialization NonCanonicalKeyAndSerialization2() {
@@ -489,8 +487,7 @@ KeyAndSerialization NonCanonicalKeyAndSerialization2() {
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
       KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, std::nullopt);
 
-  return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
-                             serialization);
+  return KeyAndSerialization(std::make_unique<AesCmacKey>(*key), serialization);
 }
 
 INSTANTIATE_TEST_SUITE_P(SerializationTest, SerializationTest,

@@ -36,16 +36,16 @@ namespace tink {
 absl::Status MacConfig::Register() {
   // Register primitive wrappers.
   auto status =
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<MacWrapper>());
+      Registry::RegisterPrimitiveWrapper(std::make_unique<MacWrapper>());
   if (!status.ok()) return status;
 
   status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<internal::ChunkedMacWrapper>());
+      std::make_unique<internal::ChunkedMacWrapper>());
   if (!status.ok()) return status;
 
   // Register key managers which utilize the FIPS validated BoringCrypto
   // implementations.
-  status = Registry::RegisterKeyTypeManager(absl::make_unique<HmacKeyManager>(),
+  status = Registry::RegisterKeyTypeManager(std::make_unique<HmacKeyManager>(),
                                             true);
   if (!status.ok()) return status;
 
@@ -58,7 +58,7 @@ absl::Status MacConfig::Register() {
 
   // CMac in BoringSSL is not FIPS validated.
   status = Registry::RegisterKeyTypeManager(
-      absl::make_unique<AesCmacKeyManager>(), true);
+      std::make_unique<AesCmacKeyManager>(), true);
   if (!status.ok()) return status;
 
   status = RegisterAesCmacProtoSerialization();

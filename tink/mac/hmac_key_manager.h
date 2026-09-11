@@ -59,8 +59,8 @@ class HmacKeyManager
   };
 
   HmacKeyManager()
-      : KeyTypeManager(absl::make_unique<MacFactory>(),
-                       absl::make_unique<ChunkedMacFactory>()) {}
+      : KeyTypeManager(std::make_unique<MacFactory>(),
+                       std::make_unique<ChunkedMacFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

@@ -59,8 +59,8 @@ class AesCmacKeyManager
 
   AesCmacKeyManager()
       : KeyTypeManager(
-            absl::make_unique<AesCmacKeyManager::MacFactory>(),
-            absl::make_unique<AesCmacKeyManager::ChunkedMacFactory>()) {}
+            std::make_unique<AesCmacKeyManager::MacFactory>(),
+            std::make_unique<AesCmacKeyManager::ChunkedMacFactory>()) {}
 
   uint32_t get_version() const override { return 0; }
 

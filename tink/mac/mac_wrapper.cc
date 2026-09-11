@@ -178,7 +178,7 @@ absl::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
-    return {absl::make_unique<MacSetWrapper>(std::move(mac_set))};
+    return {std::make_unique<MacSetWrapper>(std::move(mac_set))};
   }
 
   absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
@@ -201,7 +201,7 @@ absl::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
     return monitoring_verify_client.status();
   }
 
-  return {absl::make_unique<MacSetWrapper>(
+  return {std::make_unique<MacSetWrapper>(
       std::move(mac_set), *std::move(monitoring_compute_client),
       *std::move(monitoring_verify_client))};
 }

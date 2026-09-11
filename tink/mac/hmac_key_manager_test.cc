@@ -261,7 +261,7 @@ TEST(HmacKeyManagerTest, DeriveKey) {
   format.mutable_params()->set_tag_size(10);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
+      std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
   absl::StatusOr<HmacKeyProto> key_or =
       HmacKeyManager().DeriveKey(format, &input_stream);
@@ -279,7 +279,7 @@ TEST(HmacKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   format.mutable_params()->set_tag_size(10);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef")};
 
   ASSERT_THAT(HmacKeyManager().DeriveKey(format, &input_stream).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -293,7 +293,7 @@ TEST(HmacKeyManagerTest, DeriveKeyWrongVersion) {
   format.mutable_params()->set_tag_size(10);
 
   IstreamInputStream input_stream{
-      absl::make_unique<std::stringstream>("0123456789abcdef")};
+      std::make_unique<std::stringstream>("0123456789abcdef")};
 
   ASSERT_THAT(
       HmacKeyManager().DeriveKey(format, &input_stream).status(),

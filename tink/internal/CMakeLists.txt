@@ -1163,12 +1163,14 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::string_view
+    tink::core::cleartext_keyset_handle
     tink::core::configuration
     tink::core::key_manager_impl
     tink::core::key_type_manager
     tink::core::private_key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::insecure_secret_key_access
     tink::core::key_manager
     tink::core::keyset_handle
     tink::core::primitive_set

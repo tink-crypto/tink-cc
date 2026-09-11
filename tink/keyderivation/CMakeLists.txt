@@ -147,6 +147,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::primitive_set
     tink::util::statusor

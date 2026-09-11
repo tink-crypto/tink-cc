@@ -620,6 +620,7 @@ tink_cc_test(
     absl::strings
     crypto
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::keyset_reader
     tink::config::global_registry

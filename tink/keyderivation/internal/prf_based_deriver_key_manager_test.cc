@@ -28,6 +28,7 @@
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/cleartext_keyset_handle.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/keyderivation/internal/prf_based_deriver.h"
 #include "tink/keyderivation/keyset_deriver.h"
 #include "tink/keyset_handle.h"
@@ -262,7 +263,9 @@ TEST(PrfBasedDeriverKeyManagerTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       (*deriver)->DeriveKeyset(salt);
   ASSERT_THAT(handle, IsOk());
-  Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
+  absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+      **handle, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset, IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetDeriver>> direct_deriver =
       internal::PrfBasedDeriver::New(key.prf_key(),
@@ -271,19 +274,22 @@ TEST(PrfBasedDeriverKeyManagerTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> direct_handle =
       (*direct_deriver)->DeriveKeyset(salt);
   ASSERT_THAT(direct_handle, IsOk());
-  Keyset direct_keyset = CleartextKeysetHandle::GetKeyset(**direct_handle);
+  absl::StatusOr<Keyset> direct_keyset =
+      CleartextKeysetHandle::GetKeysetOrError(**direct_handle,
+                                              InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(direct_keyset, IsOk());
 
-  ASSERT_THAT(keyset.key(), SizeIs(1));
-  ASSERT_THAT(direct_keyset.key(), SizeIs(1));
+  ASSERT_THAT(keyset->key(), SizeIs(1));
+  ASSERT_THAT(direct_keyset->key(), SizeIs(1));
 
-  ASSERT_THAT(keyset.key(0).key_data().type_url(),
-              Eq(keyset.key(0).key_data().type_url()));
+  ASSERT_THAT(keyset->key(0).key_data().type_url(),
+              Eq(keyset->key(0).key_data().type_url()));
 
   AesGcmKeyProto derived_key;
-  ASSERT_TRUE(derived_key.ParseFromString(keyset.key(0).key_data().value()));
+  ASSERT_TRUE(derived_key.ParseFromString(keyset->key(0).key_data().value()));
   AesGcmKeyProto direct_derived_key;
   ASSERT_TRUE(direct_derived_key.ParseFromString(
-      direct_keyset.key(0).key_data().value()));
+      direct_keyset->key(0).key_data().value()));
   EXPECT_THAT(derived_key.key_value(), Eq(direct_derived_key.key_value()));
 }
 

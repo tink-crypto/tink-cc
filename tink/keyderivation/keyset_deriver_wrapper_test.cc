@@ -29,6 +29,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/keyderivation/keyset_deriver.h"
 #include "tink/keyset_handle.h"
 #include "tink/primitive_set.h"
@@ -109,15 +110,17 @@ TEST(KeysetDeriverWrapperTest, WrapSingle) {
 
   ASSERT_THAT(derived_keyset_or, IsOk());
 
-  Keyset keyset = CleartextKeysetHandle::GetKeyset(*derived_keyset_or.value());
+  absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+      *derived_keyset_or.value(), InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset, IsOk());
 
-  EXPECT_THAT(keyset.primary_key_id(), Eq(1234));
-  ASSERT_THAT(keyset.key_size(), Eq(1));
-  EXPECT_THAT(keyset.key(0).key_data().type_url(),
+  EXPECT_THAT(keyset->primary_key_id(), Eq(1234));
+  ASSERT_THAT(keyset->key_size(), Eq(1));
+  EXPECT_THAT(keyset->key(0).key_data().type_url(),
               Eq("15:wrap_single_keywrap_single_salt"));
-  EXPECT_THAT(keyset.key(0).status(), Eq(KeyStatusType::ENABLED));
-  EXPECT_THAT(keyset.key(0).key_id(), Eq(1234));
-  EXPECT_THAT(keyset.key(0).output_prefix_type(), Eq(OutputPrefixType::TINK));
+  EXPECT_THAT(keyset->key(0).status(), Eq(KeyStatusType::ENABLED));
+  EXPECT_THAT(keyset->key(0).key_id(), Eq(1234));
+  EXPECT_THAT(keyset->key(0).output_prefix_type(), Eq(OutputPrefixType::TINK));
 }
 
 TEST(KeysetDeriverWrapperTest, WrapMultiple) {
@@ -164,16 +167,18 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> derived_keyset =
       (*wrapper_deriver)->DeriveKeyset("salt");
   ASSERT_THAT(derived_keyset, IsOk());
-  Keyset keyset = CleartextKeysetHandle::GetKeyset(**derived_keyset);
+  absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+      **derived_keyset, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset, IsOk());
 
-  EXPECT_THAT(keyset.primary_key_id(), Eq(2020202));
-  ASSERT_THAT(keyset.key_size(), Eq(3));
+  EXPECT_THAT(keyset->primary_key_id(), Eq(2020202));
+  ASSERT_THAT(keyset->key_size(), Eq(3));
 
-  for (int i = 0; i < keyset.key().size(); i++) {
+  for (int i = 0; i < keyset->key().size(); i++) {
     std::string type_url = absl::StrCat("2:k", i + 1, "salt");
-    EXPECT_THAT(keyset.key(i).key_data().type_url(), Eq(type_url));
+    EXPECT_THAT(keyset->key(i).key_data().type_url(), Eq(type_url));
 
-    Keyset::Key key = keyset.key(i);
+    Keyset::Key key = keyset->key(i);
     key_info = key_infos[i];
     EXPECT_THAT(key.status(), Eq(key_info.status()));
     EXPECT_THAT(key.key_id(), Eq(key_info.key_id()));

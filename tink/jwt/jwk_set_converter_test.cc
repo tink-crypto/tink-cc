@@ -34,6 +34,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/json/json_keyset_reader.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/jwt_public_key_sign.h"
@@ -681,13 +682,15 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Rs256CorrectlySetsKid) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, IsOk());
-  const google::crypto::tink::Keyset &keyset =
-      CleartextKeysetHandle::GetKeyset(**public_handle);
-  ASSERT_THAT(keyset.key_size(), Eq(1));
-  EXPECT_THAT(keyset.key(0).output_prefix_type(),
+  absl::StatusOr<google::crypto::tink::Keyset> keyset =
+      CleartextKeysetHandle::GetKeysetOrError(**public_handle,
+                                              InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset, IsOk());
+  ASSERT_THAT(keyset->key_size(), Eq(1));
+  EXPECT_THAT(keyset->key(0).output_prefix_type(),
               Eq(google::crypto::tink::OutputPrefixType::RAW));
   google::crypto::tink::JwtRsaSsaPkcs1PublicKey key;
-  key.ParseFromString(keyset.key(0).key_data().value());
+  key.ParseFromString(keyset->key(0).key_data().value());
   EXPECT_THAT(key.custom_kid().value(), Eq("DfpE4Q"));
 }
 
@@ -877,13 +880,14 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256CorrectlySetsKid) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, IsOk());
-  const google::crypto::tink::Keyset &keyset =
-      CleartextKeysetHandle::GetKeyset(**public_handle);
-  ASSERT_THAT(keyset.key_size(), Eq(1));
-  EXPECT_THAT(keyset.key(0).output_prefix_type(),
+  absl::StatusOr<google::crypto::tink::Keyset> keyset =
+      CleartextKeysetHandle::GetKeysetOrError(**public_handle,
+                                              InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset->key_size(), Eq(1));
+  EXPECT_THAT(keyset->key(0).output_prefix_type(),
               Eq(google::crypto::tink::OutputPrefixType::RAW));
   google::crypto::tink::JwtEcdsaPublicKey key;
-  key.ParseFromString(keyset.key(0).key_data().value());
+  key.ParseFromString(keyset->key(0).key_data().value());
   EXPECT_THAT(key.custom_kid().value(), Eq("EhuduQ"));
 }
 
@@ -1206,11 +1210,13 @@ TEST_P(JwkSetSmallCoordinateConverterTest,
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
-  const google::crypto::tink::Keyset &public_keyset =
-      CleartextKeysetHandle::GetKeyset(**keyset_handle);
+  absl::StatusOr<google::crypto::tink::Keyset> public_keyset =
+      CleartextKeysetHandle::GetKeysetOrError(**keyset_handle,
+                                              InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(public_keyset, IsOk());
   google::crypto::tink::EcdsaPublicKey public_key;
-  ASSERT_TRUE(
-      public_key.ParseFromString(public_keyset.key().at(0).key_data().value()));
+  ASSERT_TRUE(public_key.ParseFromString(
+      public_keyset->key().at(0).key_data().value()));
   // verify one of the coordinates is different than the field element size.
   ASSERT_FALSE(public_key.x().size() == GetParam().expected_encoded_size &&
                public_key.y().size() == GetParam().expected_encoded_size);

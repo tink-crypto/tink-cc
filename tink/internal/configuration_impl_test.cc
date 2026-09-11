@@ -29,12 +29,14 @@
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
+#include "tink/cleartext_keyset_handle.h"
 #include "tink/configuration.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/private_key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/keyset_wrapper_store.h"
@@ -555,8 +557,11 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
   std::string raw_key = AddAesGcmKeyToKeyset(
       keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
-  std::unique_ptr<KeysetHandle> handle =
-      CleartextKeysetHandle::GetKeysetHandle(keyset);
+  absl::StatusOr<KeysetHandle> raw_handle =
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          keyset, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(raw_handle, IsOk());
+  auto handle = std::make_unique<KeysetHandle>(std::move(*raw_handle));
   EXPECT_THAT(handle->GetPrimitive<FakePrimitive>(config).status(),
               StatusIs(absl::StatusCode::kNotFound));
 

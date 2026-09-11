@@ -1587,13 +1587,15 @@ TEST_F(KeysetHandleTest, ReadNoSecret) {
   ASSERT_THAT(handle_result, IsOk());
   std::unique_ptr<KeysetHandle>& keyset_handle = handle_result.value();
 
-  const Keyset& result = CleartextKeysetHandle::GetKeyset(*keyset_handle);
+  absl::StatusOr<Keyset> result = CleartextKeysetHandle::GetKeysetOrError(
+      *keyset_handle, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(result, IsOk());
   // We check that result equals keyset. For lack of a better method we do this
   // by hand.
-  EXPECT_EQ(result.primary_key_id(), keyset.primary_key_id());
-  ASSERT_EQ(result.key_size(), keyset.key_size());
-  ASSERT_EQ(result.key(0).key_id(), keyset.key(0).key_id());
-  ASSERT_EQ(result.key(1).key_id(), keyset.key(1).key_id());
+  EXPECT_EQ(result->primary_key_id(), keyset.primary_key_id());
+  ASSERT_EQ(result->key_size(), keyset.key_size());
+  ASSERT_EQ(result->key(0).key_id(), keyset.key(0).key_id());
+  ASSERT_EQ(result->key(1).key_id(), keyset.key(1).key_id());
 }
 
 TEST_F(KeysetHandleTest, ReadNoSecretWithAnnotations) {

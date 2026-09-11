@@ -105,6 +105,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::registry
     tink::aead::aead_key_templates

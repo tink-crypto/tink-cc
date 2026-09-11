@@ -138,8 +138,11 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholders) {
   EXPECT_THAT(key->GetIdRequirement(), Eq(std::nullopt));
   // Verify primary key ID, which is generated when the KeysetHandle is built.
   // http://google3/third_party/tink/cc/core/keyset_handle_builder.cc;l=163;rcl=604267117
-  EXPECT_THAT(CleartextKeysetHandle::GetKeyset(**handle).primary_key_id(),
-              Ne(0));
+  absl::StatusOr<Keyset> derived_keyset =
+      CleartextKeysetHandle::GetKeysetOrError(**handle,
+                                              InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(derived_keyset, IsOk());
+  EXPECT_THAT(derived_keyset->primary_key_id(), Ne(0));
 }
 
 TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholdersWithGlobalRegistry) {
@@ -155,14 +158,16 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholdersWithGlobalRegistry) {
   ASSERT_THAT(**handle, SizeIs(1));
 
   // Verify placeholders.
-  Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
-  EXPECT_THAT(keyset.key(0).output_prefix_type(),
+  absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+      **handle, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset, IsOk());
+  EXPECT_THAT(keyset->key(0).output_prefix_type(),
               Eq(OutputPrefixType::UNKNOWN_PREFIX));
-  EXPECT_THAT(keyset.key(0).status(), Eq(KeyStatusType::UNKNOWN_STATUS));
+  EXPECT_THAT(keyset->key(0).status(), Eq(KeyStatusType::UNKNOWN_STATUS));
 
   // Verify primary key ID and derived key ID are both 0.
-  EXPECT_THAT(keyset.primary_key_id(), Eq(0));
-  EXPECT_THAT(keyset.key(0).key_id(), Eq(0));
+  EXPECT_THAT(keyset->primary_key_id(), Eq(0));
+  EXPECT_THAT(keyset->key(0).key_id(), Eq(0));
 }
 
 TEST_F(PrfBasedDeriverTest, DeriveKeysetWithDifferentPrfKeys) {
@@ -177,9 +182,11 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetWithDifferentPrfKeys) {
     absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
         (*deriver)->DeriveKeyset(salt);
     ASSERT_THAT(handle, IsOk());
-    Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
+    absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+        **handle, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(keyset, IsOk());
     ASSERT_TRUE(
-        derived_key_0.ParseFromString(keyset.key(0).key_data().value()));
+        derived_key_0.ParseFromString(keyset->key(0).key_data().value()));
   }
   {
     HkdfPrfKey different_prf_key = valid_prf_key_;
@@ -192,9 +199,11 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetWithDifferentPrfKeys) {
     absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
         (*deriver)->DeriveKeyset(salt);
     ASSERT_THAT(handle, IsOk());
-    Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
+    absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+        **handle, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(keyset, IsOk());
     ASSERT_TRUE(
-        derived_key_1.ParseFromString(keyset.key(0).key_data().value()));
+        derived_key_1.ParseFromString(keyset->key(0).key_data().value()));
   }
   EXPECT_THAT(derived_key_0.key_value(), SizeIs(16));
   EXPECT_THAT(derived_key_1.key_value(), SizeIs(16));
@@ -212,17 +221,21 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetWithDifferentSalts) {
     absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
         (*deriver)->DeriveKeyset("salt");
     ASSERT_THAT(handle, IsOk());
-    Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
+    absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+        **handle, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(keyset, IsOk());
     ASSERT_TRUE(
-        derived_key_0.ParseFromString(keyset.key(0).key_data().value()));
+        derived_key_0.ParseFromString(keyset->key(0).key_data().value()));
   }
   {
     absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
         (*deriver)->DeriveKeyset("different_salt");
     ASSERT_THAT(handle, IsOk());
-    Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
+    absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+        **handle, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(keyset, IsOk());
     ASSERT_TRUE(
-        derived_key_1.ParseFromString(keyset.key(0).key_data().value()));
+        derived_key_1.ParseFromString(keyset->key(0).key_data().value()));
   }
   EXPECT_THAT(derived_key_0.key_value(), SizeIs(16));
   EXPECT_THAT(derived_key_1.key_value(), SizeIs(16));
@@ -362,9 +375,11 @@ TEST_P(PrfBasedDeriverJavaVectorsTest, AesGcm) {
       (*deriver)->DeriveKeyset(test_vector.deriving_salt);
   ASSERT_THAT(handle, IsOk());
 
-  Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
+  absl::StatusOr<Keyset> keyset = CleartextKeysetHandle::GetKeysetOrError(
+      **handle, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(keyset, IsOk());
   google::crypto::tink::AesGcmKey derived_key;
-  ASSERT_TRUE(derived_key.ParseFromString(keyset.key(0).key_data().value()));
+  ASSERT_TRUE(derived_key.ParseFromString(keyset->key(0).key_data().value()));
   EXPECT_THAT(derived_key.version(), Eq(AesGcmKeyManager().get_version()));
   EXPECT_THAT(test::HexEncode(derived_key.key_value()),
               Eq(test_vector.derived_key_value));

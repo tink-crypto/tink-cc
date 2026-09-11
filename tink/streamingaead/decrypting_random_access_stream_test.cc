@@ -32,9 +32,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/test_random_access_stream.h"
 #include "tink/output_stream.h"
-#include "tink/primitive_set.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
 #include "tink/subtle/random.h"
@@ -52,6 +52,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::crypto::tink::subtle::test::WriteToStream;
 using ::crypto::tink::test::DummyStreamingAead;
 using ::google::crypto::tink::KeysetInfo;

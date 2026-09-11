@@ -17,10 +17,10 @@ tink_cc_library(
     tink::core::crypto_format
     tink::core::input_stream
     tink::core::output_stream
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::random_access_stream
     tink::core::streaming_aead
+    tink::internal::primitive_set
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -171,8 +171,8 @@ tink_cc_library(
     absl::statusor
     absl::string_view
     tink::core::input_stream
-    tink::core::primitive_set
     tink::core::streaming_aead
+    tink::internal::primitive_set
     tink::util::errors
     tink::util::status
     tink::util::statusor
@@ -191,9 +191,9 @@ tink_cc_library(
     absl::statusor
     absl::string_view
     absl::synchronization
-    tink::core::primitive_set
     tink::core::random_access_stream
     tink::core::streaming_aead
+    tink::internal::primitive_set
     tink::util::buffer
     tink::util::errors
     tink::util::status
@@ -342,11 +342,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::output_stream
-    tink::core::primitive_set
     tink::core::proto_keyset_format
     tink::core::random_access_stream
     tink::core::streaming_aead
     tink::config::global_registry
+    tink::internal::primitive_set
     tink::internal::test_random_access_stream
     tink::subtle::random
     tink::subtle::streaming_aead_test_util
@@ -516,8 +516,8 @@ tink_cc_test(
     absl::strings
     tink::core::input_stream
     tink::core::output_stream
-    tink::core::primitive_set
     tink::core::streaming_aead
+    tink::internal::primitive_set
     tink::subtle::random
     tink::subtle::test_util
     tink::util::istream_input_stream
@@ -538,9 +538,9 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::output_stream
-    tink::core::primitive_set
     tink::core::random_access_stream
     tink::core::streaming_aead
+    tink::internal::primitive_set
     tink::internal::test_random_access_stream
     tink::subtle::random
     tink::subtle::test_util

@@ -31,8 +31,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/output_stream.h"
-#include "tink/primitive_set.h"
 #include "tink/streaming_aead.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/test_util.h"
@@ -48,6 +48,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::crypto::tink::subtle::test::ReadFromStream;
 using ::crypto::tink::subtle::test::WriteToStream;
 using ::crypto::tink::test::DummyStreamingAead;

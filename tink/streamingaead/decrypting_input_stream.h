@@ -24,7 +24,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/buffered_input_stream.h"
 #include "tink/util/statusor.h"
@@ -45,7 +45,8 @@ class DecryptingInputStream : public crypto::tink::InputStream {
   // using 'associated_data' as authenticated associated data
   // of the decryption process.
   static absl::StatusOr<std::unique_ptr<InputStream>> New(
-      std::shared_ptr<crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>>
+      std::shared_ptr<
+          crypto::tink::internal::PrimitiveSet<crypto::tink::StreamingAead>>
           primitives,
       std::unique_ptr<crypto::tink::InputStream> ciphertext_source,
       absl::string_view associated_data);
@@ -58,7 +59,8 @@ class DecryptingInputStream : public crypto::tink::InputStream {
  private:
   DecryptingInputStream() = default;
   std::shared_ptr<
-      crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives_;
+      crypto::tink::internal::PrimitiveSet<crypto::tink::StreamingAead>>
+      primitives_;
   std::shared_ptr<BufferedInputStream> buffered_ct_source_;
   std::string associated_data_;
   std::unique_ptr<crypto::tink::InputStream> matching_stream_;

@@ -26,8 +26,8 @@
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/input_stream.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/output_stream.h"
-#include "tink/primitive_set.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/decrypting_input_stream.h"
@@ -40,7 +40,7 @@ namespace tink {
 
 namespace {
 
-absl::Status Validate(PrimitiveSet<StreamingAead>* primitives) {
+absl::Status Validate(internal::PrimitiveSet<StreamingAead>* primitives) {
   if (primitives == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                   "primitive set must be non-NULL");
@@ -55,7 +55,7 @@ absl::Status Validate(PrimitiveSet<StreamingAead>* primitives) {
 class StreamingAeadSetWrapper: public StreamingAead {
  public:
   explicit StreamingAeadSetWrapper(
-      std::unique_ptr<PrimitiveSet<StreamingAead>> primitives)
+      std::unique_ptr<internal::PrimitiveSet<StreamingAead>> primitives)
       : primitives_(std::move(primitives)) {}
 
   absl::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
@@ -81,7 +81,7 @@ class StreamingAeadSetWrapper: public StreamingAead {
   // by NewDecryptingStream.  This can happen after this wrapper
   // is destroyed, as we refer to primitives_ only when the user attempts
   // to read some data from the decrypting stream.
-  std::shared_ptr<PrimitiveSet<StreamingAead>> primitives_;
+  std::shared_ptr<internal::PrimitiveSet<StreamingAead>> primitives_;
 };  // class StreamingAeadSetWrapper
 
 absl::StatusOr<std::unique_ptr<OutputStream>>
@@ -111,7 +111,8 @@ StreamingAeadSetWrapper::NewDecryptingRandomAccessStream(
 }  // anonymous namespace
 
 absl::StatusOr<std::unique_ptr<StreamingAead>> StreamingAeadWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<StreamingAead>> streaming_aead_set) const {
+    std::unique_ptr<internal::PrimitiveSet<StreamingAead>>
+        streaming_aead_set) const {
   auto status = Validate(streaming_aead_set.get());
   if (!status.ok()) return status;
   std::unique_ptr<StreamingAead> streaming_aead =

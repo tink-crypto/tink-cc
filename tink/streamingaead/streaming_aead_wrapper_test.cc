@@ -34,10 +34,10 @@
 #include "tink/config/global_registry.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/test_random_access_stream.h"
 #include "tink/keyset_handle.h"
 #include "tink/output_stream.h"
-#include "tink/primitive_set.h"
 #include "tink/proto_keyset_format.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
@@ -63,6 +63,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::crypto::tink::internal::ReadAllFromRandomAccessStream;
 using ::crypto::tink::subtle::test::ReadFromStream;
 using ::crypto::tink::subtle::test::WriteToStream;

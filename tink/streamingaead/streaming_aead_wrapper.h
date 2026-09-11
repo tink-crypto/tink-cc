@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/streaming_aead.h"
 #include "tink/util/statusor.h"
@@ -43,8 +43,8 @@ class StreamingAeadWrapper
   // provided in 'streaming_aead_set', which must be non-NULL and must contain
   // a primary instance.
   absl::StatusOr<std::unique_ptr<StreamingAead>> Wrap(
-      std::unique_ptr<PrimitiveSet<StreamingAead>> streaming_aead_set)
-      const override;
+      std::unique_ptr<internal::PrimitiveSet<StreamingAead>>
+          streaming_aead_set) const override;
 };
 
 }  // namespace tink

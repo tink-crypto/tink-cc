@@ -26,7 +26,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
 #include "tink/util/buffer.h"
@@ -49,7 +49,8 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
   // of 'random_access_stream', using 'associated_data' as authenticated
   // associated data of the decryption process.
   static absl::StatusOr<std::unique_ptr<RandomAccessStream>> New(
-      std::shared_ptr<crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>>
+      std::shared_ptr<
+          crypto::tink::internal::PrimitiveSet<crypto::tink::StreamingAead>>
           primitives,
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
       absl::string_view associated_data);
@@ -62,7 +63,8 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
  private:
   DecryptingRandomAccessStream(
       std::shared_ptr<
-          crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives,
+          crypto::tink::internal::PrimitiveSet<crypto::tink::StreamingAead>>
+          primitives,
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
       absl::string_view associated_data)
       : primitives_(primitives),
@@ -74,7 +76,8 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
   absl::StatusOr<crypto::tink::RandomAccessStream*> GetMatchedStream() const;
 
   std::shared_ptr<
-      crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives_;
+      crypto::tink::internal::PrimitiveSet<crypto::tink::StreamingAead>>
+      primitives_;
   std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source_;
   std::string associated_data_;
   mutable absl::Mutex matching_mutex_;

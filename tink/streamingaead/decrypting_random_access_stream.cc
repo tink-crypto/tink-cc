@@ -26,7 +26,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/shared_random_access_stream.h"
@@ -39,7 +39,7 @@ namespace crypto {
 namespace tink {
 namespace streamingaead {
 
-using crypto::tink::PrimitiveSet;
+using crypto::tink::internal::PrimitiveSet;
 using crypto::tink::StreamingAead;
 
 using StreamingAeadEntry = PrimitiveSet<StreamingAead>::Entry<StreamingAead>;

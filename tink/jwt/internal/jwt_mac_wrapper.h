@@ -20,9 +20,9 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/jwt_mac.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 
 namespace crypto {
@@ -38,7 +38,8 @@ namespace jwt_internal {
 class JwtMacWrapper : public PrimitiveWrapper<JwtMacInternal, JwtMac> {
  public:
   absl::StatusOr<std::unique_ptr<JwtMac>> Wrap(
-      std::unique_ptr<PrimitiveSet<JwtMacInternal>> jwt_mac_set) const override;
+      std::unique_ptr<crypto::tink::internal::PrimitiveSet<JwtMacInternal>>
+          jwt_mac_set) const override;
 };
 
 }  // namespace jwt_internal

@@ -19,9 +19,9 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/jwt_public_key_sign.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 
 namespace crypto {
@@ -36,8 +36,9 @@ class JwtPublicKeySignWrapper
     : public PrimitiveWrapper<JwtPublicKeySignInternal, JwtPublicKeySign> {
  public:
   absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> Wrap(
-      std::unique_ptr<PrimitiveSet<JwtPublicKeySignInternal>> jwt_sign_set)
-      const override;
+      std::unique_ptr<
+          crypto::tink::internal::PrimitiveSet<JwtPublicKeySignInternal>>
+          jwt_sign_set) const override;
 };
 
 }  // namespace jwt_internal

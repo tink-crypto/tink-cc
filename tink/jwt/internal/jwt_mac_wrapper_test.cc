@@ -47,9 +47,9 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/keyset_manager.h"
 #include "tink/mac/failing_mac.h"
-#include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -69,6 +69,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::CleartextKeysetHandle;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::crypto::tink::test::DummyMac;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeysetInfo;

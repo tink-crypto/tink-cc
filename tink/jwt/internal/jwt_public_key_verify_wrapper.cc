@@ -33,13 +33,14 @@
 #include "tink/jwt/jwt_public_key_verify.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
+using ::crypto::tink::internal::PrimitiveSet;
 using google::crypto::tink::OutputPrefixType;
 
 namespace {

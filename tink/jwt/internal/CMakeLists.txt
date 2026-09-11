@@ -228,10 +228,10 @@ tink_cc_library(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
@@ -261,11 +261,11 @@ tink_cc_test(
     absl::strings
     tink::core::cleartext_keyset_handle
     tink::core::keyset_manager
-    tink::core::primitive_set
     tink::core::registry
     tink::config::global_registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
@@ -734,10 +734,10 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::jwt::jwt_public_key_sign
     tink::jwt::raw_jwt
@@ -757,10 +757,10 @@ tink_cc_library(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_validator

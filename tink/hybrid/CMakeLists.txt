@@ -53,10 +53,10 @@ tink_cc_library(
     absl::strings
     tink::core::crypto_format
     tink::core::hybrid_decrypt
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
     tink::util::status
@@ -75,10 +75,10 @@ tink_cc_library(
     absl::strings
     tink::core::crypto_format
     tink::core::hybrid_encrypt
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
     tink::util::status
@@ -569,10 +569,10 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::hybrid_decrypt
-    tink::core::primitive_set
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor
@@ -595,10 +595,10 @@ tink_cc_test(
     absl::status_matchers
     absl::string_view
     tink::core::hybrid_encrypt
-    tink::core::primitive_set
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor

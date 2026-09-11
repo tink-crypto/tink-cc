@@ -29,7 +29,7 @@
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -44,7 +44,8 @@ constexpr absl::string_view kDecryptApi = "decrypt";
 class HybridDecryptSetWrapper : public HybridDecrypt {
  public:
   explicit HybridDecryptSetWrapper(
-      std::unique_ptr<PrimitiveSet<HybridDecrypt>> hybrid_decrypt_set,
+      std::unique_ptr<internal::PrimitiveSet<HybridDecrypt>>
+          hybrid_decrypt_set,
       std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client =
           nullptr)
       : hybrid_decrypt_set_(std::move(hybrid_decrypt_set)),
@@ -58,7 +59,7 @@ class HybridDecryptSetWrapper : public HybridDecrypt {
   ~HybridDecryptSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<HybridDecrypt>> hybrid_decrypt_set_;
+  std::unique_ptr<internal::PrimitiveSet<HybridDecrypt>> hybrid_decrypt_set_;
   std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client_;
 };
 
@@ -107,7 +108,8 @@ absl::StatusOr<std::string> HybridDecryptSetWrapper::Decrypt(
   return absl::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
 }
 
-absl::Status Validate(PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
+absl::Status Validate(
+    internal::PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
   if (hybrid_decrypt_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "hybrid_decrypt_set must be non-NULL");
@@ -123,7 +125,8 @@ absl::Status Validate(PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
 
 // static
 absl::StatusOr<std::unique_ptr<HybridDecrypt>> HybridDecryptWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<HybridDecrypt>> primitive_set) const {
+    std::unique_ptr<internal::PrimitiveSet<HybridDecrypt>>
+        primitive_set) const {
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 

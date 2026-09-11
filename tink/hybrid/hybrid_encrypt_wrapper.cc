@@ -29,7 +29,7 @@
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -41,7 +41,8 @@ namespace {
 constexpr absl::string_view kPrimitive = "hybrid_encrypt";
 constexpr absl::string_view kEncryptApi = "encrypt";
 
-absl::Status Validate(PrimitiveSet<HybridEncrypt>* hybrid_encrypt_set) {
+absl::Status Validate(
+    internal::PrimitiveSet<HybridEncrypt>* hybrid_encrypt_set) {
   if (hybrid_encrypt_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "hybrid_encrypt_set must be non-NULL");
@@ -59,7 +60,8 @@ absl::Status Validate(PrimitiveSet<HybridEncrypt>* hybrid_encrypt_set) {
 class HybridEncryptSetWrapper : public HybridEncrypt {
  public:
   explicit HybridEncryptSetWrapper(
-      std::unique_ptr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_set,
+      std::unique_ptr<internal::PrimitiveSet<HybridEncrypt>>
+          hybrid_encrypt_set,
       std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client =
           nullptr)
       : hybrid_encrypt_set_(std::move(hybrid_encrypt_set)),
@@ -73,7 +75,7 @@ class HybridEncryptSetWrapper : public HybridEncrypt {
   ~HybridEncryptSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_set_;
+  std::unique_ptr<internal::PrimitiveSet<HybridEncrypt>> hybrid_encrypt_set_;
   std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client_;
 };
 
@@ -104,7 +106,8 @@ absl::StatusOr<std::string> HybridEncryptSetWrapper::Encrypt(
 }  // anonymous namespace
 
 absl::StatusOr<std::unique_ptr<HybridEncrypt>> HybridEncryptWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<HybridEncrypt>> primitive_set) const {
+    std::unique_ptr<internal::PrimitiveSet<HybridEncrypt>>
+        primitive_set) const {
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 

@@ -39,7 +39,7 @@
 #include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_encapsulate.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"

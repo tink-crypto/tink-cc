@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "tink/kem/kem_encapsulate.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"

@@ -31,7 +31,7 @@
 #include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/keyset_handle.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 

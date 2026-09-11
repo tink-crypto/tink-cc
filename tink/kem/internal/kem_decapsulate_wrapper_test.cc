@@ -47,7 +47,7 @@
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/kem/kem_encapsulate.h"
 #include "tink/keyset_handle.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/test_util.h"
 

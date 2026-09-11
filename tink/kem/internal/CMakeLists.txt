@@ -30,10 +30,10 @@ tink_cc_library(
     absl::string_view
     tink::core::crypto_format
     tink::core::keyset_handle
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::kem::kem_decapsulate
     tink::util::status
@@ -59,7 +59,6 @@ tink_cc_test(
     crypto
     tink::core::aead
     tink::core::keyset_handle
-    tink::core::primitive_set
     tink::core::registry
     tink::aead::aead_config
     tink::aead::aes_gcm_parameters
@@ -71,6 +70,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::kem::kem_decapsulate
     tink::kem::kem_encapsulate
@@ -87,10 +87,10 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::string_view
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::kem::kem_encapsulate
     tink::util::status
@@ -111,7 +111,6 @@ tink_cc_test(
     absl::status_matchers
     absl::optional
     crypto
-    tink::core::primitive_set
     tink::core::registry
     tink::aead::aead_config
     tink::aead::aes_gcm_parameters
@@ -121,6 +120,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::kem::kem_encapsulate
     tink::util::statusor

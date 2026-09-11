@@ -271,6 +271,7 @@ tink_cc_library(
     keyset_util.h
   DEPS
     tink::proto::tink_cc_proto
+    tink::subtle::random
 )
 
 # tests

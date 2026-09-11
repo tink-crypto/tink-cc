@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "tink/prf/prf_set.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/statusor.h"
 
@@ -34,7 +34,7 @@ namespace tink {
 class PrfSetWrapper : public PrimitiveWrapper<Prf, PrfSet> {
  public:
   absl::StatusOr<std::unique_ptr<PrfSet>> Wrap(
-      std::unique_ptr<PrimitiveSet<Prf>> prf_set) const override;
+      std::unique_ptr<internal::PrimitiveSet<Prf>> prf_set) const override;
 };
 
 }  // namespace tink

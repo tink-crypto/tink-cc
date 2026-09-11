@@ -30,7 +30,7 @@
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 
 namespace crypto {
 namespace tink {
@@ -41,7 +41,7 @@ constexpr absl::string_view kPrimitive = "daead";
 constexpr absl::string_view kEncryptApi = "encrypt";
 constexpr absl::string_view kDecryptApi = "decrypt";
 
-absl::Status Validate(PrimitiveSet<DeterministicAead>* daead_set) {
+absl::Status Validate(internal::PrimitiveSet<DeterministicAead>* daead_set) {
   if (daead_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "daead_set must be non-NULL");
@@ -56,7 +56,7 @@ absl::Status Validate(PrimitiveSet<DeterministicAead>* daead_set) {
 class  DeterministicAeadSetWrapper : public DeterministicAead {
  public:
   explicit DeterministicAeadSetWrapper(
-      std::unique_ptr<PrimitiveSet<DeterministicAead>> daead_set,
+      std::unique_ptr<internal::PrimitiveSet<DeterministicAead>> daead_set,
       std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client =
           nullptr,
       std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client =
@@ -77,7 +77,7 @@ class  DeterministicAeadSetWrapper : public DeterministicAead {
   ~DeterministicAeadSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<DeterministicAead>> daead_set_;
+  std::unique_ptr<internal::PrimitiveSet<DeterministicAead>> daead_set_;
   std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client_;
   std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client_;
 };
@@ -162,7 +162,8 @@ DeterministicAeadSetWrapper::DecryptDeterministically(
 
 absl::StatusOr<std::unique_ptr<DeterministicAead>>
 DeterministicAeadWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<DeterministicAead>> primitive_set) const {
+    std::unique_ptr<internal::PrimitiveSet<DeterministicAead>>
+        primitive_set) const {
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 

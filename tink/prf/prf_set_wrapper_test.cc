@@ -33,7 +33,7 @@
 #include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/prf/prf_set.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -46,6 +46,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::testing::_;

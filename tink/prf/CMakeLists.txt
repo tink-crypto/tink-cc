@@ -90,10 +90,10 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::internal::monitoring
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor
@@ -393,10 +393,10 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    tink::core::primitive_set
     tink::core::registry
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::util::status
     tink::util::statusor

@@ -21,7 +21,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/deterministic_aead.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
@@ -42,7 +42,7 @@ class DeterministicAeadWrapper
   // Returns a DeterministicAead-primitive that uses Daead-instances provided
   // in 'daead_set', which must be non-NULL and must contain a primary instance.
   absl::StatusOr<std::unique_ptr<DeterministicAead>> Wrap(
-      std::unique_ptr<PrimitiveSet<DeterministicAead>> primitive_set)
+      std::unique_ptr<internal::PrimitiveSet<DeterministicAead>> primitive_set)
       const override;
 };
 

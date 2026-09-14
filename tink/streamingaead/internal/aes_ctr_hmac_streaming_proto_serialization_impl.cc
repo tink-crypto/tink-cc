@@ -65,8 +65,12 @@ class HmacParamsTP : public Message {
   HmacParamsTP() = default;
   using Message::SerializeAsString;
 
-  HashTypeEnum hash() const { return hash_.value(); }
-  void set_hash(HashTypeEnum hash) { hash_.set_value(hash); }
+  google::crypto::tink::internal::HashTypeTP hash() const {
+    return hash_.value();
+  }
+  void set_hash(google::crypto::tink::internal::HashTypeTP hash) {
+    hash_.set_value(hash);
+  }
 
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t tag_size) { tag_size_.set_value(tag_size); }
@@ -77,7 +81,8 @@ class HmacParamsTP : public Message {
     return std::array<const Field*, 2>{&hash_, &tag_size_}[i];
   }
 
-  EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> hash_{
+      1, &HashTypeEnumIsValid};
   Uint32Field tag_size_{2, ProtoFieldOptions::kImplicit};
 };
 
@@ -98,8 +103,11 @@ class AesCtrHmacStreamingParamsTP : public Message {
     derived_key_size_.set_value(size);
   }
 
-  HashTypeEnum hkdf_hash_type() const { return hkdf_hash_type_.value(); }
-  void set_hkdf_hash_type(HashTypeEnum hash_type) {
+  google::crypto::tink::internal::HashTypeTP hkdf_hash_type() const {
+    return hkdf_hash_type_.value();
+  }
+  void set_hkdf_hash_type(
+      google::crypto::tink::internal::HashTypeTP hash_type) {
     hkdf_hash_type_.set_value(hash_type);
   }
 
@@ -116,7 +124,8 @@ class AesCtrHmacStreamingParamsTP : public Message {
 
   Uint32Field ciphertext_segment_size_{1, ProtoFieldOptions::kImplicit};
   Uint32Field derived_key_size_{2, ProtoFieldOptions::kImplicit};
-  EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> hkdf_hash_type_{
+      3, &HashTypeEnumIsValid};
   MessageField<HmacParamsTP> hmac_params_{4};
 };
 
@@ -191,28 +200,28 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCtrHmacStreamingKey";
 
 absl::StatusOr<AesCtrHmacStreamingParameters::HashType> FromProtoHashType(
-    HashTypeEnum hash_type) {
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case google::crypto::tink::internal::HashTypeTP::kSha1:
       return AesCtrHmacStreamingParameters::HashType::kSha1;
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return AesCtrHmacStreamingParameters::HashType::kSha256;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return AesCtrHmacStreamingParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError("Unsupported proto hash type");
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     AesCtrHmacStreamingParameters::HashType hash_type) {
   switch (hash_type) {
     case AesCtrHmacStreamingParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return google::crypto::tink::internal::HashTypeTP::kSha1;
     case AesCtrHmacStreamingParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case AesCtrHmacStreamingParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError(
           absl::StrCat("Unsupported hash type: ", hash_type));
@@ -244,12 +253,12 @@ absl::StatusOr<AesCtrHmacStreamingParameters> ToParameters(
 
 absl::StatusOr<AesCtrHmacStreamingParamsTP> FromParameters(
     const AesCtrHmacStreamingParameters& parameters) {
-  absl::StatusOr<HashTypeEnum> hkdf_hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hkdf_hash_type =
       ToProtoHashType(parameters.HkdfHashType());
   if (!hkdf_hash_type.ok()) {
     return hkdf_hash_type.status();
   }
-  absl::StatusOr<HashTypeEnum> hmac_hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hmac_hash_type =
       ToProtoHashType(parameters.HmacHashType());
   if (!hmac_hash_type.ok()) {
     return hmac_hash_type.status();
@@ -266,7 +275,8 @@ absl::StatusOr<AesCtrHmacStreamingParamsTP> FromParameters(
 
 absl::StatusOr<AesCtrHmacStreamingParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesCtrHmacStreamingParameters.");
@@ -297,7 +307,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   *format.mutable_params() = *params_proto;
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
+      kTypeUrl, google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+      format.SerializeAsString());
 }
 
 absl::StatusOr<AesCtrHmacStreamingKey> ParseKey(
@@ -358,7 +369,8 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(key_proto.SerializeAsSecretData(), *token),
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       key.GetIdRequirement());
 }
 

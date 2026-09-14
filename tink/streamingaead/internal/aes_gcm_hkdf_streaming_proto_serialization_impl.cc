@@ -75,8 +75,10 @@ class AesGcmHkdfStreamingParamsTP : public Message {
     derived_key_size_.set_value(value);
   }
 
-  HashTypeEnum hkdf_hash_type() const { return hkdf_hash_type_.value(); }
-  void set_hkdf_hash_type(HashTypeEnum value) {
+  google::crypto::tink::internal::HashTypeTP hkdf_hash_type() const {
+    return hkdf_hash_type_.value();
+  }
+  void set_hkdf_hash_type(google::crypto::tink::internal::HashTypeTP value) {
     hkdf_hash_type_.set_value(value);
   }
 
@@ -88,7 +90,8 @@ class AesGcmHkdfStreamingParamsTP : public Message {
   }
   Uint32Field ciphertext_segment_size_{1, ProtoFieldOptions::kImplicit};
   Uint32Field derived_key_size_{2, ProtoFieldOptions::kImplicit};
-  EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> hkdf_hash_type_{
+      3, &HashTypeEnumIsValid};
 };
 
 class AesGcmHkdfStreamingKeyFormatTP : public Message {
@@ -157,13 +160,13 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesGcmHkdfStreamingKey";
 
 absl::StatusOr<AesGcmHkdfStreamingParameters::HashType> FromProtoHashType(
-    HashTypeEnum hash_type) {
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case google::crypto::tink::internal::HashTypeTP::kSha1:
       return AesGcmHkdfStreamingParameters::HashType::kSha1;
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return AesGcmHkdfStreamingParameters::HashType::kSha256;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return AesGcmHkdfStreamingParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError(
@@ -171,15 +174,15 @@ absl::StatusOr<AesGcmHkdfStreamingParameters::HashType> FromProtoHashType(
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     AesGcmHkdfStreamingParameters::HashType hash_type) {
   switch (hash_type) {
     case AesGcmHkdfStreamingParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return google::crypto::tink::internal::HashTypeTP::kSha1;
     case AesGcmHkdfStreamingParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case AesGcmHkdfStreamingParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError(
           absl::StrCat("Unsupported hash type: ", hash_type));
@@ -204,7 +207,7 @@ absl::StatusOr<AesGcmHkdfStreamingParameters> ToParameters(
 
 absl::StatusOr<AesGcmHkdfStreamingParamsTP> FromParameters(
     const AesGcmHkdfStreamingParameters& parameters) {
-  absl::StatusOr<HashTypeEnum> hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -219,7 +222,8 @@ absl::StatusOr<AesGcmHkdfStreamingParamsTP> FromParameters(
 
 absl::StatusOr<AesGcmHkdfStreamingParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmHkdfStreamingParameters.");
@@ -252,7 +256,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   *format.mutable_params() = *params;
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeTP::kRaw, format.SerializeAsString());
+      kTypeUrl, google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+      format.SerializeAsString());
 }
 
 absl::StatusOr<AesGcmHkdfStreamingKey> ParseKey(
@@ -314,7 +319,8 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(key_proto.SerializeAsSecretData(), *token),
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       key.GetIdRequirement());
 }
 

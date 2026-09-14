@@ -79,11 +79,12 @@ std::string FieldWithNumber::IsSubMessage(const std::vector<std::string>& s) {
   return IsString(absl::StrJoin(s, ""));
 }
 
-ProtoKeySerialization SerializeMessage(absl::string_view type_url,
-                                       const std::vector<std::string>& v,
-                                       KeyMaterialTypeTP key_material_type,
-                                       OutputPrefixTypeTP output_prefix_type,
-                                       std::optional<int> id_requirement) {
+ProtoKeySerialization SerializeMessage(
+    absl::string_view type_url, const std::vector<std::string>& v,
+    google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+        key_material_type,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    std::optional<int> id_requirement) {
   absl::StatusOr<ProtoKeySerialization> result = ProtoKeySerialization::Create(
       type_url,
       RestrictedData(absl::StrJoin(v, ""), InsecureSecretKeyAccess::Get()),

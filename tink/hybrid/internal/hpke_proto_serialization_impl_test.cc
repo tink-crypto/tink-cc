@@ -247,7 +247,7 @@ struct TestCase {
   HpkeParameters::KemId kem_id;
   HpkeParameters::KdfId kdf_id;
   HpkeParameters::AeadId aead_id;
-  OutputPrefixTypeTP output_prefix_type;
+  google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type;
   HpkeKem kem;
   HpkeKdf kdf;
   HpkeAead aead;
@@ -280,7 +280,8 @@ INSTANTIATE_TEST_SUITE_P(
         TestCase{HpkeParameters::Variant::kTink,
                  HpkeParameters::KemId::kDhkemP256HkdfSha256,
                  HpkeParameters::KdfId::kHkdfSha256,
-                 HpkeParameters::AeadId::kAesGcm128, OutputPrefixTypeTP::kTink,
+                 HpkeParameters::AeadId::kAesGcm128,
+                 google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
                  HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                  HpkeAead::AES_128_GCM, /*id=*/0x02030400,
                  /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
@@ -289,8 +290,9 @@ INSTANTIATE_TEST_SUITE_P(
                  HpkeParameters::KemId::kDhkemP384HkdfSha384,
                  HpkeParameters::KdfId::kHkdfSha384,
                  HpkeParameters::AeadId::kAesGcm256,
-                 OutputPrefixTypeTP::kCrunchy, HpkeKem::DHKEM_P384_HKDF_SHA384,
-                 HpkeKdf::HKDF_SHA384, HpkeAead::AES_256_GCM,
+                 google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy,
+                 HpkeKem::DHKEM_P384_HKDF_SHA384, HpkeKdf::HKDF_SHA384,
+                 HpkeAead::AES_256_GCM,
                  /*id=*/0x01030005,
                  /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5),
                  subtle::EllipticCurveType::NIST_P384},
@@ -298,8 +300,9 @@ INSTANTIATE_TEST_SUITE_P(
                  HpkeParameters::KemId::kDhkemP521HkdfSha512,
                  HpkeParameters::KdfId::kHkdfSha512,
                  HpkeParameters::AeadId::kAesGcm256,
-                 OutputPrefixTypeTP::kCrunchy, HpkeKem::DHKEM_P521_HKDF_SHA512,
-                 HpkeKdf::HKDF_SHA512, HpkeAead::AES_256_GCM,
+                 google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy,
+                 HpkeKem::DHKEM_P521_HKDF_SHA512, HpkeKdf::HKDF_SHA512,
+                 HpkeAead::AES_256_GCM,
                  /*id=*/0x07080910,
                  /*output_prefix=*/std::string("\x00\x07\x08\x09\x10", 5),
                  subtle::EllipticCurveType::NIST_P521},
@@ -307,8 +310,9 @@ INSTANTIATE_TEST_SUITE_P(
                  HpkeParameters::KemId::kDhkemX25519HkdfSha256,
                  HpkeParameters::KdfId::kHkdfSha256,
                  HpkeParameters::AeadId::kChaCha20Poly1305,
-                 OutputPrefixTypeTP::kRaw, HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                 HpkeKdf::HKDF_SHA256, HpkeAead::CHACHA20_POLY1305,
+                 google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                 HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
+                 HpkeAead::CHACHA20_POLY1305,
                  /*id=*/std::nullopt, /*output_prefix=*/"",
                  subtle::EllipticCurveType::CURVE25519}));
 
@@ -393,7 +397,8 @@ TEST_F(HpkeProtoSerializationTest, ParseLegacyAsCrunchy) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kLegacy,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -422,7 +427,9 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithInvalidSerialization) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -444,7 +451,8 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -468,7 +476,8 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKem) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kTink,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -492,7 +501,8 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKdf) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kTink,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -516,7 +526,8 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownAead) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kTink,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -548,7 +559,8 @@ TEST_P(HpkeProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));
@@ -584,7 +596,8 @@ TEST_P(HpkeProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));
@@ -646,7 +659,8 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -698,7 +712,8 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -735,10 +750,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -768,10 +785,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -811,7 +830,8 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -862,7 +882,8 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -909,7 +930,8 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -972,7 +994,8 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1014,10 +1037,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1042,10 +1067,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1081,10 +1108,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1123,10 +1152,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidPublicKeyVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1165,10 +1196,12 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1214,7 +1247,8 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -1275,7 +1309,8 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -1407,8 +1442,9 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PrivateKeyP256",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1445,8 +1481,9 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
             FieldWithNumber(3).IsString(P384PointAsString())}),
        FieldWithNumber(3).IsString(
            P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PrivateKeyP384",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1483,8 +1520,9 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
             FieldWithNumber(3).IsString(P521PointAsString())}),
        FieldWithNumber(3).IsString(
            P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PrivateKeyP521",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1521,8 +1559,9 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
             FieldWithNumber(3).IsString(X25519PublicValue())}),
        FieldWithNumber(3).IsString(
            X25519SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PrivateKeyX25519",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1557,7 +1596,9 @@ KeyAndSerialization PrivateKeyAndSerializationXWing() {
             FieldWithNumber(3).IsString(XWingPublicValue())}),
        FieldWithNumber(3).IsString(
            XWingSecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PrivateKeyXWing",
@@ -1593,7 +1634,9 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem768() {
             FieldWithNumber(3).IsString(MlKem768PublicValue())}),
        FieldWithNumber(3).IsString(
            MlKem768SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PrivateKeyMlKem768",
@@ -1629,7 +1672,9 @@ KeyAndSerialization PrivateKeyAndSerializationMlKem1024() {
             FieldWithNumber(3).IsString(MlKem1024PublicValue())}),
        FieldWithNumber(3).IsString(
            MlKem1024SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PrivateKeyMlKem1024",
@@ -1667,8 +1712,9 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
-      0x12341234);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kTink, 0x12341234);
 
   return KeyAndSerialization("PrivateKeyTink",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1705,8 +1751,9 @@ KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kCrunchy,
-      0x12341234);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy, 0x12341234);
 
   return KeyAndSerialization("PrivateKeyCrunchy",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1735,8 +1782,9 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PublicKeyP256",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1765,8 +1813,9 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(P384PointAsString())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PublicKeyP384",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1795,8 +1844,9 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA512),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P521PointAsString())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PublicKeyP521",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1825,8 +1875,9 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(X25519PublicValue())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("PublicKeyX25519",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1854,7 +1905,9 @@ KeyAndSerialization PublicKeyAndSerializationXWing() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(XWingPublicValue())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PublicKeyXWing",
@@ -1883,7 +1936,9 @@ KeyAndSerialization PublicKeyAndSerializationMlKem768() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(MlKem768PublicValue())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PublicKeyMlKem768",
@@ -1912,7 +1967,9 @@ KeyAndSerialization PublicKeyAndSerializationMlKem1024() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(MlKem1024PublicValue())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       /*id_requirement=*/std::nullopt);
 
   return KeyAndSerialization("PublicKeyMlKem1024",
@@ -1942,8 +1999,9 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
-      0x12341234);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kTink, 0x12341234);
 
   return KeyAndSerialization("PublicKeyTink",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -1972,8 +2030,9 @@ KeyAndSerialization PublicKeyAndSerializationCrunchy() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kCrunchy,
-      0x12341234);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy, 0x12341234);
 
   return KeyAndSerialization("PublicKeyCrunchy",
                              std::make_shared<HpkePublicKey>(*public_key),
@@ -2018,8 +2077,9 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-      std::nullopt);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw, std::nullopt);
 
   return KeyAndSerialization("NonCanonicalSerialization",
                              std::make_shared<HpkePrivateKey>(*private_key),

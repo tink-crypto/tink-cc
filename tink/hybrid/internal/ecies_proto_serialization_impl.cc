@@ -82,13 +82,19 @@ class ProtoEciesHkdfKemParams : public Message {
   ProtoEciesHkdfKemParams() = default;
   using Message::SerializeAsString;
 
-  EllipticCurveTypeEnum curve_type() const { return curve_type_.value(); }
-  void set_curve_type(EllipticCurveTypeEnum curve_type) {
+  google::crypto::tink::internal::EllipticCurveTypeTP curve_type() const {
+    return curve_type_.value();
+  }
+  void set_curve_type(
+      google::crypto::tink::internal::EllipticCurveTypeTP curve_type) {
     curve_type_.set_value(curve_type);
   }
 
-  HashTypeEnum hkdf_hash_type() const { return hkdf_hash_type_.value(); }
-  void set_hkdf_hash_type(HashTypeEnum hkdf_hash_type) {
+  google::crypto::tink::internal::HashTypeTP hkdf_hash_type() const {
+    return hkdf_hash_type_.value();
+  }
+  void set_hkdf_hash_type(
+      google::crypto::tink::internal::HashTypeTP hkdf_hash_type) {
     hkdf_hash_type_.set_value(hkdf_hash_type);
   }
 
@@ -104,9 +110,10 @@ class ProtoEciesHkdfKemParams : public Message {
                                        &hkdf_salt_}[i];
   }
 
-  EnumField<EllipticCurveTypeEnum> curve_type_{1,
-                                               &EllipticCurveTypeEnumIsValid};
-  EnumField<HashTypeEnum> hkdf_hash_type_{2, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::EllipticCurveTypeTP> curve_type_{
+      1, &EllipticCurveTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> hkdf_hash_type_{
+      2, &HashTypeEnumIsValid};
   BytesField hkdf_salt_{11};
 };
 
@@ -146,8 +153,11 @@ class ProtoEciesAeadHkdfParams : public Message {
     return dem_params_.mutable_value();
   }
 
-  EcPointFormatEnum ec_point_format() const { return ec_point_format_.value(); }
-  void set_ec_point_format(EcPointFormatEnum ec_point_format) {
+  google::crypto::tink::internal::EcPointFormatTP ec_point_format() const {
+    return ec_point_format_.value();
+  }
+  void set_ec_point_format(
+      google::crypto::tink::internal::EcPointFormatTP ec_point_format) {
     ec_point_format_.set_value(ec_point_format);
   }
 
@@ -160,7 +170,8 @@ class ProtoEciesAeadHkdfParams : public Message {
 
   MessageField<ProtoEciesHkdfKemParams> kem_params_{1};
   MessageField<ProtoEciesAeadDemParams> dem_params_{2};
-  EnumField<EcPointFormatEnum> ec_point_format_{3, &EcPointFormatEnumIsValid};
+  EnumField<google::crypto::tink::internal::EcPointFormatTP> ec_point_format_{
+      3, &EcPointFormatEnumIsValid};
 };
 
 class ProtoEciesAeadHkdfPublicKey : public Message {
@@ -259,15 +270,15 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey";
 
 absl::StatusOr<EciesParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return EciesParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return EciesParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return EciesParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -275,15 +286,15 @@ absl::StatusOr<EciesParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    EciesParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(EciesParameters::Variant variant) {
   switch (variant) {
     case EciesParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case EciesParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case EciesParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type.");
@@ -297,15 +308,15 @@ bool IsNistCurve(EciesParameters::CurveType curve) {
 }
 
 absl::StatusOr<EciesParameters::CurveType> FromProtoCurveType(
-    EllipticCurveTypeEnum curve) {
+    google::crypto::tink::internal::EllipticCurveTypeTP curve) {
   switch (curve) {
-    case EllipticCurveTypeEnum::kNistP256:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kNistP256:
       return EciesParameters::CurveType::kNistP256;
-    case EllipticCurveTypeEnum::kNistP384:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kNistP384:
       return EciesParameters::CurveType::kNistP384;
-    case EllipticCurveTypeEnum::kNistP521:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kNistP521:
       return EciesParameters::CurveType::kNistP521;
-    case EllipticCurveTypeEnum::kCurve25519:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kCurve25519:
       return EciesParameters::CurveType::kX25519;
     default:
       return absl::InvalidArgumentError(
@@ -313,33 +324,34 @@ absl::StatusOr<EciesParameters::CurveType> FromProtoCurveType(
   }
 }
 
-absl::StatusOr<EllipticCurveTypeEnum> ToProtoCurveType(
-    EciesParameters::CurveType curve) {
+absl::StatusOr<google::crypto::tink::internal::EllipticCurveTypeTP>
+ToProtoCurveType(EciesParameters::CurveType curve) {
   switch (curve) {
     case EciesParameters::CurveType::kNistP256:
-      return EllipticCurveTypeEnum::kNistP256;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kNistP256;
     case EciesParameters::CurveType::kNistP384:
-      return EllipticCurveTypeEnum::kNistP384;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kNistP384;
     case EciesParameters::CurveType::kNistP521:
-      return EllipticCurveTypeEnum::kNistP521;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kNistP521;
     case EciesParameters::CurveType::kX25519:
-      return EllipticCurveTypeEnum::kCurve25519;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kCurve25519;
     default:
       return absl::InvalidArgumentError("Could not determine curve type.");
   }
 }
 
-absl::StatusOr<EciesParameters::HashType> FromProtoHashType(HashTypeEnum hash) {
+absl::StatusOr<EciesParameters::HashType> FromProtoHashType(
+    google::crypto::tink::internal::HashTypeTP hash) {
   switch (hash) {
-    case HashTypeEnum::kSha1:
+    case google::crypto::tink::internal::HashTypeTP::kSha1:
       return EciesParameters::HashType::kSha1;
-    case HashTypeEnum::kSha224:
+    case google::crypto::tink::internal::HashTypeTP::kSha224:
       return EciesParameters::HashType::kSha224;
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return EciesParameters::HashType::kSha256;
-    case HashTypeEnum::kSha384:
+    case google::crypto::tink::internal::HashTypeTP::kSha384:
       return EciesParameters::HashType::kSha384;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return EciesParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError(
@@ -347,31 +359,33 @@ absl::StatusOr<EciesParameters::HashType> FromProtoHashType(HashTypeEnum hash) {
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(EciesParameters::HashType hash) {
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
+    EciesParameters::HashType hash) {
   switch (hash) {
     case EciesParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return google::crypto::tink::internal::HashTypeTP::kSha1;
     case EciesParameters::HashType::kSha224:
-      return HashTypeEnum::kSha224;
+      return google::crypto::tink::internal::HashTypeTP::kSha224;
     case EciesParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case EciesParameters::HashType::kSha384:
-      return HashTypeEnum::kSha384;
+      return google::crypto::tink::internal::HashTypeTP::kSha384;
     case EciesParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError("Could not determine hash type.");
   }
 }
 
 absl::StatusOr<EciesParameters::PointFormat> FromProtoPointFormat(
-    EcPointFormatEnum format) {
+    google::crypto::tink::internal::EcPointFormatTP format) {
   switch (format) {
-    case EcPointFormatEnum::kCompressed:
+    case google::crypto::tink::internal::EcPointFormatTP::kCompressed:
       return EciesParameters::PointFormat::kCompressed;
-    case EcPointFormatEnum::kUncompressed:
+    case google::crypto::tink::internal::EcPointFormatTP::kUncompressed:
       return EciesParameters::PointFormat::kUncompressed;
-    case EcPointFormatEnum::kDoNotUseCrunchyUncompressed:
+    case google::crypto::tink::internal::EcPointFormatTP::
+        kDoNotUseCrunchyUncompressed:
       return EciesParameters::PointFormat::kLegacyUncompressed;
     default:
       return absl::InvalidArgumentError(
@@ -379,15 +393,16 @@ absl::StatusOr<EciesParameters::PointFormat> FromProtoPointFormat(
   }
 }
 
-absl::StatusOr<EcPointFormatEnum> ToProtoPointFormat(
-    EciesParameters::PointFormat format) {
+absl::StatusOr<google::crypto::tink::internal::EcPointFormatTP>
+ToProtoPointFormat(EciesParameters::PointFormat format) {
   switch (format) {
     case EciesParameters::PointFormat::kCompressed:
-      return EcPointFormatEnum::kCompressed;
+      return google::crypto::tink::internal::EcPointFormatTP::kCompressed;
     case EciesParameters::PointFormat::kUncompressed:
-      return EcPointFormatEnum::kUncompressed;
+      return google::crypto::tink::internal::EcPointFormatTP::kUncompressed;
     case EciesParameters::PointFormat::kLegacyUncompressed:
-      return EcPointFormatEnum::kDoNotUseCrunchyUncompressed;
+      return google::crypto::tink::internal::EcPointFormatTP::
+          kDoNotUseCrunchyUncompressed;
     default:
       return absl::InvalidArgumentError("Could not determine point format.");
   }
@@ -404,7 +419,8 @@ absl::Status ValidateAesCtrHmacAeadKeyFormat(
   if (format.hmac_key_format().key_size() != 32) {
     return absl::InvalidArgumentError("HMAC key size must be 32 bytes.");
   }
-  if (format.hmac_key_format().params().hash() != HashTypeEnum::kSha256) {
+  if (format.hmac_key_format().params().hash() !=
+      google::crypto::tink::internal::HashTypeTP::kSha256) {
     return absl::InvalidArgumentError("Hash type must be SHA256.");
   }
   if (format.aes_ctr_key_format().key_size() !=
@@ -490,7 +506,7 @@ ProtoEciesAeadDemParams CreateEciesAeadDemParamsStruct(
   ProtoEciesAeadDemParams dem_params;
   dem_params.mutable_aead_dem()->set_type_url(type_url);
   dem_params.mutable_aead_dem()->set_output_prefix_type(
-      OutputPrefixTypeTP::kTink);
+      google::crypto::tink::internal::OutputPrefixTypeTP::kTink);
   dem_params.mutable_aead_dem()->set_value(serialized_key_format);
   return dem_params;
 }
@@ -536,7 +552,7 @@ absl::StatusOr<ProtoEciesAeadDemParams> ToProtoDemParams(
     format.mutable_hmac_key_format()->set_key_size(32);
     format.mutable_hmac_key_format()->mutable_params()->set_tag_size(tag_size);
     format.mutable_hmac_key_format()->mutable_params()->set_hash(
-        HashTypeEnum::kSha256);
+        google::crypto::tink::internal::HashTypeTP::kSha256);
 
     return CreateEciesAeadDemParamsStruct(
         "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
@@ -547,7 +563,7 @@ absl::StatusOr<ProtoEciesAeadDemParams> ToProtoDemParams(
 }
 
 absl::StatusOr<EciesParameters> ToParameters(
-    OutputPrefixTypeTP output_prefix_type,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
     const ProtoEciesAeadHkdfParams& params) {
   absl::StatusOr<EciesParameters::Variant> variant =
       ToVariant(output_prefix_type);
@@ -597,13 +613,13 @@ absl::StatusOr<EciesParameters> ToParameters(
 
 absl::StatusOr<ProtoEciesAeadHkdfParams> FromParameters(
     const EciesParameters& parameters) {
-  absl::StatusOr<EllipticCurveTypeEnum> curve_type =
-      ToProtoCurveType(parameters.GetCurveType());
+  absl::StatusOr<google::crypto::tink::internal::EllipticCurveTypeTP>
+      curve_type = ToProtoCurveType(parameters.GetCurveType());
   if (!curve_type.ok()) {
     return curve_type.status();
   }
 
-  absl::StatusOr<HashTypeEnum> hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -623,15 +639,17 @@ absl::StatusOr<ProtoEciesAeadHkdfParams> FromParameters(
     params.mutable_kem_params()->set_hkdf_salt(*parameters.GetSalt());
   }
   if (parameters.GetNistCurvePointFormat().has_value()) {
-    absl::StatusOr<EcPointFormatEnum> ec_point_format =
-        ToProtoPointFormat(*parameters.GetNistCurvePointFormat());
+    absl::StatusOr<google::crypto::tink::internal::EcPointFormatTP>
+        ec_point_format =
+            ToProtoPointFormat(*parameters.GetNistCurvePointFormat());
     if (!ec_point_format.ok()) {
       return ec_point_format.status();
     }
     params.set_ec_point_format(*ec_point_format);
   } else {
     // Must be X25519, so set to the compressed format.
-    params.set_ec_point_format(EcPointFormatEnum::kCompressed);
+    params.set_ec_point_format(
+        google::crypto::tink::internal::EcPointFormatTP::kCompressed);
   }
 
   return params;
@@ -777,7 +795,7 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
         "EciesAeadHkdfPrivateKey proto.");
   }
 
-  const OutputPrefixTypeTP output_prefix_type =
+  const google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type =
       serialization.GetOutputPrefixTypeTP();
 
   absl::StatusOr<EciesParameters::Variant> variant =
@@ -820,8 +838,8 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const EciesParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -857,8 +875,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   if (!serialized_proto_key.ok()) {
     return serialized_proto_key.status();
   }
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -866,7 +884,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto_key, InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPublic,
+      kPublicTypeUrl, restricted_output,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -922,8 +942,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
         secret->Get(InsecureSecretKeyAccess::Get()));
   }
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -936,7 +957,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto_private_key, *token);
   return ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPrivate,
+      kPrivateTypeUrl, restricted_output,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
       *output_prefix_type, key.GetIdRequirement());
 }
 

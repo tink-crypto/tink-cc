@@ -193,7 +193,8 @@ EciesAeadDemParams CreateXChaCha20Poly1305DemParams() {
 EciesAeadDemParams CreateAesCtrHmacDemParams(
     std::optional<int> aes_key_size, std::optional<int> iv_size,
     std::optional<int> version, std::optional<int> hmac_key_size,
-    std::optional<int> tag_size, std::optional<HashTypeEnum> hash_type) {
+    std::optional<int> tag_size,
+    std::optional<google::crypto::tink::internal::HashTypeTP> hash_type) {
   AesCtrHmacAeadKeyFormatTP format;
   format.mutable_aes_ctr_key_format()->set_key_size(aes_key_size.value_or(0));
   format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(
@@ -204,7 +205,8 @@ EciesAeadDemParams CreateAesCtrHmacDemParams(
   format.mutable_hmac_key_format()->mutable_params()->set_tag_size(
       tag_size.value_or(0));
   format.mutable_hmac_key_format()->mutable_params()->set_hash(
-      hash_type.value_or(HashTypeEnum::kUnknownHash));
+      hash_type.value_or(
+          google::crypto::tink::internal::HashTypeTP::kUnknownHash));
 
   KeyTemplate key_template;
   key_template.set_type_url(
@@ -223,7 +225,7 @@ EciesAeadDemParams CreateAesCtrHmacDemParams(int key_size) {
       /*aes_key_size=*/key_size, /*iv_size=*/16,
       /*version=*/0, /*hmac_key_size=*/32,
       /*tag_size=*/key_size,
-      /*hash_type=*/HashTypeEnum::kSha256);
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -686,7 +688,7 @@ TEST_F(EciesProtoSerializationTest,
   *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
       /*aes_key_size=*/std::nullopt, /*iv_size=*/std::nullopt,
       /*version=*/0, /*hmac_key_size=*/32, /*tag_size=*/16,
-      /*hash_type=*/HashTypeEnum::kSha256);
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -712,11 +714,11 @@ TEST_F(EciesProtoSerializationTest,
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
-  *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/std::nullopt,
-                                /*version=*/0, /*hmac_key_size=*/32,
-                                /*tag_size=*/16,
-                                /*hash_type=*/HashTypeEnum::kSha256);
+  *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/16, /*iv_size=*/std::nullopt,
+      /*version=*/0, /*hmac_key_size=*/32,
+      /*tag_size=*/16,
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -741,11 +743,11 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidIv) {
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
-  *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/14,
-                                /*version=*/0, /*hmac_key_size=*/32,
-                                /*tag_size=*/16,
-                                /*hash_type=*/HashTypeEnum::kSha256);
+  *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/16, /*iv_size=*/14,
+      /*version=*/0, /*hmac_key_size=*/32,
+      /*tag_size=*/16,
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -801,11 +803,11 @@ TEST_F(EciesProtoSerializationTest,
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
-  *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
-                                /*version=*/0, /*hmac_key_size=*/30,
-                                /*tag_size=*/16,
-                                /*hash_type=*/HashTypeEnum::kSha256);
+  *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/16, /*iv_size=*/16,
+      /*version=*/0, /*hmac_key_size=*/30,
+      /*tag_size=*/16,
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -859,11 +861,11 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidHashType) {
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
-  *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
-                                /*version=*/0, /*hmac_key_size=*/32,
-                                /*tag_size=*/16,
-                                /*hash_type=*/HashTypeEnum::kSha1);
+  *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/16, /*iv_size=*/16,
+      /*version=*/0, /*hmac_key_size=*/32,
+      /*tag_size=*/16,
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha1);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -889,11 +891,11 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidVersion) {
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
-  *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
-                                /*version=*/1, /*hmac_key_size=*/32,
-                                /*tag_size=*/16,
-                                /*hash_type=*/HashTypeEnum::kSha256);
+  *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/16, /*iv_size=*/16,
+      /*version=*/1, /*hmac_key_size=*/32,
+      /*tag_size=*/16,
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -920,11 +922,11 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithMismatchedSizes) {
   *params.mutable_kem_params() =
       CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
   // AES key size and HMAC tag size should match for allowed AES-CTR-HMAC DEMs.
-  *params.mutable_dem_params() =
-      CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
-                                /*version=*/0, /*hmac_key_size=*/32,
-                                /*tag_size=*/32,
-                                /*hash_type=*/HashTypeEnum::kSha256);
+  *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/16, /*iv_size=*/16,
+      /*version=*/0, /*hmac_key_size=*/32,
+      /*tag_size=*/32,
+      /*hash_type=*/google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -972,7 +974,8 @@ TEST_P(EciesProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));
@@ -1031,7 +1034,8 @@ TEST_P(EciesProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));

@@ -57,15 +57,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HmacKey";
 
 absl::StatusOr<HmacParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return HmacParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       return HmacParameters::Variant::kLegacy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return HmacParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return HmacParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -73,53 +73,54 @@ absl::StatusOr<HmacParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    HmacParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(HmacParameters::Variant variant) {
   switch (variant) {
     case HmacParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case HmacParameters::Variant::kLegacy:
-      return OutputPrefixTypeTP::kLegacy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy;
     case HmacParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case HmacParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
   }
 }
 
-absl::StatusOr<HmacParameters::HashType> ToHashType(HashTypeEnum hash_type) {
+absl::StatusOr<HmacParameters::HashType> ToHashType(
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case google::crypto::tink::internal::HashTypeTP::kSha1:
       return HmacParameters::HashType::kSha1;
-    case HashTypeEnum::kSha224:
+    case google::crypto::tink::internal::HashTypeTP::kSha224:
       return HmacParameters::HashType::kSha224;
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return HmacParameters::HashType::kSha256;
-    case HashTypeEnum::kSha384:
+    case google::crypto::tink::internal::HashTypeTP::kSha384:
       return HmacParameters::HashType::kSha384;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return HmacParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     HmacParameters::HashType hash_type) {
   switch (hash_type) {
     case HmacParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return google::crypto::tink::internal::HashTypeTP::kSha1;
     case HmacParameters::HashType::kSha224:
-      return HashTypeEnum::kSha224;
+      return google::crypto::tink::internal::HashTypeTP::kSha224;
     case HmacParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case HmacParameters::HashType::kSha384:
-      return HashTypeEnum::kSha384;
+      return google::crypto::tink::internal::HashTypeTP::kSha384;
     case HmacParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError(
           "Could not determine HmacParameters::HashType");
@@ -128,7 +129,8 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<HmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HmacParameters.");
@@ -161,10 +163,10 @@ absl::StatusOr<HmacParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HmacParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
-  absl::StatusOr<HashTypeEnum> proto_hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> proto_hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
@@ -223,7 +225,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
   if (!restricted_input.ok()) return restricted_input.status();
-  absl::StatusOr<HashTypeEnum> proto_hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> proto_hash_type =
       ToProtoHashType(key.GetParameters().GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
@@ -234,15 +236,16 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->Get(*token));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   SecretData serialized_key = proto_key.SerializeAsSecretData();
   RestrictedData restricted_output =
       RestrictedData(std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, std::move(restricted_output), KeyMaterialTypeTP::kSymmetric,
+      kTypeUrl, std::move(restricted_output),
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

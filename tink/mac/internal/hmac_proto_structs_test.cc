@@ -41,7 +41,8 @@ TEST(ProtoHmacMessagesTest, ParseHmacParamsTP) {
 
   HmacParamsTP params;
   ASSERT_THAT(params.ParseFromString(serialized_hmac_params), IsTrue());
-  EXPECT_THAT(params.hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(params.hash(),
+              Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
   EXPECT_THAT(params.tag_size(), Eq(16));
 }
 
@@ -52,7 +53,7 @@ TEST(ProtoHmacMessagesTest, ParseHmacParamsInvalidTP) {
 
 TEST(ProtoHmacMessagesTest, SerializeHmacParamsTP) {
   HmacParamsTP params;
-  params.set_hash(HashTypeEnum::kSha256);
+  params.set_hash(google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_tag_size(16);
 
   auto serialized_hmac_params = params.SerializeAsSecretData();
@@ -72,7 +73,8 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatTP) {
 
   HmacKeyFormatTP format;
   ASSERT_THAT(format.ParseFromString(serialized_hmac_format), IsTrue());
-  EXPECT_THAT(format.params().hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(format.params().hash(),
+              Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
   EXPECT_THAT(format.params().tag_size(), Eq(16));
   EXPECT_THAT(format.key_size(), Eq(32));
   EXPECT_THAT(format.version(), Eq(1));
@@ -85,7 +87,8 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatInvalidTP) {
 
 TEST(ProtoHmacMessagesTest, SerializeHmacKeyFormatTP) {
   HmacKeyFormatTP format;
-  format.mutable_params()->set_hash(HashTypeEnum::kSha256);
+  format.mutable_params()->set_hash(
+      google::crypto::tink::internal::HashTypeTP::kSha256);
   format.mutable_params()->set_tag_size(16);
   format.set_key_size(32);
   format.set_version(1);
@@ -114,7 +117,8 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyTP) {
 
   HmacKeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_hmac_key), IsTrue());
-  EXPECT_THAT(key.params().hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(key.params().hash(),
+              Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
   EXPECT_THAT(key.params().tag_size(), Eq(16));
   EXPECT_THAT(util::SecretDataAsStringView(key.key_value()),
               Eq("01234567890123456789012345678901"));
@@ -128,7 +132,8 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyInvalidTP) {
 
 TEST(ProtoHmacMessagesTest, SerializeHmacKeyTP) {
   HmacKeyTP key;
-  key.mutable_params()->set_hash(HashTypeEnum::kSha256);
+  key.mutable_params()->set_hash(
+      google::crypto::tink::internal::HashTypeTP::kSha256);
   key.mutable_params()->set_tag_size(16);
   key.set_key_value(
       util::SecretDataFromStringView("01234567890123456789012345678901"));

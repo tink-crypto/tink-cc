@@ -134,15 +134,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCmacKey";
 
 absl::StatusOr<AesCmacParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return AesCmacParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       return AesCmacParameters::Variant::kLegacy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return AesCmacParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return AesCmacParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -150,17 +150,17 @@ absl::StatusOr<AesCmacParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    AesCmacParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(AesCmacParameters::Variant variant) {
   switch (variant) {
     case AesCmacParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case AesCmacParameters::Variant::kLegacy:
-      return OutputPrefixTypeTP::kLegacy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy;
     case AesCmacParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case AesCmacParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -169,7 +169,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 
 absl::StatusOr<AesCmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesCmacParameters.");
@@ -192,8 +193,8 @@ absl::StatusOr<AesCmacParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesCmacParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   AesCmacKeyFormatProto proto_key_format;
@@ -256,15 +257,16 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   SecretData serialized_key = proto_key.SerializeAsSecretData();
   RestrictedData restricted_output =
       RestrictedData(std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, std::move(restricted_output), KeyMaterialTypeTP::kSymmetric,
+      kTypeUrl, std::move(restricted_output),
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

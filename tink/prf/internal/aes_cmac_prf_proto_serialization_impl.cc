@@ -110,12 +110,14 @@ const absl::string_view kTypeUrl =
 
 absl::StatusOr<AesCmacPrfParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesCmacPrfParameters.");
   }
-  if (key_template.output_prefix_type() != OutputPrefixTypeTP::kRaw) {
+  if (key_template.output_prefix_type() !=
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for AesCmacPrfParameters.");
   }
@@ -139,7 +141,8 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   proto_key_format.set_version(0);
 
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeTP::kRaw, proto_key_format.SerializeAsString());
+      kTypeUrl, google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<AesCmacPrfKey> ParseKey(
@@ -152,7 +155,8 @@ absl::StatusOr<AesCmacPrfKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  if (serialization.GetOutputPrefixTypeTP() != OutputPrefixTypeTP::kRaw) {
+  if (serialization.GetOutputPrefixTypeTP() !=
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for AesCmacPrfKey.");
   }
@@ -188,7 +192,8 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
 
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       key.GetIdRequirement());
 }
 

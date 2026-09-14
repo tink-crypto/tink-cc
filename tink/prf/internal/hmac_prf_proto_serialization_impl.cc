@@ -62,15 +62,20 @@ class HmacPrfParamsTP : public Message {
   HmacPrfParamsTP() = default;
   using Message::SerializeAsString;
 
-  HashTypeEnum hash() const { return hash_.value(); }
-  void set_hash(HashTypeEnum hash) { hash_.set_value(hash); }
+  google::crypto::tink::internal::HashTypeTP hash() const {
+    return hash_.value();
+  }
+  void set_hash(google::crypto::tink::internal::HashTypeTP hash) {
+    hash_.set_value(hash);
+  }
 
  private:
   size_t num_fields() const override { return 1; }
   const Field* field(int i) const override {
     return std::array<const Field*, 1>{&hash_}[i];
   }
-  EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> hash_{
+      1, &HashTypeEnumIsValid};
 };
 
 class HmacPrfKeyTP : public Message {
@@ -135,36 +140,37 @@ using HmacPrfProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HmacPrfKey";
 
-absl::StatusOr<HmacPrfParameters::HashType> ToHashType(HashTypeEnum hash_type) {
+absl::StatusOr<HmacPrfParameters::HashType> ToHashType(
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case google::crypto::tink::internal::HashTypeTP::kSha1:
       return HmacPrfParameters::HashType::kSha1;
-    case HashTypeEnum::kSha224:
+    case google::crypto::tink::internal::HashTypeTP::kSha224:
       return HmacPrfParameters::HashType::kSha224;
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return HmacPrfParameters::HashType::kSha256;
-    case HashTypeEnum::kSha384:
+    case google::crypto::tink::internal::HashTypeTP::kSha384:
       return HmacPrfParameters::HashType::kSha384;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return HmacPrfParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     HmacPrfParameters::HashType hash_type) {
   switch (hash_type) {
     case HmacPrfParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return google::crypto::tink::internal::HashTypeTP::kSha1;
     case HmacPrfParameters::HashType::kSha224:
-      return HashTypeEnum::kSha224;
+      return google::crypto::tink::internal::HashTypeTP::kSha224;
     case HmacPrfParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case HmacPrfParameters::HashType::kSha384:
-      return HashTypeEnum::kSha384;
+      return google::crypto::tink::internal::HashTypeTP::kSha384;
     case HmacPrfParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError(
           "Could not determine HmacPrfParameters::HashType");
@@ -173,12 +179,14 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<HmacPrfParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HmacPrfParameters.");
   }
-  if (key_template.output_prefix_type() != OutputPrefixTypeTP::kRaw) {
+  if (key_template.output_prefix_type() !=
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HmacPrfParameters.");
   }
@@ -202,7 +210,7 @@ absl::StatusOr<HmacPrfParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HmacPrfParameters& parameters) {
-  absl::StatusOr<HashTypeEnum> proto_hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> proto_hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!proto_hash_type.ok()) {
     return proto_hash_type.status();
@@ -214,7 +222,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   proto_key_format.set_version(0);
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeTP::kRaw, proto_key_format.SerializeAsString());
+      kTypeUrl, google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<HmacPrfKey> ParseKey(
@@ -227,7 +236,8 @@ absl::StatusOr<HmacPrfKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  if (serialization.GetOutputPrefixTypeTP() != OutputPrefixTypeTP::kRaw) {
+  if (serialization.GetOutputPrefixTypeTP() !=
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HmacPrfKey.");
   }
@@ -269,7 +279,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return restricted_input.status();
   }
 
-  absl::StatusOr<HashTypeEnum> proto_hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> proto_hash_type =
       ToProtoHashType(key.GetParameters().GetHashType());
   if (!proto_hash_type.ok()) {
     return proto_hash_type.status();
@@ -282,7 +292,8 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
       key.GetIdRequirement());
 }
 

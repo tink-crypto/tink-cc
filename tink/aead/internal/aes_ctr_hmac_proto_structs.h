@@ -74,10 +74,11 @@ class AesCtrHmacAeadKeyFormatTP : public proto_parsing::Message {
   const AesCtrKeyFormatTP& aes_ctr_key_format() const {
     return aes_ctr_key_format_.value();
   }
-  HmacKeyFormatTP* mutable_hmac_key_format() {
+  google::crypto::tink::internal::HmacKeyFormatTP* mutable_hmac_key_format() {
     return hmac_key_format_.mutable_value();
   }
-  const HmacKeyFormatTP& hmac_key_format() const {
+  const google::crypto::tink::internal::HmacKeyFormatTP& hmac_key_format()
+      const {
     return hmac_key_format_.value();
   }
   using Message::SerializeAsString;
@@ -90,7 +91,8 @@ class AesCtrHmacAeadKeyFormatTP : public proto_parsing::Message {
   }
 
   proto_parsing::MessageField<AesCtrKeyFormatTP> aes_ctr_key_format_{1};
-  proto_parsing::MessageField<HmacKeyFormatTP> hmac_key_format_{2};
+  proto_parsing::MessageField<google::crypto::tink::internal::HmacKeyFormatTP>
+      hmac_key_format_{2};
 };
 
 class AesCtrKeyTP : public proto_parsing::Message {
@@ -125,8 +127,12 @@ class AesCtrHmacAeadKeyTP : public proto_parsing::Message {
   void set_version(uint32_t value) { version_.set_value(value); }
   AesCtrKeyTP* mutable_aes_ctr_key() { return aes_ctr_key_.mutable_value(); }
   const AesCtrKeyTP& aes_ctr_key() const { return aes_ctr_key_.value(); }
-  HmacKeyTP* mutable_hmac_key() { return hmac_key_.mutable_value(); }
-  const HmacKeyTP& hmac_key() const { return hmac_key_.value(); }
+  google::crypto::tink::internal::HmacKeyTP* mutable_hmac_key() {
+    return hmac_key_.mutable_value();
+  }
+  const google::crypto::tink::internal::HmacKeyTP& hmac_key() const {
+    return hmac_key_.value();
+  }
 
  private:
   size_t num_fields() const override { return 3; }
@@ -137,7 +143,8 @@ class AesCtrHmacAeadKeyTP : public proto_parsing::Message {
 
   proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   proto_parsing::MessageField<AesCtrKeyTP> aes_ctr_key_{2};
-  proto_parsing::MessageField<HmacKeyTP> hmac_key_{3};
+  proto_parsing::MessageField<google::crypto::tink::internal::HmacKeyTP>
+      hmac_key_{3};
 };
 
 }  // namespace internal

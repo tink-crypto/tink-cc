@@ -65,9 +65,9 @@ set -x
 rm -rf out out_examples
 mkdir -p out out_examples
 cmake -S . -B out ${cmake_opts[@]@Q}
-tar -C . -czf "${config_cache_dir}/${config_cache_tar}" out
-cmake --build out --parallel \$(nproc)
 cmake -S examples -B out_examples ${cmake_opts[@]@Q}
+tar -C . -czf "${config_cache_dir}/${config_cache_tar}" out out_examples
+cmake --build out --parallel \$(nproc)
 cmake --build out_examples --parallel \$(nproc)
 tar -C . -czf "${ccache_tar}" ccache
 EOF

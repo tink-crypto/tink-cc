@@ -73,7 +73,8 @@ export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_NOREADONLY=true
 mkdir -p out
 ./kokoro/testutils/run_cmake_tests.sh -o out . ${CMAKE_ARGS[@]@Q} ${EXTRA_CMAKE_ARGS[@]@Q}
-./kokoro/testutils/run_cmake_tests.sh examples ${CMAKE_ARGS[@]@Q} ${EXTRA_CMAKE_ARGS[@]@Q}
+mkdir -p out_examples
+./kokoro/testutils/run_cmake_tests.sh -o out_examples examples ${CMAKE_ARGS[@]@Q} ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF
 
 readonly RUN_COMMAND_ARGS

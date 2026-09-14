@@ -67,7 +67,7 @@ if [[ "${IS_KOKORO}" == "true" ]]; then
     if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" &> /dev/null; then
       echo "Using config cache: ${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"
       gcloud storage cat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" \
-        | tar -C out -xzf - --strip-components=1
+        | tar -C . -xzf -
     fi
   fi
 fi
@@ -87,7 +87,8 @@ export CCACHE_NOREADONLY=true
 set -x
 mkdir -p out
 ./kokoro/testutils/run_cmake_tests.sh -o out . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
-./kokoro/testutils/run_cmake_tests.sh examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+mkdir -p out_examples
+./kokoro/testutils/run_cmake_tests.sh -o out_examples examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF
 
 readonly RUN_COMMAND_ARGS

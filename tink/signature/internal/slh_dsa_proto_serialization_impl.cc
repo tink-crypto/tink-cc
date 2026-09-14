@@ -201,11 +201,11 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.SlhDsaPublicKey";
 
 absl::StatusOr<SlhDsaParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return SlhDsaParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return SlhDsaParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -213,13 +213,13 @@ absl::StatusOr<SlhDsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    SlhDsaParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(SlhDsaParameters::Variant variant) {
   switch (variant) {
     case SlhDsaParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case SlhDsaParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -278,7 +278,8 @@ absl::StatusOr<SlhDsaSignatureTypeEnum> ToProtoSignatureType(
 }
 
 absl::StatusOr<SlhDsaParameters> ToParameters(
-    OutputPrefixTypeTP output_prefix_type, const SlhDsaParamsTP& params) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    const SlhDsaParamsTP& params) {
   absl::StatusOr<SlhDsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -326,7 +327,8 @@ absl::StatusOr<SlhDsaParamsTP> FromParameters(
 
 absl::StatusOr<SlhDsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing SlhDsaParameters.");
@@ -412,8 +414,8 @@ absl::StatusOr<SlhDsaPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const SlhDsaParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -448,8 +450,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   *proto_key.mutable_params() = *params;
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -457,7 +459,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsSecretData(), InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPublic,
+      kPublicTypeUrl, restricted_output,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -492,16 +496,18 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return serialized_proto.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
-      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 SlhDsaProtoParametersParserImpl& SlhDsaProtoParametersParser() {

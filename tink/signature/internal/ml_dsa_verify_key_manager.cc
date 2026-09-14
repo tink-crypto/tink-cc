@@ -47,8 +47,10 @@ class MlDsaVerifyKeyManagerAdaptor
 
   const std::string& GetKeyType() const final { return key_type_; }
 
-  KeyMaterialTypeTP GetKeyMaterialType() const final {
-    return KeyMaterialTypeTP::kAsymmetricPublic;
+  google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+  GetKeyMaterialType() const final {
+    return google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+        kAsymmetricPublic;
   }
 
   const KeyFactory& GetKeyFactory() const final { return *key_factory_; }

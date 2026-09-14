@@ -74,11 +74,17 @@ class RsaSsaPssParamsTP : public Message {
   RsaSsaPssParamsTP() = default;
   using Message::SerializeAsString;
 
-  HashTypeEnum sig_hash() const { return sig_hash_.value(); }
-  void set_sig_hash(HashTypeEnum sig_hash) { sig_hash_.set_value(sig_hash); }
+  google::crypto::tink::internal::HashTypeTP sig_hash() const {
+    return sig_hash_.value();
+  }
+  void set_sig_hash(google::crypto::tink::internal::HashTypeTP sig_hash) {
+    sig_hash_.set_value(sig_hash);
+  }
 
-  HashTypeEnum mgf1_hash() const { return mgf1_hash_.value(); }
-  void set_mgf1_hash(HashTypeEnum mgf1_hash) {
+  google::crypto::tink::internal::HashTypeTP mgf1_hash() const {
+    return mgf1_hash_.value();
+  }
+  void set_mgf1_hash(google::crypto::tink::internal::HashTypeTP mgf1_hash) {
     mgf1_hash_.set_value(mgf1_hash);
   }
 
@@ -94,8 +100,10 @@ class RsaSsaPssParamsTP : public Message {
                                        &salt_length_}[i];
   }
 
-  EnumField<HashTypeEnum> sig_hash_{1, &HashTypeEnumIsValid};
-  EnumField<HashTypeEnum> mgf1_hash_{2, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> sig_hash_{
+      1, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> mgf1_hash_{
+      2, &HashTypeEnumIsValid};
   Uint32Field salt_length_{3, ProtoFieldOptions::kImplicit};
 };
 
@@ -229,15 +237,15 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey";
 
 absl::StatusOr<RsaSsaPssParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       return RsaSsaPssParameters::Variant::kLegacy;
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return RsaSsaPssParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return RsaSsaPssParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return RsaSsaPssParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -245,17 +253,17 @@ absl::StatusOr<RsaSsaPssParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    RsaSsaPssParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(RsaSsaPssParameters::Variant variant) {
   switch (variant) {
     case RsaSsaPssParameters::Variant::kLegacy:
-      return OutputPrefixTypeTP::kLegacy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy;
     case RsaSsaPssParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case RsaSsaPssParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case RsaSsaPssParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type.");
@@ -263,28 +271,28 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 }
 
 absl::StatusOr<RsaSsaPssParameters::HashType> ToEnumHashType(
-    HashTypeEnum hash_type) {
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return RsaSsaPssParameters::HashType::kSha256;
-    case HashTypeEnum::kSha384:
+    case google::crypto::tink::internal::HashTypeTP::kSha384:
       return RsaSsaPssParameters::HashType::kSha384;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return RsaSsaPssParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     RsaSsaPssParameters::HashType hash_type) {
   switch (hash_type) {
     case RsaSsaPssParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case RsaSsaPssParameters::HashType::kSha384:
-      return HashTypeEnum::kSha384;
+      return google::crypto::tink::internal::HashTypeTP::kSha384;
     case RsaSsaPssParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError(
           "Could not determine RsaSsaPssParameters::HashType");
@@ -292,8 +300,9 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 }
 
 absl::StatusOr<RsaSsaPssParameters> ToParameters(
-    OutputPrefixTypeTP output_prefix_type, const RsaSsaPssParamsTP& params,
-    int modulus_size_in_bits, const BigInteger& public_exponent) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    const RsaSsaPssParamsTP& params, int modulus_size_in_bits,
+    const BigInteger& public_exponent) {
   absl::StatusOr<RsaSsaPssParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -324,7 +333,8 @@ absl::StatusOr<RsaSsaPssParameters> ToParameters(
 
 absl::StatusOr<RsaSsaPssParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing RsaSsaPssParameters.");
@@ -478,18 +488,18 @@ absl::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const RsaSsaPssParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<HashTypeEnum> sig_hash =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> sig_hash =
       ToProtoHashType(parameters.GetSigHashType());
   if (!sig_hash.ok()) {
     return sig_hash.status();
   }
-  absl::StatusOr<HashTypeEnum> mgf1_hash =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> mgf1_hash =
       ToProtoHashType(parameters.GetMgf1HashType());
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
@@ -511,12 +521,12 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const RsaSsaPssPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<HashTypeEnum> sig_hash =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> sig_hash =
       ToProtoHashType(key.GetParameters().GetSigHashType());
   if (!sig_hash.ok()) {
     return sig_hash.status();
   }
-  absl::StatusOr<HashTypeEnum> mgf1_hash =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> mgf1_hash =
       ToProtoHashType(key.GetParameters().GetMgf1HashType());
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
@@ -531,15 +541,17 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   proto_key.set_n(key.GetModulus(GetPartialKeyAccess()).GetValue());
   proto_key.set_e(key.GetParameters().GetPublicExponent().GetValue());
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyMaterialTypeTP::kAsymmetricPublic,
+      kPublicTypeUrl, restricted_output,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -550,12 +562,12 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<HashTypeEnum> sig_hash =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> sig_hash =
       ToProtoHashType(key.GetPublicKey().GetParameters().GetSigHashType());
   if (!sig_hash.ok()) {
     return sig_hash.status();
   }
-  absl::StatusOr<HashTypeEnum> mgf1_hash =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> mgf1_hash =
       ToProtoHashType(key.GetPublicKey().GetParameters().GetMgf1HashType());
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
@@ -584,16 +596,18 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   RestrictedData serialized_private_key =
       RestrictedData(proto_private_key.SerializeAsSecretData(), *token);
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  return ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_private_key,
-                                       KeyMaterialTypeTP::kAsymmetricPrivate,
-                                       *output_prefix_type,
-                                       key.GetIdRequirement());
+  return ProtoKeySerialization::Create(
+      kPrivateTypeUrl, serialized_private_key,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 RsaSsaPssProtoParametersParserImpl* RsaSsaPssProtoParametersParser() {

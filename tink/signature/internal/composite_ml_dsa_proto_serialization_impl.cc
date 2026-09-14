@@ -182,17 +182,18 @@ class CompositeMlDsaPublicKeyTP final : public Message {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
-  const KeyDataTP& ml_dsa_public_key() const {
+  const google::crypto::tink::internal::KeyDataTP& ml_dsa_public_key() const {
     return ml_dsa_public_key_.value();
   }
-  KeyDataTP* mutable_ml_dsa_public_key() {
+  google::crypto::tink::internal::KeyDataTP* mutable_ml_dsa_public_key() {
     return ml_dsa_public_key_.mutable_value();
   }
 
-  const KeyDataTP& classical_public_key() const {
+  const google::crypto::tink::internal::KeyDataTP& classical_public_key()
+      const {
     return classical_public_key_.value();
   }
-  KeyDataTP* mutable_classical_public_key() {
+  google::crypto::tink::internal::KeyDataTP* mutable_classical_public_key() {
     return classical_public_key_.mutable_value();
   }
 
@@ -207,8 +208,9 @@ class CompositeMlDsaPublicKeyTP final : public Message {
   }
 
   Uint32Field version_{1, ProtoFieldOptions::kImplicit};
-  MessageField<KeyDataTP> ml_dsa_public_key_{2};
-  MessageField<KeyDataTP> classical_public_key_{3};
+  MessageField<google::crypto::tink::internal::KeyDataTP> ml_dsa_public_key_{2};
+  MessageField<google::crypto::tink::internal::KeyDataTP> classical_public_key_{
+      3};
   MessageField<CompositeMlDsaParamsTP> params_{4};
 };
 
@@ -219,17 +221,18 @@ class CompositeMlDsaPrivateKeyTP final : public Message {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
-  const KeyDataTP& ml_dsa_private_key() const {
+  const google::crypto::tink::internal::KeyDataTP& ml_dsa_private_key() const {
     return ml_dsa_private_key_.value();
   }
-  KeyDataTP* mutable_ml_dsa_private_key() {
+  google::crypto::tink::internal::KeyDataTP* mutable_ml_dsa_private_key() {
     return ml_dsa_private_key_.mutable_value();
   }
 
-  const KeyDataTP& classical_private_key() const {
+  const google::crypto::tink::internal::KeyDataTP& classical_private_key()
+      const {
     return classical_private_key_.value();
   }
-  KeyDataTP* mutable_classical_private_key() {
+  google::crypto::tink::internal::KeyDataTP* mutable_classical_private_key() {
     return classical_private_key_.mutable_value();
   }
 
@@ -244,8 +247,10 @@ class CompositeMlDsaPrivateKeyTP final : public Message {
   }
 
   Uint32Field version_{1, ProtoFieldOptions::kImplicit};
-  MessageField<KeyDataTP> ml_dsa_private_key_{2};
-  MessageField<KeyDataTP> classical_private_key_{3};
+  MessageField<google::crypto::tink::internal::KeyDataTP> ml_dsa_private_key_{
+      2};
+  MessageField<google::crypto::tink::internal::KeyDataTP>
+      classical_private_key_{3};
   MessageField<CompositeMlDsaParamsTP> params_{4};
 };
 
@@ -270,11 +275,11 @@ constexpr absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.CompositeMlDsaPublicKey";
 
 absl::StatusOr<CompositeMlDsaParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return CompositeMlDsaParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return CompositeMlDsaParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -282,13 +287,13 @@ absl::StatusOr<CompositeMlDsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    CompositeMlDsaParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(CompositeMlDsaParameters::Variant variant) {
   switch (variant) {
     case CompositeMlDsaParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case CompositeMlDsaParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -377,7 +382,7 @@ ToProtoClassicalAlgorithm(
 }
 
 absl::StatusOr<CompositeMlDsaParameters> ToParameters(
-    OutputPrefixTypeTP output_prefix_type,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
     MlDsaInstanceEnumTP ml_dsa_instance_enum,
     CompositeMlDsaClassicalAlgorithmEnumTP classical_algorithm_enum) {
   absl::StatusOr<CompositeMlDsaParameters::Variant> variant =
@@ -419,7 +424,8 @@ absl::StatusOr<CompositeMlDsaParamsTP> FromParameters(
 
 absl::StatusOr<CompositeMlDsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing CompositeMlDsaParameters.");
@@ -445,7 +451,8 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
         "Wrong type URL when parsing CompositeMlDsaPublicKey.");
   }
   if (serialization.GetKeyMaterialTypeTP() !=
-      KeyMaterialTypeTP::kAsymmetricPublic) {
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic) {
     return absl::InvalidArgumentError(
         "Wrong key material type when parsing CompositeMlDsaPublicKey.");
   }
@@ -483,7 +490,8 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
           proto_key.ml_dsa_public_key().type_url(),
           std::move(ml_dsa_serialized_key),
           proto_key.ml_dsa_public_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   if (!ml_dsa_serialization.ok()) {
     return ml_dsa_serialization.status();
   }
@@ -508,7 +516,8 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
           proto_key.classical_public_key().type_url(),
           std::move(classical_serialized_key),
           proto_key.classical_public_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   if (!classical_serialization.ok()) {
     return classical_serialization.status();
   }
@@ -537,7 +546,8 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
         "Wrong type URL when parsing CompositeMlDsaPrivateKey.");
   }
   if (serialization.GetKeyMaterialTypeTP() !=
-      KeyMaterialTypeTP::kAsymmetricPrivate) {
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate) {
     return absl::InvalidArgumentError(
         "Wrong key material type when parsing CompositeMlDsaPrivateKey.");
   }
@@ -578,7 +588,8 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
           proto_key.ml_dsa_private_key().type_url(),
           std::move(ml_dsa_serialized_key),
           proto_key.ml_dsa_private_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   if (!ml_dsa_serialization.ok()) {
     return ml_dsa_serialization.status();
   }
@@ -603,7 +614,8 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
           proto_key.classical_private_key().type_url(),
           std::move(classical_serialized_key),
           proto_key.classical_private_key().key_material_type(),
-          OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   if (!classical_serialization.ok()) {
     return classical_serialization.status();
   }
@@ -626,8 +638,8 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const CompositeMlDsaParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -672,7 +684,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return ml_dsa_proto_key_serialization.status();
   }
   if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeTP() !=
-      OutputPrefixTypeTP::kRaw) {
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for ML-DSA public key.");
   }
@@ -680,7 +692,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return absl::InvalidArgumentError(
         "ML-DSA public key cannot have ID requirement.");
   }
-  KeyDataTP ml_dsa_key_data;
+  google::crypto::tink::internal::KeyDataTP ml_dsa_key_data;
   ml_dsa_key_data.set_type_url((*ml_dsa_proto_key_serialization)->TypeUrl());
   ml_dsa_key_data.set_key_material_type(
       (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeTP());
@@ -703,7 +715,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return classical_proto_key_serialization.status();
   }
   if ((*classical_proto_key_serialization)->GetOutputPrefixTypeTP() !=
-      OutputPrefixTypeTP::kRaw) {
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for classical public key.");
   }
@@ -711,7 +723,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return absl::InvalidArgumentError(
         "Classical public key cannot have ID requirement.");
   }
-  KeyDataTP classical_key_data;
+  google::crypto::tink::internal::KeyDataTP classical_key_data;
   classical_key_data.set_type_url(
       (*classical_proto_key_serialization)->TypeUrl());
   classical_key_data.set_key_material_type(
@@ -726,8 +738,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   *proto_key.mutable_ml_dsa_public_key() = ml_dsa_key_data;
   *proto_key.mutable_classical_public_key() = classical_key_data;
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -736,8 +748,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       proto_key.SerializeAsSecretData(), InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
       kPublicTypeUrl, std::move(restricted_output),
-      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
@@ -774,7 +787,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return ml_dsa_proto_key_serialization.status();
   }
   if ((*ml_dsa_proto_key_serialization)->GetOutputPrefixTypeTP() !=
-      OutputPrefixTypeTP::kRaw) {
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for ML-DSA private key.");
   }
@@ -782,7 +795,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return absl::InvalidArgumentError(
         "ML-DSA private key cannot have ID requirement.");
   }
-  KeyDataTP ml_dsa_key_data;
+  google::crypto::tink::internal::KeyDataTP ml_dsa_key_data;
   ml_dsa_key_data.set_type_url((*ml_dsa_proto_key_serialization)->TypeUrl());
   ml_dsa_key_data.set_key_material_type(
       (*ml_dsa_proto_key_serialization)->GetKeyMaterialTypeTP());
@@ -804,7 +817,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return classical_proto_key_serialization.status();
   }
   if ((*classical_proto_key_serialization)->GetOutputPrefixTypeTP() !=
-      OutputPrefixTypeTP::kRaw) {
+      google::crypto::tink::internal::OutputPrefixTypeTP::kRaw) {
     return absl::InvalidArgumentError(
         "Require raw output prefix for classical private key.");
   }
@@ -812,7 +825,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return absl::InvalidArgumentError(
         "Classical private key cannot have ID requirement.");
   }
-  KeyDataTP classical_key_data;
+  google::crypto::tink::internal::KeyDataTP classical_key_data;
   classical_key_data.set_type_url(
       (*classical_proto_key_serialization)->TypeUrl());
   classical_key_data.set_key_material_type(
@@ -826,8 +839,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   *proto_key.mutable_ml_dsa_private_key() = ml_dsa_key_data;
   *proto_key.mutable_classical_private_key() = classical_key_data;
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -836,8 +850,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       RestrictedData(proto_key.SerializeAsSecretData(), *token);
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, std::move(restricted_output),
-      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 CompositeMlDsaProtoParametersParserImpl& CompositeMlDsaProtoParametersParser() {

@@ -88,8 +88,10 @@ class SlhDsaSignKeyManagerAdaptor
 
   const std::string& GetKeyType() const final { return key_type_; }
 
-  KeyMaterialTypeTP GetKeyMaterialType() const final {
-    return KeyMaterialTypeTP::kAsymmetricPrivate;
+  google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+  GetKeyMaterialType() const final {
+    return google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+        kAsymmetricPrivate;
   }
 
   const KeyFactory& GetKeyFactory() const final { return *key_factory_; }

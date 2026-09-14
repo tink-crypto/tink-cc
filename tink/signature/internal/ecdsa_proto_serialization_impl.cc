@@ -82,11 +82,19 @@ class EcdsaParamsTP final : public Message {
  public:
   EcdsaParamsTP() = default;
 
-  HashTypeEnum hash_type() const { return hash_type_.value(); }
-  void set_hash_type(HashTypeEnum value) { hash_type_.set_value(value); }
+  google::crypto::tink::internal::HashTypeTP hash_type() const {
+    return hash_type_.value();
+  }
+  void set_hash_type(google::crypto::tink::internal::HashTypeTP value) {
+    hash_type_.set_value(value);
+  }
 
-  EllipticCurveTypeEnum curve() const { return curve_.value(); }
-  void set_curve(EllipticCurveTypeEnum value) { curve_.set_value(value); }
+  google::crypto::tink::internal::EllipticCurveTypeTP curve() const {
+    return curve_.value();
+  }
+  void set_curve(google::crypto::tink::internal::EllipticCurveTypeTP value) {
+    curve_.set_value(value);
+  }
 
   EcdsaSignatureEncodingEnum encoding() const { return encoding_.value(); }
   void set_encoding(EcdsaSignatureEncodingEnum value) {
@@ -105,8 +113,10 @@ class EcdsaParamsTP final : public Message {
     return std::array<const Field*, 3>{&hash_type_, &curve_, &encoding_}[i];
   }
 
-  EnumField<HashTypeEnum> hash_type_{1, &HashTypeEnumIsValid};
-  EnumField<EllipticCurveTypeEnum> curve_{2, &EllipticCurveTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::HashTypeTP> hash_type_{
+      1, &HashTypeEnumIsValid};
+  EnumField<google::crypto::tink::internal::EllipticCurveTypeTP> curve_{
+      2, &EllipticCurveTypeEnumIsValid};
   EnumField<EcdsaSignatureEncodingEnum> encoding_{3,
                                                   &EcdsaSignatureEncodingValid};
 };
@@ -207,17 +217,17 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.EcdsaPrivateKey";
 
 absl::StatusOr<EcdsaParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       return EcdsaParameters::Variant::kLegacy;
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return EcdsaParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return EcdsaParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return EcdsaParameters::Variant::kTink;
-    case OutputPrefixTypeTP::kWithIdRequirement:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kWithIdRequirement:
       return EcdsaParameters::Variant::kNoPrefixWithPrehashId;
     default:
       return absl::InvalidArgumentError(
@@ -225,47 +235,49 @@ absl::StatusOr<EcdsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    EcdsaParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(EcdsaParameters::Variant variant) {
   switch (variant) {
     case EcdsaParameters::Variant::kLegacy:
-      return OutputPrefixTypeTP::kLegacy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy;
     case EcdsaParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case EcdsaParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case EcdsaParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     case EcdsaParameters::Variant::kNoPrefixWithPrehashId:
-      return OutputPrefixTypeTP::kWithIdRequirement;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::
+          kWithIdRequirement;
     default:
       return absl::InvalidArgumentError(
           "Could not determine EcdsaParameters::Variant");
   }
 }
 
-absl::StatusOr<EcdsaParameters::HashType> ToHashType(HashTypeEnum hash_type) {
+absl::StatusOr<EcdsaParameters::HashType> ToHashType(
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return EcdsaParameters::HashType::kSha256;
-    case HashTypeEnum::kSha384:
+    case google::crypto::tink::internal::HashTypeTP::kSha384:
       return EcdsaParameters::HashType::kSha384;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return EcdsaParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     EcdsaParameters::HashType hash_type) {
   switch (hash_type) {
     case EcdsaParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case EcdsaParameters::HashType::kSha384:
-      return HashTypeEnum::kSha384;
+      return google::crypto::tink::internal::HashTypeTP::kSha384;
     case EcdsaParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::InvalidArgumentError(
           "Could not determine EcdsaParameters::HashType");
@@ -273,13 +285,13 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 }
 
 absl::StatusOr<EcdsaParameters::CurveType> ToCurveType(
-    EllipticCurveTypeEnum curve_type) {
+    google::crypto::tink::internal::EllipticCurveTypeTP curve_type) {
   switch (curve_type) {
-    case EllipticCurveTypeEnum::kNistP256:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kNistP256:
       return EcdsaParameters::CurveType::kNistP256;
-    case EllipticCurveTypeEnum::kNistP384:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kNistP384:
       return EcdsaParameters::CurveType::kNistP384;
-    case EllipticCurveTypeEnum::kNistP521:
+    case google::crypto::tink::internal::EllipticCurveTypeTP::kNistP521:
       return EcdsaParameters::CurveType::kNistP521;
     default:
       return absl::InvalidArgumentError(
@@ -287,15 +299,15 @@ absl::StatusOr<EcdsaParameters::CurveType> ToCurveType(
   }
 }
 
-absl::StatusOr<EllipticCurveTypeEnum> ToProtoCurveType(
-    EcdsaParameters::CurveType curve_type) {
+absl::StatusOr<google::crypto::tink::internal::EllipticCurveTypeTP>
+ToProtoCurveType(EcdsaParameters::CurveType curve_type) {
   switch (curve_type) {
     case EcdsaParameters::CurveType::kNistP256:
-      return EllipticCurveTypeEnum::kNistP256;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kNistP256;
     case EcdsaParameters::CurveType::kNistP384:
-      return EllipticCurveTypeEnum::kNistP384;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kNistP384;
     case EcdsaParameters::CurveType::kNistP521:
-      return EllipticCurveTypeEnum::kNistP521;
+      return google::crypto::tink::internal::EllipticCurveTypeTP::kNistP521;
     default:
       return absl::InvalidArgumentError(
           "Could not determine EcdsaParameters::CurveType");
@@ -344,7 +356,8 @@ absl::StatusOr<int> getEncodingLength(EcdsaParameters::CurveType curveType) {
 }
 
 absl::StatusOr<EcdsaParameters> ToParameters(
-    OutputPrefixTypeTP output_prefix_type, const EcdsaParamsTP& params) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    const EcdsaParamsTP& params) {
   absl::StatusOr<EcdsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -379,13 +392,13 @@ absl::StatusOr<EcdsaParameters> ToParameters(
 
 absl::StatusOr<EcdsaParamsTP> FromParameters(
     const EcdsaParameters& parameters) {
-  absl::StatusOr<EllipticCurveTypeEnum> curve =
+  absl::StatusOr<google::crypto::tink::internal::EllipticCurveTypeTP> curve =
       ToProtoCurveType(parameters.GetCurveType());
   if (!curve.ok()) {
     return curve.status();
   }
 
-  absl::StatusOr<HashTypeEnum> hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -407,7 +420,8 @@ absl::StatusOr<EcdsaParamsTP> FromParameters(
 
 absl::StatusOr<EcdsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EcdsaParameters.");
@@ -477,7 +491,8 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
         "Only version 0 public keys are accepted.");
   }
 
-  OutputPrefixTypeTP output_prefix_type = serialization.GetOutputPrefixTypeTP();
+  google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type =
+      serialization.GetOutputPrefixTypeTP();
 
   absl::StatusOr<EcdsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
@@ -513,8 +528,8 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const EcdsaParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -566,8 +581,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   proto_key.set_x(*x);
   proto_key.set_y(*y);
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -577,8 +592,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
                                           InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
       kPublicTypeUrl, std::move(restricted_output),
-      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
@@ -637,8 +653,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   }
   proto_private_key.set_key_value(SecretDataAsStringView(*fixed_length_key));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -646,8 +663,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   SecretData serialized_proto = proto_private_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(std::move(serialized_proto), *token),
-      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 EcdsaProtoParametersParserImpl& EcdsaProtoParametersParser() {

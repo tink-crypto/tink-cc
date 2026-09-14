@@ -444,7 +444,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
@@ -483,7 +483,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(

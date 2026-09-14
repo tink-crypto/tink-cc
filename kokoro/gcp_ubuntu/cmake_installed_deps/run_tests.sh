@@ -71,7 +71,8 @@ cat << EOF > /tmp/do_run_test.sh
 set -euo pipefail
 export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_NOREADONLY=true
-./kokoro/testutils/run_cmake_tests.sh . ${CMAKE_ARGS[@]@Q} ${EXTRA_CMAKE_ARGS[@]@Q}
+mkdir -p out
+./kokoro/testutils/run_cmake_tests.sh -o out . ${CMAKE_ARGS[@]@Q} ${EXTRA_CMAKE_ARGS[@]@Q}
 ./kokoro/testutils/run_cmake_tests.sh examples ${CMAKE_ARGS[@]@Q} ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF
 

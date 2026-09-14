@@ -92,7 +92,7 @@ struct TestCase {
   JwtRsaSsaPkcs1Parameters::KidStrategy strategy;
   // Helper member for parsing/serializing parameters with custom kid strategy.
   JwtRsaSsaPkcs1Parameters::KidStrategy expected_parameters_strategy;
-  OutputPrefixTypeTP output_prefix_type;
+  google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type;
   JwtRsaSsaPkcs1Parameters::Algorithm algorithm;
   JwtRsaSsaPkcs1Algorithm proto_algorithm;
   KeyValues key_values;
@@ -139,7 +139,7 @@ INSTANTIATE_TEST_SUITE_P(
                         kBase64EncodedKeyId,
                     /*expected_parameters_strategy=*/
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
-                    OutputPrefixTypeTP::kTink,
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
                     JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
                     JwtRsaSsaPkcs1Algorithm::RS256,
                     /*key_values=*/*kKeyValues,
@@ -148,7 +148,7 @@ INSTANTIATE_TEST_SUITE_P(
                /*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
                /*expected_parameters_strategy=*/
                JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-               OutputPrefixTypeTP::kRaw,
+               google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
                JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
                JwtRsaSsaPkcs1Algorithm::RS384,
                /*key_values=*/*kKeyValues,
@@ -157,7 +157,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{/*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
                     /*expected_parameters_strategy=*/
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-                    OutputPrefixTypeTP::kRaw,
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
                     JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
                     JwtRsaSsaPkcs1Algorithm::RS512,
                     /*key_values=*/*kKeyValues,
@@ -248,7 +248,9 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> parameters =
@@ -273,7 +275,8 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -282,16 +285,19 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
                        HasSubstr("only version 0 is accepted")));
 }
 
-using JwtRsaSsaPkcs1ParseInvalidPrefixTest = TestWithParam<OutputPrefixTypeTP>;
+using JwtRsaSsaPkcs1ParseInvalidPrefixTest =
+    TestWithParam<google::crypto::tink::internal::OutputPrefixTypeTP>;
 
-INSTANTIATE_TEST_SUITE_P(JwtRsaSsaPkcs1ParseInvalidPrefixTestSuite,
-                         JwtRsaSsaPkcs1ParseInvalidPrefixTest,
-                         Values(OutputPrefixTypeTP::kCrunchy,
-                                OutputPrefixTypeTP::kLegacy,
-                                OutputPrefixTypeTP::kUnknownPrefix));
+INSTANTIATE_TEST_SUITE_P(
+    JwtRsaSsaPkcs1ParseInvalidPrefixTestSuite,
+    JwtRsaSsaPkcs1ParseInvalidPrefixTest,
+    Values(google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy,
+           google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy,
+           google::crypto::tink::internal::OutputPrefixTypeTP::kUnknownPrefix));
 
 TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest, ParseParametersWithInvalidPrefix) {
-  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
+  google::crypto::tink::internal::OutputPrefixTypeTP
+      invalid_output_prefix_type = GetParam();
   MutableSerializationRegistry registry;
   ASSERT_THAT(
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
@@ -333,7 +339,8 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -369,11 +376,13 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
 
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
+      Eq(static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          test_case.output_prefix_type)));
   JwtRsaSsaPkcs1KeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
@@ -409,11 +418,13 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
 
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
+      Eq(static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          test_case.output_prefix_type)));
   JwtRsaSsaPkcs1KeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
@@ -470,7 +481,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -531,7 +543,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -579,10 +592,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -607,10 +622,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -637,10 +654,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/123);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -652,7 +671,8 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
 TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
        ParsePublicKeyWithInvalidPrefixFails) {
-  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
+  google::crypto::tink::internal::OutputPrefixTypeTP
+      invalid_output_prefix_type = GetParam();
   MutableSerializationRegistry registry;
   ASSERT_THAT(
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
@@ -668,7 +688,8 @@ TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
                                     invalid_output_prefix_type,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -698,10 +719,12 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPublic,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -757,7 +780,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -823,7 +847,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -877,7 +902,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -968,7 +994,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1035,10 +1062,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kTink,
-                                    /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1075,10 +1104,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1117,10 +1148,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1152,10 +1185,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1165,7 +1200,8 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
 TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
        ParsePrivateKeyWithInvalidPrefixFails) {
-  OutputPrefixTypeTP invalid_output_prefix_type = GetParam();
+  google::crypto::tink::internal::OutputPrefixTypeTP
+      invalid_output_prefix_type = GetParam();
   MutableSerializationRegistry registry;
   ASSERT_THAT(
       RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(registry),
@@ -1193,7 +1229,8 @@ TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     invalid_output_prefix_type,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -1236,10 +1273,12 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1310,7 +1349,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -1402,7 +1442,8 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));

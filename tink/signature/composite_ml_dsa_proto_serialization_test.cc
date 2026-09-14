@@ -83,7 +83,7 @@ struct TestCase {
   CompositeMlDsaParameters::MlDsaInstance ml_dsa_instance;
   CompositeMlDsaParameters::ClassicalAlgorithm classical_algorithm;
   CompositeMlDsaParameters::Variant variant;
-  OutputPrefixTypeTP output_prefix_type;
+  google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type;
   std::optional<int> id_requirement;
   std::string output_prefix;
 };
@@ -101,120 +101,133 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeTP::kRaw, std::nullopt, ""},
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+                    std::nullopt, ""},
            TestCase{CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
                     CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
                     CompositeMlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeTP::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)}));
+                    google::crypto::tink::internal::OutputPrefixTypeTP::kTink,
+                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)}));
 
 MlDsaInstance ToProtoInstance(
     CompositeMlDsaParameters::MlDsaInstance instance) {
@@ -257,15 +270,19 @@ CompositeMlDsaClassicalAlgorithm ToProtoAlgorithm(
 }
 
 KeyData::KeyMaterialType ToProtoKeyMaterialType(
-    KeyMaterialTypeTP key_material_type) {
+    google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+        key_material_type) {
   switch (key_material_type) {
-    case KeyMaterialTypeTP::kSymmetric:
+    case google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+        kSymmetric:
       return KeyData::SYMMETRIC;
-    case KeyMaterialTypeTP::kAsymmetricPrivate:
+    case google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+        kAsymmetricPrivate:
       return KeyData::ASYMMETRIC_PRIVATE;
-    case KeyMaterialTypeTP::kAsymmetricPublic:
+    case google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+        kAsymmetricPublic:
       return KeyData::ASYMMETRIC_PUBLIC;
-    case KeyMaterialTypeTP::kRemote:
+    case google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kRemote:
       return KeyData::REMOTE;
     default:
       return KeyData::UNKNOWN_KEYMATERIAL;
@@ -355,7 +372,9 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw, "invalid serialization");
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          "invalid serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
@@ -380,7 +399,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -399,7 +419,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   CompositeMlDsaKeyFormat key_format_proto;
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -426,7 +447,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
+          kPrivateTypeUrl,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -453,7 +475,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+            kPrivateTypeUrl,
+            google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -477,7 +500,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+            kPrivateTypeUrl,
+            google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -501,7 +525,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+            kPrivateTypeUrl,
+            google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -530,7 +555,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+            kPrivateTypeUrl,
+            google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -554,7 +580,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+            kPrivateTypeUrl,
+            google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -578,7 +605,8 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
     absl::StatusOr<ProtoParametersSerialization> serialization =
         ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixTypeTP::kRaw,
+            kPrivateTypeUrl,
+            google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -614,11 +642,13 @@ TEST_P(CompositeMlDsaProtoSerializationTest, SerializeParametersWorks) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(
       key_template.output_prefix_type(),
-      Eq(static_cast<OutputPrefixTypeTP>(test_case.output_prefix_type)));
+      Eq(static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          test_case.output_prefix_type)));
 
   CompositeMlDsaKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
@@ -691,9 +721,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest, ParsePublicKeyWorks) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
-          test_case.output_prefix_type, test_case.id_requirement);
+      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
+                                    test_case.output_prefix_type,
+                                    test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -747,7 +779,9 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   absl::StatusOr<ProtoKeySerialization> proto_serialization =
       ProtoKeySerialization::Create(
           kPublicTypeUrl, public_key_serialization->SerializedKeyProto(),
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_serialization, IsOk());
 
@@ -771,9 +805,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
-          test_case.output_prefix_type, test_case.id_requirement);
+      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
+                                    test_case.output_prefix_type,
+                                    test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -821,9 +857,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
-          test_case.output_prefix_type, test_case.id_requirement);
+      ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPublic,
+                                    test_case.output_prefix_type,
+                                    test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -875,7 +913,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest, SerializePublicKeyWorks) {
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
@@ -979,7 +1018,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest, ParsePrivateKeyWorks) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1034,7 +1074,9 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
   absl::StatusOr<ProtoKeySerialization> proto_serialization =
       ProtoKeySerialization::Create(
           kPrivateTypeUrl, private_key_serialization->SerializedKeyProto(),
-          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/std::nullopt);
   ASSERT_THAT(proto_serialization, IsOk());
 
@@ -1057,7 +1099,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1109,7 +1152,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1160,7 +1204,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
+                                    google::crypto::tink::internal::KeyDataTP::
+                                        KeyMaterialTypeTP::kAsymmetricPrivate,
                                     test_case.output_prefix_type,
                                     test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
@@ -1211,10 +1256,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1263,10 +1310,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1314,10 +1363,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1367,10 +1418,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kAsymmetricPrivate,
-                                    OutputPrefixTypeTP::kRaw,
-                                    /*id_requirement=*/std::nullopt);
+      ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1408,7 +1461,8 @@ TEST_P(CompositeMlDsaProtoSerializationTest, SerializePrivateKeyWorks) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),

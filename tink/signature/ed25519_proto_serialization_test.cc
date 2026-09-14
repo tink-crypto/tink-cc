@@ -195,12 +195,13 @@ TEST_P(Ed25519ProtoSerializationTest, SerializeParameters) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateKeyTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(static_cast<internal::OutputPrefixTypeTP>(
-                  test_case.output_prefix_type)));
+  EXPECT_THAT(
+      key_template.output_prefix_type(),
+      Eq(static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          test_case.output_prefix_type)));
 
   Ed25519KeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());

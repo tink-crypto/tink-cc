@@ -167,7 +167,7 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromParameters) {
 
   EXPECT_THAT((*keyset_key)->status(), Eq(KeyStatusType::ENABLED));
   EXPECT_THAT((*keyset_key)->key_id(), Eq(123));
-  const KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       parameters->Serialization().GetKeyTemplate();
   EXPECT_THAT(
       (*keyset_key)->output_prefix_type(),

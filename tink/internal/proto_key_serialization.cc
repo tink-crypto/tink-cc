@@ -32,19 +32,23 @@ namespace internal {
 
 absl::StatusOr<ProtoKeySerialization> ProtoKeySerialization::Create(
     absl::string_view type_url, RestrictedData serialized_key,
-    KeyMaterialTypeTP key_material_type, OutputPrefixTypeTP output_prefix_type,
+    google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+        key_material_type,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
     absl::optional<int> id_requirement) {
   if (!IsPrintableAscii(type_url)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  if (output_prefix_type == OutputPrefixTypeTP::kRaw &&
+  if (output_prefix_type ==
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw &&
       id_requirement.has_value()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Keys with a RAW output prefix type should not have an "
                         "ID requirement.");
   }
-  if (output_prefix_type != OutputPrefixTypeTP::kRaw &&
+  if (output_prefix_type !=
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw &&
       !id_requirement.has_value()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

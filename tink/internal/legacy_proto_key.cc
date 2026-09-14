@@ -30,10 +30,14 @@ namespace tink {
 namespace internal {
 namespace {
 
-absl::Status CheckKeyAccess(KeyMaterialTypeTP key_material_type,
-                            absl::optional<SecretKeyAccessToken> token) {
-  if (key_material_type == KeyMaterialTypeTP::kSymmetric ||
-      key_material_type == KeyMaterialTypeTP::kAsymmetricPrivate) {
+absl::Status CheckKeyAccess(
+    google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+        key_material_type,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (key_material_type == google::crypto::tink::internal::KeyDataTP::
+                               KeyMaterialTypeTP::kSymmetric ||
+      key_material_type == google::crypto::tink::internal::KeyDataTP::
+                               KeyMaterialTypeTP::kAsymmetricPrivate) {
     if (!token.has_value()) {
       return absl::Status(
           absl::StatusCode::kPermissionDenied,

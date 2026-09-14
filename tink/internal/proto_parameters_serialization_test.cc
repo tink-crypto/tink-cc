@@ -58,7 +58,8 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   ASSERT_THAT(serialization.status(), IsOk());
 
   EXPECT_THAT(serialization->ObjectIdentifier(), "type_url");
-  const KeyTemplateTP& key_template = serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), "type_url");
   EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeTP::kRaw);
   EXPECT_THAT(key_template.value(), test_proto.SerializeAsString());
@@ -66,7 +67,8 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   parsed_proto.ParseFromString(key_template.value());
   EXPECT_THAT(parsed_proto.num(), Eq(12345));
 
-  const KeyTemplateTP& proto_key_template = serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& proto_key_template =
+      serialization->GetKeyTemplate();
   EXPECT_THAT(proto_key_template.type_url(), "type_url");
   EXPECT_THAT(proto_key_template.output_prefix_type(),
               OutputPrefixTypeTP::kRaw);
@@ -100,7 +102,8 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplate) {
   ASSERT_THAT(serialization.status(), IsOk());
 
   EXPECT_THAT(serialization->ObjectIdentifier(), "type_url");
-  const KeyTemplateTP& key_template_struct = serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template_struct =
+      serialization->GetKeyTemplate();
   EXPECT_THAT(key_template_struct.type_url(), "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type(),
               OutputPrefixTypeTP::kTink);
@@ -130,7 +133,7 @@ TEST_F(ProtoParametersSerializationTest,
 TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateTP) {
   TestProto test_proto;
   test_proto.set_num(12345);
-  KeyTemplateTP proto_key_template;
+  google::crypto::tink::internal::KeyTemplateTP proto_key_template;
   proto_key_template.set_value(test_proto.SerializeAsString());
   proto_key_template.set_output_prefix_type(OutputPrefixTypeTP::kTink);
   proto_key_template.set_type_url("type_url");
@@ -138,7 +141,8 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateTP) {
       ProtoParametersSerialization::Create(proto_key_template);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  const KeyTemplateTP& key_template = serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), "type_url");
   EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeTP::kTink);
   EXPECT_THAT(key_template.value(), test_proto.SerializeAsString());
@@ -151,7 +155,7 @@ TEST_F(ProtoParametersSerializationTest,
        CreateFromKeyTemplateTPWithNonPrintableAsciiTypeURLFails) {
   TestProto test_proto;
   test_proto.set_num(12345);
-  KeyTemplateTP proto_key_template;
+  google::crypto::tink::internal::KeyTemplateTP proto_key_template;
   proto_key_template.set_value(test_proto.SerializeAsString());
   proto_key_template.set_output_prefix_type(OutputPrefixTypeTP::kTink);
   proto_key_template.set_type_url("type_url\x01");
@@ -175,7 +179,8 @@ TEST_F(ProtoParametersSerializationTest, GetKeyTemplate) {
       ProtoParametersSerialization::Create(key_template);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  const KeyTemplateTP& key_template_struct = serialization->GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template_struct =
+      serialization->GetKeyTemplate();
   EXPECT_THAT(key_template_struct.type_url(), "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type(),
               OutputPrefixTypeTP::kTink);

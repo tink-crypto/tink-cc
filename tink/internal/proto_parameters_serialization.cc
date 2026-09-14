@@ -34,14 +34,15 @@ namespace internal {
 using ::google::crypto::tink::KeyTemplate;
 
 absl::StatusOr<ProtoParametersSerialization>
-ProtoParametersSerialization::Create(absl::string_view type_url,
-                                     OutputPrefixTypeTP output_prefix_type,
-                                     absl::string_view serialized_proto) {
+ProtoParametersSerialization::Create(
+    absl::string_view type_url,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    absl::string_view serialized_proto) {
   if (!IsPrintableAscii(type_url)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  KeyTemplateTP proto_key_template;
+  google::crypto::tink::internal::KeyTemplateTP proto_key_template;
   proto_key_template.set_type_url(type_url);
   proto_key_template.set_output_prefix_type(output_prefix_type);
   proto_key_template.set_value(serialized_proto);
@@ -54,16 +55,18 @@ ProtoParametersSerialization::Create(KeyTemplate key_template) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  KeyTemplateTP proto_key_template;
+  google::crypto::tink::internal::KeyTemplateTP proto_key_template;
   proto_key_template.set_type_url(key_template.type_url());
   proto_key_template.set_output_prefix_type(
-      static_cast<OutputPrefixTypeTP>(key_template.output_prefix_type()));
+      static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          key_template.output_prefix_type()));
   proto_key_template.set_value(key_template.value());
   return ProtoParametersSerialization(std::move(proto_key_template));
 }
 
 absl::StatusOr<ProtoParametersSerialization>
-ProtoParametersSerialization::Create(const KeyTemplateTP& key_template) {
+ProtoParametersSerialization::Create(
+    const google::crypto::tink::internal::KeyTemplateTP& key_template) {
   if (!IsPrintableAscii(key_template.type_url())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");

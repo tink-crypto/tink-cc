@@ -78,9 +78,10 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
               proto_key.key_data().type_url(),
               RestrictedData(proto_key.key_data().value(),
                              internal::GetInsecureSecretKeyAccessInternal()),
-              static_cast<KeyMaterialTypeTP>(
+              static_cast<
+                  google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP>(
                   proto_key.key_data().key_material_type()),
-              OutputPrefixTypeTP::kRaw,
+              google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
               /*id_requirement=*/std::nullopt);
       if (!serialization.ok()) {
         return serialization.status();

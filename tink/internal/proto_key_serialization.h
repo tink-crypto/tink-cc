@@ -46,8 +46,9 @@ class ProtoKeySerialization : public Serialization {
   // Creates a `ProtoKeySerialization` object from individual components.
   static absl::StatusOr<ProtoKeySerialization> Create(
       absl::string_view type_url, RestrictedData serialized_key,
-      KeyMaterialTypeTP key_material_type,
-      OutputPrefixTypeTP output_prefix_type,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+          key_material_type,
+      google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
       absl::optional<int> id_requirement);
 
   // Returned value is only valid for the lifetime of this object.
@@ -61,11 +62,13 @@ class ProtoKeySerialization : public Serialization {
   // Returned value is only valid for the lifetime of this object.
   const RestrictedData& SerializedKeyProto() const { return serialized_key_; }
 
-  KeyMaterialTypeTP GetKeyMaterialTypeTP() const {
+  google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+  GetKeyMaterialTypeTP() const {
     return key_material_type_;
   }
 
-  OutputPrefixTypeTP GetOutputPrefixTypeTP() const {
+  google::crypto::tink::internal::OutputPrefixTypeTP GetOutputPrefixTypeTP()
+      const {
     return output_prefix_type_;
   }
 
@@ -76,12 +79,13 @@ class ProtoKeySerialization : public Serialization {
   friend class LegacyProtoKey;
   friend class LegacyProtoKeyTest;
 
-  ProtoKeySerialization(absl::string_view type_url,
-                        absl::string_view object_identifier,
-                        RestrictedData serialized_key,
-                        KeyMaterialTypeTP key_material_type,
-                        OutputPrefixTypeTP output_prefix_type,
-                        absl::optional<int> id_requirement)
+  ProtoKeySerialization(
+      absl::string_view type_url, absl::string_view object_identifier,
+      RestrictedData serialized_key,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+          key_material_type,
+      google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+      absl::optional<int> id_requirement)
       : type_url_(type_url),
         object_identifier_(object_identifier),
         serialized_key_(std::move(serialized_key)),
@@ -99,8 +103,9 @@ class ProtoKeySerialization : public Serialization {
   std::string type_url_;
   std::string object_identifier_;
   RestrictedData serialized_key_;
-  KeyMaterialTypeTP key_material_type_;
-  OutputPrefixTypeTP output_prefix_type_;
+  google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP
+      key_material_type_;
+  google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type_;
   absl::optional<int> id_requirement_;
 };
 

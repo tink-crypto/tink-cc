@@ -56,7 +56,8 @@ LegacyPrivateKeyFactoryImpl::NewKey(
   absl::StatusOr<internal::ProtoParametersSerialization>
       parameters_serialization = internal::ProtoParametersSerialization::Create(
           absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPrivateKeyTypeName()),
-          OutputPrefixTypeTP::kRaw, key_format.SerializeAsString());
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          key_format.SerializeAsString());
   if (!parameters_serialization.ok()) {
     return parameters_serialization.status();
   }
@@ -143,8 +144,10 @@ LegacyPrivateKeyFactoryImpl::GetPublicKeyData(
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           absl::StrCat(kTypeGoogleapisCom, adaptor_->GetPrivateKeyTypeName()),
-          serialized_key, KeyMaterialTypeTP::kAsymmetricPrivate,
-          OutputPrefixTypeTP::kRaw,
+          serialized_key,
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
           /*id_requirement=*/std::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
@@ -201,10 +204,10 @@ absl::StatusOr<std::unique_ptr<Key>> LegacyKeyManagerBaseAdaptor::GetKey(
   RestrictedData serialized_key =
       RestrictedData(key_data.value(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(GetKeyType(), serialized_key,
-                                              GetKeyMaterialType(),
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          GetKeyType(), serialized_key, GetKeyMaterialType(),
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
   }
@@ -227,10 +230,10 @@ absl::StatusOr<std::unique_ptr<Key>> LegacyKeyManagerBaseAdaptor::GetKey(
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(GetKeyType(), serialized_key,
-                                              GetKeyMaterialType(),
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          GetKeyType(), serialized_key, GetKeyMaterialType(),
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   if (!serialization.ok()) {
     return serialization.status();
   }

@@ -236,11 +236,11 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeParameters) {
   const internal::ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
-              Eq(internal::OutputPrefixTypeTP::kRaw));
+              Eq(google::crypto::tink::internal::OutputPrefixTypeTP::kRaw));
 
   HmacPrfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());

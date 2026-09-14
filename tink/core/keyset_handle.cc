@@ -133,9 +133,10 @@ absl::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
   return internal::ProtoKeySerialization::Create(
       key.key_data().type_url(),
       RestrictedData(key.key_data().value(), InsecureSecretKeyAccess::Get()),
-      static_cast<internal::KeyMaterialTypeTP>(
+      static_cast<google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP>(
           key.key_data().key_material_type()),
-      static_cast<internal::OutputPrefixTypeTP>(key.output_prefix_type()),
+      static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          key.output_prefix_type()),
       id_requirement);
 }
 

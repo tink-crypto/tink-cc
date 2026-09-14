@@ -65,8 +65,8 @@ mkdir -p "${CCACHE_DIR}"
 # This variable can be passed to CMake: cmake ${EXTRA_CMAKE_ARGS[@]} ...
 if [[ -d "${CCACHE_DIR}" ]]; then
   if [[ "$(declare -p EXTRA_CMAKE_ARGS 2>/dev/null)" == "declare -a"* ]]; then
-    EXTRA_CMAKE_ARGS+=( "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache" )
+    EXTRA_CMAKE_ARGS+=( "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache" "-DCMAKE_C_COMPILER_LAUNCHER=ccache" "-DCMAKE_ASM_COMPILER_LAUNCHER=ccache" )
   else
-    export EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS:-} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+    export EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS:-} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_ASM_COMPILER_LAUNCHER=ccache"
   fi
 fi

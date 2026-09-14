@@ -85,11 +85,8 @@ set -euo pipefail
 export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_NOREADONLY=true
 set -x
-if [[ -d out ]]; then
-  ./kokoro/testutils/run_cmake_tests.sh -o out . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
-else
-  ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
-fi
+mkdir -p out
+./kokoro/testutils/run_cmake_tests.sh -o out . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 ./kokoro/testutils/run_cmake_tests.sh examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF
 

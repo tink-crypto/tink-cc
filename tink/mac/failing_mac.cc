@@ -59,7 +59,7 @@ class AlwaysFailMac : public Mac {
 }  // namespace
 
 std::unique_ptr<Mac> CreateAlwaysFailingMac(std::string message) {
-  return absl::make_unique<AlwaysFailMac>(std::move(message));
+  return std::make_unique<AlwaysFailMac>(std::move(message));
 }
 
 }  // namespace tink

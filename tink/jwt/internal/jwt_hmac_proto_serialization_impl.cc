@@ -165,14 +165,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtHmacKey";
 
 absl::StatusOr<JwtHmacParameters::KidStrategy> ToKidStrategy(
-    OutputPrefixTypeTP output_prefix_type, bool has_custom_kid) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    bool has_custom_kid) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       if (has_custom_kid) {
         return JwtHmacParameters::KidStrategy::kCustom;
       }
       return JwtHmacParameters::KidStrategy::kIgnored;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return JwtHmacParameters::KidStrategy::kBase64EncodedKeyId;
     default:
       return absl::InvalidArgumentError(
@@ -180,15 +181,15 @@ absl::StatusOr<JwtHmacParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    JwtHmacParameters::KidStrategy kid_strategy) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(JwtHmacParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtHmacParameters::KidStrategy::kCustom:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case JwtHmacParameters::KidStrategy::kIgnored:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case JwtHmacParameters::KidStrategy::kBase64EncodedKeyId:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine JwtHmacParameters::KidStrategy.");
@@ -226,7 +227,8 @@ absl::StatusOr<JwtHmacAlgorithmEnum> ToProtoAlgorithm(
 }
 
 absl::StatusOr<JwtHmacParameters> ToParameters(
-    int key_size_in_bytes, OutputPrefixTypeTP output_prefix_type,
+    int key_size_in_bytes,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
     JwtHmacAlgorithmEnum proto_algorithm, bool has_custom_kid) {
   absl::StatusOr<JwtHmacParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
@@ -244,7 +246,8 @@ absl::StatusOr<JwtHmacParameters> ToParameters(
 
 absl::StatusOr<JwtHmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtHmacParameters.");
@@ -270,8 +273,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return absl::InvalidArgumentError(
         "Unable to serialize JwtHmacParameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetKidStrategy());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -356,16 +359,17 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     proto_key.mutable_custom_kid()->set_value(*key.GetKid());
   }
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetKidStrategy());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
-      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 JwtHmacProtoParametersParserImpl* JwtHmacProtoParametersParser() {

@@ -207,14 +207,15 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtEcdsaPrivateKey";
 
 absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
-    OutputPrefixTypeTP output_prefix_type, bool has_custom_kid) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+    bool has_custom_kid) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       if (has_custom_kid) {
         return JwtEcdsaParameters::KidStrategy::kCustom;
       }
       return JwtEcdsaParameters::KidStrategy::kIgnored;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId;
     default:
       return absl::InvalidArgumentError(
@@ -222,15 +223,15 @@ absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    JwtEcdsaParameters::KidStrategy kid_strategy) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(JwtEcdsaParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtEcdsaParameters::KidStrategy::kCustom:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case JwtEcdsaParameters::KidStrategy::kIgnored:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine JwtEcdsaParameters::KidStrategy.");
@@ -268,7 +269,7 @@ absl::StatusOr<JwtEcdsaAlgorithmEnum> ToProtoAlgorithm(
 }
 
 absl::StatusOr<JwtEcdsaParameters> ToParameters(
-    OutputPrefixTypeTP output_prefix_type,
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
     JwtEcdsaAlgorithmEnum proto_algorithm, bool has_custom_kid) {
   absl::StatusOr<JwtEcdsaParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
@@ -360,7 +361,8 @@ absl::StatusOr<JwtEcdsaPublicKeyTP> ToProtoPublicKey(
 
 absl::StatusOr<JwtEcdsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtEcdsaParameters.");
@@ -386,8 +388,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return absl::InvalidArgumentError(
         "Unable to serialize JwtEcdsaParameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetKidStrategy());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -443,8 +445,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return proto_public_key.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetKidStrategy());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type =
+          ToOutputPrefixType(key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -452,8 +455,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       kPublicTypeUrl,
       RestrictedData(proto_public_key->SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      KeyMaterialTypeTP::kAsymmetricPublic, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPublic,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
@@ -536,8 +540,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   proto_private_key.set_key_value(
       *GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(
+          key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -546,8 +551,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       kPrivateTypeUrl,
       RestrictedData(proto_private_key.SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      KeyMaterialTypeTP::kAsymmetricPrivate, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+          kAsymmetricPrivate,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 JwtEcdsaProtoParametersParserImpl& JwtEcdsaProtoParametersParser() {

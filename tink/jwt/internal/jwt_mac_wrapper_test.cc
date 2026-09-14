@@ -35,6 +35,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
@@ -99,18 +100,28 @@ KeyTemplate createTemplate(OutputPrefixType output_prefix) {
 
 std::unique_ptr<KeysetHandle> KeysetHandleWithNewKeyId(
     const KeysetHandle& keyset_handle) {
-  Keyset keyset(CleartextKeysetHandle::GetKeyset(keyset_handle));
+  Keyset keyset = CleartextKeysetHandle::GetKeysetOrError(
+                      keyset_handle, InsecureSecretKeyAccess::Get())
+                      .value();
   uint32_t new_key_id = keyset.mutable_key(0)->key_id() ^ 0xdeadbeef;
   keyset.mutable_key(0)->set_key_id(new_key_id);
   keyset.set_primary_key_id(new_key_id);
-  return CleartextKeysetHandle::GetKeysetHandle(keyset);
+  return std::make_unique<KeysetHandle>(
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          keyset, InsecureSecretKeyAccess::Get())
+          .value());
 }
 
 std::unique_ptr<KeysetHandle> KeysetHandleWithTinkPrefix(
     const KeysetHandle& keyset_handle) {
-  Keyset keyset(CleartextKeysetHandle::GetKeyset(keyset_handle));
+  Keyset keyset = CleartextKeysetHandle::GetKeysetOrError(
+                      keyset_handle, InsecureSecretKeyAccess::Get())
+                      .value();
   keyset.mutable_key(0)->set_output_prefix_type(OutputPrefixType::TINK);
-  return CleartextKeysetHandle::GetKeysetHandle(keyset);
+  return std::make_unique<KeysetHandle>(
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          keyset, InsecureSecretKeyAccess::Get())
+          .value());
 }
 
 class JwtMacWrapperTest : public ::testing::Test {

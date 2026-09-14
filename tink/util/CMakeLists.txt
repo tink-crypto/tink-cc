@@ -172,6 +172,7 @@ tink_cc_library(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::cord
@@ -182,6 +183,7 @@ tink_cc_library(
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
     tink::core::input_stream
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
     tink::core::keyset_writer
     tink::core::kms_client

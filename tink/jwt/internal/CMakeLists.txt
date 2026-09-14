@@ -260,6 +260,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     tink::core::cleartext_keyset_handle
+    tink::core::insecure_secret_key_access
     tink::core::keyset_manager
     tink::core::registry
     tink::config::global_registry

@@ -37,6 +37,7 @@
 #include "tink/big_integer.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/ec_point.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key.h"
@@ -1343,8 +1344,10 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519PrivateKey) {
       KeysetHandle::ReadNoSecret((*keyset)->SerializeAsString());
   ASSERT_THAT(handle, StatusIs(absl::StatusCode::kFailedPrecondition));
 
-  std::unique_ptr<KeysetHandle> private_keyset_handle =
-      CleartextKeysetHandle::GetKeysetHandle(**keyset);
+  absl::StatusOr<KeysetHandle> private_keyset_handle =
+      CleartextKeysetHandle::GetKeysetHandleOrError(
+          **keyset, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(private_keyset_handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       private_keyset_handle->GetPrimitive<PublicKeySign>(ConfigSignature2026());
   ASSERT_THAT(sign, IsOk());

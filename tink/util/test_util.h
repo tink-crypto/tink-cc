@@ -722,20 +722,7 @@ class FakeKeysetDeriver : public KeysetDeriver {
  public:
   explicit FakeKeysetDeriver(absl::string_view name) : name_(name) {}
   absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
-      absl::string_view salt) const override {
-    google::crypto::tink::Keyset::Key key;
-    key.mutable_key_data()->set_type_url(
-        absl::StrCat(name_.size(), ":", name_, salt));
-    key.set_status(google::crypto::tink::KeyStatusType::UNKNOWN_STATUS);
-    key.set_key_id(119);
-    key.set_output_prefix_type(
-        google::crypto::tink::OutputPrefixType::UNKNOWN_PREFIX);
-
-    google::crypto::tink::Keyset keyset;
-    *keyset.add_key() = key;
-    keyset.set_primary_key_id(119);
-    return CleartextKeysetHandle::GetKeysetHandle(keyset);
-  }
+      absl::string_view salt) const override;
 
  private:
   std::string name_;

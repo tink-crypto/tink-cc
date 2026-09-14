@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
@@ -41,9 +42,10 @@
 #include "tink/aead/aes_gcm_key_manager.h"  // IWYU pragma: keep
 #include "tink/aead/xchacha20_poly1305_key_manager.h"  // IWYU pragma: keep
 #include "tink/daead/aes_siv_key_manager.h"  // IWYU pragma: keep
-#include "tink/internal/ec_util.h"           // IWYU pragma: keep
-#include "tink/subtle/common_enums.h"        // IWYU pragma: keep
-#include "tink/util/enums.h"                 // IWYU pragma: keep
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ec_util.h"     // IWYU pragma: keep
+#include "tink/subtle/common_enums.h"  // IWYU pragma: keep
+#include "tink/util/enums.h"           // IWYU pragma: keep
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"  // IWYU pragma: keep
 #include "proto/aes_ctr.pb.h"
@@ -406,6 +408,25 @@ absl::Status ZTestAutocorrelationUniformString(absl::string_view bytes) {
       absl::StrCat("Autocorrelation exceeded 10 standard deviation at ",
                    violations.size(),
                    " indices: ", absl::StrJoin(violations, ", ")));
+}
+
+absl::StatusOr<std::unique_ptr<KeysetHandle>> FakeKeysetDeriver::DeriveKeyset(
+    absl::string_view salt) const {
+  Keyset::Key key;
+  key.mutable_key_data()->set_type_url(
+      absl::StrCat(name_.size(), ":", name_, salt));
+  key.set_status(google::crypto::tink::KeyStatusType::UNKNOWN_STATUS);
+  key.set_key_id(119);
+  key.set_output_prefix_type(
+      google::crypto::tink::OutputPrefixType::UNKNOWN_PREFIX);
+
+  Keyset keyset;
+  *keyset.add_key() = key;
+  keyset.set_primary_key_id(119);
+  ABSL_ASSIGN_OR_RETURN(KeysetHandle handle,
+                        CleartextKeysetHandle::GetKeysetHandleOrError(
+                            keyset, InsecureSecretKeyAccess::Get()));
+  return std::make_unique<KeysetHandle>(std::move(handle));
 }
 
 }  // namespace test

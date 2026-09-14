@@ -264,6 +264,7 @@ cc_test(
         "//proto:jwt_hmac_cc_proto",
         "//proto:tink_cc_proto",
         "//tink:cleartext_keyset_handle",
+        "//tink:insecure_secret_key_access",
         "//tink:keyset_manager",
         "//tink:registry",
         "//tink/config:global_registry",

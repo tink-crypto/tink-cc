@@ -40,5 +40,15 @@ if ! command -v cmake &> /dev/null; then
   brew install cmake
 fi
 
-./kokoro/testutils/run_cmake_tests.sh .
-./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF
+# Install ccache if not available
+if ! command -v ccache &> /dev/null; then
+  brew install ccache
+fi
+
+export CCACHE_DIR="$(pwd)/ccache"
+mkdir -p "${CCACHE_DIR}"
+EXTRA_CMAKE_ARGS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_ASM_COMPILER_LAUNCHER=ccache"
+
+mkdir -p out out_examples
+./kokoro/testutils/run_cmake_tests.sh -o out . ${EXTRA_CMAKE_ARGS}
+./kokoro/testutils/run_cmake_tests.sh -o out_examples "examples" -DTINK_BUILD_TESTS=OFF ${EXTRA_CMAKE_ARGS}

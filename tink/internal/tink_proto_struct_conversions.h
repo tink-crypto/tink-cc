@@ -25,23 +25,28 @@ namespace tink {
 namespace internal {
 
 // Converts a proto library KeyTemplate to a TinkPB KeyTemplate.
-KeyTemplateTP ToKeyTemplateTP(::google::crypto::tink::KeyTemplate key_template);
+google::crypto::tink::internal::KeyTemplateTP ToKeyTemplateTP(
+    ::google::crypto::tink::KeyTemplate key_template);
 
 // Converts a TinkPB KeyTemplate to a proto library KeyTemplate.
 ::google::crypto::tink::KeyTemplate ToProtoKeyTemplate(
-    KeyTemplateTP key_template);
+    google::crypto::tink::internal::KeyTemplateTP key_template);
 
 // Converts a proto library KeyData to a TinkPB KeyData.
-KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data);
+google::crypto::tink::internal::KeyDataTP ToKeyDataTP(
+    ::google::crypto::tink::KeyData key_data);
 
 // Converts a TinkPB KeyData to a proto library KeyData.
-::google::crypto::tink::KeyData ToProtoKeyData(KeyDataTP key_data);
+::google::crypto::tink::KeyData ToProtoKeyData(
+    google::crypto::tink::internal::KeyDataTP key_data);
 
 // Converts a proto library Keyset::Key to a TinkPB KeysetTP::KeyTP.
-KeysetTP::KeyTP ToKeyTP(::google::crypto::tink::Keyset::Key key);
+google::crypto::tink::internal::KeysetTP::KeyTP ToKeyTP(
+    ::google::crypto::tink::Keyset::Key key);
 
 // Converts a TinkPB KeyData to a proto library KeyData.
-::google::crypto::tink::Keyset::Key ToProtoKey(KeysetTP::KeyTP key);
+::google::crypto::tink::Keyset::Key ToProtoKey(
+    google::crypto::tink::internal::KeysetTP::KeyTP key);
 
 }  // namespace internal
 }  // namespace tink

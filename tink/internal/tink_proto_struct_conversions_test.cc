@@ -40,12 +40,13 @@ TEST(ToKeyTemplateTPTest, Works) {
   key_template.set_value("value");
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
 
-  KeyTemplateTP key_template_tp = ToKeyTemplateTP(key_template);
+  google::crypto::tink::internal::KeyTemplateTP key_template_tp =
+      ToKeyTemplateTP(key_template);
 
   EXPECT_THAT(key_template_tp.type_url(), Eq("type_url"));
   EXPECT_THAT(key_template_tp.value(), Eq("value"));
   EXPECT_THAT(key_template_tp.output_prefix_type(),
-              Eq(OutputPrefixTypeTP::kTink));
+              Eq(google::crypto::tink::internal::OutputPrefixTypeTP::kTink));
 }
 
 TEST(ToKeyTemplateTPTest, WorksWithRaw) {
@@ -54,19 +55,21 @@ TEST(ToKeyTemplateTPTest, WorksWithRaw) {
   key_template.set_value("value_raw");
   key_template.set_output_prefix_type(OutputPrefixType::RAW);
 
-  KeyTemplateTP key_template_tp = ToKeyTemplateTP(key_template);
+  google::crypto::tink::internal::KeyTemplateTP key_template_tp =
+      ToKeyTemplateTP(key_template);
 
   EXPECT_THAT(key_template_tp.type_url(), Eq("type_url_raw"));
   EXPECT_THAT(key_template_tp.value(), Eq("value_raw"));
   EXPECT_THAT(key_template_tp.output_prefix_type(),
-              Eq(OutputPrefixTypeTP::kRaw));
+              Eq(google::crypto::tink::internal::OutputPrefixTypeTP::kRaw));
 }
 
 TEST(FromKeyTemplateTPTest, Works) {
-  KeyTemplateTP key_template_tp;
+  google::crypto::tink::internal::KeyTemplateTP key_template_tp;
   key_template_tp.set_type_url("type_url");
   key_template_tp.set_value("value");
-  key_template_tp.set_output_prefix_type(OutputPrefixTypeTP::kTink);
+  key_template_tp.set_output_prefix_type(
+      google::crypto::tink::internal::OutputPrefixTypeTP::kTink);
 
   KeyTemplate key_template = ToProtoKeyTemplate(key_template_tp);
 
@@ -95,12 +98,13 @@ TEST(ToKeyDataTPTest, Works) {
   key_data.set_value("value");
   key_data.set_key_material_type(KeyData::SYMMETRIC);
 
-  KeyDataTP key_data_tp = ToKeyDataTP(key_data);
+  google::crypto::tink::internal::KeyDataTP key_data_tp = ToKeyDataTP(key_data);
 
   EXPECT_THAT(key_data_tp.type_url(), Eq("type_url"));
   EXPECT_THAT(util::SecretDataAsStringView(key_data_tp.value()), Eq("value"));
   EXPECT_THAT(key_data_tp.key_material_type(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kSymmetric));
 }
 
 TEST(ToKeyDataTPTest, WorksWithAsymmetric) {
@@ -109,20 +113,22 @@ TEST(ToKeyDataTPTest, WorksWithAsymmetric) {
   key_data.set_value("value_asymmetric");
   key_data.set_key_material_type(KeyData::ASYMMETRIC_PRIVATE);
 
-  KeyDataTP key_data_tp = ToKeyDataTP(key_data);
+  google::crypto::tink::internal::KeyDataTP key_data_tp = ToKeyDataTP(key_data);
 
   EXPECT_THAT(key_data_tp.type_url(), Eq("type_url_asymmetric"));
   EXPECT_THAT(util::SecretDataAsStringView(key_data_tp.value()),
               Eq("value_asymmetric"));
   EXPECT_THAT(key_data_tp.key_material_type(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kAsymmetricPrivate));
 }
 
 TEST(FromKeyDataTPTest, Works) {
-  KeyDataTP key_data_tp;
+  google::crypto::tink::internal::KeyDataTP key_data_tp;
   key_data_tp.set_type_url("type_url");
   key_data_tp.set_value(util::SecretDataFromStringView("value"));
-  key_data_tp.set_key_material_type(KeyMaterialTypeTP::kSymmetric);
+  key_data_tp.set_key_material_type(
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric);
 
   KeyData key_data = ToProtoKeyData(key_data_tp);
 
@@ -153,27 +159,31 @@ TEST(ToKeyTPTest, Works) {
   key.set_key_id(123);
   key.set_output_prefix_type(OutputPrefixType::TINK);
 
-  KeysetTP::KeyTP key_tp = ToKeyTP(key);
+  google::crypto::tink::internal::KeysetTP::KeyTP key_tp = ToKeyTP(key);
 
   EXPECT_THAT(key_tp.key_data().type_url(), Eq("type_url"));
   EXPECT_THAT(util::SecretDataAsStringView(key_tp.key_data().value()),
               Eq("value"));
   EXPECT_THAT(key_tp.key_data().key_material_type(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
-  EXPECT_THAT(key_tp.status(), Eq(KeyStatusTypeTP::kEnabled));
+              Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+                     kSymmetric));
+  EXPECT_THAT(key_tp.status(),
+              Eq(google::crypto::tink::internal::KeyStatusTypeTP::kEnabled));
   EXPECT_THAT(key_tp.key_id(), Eq(123));
-  EXPECT_THAT(key_tp.output_prefix_type(), Eq(OutputPrefixTypeTP::kTink));
+  EXPECT_THAT(key_tp.output_prefix_type(),
+              Eq(google::crypto::tink::internal::OutputPrefixTypeTP::kTink));
 }
 
 TEST(ToProtoKeyTest, Works) {
-  KeysetTP::KeyTP key_tp;
+  google::crypto::tink::internal::KeysetTP::KeyTP key_tp;
   key_tp.mutable_key_data()->set_type_url("type_url");
   key_tp.mutable_key_data()->set_value(util::SecretDataFromStringView("value"));
   key_tp.mutable_key_data()->set_key_material_type(
-      KeyMaterialTypeTP::kSymmetric);
-  key_tp.set_status(KeyStatusTypeTP::kEnabled);
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric);
+  key_tp.set_status(google::crypto::tink::internal::KeyStatusTypeTP::kEnabled);
   key_tp.set_key_id(123);
-  key_tp.set_output_prefix_type(OutputPrefixTypeTP::kTink);
+  key_tp.set_output_prefix_type(
+      google::crypto::tink::internal::OutputPrefixTypeTP::kTink);
 
   Keyset::Key key = ToProtoKey(key_tp);
 

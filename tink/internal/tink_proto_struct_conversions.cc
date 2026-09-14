@@ -26,18 +26,19 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-KeyTemplateTP ToKeyTemplateTP(
+google::crypto::tink::internal::KeyTemplateTP ToKeyTemplateTP(
     ::google::crypto::tink::KeyTemplate key_template) {
-  KeyTemplateTP key_template_tp;
+  google::crypto::tink::internal::KeyTemplateTP key_template_tp;
   key_template_tp.set_type_url(std::move(*key_template.mutable_type_url()));
   key_template_tp.set_value(std::move(*key_template.mutable_value()));
   key_template_tp.set_output_prefix_type(
-      static_cast<OutputPrefixTypeTP>(key_template.output_prefix_type()));
+      static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          key_template.output_prefix_type()));
   return key_template_tp;
 }
 
 ::google::crypto::tink::KeyTemplate ToProtoKeyTemplate(
-    KeyTemplateTP key_template) {
+    google::crypto::tink::internal::KeyTemplateTP key_template) {
   ::google::crypto::tink::KeyTemplate key_template_proto;
   key_template_proto.set_type_url(key_template.type_url());
   key_template_proto.set_value(key_template.value());
@@ -47,16 +48,19 @@ KeyTemplateTP ToKeyTemplateTP(
   return key_template_proto;
 }
 
-KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data) {
-  KeyDataTP key_data_tp;
+google::crypto::tink::internal::KeyDataTP ToKeyDataTP(
+    ::google::crypto::tink::KeyData key_data) {
+  google::crypto::tink::internal::KeyDataTP key_data_tp;
   key_data_tp.set_type_url(std::move(*key_data.mutable_type_url()));
   key_data_tp.set_value(util::SecretDataFromStringView(key_data.value()));
   key_data_tp.set_key_material_type(
-      static_cast<KeyMaterialTypeTP>(key_data.key_material_type()));
+      static_cast<google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP>(
+          key_data.key_material_type()));
   return key_data_tp;
 }
 
-::google::crypto::tink::KeyData ToProtoKeyData(KeyDataTP key_data) {
+::google::crypto::tink::KeyData ToProtoKeyData(
+    google::crypto::tink::internal::KeyDataTP key_data) {
   ::google::crypto::tink::KeyData key_data_proto;
   key_data_proto.set_type_url(key_data.type_url());
   key_data_proto.set_value(
@@ -67,20 +71,25 @@ KeyDataTP ToKeyDataTP(::google::crypto::tink::KeyData key_data) {
   return key_data_proto;
 }
 
-KeysetTP::KeyTP ToKeyTP(::google::crypto::tink::Keyset::Key key) {
-  KeysetTP::KeyTP key_tp;
+google::crypto::tink::internal::KeysetTP::KeyTP ToKeyTP(
+    ::google::crypto::tink::Keyset::Key key) {
+  google::crypto::tink::internal::KeysetTP::KeyTP key_tp;
   if (key.has_key_data()) {
     *key_tp.mutable_key_data() =
         ToKeyDataTP(std::move(*key.mutable_key_data()));
   }
-  key_tp.set_status(static_cast<KeyStatusTypeTP>(key.status()));
+  key_tp.set_status(
+      static_cast<google::crypto::tink::internal::KeyStatusTypeTP>(
+          key.status()));
   key_tp.set_key_id(key.key_id());
   key_tp.set_output_prefix_type(
-      static_cast<OutputPrefixTypeTP>(key.output_prefix_type()));
+      static_cast<google::crypto::tink::internal::OutputPrefixTypeTP>(
+          key.output_prefix_type()));
   return key_tp;
 }
 
-::google::crypto::tink::Keyset::Key ToProtoKey(KeysetTP::KeyTP key) {
+::google::crypto::tink::Keyset::Key ToProtoKey(
+    google::crypto::tink::internal::KeysetTP::KeyTP key) {
   ::google::crypto::tink::Keyset::Key key_proto;
   if (key.has_key_data()) {
     *key_proto.mutable_key_data() =

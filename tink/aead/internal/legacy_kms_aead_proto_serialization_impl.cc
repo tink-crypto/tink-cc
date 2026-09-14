@@ -107,11 +107,11 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.KmsAeadKey";
 
 absl::StatusOr<LegacyKmsAeadParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return LegacyKmsAeadParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return LegacyKmsAeadParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -119,13 +119,13 @@ absl::StatusOr<LegacyKmsAeadParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    LegacyKmsAeadParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(LegacyKmsAeadParameters::Variant variant) {
   switch (variant) {
     case LegacyKmsAeadParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case LegacyKmsAeadParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -134,7 +134,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 
 absl::StatusOr<LegacyKmsAeadParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsAeadParameters.");
@@ -153,8 +154,8 @@ absl::StatusOr<LegacyKmsAeadParameters> ParseParameters(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const LegacyKmsAeadParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -203,8 +204,8 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.mutable_params()->set_key_uri(key.GetParameters().GetKeyUri());
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -215,7 +216,8 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
       std::move(serialized_key), GetInsecureSecretKeyAccessInternal());
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeTP::kRemote,
+      kTypeUrl, restricted_output,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kRemote,
       *output_prefix_type, key.GetIdRequirement());
 }
 

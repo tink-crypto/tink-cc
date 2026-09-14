@@ -109,15 +109,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key";
 
 absl::StatusOr<ChaCha20Poly1305Parameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return ChaCha20Poly1305Parameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return ChaCha20Poly1305Parameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return ChaCha20Poly1305Parameters::Variant::kTink;
     default:
       return absl::Status(
@@ -126,15 +126,15 @@ absl::StatusOr<ChaCha20Poly1305Parameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    ChaCha20Poly1305Parameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(ChaCha20Poly1305Parameters::Variant variant) {
   switch (variant) {
     case ChaCha20Poly1305Parameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case ChaCha20Poly1305Parameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case ChaCha20Poly1305Parameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -143,7 +143,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 
 absl::StatusOr<ChaCha20Poly1305Parameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing ChaCha20Poly1305Parameters.");
@@ -164,8 +165,8 @@ absl::StatusOr<ChaCha20Poly1305Parameters> ParseParameters(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const ChaCha20Poly1305Parameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   ChaCha20Poly1305KeyFormatTP proto_key_format;
@@ -223,15 +224,15 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   SecretData serialized_key = proto_key.SerializeAsSecretData();
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(std::move(serialized_key), *token),
-      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 ChaCha20Poly1305ProtoParametersParserImpl*

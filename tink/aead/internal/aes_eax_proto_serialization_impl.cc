@@ -135,15 +135,15 @@ class AesEaxKeyTP : public Message {
 };
 
 absl::StatusOr<AesEaxParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return AesEaxParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return AesEaxParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return AesEaxParameters::Variant::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -151,15 +151,15 @@ absl::StatusOr<AesEaxParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    AesEaxParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(AesEaxParameters::Variant variant) {
   switch (variant) {
     case AesEaxParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case AesEaxParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case AesEaxParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
@@ -181,7 +181,8 @@ absl::StatusOr<AesEaxParamsTP> GetProtoParams(
 
 absl::StatusOr<AesEaxParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         absl::StrCat("Wrong type URL when parsing AesEaxParameters: ",
@@ -215,8 +216,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return params.status();
   }
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -290,16 +291,16 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.mutable_params()->set_iv_size(params->iv_size());
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
   SecretData serialized_proto = proto_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(std::move(serialized_proto), *token),
-      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 AesEaxProtoParametersParserImpl* AesEaxProtoParametersParser() {

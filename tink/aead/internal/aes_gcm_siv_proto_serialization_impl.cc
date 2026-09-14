@@ -110,15 +110,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesGcmSivKey";
 
 absl::StatusOr<AesGcmSivParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return AesGcmSivParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return AesGcmSivParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return AesGcmSivParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -126,15 +126,15 @@ absl::StatusOr<AesGcmSivParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    AesGcmSivParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(AesGcmSivParameters::Variant variant) {
   switch (variant) {
     case AesGcmSivParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case AesGcmSivParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case AesGcmSivParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -143,7 +143,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 
 absl::StatusOr<AesGcmSivParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmSivParameters.");
@@ -168,8 +169,8 @@ absl::StatusOr<AesGcmSivParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesGcmSivParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -236,8 +237,8 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   key_struct.set_key_value(restricted_input->GetSecret(*token));
   SecretData serialized_key = key_struct.SerializeAsSecretData();
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -245,7 +246,8 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, std::move(restricted_output), KeyMaterialTypeTP::kSymmetric,
+      kTypeUrl, std::move(restricted_output),
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

@@ -251,7 +251,7 @@ TEST_P(XChaCha20Poly1305ProtoSerializationTest,
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
@@ -285,7 +285,7 @@ TEST_P(XChaCha20Poly1305ProtoSerializationTest,
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),

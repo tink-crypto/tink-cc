@@ -95,15 +95,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key";
 
 absl::StatusOr<XChaCha20Poly1305Parameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return XChaCha20Poly1305Parameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return XChaCha20Poly1305Parameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return XChaCha20Poly1305Parameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -111,15 +111,15 @@ absl::StatusOr<XChaCha20Poly1305Parameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    XChaCha20Poly1305Parameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(XChaCha20Poly1305Parameters::Variant variant) {
   switch (variant) {
     case XChaCha20Poly1305Parameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case XChaCha20Poly1305Parameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case XChaCha20Poly1305Parameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -128,7 +128,8 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 
 absl::StatusOr<XChaCha20Poly1305Parameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const KeyTemplateTP& template_struct = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& template_struct =
+      serialization.GetKeyTemplate();
   if (template_struct.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing XChaCha20Poly1305Parameters.");
@@ -151,8 +152,8 @@ absl::StatusOr<XChaCha20Poly1305Parameters> ParseParameters(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const XChaCha20Poly1305Parameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   XChaCha20Poly1305KeyFormatTP proto_key_format;
@@ -215,14 +216,15 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(std::move(serialized_key), *token);
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeTP::kSymmetric,
+      kTypeUrl, restricted_output,
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

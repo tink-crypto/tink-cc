@@ -63,15 +63,15 @@ constexpr absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey";
 
 absl::StatusOr<AesCtrHmacAeadParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+    google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixTypeTP::kLegacy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixTypeTP::kCrunchy:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy:
       return AesCtrHmacAeadParameters::Variant::kCrunchy;
-    case OutputPrefixTypeTP::kRaw:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kRaw:
       return AesCtrHmacAeadParameters::Variant::kNoPrefix;
-    case OutputPrefixTypeTP::kTink:
+    case google::crypto::tink::internal::OutputPrefixTypeTP::kTink:
       return AesCtrHmacAeadParameters::Variant::kTink;
     default:
       return absl::Status(
@@ -80,15 +80,15 @@ absl::StatusOr<AesCtrHmacAeadParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    AesCtrHmacAeadParameters::Variant variant) {
+absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+ToOutputPrefixType(AesCtrHmacAeadParameters::Variant variant) {
   switch (variant) {
     case AesCtrHmacAeadParameters::Variant::kCrunchy:
-      return OutputPrefixTypeTP::kCrunchy;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kCrunchy;
     case AesCtrHmacAeadParameters::Variant::kNoPrefix:
-      return OutputPrefixTypeTP::kRaw;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kRaw;
     case AesCtrHmacAeadParameters::Variant::kTink:
-      return OutputPrefixTypeTP::kTink;
+      return google::crypto::tink::internal::OutputPrefixTypeTP::kTink;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
@@ -96,17 +96,17 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
 }
 
 absl::StatusOr<AesCtrHmacAeadParameters::HashType> ToHashType(
-    HashTypeEnum hash_type) {
+    google::crypto::tink::internal::HashTypeTP hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case google::crypto::tink::internal::HashTypeTP::kSha1:
       return AesCtrHmacAeadParameters::HashType::kSha1;
-    case HashTypeEnum::kSha224:
+    case google::crypto::tink::internal::HashTypeTP::kSha224:
       return AesCtrHmacAeadParameters::HashType::kSha224;
-    case HashTypeEnum::kSha256:
+    case google::crypto::tink::internal::HashTypeTP::kSha256:
       return AesCtrHmacAeadParameters::HashType::kSha256;
-    case HashTypeEnum::kSha384:
+    case google::crypto::tink::internal::HashTypeTP::kSha384:
       return AesCtrHmacAeadParameters::HashType::kSha384;
-    case HashTypeEnum::kSha512:
+    case google::crypto::tink::internal::HashTypeTP::kSha512:
       return AesCtrHmacAeadParameters::HashType::kSha512;
     default:
       return absl::Status(
@@ -115,19 +115,19 @@ absl::StatusOr<AesCtrHmacAeadParameters::HashType> ToHashType(
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<google::crypto::tink::internal::HashTypeTP> ToProtoHashType(
     AesCtrHmacAeadParameters::HashType hash_type) {
   switch (hash_type) {
     case AesCtrHmacAeadParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return google::crypto::tink::internal::HashTypeTP::kSha1;
     case AesCtrHmacAeadParameters::HashType::kSha224:
-      return HashTypeEnum::kSha224;
+      return google::crypto::tink::internal::HashTypeTP::kSha224;
     case AesCtrHmacAeadParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return google::crypto::tink::internal::HashTypeTP::kSha256;
     case AesCtrHmacAeadParameters::HashType::kSha384:
-      return HashTypeEnum::kSha384;
+      return google::crypto::tink::internal::HashTypeTP::kSha384;
     case AesCtrHmacAeadParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return google::crypto::tink::internal::HashTypeTP::kSha512;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine HashType");
@@ -136,7 +136,8 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         absl::StrCat("Wrong type URL when parsing AesCtrHmacAeadParameters: ",
@@ -180,13 +181,13 @@ absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesCtrHmacAeadParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<HashTypeEnum> hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -292,7 +293,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return restricted_hmac_input.status();
   }
 
-  absl::StatusOr<HashTypeEnum> hash_type =
+  absl::StatusOr<google::crypto::tink::internal::HashTypeTP> hash_type =
       ToProtoHashType(key.GetParameters().GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -313,15 +314,15 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.mutable_hmac_key()->set_key_value(
       restricted_hmac_input->Get(*token));
 
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
+  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
+      output_prefix_type = ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   SecretData serialized_key = proto_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(std::move(serialized_key), *token),
-      KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
-      key.GetIdRequirement());
+      google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 AesCtrHmacAeadProtoParametersParserImpl& AesCtrHmacAeadProtoParametersParser() {

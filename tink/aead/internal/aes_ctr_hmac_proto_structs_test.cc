@@ -96,7 +96,8 @@ std::string GetSerializedAesCtrHmacAeadKeyFormat() {
   aes_ctr_key_format.set_key_size(16);
 
   HmacKeyFormatTP hmac_key_format;
-  hmac_key_format.mutable_params()->set_hash(HashTypeEnum::kSha256);
+  hmac_key_format.mutable_params()->set_hash(
+      google::crypto::tink::internal::HashTypeTP::kSha256);
   hmac_key_format.mutable_params()->set_tag_size(16);
   hmac_key_format.set_key_size(32);
   hmac_key_format.set_version(1);
@@ -117,7 +118,7 @@ TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyFormatTP) {
   EXPECT_THAT(key_format.aes_ctr_key_format().params().iv_size(), Eq(12));
   EXPECT_THAT(key_format.aes_ctr_key_format().key_size(), Eq(16));
   EXPECT_THAT(key_format.hmac_key_format().params().hash(),
-              Eq(HashTypeEnum::kSha256));
+              Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
   EXPECT_THAT(key_format.hmac_key_format().params().tag_size(), Eq(16));
   EXPECT_THAT(key_format.hmac_key_format().key_size(), Eq(32));
   EXPECT_THAT(key_format.hmac_key_format().version(), Eq(1));
@@ -133,7 +134,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyFormatTP) {
   key_format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(12);
   key_format.mutable_aes_ctr_key_format()->set_key_size(16);
   key_format.mutable_hmac_key_format()->mutable_params()->set_hash(
-      HashTypeEnum::kSha256);
+      google::crypto::tink::internal::HashTypeTP::kSha256);
   key_format.mutable_hmac_key_format()->mutable_params()->set_tag_size(16);
   key_format.mutable_hmac_key_format()->set_key_size(32);
   key_format.mutable_hmac_key_format()->set_version(1);
@@ -186,7 +187,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrKeyTP) {
 
 std::string GetSerializedHmacKey() {
   HmacParamsTP params;
-  params.set_hash(HashTypeEnum::kSha256);
+  params.set_hash(google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_tag_size(16);
   return absl::StrCat(
       proto_testing::FieldWithNumber(1).IsVarint(1),  // version
@@ -214,7 +215,8 @@ TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyTP) {
   EXPECT_THAT(util::SecretDataAsStringView(key.aes_ctr_key().key_value()),
               Eq("0123456789012345"));
   EXPECT_THAT(key.hmac_key().version(), Eq(1));
-  EXPECT_THAT(key.hmac_key().params().hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(key.hmac_key().params().hash(),
+              Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
   EXPECT_THAT(key.hmac_key().params().tag_size(), Eq(16));
   EXPECT_THAT(util::SecretDataAsStringView(key.hmac_key().key_value()),
               Eq("01234567890123456789012345678901"));
@@ -232,7 +234,8 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyTP) {
   key.mutable_aes_ctr_key()->mutable_params()->set_iv_size(16);
   key.mutable_aes_ctr_key()->set_key_value("0123456789012345");
   key.mutable_hmac_key()->set_version(1);
-  key.mutable_hmac_key()->mutable_params()->set_hash(HashTypeEnum::kSha256);
+  key.mutable_hmac_key()->mutable_params()->set_hash(
+      google::crypto::tink::internal::HashTypeTP::kSha256);
   key.mutable_hmac_key()->mutable_params()->set_tag_size(16);
   key.mutable_hmac_key()->set_key_value(
       util::SecretDataFromStringView("01234567890123456789012345678901"));

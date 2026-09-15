@@ -745,3 +745,39 @@ tink_cc_library(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME ecies_key_creator
+  SRCS
+    ecies_key_creator.cc
+    ecies_key_creator.h
+  DEPS
+    absl::status
+    absl::statusor
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_private_key
+    tink::hybrid::ecies_public_key
+    tink::internal::ec_util
+    tink::subtle::common_enums
+)
+
+tink_cc_test(
+  NAME ecies_key_creator_test
+  SRCS
+    ecies_key_creator_test.cc
+  DEPS
+    tink::hybrid::internal::ecies_key_creator
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_private_key
+)

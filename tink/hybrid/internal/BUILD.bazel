@@ -746,3 +746,40 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ecies_key_creator",
+    srcs = ["ecies_key_creator.cc"],
+    hdrs = ["ecies_key_creator.h"],
+    include_prefix = "tink/hybrid/internal",
+    deps = [
+        "//tink:big_integer",
+        "//tink:ec_point",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "//tink/hybrid:ecies_public_key",
+        "//tink/internal:ec_util",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "ecies_key_creator_test",
+    srcs = ["ecies_key_creator_test.cc"],
+    deps = [
+        ":ecies_key_creator",
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:partial_key_access",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

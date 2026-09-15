@@ -107,3 +107,31 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ecdsa_key",
+    srcs = ["create_ecdsa_key.cc"],
+    hdrs = ["create_ecdsa_key.h"],
+    include_prefix = "tink/signature/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature/internal:ecdsa_key_creator",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ecdsa_key_test",
+    srcs = ["create_ecdsa_key_test.cc"],
+    deps = [
+        ":create_ecdsa_key",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

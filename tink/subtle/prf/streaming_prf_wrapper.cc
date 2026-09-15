@@ -24,7 +24,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -36,7 +36,7 @@ namespace tink {
 class StreamingPrfSetWrapper : public StreamingPrf {
  public:
   explicit StreamingPrfSetWrapper(
-      std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set)
+      std::unique_ptr<internal::PrimitiveSet<StreamingPrf>> streaming_prf_set)
       : streaming_prf_set_(std::move(streaming_prf_set)) {}
 
   std::unique_ptr<InputStream> ComputePrf(
@@ -47,11 +47,12 @@ class StreamingPrfSetWrapper : public StreamingPrf {
   ~StreamingPrfSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set_;
+  std::unique_ptr<internal::PrimitiveSet<StreamingPrf>> streaming_prf_set_;
 };
 
 absl::StatusOr<std::unique_ptr<StreamingPrf>> StreamingPrfWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set) const {
+    std::unique_ptr<internal::PrimitiveSet<StreamingPrf>> streaming_prf_set)
+    const {
   if (!streaming_prf_set) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Passed in streaming_prf_set must be non-NULL");

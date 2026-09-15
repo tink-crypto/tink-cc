@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/statusor.h"
@@ -36,7 +36,7 @@ class StreamingPrfWrapper
     : public PrimitiveWrapper<StreamingPrf, StreamingPrf> {
  public:
   absl::StatusOr<std::unique_ptr<StreamingPrf>> Wrap(
-      std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set)
+      std::unique_ptr<internal::PrimitiveSet<StreamingPrf>> streaming_prf_set)
       const override;
 };
 

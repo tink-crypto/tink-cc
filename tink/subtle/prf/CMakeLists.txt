@@ -20,8 +20,8 @@ tink_cc_library(
     absl::status
     absl::strings
     tink::core::input_stream
-    tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::primitive_set
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -108,7 +108,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::input_stream
-    tink::core::primitive_set
+    tink::internal::primitive_set
     tink::util::input_stream_util
     tink::util::istream_input_stream
     tink::util::test_matchers

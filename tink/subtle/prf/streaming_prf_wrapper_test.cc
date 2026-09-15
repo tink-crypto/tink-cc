@@ -29,7 +29,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
-#include "tink/primitive_set.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
@@ -43,6 +43,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::PrimitiveSet;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;

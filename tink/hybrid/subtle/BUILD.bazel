@@ -1,1 +1,35 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//:__subpackages__"])
+
 licenses(["notice"])
+
+cc_library(
+    name = "create_ecies_key",
+    srcs = ["create_ecies_key.cc"],
+    hdrs = ["create_ecies_key.h"],
+    include_prefix = "tink/hybrid/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "//tink/hybrid/internal:ecies_key_creator",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ecies_key_test",
+    srcs = ["create_ecies_key_test.cc"],
+    deps = [
+        ":create_ecies_key",
+        "//tink:partial_key_access",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

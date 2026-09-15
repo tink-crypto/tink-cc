@@ -370,7 +370,7 @@ class KeysetHandle {
       util::SecretProto<google::crypto::tink::Keyset> keyset,
       absl::flat_hash_map<std::type_index, std::unique_ptr<Annotations>>
           annotations)
-      : keyset_(std::move(*keyset)), annotations_(std::move(annotations)) {}
+      : keyset_(std::move(keyset)), annotations_(std::move(annotations)) {}
   // Creates a handle that contains the given `keyset`, `entries`, and
   // `annotations`.
   KeysetHandle(

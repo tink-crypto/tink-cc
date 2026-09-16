@@ -135,3 +135,32 @@ tink_cc_test(
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
 )
+
+tink_cc_library(
+  NAME create_ed25519_key
+  SRCS
+    create_ed25519_key.cc
+    create_ed25519_key.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::internal::ed25519_key_creator
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ed25519_key_test
+  SRCS
+    create_ed25519_key_test.cc
+  DEPS
+    tink::signature::subtle::create_ed25519_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+)

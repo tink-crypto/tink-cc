@@ -135,3 +135,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ed25519_key",
+    srcs = ["create_ed25519_key.cc"],
+    hdrs = ["create_ed25519_key.h"],
+    include_prefix = "tink/signature/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/signature:ed25519_parameters",
+        "//tink/signature:ed25519_private_key",
+        "//tink/signature/internal:ed25519_key_creator",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ed25519_key_test",
+    srcs = ["create_ed25519_key_test.cc"],
+    deps = [
+        ":create_ed25519_key",
+        "//tink:partial_key_access",
+        "//tink/signature:ed25519_parameters",
+        "//tink/signature:ed25519_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

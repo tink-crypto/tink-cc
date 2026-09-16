@@ -368,6 +368,7 @@
 #include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
 #include "tink/signature/subtle/composite_ml_dsa_verify_boringssl.h"
 #include "tink/signature/subtle/create_ecdsa_key.h"
+#include "tink/signature/subtle/create_ed25519_key.h"
 #include "tink/signature_config.h"
 #include "tink/signature_key_templates.h"
 #include "tink/streaming_aead.h"

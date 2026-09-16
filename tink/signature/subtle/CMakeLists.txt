@@ -164,3 +164,32 @@ tink_cc_test(
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
 )
+
+tink_cc_library(
+  NAME create_rsa_ssa_pkcs1_key
+  SRCS
+    create_rsa_ssa_pkcs1_key.cc
+    create_rsa_ssa_pkcs1_key.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::rsa_ssa_pkcs1_key_creator
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_rsa_ssa_pkcs1_key_test
+  SRCS
+    create_rsa_ssa_pkcs1_key_test.cc
+  DEPS
+    tink::signature::subtle::create_rsa_ssa_pkcs1_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+)

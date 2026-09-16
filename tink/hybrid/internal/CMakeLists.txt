@@ -781,3 +781,45 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
 )
+
+tink_cc_library(
+  NAME hpke_key_creator
+  SRCS
+    hpke_key_creator.cc
+    hpke_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::internal::ec_util
+    tink::internal::mlkem_util
+    tink::internal::ssl_unique_ptr
+    tink::internal::xwing_util
+    tink::subtle::common_enums
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME hpke_key_creator_test
+  SRCS
+    hpke_key_creator_test.cc
+  DEPS
+    tink::hybrid::internal::hpke_key_creator
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+  TAGS
+    exclude_if_openssl
+)

@@ -1830,3 +1830,40 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME jwt_ecdsa_key_creator
+  SRCS
+    jwt_ecdsa_key_creator.cc
+    jwt_ecdsa_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::ec_util
+    tink::internal::internal_insecure_secret_key_access
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_ecdsa_public_key
+    tink::subtle::common_enums
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME jwt_ecdsa_key_creator_test
+  SRCS
+    jwt_ecdsa_key_creator_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ecdsa_key_creator
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+)

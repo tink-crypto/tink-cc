@@ -370,6 +370,7 @@
 #include "tink/signature/subtle/create_ecdsa_key.h"
 #include "tink/signature/subtle/create_ed25519_key.h"
 #include "tink/signature/subtle/create_rsa_ssa_pkcs1_key.h"
+#include "tink/signature/subtle/create_rsa_ssa_pss_key.h"
 #include "tink/signature_config.h"
 #include "tink/signature_key_templates.h"
 #include "tink/streaming_aead.h"

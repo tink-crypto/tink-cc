@@ -195,3 +195,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_rsa_ssa_pss_key",
+    srcs = ["create_rsa_ssa_pss_key.cc"],
+    hdrs = ["create_rsa_ssa_pss_key.h"],
+    include_prefix = "tink/signature/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/signature:rsa_ssa_pss_parameters",
+        "//tink/signature:rsa_ssa_pss_private_key",
+        "//tink/signature/internal:rsa_ssa_pss_key_creator",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_rsa_ssa_pss_key_test",
+    srcs = ["create_rsa_ssa_pss_key_test.cc"],
+    deps = [
+        ":create_rsa_ssa_pss_key",
+        "//tink:partial_key_access",
+        "//tink/signature:rsa_ssa_pss_parameters",
+        "//tink/signature:rsa_ssa_pss_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

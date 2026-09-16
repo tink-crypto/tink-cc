@@ -242,7 +242,7 @@ TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
   absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
-  EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
+  EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 
   // Parse header to make sure that key ID is correctly encoded.
   google::crypto::tink::KeysetInfo keyset_info =

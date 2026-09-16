@@ -270,7 +270,7 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateRawSignVerifySuccess) {
   absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_verify)->VerifyAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
-  EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
+  EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 
   absl::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
                                                 .ExpectIssuer("unknown")
@@ -338,7 +338,7 @@ TEST_F(JwtPublicKeyWrappersTest, GenerateTinkSignVerifySuccess) {
   absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_verify)->VerifyAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
-  EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
+  EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 
   // Parse header to make sure that key ID is correctly encoded.
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =

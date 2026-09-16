@@ -41,6 +41,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Not;
 
@@ -75,7 +76,7 @@ TEST_P(JwtMacKeyTemplatesTest, CreateComputeVerify) {
   absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
-  EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
+  EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 
   absl::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
                                                 .ExpectIssuer("unknown")
@@ -130,7 +131,7 @@ TEST_P(JwtSignatureKeyTemplatesTest, CreateComputeVerify) {
   absl::StatusOr<VerifiedJwt> verified_jwt =
       (*verify)->VerifyAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
-  EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
+  EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 
   absl::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
                                                 .ExpectIssuer("unknown")

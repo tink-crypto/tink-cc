@@ -446,12 +446,10 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::key_gen_configuration
-    tink::core::key_manager
     tink::core::key_status
     tink::core::keyset_reader
     tink::core::keyset_writer
     tink::core::parameters
-    tink::core::primitive_set
     tink::core::private_key
     tink::core::registry
     tink::core::restricted_data

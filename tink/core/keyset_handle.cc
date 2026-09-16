@@ -30,6 +30,7 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
@@ -54,7 +55,6 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/key_manager.h"
 #include "tink/key_status.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
@@ -65,6 +65,7 @@
 #include "tink/util/keyset_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
+#include "tink/util/validation.h"
 #include "proto/tink.pb.h"
 
 using ::crypto::tink::util::SecretProto;

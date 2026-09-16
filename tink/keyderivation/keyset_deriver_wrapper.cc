@@ -25,9 +25,9 @@
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/keyderivation/keyset_deriver.h"
 #include "tink/keyset_handle.h"
-#include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
@@ -40,7 +40,7 @@ namespace {
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 
-absl::Status Validate(PrimitiveSet<KeysetDeriver>* deriver_set) {
+absl::Status Validate(internal::PrimitiveSet<KeysetDeriver>* deriver_set) {
   if (deriver_set == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "deriver_set must be non-NULL");
@@ -55,7 +55,7 @@ absl::Status Validate(PrimitiveSet<KeysetDeriver>* deriver_set) {
 class KeysetDeriverSetWrapper : public KeysetDeriver {
  public:
   explicit KeysetDeriverSetWrapper(
-      std::unique_ptr<PrimitiveSet<KeysetDeriver>> deriver_set)
+      std::unique_ptr<internal::PrimitiveSet<KeysetDeriver>> deriver_set)
       : deriver_set_(std::move(deriver_set)) {}
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
@@ -64,7 +64,7 @@ class KeysetDeriverSetWrapper : public KeysetDeriver {
   ~KeysetDeriverSetWrapper() override = default;
 
  private:
-  std::unique_ptr<PrimitiveSet<KeysetDeriver>> deriver_set_;
+  std::unique_ptr<internal::PrimitiveSet<KeysetDeriver>> deriver_set_;
 };
 
 absl::StatusOr<KeyData> DeriveAndGetKeyData(absl::string_view salt,
@@ -106,7 +106,7 @@ KeysetDeriverSetWrapper::DeriveKeyset(absl::string_view salt) const {
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<KeysetDeriver>> KeysetDeriverWrapper::Wrap(
-    std::unique_ptr<PrimitiveSet<KeysetDeriver>> deriver_set) const {
+    std::unique_ptr<internal::PrimitiveSet<KeysetDeriver>> deriver_set) const {
   absl::Status status = Validate(deriver_set.get());
   if (!status.ok()) return status;
   return {std::make_unique<KeysetDeriverSetWrapper>(std::move(deriver_set))};

@@ -27,8 +27,8 @@ tink_cc_library(
     tink::core::cleartext_keyset_handle
     tink::core::insecure_secret_key_access
     tink::core::keyset_handle
-    tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::primitive_set
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -151,7 +151,7 @@ tink_cc_test(
     tink::core::cleartext_keyset_handle
     tink::core::insecure_secret_key_access
     tink::core::keyset_handle
-    tink::core::primitive_set
+    tink::internal::primitive_set
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

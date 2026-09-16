@@ -19,8 +19,8 @@
 
 #include <memory>
 
+#include "tink/internal/primitive_set.h"
 #include "tink/keyderivation/keyset_deriver.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/statusor.h"
 
@@ -36,7 +36,8 @@ class KeysetDeriverWrapper
     : public PrimitiveWrapper<KeysetDeriver, KeysetDeriver> {
  public:
   absl::StatusOr<std::unique_ptr<KeysetDeriver>> Wrap(
-      std::unique_ptr<PrimitiveSet<KeysetDeriver>> deriver_set) const override;
+      std::unique_ptr<internal::PrimitiveSet<KeysetDeriver>> deriver_set)
+      const override;
 };
 
 }  // namespace tink

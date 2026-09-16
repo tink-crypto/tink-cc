@@ -28,6 +28,7 @@ namespace tink {
 // Google, access to this function is restricted by the build system. Outside of
 // Google, users can search their codebase for `GetLowLevelCryptoAccess()` to
 // find instances where it is used.
+// TODO(b/562428810): Remove this before Tink 3.0.0
 inline LowLevelCryptoAccessToken GetLowLevelCryptoAccess() {
   return LowLevelCryptoAccessToken();
 }

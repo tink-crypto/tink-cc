@@ -208,8 +208,8 @@ TEST_P(CompositeMlDsaSignBoringSslTest, SignatureOutputPrefixIsCorrect) {
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false, test_case.id_requirement);
 
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer = NewCompositeMlDsaSign(
-      composite_ml_dsa_private_key, GetLowLevelCryptoAccess());
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewCompositeMlDsaSign(composite_ml_dsa_private_key);
   ASSERT_THAT(signer, IsOk());
 
   absl::string_view message = "message to be signed";
@@ -237,8 +237,8 @@ TEST_P(CompositeMlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
           *parameters, /*force_random=*/false, test_case.id_requirement);
 
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer = NewCompositeMlDsaSign(
-      composite_ml_dsa_private_key, GetLowLevelCryptoAccess());
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewCompositeMlDsaSign(composite_ml_dsa_private_key);
   ASSERT_THAT(signer, IsOk());
 
   absl::string_view message = "message to be signed";
@@ -269,9 +269,7 @@ TEST_P(CompositeMlDsaSignBoringSslTest, FipsMode) {
           /*id_requirement=*/std::nullopt);
 
   // Check that creating the signer fails in FIPS mode.
-  EXPECT_THAT(NewCompositeMlDsaSign(composite_ml_dsa_private_key,
-                                    GetLowLevelCryptoAccess())
-                  .status(),
+  EXPECT_THAT(NewCompositeMlDsaSign(composite_ml_dsa_private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

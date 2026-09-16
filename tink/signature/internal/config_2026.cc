@@ -131,14 +131,12 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEd25519VerifyBoringSsl(
 #ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewCompositeMlDsaSignBoringSsl(
     const CompositeMlDsaPrivateKey& key) {
-  return crypto::tink::subtle::NewCompositeMlDsaSign(key,
-                                                     GetLowLevelCryptoAccess());
+  return crypto::tink::subtle::NewCompositeMlDsaSign(key);
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 NewCompositeMlDsaVerifyBoringSsl(const CompositeMlDsaPublicKey& key) {
-  return crypto::tink::subtle::NewCompositeMlDsaVerify(
-      key, GetLowLevelCryptoAccess());
+  return crypto::tink::subtle::NewCompositeMlDsaVerify(key);
 }
 #endif
 

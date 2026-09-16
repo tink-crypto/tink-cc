@@ -178,8 +178,7 @@ absl::StatusOr<std::string> CompositeMlDsaSign::Sign(
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewCompositeMlDsaSign(
-    const CompositeMlDsaPrivateKey& private_key,
-    LowLevelCryptoAccessToken token) {
+    const CompositeMlDsaPrivateKey& private_key) {
   return CompositeMlDsaSign::New(private_key);
 }
 

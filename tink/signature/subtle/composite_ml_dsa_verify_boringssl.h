@@ -20,7 +20,6 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
-#include "tink/low_level_crypto_access_token.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/composite_ml_dsa_public_key.h"
 
@@ -31,7 +30,7 @@ namespace subtle {
 // Creates a new PublicKeyVerify primitive using the existing ML-DSA and
 // classical PublicKeyVerify primitives.
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewCompositeMlDsaVerify(
-    const CompositeMlDsaPublicKey& public_key, LowLevelCryptoAccessToken token);
+    const CompositeMlDsaPublicKey& public_key);
 
 }  // namespace subtle
 }  // namespace tink

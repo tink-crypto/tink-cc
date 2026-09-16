@@ -20,6 +20,7 @@
 namespace crypto {
 namespace tink {
 
+// TODO(tholenst): Remove this before Tink 3.0.0
 class LowLevelCryptoAccessToken {
  public:
   // Copyable and movable.

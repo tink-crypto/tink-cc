@@ -213,8 +213,7 @@ absl::Status CompositeMlDsaVerify::Verify(absl::string_view signature,
 #endif  // OPENSSL_IS_BORINGSSL
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewCompositeMlDsaVerify(
-    const CompositeMlDsaPublicKey& public_key,
-    LowLevelCryptoAccessToken token) {
+    const CompositeMlDsaPublicKey& public_key) {
 #ifndef OPENSSL_IS_BORINGSSL
   return absl::UnimplementedError(
       "ML-DSA is only supported in BoringSSL builds.");

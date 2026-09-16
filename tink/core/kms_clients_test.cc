@@ -27,16 +27,15 @@
 #include "tink/kms_client.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using absl_testing::IsOk;
 using absl_testing::StatusIs;
 using crypto::tink::test::DummyKmsClient;
-using crypto::tink::test::IsOk;
 
 TEST(KmsClientsTest, Empty) {
   auto client_result = KmsClients::Get("some uri");

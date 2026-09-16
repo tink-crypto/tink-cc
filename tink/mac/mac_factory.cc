@@ -39,18 +39,6 @@ util::StatusOr<std::unique_ptr<Mac>> MacFactory::GetPrimitive(
   }
   return keyset_handle.GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
 }
-
-// static
-util::StatusOr<std::unique_ptr<Mac>> MacFactory::GetPrimitive(
-    const KeysetHandle& keyset_handle,
-    const KeyManager<Mac>* custom_key_manager) {
-  util::Status status =
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<MacWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<Mac>(custom_key_manager);
-}
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)
 

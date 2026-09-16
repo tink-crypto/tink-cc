@@ -42,18 +42,6 @@ absl::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
   }
   return keyset_handle.GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
 }
-
-// static
-absl::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
-    const KeysetHandle& keyset_handle,
-    const KeyManager<Aead>* custom_key_manager) {
-  absl::Status status =
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<Aead>(custom_key_manager);
-}
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)
 

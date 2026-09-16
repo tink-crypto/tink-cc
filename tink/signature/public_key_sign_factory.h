@@ -48,13 +48,6 @@ class ABSL_DEPRECATED(
   static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>>
   GetPrimitive(const KeysetHandle& keyset_handle);
 
-  // Returns a PublicKeySign-primitive that uses key material from the keyset
-  // specified via 'keyset_handle' and is instantiated by the given
-  // 'custom_key_manager' (instead of the key manager from the Registry).
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>>
-  GetPrimitive(const KeysetHandle& keyset_handle,
-               const KeyManager<PublicKeySign>* custom_key_manager);
-
  private:
   PublicKeySignFactory() {}
 };

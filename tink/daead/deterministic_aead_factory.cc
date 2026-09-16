@@ -42,19 +42,6 @@ DeterministicAeadFactory::GetPrimitive(const KeysetHandle& keyset_handle) {
   return keyset_handle.GetPrimitive<crypto::tink::DeterministicAead>(
       ConfigGlobalRegistry());
 }
-
-// static
-absl::StatusOr<std::unique_ptr<DeterministicAead>>
-DeterministicAeadFactory::GetPrimitive(
-    const KeysetHandle& keyset_handle,
-    const KeyManager<DeterministicAead>* custom_key_manager) {
-  absl::Status status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<DeterministicAeadWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<DeterministicAead>(custom_key_manager);
-}
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)
 

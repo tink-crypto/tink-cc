@@ -1525,46 +1525,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithConfigFips1402FailsWithNonFipsHandle) {
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-// Tests that GetPrimitive(nullptr) fails with a non-ok status.
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST_F(KeysetHandleTest, GetPrimitiveNullptrKeyManager) {
-  Keyset keyset;
-  AddKeyData(*Registry::NewKeyData(AeadKeyTemplates::Aes128Gcm()).value(),
-             /*key_id=*/0, google::crypto::tink::OutputPrefixType::TINK,
-             KeyStatusType::ENABLED, &keyset);
-  keyset.set_primary_key_id(0);
-  std::unique_ptr<KeysetHandle> keyset_handle =
-      TestKeysetHandle::GetKeysetHandle(keyset);
-  ASSERT_THAT(keyset_handle->GetPrimitive<Aead>(nullptr).status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
 
-// Test creating with custom key manager. For this, we reset the registry before
-// asking for the primitive.
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST_F(KeysetHandleTest, GetPrimitiveCustomKeyManager) {
-  auto handle_result =
-  KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
-                                                 KeyGenConfigGlobalRegistry());
-  ASSERT_TRUE(handle_result.ok()) << handle_result.status();
-  std::unique_ptr<KeysetHandle> handle = std::move(handle_result.value());
-  Registry::Reset();
-  ASSERT_TRUE(
-      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>())
-          .ok());
-  // Without custom key manager it now fails.
-  ASSERT_FALSE(
-      handle->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry()).ok());
-  AesGcmKeyManager key_type_manager;
-  std::unique_ptr<KeyManager<Aead>> key_manager =
-      crypto::tink::internal::MakeKeyManager<Aead>(&key_type_manager);
-  // With custom key manager it works ok.
-  ASSERT_TRUE(handle->GetPrimitive<Aead>(key_manager.get()).ok());
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 // Compile time check: ensures that the KeysetHandle can be copied.
 TEST_F(KeysetHandleTest, Copiable) {

@@ -42,19 +42,6 @@ PublicKeySignFactory::GetPrimitive(const KeysetHandle& keyset_handle) {
   return keyset_handle.GetPrimitive<crypto::tink::PublicKeySign>(
       ConfigGlobalRegistry());
 }
-
-// static
-util::StatusOr<std::unique_ptr<PublicKeySign>>
-PublicKeySignFactory::GetPrimitive(
-    const KeysetHandle& keyset_handle,
-    const KeyManager<PublicKeySign>* custom_key_manager) {
-  util::Status status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<PublicKeySignWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<PublicKeySign>(custom_key_manager);
-}
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 // NOLINTEND(whitespace/line_length)
 

@@ -39,19 +39,7 @@ namespace tink {
 //   const crypto::tink::SecretData key_;
 // }
 
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-#ifndef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-#define TINK_CPP_SECRET_DATA_IS_STD_VECTOR 1
-#endif
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-using SecretData =
-    std::vector<uint8_t,
-                crypto::tink::util::internal::SanitizingAllocator<uint8_t>>;
-#else
 using SecretData = ::crypto::tink::util::internal::SecretDataInternalClass;
-#endif
 
 }  // namespace tink
 }  // namespace crypto

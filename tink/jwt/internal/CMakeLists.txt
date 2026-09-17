@@ -1867,3 +1867,31 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
 )
+
+tink_cc_library(
+  NAME jwt_mac_key_creator
+  SRCS
+    jwt_mac_key_creator.cc
+    jwt_mac_key_creator.h
+  DEPS
+    absl::statusor
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+)
+
+tink_cc_test(
+  NAME jwt_mac_key_creator_test
+  SRCS
+    jwt_mac_key_creator_test.cc
+  DEPS
+    tink::jwt::internal::jwt_mac_key_creator
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+)

@@ -24,7 +24,6 @@
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
-#include "tink/low_level_crypto_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_private_key.h"

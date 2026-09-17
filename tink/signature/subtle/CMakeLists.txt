@@ -10,7 +10,6 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
-    tink::core::low_level_crypto_access_token
     tink::core::public_key_sign
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_parameters
@@ -41,7 +40,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::core::low_level_crypto_access
     tink::core::public_key_sign
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_parameters
@@ -63,7 +61,6 @@ tink_cc_library(
     absl::strings
     absl::string_view
     crypto
-    tink::core::low_level_crypto_access_token
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_parameters
@@ -95,7 +92,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::core::low_level_crypto_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::fips_utils

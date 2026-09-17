@@ -11,7 +11,6 @@ cc_library(
     hdrs = ["composite_ml_dsa_sign_boringssl.h"],
     include_prefix = "tink/signature/subtle",
     deps = [
-        "//tink:low_level_crypto_access_token",
         "//tink:public_key_sign",
         "//tink/internal:fips_utils",
         "//tink/signature:composite_ml_dsa_parameters",
@@ -38,7 +37,6 @@ cc_test(
     srcs = ["composite_ml_dsa_sign_boringssl_test.cc"],
     deps = [
         ":composite_ml_dsa_sign_boringssl",
-        "//tink:low_level_crypto_access",
         "//tink:public_key_sign",
         "//tink/internal:fips_utils",
         "//tink/signature:composite_ml_dsa_parameters",
@@ -60,7 +58,6 @@ cc_library(
     hdrs = ["composite_ml_dsa_verify_boringssl.h"],
     include_prefix = "tink/signature/subtle",
     deps = [
-        "//tink:low_level_crypto_access_token",
         "//tink:public_key_verify",
         "//tink/internal:fips_utils",
         "//tink/signature:composite_ml_dsa_parameters",
@@ -89,7 +86,6 @@ cc_test(
     deps = [
         ":composite_ml_dsa_sign_boringssl",
         ":composite_ml_dsa_verify_boringssl",
-        "//tink:low_level_crypto_access",
         "//tink:public_key_sign",
         "//tink:public_key_verify",
         "//tink/internal:fips_utils",

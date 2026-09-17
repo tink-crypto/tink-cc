@@ -52,7 +52,6 @@ cc_library(
         ":slh_dsa_sign_boringssl",
         ":slh_dsa_verify_boringssl",
         "//tink:configuration",
-        "//tink:low_level_crypto_access",
         "//tink:public_key_sign",
         "//tink:public_key_verify",
         "//tink/internal:configuration_impl",

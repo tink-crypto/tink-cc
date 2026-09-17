@@ -1480,7 +1480,6 @@ tink_cc_library(
     absl::statusor
     crypto
     tink::core::configuration
-    tink::core::low_level_crypto_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl

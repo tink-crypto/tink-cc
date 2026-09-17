@@ -1,6 +1,7 @@
 tink_module(jwt)
 
 add_subdirectory(internal)
+add_subdirectory(subtle)
 
 tink_cc_library(
   NAME raw_jwt

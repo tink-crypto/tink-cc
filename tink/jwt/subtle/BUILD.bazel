@@ -1,0 +1,35 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "create_jwt_ml_dsa_key",
+    srcs = ["create_jwt_ml_dsa_key.cc"],
+    hdrs = ["create_jwt_ml_dsa_key.h"],
+    include_prefix = "tink/jwt/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/jwt:jwt_ml_dsa_parameters",
+        "//tink/jwt:jwt_ml_dsa_private_key",
+        "//tink/jwt/internal:jwt_ml_dsa_key_creator",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_jwt_ml_dsa_key_test",
+    srcs = ["create_jwt_ml_dsa_key_test.cc"],
+    deps = [
+        ":create_jwt_ml_dsa_key",
+        "//tink/jwt:jwt_ml_dsa_parameters",
+        "//tink/jwt:jwt_ml_dsa_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

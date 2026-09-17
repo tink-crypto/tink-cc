@@ -59,3 +59,31 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
 )
+
+tink_cc_library(
+  NAME create_jwt_rsa_ssa_pss_key
+  SRCS
+    create_jwt_rsa_ssa_pss_key.cc
+    create_jwt_rsa_ssa_pss_key.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::jwt::internal::jwt_rsa_ssa_pss_key_creator
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_jwt_rsa_ssa_pss_key_test
+  SRCS
+    create_jwt_rsa_ssa_pss_key_test.cc
+  DEPS
+    tink::jwt::subtle::create_jwt_rsa_ssa_pss_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+)

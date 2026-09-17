@@ -222,6 +222,7 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/subtle/create_jwt_ecdsa_key.h"
 #include "tink/jwt/subtle/create_jwt_ml_dsa_key.h"
+#include "tink/jwt/subtle/create_jwt_rsa_ssa_pkcs1_key.h"
 #include "tink/jwt/subtle/create_jwt_rsa_ssa_pss_key.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/kem/kem_decapsulate.h"

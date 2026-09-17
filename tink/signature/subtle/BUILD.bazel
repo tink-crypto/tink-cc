@@ -225,3 +225,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ml_dsa_key",
+    srcs = ["create_ml_dsa_key.cc"],
+    hdrs = ["create_ml_dsa_key.h"],
+    include_prefix = "tink/signature/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature/internal:ml_dsa_key_creator",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ml_dsa_key_test",
+    srcs = ["create_ml_dsa_key_test.cc"],
+    deps = [
+        ":create_ml_dsa_key",
+        "//tink:partial_key_access",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

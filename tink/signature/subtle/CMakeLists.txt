@@ -222,3 +222,37 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key
 )
+
+tink_cc_library(
+  NAME create_ml_dsa_key
+  SRCS
+    create_ml_dsa_key.cc
+    create_ml_dsa_key.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::internal::ml_dsa_key_creator
+  PUBLIC
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME create_ml_dsa_key_test
+  SRCS
+    create_ml_dsa_key_test.cc
+  DEPS
+    tink::signature::subtle::create_ml_dsa_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+  TAGS
+    exclude_if_openssl
+)
+

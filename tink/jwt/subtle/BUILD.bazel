@@ -33,3 +33,32 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_jwt_ecdsa_key",
+    srcs = ["create_jwt_ecdsa_key.cc"],
+    hdrs = ["create_jwt_ecdsa_key.h"],
+    include_prefix = "tink/jwt/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/jwt:jwt_ecdsa_parameters",
+        "//tink/jwt:jwt_ecdsa_private_key",
+        "//tink/jwt/internal:jwt_ecdsa_key_creator",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_jwt_ecdsa_key_test",
+    srcs = ["create_jwt_ecdsa_key_test.cc"],
+    deps = [
+        ":create_jwt_ecdsa_key",
+        "//tink/jwt:jwt_ecdsa_parameters",
+        "//tink/jwt:jwt_ecdsa_private_key",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

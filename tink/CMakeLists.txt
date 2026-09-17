@@ -1295,10 +1295,10 @@ tink_cc_test(
     tink::core::restricted_data
     tink::core::secret_data
     gmock
+    absl::status_matchers
     absl::statusor
     absl::string_view
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

@@ -113,19 +113,6 @@ inline const absl::Status& GetStatus(const absl::Status& s) { return s; }
 
 }  // namespace internal
 
-// Matches an absl::StatusOk() value.
-// This is better than EXPECT_TRUE(status.ok())
-// because the error message is a part of the failure message.
-MATCHER(IsOk,
-        absl::StrCat(negation ? "isn't" : "is", " a Status with an OK value")) {
-  const absl::Status& status = internal::GetStatus(arg);
-  if (status.ok()) {
-    return true;
-  }
-  *result_listener << ::testing::PrintToString(status);
-  return false;
-}
-
 // Returns a gMock matcher that matches a StatusOr<> whose status is
 // OK and whose value matches the inner matcher.
 template <typename InnerMatcher>

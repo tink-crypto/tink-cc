@@ -29,13 +29,13 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
+#include "absl/status/status_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::test::IsOk;
+using ::absl_testing::IsOk;
 using ::testing::Eq;
 using ::testing::Not;
 

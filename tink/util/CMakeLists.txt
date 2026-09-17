@@ -596,7 +596,6 @@ tink_cc_test(
     tink::util::test_matchers
     gmock
     absl::status
-    absl::status_matchers
 )
 
 tink_cc_library(

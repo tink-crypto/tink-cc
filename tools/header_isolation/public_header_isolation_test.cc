@@ -367,6 +367,7 @@
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
 #include "tink/signature/subtle/composite_ml_dsa_verify_boringssl.h"
+#include "tink/signature/subtle/create_composite_ml_dsa_key.h"
 #include "tink/signature/subtle/create_ecdsa_key.h"
 #include "tink/signature/subtle/create_ed25519_key.h"
 #include "tink/signature/subtle/create_ml_dsa_key.h"

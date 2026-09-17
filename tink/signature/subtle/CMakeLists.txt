@@ -287,3 +287,35 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME create_slh_dsa_key
+  SRCS
+    create_slh_dsa_key.cc
+    create_slh_dsa_key.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::signature::slh_dsa_parameters
+    tink::signature::slh_dsa_private_key
+    tink::signature::internal::slh_dsa_key_creator
+  PUBLIC
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME create_slh_dsa_key_test
+  SRCS
+    create_slh_dsa_key_test.cc
+  DEPS
+    tink::signature::subtle::create_slh_dsa_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::signature::slh_dsa_parameters
+    tink::signature::slh_dsa_private_key
+  TAGS
+    exclude_if_openssl
+)

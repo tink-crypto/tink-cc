@@ -46,18 +46,12 @@ absl::Status Validate(PrimitiveSet<Prehash>* prehash_set) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "prehash_set must have a primary");
   }
-  // TODO(b/381090307): Support raw output prefixes in Tink 2.0 Keyset API.
-  // Prehashes must include the key id for key synchronization with the prehash
-  // signer. However, keys with raw output prefixes do not have any key id
-  // requirement (i.e., we cannot rely on a key id for synchronization).
-  // With Tink 2.0, we would have the flexibility to introduce a new key variant
-  // for prehash signature keys that requires the key id prefix for prehashes,
-  // but omits the key id for the resulting signature.
   for (const auto& primitive : prehash_set->get_all()) {
     if (primitive->get_output_prefix_type() == OutputPrefixType::RAW) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
-          "Prehash primitive does not allow raw output prefixes.");
+          "Prehash primitive does not allow raw output prefixes, "
+          "use the WITH_ID_REQUIREMENT output prefix instead.");
     }
   }
   return absl::OkStatus();

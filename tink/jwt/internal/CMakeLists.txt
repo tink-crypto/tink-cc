@@ -1932,3 +1932,39 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
 )
+
+tink_cc_library(
+  NAME jwt_rsa_ssa_pss_key_creator
+  SRCS
+    jwt_rsa_ssa_pss_key_creator.cc
+    jwt_rsa_ssa_pss_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    crypto
+    tink::core::big_integer
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::bn_util
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::rsa_util
+    tink::internal::ssl_unique_ptr
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::jwt::jwt_rsa_ssa_pss_public_key
+)
+
+tink_cc_test(
+  NAME jwt_rsa_ssa_pss_key_creator_test
+  SRCS
+    jwt_rsa_ssa_pss_key_creator_test.cc
+  DEPS
+    tink::jwt::internal::jwt_rsa_ssa_pss_key_creator
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+)

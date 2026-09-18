@@ -49,6 +49,7 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/legacy_proto_parameters.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -60,7 +61,6 @@
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/mac_key_templates.h"
 #include "tink/partial_key_access.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
@@ -1169,7 +1169,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {
 class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
  public:
   MOCK_METHOD(absl::StatusOr<std::unique_ptr<Aead>>, Wrap,
-              (std::unique_ptr<PrimitiveSet<Aead>> primitive_set),
+              (std::unique_ptr<internal::PrimitiveSet<Aead>> primitive_set),
               (const, override));
 };
 
@@ -1256,7 +1256,8 @@ TEST_F(KeysetHandleBuilderTest, BuildWithAnnotations) {
   EXPECT_CALL(*primitive_wrapper, Wrap(_))
       .WillOnce(
           [&generated_annotations](
-              std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+              std::unique_ptr<internal::PrimitiveSet<Aead>>
+                  generated_primitive_set) {
             generated_annotations = generated_primitive_set->get_annotations();
             std::unique_ptr<Aead> aead = std::make_unique<test::DummyAead>("");
             return aead;

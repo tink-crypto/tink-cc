@@ -198,7 +198,7 @@ class FakeAeadKeyManager
 class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
  public:
   MOCK_METHOD(absl::StatusOr<std::unique_ptr<Aead>>, Wrap,
-              (std::unique_ptr<PrimitiveSet<Aead>> primitive_set),
+              (std::unique_ptr<internal::PrimitiveSet<Aead>> primitive_set),
               (const, override));
 };
 
@@ -513,7 +513,8 @@ TEST_F(KeysetHandleTest, ReadEncryptedWithAnnotations) {
   EXPECT_CALL(*primitive_wrapper, Wrap(_))
       .WillOnce(
           [&generated_annotations](
-              std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+              std::unique_ptr<internal::PrimitiveSet<Aead>>
+                  generated_primitive_set) {
             generated_annotations = generated_primitive_set->get_annotations();
             std::unique_ptr<Aead> aead = std::make_unique<DummyAead>("");
             return aead;
@@ -585,7 +586,8 @@ TEST_F(KeysetHandleTest, ReadEncryptedWithAssociatedDataAndAnnotations) {
   EXPECT_CALL(*primitive_wrapper, Wrap(_))
       .WillOnce(
           [&generated_annotations](
-              std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+              std::unique_ptr<internal::PrimitiveSet<Aead>>
+                  generated_primitive_set) {
             generated_annotations = generated_primitive_set->get_annotations();
             std::unique_ptr<Aead> aead = std::make_unique<DummyAead>("");
             return aead;
@@ -770,7 +772,8 @@ TEST_F(KeysetHandleTest, GenerateNewWithAnnotations) {
     EXPECT_CALL(*primitive_wrapper, Wrap(_))
         .WillOnce(
             [&generated_annotations](
-                std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+                std::unique_ptr<internal::PrimitiveSet<Aead>>
+                  generated_primitive_set) {
               generated_annotations =
                   generated_primitive_set->get_annotations();
               std::unique_ptr<Aead> aead = std::make_unique<DummyAead>("");
@@ -902,7 +905,8 @@ TEST_F(KeysetHandleGenerateNewFromParametersTest,
   EXPECT_CALL(*primitive_wrapper, Wrap(_))
       .WillOnce(
           [&generated_annotations](
-              std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+              std::unique_ptr<internal::PrimitiveSet<Aead>>
+                  generated_primitive_set) {
             generated_annotations = generated_primitive_set->get_annotations();
             std::unique_ptr<Aead> aead = std::make_unique<DummyAead>("");
             return aead;
@@ -1571,7 +1575,8 @@ TEST_F(KeysetHandleTest, ReadNoSecretWithAnnotations) {
   EXPECT_CALL(*primitive_wrapper, Wrap(_))
       .WillOnce(
           [&generated_annotations](
-              std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+              std::unique_ptr<internal::PrimitiveSet<Aead>>
+                  generated_primitive_set) {
             generated_annotations = generated_primitive_set->get_annotations();
             std::unique_ptr<Aead> aead = std::make_unique<DummyAead>("");
             return aead;

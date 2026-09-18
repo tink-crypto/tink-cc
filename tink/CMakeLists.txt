@@ -1009,7 +1009,6 @@ tink_cc_test(
     tink::core::keyset_handle_builder
     tink::core::mac
     tink::core::partial_key_access
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::registry
     tink::core::restricted_data
@@ -1033,6 +1032,7 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters
+    tink::internal::primitive_set
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs

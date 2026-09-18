@@ -230,7 +230,7 @@ void WycheproofTest(const google::protobuf::Struct& parsed_input,
        test_groups.list_value().values()) {
     const auto& test_group_fields = test_group.struct_value().fields();
     const size_t key_size = test_group_fields.at("keySize").number_value();
-    if (!AesSivBoringSsl::IsValidKeySizeInBytes(key_size / 8)) {
+    if (key_size / 8 != 64) {
       // Currently the key size is restricted to two 256-bit AES keys.
       skipped_test_groups++;
       continue;

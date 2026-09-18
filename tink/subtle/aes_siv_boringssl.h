@@ -63,8 +63,6 @@ class AesSivBoringSsl {
   static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(
       const SecretData& key);
 
-  static bool IsValidKeySizeInBytes(size_t size) { return size == 64; }
-
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 

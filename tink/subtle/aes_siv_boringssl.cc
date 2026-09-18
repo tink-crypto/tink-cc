@@ -48,6 +48,7 @@ using ::crypto::tink::internal::CallWithCoreDumpProtection;
 using ::crypto::tink::internal::SafeCryptoMemEquals;
 
 constexpr size_t kBlockSize = internal::AesBlockSize();
+constexpr size_t kKeySizeInBytes = 64;
 
 absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {
@@ -317,7 +318,7 @@ absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
     const SecretData& key) {
   ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesSivBoringSsl>());
 
-  if (!IsValidKeySizeInBytes(key.size())) {
+  if (key.size() != kKeySizeInBytes) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
   ABSL_ASSIGN_OR_RETURN(

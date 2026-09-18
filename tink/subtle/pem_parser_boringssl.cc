@@ -346,41 +346,6 @@ absl::StatusOr<std::string> PemParser::WriteRsaPrivateKey(
   return ConvertBioToString(bio.get());
 }
 
-absl::StatusOr<std::unique_ptr<internal::Ed25519Key>>
-PemParser::ParseEd25519PublicKey(absl::string_view pem_serialized_key) {
-  internal::SslUniquePtr<BIO> pub_key_bio(BIO_new(BIO_s_mem()));
-  BIO_write(pub_key_bio.get(), pem_serialized_key.data(),
-            pem_serialized_key.size());
-
-  internal::SslUniquePtr<EVP_PKEY> evp_pub_key(
-      PEM_read_bio_PUBKEY(pub_key_bio.get(), /*x=*/nullptr,
-                          &FailingPassphraseCallback, /*u=*/nullptr));
-  if (evp_pub_key == nullptr) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "PEM Public Key parsing failed");
-  }
-  if (EVP_PKEY_id(evp_pub_key.get()) != EVP_PKEY_ED25519) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "PEM key is not an Ed25519 public key");
-  }
-  std::array<uint8_t, internal::Ed25519KeyPubKeySize()> public_key = {};
-  size_t out_len_pub = public_key.size();
-  if (EVP_PKEY_get_raw_public_key(evp_pub_key.get(), public_key.data(),
-                                  &out_len_pub) != 1) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "invalid ed25519 public key");
-  }
-  if (out_len_pub != public_key.size()) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        absl::StrCat("Invalid public key size; expected ",
-                                     public_key.size(), " got ", out_len_pub));
-  }
-  auto key = std::make_unique<internal::Ed25519Key>();
-  key->public_key = std::string(reinterpret_cast<char*>(public_key.data()),
-                                      public_key.size());
-  return std::move(key);
-}
-
 absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
 PemParser::ParseEcPublicKey(absl::string_view pem_serialized_key) {
   // Read the ECDSA key into EVP_PKEY.

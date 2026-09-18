@@ -292,6 +292,7 @@ tink_cc_test(
   DEPS
     tink::internal::fips_utils
     tink::internal::monitoring_client_mocks
+    tink::internal::primitive_set
     tink::internal::registry_impl
     gmock
     absl::memory
@@ -310,7 +311,6 @@ tink_cc_test(
     tink::core::input_stream
     tink::core::key_manager
     tink::core::mac
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::registry
     tink::aead::aead_wrapper
@@ -522,6 +522,7 @@ tink_cc_test(
   DEPS
     tink::internal::monitoring_key_set_info
     tink::internal::monitoring_util
+    tink::internal::primitive_set
     gmock
     absl::flat_hash_map
     absl::memory
@@ -530,7 +531,6 @@ tink_cc_test(
     absl::statusor
     absl::strings
     tink::core::key_status
-    tink::core::primitive_set
     tink::proto::tink_cc_proto
 )
 
@@ -1158,6 +1158,7 @@ tink_cc_test(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
+    tink::internal::primitive_set
     gmock
     absl::memory
     absl::status
@@ -1173,7 +1174,6 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key_manager
     tink::core::keyset_handle
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::public_key_sign
     tink::core::public_key_verify

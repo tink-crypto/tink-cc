@@ -140,15 +140,16 @@ TEST_F(SignatureConfigTest, PublicKeySignWrapperRegistered) {
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
-  PrimitiveSet<PublicKeySign>::Builder sign_set_builder;
+  internal::PrimitiveSet<PublicKeySign>::Builder sign_set_builder;
   sign_set_builder.AddPrimaryPrimitive(
       std::make_unique<DummyPublicKeySign>("dummy"), key_info);
-  absl::StatusOr<PrimitiveSet<PublicKeySign>> primitive_set =
+  absl::StatusOr<internal::PrimitiveSet<PublicKeySign>> primitive_set =
       std::move(sign_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
   auto wrapped = Registry::Wrap(
-      std::make_unique<PrimitiveSet<PublicKeySign>>(*std::move(primitive_set)));
+      std::make_unique<internal::PrimitiveSet<PublicKeySign>>(
+          *std::move(primitive_set)));
 
   ASSERT_THAT(wrapped, IsOk());
   auto signature_result = wrapped.value()->Sign("message");
@@ -174,18 +175,19 @@ TEST_F(SignatureConfigTest, PublicKeyVerifyWrapperRegistered) {
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
-  PrimitiveSet<PublicKeyVerify>::Builder verify_set_builder;
+  internal::PrimitiveSet<PublicKeyVerify>::Builder verify_set_builder;
   verify_set_builder.AddPrimaryPrimitive(
       std::make_unique<DummyPublicKeyVerify>("dummy"), key_info);
-  absl::StatusOr<PrimitiveSet<PublicKeyVerify>> primitive_set =
+  absl::StatusOr<internal::PrimitiveSet<PublicKeyVerify>> primitive_set =
       std::move(verify_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
   std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
   std::string signature = DummyPublicKeySign("dummy").Sign("message").value();
 
-  auto wrapped = Registry::Wrap(std::make_unique<PrimitiveSet<PublicKeyVerify>>(
-      *std::move(primitive_set)));
+  auto wrapped = Registry::Wrap(
+      std::make_unique<internal::PrimitiveSet<PublicKeyVerify>>(
+          *std::move(primitive_set)));
 
   ASSERT_THAT(wrapped, IsOk());
   ASSERT_THAT(

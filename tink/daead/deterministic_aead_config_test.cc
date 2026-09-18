@@ -100,15 +100,15 @@ TEST_F(DeterministicAeadConfigTest, WrappersRegistered) {
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::RAW);
-  PrimitiveSet<DeterministicAead>::Builder primitive_set_builder;
+  internal::PrimitiveSet<DeterministicAead>::Builder primitive_set_builder;
   primitive_set_builder.AddPrimaryPrimitive(
       std::make_unique<DummyDeterministicAead>("dummy"), key_info);
-  absl::StatusOr<PrimitiveSet<DeterministicAead>> primitive_set =
+  absl::StatusOr<internal::PrimitiveSet<DeterministicAead>> primitive_set =
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
-  auto registry_wrapped =
-      Registry::Wrap(std::make_unique<PrimitiveSet<DeterministicAead>>(
+  auto registry_wrapped = Registry::Wrap(
+      std::make_unique<internal::PrimitiveSet<DeterministicAead>>(
           *std::move(primitive_set)));
 
   ASSERT_THAT(registry_wrapped, IsOk());

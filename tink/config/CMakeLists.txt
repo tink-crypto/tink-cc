@@ -239,9 +239,9 @@ tink_cc_test(
     tink::core::template_util
     tink::core::input_stream
     tink::core::keyset_handle
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::registry
+    tink::internal::primitive_set
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

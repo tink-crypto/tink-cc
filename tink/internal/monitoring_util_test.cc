@@ -31,8 +31,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/monitoring_key_set_info.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/key_status.h"
-#include "tink/primitive_set.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

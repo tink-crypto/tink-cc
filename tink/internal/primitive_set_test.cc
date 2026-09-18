@@ -71,7 +71,7 @@ void add_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
 }
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
-void add_primitives(PrimitiveSet<Mac>::Builder* primitive_set_builder,
+void add_primitives(internal::PrimitiveSet<Mac>::Builder* primitive_set_builder,
                     int key_id_offset, int primitives_count) {
   for (int i = 0; i < primitives_count; i++) {
     int key_id = key_id_offset + i;
@@ -84,8 +84,8 @@ void add_primitives(PrimitiveSet<Mac>::Builder* primitive_set_builder,
   }
 }
 
-void access_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
-                       int primitives_count) {
+void access_primitives(internal::PrimitiveSet<Mac>* primitive_set,
+                       int key_id_offset, int primitives_count) {
   for (int i = 0; i < primitives_count; i++) {
     int key_id = key_id_offset + i;
     KeysetInfo::KeyInfo key_info;
@@ -100,7 +100,7 @@ void access_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
 }
 
 TEST_F(PrimitiveSetTest, ConcurrentOperations) {
-  PrimitiveSet<Mac>::Builder mac_set_builder;
+  internal::PrimitiveSet<Mac>::Builder mac_set_builder;
   int offset_a = 100;
   int offset_b = 150;
   int count = 100;
@@ -116,7 +116,7 @@ TEST_F(PrimitiveSetTest, ConcurrentOperations) {
 
   auto mac_set_result = std::move(mac_set_builder).Build();
   ASSERT_THAT(mac_set_result, IsOk());
-  PrimitiveSet<Mac> mac_set = std::move(mac_set_result.value());
+  internal::PrimitiveSet<Mac> mac_set = std::move(mac_set_result.value());
 
   // Access primitives.
   std::thread access_primitives_a(access_primitives, &mac_set, offset_a, count);
@@ -192,10 +192,10 @@ TEST_F(PrimitiveSetTest, Basic) {
   key_6.set_key_id(key_id_6);
   key_6.set_status(KeyStatusType::ENABLED);
 
-  PrimitiveSet<Mac>::Builder primitive_set_builder;
+  internal::PrimitiveSet<Mac>::Builder primitive_set_builder;
 
   // Add all the primitives.
-  auto primitive_set_result = PrimitiveSet<Mac>::Builder{}
+  auto primitive_set_result = internal::PrimitiveSet<Mac>::Builder{}
                                   .AddPrimitive(std::move(mac_1), key_1)
                                   .AddPrimitive(std::move(mac_2), key_2)
                                   .AddPrimaryPrimitive(std::move(mac_3), key_3)
@@ -205,7 +205,8 @@ TEST_F(PrimitiveSetTest, Basic) {
                                   .Build();
 
   ASSERT_THAT(primitive_set_result, IsOk());
-  PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
+  internal::PrimitiveSet<Mac> primitive_set =
+      std::move(primitive_set_result.value());
 
   std::string data = "some data";
 
@@ -291,14 +292,15 @@ TEST_F(PrimitiveSetTest, PrimaryKeyWithIdCollisions) {
     std::unique_ptr<Mac> mac_2(new DummyMac(mac_name_2));
     key_info_1.set_output_prefix_type(OutputPrefixType::RAW);
     key_info_2.set_output_prefix_type(OutputPrefixType::RAW);
-    PrimitiveSet<Mac>::Builder primitive_set_builder;
+    internal::PrimitiveSet<Mac>::Builder primitive_set_builder;
 
     // Add the first primitive, and set it as primary.
     primitive_set_builder.AddPrimaryPrimitive(std::move(mac_1), key_info_1);
 
     auto primitive_set_result = std::move(primitive_set_builder).Build();
     ASSERT_THAT(primitive_set_result, IsOk());
-    PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
+    internal::PrimitiveSet<Mac> primitive_set =
+        std::move(primitive_set_result.value());
 
     std::string identifier = "";
     const auto& primitives =
@@ -312,14 +314,15 @@ TEST_F(PrimitiveSetTest, PrimaryKeyWithIdCollisions) {
     std::unique_ptr<Mac> mac_2(new DummyMac(mac_name_2));
     key_info_1.set_output_prefix_type(OutputPrefixType::TINK);
     key_info_2.set_output_prefix_type(OutputPrefixType::TINK);
-    PrimitiveSet<Mac>::Builder primitive_set_builder;
+    internal::PrimitiveSet<Mac>::Builder primitive_set_builder;
 
     // Add the first primitive, and set it as primary.
     primitive_set_builder.AddPrimaryPrimitive(std::move(mac_1), key_info_1);
 
     auto primitive_set_result = std::move(primitive_set_builder).Build();
     ASSERT_THAT(primitive_set_result, IsOk());
-    PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
+    internal::PrimitiveSet<Mac> primitive_set =
+        std::move(primitive_set_result.value());
     std::string identifier = CryptoFormat::GetOutputPrefix(key_info_1).value();
     const auto& primitives =
         *(primitive_set.get_primitives(identifier).value());
@@ -332,14 +335,15 @@ TEST_F(PrimitiveSetTest, PrimaryKeyWithIdCollisions) {
     std::unique_ptr<Mac> mac_2(new DummyMac(mac_name_2));
     key_info_1.set_output_prefix_type(OutputPrefixType::LEGACY);
     key_info_2.set_output_prefix_type(OutputPrefixType::LEGACY);
-    PrimitiveSet<Mac>::Builder primitive_set_builder;
+    internal::PrimitiveSet<Mac>::Builder primitive_set_builder;
 
     // Add the first primitive, and set it as primary.
     primitive_set_builder.AddPrimaryPrimitive(std::move(mac_1), key_info_1);
 
     auto primitive_set_result = std::move(primitive_set_builder).Build();
     ASSERT_THAT(primitive_set_result, IsOk());
-    PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
+    internal::PrimitiveSet<Mac> primitive_set =
+        std::move(primitive_set_result.value());
     std::string identifier = CryptoFormat::GetOutputPrefix(key_info_1).value();
     const auto& primitives =
         *(primitive_set.get_primitives(identifier).value());
@@ -359,7 +363,7 @@ TEST_F(PrimitiveSetTest, DisabledKey) {
   key_info_1.set_status(KeyStatusType::DISABLED);
 
   // Add all the primitives.
-  auto add_primitive_result = PrimitiveSet<Mac>::Builder{}
+  auto add_primitive_result = internal::PrimitiveSet<Mac>::Builder{}
                                   .AddPrimitive(std::move(mac_1), key_info_1)
                                   .Build();
   EXPECT_THAT(add_primitive_result, Not(IsOk()));
@@ -392,7 +396,7 @@ bool operator==(const MacIdAndTypeUrl& first, const MacIdAndTypeUrl& other) {
 
 TEST_F(PrimitiveSetTest, GetAll) {
   auto pset_result =
-      PrimitiveSet<Mac>::Builder{}
+      internal::PrimitiveSet<Mac>::Builder{}
           .AddPrimitive(
               std::make_unique<DummyMac>("MAC1"),
               CreateKey(0x01010101, OutputPrefixType::TINK,
@@ -423,7 +427,7 @@ TEST_F(PrimitiveSetTest, GetAll) {
           .Build();
 
   ASSERT_THAT(pset_result, IsOk());
-  PrimitiveSet<Mac> pset = std::move(pset_result.value());
+  internal::PrimitiveSet<Mac> pset = std::move(pset_result.value());
 
   std::vector<MacIdAndTypeUrl> mac_id_and_type;
   for (auto* entry : pset.get_all()) {
@@ -450,7 +454,7 @@ TEST_F(PrimitiveSetTest, GetAll) {
 }
 
 TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
-  PrimitiveSet<KeysetDeriver>::Builder pset_builder;
+  internal::PrimitiveSet<KeysetDeriver>::Builder pset_builder;
   std::vector<KeysetInfo::KeyInfo> key_infos;
 
   KeysetInfo::KeyInfo key_info;
@@ -481,12 +485,12 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
                             key_info);
   key_infos.push_back(key_info);
 
-  absl::StatusOr<PrimitiveSet<KeysetDeriver>> pset =
+  absl::StatusOr<internal::PrimitiveSet<KeysetDeriver>> pset =
       std::move(pset_builder).Build();
   ASSERT_THAT(pset, IsOk());
 
-  std::vector<PrimitiveSet<KeysetDeriver>::Entry<KeysetDeriver>*> entries =
-      pset->get_all_in_keyset_order();
+  std::vector<internal::PrimitiveSet<KeysetDeriver>::Entry<KeysetDeriver>*>
+      entries = pset->get_all_in_keyset_order();
   ASSERT_THAT(entries, SizeIs(key_infos.size()));
 
   for (size_t i = 0; i < entries.size(); i++) {
@@ -501,7 +505,7 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
 }
 
 TEST_F(PrimitiveSetTest, ReleaseAllEntries) {
-  PrimitiveSet<Mac>::Builder pset_builder;
+  internal::PrimitiveSet<Mac>::Builder pset_builder;
 
   KeysetInfo::KeyInfo key_info_1 = CreateKey(
       1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_url_1");
@@ -512,11 +516,12 @@ TEST_F(PrimitiveSetTest, ReleaseAllEntries) {
   pset_builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("MAC2"),
                                    key_info_2);
 
-  absl::StatusOr<PrimitiveSet<Mac>> pset = std::move(pset_builder).Build();
+  absl::StatusOr<internal::PrimitiveSet<Mac>> pset =
+      std::move(pset_builder).Build();
   ASSERT_THAT(pset, IsOk());
 
-  std::vector<std::unique_ptr<PrimitiveSet<Mac>::Entry<Mac>>> released =
-      pset->ReleaseAllEntries();
+  std::vector<std::unique_ptr<internal::PrimitiveSet<Mac>::Entry<Mac>>>
+      released = pset->ReleaseAllEntries();
 
   ASSERT_THAT(released, SizeIs(2));
 

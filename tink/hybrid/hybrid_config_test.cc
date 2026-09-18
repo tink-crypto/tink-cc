@@ -128,15 +128,16 @@ TEST_F(HybridConfigTest, EncryptWrapperRegistered) {
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
-  PrimitiveSet<HybridEncrypt>::Builder hybrid_encrypt_set_builder;
+  internal::PrimitiveSet<HybridEncrypt>::Builder hybrid_encrypt_set_builder;
   hybrid_encrypt_set_builder.AddPrimaryPrimitive(
       std::make_unique<DummyHybridEncrypt>("dummy"), key_info);
-  absl::StatusOr<PrimitiveSet<HybridEncrypt>> primitive_set =
+  absl::StatusOr<internal::PrimitiveSet<HybridEncrypt>> primitive_set =
       std::move(hybrid_encrypt_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
   auto wrapped = Registry::Wrap(
-      std::make_unique<PrimitiveSet<HybridEncrypt>>(*std::move(primitive_set)));
+      std::make_unique<internal::PrimitiveSet<HybridEncrypt>>(
+          *std::move(primitive_set)));
 
   ASSERT_THAT(wrapped, IsOk());
   auto encryption_result = wrapped.value()->Encrypt("secret", "");
@@ -162,15 +163,16 @@ TEST_F(HybridConfigTest, DecryptWrapperRegistered) {
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
-  PrimitiveSet<HybridDecrypt>::Builder hybrid_decrypt_set_builder;
+  internal::PrimitiveSet<HybridDecrypt>::Builder hybrid_decrypt_set_builder;
   hybrid_decrypt_set_builder.AddPrimaryPrimitive(
       std::make_unique<DummyHybridDecrypt>("dummy"), key_info);
-  absl::StatusOr<PrimitiveSet<HybridDecrypt>> primitive_set =
+  absl::StatusOr<internal::PrimitiveSet<HybridDecrypt>> primitive_set =
       std::move(hybrid_decrypt_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
   auto wrapped = Registry::Wrap(
-      std::make_unique<PrimitiveSet<HybridDecrypt>>(*std::move(primitive_set)));
+      std::make_unique<internal::PrimitiveSet<HybridDecrypt>>(
+          *std::move(primitive_set)));
 
   ASSERT_THAT(wrapped, IsOk());
 

@@ -133,15 +133,15 @@ TEST_F(MacConfigTest, MacWrappersRegistered) {
   key_info.set_status(KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
-  PrimitiveSet<Mac>::Builder mac_set_builder;
+  internal::PrimitiveSet<Mac>::Builder mac_set_builder;
   mac_set_builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("dummy"),
                                       key_info);
-  absl::StatusOr<PrimitiveSet<Mac>> primitive_set =
+  absl::StatusOr<internal::PrimitiveSet<Mac>> primitive_set =
       std::move(mac_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
   auto primitive_result = Registry::Wrap(
-      std::make_unique<PrimitiveSet<Mac>>(*std::move(primitive_set)));
+      std::make_unique<internal::PrimitiveSet<Mac>>(*std::move(primitive_set)));
 
   ASSERT_THAT(primitive_result, IsOk());
   auto mac_result = primitive_result.value()->ComputeMac("verified text");

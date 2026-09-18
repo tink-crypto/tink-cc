@@ -29,8 +29,8 @@
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/keyset_handle.h"
-#include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
@@ -112,7 +112,7 @@ class FakePrimitiveWrapper
     : public PrimitiveWrapper<FakePrimitive, FakePrimitive> {
  public:
   absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
-      std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
+      std::unique_ptr<internal::PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
     return std::make_unique<FakePrimitive>(
         primitive_set->get_primary()->get_primitive().get());

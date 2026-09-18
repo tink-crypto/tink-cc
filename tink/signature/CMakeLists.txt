@@ -414,47 +414,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME signature_pem_keyset_reader
-  SRCS
-    signature_pem_keyset_reader.cc
-    signature_pem_keyset_reader.h
-  DEPS
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::ecdsa_verify_key_manager
-    tink::signature::ed25519_sign_key_manager
-    tink::signature::ed25519_verify_key_manager
-    tink::signature::rsa_ssa_pkcs1_sign_key_manager
-    tink::signature::rsa_ssa_pkcs1_verify_key_manager
-    tink::signature::rsa_ssa_pss_sign_key_manager
-    tink::signature::rsa_ssa_pss_verify_key_manager
-    absl::core_headers
-    absl::memory
-    absl::status
-    absl::statusor
-    absl::strings
-    tink::core::keyset_handle
-    tink::core::keyset_reader
-    tink::internal::ec_util
-    tink::internal::pem_key_parser
-    tink::internal::rsa_util
-    tink::signature::internal::ml_dsa_pem
-    tink::subtle::pem_parser_boringssl
-    tink::util::constants
-    tink::util::enums
-    tink::util::keyset_util
-    tink::util::secret_data
-    tink::util::statusor
-    tink::proto::common_cc_proto
-    tink::proto::ecdsa_cc_proto
-    tink::proto::ed25519_cc_proto
-    tink::proto::ml_dsa_cc_proto
-    tink::proto::rsa_ssa_pkcs1_cc_proto
-    tink::proto::rsa_ssa_pss_cc_proto
-    tink::proto::tink_cc_proto
-  PUBLIC
-)
-
-tink_cc_library(
   NAME failing_signature
   SRCS
     failing_signature.cc
@@ -1256,55 +1215,6 @@ tink_cc_test(
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME signature_pem_keyset_reader_test
-  SRCS
-    signature_pem_keyset_reader_test.cc
-  DEPS
-    tink::signature::config_2026
-    tink::signature::config_v0
-    tink::signature::ecdsa_parameters
-    tink::signature::ecdsa_public_key
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::ecdsa_verify_key_manager
-    tink::signature::rsa_ssa_pss_sign_key_manager
-    tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::signature::signature_pem_keyset_reader
-    gmock
-    absl::status
-    absl::status_matchers
-    absl::statusor
-    absl::strings
-    absl::optional
-    crypto
-    tink::core::big_integer
-    tink::core::cleartext_keyset_handle
-    tink::core::ec_point
-    tink::core::key
-    tink::core::keyset_handle
-    tink::core::keyset_reader
-    tink::core::partial_key_access
-    tink::core::proto_keyset_format
-    tink::core::public_key_sign
-    tink::core::public_key_verify
-    tink::internal::rsa_util
-    tink::internal::ssl_util
-    tink::subtle::pem_parser_boringssl
-    tink::util::constants
-    tink::util::enums
-    tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::common_cc_proto
-    tink::proto::ecdsa_cc_proto
-    tink::proto::ed25519_cc_proto
-    tink::proto::ml_dsa_cc_proto
-    tink::proto::rsa_ssa_pss_cc_proto
-    tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(

@@ -2187,39 +2187,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME pem_key_parser
-  SRCS
-    pem_key_parser.cc
-    pem_key_parser.h
-  DEPS
-    tink::internal::ec_util
-    tink::internal::secret_buffer
-    tink::internal::ssl_unique_ptr
-    absl::status
-    absl::statusor
-    absl::strings
-    crypto
-    tink::subtle::subtle_util
-    tink::util::secret_data
-)
-
-tink_cc_test(
-  NAME pem_key_parser_test
-  SRCS
-    pem_key_parser_test.cc
-  DEPS
-    tink::internal::ec_util
-    tink::internal::pem_key_parser
-    gmock
-    absl::status
-    absl::status_matchers
-    absl::statusor
-    absl::string_view
-    tink::util::secret_data
-    tink::util::test_util
-)
-
-tink_cc_library(
   NAME primitive_set_base
   SRCS
     primitive_set_base.cc

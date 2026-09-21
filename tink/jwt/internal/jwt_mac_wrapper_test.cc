@@ -246,7 +246,7 @@ TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
 
   // Parse header to make sure that key ID is correctly encoded.
   google::crypto::tink::KeysetInfo keyset_info =
-      (*keyset_handle)->GetKeysetInfo();
+      LegacyGetKeysetInfo(**keyset_handle);
   uint32_t key_id = keyset_info.key_info(0).key_id();
   std::vector<absl::string_view> parts = absl::StrSplit(*compact, '.');
   ASSERT_THAT(parts.size(), Eq(3));

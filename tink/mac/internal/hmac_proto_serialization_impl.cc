@@ -136,7 +136,7 @@ absl::StatusOr<HmacParameters> ParseParameters(
         "Wrong type URL when parsing HmacParameters.");
   }
 
-  HmacKeyFormatTP proto_key_format;
+  google::crypto::tink::internal::HmacKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse HmacKeyFormat proto.");
   }
@@ -170,7 +170,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
       ToProtoHashType(parameters.GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
-  HmacKeyFormatTP proto_key_format;
+  google::crypto::tink::internal::HmacKeyFormatTP proto_key_format;
   proto_key_format.mutable_params()->set_hash(*proto_hash_type);
   proto_key_format.mutable_params()->set_tag_size(
       parameters.CryptographicTagSizeInBytes());
@@ -190,7 +190,7 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  HmacKeyTP proto_key;
+  google::crypto::tink::internal::HmacKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse HmacKey proto.");
@@ -229,7 +229,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
       ToProtoHashType(key.GetParameters().GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
-  HmacKeyTP proto_key;
+  google::crypto::tink::internal::HmacKeyTP proto_key;
   proto_key.mutable_params()->set_hash(*proto_hash_type);
   proto_key.mutable_params()->set_tag_size(
       key.GetParameters().CryptographicTagSizeInBytes());

@@ -39,7 +39,7 @@ TEST(ProtoHmacMessagesTest, ParseHmacParamsTP) {
       absl::StrCat(proto_testing::FieldWithNumber(1).IsVarint(3),
                    proto_testing::FieldWithNumber(2).IsVarint(16));
 
-  HmacParamsTP params;
+  google::crypto::tink::internal::HmacParamsTP params;
   ASSERT_THAT(params.ParseFromString(serialized_hmac_params), IsTrue());
   EXPECT_THAT(params.hash(),
               Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
@@ -47,12 +47,12 @@ TEST(ProtoHmacMessagesTest, ParseHmacParamsTP) {
 }
 
 TEST(ProtoHmacMessagesTest, ParseHmacParamsInvalidTP) {
-  HmacParamsTP params;
+  google::crypto::tink::internal::HmacParamsTP params;
   EXPECT_THAT(params.ParseFromString("invalid"), IsFalse());
 }
 
 TEST(ProtoHmacMessagesTest, SerializeHmacParamsTP) {
-  HmacParamsTP params;
+  google::crypto::tink::internal::HmacParamsTP params;
   params.set_hash(google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_tag_size(16);
 
@@ -71,7 +71,7 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatTP) {
                    proto_testing::FieldWithNumber(3).IsVarint(1)    // version
       );
 
-  HmacKeyFormatTP format;
+  google::crypto::tink::internal::HmacKeyFormatTP format;
   ASSERT_THAT(format.ParseFromString(serialized_hmac_format), IsTrue());
   EXPECT_THAT(format.params().hash(),
               Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
@@ -81,12 +81,12 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatTP) {
 }
 
 TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatInvalidTP) {
-  HmacKeyFormatTP format;
+  google::crypto::tink::internal::HmacKeyFormatTP format;
   EXPECT_THAT(format.ParseFromString("invalid"), IsFalse());
 }
 
 TEST(ProtoHmacMessagesTest, SerializeHmacKeyFormatTP) {
-  HmacKeyFormatTP format;
+  google::crypto::tink::internal::HmacKeyFormatTP format;
   format.mutable_params()->set_hash(
       google::crypto::tink::internal::HashTypeTP::kSha256);
   format.mutable_params()->set_tag_size(16);
@@ -115,7 +115,7 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyTP) {
                    proto_testing::FieldWithNumber(1).IsVarint(1)  // version
       );
 
-  HmacKeyTP key;
+  google::crypto::tink::internal::HmacKeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_hmac_key), IsTrue());
   EXPECT_THAT(key.params().hash(),
               Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
@@ -126,12 +126,12 @@ TEST(ProtoHmacMessagesTest, ParseHmacKeyTP) {
 }
 
 TEST(ProtoHmacMessagesTest, ParseHmacKeyInvalidTP) {
-  HmacKeyTP key;
+  google::crypto::tink::internal::HmacKeyTP key;
   EXPECT_THAT(key.ParseFromString("invalid"), IsFalse());
 }
 
 TEST(ProtoHmacMessagesTest, SerializeHmacKeyTP) {
-  HmacKeyTP key;
+  google::crypto::tink::internal::HmacKeyTP key;
   key.mutable_params()->set_hash(
       google::crypto::tink::internal::HashTypeTP::kSha256);
   key.mutable_params()->set_tag_size(16);

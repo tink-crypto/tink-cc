@@ -347,6 +347,35 @@ TEST(JwtFormat, DecodeSignatureWithLineFeedFails) {
       DecodePayload("dBjftJeZ4CVP-mB92K2\n7uhbUJU1p1r_wW1gFWFOEjXk", &output));
 }
 
+TEST(JwtFormat, StrictWebSafeBase64UnescapeRejectsNonZeroTrailingPadBits) {
+  std::string output;
+  // "AA" decodes to a single 0x00 byte with 4 zero pad bits.
+  EXPECT_TRUE(StrictWebSafeBase64Unescape("AA", &output));
+  // "AB" has non-zero trailing pad bits (000000 000001) but decodes to the same
+  // 0x00 byte in lax decoders.
+  EXPECT_FALSE(StrictWebSafeBase64Unescape("AB", &output));
+  // "AAA" decodes to two 0x00 bytes with 2 zero pad bits.
+  EXPECT_TRUE(StrictWebSafeBase64Unescape("AAA", &output));
+  // "AAB" has non-zero trailing pad bits (000000 000000 000001) but decodes to
+  // the same two 0x00 bytes in lax decoders.
+  EXPECT_FALSE(StrictWebSafeBase64Unescape("AAB", &output));
+}
+
+TEST(JwtFormat, DecodeSignatureRejectsNonZeroTrailingPadBits) {
+  // "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk" is 43 characters (32 bytes).
+  // The last char 'k' (index 36, binary 100100) has 2 unused pad bits (00).
+  // Changing 'k' to 'l' (index 37, binary 100101) flips an unused pad bit.
+  std::string signature;
+  ASSERT_TRUE(DecodeSignature("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+                              &signature));
+  EXPECT_FALSE(DecodeSignature("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXl",
+                               &signature));
+  EXPECT_FALSE(DecodeSignature("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXm",
+                               &signature));
+  EXPECT_FALSE(DecodeSignature("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXn",
+                               &signature));
+}
+
 TEST(RawJwt, FromJson) {
   absl::StatusOr<RawJwt> jwt = RawJwtParser::FromJson(
       std::nullopt,

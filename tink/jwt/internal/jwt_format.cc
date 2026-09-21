@@ -63,7 +63,10 @@ bool StrictWebSafeBase64Unescape(absl::string_view src, std::string* dest) {
       return false;
     }
   }
-  return absl::WebSafeBase64Unescape(src, dest);
+  if (!absl::WebSafeBase64Unescape(src, dest)) {
+    return false;
+  }
+  return absl::WebSafeBase64Escape(*dest) == src;
 }
 
 std::string EncodeHeader(absl::string_view json_header) {

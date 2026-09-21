@@ -1782,7 +1782,7 @@ TEST_F(KeysetHandleTest, GetKeysetInfo) {
   keyset.set_primary_key_id(42);
 
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
-  auto keyset_info = handle->GetKeysetInfo();
+  auto keyset_info = LegacyGetKeysetInfo(*handle);
 
   EXPECT_EQ(keyset.primary_key_id(), keyset_info.primary_key_id());
   for (int i = 0; i < keyset.key_size(); ++i) {

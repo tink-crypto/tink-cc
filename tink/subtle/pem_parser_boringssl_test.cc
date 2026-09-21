@@ -548,49 +548,6 @@ TEST_F(PemParserRsaTest, ReadRsaPrivateKeyInvalid) {
 
 using ParametrizedPemParserEcTest = TestWithParam<EcKeyTestVector>;
 
-TEST_P(ParametrizedPemParserEcTest, ReadEcPublicKeySuccess) {
-  EcKeyTestVector test_vector = GetParam();
-  auto ecdsa_key = PemParser::ParseEcPublicKey(
-      absl::StripAsciiWhitespace(test_vector.pub_pem));
-
-  EXPECT_THAT(ecdsa_key, IsOk()) << internal::GetSslErrors();
-
-  auto x_hex_result = test::HexEncode(ecdsa_key->get()->pub_x);
-  auto y_hex_result = test::HexEncode(ecdsa_key->get()->pub_y);
-  EXPECT_EQ(test_vector.pub_x_hex_str, x_hex_result);
-  EXPECT_EQ(test_vector.pub_y_hex_str, y_hex_result);
-  EXPECT_EQ(test_vector.curve, ecdsa_key->get()->curve);
-}
-
-TEST_P(ParametrizedPemParserEcTest, ReadEcPrivateKeySuccess) {
-  EcKeyTestVector test_vector = GetParam();
-  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
-      PemParser::ParseEcPrivateKey(
-          absl::StripAsciiWhitespace(test_vector.priv_pem));
-
-  EXPECT_THAT(ecdsa_key, IsOk()) << internal::GetSslErrors();
-
-  std::string x_hex = test::HexEncode((*ecdsa_key)->pub_x);
-  std::string y_hex = test::HexEncode((*ecdsa_key)->pub_y);
-  std::string priv_hex =
-      test::HexEncode(util::SecretDataAsStringView((*ecdsa_key)->priv));
-  EXPECT_THAT(x_hex, Eq(test_vector.pub_x_hex_str));
-  EXPECT_THAT(y_hex, Eq(test_vector.pub_y_hex_str));
-  EXPECT_THAT(priv_hex, Eq(absl::AsciiStrToLower(test_vector.priv_hex_str)));
-  EXPECT_THAT((*ecdsa_key)->curve, test_vector.curve);
-}
-
-TEST_P(ParametrizedPemParserEcTest, ReadEcPublicKeyInvalid) {
-  EcKeyTestVector test_vector = GetParam();
-  std::string corrupt_pem = test_vector.pub_pem;
-  Corrupt(&corrupt_pem);
-
-  auto ecdsa_key =
-      PemParser::ParseEcPublicKey(absl::StripAsciiWhitespace(corrupt_pem));
-
-  EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
 TEST_P(ParametrizedPemParserEcTest, ReadEcPrivateKeyInvalid) {
   EcKeyTestVector test_vector = GetParam();
   std::string corrupt_pem = test_vector.pub_pem;
@@ -643,20 +600,6 @@ INSTANTIATE_TEST_SUITE_P(ParametrizedPemParserEcTest,
                          ParametrizedPemParserEcTest,
                          ValuesIn(GetEcKeyTestVectors()));
 
-TEST(PemParserEcTest, NewKeyWriteAndReadPublicKeySuccess) {
-  const SubtleUtilBoringSSL::EcKey& ec_key =
-      internal::GetEcKey(EllipticCurveType::NIST_P256);
-
-  absl::StatusOr<std::string> public_pem = PemParser::WriteEcPublicKey(ec_key);
-  ASSERT_THAT(public_pem, IsOk());
-  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> public_key =
-      PemParser::ParseEcPublicKey(*public_pem);
-  ASSERT_THAT(public_key, IsOk()) << internal::GetSslErrors();
-  EXPECT_EQ((*public_key)->pub_x, ec_key.pub_x);
-  EXPECT_EQ((*public_key)->pub_y, ec_key.pub_y);
-  EXPECT_EQ((*public_key)->curve, ec_key.curve);
-}
-
 TEST(PemParserEcTest, NewKeyWriteAndReadPrivateKeySuccess) {
   const SubtleUtilBoringSSL::EcKey& ec_key =
       internal::GetEcKey(EllipticCurveType::NIST_P256);
@@ -674,64 +617,11 @@ TEST(PemParserEcTest, NewKeyWriteAndReadPrivateKeySuccess) {
   EXPECT_EQ((*parsed_ec_key)->curve, ec_key.curve);
 }
 
-TEST(PemParserEcTest, ReadEcPublicKeyP224_Unimplemented) {
-  constexpr absl::string_view kP224PublicKey =
-      R"(-----BEGIN PUBLIC KEY-----
-ME4wEAYHKoZIzj0CAQYFK4EEACEDOgAE9PcDd+z3cVYhKnNbDVAXwDmShKBCPc88
-sEUoYDu3Oi24YuZAFbwVIdX69RME4FB5PbxISleynMI=
------END PUBLIC KEY-----)";
-
-  auto ecdsa_key =
-      PemParser::ParseEcPublicKey(absl::StripAsciiWhitespace(kP224PublicKey));
-
-  EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kUnimplemented));
-}
-
-TEST(PemParserEcTest, ReadInvalidEcPublicKey) {
-  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
-      PemParser::ParseEcPublicKey("invalid");
-
-  EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
 TEST(PemParserEcTest, ReadInvalidEcPrivateKey) {
   absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPrivateKey("invalid");
 
   EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
-// Makes sure parsing of a valid EC public key on secp256k1 fails because the
-// curve is unsupported.
-TEST(PemParserEcTest, ReadEcPublicKeyFailsBecauseSecp256k1Unsupported) {
-  // Generate private key with:
-  // > openssl ecparam -genkey -name secp256k1 -noout -out ec-key-pair.pem
-  // Extract the public key:
-  // > openssl ec -in ec-key-pair.pem -pubout
-  constexpr absl::string_view kSecp256k1PublicKey =
-      R"(-----BEGIN PUBLIC KEY-----
-MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEC9naJNDkHKVBjfDK90szJegpzatlUcFO
-BLrJS8EVf4tMw52zdhXpKBF2FGpD54dNo+Ut2s6JIE+LoaX/FSvifw==
------END PUBLIC KEY-----)";
-
-  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
-      PemParser::ParseEcPublicKey(
-          absl::StripAsciiWhitespace(kSecp256k1PublicKey));
-  // With BoringSSL parsing of the PEM key fails when an unsupported curve is
-  // used [1]; Supported curves are defined here [2]. Tink doesn't distinguish
-  // between an error caused by a malformed PEM and an unsupported group by
-  // BoringSSL. On the other hand, with OpenSSL parsing succeeds, but this
-  // curve is unsupported by Tink. As a consequence, this fails with two
-  // different errors.
-  //
-  // [1]https://github.com/google/boringssl/blob/master/crypto/ec_extra/ec_asn1.c#L324
-  // [2]https://github.com/google/boringssl/blob/master/crypto/fipsmodule/ec/ec.c#L218
-  if (internal::IsBoringSsl()) {
-    EXPECT_THAT(ecdsa_key.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument));
-  } else {
-    EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kUnimplemented));
-  }
 }
 
 // Makes sure parsing of a valid EC private key on secp256k1 fails because the

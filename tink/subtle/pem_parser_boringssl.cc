@@ -347,61 +347,6 @@ absl::StatusOr<std::string> PemParser::WriteRsaPrivateKey(
 }
 
 absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
-PemParser::ParseEcPublicKey(absl::string_view pem_serialized_key) {
-  // Read the ECDSA key into EVP_PKEY.
-  internal::SslUniquePtr<BIO> ecdsa_key_bio(BIO_new(BIO_s_mem()));
-  BIO_write(ecdsa_key_bio.get(), pem_serialized_key.data(),
-            pem_serialized_key.size());
-
-  internal::SslUniquePtr<EVP_PKEY> evp_ecdsa_key(
-      PEM_read_bio_PUBKEY(ecdsa_key_bio.get(), /*x=*/nullptr,
-                          &FailingPassphraseCallback, /*u=*/nullptr));
-
-  if (evp_ecdsa_key == nullptr) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "PEM Public Key parsing failed");
-  }
-  // No need to free bssl_ecdsa_key after use.
-  const EC_KEY* bssl_ecdsa_key = EVP_PKEY_get0_EC_KEY(evp_ecdsa_key.get());
-  auto is_valid = VerifyEcdsaKey(bssl_ecdsa_key);
-  if (!is_valid.ok()) {
-    return is_valid;
-  }
-
-  // Get the public key parameters.
-  const EC_POINT* public_point = EC_KEY_get0_public_key(bssl_ecdsa_key);
-  const EC_GROUP* ec_group = EC_KEY_get0_group(bssl_ecdsa_key);
-  internal::SslUniquePtr<BIGNUM> x_coordinate(BN_new());
-  internal::SslUniquePtr<BIGNUM> y_coordinate(BN_new());
-  EC_POINT_get_affine_coordinates(ec_group, public_point, x_coordinate.get(),
-                                  y_coordinate.get(), nullptr);
-
-  // Convert public key parameters and construct Subtle ECKey
-  absl::StatusOr<std::string> x_string = internal::BignumToString(
-      x_coordinate.get(), FieldElementSizeInBytes(ec_group));
-  if (!x_string.ok()) {
-    return x_string.status();
-  }
-  absl::StatusOr<std::string> y_string = internal::BignumToString(
-      y_coordinate.get(), FieldElementSizeInBytes(ec_group));
-  if (!y_string.ok()) {
-    return y_string.status();
-  }
-  absl::StatusOr<EllipticCurveType> curve =
-      internal::CurveTypeFromEcGroup(ec_group);
-  if (!curve.ok()) {
-    return curve.status();
-  }
-
-  auto ecdsa_public_key = std::make_unique<SubtleUtilBoringSSL::EcKey>();
-  ecdsa_public_key->pub_x = *std::move(x_string);
-  ecdsa_public_key->pub_y = *std::move(y_string);
-  ecdsa_public_key->curve = *std::move(curve);
-
-  return std::move(ecdsa_public_key);
-}
-
-absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
 PemParser::ParseEcPrivateKey(absl::string_view pem_serialized_key) {
   internal::SslUniquePtr<BIO> ecdsa_key_bio(BIO_new(BIO_s_mem()));
   BIO_write(ecdsa_key_bio.get(), pem_serialized_key.data(),

@@ -27,14 +27,6 @@ namespace subtle {
 
 using ::testing::Eq;
 
-TEST(SubtleUtilTest, Basic) {
-  std::string result = BigEndian32(0x12345678);
-  EXPECT_EQ(result[0], 0x12);
-  EXPECT_EQ(result[1], 0x34);
-  EXPECT_EQ(result[2], 0x56);
-  EXPECT_EQ(result[3], 0x78);
-}
-
 TEST(SubtleUtilTest, ResizeStringUninitialized) {
   std::string s;
   for (int len = 0; len <= 123; len += 17) {

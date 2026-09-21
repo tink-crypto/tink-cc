@@ -505,7 +505,6 @@ tink_cc_library(
     tink::subtle::random
     tink::subtle::stream_segment_decrypter
     tink::subtle::stream_segment_encrypter
-    tink::subtle::subtle_util
     absl::absl_check
     absl::memory
     absl::status
@@ -518,6 +517,7 @@ tink_cc_library(
     tink::core::secret_data
     tink::internal::aes_util
     tink::internal::dfsan_forwarders
+    tink::internal::endian
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::util::secret_data

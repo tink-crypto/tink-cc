@@ -18,15 +18,11 @@
 #define TINK_SUBTLE_SUBTLE_UTIL_H_
 
 #include <cstddef>
-#include <cstdint>
 #include <string>
 
 namespace crypto {
 namespace tink {
 namespace subtle {
-
-// Returnes big endian order representation of `val`.
-std::string BigEndian32(uint32_t val);
 
 // Like string::resize, but the newly allocated storage may be left
 // uninitialized. C++11 provides no portable way to do this. Using this function

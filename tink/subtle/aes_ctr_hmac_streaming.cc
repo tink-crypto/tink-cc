@@ -36,6 +36,7 @@
 #include "openssl/evp.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/dfsan_forwarders.h"
+#include "tink/internal/endian.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/secret_data.h"
@@ -45,7 +46,6 @@
 #include "tink/subtle/random.h"
 #include "tink/subtle/stream_segment_decrypter.h"
 #include "tink/subtle/stream_segment_encrypter.h"
-#include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -59,8 +59,11 @@ using ::crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe;
 static std::string NonceForSegment(absl::string_view nonce_prefix,
                                    int64_t segment_number,
                                    bool is_last_segment) {
+  char segment_number_bytes[4];
+  internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(segment_number_bytes),
+                             static_cast<uint32_t>(segment_number));
   return absl::StrCat(
-      nonce_prefix, BigEndian32(segment_number),
+      nonce_prefix, absl::string_view(segment_number_bytes, 4),
       is_last_segment ? std::string(1, '\x01') : std::string(1, '\x00'),
       std::string(4, '\x00'));
 }

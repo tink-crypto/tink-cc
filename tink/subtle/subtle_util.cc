@@ -17,22 +17,12 @@
 #include "tink/subtle/subtle_util.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <string>
 // placeholder_subtle_util_cc
 
 namespace crypto {
 namespace tink {
 namespace subtle {
-
-std::string BigEndian32(uint32_t val) {
-  std::string result(4, '\0');
-  result[0] = (val >> 24) & 0xff;
-  result[1] = (val >> 16) & 0xff;
-  result[2] = (val >> 8) & 0xff;
-  result[3] = val & 0xff;
-  return result;
-}
 
 void ResizeStringUninitialized(std::string* s, size_t new_size) {
   s->resize(new_size);

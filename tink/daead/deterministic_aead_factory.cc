@@ -16,34 +16,8 @@
 
 #include "tink/daead/deterministic_aead_factory.h"
 
-#include <memory>
-
-#include "tink/daead/deterministic_aead_wrapper.h"
-#include "tink/deterministic_aead.h"
-#include "tink/key_manager.h"
-#include "tink/keyset_handle.h"
-#include "tink/registry.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-// static
-absl::StatusOr<std::unique_ptr<DeterministicAead>>
-DeterministicAeadFactory::GetPrimitive(const KeysetHandle& keyset_handle) {
-  absl::Status status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<DeterministicAeadWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<crypto::tink::DeterministicAead>(
-      ConfigGlobalRegistry());
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 }  // namespace tink
 }  // namespace crypto

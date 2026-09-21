@@ -75,15 +75,6 @@ tink_cc_library(
   SRCS
     deterministic_aead_factory.cc
     deterministic_aead_factory.h
-  DEPS
-    tink::daead::deterministic_aead_wrapper
-    absl::core_headers
-    tink::core::deterministic_aead
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -274,26 +265,6 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::util::test_util
-    tink::proto::aes_siv_cc_proto
-)
-
-tink_cc_test(
-  NAME deterministic_aead_factory_test
-  SRCS
-    deterministic_aead_factory_test.cc
-  DEPS
-    tink::daead::aes_siv_key_manager
-    tink::daead::deterministic_aead_config
-    tink::daead::deterministic_aead_factory
-    gmock
-    tink::core::key_manager_impl
-    tink::core::crypto_format
-    tink::core::deterministic_aead
-    tink::core::keyset_handle
-    tink::internal::key_info
-    tink::util::status
-    tink::util::test_keyset_handle
     tink::util::test_util
     tink::proto::aes_siv_cc_proto
 )

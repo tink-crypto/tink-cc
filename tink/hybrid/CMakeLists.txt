@@ -91,15 +91,6 @@ tink_cc_library(
   SRCS
     hybrid_decrypt_factory.cc
     hybrid_decrypt_factory.h
-  DEPS
-    tink::hybrid::hybrid_decrypt_wrapper
-    absl::core_headers
-    tink::core::hybrid_decrypt
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -107,15 +98,6 @@ tink_cc_library(
   SRCS
     hybrid_encrypt_factory.cc
     hybrid_encrypt_factory.h
-  DEPS
-    tink::hybrid::hybrid_encrypt_wrapper
-    absl::core_headers
-    tink::core::hybrid_encrypt
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -604,45 +586,6 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME hybrid_decrypt_factory_test
-  SRCS
-    hybrid_decrypt_factory_test.cc
-  DEPS
-    tink::hybrid::ecies_aead_hkdf_public_key_manager
-    tink::hybrid::hybrid_config
-    tink::hybrid::hybrid_decrypt_factory
-    gmock
-    absl::memory
-    tink::core::crypto_format
-    tink::core::hybrid_decrypt
-    tink::core::hybrid_encrypt
-    tink::core::keyset_handle
-    tink::util::status
-    tink::util::test_keyset_handle
-    tink::util::test_util
-    tink::proto::ecies_aead_hkdf_cc_proto
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME hybrid_encrypt_factory_test
-  SRCS
-    hybrid_encrypt_factory_test.cc
-  DEPS
-    tink::hybrid::hybrid_config
-    tink::hybrid::hybrid_encrypt_factory
-    gmock
-    tink::core::crypto_format
-    tink::core::hybrid_encrypt
-    tink::core::keyset_handle
-    tink::util::status
-    tink::util::test_keyset_handle
-    tink::util::test_util
-    tink::proto::ecies_aead_hkdf_cc_proto
     tink::proto::tink_cc_proto
 )
 

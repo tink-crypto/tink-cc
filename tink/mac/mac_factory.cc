@@ -16,31 +16,8 @@
 
 #include "tink/mac/mac_factory.h"
 
-#include <memory>
-
-#include "tink/mac.h"
-#include "tink/mac/mac_wrapper.h"
-#include "tink/registry.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-// static
-util::StatusOr<std::unique_ptr<Mac>> MacFactory::GetPrimitive(
-    const KeysetHandle& keyset_handle) {
-  util::Status status =
-      Registry::RegisterPrimitiveWrapper(absl::make_unique<MacWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 }  // namespace tink
 }  // namespace crypto

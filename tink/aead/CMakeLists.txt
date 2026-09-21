@@ -87,16 +87,6 @@ tink_cc_library(
   SRCS
     aead_factory.cc
     aead_factory.h
-  DEPS
-    tink::aead::aead_wrapper
-    absl::core_headers
-    absl::memory
-    tink::core::aead
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -933,29 +923,6 @@ tink_cc_test(
     tink::proto::tink_cc_proto
     tink::proto::x_aes_gcm_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
-)
-
-tink_cc_test(
-  NAME aead_factory_test
-  SRCS
-    aead_factory_test.cc
-  DEPS
-    tink::aead::aead_config
-    tink::aead::aead_factory
-    tink::aead::aes_gcm_key_manager
-    gmock
-    absl::status
-    absl::strings
-    tink::core::aead
-    tink::core::crypto_format
-    tink::core::keyset_handle
-    tink::internal::key_info
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_keyset_handle
-    tink::util::test_util
-    tink::proto::aes_gcm_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

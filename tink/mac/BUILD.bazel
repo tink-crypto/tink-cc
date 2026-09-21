@@ -56,16 +56,6 @@ cc_library(
     srcs = ["mac_factory.cc"],
     hdrs = ["mac_factory.h"],
     include_prefix = "tink/mac",
-    deps = [
-        ":mac_wrapper",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:mac",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-    ],
 )
 
 cc_library(
@@ -403,28 +393,6 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@boringssl//:crypto",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "mac_factory_test",
-    size = "small",
-    srcs = ["mac_factory_test.cc"],
-    deps = [
-        ":hmac_key_manager",
-        ":mac_config",
-        ":mac_factory",
-        "//proto:common_cc_proto",
-        "//proto:hmac_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:crypto_format",
-        "//tink:keyset_handle",
-        "//tink:mac",
-        "//tink/internal:key_info",
-        "//tink/util:status",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
         "@googletest//:gtest_main",
     ],
 )

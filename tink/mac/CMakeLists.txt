@@ -50,15 +50,6 @@ tink_cc_library(
   SRCS
     mac_factory.cc
     mac_factory.h
-  DEPS
-    tink::mac::mac_wrapper
-    absl::core_headers
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::mac
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -344,27 +335,6 @@ tink_cc_test(
     tink::mac::internal::hmac_test_vectors
     tink::util::test_util
     tink::proto::aes_cmac_cc_proto
-    tink::proto::common_cc_proto
-    tink::proto::hmac_cc_proto
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME mac_factory_test
-  SRCS
-    mac_factory_test.cc
-  DEPS
-    tink::mac::hmac_key_manager
-    tink::mac::mac_config
-    tink::mac::mac_factory
-    gmock
-    tink::core::crypto_format
-    tink::core::keyset_handle
-    tink::core::mac
-    tink::internal::key_info
-    tink::util::status
-    tink::util::test_keyset_handle
-    tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto

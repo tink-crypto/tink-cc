@@ -101,16 +101,6 @@ cc_library(
     srcs = ["hybrid_decrypt_factory.cc"],
     hdrs = ["hybrid_decrypt_factory.h"],
     include_prefix = "tink/hybrid",
-    deps = [
-        ":hybrid_decrypt_wrapper",
-        "//tink:hybrid_decrypt",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-    ],
 )
 
 cc_library(
@@ -118,16 +108,6 @@ cc_library(
     srcs = ["hybrid_encrypt_factory.cc"],
     hdrs = ["hybrid_encrypt_factory.h"],
     include_prefix = "tink/hybrid",
-    deps = [
-        ":hybrid_encrypt_wrapper",
-        "//tink:hybrid_encrypt",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-    ],
 )
 
 cc_library(
@@ -672,47 +652,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "hybrid_decrypt_factory_test",
-    size = "small",
-    srcs = ["hybrid_decrypt_factory_test.cc"],
-    deps = [
-        ":ecies_aead_hkdf_public_key_manager",
-        ":hybrid_config",
-        ":hybrid_decrypt_factory",
-        "//proto:ecies_aead_hkdf_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:crypto_format",
-        "//tink:hybrid_decrypt",
-        "//tink:hybrid_encrypt",
-        "//tink:keyset_handle",
-        "//tink/util:status",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
-        "@abseil-cpp//absl/memory",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "hybrid_encrypt_factory_test",
-    size = "small",
-    srcs = ["hybrid_encrypt_factory_test.cc"],
-    deps = [
-        ":hybrid_config",
-        ":hybrid_encrypt_factory",
-        "//proto:ecies_aead_hkdf_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:crypto_format",
-        "//tink:hybrid_encrypt",
-        "//tink:keyset_handle",
-        "//tink/util:status",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
         "@googletest//:gtest_main",
     ],
 )

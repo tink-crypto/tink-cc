@@ -81,16 +81,6 @@ cc_library(
     srcs = ["deterministic_aead_factory.cc"],
     hdrs = ["deterministic_aead_factory.h"],
     include_prefix = "tink/daead",
-    deps = [
-        ":deterministic_aead_wrapper",
-        "//tink:deterministic_aead",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-    ],
 )
 
 cc_library(
@@ -325,27 +315,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "deterministic_aead_factory_test",
-    size = "small",
-    srcs = ["deterministic_aead_factory_test.cc"],
-    deps = [
-        ":aes_siv_key_manager",
-        ":deterministic_aead_config",
-        ":deterministic_aead_factory",
-        "//proto:aes_siv_cc_proto",
-        "//tink:core/key_manager_impl",
-        "//tink:crypto_format",
-        "//tink:deterministic_aead",
-        "//tink:keyset_handle",
-        "//tink/internal:key_info",
-        "//tink/util:status",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
         "@googletest//:gtest_main",
     ],
 )

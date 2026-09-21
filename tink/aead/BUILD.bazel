@@ -123,17 +123,6 @@ cc_library(
     srcs = ["aead_factory.cc"],
     hdrs = ["aead_factory.h"],
     include_prefix = "tink/aead",
-    deps = [
-        ":aead_wrapper",
-        "//tink:aead",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/memory",
-    ],
 )
 
 cc_library(
@@ -1066,30 +1055,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "aead_factory_test",
-    size = "small",
-    srcs = ["aead_factory_test.cc"],
-    deps = [
-        ":aead_config",
-        ":aead_factory",
-        ":aes_gcm_key_manager",
-        "//proto:aes_gcm_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:aead",
-        "//tink:crypto_format",
-        "//tink:keyset_handle",
-        "//tink/internal:key_info",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],
 )

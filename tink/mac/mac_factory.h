@@ -17,44 +17,8 @@
 #ifndef TINK_MAC_MAC_FACTORY_H_
 #define TINK_MAC_MAC_FACTORY_H_
 
-#include <memory>
-
-#include "absl/base/macros.h"
-#include "tink/key_manager.h"
-#include "tink/keyset_handle.h"
-#include "tink/mac.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
-
-///////////////////////////////////////////////////////////////////////////////
-// This class is deprecated. Call keyset_handle->GetPrimitive<Mac>() instead.
-//
-// Note that in order to for this change to be safe, the AeadSetWrapper has to
-// be registered in your binary before this call. This happens automatically if
-// you call one of
-// * MacConfig::Register()
-// * AeadConfig::Register()
-// * HybridConfig::Register()
-// * TinkConfig::Register()
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-class ABSL_DEPRECATED(
-    "Call getPrimitive<Mac>() on the keyset_handle after registering the "
-    "MacWrapper instead.") MacFactory {
- public:
-  // Returns a Mac-primitive that uses key material from the keyset
-  // specified via 'keyset_handle'.
-  static crypto::tink::util::StatusOr<std::unique_ptr<Mac>> GetPrimitive(
-      const KeysetHandle& keyset_handle);
-
- private:
-  MacFactory() {}
-};
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 }  // namespace tink
 }  // namespace crypto

@@ -17,46 +17,8 @@
 #ifndef TINK_HYBRID_HYBRID_DECRYPT_FACTORY_H_
 #define TINK_HYBRID_HYBRID_DECRYPT_FACTORY_H_
 
-#include <memory>
-
-#include "absl/base/macros.h"
-#include "tink/hybrid_decrypt.h"
-#include "tink/key_manager.h"
-#include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
-
-///////////////////////////////////////////////////////////////////////////////
-// This class is deprecated. Call keyset_handle->GetPrimitive<HybridDecrypt>()
-// instead.
-//
-// Note that in order to for this change to be safe, the AeadSetWrapper has to
-// be registered in your binary before this call. This happens automatically if
-// you call one of
-// * HybridConfig::Register()
-// * TinkConfig::Register()
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-class ABSL_DEPRECATED(
-    "Call getPrimitive<HybridDecrypt>() on the keyset_handle after registering "
-    "the HybridDecryptWrapper instead.") HybridDecryptFactory {
- public:
-  // Returns a HybridDecrypt-primitive that uses key material from the keyset
-  // specified via 'keyset_handle'.
-  ABSL_DEPRECATED(
-      "Call getPrimitive<HybridDecrypt>() on the keyset_handle after "
-      "registering "
-      "the HybridEncryptWrapper instead.")
-  static crypto::tink::util::StatusOr<std::unique_ptr<HybridDecrypt>>
-  GetPrimitive(const KeysetHandle& keyset_handle);
-
- private:
-  HybridDecryptFactory() {}
-};
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 }  // namespace tink
 }  // namespace crypto

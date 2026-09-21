@@ -53,15 +53,6 @@ tink_cc_library(
   SRCS
     public_key_verify_factory.cc
     public_key_verify_factory.h
-  DEPS
-    tink::signature::public_key_verify_wrapper
-    absl::core_headers
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::public_key_verify
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -91,15 +82,6 @@ tink_cc_library(
   SRCS
     public_key_sign_factory.cc
     public_key_sign_factory.h
-  DEPS
-    tink::signature::public_key_sign_wrapper
-    absl::core_headers
-    tink::core::key_manager
-    tink::core::keyset_handle
-    tink::core::public_key_sign
-    tink::core::registry
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -823,26 +805,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME public_key_verify_factory_test
-  SRCS
-    public_key_verify_factory_test.cc
-  DEPS
-    tink::signature::ecdsa_verify_key_manager
-    tink::signature::public_key_verify_factory
-    tink::signature::signature_config
-    gmock
-    tink::core::crypto_format
-    tink::core::keyset_handle
-    tink::core::public_key_verify
-    tink::core::registry
-    tink::util::status
-    tink::util::test_keyset_handle
-    tink::util::test_util
-    tink::proto::ecdsa_cc_proto
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
   NAME public_key_sign_wrapper_test
   SRCS
     public_key_sign_wrapper_test.cc
@@ -867,26 +829,6 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME public_key_sign_factory_test
-  SRCS
-    public_key_sign_factory_test.cc
-  DEPS
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::public_key_sign_factory
-    tink::signature::signature_config
-    gmock
-    tink::core::crypto_format
-    tink::core::keyset_handle
-    tink::core::public_key_sign
-    tink::core::registry
-    tink::util::status
-    tink::util::test_keyset_handle
-    tink::util::test_util
-    tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
 

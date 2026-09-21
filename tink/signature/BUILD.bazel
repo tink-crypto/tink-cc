@@ -60,16 +60,6 @@ cc_library(
     srcs = ["public_key_verify_factory.cc"],
     hdrs = ["public_key_verify_factory.h"],
     include_prefix = "tink/signature",
-    deps = [
-        ":public_key_verify_wrapper",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:public_key_verify",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-    ],
 )
 
 cc_library(
@@ -100,16 +90,6 @@ cc_library(
     srcs = ["public_key_sign_factory.cc"],
     hdrs = ["public_key_sign_factory.h"],
     include_prefix = "tink/signature",
-    deps = [
-        ":public_key_sign_wrapper",
-        "//tink:key_manager",
-        "//tink:keyset_handle",
-        "//tink:public_key_sign",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/base:core_headers",
-    ],
 )
 
 cc_library(
@@ -1015,27 +995,6 @@ cc_test(
 )
 
 cc_test(
-    name = "public_key_verify_factory_test",
-    size = "small",
-    srcs = ["public_key_verify_factory_test.cc"],
-    deps = [
-        ":ecdsa_verify_key_manager",
-        ":public_key_verify_factory",
-        ":signature_config",
-        "//proto:ecdsa_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:crypto_format",
-        "//tink:keyset_handle",
-        "//tink:public_key_verify",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "public_key_sign_wrapper_test",
     size = "small",
     srcs = ["public_key_sign_wrapper_test.cc"],
@@ -1060,27 +1019,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "public_key_sign_factory_test",
-    size = "small",
-    srcs = ["public_key_sign_factory_test.cc"],
-    deps = [
-        ":ecdsa_sign_key_manager",
-        ":public_key_sign_factory",
-        ":signature_config",
-        "//proto:ecdsa_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:crypto_format",
-        "//tink:keyset_handle",
-        "//tink:public_key_sign",
-        "//tink:registry",
-        "//tink/util:status",
-        "//tink/util:test_keyset_handle",
-        "//tink/util:test_util",
         "@googletest//:gtest_main",
     ],
 )

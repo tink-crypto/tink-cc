@@ -17,42 +17,8 @@
 #ifndef TINK_AEAD_AEAD_FACTORY_H_
 #define TINK_AEAD_AEAD_FACTORY_H_
 
-#include <memory>
-
-#include "absl/base/attributes.h"
-#include "tink/aead.h"
-#include "tink/key_manager.h"
-#include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
-
-///////////////////////////////////////////////////////////////////////////////
-// This class is deprecated. Call keyset_handle->GetPrimitive<Aead>() instead.
-//
-// Note that in order to for this change to be safe, the AeadSetWrapper has to
-// be registered in your binary before this call. This happens automatically if
-// you call one of
-// * AeadConfig::Register()
-// * HybridConfig::Register()
-// * TinkConfig::Register()
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-class ABSL_DEPRECATED(
-    "Call GetPrimitive<Aead>() on the keyset_handle after registering the "
-    "AeadWrapper instead.") AeadFactory {
- public:
-  // Returns an Aead-primitive that uses key material from the keyset
-  // specified via 'keyset_handle'.
-  static absl::StatusOr<std::unique_ptr<Aead>> GetPrimitive(
-      const KeysetHandle& keyset_handle);
-
- private:
-  AeadFactory() {}
-};
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 }  // namespace tink
 }  // namespace crypto

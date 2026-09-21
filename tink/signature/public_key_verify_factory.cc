@@ -16,34 +16,8 @@
 
 #include "tink/signature/public_key_verify_factory.h"
 
-#include <memory>
-
-#include "tink/key_manager.h"
-#include "tink/keyset_handle.h"
-#include "tink/public_key_verify.h"
-#include "tink/registry.h"
-#include "tink/signature/public_key_verify_wrapper.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-// static
-util::StatusOr<std::unique_ptr<PublicKeyVerify>>
-PublicKeyVerifyFactory::GetPrimitive(const KeysetHandle& keyset_handle) {
-  util::Status status = Registry::RegisterPrimitiveWrapper(
-      absl::make_unique<PublicKeyVerifyWrapper>());
-  if (!status.ok()) {
-    return status;
-  }
-  return keyset_handle.GetPrimitive<crypto::tink::PublicKeyVerify>(
-      ConfigGlobalRegistry());
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 }  // namespace tink
 }  // namespace crypto

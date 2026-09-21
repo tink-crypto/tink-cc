@@ -296,10 +296,10 @@ TEST(FakeKeysetDeriver, DeriveKeyset) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       deriver.DeriveKeyset("salty");
   ASSERT_THAT(handle, IsOk());
-  EXPECT_THAT((*handle)->GetKeysetInfo().primary_key_id(), Eq(119));
-  EXPECT_THAT((*handle)->GetKeysetInfo().key_info_size(), Eq(1));
+  EXPECT_THAT(LegacyGetKeysetInfo(**handle).primary_key_id(), Eq(119));
+  EXPECT_THAT(LegacyGetKeysetInfo(**handle).key_info_size(), Eq(1));
   google::crypto::tink::KeysetInfo::KeyInfo info =
-      (*handle)->GetKeysetInfo().key_info(0);
+      LegacyGetKeysetInfo(**handle).key_info(0);
   EXPECT_THAT(info.type_url(), Eq("5:hellosalty"));
   EXPECT_THAT(info.status(),
               Eq(google::crypto::tink::KeyStatusType::UNKNOWN_STATUS));

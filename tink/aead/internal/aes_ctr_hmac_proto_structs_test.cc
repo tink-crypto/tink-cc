@@ -95,7 +95,7 @@ std::string GetSerializedAesCtrHmacAeadKeyFormat() {
   aes_ctr_key_format.mutable_params()->set_iv_size(12);
   aes_ctr_key_format.set_key_size(16);
 
-  HmacKeyFormatTP hmac_key_format;
+  google::crypto::tink::internal::HmacKeyFormatTP hmac_key_format;
   hmac_key_format.mutable_params()->set_hash(
       google::crypto::tink::internal::HashTypeTP::kSha256);
   hmac_key_format.mutable_params()->set_tag_size(16);
@@ -186,7 +186,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrKeyTP) {
 }
 
 std::string GetSerializedHmacKey() {
-  HmacParamsTP params;
+  google::crypto::tink::internal::HmacParamsTP params;
   params.set_hash(google::crypto::tink::internal::HashTypeTP::kSha256);
   params.set_tag_size(16);
   return absl::StrCat(

@@ -225,7 +225,6 @@ tink_cc_library(
     tink::util::statusor
     gmock
     absl::status
-    absl::strings
   TESTONLY
 )
 

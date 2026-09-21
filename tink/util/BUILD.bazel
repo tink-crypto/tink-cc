@@ -293,7 +293,6 @@ cc_library(
         ":status",
         ":statusor",
         "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
     ],
 )

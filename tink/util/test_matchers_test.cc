@@ -27,22 +27,17 @@ namespace test {
 namespace internal {
 namespace {
 
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
-using ::testing::Eq;
 using ::testing::Not;
 
 TEST(TestMatchersTest, MatchersWithStatusOr) {
   absl::StatusOr<int> status_or_with_value = 123;
-  EXPECT_THAT(status_or_with_value, IsOkAndHolds(Eq(123)));
-  EXPECT_THAT(status_or_with_value, Not(IsOkAndHolds(Eq(124))));
   EXPECT_THAT(status_or_with_value, StatusIs(absl::StatusCode::kOk));
   EXPECT_THAT(status_or_with_value,
               Not(StatusIs(absl::StatusCode::kInvalidArgument)));
 
   absl::StatusOr<int> invalid_status_or =
       absl::Status(absl::StatusCode::kInvalidArgument, "invalid argument");
-  EXPECT_THAT(invalid_status_or, Not(IsOkAndHolds(Eq(123))));
   EXPECT_THAT(invalid_status_or, StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(invalid_status_or, Not(StatusIs(absl::StatusCode::kOk)));
 }

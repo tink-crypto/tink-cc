@@ -135,7 +135,7 @@ class Registry {
   // and wraps the given PrimitiveSet with it.
   template <class P>
   static absl::StatusOr<std::unique_ptr<P>> Wrap(
-      std::unique_ptr<PrimitiveSet<P>> primitive_set) {
+      std::unique_ptr<internal::PrimitiveSet<P>> primitive_set) {
     return internal::RegistryImpl::GlobalInstance().Wrap<P>(
         std::move(primitive_set));
   }

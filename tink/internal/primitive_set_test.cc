@@ -56,8 +56,8 @@ namespace {
 class PrimitiveSetTest : public ::testing::Test {};
 
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
-void add_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
-                    int primitives_count) {
+void add_primitives(internal::PrimitiveSet<Mac>* primitive_set,
+                    int key_id_offset, int primitives_count) {
   for (int i = 0; i < primitives_count; i++) {
     int key_id = key_id_offset + i;
     KeysetInfo::KeyInfo key_info;
@@ -554,7 +554,7 @@ TEST_F(PrimitiveSetTest, ReleaseAllEntries) {
 // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_F(PrimitiveSetTest, LegacyConcurrentOperations) {
-  PrimitiveSet<Mac> mac_set;
+  internal::PrimitiveSet<Mac> mac_set;
   int offset_a = 100;
   int offset_b = 150;
   int count = 100;
@@ -641,7 +641,7 @@ TEST_F(PrimitiveSetTest, LegacyBasic) {
   key_6.set_key_id(key_id_6);
   key_6.set_status(KeyStatusType::ENABLED);
 
-  PrimitiveSet<Mac> primitive_set;
+  internal::PrimitiveSet<Mac> primitive_set;
   EXPECT_TRUE(primitive_set.get_primary() == nullptr);
   EXPECT_EQ(absl::StatusCode::kNotFound,
             primitive_set.get_raw_primitives().status().code());
@@ -758,7 +758,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     std::unique_ptr<Mac> mac_2(new DummyMac(mac_name_2));
     key_info_1.set_output_prefix_type(OutputPrefixType::RAW);
     key_info_2.set_output_prefix_type(OutputPrefixType::RAW);
-    PrimitiveSet<Mac> primitive_set;
+    internal::PrimitiveSet<Mac> primitive_set;
     EXPECT_TRUE(primitive_set.get_primary() == nullptr);
 
     // Add the first primitive, and set it as primary.
@@ -787,7 +787,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     std::unique_ptr<Mac> mac_2(new DummyMac(mac_name_2));
     key_info_1.set_output_prefix_type(OutputPrefixType::TINK);
     key_info_2.set_output_prefix_type(OutputPrefixType::TINK);
-    PrimitiveSet<Mac> primitive_set;
+    internal::PrimitiveSet<Mac> primitive_set;
     EXPECT_TRUE(primitive_set.get_primary() == nullptr);
 
     // Add the first primitive, and set it as primary.
@@ -816,7 +816,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     std::unique_ptr<Mac> mac_2(new DummyMac(mac_name_2));
     key_info_1.set_output_prefix_type(OutputPrefixType::LEGACY);
     key_info_2.set_output_prefix_type(OutputPrefixType::LEGACY);
-    PrimitiveSet<Mac> primitive_set;
+    internal::PrimitiveSet<Mac> primitive_set;
     EXPECT_TRUE(primitive_set.get_primary() == nullptr);
 
     // Add the first primitive, and set it as primary.
@@ -851,7 +851,7 @@ TEST_F(PrimitiveSetTest, LegacyDisabledKey) {
   key_info_1.set_key_id(key_id_1);
   key_info_1.set_status(KeyStatusType::DISABLED);
 
-  PrimitiveSet<Mac> primitive_set;
+  internal::PrimitiveSet<Mac> primitive_set;
   // Add all the primitives.
   auto add_primitive_result =
       primitive_set.AddPrimitive(std::move(mac_1), key_info_1);
@@ -860,7 +860,7 @@ TEST_F(PrimitiveSetTest, LegacyDisabledKey) {
 
 
 TEST_F(PrimitiveSetTest, LegacyGetAll) {
-  PrimitiveSet<Mac> pset;
+  internal::PrimitiveSet<Mac> pset;
   EXPECT_THAT(
       pset.AddPrimitive(
               absl::make_unique<DummyMac>("MAC1"),

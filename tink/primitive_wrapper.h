@@ -41,7 +41,8 @@ class PrimitiveWrapper {
   using Primitive = PrimitiveParam;
 
   virtual absl::StatusOr<std::unique_ptr<Primitive>> Wrap(
-      std::unique_ptr<PrimitiveSet<InputPrimitive>> primitive_set) const = 0;
+      std::unique_ptr<internal::PrimitiveSet<InputPrimitive>> primitive_set)
+      const = 0;
 };
 
 }  // namespace tink

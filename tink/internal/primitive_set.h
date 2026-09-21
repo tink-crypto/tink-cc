@@ -408,11 +408,6 @@ class PrimitiveSet {
 };
 
 }  // namespace internal
-
-// TODO (b/394566880): Remove this alias
-template <class P>
-using PrimitiveSet = internal::PrimitiveSet<P>;
-
 }  // namespace tink
 }  // namespace crypto
 

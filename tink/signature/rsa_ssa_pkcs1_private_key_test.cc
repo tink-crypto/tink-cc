@@ -54,9 +54,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
-using ::testing::HasSubstr;
 using ::testing::NotNull;
-using ::testing::StrEq;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -255,34 +253,6 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeySucceeds) {
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  private_values.p.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeQ(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  private_values.q.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeExponentP(),
-              Eq(RestrictedBigInteger(
-                  private_values.dp.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeExponentQ(),
-              Eq(RestrictedBigInteger(
-                  private_values.dq.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetCrtCoefficient(),
-              Eq(RestrictedBigInteger(
-                  private_values.q_inv.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrivateExponent(),
-              Eq(RestrictedBigInteger(
-                  private_values.d.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
 }
 
 TEST(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
@@ -787,34 +757,6 @@ TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  private_values.p.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeQ(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  private_values.q.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeExponentP(),
-              Eq(RestrictedBigInteger(
-                  private_values.dp.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeExponentQ(),
-              Eq(RestrictedBigInteger(
-                  private_values.dq.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetCrtCoefficient(),
-              Eq(RestrictedBigInteger(
-                  private_values.q_inv.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrivateExponent(),
-              Eq(RestrictedBigInteger(
-                  private_values.d.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
 }
 
 TEST(RsaSsaPkcs1PrivateKeyTest,
@@ -869,187 +811,7 @@ TEST(RsaSsaPkcs1PrivateKeyTest,
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  private_values.p.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeQ(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  private_values.q.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeExponentP(),
-              Eq(RestrictedBigInteger(
-                  private_values.dp.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeExponentQ(),
-              Eq(RestrictedBigInteger(
-                  private_values.dq.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetCrtCoefficient(),
-              Eq(RestrictedBigInteger(
-                  private_values.q_inv.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrivateExponent(),
-              Eq(RestrictedBigInteger(
-                  private_values.d.Get(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
 }
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST(RsaSsaPkcs1PrivateKeyTest,
-     BuildAllowNonConstantTimeWithRestrictedBigIntegerAndDataFails) {
-  RsaSsaPkcs1PublicKey public_key = GetValidPublicKey();
-
-  RestrictedBigInteger dq_rb(
-      Get2048BitPrivateKey().GetPrimeExponentQData().GetSecret(
-          InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  PrivateValues private_values = GetValid2048BitPrivateValues();
-
-  EXPECT_THAT(
-      RsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.d)
-          .SetPrimeExponentQ(dq_rb)
-          .SetPrivateExponent(private_values.dq)
-          .SetCrtCoefficient(private_values.q_inv)
-          .BuildAllowNonConstantTime(GetPartialKeyAccess()),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               StrEq("BuildAllowNonConstantTime method can only be used by "
-                     "setting RestrictedData fields.")));
-}
-
-TEST_P(RsaSsaPkcs1PrivateKeyTest, BuildWithRestrictedBigIntegerSucceeds) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
-      RsaSsaPkcs1Parameters::Builder()
-          .SetModulusSizeInBits(kModulusSizeInBits)
-          .SetPublicExponent(kF4)
-          .SetHashType(test_case.hash_type)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  BigInteger modulus = Get2048BitPrivateKey().GetPublicKey().GetModulus(
-      GetPartialKeyAccess());
-  absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
-      RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
-                                   test_case.id_requirement,
-                                   GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  const RsaSsaPkcs1PrivateKey& key = Get2048BitPrivateKey();
-  RestrictedBigInteger p_rb(
-      key.GetPrimePData(GetPartialKeyAccess())
-          .GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_rb(
-      key.GetPrimeQData(GetPartialKeyAccess())
-          .GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dp_rb(
-      key.GetPrimeExponentPData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dq_rb(
-      key.GetPrimeExponentQData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger d_rb(
-      key.GetPrivateExponentData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_inv_rb(
-      key.GetCrtCoefficientData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
-      RsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(*public_key)
-          .SetPrimeP(p_rb)
-          .SetPrimeQ(q_rb)
-          .SetPrimeExponentP(dp_rb)
-          .SetPrimeExponentQ(dq_rb)
-          .SetPrivateExponent(d_rb)
-          .SetCrtCoefficient(q_inv_rb)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  PrivateValues private_values = GetValid2048BitPrivateValues();
-  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
-  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess()),
-              Eq(private_values.p));
-  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess()),
-              Eq(private_values.q));
-  EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
-  EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
-  EXPECT_THAT(private_key->GetCrtCoefficientData(),
-  Eq(private_values.q_inv));
-  EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
-}
-
-TEST_P(RsaSsaPkcs1PrivateKeyTest,
-       BuildWithRestrictedBigIntegerAndRestrictedDataFails) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
-      RsaSsaPkcs1Parameters::Builder()
-          .SetModulusSizeInBits(kModulusSizeInBits)
-          .SetPublicExponent(kF4)
-          .SetHashType(test_case.hash_type)
-          .SetVariant(test_case.variant)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  BigInteger modulus = Get2048BitPrivateKey().GetPublicKey().GetModulus(
-      GetPartialKeyAccess());
-  absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
-      RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
-                                   test_case.id_requirement,
-                                   GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-  const RsaSsaPkcs1PrivateKey& key = Get2048BitPrivateKey();
-  RestrictedBigInteger p_rb(
-      key.GetPrimePData(GetPartialKeyAccess())
-          .GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dp_rb(
-      key.GetPrimeExponentPData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dq_rb(
-      key.GetPrimeExponentQData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger d_rb(
-      key.GetPrivateExponentData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_inv_rb(
-      key.GetCrtCoefficientData().GetSecret(InsecureSecretKeyAccess::Get()),
-      InsecureSecretKeyAccess::Get());
-  PrivateValues private_values = GetValid2048BitPrivateValues();
-
-  EXPECT_THAT(RsaSsaPkcs1PrivateKey::Builder()
-                  .SetPublicKey(*public_key)
-                  .SetPrimeP(p_rb)
-                  .SetPrimeQ(private_values.q)
-                  .SetPrimeExponentP(dp_rb)
-                  .SetPrimeExponentQ(dq_rb)
-                  .SetPrivateExponent(d_rb)
-                  .SetCrtCoefficient(q_inv_rb)
-                  .Build(GetPartialKeyAccess()),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 TEST_P(RsaSsaPkcs1PrivateKeyTest, PrivateKeyEquals) {
   TestCase test_case = GetParam();
@@ -1203,50 +965,6 @@ TEST(RsaSsaPkcs1PrivateKeyTest, CopyAssignment) {
 
   EXPECT_THAT(*copy, Eq(*private_key));
 }
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST(RsaSsaPkcs1PrivateKeyTest,
-     CopyAssignmentWithRestrictedBigIntegerFieldsInitialized) {
-  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
-      RsaSsaPkcs1Parameters::Builder()
-          .SetModulusSizeInBits(2048)
-          .SetPublicExponent(kF4)
-          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
-          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
-      CreateValid2048BitPrivateKey(*parameters,
-                                   /*id_requirement=*/absl::nullopt);
-  ASSERT_THAT(private_key, IsOk());
-  private_key->GetPrivateExponent();
-  private_key->GetPrimeP(GetPartialKeyAccess());
-  private_key->GetPrimeQ(GetPartialKeyAccess());
-  private_key->GetPrimeExponentP();
-  private_key->GetPrimeExponentQ();
-  private_key->GetCrtCoefficient();
-
-  absl::StatusOr<RsaSsaPkcs1Parameters> other_parameters =
-      RsaSsaPkcs1Parameters::Builder()
-          .SetModulusSizeInBits(3072)
-          .SetPublicExponent(kF4)
-          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
-          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(other_parameters, IsOk());
-
-  absl::StatusOr<RsaSsaPkcs1PrivateKey> copy = CreateValid3072BitPrivateKey(
-      *other_parameters, /*id_requirement=*/0x01020304);
-  ASSERT_THAT(copy, IsOk());
-
-  *copy = *private_key;
-
-  EXPECT_THAT(*copy, Eq(*private_key));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 TEST(RsaSsaPkcs1PrivateKeyTest, MoveConstructor) {
   absl::StatusOr<RsaSsaPkcs1Parameters> parameters =

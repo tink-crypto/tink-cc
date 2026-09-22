@@ -17,10 +17,7 @@
 #ifndef TINK_CONFIG_TINK_CONFIG_H_
 #define TINK_CONFIG_TINK_CONFIG_H_
 
-#include "absl/base/attributes.h"
-#include "absl/base/macros.h"
 #include "tink/util/status.h"
-#include "proto/config.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -35,11 +32,6 @@ namespace tink {
 //
 class TinkConfig {
  public:
-  // Returns config of implementations of all primitives supported
-  // in the current Tink release.
-  ABSL_DEPRECATED("This is not supported anymore.")
-  static const google::crypto::tink::RegistryConfig& Latest();
-
   // Registers all primitive wrappers and all key managers for all primitives
   // supported in the current Tink release.
   static absl::Status Register();

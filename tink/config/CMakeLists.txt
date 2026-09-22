@@ -8,16 +8,12 @@ tink_cc_library(
     tink_config.cc
     tink_config.h
   DEPS
-    absl::core_headers
-    tink::core::key_manager
-    tink::core::registry
     tink::daead::deterministic_aead_config
     tink::hybrid::hybrid_config
     tink::prf::prf_config
     tink::signature::signature_config
     tink::streamingaead::streaming_aead_config
     tink::util::status
-    tink::proto::config_cc_proto
 )
 
 tink_cc_library(

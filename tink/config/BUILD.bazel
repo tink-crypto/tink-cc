@@ -13,16 +13,12 @@ cc_library(
     include_prefix = "tink/config",
     visibility = ["//visibility:public"],
     deps = [
-        "//proto:config_cc_proto",
-        "//tink:key_manager",
-        "//tink:registry",
         "//tink/daead:deterministic_aead_config",
         "//tink/hybrid:hybrid_config",
         "//tink/prf:prf_config",
         "//tink/signature:signature_config",
         "//tink/streamingaead:streaming_aead_config",
         "//tink/util:status",
-        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 

@@ -18,24 +18,13 @@
 
 #include "tink/daead/deterministic_aead_config.h"
 #include "tink/hybrid/hybrid_config.h"
-#include "tink/key_manager.h"
 #include "tink/prf/prf_config.h"
-#include "tink/registry.h"
 #include "tink/signature/signature_config.h"
 #include "tink/streamingaead/streaming_aead_config.h"
 #include "tink/util/status.h"
-#include "proto/config.pb.h"
-
-using google::crypto::tink::RegistryConfig;
 
 namespace crypto {
 namespace tink {
-
-// static
-const RegistryConfig& TinkConfig::Latest() {
-  static const RegistryConfig* config = new RegistryConfig();
-  return *config;
-}
 
 // static
 absl::Status TinkConfig::Register() {

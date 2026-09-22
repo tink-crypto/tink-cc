@@ -387,114 +387,6 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest,
   EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
 }
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST(JwtRsaSsaPkcs1PrivateKeyTest,
-     BuildAllowNonConstantTimeWithRestrictedBigIntegerAndDataFails) {
-  JwtRsaSsaPkcs1PublicKey public_key = GetValidPublicKey(
-      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
-      /*id_requirement=*/0x1ac6a944, /*custom_kid=*/std::nullopt);
-
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector2();
-  RestrictedBigInteger dq_rb(vector.dq, InsecureSecretKeyAccess::Get());
-  PrivateValues private_values = GetValidPrivateValues();
-
-  EXPECT_THAT(
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.d)
-          .SetPrimeExponentQ(dq_rb)
-          .SetPrivateExponent(private_values.dq)
-          .SetCrtCoefficient(private_values.q_inv)
-          .BuildAllowNonConstantTime(GetPartialKeyAccess()),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               StrEq("BuildAllowNonConstantTime method can only be used by "
-                     "setting RestrictedData fields.")));
-}
-
-TEST_P(JwtRsaSsaPkcs1PrivateKeyTest, BuildWithRestrictedBigInteger) {
-  TestCase test_case = GetParam();
-
-  JwtRsaSsaPkcs1PublicKey public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
-
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector2();
-  RestrictedBigInteger p_rb(vector.p, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_rb(vector.q, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dp_rb(vector.dp, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dq_rb(vector.dq, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger d_rb(vector.d, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_inv_rb(vector.q_inv,
-                                InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
-      JwtRsaSsaPkcs1PrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(p_rb)
-          .SetPrimeQ(q_rb)
-          .SetPrimeExponentP(dp_rb)
-          .SetPrimeExponentQ(dq_rb)
-          .SetPrivateExponent(d_rb)
-          .SetCrtCoefficient(q_inv_rb)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  PrivateValues private_values = GetValidPrivateValues();
-  EXPECT_THAT(private_key->GetParameters(), Eq(public_key.GetParameters()));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(public_key));
-  EXPECT_THAT(private_key->GetKid(), Eq(test_case.expected_kid));
-  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess()),
-              Eq(private_values.p));
-  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess()),
-              Eq(private_values.q));
-  EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
-  EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
-  EXPECT_THAT(private_key->GetCrtCoefficientData(),
-              Eq(private_values.q_inv));
-  EXPECT_THAT(private_key->GetPrivateExponentData(), Eq(private_values.d));
-}
-
-TEST_P(JwtRsaSsaPkcs1PrivateKeyTest,
-       BuildWithRestrictedBigIntegerAndRestrictedDataFails) {
-  TestCase test_case = GetParam();
-
-  JwtRsaSsaPkcs1PublicKey public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
-
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector2();
-  RestrictedBigInteger p_rb(vector.p, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dp_rb(vector.dp, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dq_rb(vector.dq, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger d_rb(vector.d, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_inv_rb(vector.q_inv,
-                                InsecureSecretKeyAccess::Get());
-  PrivateValues private_values = GetValidPrivateValues();
-
-  EXPECT_THAT(JwtRsaSsaPkcs1PrivateKey::Builder()
-                  .SetPublicKey(public_key)
-                  .SetPrimeP(p_rb)
-                  .SetPrimeQ(private_values.q)
-                  .SetPrimeExponentP(dp_rb)
-                  .SetPrimeExponentQ(dq_rb)
-                  .SetPrivateExponent(d_rb)
-                  .SetCrtCoefficient(q_inv_rb)
-                  .Build(GetPartialKeyAccess()),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
-
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   internal::SslUniquePtr<RSA> rsa(RSA_new());
   ASSERT_THAT(rsa, NotNull());
@@ -812,10 +704,10 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimePNotSetFails) {
           .SetCrtCoefficient(private_values.q_inv)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(private_key_no_prime_p_set.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
+  EXPECT_THAT(
+      private_key_no_prime_p_set.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting all parameters")));
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimeQNotSetFails) {
@@ -835,10 +727,10 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimeQNotSetFails) {
           .SetCrtCoefficient(private_values.q_inv)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(private_key_no_prime_q_set.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
+  EXPECT_THAT(
+      private_key_no_prime_q_set.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting all parameters")));
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimeExponentPNotSetFails) {
@@ -858,10 +750,10 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimeExponentPNotSetFails) {
           .SetCrtCoefficient(private_values.q_inv)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(private_key_no_prime_exponent_p_set.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
+  EXPECT_THAT(
+      private_key_no_prime_exponent_p_set.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting all parameters")));
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimeExponentQNotSetFails) {
@@ -881,10 +773,10 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrimeExponentQNotSetFails) {
           .SetCrtCoefficient(private_values.q_inv)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(private_key_no_prime_exponent_q_set.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
+  EXPECT_THAT(
+      private_key_no_prime_exponent_q_set.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting all parameters")));
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateExponentNotSetFails) {
@@ -904,10 +796,10 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildPrivateExponentNotSetFails) {
           .SetCrtCoefficient(private_values.q_inv)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(private_key_no_private_exponent_set.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
+  EXPECT_THAT(
+      private_key_no_private_exponent_set.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting all parameters")));
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildCrtCoefficientNotSetFails) {
@@ -927,10 +819,10 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, BuildCrtCoefficientNotSetFails) {
           .SetPrivateExponent(private_values.d)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(private_key_no_crt_coefficient_set.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::AllOf(HasSubstr("RestrictedData"),
-                                      HasSubstr("RestrictedBigInteger"))));
+  EXPECT_THAT(
+      private_key_no_crt_coefficient_set.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting all parameters")));
 }
 
 TEST(JwtRsaSsaPkcs1PrivateKeyTest, CreateMismatchedKeyPairFails) {

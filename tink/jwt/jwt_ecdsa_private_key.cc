@@ -22,7 +22,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/util.h"
 #include "tink/secret_data.h"
@@ -160,40 +159,6 @@ JwtEcdsaPrivateKey::CreateAllowNonConstantTime(
                                InsecureSecretKeyAccess::Get()),
                 token);
 }
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
-    const JwtEcdsaPublicKey& public_key,
-    const RestrictedBigInteger& private_key_value,
-    PartialKeyAccessToken token) {
-  absl::StatusOr<RestrictedData> private_key_data =
-      private_key_value.EncodeWithFixedSize(
-          public_key.GetParameters().GetPrivateKeyLength());
-
-  if (!private_key_data.ok()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Private key is longer than expected length, got: ",
-                     private_key_value.SizeInBytes(), "expected ",
-                     public_key.GetParameters().GetPrivateKeyLength()));
-  }
-
-  return JwtEcdsaPrivateKey::Create(public_key, *std::move(private_key_data),
-  token);
-}
-
-const RestrictedBigInteger& JwtEcdsaPrivateKey::GetPrivateKeyValue(
-    PartialKeyAccessToken token) const {
-  absl::MutexLock lock(mutex_);
-  if (!private_key_value_big_integer_.has_value()) {
-    private_key_value_big_integer_.emplace(
-        private_key_value_.GetSecret(InsecureSecretKeyAccess::Get()),
-        InsecureSecretKeyAccess::Get());
-  }
-  return *private_key_value_big_integer_;
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 bool JwtEcdsaPrivateKey::operator==(const Key& other) const {
   const JwtEcdsaPrivateKey* that =

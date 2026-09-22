@@ -86,48 +86,9 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreateSucceeds) {
   EXPECT_THAT(private_key->GetPublicKey(), Eq(public_key));
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
               Eq(key.GetPrivateKey(GetPartialKeyAccess())));
-
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  key.GetPrivateKey(GetPartialKeyAccess())
-                      .GetSecret(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()).size(),
               Eq(public_key.GetParameters().GetPrivateKeyLength()));
 }
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST_P(JwtEcdsaPrivateKeyTest, CreateWithRestrictedBigIntegerSucceeds) {
-  const jwt_internal::JwtEcdsaTestVector& test_vector = GetParam();
-  const JwtEcdsaPrivateKey& key = test_vector.key;
-  const JwtEcdsaPublicKey& public_key = key.GetPublicKey();
-
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(key.GetPrivateKey(GetPartialKeyAccess())
-                               .GetSecret(InsecureSecretKeyAccess::Get()),
-                           InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key =
-      JwtEcdsaPrivateKey::Create(public_key, private_key_value,
-                                 GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  EXPECT_THAT(private_key->GetParameters(), Eq(public_key.GetParameters()));
-  EXPECT_THAT(private_key->GetKid(), Eq(key.GetKid()));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(public_key));
-  EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
-              Eq(key.GetPrivateKey(GetPartialKeyAccess())));
-  EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
-              Eq(private_key_value));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 TEST_P(JwtEcdsaPrivateKeyTest, CreatePrivateKeyAllowNonConstantTimeWorks) {
   const jwt_internal::JwtEcdsaTestVector& test_vector = GetParam();
@@ -146,15 +107,6 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreatePrivateKeyAllowNonConstantTimeWorks) {
   EXPECT_THAT(private_key->GetPublicKey(), Eq(public_key));
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()),
               Eq(key.GetPrivateKey(GetPartialKeyAccess())));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetPrivateKeyValue(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(
-                  key.GetPrivateKey(GetPartialKeyAccess())
-                      .GetSecret(InsecureSecretKeyAccess::Get()),
-                  InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()).size(),
               Eq(public_key.GetParameters().GetPrivateKeyLength()));
 }

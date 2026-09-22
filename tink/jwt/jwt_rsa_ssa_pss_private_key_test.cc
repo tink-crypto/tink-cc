@@ -405,37 +405,6 @@ TEST(JwtRsaSsaPssPrivateKeyTest,
               Eq(private_values.d));
 }
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST(JwtRsaSsaPssPrivateKeyTest,
-     BuildAllowNonConstantTimeWithRestrictedBigIntegerAndDataFails) {
-  JwtRsaSsaPssPublicKey public_key = GetValidPublicKey(
-      JwtRsaSsaPssParameters::Algorithm::kPs256,
-      JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId,
-      /*id_requirement=*/0x1ac6a944, /*custom_kid=*/std::nullopt);
-
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector1();
-  RestrictedBigInteger dq_rb(vector.dq, InsecureSecretKeyAccess::Get());
-  PrivateValues private_values = GetValidPrivateValues();
-
-  EXPECT_THAT(
-      JwtRsaSsaPssPrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(private_values.p)
-          .SetPrimeQ(private_values.q)
-          .SetPrimeExponentP(private_values.d)
-          .SetPrimeExponentQ(dq_rb)
-          .SetPrivateExponent(private_values.dq)
-          .SetCrtCoefficient(private_values.q_inv)
-          .BuildAllowNonConstantTime(GetPartialKeyAccess()),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               StrEq("BuildAllowNonConstantTime method can only be used by "
-                     "setting RestrictedData fields.")));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
-
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   internal::SslUniquePtr<RSA> rsa(RSA_new());
   ASSERT_THAT(rsa, NotNull());
@@ -549,28 +518,6 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {
   EXPECT_THAT(private_key->GetPrivateExponentData(GetPartialKeyAccess())
                   .GetSecret(InsecureSecretKeyAccess::Get()),
               Eq(*d_str));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetPrimeP(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(*p_str,
-              InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrimeQ(GetPartialKeyAccess()),
-              Eq(RestrictedBigInteger(*q_str,
-              InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(
-      private_key->GetPrimeExponentP(),
-      Eq(RestrictedBigInteger(*dp_str, InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(
-      private_key->GetPrimeExponentQ(),
-      Eq(RestrictedBigInteger(*dq_str, InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(
-      private_key->GetCrtCoefficient(),
-      Eq(RestrictedBigInteger(*q_inv_str, InsecureSecretKeyAccess::Get())));
-  EXPECT_THAT(private_key->GetPrivateExponent(),
-              Eq(RestrictedBigInteger(*d_str,
-              InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(private_key->GetKid(), Eq(std::nullopt));
 }
@@ -923,90 +870,6 @@ TEST(JwtRsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
               StatusIs(absl::StatusCode ::kInvalidArgument,
                        HasSubstr("Could not load RSA key")));
 }
-
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-TEST_P(JwtRsaSsaPssPrivateKeyTest, BuildWithRestrictedBigInteger) {
-  TestCase test_case = GetParam();
-
-  JwtRsaSsaPssPublicKey public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
-
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector1();
-  RestrictedBigInteger p_rb(vector.p, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_rb(vector.q, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dp_rb(vector.dp, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dq_rb(vector.dq, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger d_rb(vector.d, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_inv_rb(vector.q_inv,
-                                InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
-      JwtRsaSsaPssPrivateKey::Builder()
-          .SetPublicKey(public_key)
-          .SetPrimeP(p_rb)
-          .SetPrimeQ(q_rb)
-          .SetPrimeExponentP(dp_rb)
-          .SetPrimeExponentQ(dq_rb)
-          .SetPrivateExponent(d_rb)
-          .SetCrtCoefficient(q_inv_rb)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  PrivateValues private_values = GetValidPrivateValues();
-  EXPECT_THAT(private_key->GetParameters(), Eq(public_key.GetParameters()));
-  EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
-  EXPECT_THAT(private_key->GetPublicKey(), Eq(public_key));
-  EXPECT_THAT(private_key->GetKid(), Eq(test_case.expected_kid));
-  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess()),
-              Eq(private_values.p));
-  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess()),
-              Eq(private_values.q));
-  EXPECT_THAT(private_key->GetPrimeExponentPData(GetPartialKeyAccess()),
-              Eq(private_values.dp));
-  EXPECT_THAT(private_key->GetPrimeExponentQData(GetPartialKeyAccess()),
-              Eq(private_values.dq));
-  EXPECT_THAT(private_key->GetCrtCoefficientData(GetPartialKeyAccess()),
-              Eq(private_values.q_inv));
-  EXPECT_THAT(private_key->GetPrivateExponentData(GetPartialKeyAccess()),
-              Eq(private_values.d));
-}
-
-TEST_P(JwtRsaSsaPssPrivateKeyTest,
-       BuildWithRestrictedBigIntegerAndRestrictedDataFails) {
-  TestCase test_case = GetParam();
-
-  JwtRsaSsaPssPublicKey public_key =
-      GetValidPublicKey(test_case.algorithm, test_case.kid_strategy,
-                        test_case.id_requirement, test_case.custom_kid);
-
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa2048BitVector1();
-  RestrictedBigInteger p_rb(vector.p, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dp_rb(vector.dp, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger dq_rb(vector.dq, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger d_rb(vector.d, InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger q_inv_rb(vector.q_inv,
-                                InsecureSecretKeyAccess::Get());
-  PrivateValues private_values = GetValidPrivateValues();
-
-  EXPECT_THAT(JwtRsaSsaPssPrivateKey::Builder()
-                  .SetPublicKey(public_key)
-                  .SetPrimeP(p_rb)
-                  .SetPrimeQ(private_values.q)
-                  .SetPrimeExponentP(dp_rb)
-                  .SetPrimeExponentQ(dq_rb)
-                  .SetPrivateExponent(d_rb)
-                  .SetCrtCoefficient(q_inv_rb)
-                  .Build(GetPartialKeyAccess()),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("mix of RestrictedData and "
-                                 "RestrictedBigInteger")));
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 TEST_P(JwtRsaSsaPssPrivateKeyTest, PrivateKeyEquals) {
   TestCase test_case = GetParam();

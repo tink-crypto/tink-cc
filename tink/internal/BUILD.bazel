@@ -1444,7 +1444,6 @@ cc_library(
     deps = [
         ":safe_stringops",
         ":secret_buffer",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink:secret_data",
         "//tink:secret_key_access_token",

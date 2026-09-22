@@ -23,7 +23,6 @@
 #include "absl/base/macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
@@ -41,16 +40,6 @@ absl::StatusOr<std::string> GetValueOfFixedLength(
 absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedData& big_integer, int length, SecretKeyAccessToken token);
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-inline absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
-    const RestrictedBigInteger& big_integer, int length,
-    SecretKeyAccessToken token) {
-  return GetSecretValueOfFixedLength(
-      RestrictedData(big_integer.GetSecret(token), token), length, token);
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

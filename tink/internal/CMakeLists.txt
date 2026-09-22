@@ -1396,7 +1396,6 @@ tink_cc_library(
     absl::str_format
     absl::string_view
     crypto
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::core::secret_key_access_token

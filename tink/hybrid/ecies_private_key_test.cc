@@ -101,15 +101,6 @@ TEST_P(EciesPrivateKeyTest, CreateNistCurvePrivateKey) {
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(static_key.GetOutputPrefix()));
   EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
               Eq(private_key_value));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(
-      private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
-      Eq(RestrictedBigInteger(
-          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
-          InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),
               Eq(std::nullopt));
 }
@@ -178,15 +169,6 @@ TEST_P(EciesPrivateKeyTest, CreateNistCurvePrivateKeyAllowNonConstantTime) {
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(static_key.GetOutputPrefix()));
   EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
               Eq(private_key_value));
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(
-      private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
-      Eq(RestrictedBigInteger(
-          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
-          InsecureSecretKeyAccess::Get())));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),
               Eq(std::nullopt));
 }
@@ -358,12 +340,6 @@ TEST(EciesPrivateKeyTest, CreateX25519PrivateKey) {
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(std::nullopt));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetOutputPrefix(), IsEmpty());
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  EXPECT_THAT(private_key->GetNistPrivateKeyValue(GetPartialKeyAccess()),
-              Eq(absl::nullopt));
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
   EXPECT_THAT(private_key->GetNistPrivateKeyBytes(GetPartialKeyAccess()),
               Eq(std::nullopt));
   EXPECT_THAT(private_key->GetX25519PrivateKeyBytes(GetPartialKeyAccess()),

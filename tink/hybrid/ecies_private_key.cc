@@ -25,7 +25,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
@@ -46,7 +45,6 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
@@ -188,25 +186,6 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
   return EciesPrivateKey(public_key, private_key_value);
 }
 
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
-    const EciesPublicKey& public_key,
-    const RestrictedBigInteger& private_key_value,
-    PartialKeyAccessToken token) {
-  absl::StatusOr<RestrictedData> adjusted_private_key =
-      private_key_value.EncodeWithFixedSize(
-          public_key.GetParameters().GetPrivateKeyLength());
-  if (!adjusted_private_key.ok()) {
-    return adjusted_private_key.status();
-  }
-  return EciesPrivateKey::CreateForNistCurve(public_key,
-  *adjusted_private_key,
-                                             token);
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
-
 absl::StatusOr<EciesPrivateKey>
 EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
     const EciesPublicKey& public_key, const RestrictedData& private_key_value,
@@ -225,29 +204,6 @@ EciesPrivateKey::CreateForNistCurveAllowNonConstantTime(
                                            InsecureSecretKeyAccess::Get()),
                             token);
 }
-// NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-absl::optional<RestrictedBigInteger>
-EciesPrivateKey::GetNistPrivateKeyValue(
-    PartialKeyAccessToken token) const {
-  absl::MutexLock lock(mutex_);
-  switch (public_key_.GetParameters().GetCurveType()) {
-    case EciesParameters::CurveType::kNistP256:
-    case EciesParameters::CurveType::kNistP384:
-    case EciesParameters::CurveType::kNistP521:
-      if (!private_key_value_big_integer_.has_value()) {
-        private_key_value_big_integer_.emplace(
-            private_key_bytes_.value().GetSecret(
-                InsecureSecretKeyAccess::Get()),
-            InsecureSecretKeyAccess::Get());
-      }
-      return *private_key_value_big_integer_;
-    default:
-      return absl::nullopt;
-  }
-}
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-// NOLINTEND(whitespace/line_length)
 
 absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
     const EciesPublicKey& public_key, const RestrictedData& private_key_bytes,

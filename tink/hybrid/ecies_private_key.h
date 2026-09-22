@@ -39,52 +39,10 @@ namespace tink {
 class EciesPrivateKey final : public HybridPrivateKey {
  public:
   // Copyable and movable.
-  EciesPrivateKey(const EciesPrivateKey& other)
-      : public_key_(other.public_key_),
-        private_key_bytes_(other.private_key_bytes_) {
-    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-    // TINK-PENDING-REMOVAL-IN-3.0.0-START
-    absl::MutexLock lock(other.mutex_);
-    private_key_value_big_integer_ = other.private_key_value_big_integer_;
-    // TINK-PENDING-REMOVAL-IN-3.0.0-END
-    // NOLINTEND(whitespace/line_length)
-  }
-
-  EciesPrivateKey& operator=(const EciesPrivateKey& other) {
-    if (this == &other) {
-      return *this;
-    }
-
-    // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-    // TINK-PENDING-REMOVAL-IN-3.0.0-START
-    absl::optional<RestrictedBigInteger> tmp_private_key_value_big_integer;
-    {
-      absl::MutexLock lock(other.mutex_);
-      tmp_private_key_value_big_integer =
-      other.private_key_value_big_integer_;
-    }
-
-    absl::MutexLock lock(mutex_);
-    private_key_value_big_integer_ = tmp_private_key_value_big_integer;
-    // TINK-PENDING-REMOVAL-IN-3.0.0-END
-    // NOLINTEND(whitespace/line_length)
-    public_key_ = other.public_key_;
-    private_key_bytes_ = other.private_key_bytes_;
-
-    return *this;
-  }
-
+  EciesPrivateKey(const EciesPrivateKey& other) = default;
+  EciesPrivateKey& operator=(const EciesPrivateKey& other) = default;
   EciesPrivateKey(EciesPrivateKey&& other) = default;
   EciesPrivateKey& operator=(EciesPrivateKey&& other) = default;
-
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  static absl::StatusOr<EciesPrivateKey> CreateForNistCurve(
-      const EciesPublicKey& public_key,
-      const RestrictedBigInteger& private_key_value,
-      PartialKeyAccessToken token);
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
 
   // Creates a new EciesPrivateKey for a nist curve. Will return an error
   // if private_key_value is not of length
@@ -102,13 +60,6 @@ class EciesPrivateKey final : public HybridPrivateKey {
   static absl::StatusOr<EciesPrivateKey> CreateForCurveX25519(
       const EciesPublicKey& public_key, const RestrictedData& private_key_bytes,
       PartialKeyAccessToken token);
-
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  absl::optional<RestrictedBigInteger> GetNistPrivateKeyValue(
-      PartialKeyAccessToken token) const;
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
 
   absl::optional<RestrictedData> GetX25519PrivateKeyBytes(
       PartialKeyAccessToken token) const {
@@ -149,14 +100,6 @@ class EciesPrivateKey final : public HybridPrivateKey {
 
   EciesPublicKey public_key_;
   absl::optional<RestrictedData> private_key_bytes_;
-
-  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
-  // TINK-PENDING-REMOVAL-IN-3.0.0-START
-  mutable absl::Mutex mutex_;
-  mutable absl::optional<RestrictedBigInteger> private_key_value_big_integer_
-      ABSL_GUARDED_BY(mutex_);
-  // TINK-PENDING-REMOVAL-IN-3.0.0-END
-  // NOLINTEND(whitespace/line_length)
 };
 
 }  // namespace tink

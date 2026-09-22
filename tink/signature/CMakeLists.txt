@@ -660,8 +660,6 @@ tink_cc_library(
     absl::core_headers
     absl::status
     absl::statusor
-    absl::strings
-    absl::string_view
     absl::synchronization
     absl::optional
     crypto
@@ -671,7 +669,6 @@ tink_cc_library(
     tink::core::partial_key_access_token
     tink::core::restricted_big_integer
     tink::core::restricted_data
-    tink::core::secret_data
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
 )

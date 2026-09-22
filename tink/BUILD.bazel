@@ -10,13 +10,6 @@ licenses(["notice"])
 # public libraries
 
 alias(
-    name = "secret_key_access_testonly",
-    testonly = 1,
-    actual = ":secret_key_access",
-    visibility = ["//visibility:public"],
-)
-
-alias(
     name = "cleartext_keyset_handle_testonly",
     testonly = 1,
     actual = ":cleartext_keyset_handle",
@@ -725,19 +718,6 @@ cc_library(
 )
 
 cc_library(
-    name = "key_access",
-    hdrs = ["key_access.h"],
-    include_prefix = "tink",
-)
-
-cc_library(
-    name = "secret_key_access",
-    hdrs = ["secret_key_access.h"],
-    include_prefix = "tink",
-    deps = [":key_access"],
-)
-
-cc_library(
     name = "parameters",
     hdrs = ["parameters.h"],
     include_prefix = "tink",
@@ -1288,16 +1268,6 @@ cc_test(
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "core/key_access_test",
-    srcs = ["core/key_access_test.cc"],
-    deps = [
-        ":key_access",
-        ":secret_key_access_testonly",
         "@googletest//:gtest_main",
     ],
 )

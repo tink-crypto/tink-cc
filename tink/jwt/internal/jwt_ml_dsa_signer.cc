@@ -23,43 +23,16 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/types/optional.h"
 #include "tink/jwt/internal/jwt_public_key_sign_impl.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_signer.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
-#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
-#include "tink/signature/internal/ml_dsa_sign_boringssl.h"
-#include "tink/signature/ml_dsa_parameters.h"
-#include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/ml_dsa_public_key.h"
-
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
 namespace {
-
-absl::StatusOr<MlDsaParameters> RawMlDsaParametersFromJwtMlDsaParameters(
-    const JwtMlDsaParameters& parameters) {
-  switch (parameters.GetAlgorithm()) {
-    case JwtMlDsaParameters::Algorithm::kMlDsa44: {
-      return MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
-                                     MlDsaParameters::Variant::kNoPrefix);
-    }
-    case JwtMlDsaParameters::Algorithm::kMlDsa65: {
-      return MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
-                                     MlDsaParameters::Variant::kNoPrefix);
-    }
-    case JwtMlDsaParameters::Algorithm::kMlDsa87: {
-      return MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa87,
-                                     MlDsaParameters::Variant::kNoPrefix);
-    }
-    default:
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Unknown JWT ML-DSA instance");
-  }
-}
 
 // Algorithm names taken from
 // https://www.rfc-editor.org/rfc/rfc9964.html#name-ml-dsa-algorithms
@@ -82,33 +55,13 @@ absl::StatusOr<std::string> AlgorithmName(
 
 absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
 NewJwtMlDsaSignInternal(const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
-  JwtMlDsaParameters jwt_ml_dsa_params = jwt_ml_dsa_private_key.GetParameters();
-  absl::StatusOr<MlDsaParameters> raw_ml_dsa_parameters =
-      RawMlDsaParametersFromJwtMlDsaParameters(jwt_ml_dsa_params);
-  if (!raw_ml_dsa_parameters.ok()) {
-    return raw_ml_dsa_parameters.status();
-  }
-  absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
-      *raw_ml_dsa_parameters,
-      jwt_ml_dsa_private_key.GetPublicKey().GetPublicKeyBytes(
-          GetPartialKeyAccess()),
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  if (!ml_dsa_public_key.ok()) {
-    return ml_dsa_public_key.status();
-  }
-  absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
-      *ml_dsa_public_key,
-      jwt_ml_dsa_private_key.GetPrivateSeedBytes(GetPartialKeyAccess()),
-      GetPartialKeyAccess());
-  if (!ml_dsa_private_key.ok()) {
-    return ml_dsa_private_key.status();
-  }
-
   absl::StatusOr<std::unique_ptr<PublicKeySign>> raw_signer =
-      internal::NewMlDsaSignBoringSsl(*ml_dsa_private_key);
+      NewRawJwtMlDsaSign(jwt_ml_dsa_private_key);
   if (!raw_signer.ok()) {
     return raw_signer.status();
   }
+
+  JwtMlDsaParameters jwt_ml_dsa_params = jwt_ml_dsa_private_key.GetParameters();
 
   absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_ml_dsa_params.GetAlgorithm());

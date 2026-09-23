@@ -23,17 +23,14 @@
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
-#include "tink/jwt/jwt_public_key_sign.h"
-#include "tink/jwt/jwt_public_key_verify.h"
-#include "tink/jwt/jwt_validator.h"
-#include "tink/jwt/raw_jwt.h"
 #include "tink/keyset_handle.h"
+#include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/registry.h"
 
 namespace crypto {
@@ -59,7 +56,7 @@ TEST_F(JwtSignatureConfigTest, GetPrimitiveFromJwtMlDsaParameters) {
     GTEST_SKIP() << "JWT ML-DSA requires BoringSSL.";
   }
 
-  ASSERT_THAT(JwtMlDsaSignatureRegister(), IsOk());
+  ASSERT_THAT(JwtMlDsaSignatureRegisterForPython(), IsOk());
 
   absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
       JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
@@ -75,27 +72,17 @@ TEST_F(JwtSignatureConfigTest, GetPrimitiveFromJwtMlDsaParameters) {
       (*handle)->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
 
-  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
-      (*handle)->GetPrimitive<JwtPublicKeySign>(ConfigGlobalRegistry());
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+      (*handle)->GetPrimitive<PublicKeySign>(ConfigGlobalRegistry());
   ASSERT_THAT(sign, IsOk());
-  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
-      (*public_handle)
-          ->GetPrimitive<JwtPublicKeyVerify>(ConfigGlobalRegistry());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
   ASSERT_THAT(verify, IsOk());
 
-  absl::StatusOr<RawJwt> raw_jwt =
-      RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
-  ASSERT_THAT(raw_jwt, IsOk());
-
-  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
-                                               .ExpectIssuer("issuer")
-                                               .AllowMissingExpiration()
-                                               .Build();
-  ASSERT_THAT(validator, IsOk());
-
-  absl::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
-  ASSERT_THAT(compact, IsOk());
-  EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator), IsOk());
+  std::string message = "Some message";
+  absl::StatusOr<std::string> signature = (*sign)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verify)->Verify(*signature, message), IsOk());
 }
 
 }  // namespace

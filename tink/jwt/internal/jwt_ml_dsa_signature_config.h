@@ -29,7 +29,7 @@ namespace internal {
 // tink/cc/jwt/jwt_signature_config_2026.h.
 //
 // TODO: b/485221516 - Merge into JwtSignatureRegister() with other key types.
-absl::Status JwtMlDsaSignatureRegister();
+absl::Status JwtMlDsaSignatureRegisterForPython();
 
 }  // namespace internal
 }  // namespace tink

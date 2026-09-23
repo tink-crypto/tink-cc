@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_ml_dsa_verify_key_manager.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_verify_key_manager.h"
 
 #include <memory>
 #include <string>
@@ -25,20 +25,20 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/legacy_key_manager_impl.h"
 #include "tink/internal/tink_proto_structs.h"
-#include "tink/jwt/internal/jwt_ml_dsa_verifier.h"
-#include "tink/jwt/internal/jwt_public_key_verify_internal.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_verifier.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/key.h"
 #include "tink/key_manager.h"
+#include "tink/public_key_verify.h"
 #include "tink/util/constants.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
+namespace jwt_internal {
 namespace {
 
 class JwtMlDsaVerifyKeyManagerAdaptor
-    : public LegacyKeyManagerAdaptor<JwtPublicKeyVerifyInternal> {
+    : public internal::LegacyKeyManagerAdaptor<PublicKeyVerify> {
  public:
   JwtMlDsaVerifyKeyManagerAdaptor()
       : key_factory_(KeyFactory::AlwaysFailingFactory(absl::InternalError(
@@ -55,14 +55,14 @@ class JwtMlDsaVerifyKeyManagerAdaptor
 
   const KeyFactory& GetKeyFactory() const final { return *key_factory_; }
 
-  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetPrimitive(
       const Key& key) const final {
     const JwtMlDsaPublicKey* key_class =
         dynamic_cast<const JwtMlDsaPublicKey*>(&key);
     if (key_class == nullptr) {
       return absl::InternalError("Unexpected key type.");
     }
-    return jwt_internal::NewJwtMlDsaVerifyInternal(*key_class);
+    return NewRawJwtMlDsaVerify(*key_class);
   }
 
  private:
@@ -73,12 +73,11 @@ class JwtMlDsaVerifyKeyManagerAdaptor
 
 }  // namespace
 
-std::unique_ptr<KeyManager<JwtPublicKeyVerifyInternal>>
-MakeJwtMlDsaVerifyKeyManager() {
-  return std::make_unique<LegacyKeyManagerImpl<JwtPublicKeyVerifyInternal>>(
+std::unique_ptr<KeyManager<PublicKeyVerify>> MakeRawJwtMlDsaVerifyKeyManager() {
+  return std::make_unique<internal::LegacyKeyManagerImpl<PublicKeyVerify>>(
       std::make_unique<JwtMlDsaVerifyKeyManagerAdaptor>());
 }
 
-}  // namespace internal
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto

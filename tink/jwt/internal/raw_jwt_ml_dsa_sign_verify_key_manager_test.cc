@@ -21,21 +21,18 @@
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
-#include "tink/jwt/internal/jwt_ml_dsa_sign_key_manager.h"
-#include "tink/jwt/internal/jwt_ml_dsa_verify_key_manager.h"
-#include "tink/jwt/internal/jwt_public_key_sign_internal.h"
-#include "tink/jwt/internal/jwt_public_key_verify_internal.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_sign_key_manager.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_verify_key_manager.h"
 #include "tink/jwt/jwt_ml_dsa_proto_serialization.h"
-#include "tink/jwt/jwt_validator.h"
-#include "tink/jwt/raw_jwt.h"
 #include "tink/key_manager.h"
+#include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/util/protobuf_helper.h"
 #include "proto/jwt_ml_dsa.pb.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
+namespace jwt_internal {
 namespace {
 
 using ::absl_testing::IsOk;
@@ -45,8 +42,8 @@ using ::testing::IsTrue;
 using ::testing::NotNull;
 
 TEST(JwtMlDsaSignKeyManagerTest, Basic) {
-  std::unique_ptr<KeyManager<JwtPublicKeySignInternal>> key_manager =
-      MakeJwtMlDsaSignKeyManager();
+  std::unique_ptr<KeyManager<PublicKeySign>> key_manager =
+      MakeRawJwtMlDsaSignKeyManager();
 
   EXPECT_THAT(key_manager->get_key_type(),
               Eq("type.googleapis.com/google.crypto.tink.JwtMlDsaPrivateKey"));
@@ -60,8 +57,8 @@ TEST(JwtMlDsaSignKeyManagerTest, Basic) {
 }
 
 TEST(JwtMlDsaVerifyKeyManagerTest, Basic) {
-  std::unique_ptr<KeyManager<JwtPublicKeyVerifyInternal>> key_manager =
-      MakeJwtMlDsaVerifyKeyManager();
+  std::unique_ptr<KeyManager<PublicKeyVerify>> key_manager =
+      MakeRawJwtMlDsaVerifyKeyManager();
 
   EXPECT_THAT(key_manager->get_key_type(),
               Eq("type.googleapis.com/google.crypto.tink.JwtMlDsaPublicKey"));
@@ -80,14 +77,14 @@ TEST(JwtMlDsaSignVerifyKeyManagerTest, GetPrimitive) {
   google::crypto::tink::JwtMlDsaKeyFormat format;
   format.set_version(0);
   format.set_algorithm(google::crypto::tink::JwtMlDsaAlgorithm::ML_DSA44);
-  std::unique_ptr<KeyManager<JwtPublicKeySignInternal>> sign_key_manager =
-      MakeJwtMlDsaSignKeyManager();
+  std::unique_ptr<KeyManager<PublicKeySign>> sign_key_manager =
+      MakeRawJwtMlDsaSignKeyManager();
   absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> private_key =
       sign_key_manager->get_key_factory().NewKey(format);
   ASSERT_THAT(private_key, IsOk());
 
-  absl::StatusOr<std::unique_ptr<crypto::tink::JwtPublicKeySignInternal>>
-      signer = sign_key_manager->GetPrimitive(**private_key);
+  absl::StatusOr<std::unique_ptr<crypto::tink::PublicKeySign>> signer =
+      sign_key_manager->GetPrimitive(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   const google::crypto::tink::JwtMlDsaPrivateKey* jwt_ml_dsa_private_key =
@@ -96,33 +93,20 @@ TEST(JwtMlDsaSignVerifyKeyManagerTest, GetPrimitive) {
   ASSERT_THAT(jwt_ml_dsa_private_key, NotNull());
   ASSERT_THAT(jwt_ml_dsa_private_key->has_public_key(), IsTrue());
 
-  std::unique_ptr<KeyManager<JwtPublicKeyVerifyInternal>> verify_key_manager =
-      MakeJwtMlDsaVerifyKeyManager();
+  std::unique_ptr<KeyManager<PublicKeyVerify>> verify_key_manager =
+      MakeRawJwtMlDsaVerifyKeyManager();
 
-  absl::StatusOr<std::unique_ptr<crypto::tink::JwtPublicKeyVerifyInternal>>
-      verifier = verify_key_manager->GetPrimitive(
-          jwt_ml_dsa_private_key->public_key());
+  absl::StatusOr<std::unique_ptr<crypto::tink::PublicKeyVerify>> verifier =
+      verify_key_manager->GetPrimitive(jwt_ml_dsa_private_key->public_key());
   ASSERT_THAT(verifier, IsOk());
 
-  absl::StatusOr<RawJwt> raw_jwt =
-      RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
-  ASSERT_THAT(raw_jwt, IsOk());
-
-  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
-                                               .ExpectIssuer("issuer")
-                                               .AllowMissingExpiration()
-                                               .Build();
-  ASSERT_THAT(validator, IsOk());
-
-  absl::StatusOr<std::string> compact =
-      (*signer)->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
-  ASSERT_THAT(compact, IsOk());
-  EXPECT_THAT((*verifier)->VerifyAndDecodeWithKid(*compact, *validator,
-                                                  /*kid=*/std::nullopt),
-              IsOk());
+  std::string message = "Some message";
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
 
 }  // namespace
-}  // namespace internal
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto

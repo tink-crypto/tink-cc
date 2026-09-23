@@ -14,23 +14,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_JWT_INTERNAL_JWT_ML_DSA_SIGN_KEY_MANAGER_H_
-#define TINK_JWT_INTERNAL_JWT_ML_DSA_SIGN_KEY_MANAGER_H_
+#ifndef TINK_JWT_INTERNAL_RAW_JWT_ML_DSA_SIGN_KEY_MANAGER_H_
+#define TINK_JWT_INTERNAL_RAW_JWT_ML_DSA_SIGN_KEY_MANAGER_H_
 
 #include <memory>
 
-#include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/key_manager.h"
+#include "tink/public_key_sign.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
+namespace jwt_internal {
 
-std::unique_ptr<KeyManager<JwtPublicKeySignInternal>>
-MakeJwtMlDsaSignKeyManager();
+std::unique_ptr<KeyManager<PublicKeySign>> MakeRawJwtMlDsaSignKeyManager();
 
-}  // namespace internal
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_JWT_INTERNAL_JWT_ML_DSA_SIGN_KEY_MANAGER_H_
+#endif  // TINK_JWT_INTERNAL_RAW_JWT_ML_DSA_SIGN_KEY_MANAGER_H_

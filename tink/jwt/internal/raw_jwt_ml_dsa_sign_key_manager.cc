@@ -14,12 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/internal/jwt_ml_dsa_sign_key_manager.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_sign_key_manager.h"
 
 #include <memory>
 #include <string>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -28,26 +27,27 @@
 #include "tink/internal/legacy_key_manager_impl.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/internal/jwt_ml_dsa_key_creator.h"
-#include "tink/jwt/internal/jwt_ml_dsa_signer.h"
-#include "tink/jwt/internal/jwt_public_key_sign_internal.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_signer.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
 #include "tink/key.h"
 #include "tink/key_manager.h"
 #include "tink/parameters.h"
+#include "tink/public_key_sign.h"
 #include "tink/util/constants.h"
 #include "tink/util/protobuf_helper.h"
 #include "proto/jwt_ml_dsa.pb.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
+namespace jwt_internal {
 namespace {
 
-class JwtMlDsaSignKeyManagerAdaptor
-    : public LegacyKeyManagerAdaptor<JwtPublicKeySignInternal> {
+class RawJwtMlDsaSignKeyManagerAdaptor
+    : public internal::LegacyKeyManagerAdaptor<PublicKeySign> {
  public:
-  class PublicKeySignFactoryAdaptor : public LegacyPrivateKeyFactoryAdaptor {
+  class PublicKeySignFactoryAdaptor
+      : public internal::LegacyPrivateKeyFactoryAdaptor {
     absl::string_view GetKeyFormatTypeName() const final {
       return "google.crypto.tink.JwtMlDsaKeyFormat";
     }
@@ -82,8 +82,8 @@ class JwtMlDsaSignKeyManagerAdaptor
     }
   };
 
-  JwtMlDsaSignKeyManagerAdaptor()
-      : key_factory_(std::make_unique<LegacyPrivateKeyFactoryImpl>(
+  RawJwtMlDsaSignKeyManagerAdaptor()
+      : key_factory_(std::make_unique<internal::LegacyPrivateKeyFactoryImpl>(
             std::make_unique<PublicKeySignFactoryAdaptor>())) {}
 
   const std::string& GetKeyType() const final { return key_type_; }
@@ -96,14 +96,14 @@ class JwtMlDsaSignKeyManagerAdaptor
 
   const KeyFactory& GetKeyFactory() const final { return *key_factory_; }
 
-  absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> GetPrimitive(
       const Key& key) const final {
     const JwtMlDsaPrivateKey* key_class =
         dynamic_cast<const JwtMlDsaPrivateKey*>(&key);
     if (key_class == nullptr) {
       return absl::InternalError("Unexpected key type.");
     }
-    return jwt_internal::NewJwtMlDsaSignInternal(*key_class);
+    return NewRawJwtMlDsaSign(*key_class);
   }
 
  private:
@@ -114,12 +114,11 @@ class JwtMlDsaSignKeyManagerAdaptor
 
 }  // namespace
 
-std::unique_ptr<KeyManager<JwtPublicKeySignInternal>>
-MakeJwtMlDsaSignKeyManager() {
-  return std::make_unique<LegacyKeyManagerImpl<JwtPublicKeySignInternal>>(
-      std::make_unique<JwtMlDsaSignKeyManagerAdaptor>());
+std::unique_ptr<KeyManager<PublicKeySign>> MakeRawJwtMlDsaSignKeyManager() {
+  return std::make_unique<internal::LegacyKeyManagerImpl<PublicKeySign>>(
+      std::make_unique<RawJwtMlDsaSignKeyManagerAdaptor>());
 }
 
-}  // namespace internal
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto

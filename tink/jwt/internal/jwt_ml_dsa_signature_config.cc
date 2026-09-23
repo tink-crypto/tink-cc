@@ -20,28 +20,28 @@
 #include "absl/status/status.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/internal/fips_utils.h"
-#include "tink/jwt/internal/jwt_ml_dsa_sign_key_manager.h"
-#include "tink/jwt/internal/jwt_ml_dsa_verify_key_manager.h"
-#include "tink/jwt/internal/jwt_public_key_sign_wrapper.h"
-#include "tink/jwt/internal/jwt_public_key_verify_wrapper.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_sign_key_manager.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_verify_key_manager.h"
 #include "tink/jwt/jwt_ml_dsa_proto_serialization.h"
 #include "tink/registry.h"
+#include "tink/signature/public_key_sign_wrapper.h"
+#include "tink/signature/public_key_verify_wrapper.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 // static
-absl::Status JwtMlDsaSignatureRegister() {
+absl::Status JwtMlDsaSignatureRegisterForPython() {
   // Register primitive wrappers.
   absl::Status status = Registry::RegisterPrimitiveWrapper(
-      std::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
+      std::make_unique<PublicKeySignWrapper>());
   if (!status.ok()) {
     return status;
   }
 
   status = Registry::RegisterPrimitiveWrapper(
-      std::make_unique<jwt_internal::JwtPublicKeyVerifyWrapper>());
+      std::make_unique<PublicKeyVerifyWrapper>());
   if (!status.ok()) {
     return status;
   }
@@ -59,15 +59,15 @@ absl::Status JwtMlDsaSignatureRegister() {
     return status;
   }
 
-  status = Registry::RegisterKeyManager(internal::MakeJwtMlDsaSignKeyManager(),
-                                        true);
+  status = Registry::RegisterKeyManager(
+      jwt_internal::MakeRawJwtMlDsaSignKeyManager(), true);
   if (!status.ok()) {
     return status;
   }
 
   // Creating a new public key doesn't make sense and is therefore not allowed.
   status = Registry::RegisterKeyManager(
-      internal::MakeJwtMlDsaVerifyKeyManager(), false);
+      jwt_internal::MakeRawJwtMlDsaVerifyKeyManager(), false);
   if (!status.ok()) {
     return status;
   }

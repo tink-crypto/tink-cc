@@ -14,23 +14,24 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_JWT_INTERNAL_JWT_ML_DSA_VERIFY_KEY_MANAGER_H_
-#define TINK_JWT_INTERNAL_JWT_ML_DSA_VERIFY_KEY_MANAGER_H_
+#ifndef TINK_JWT_INTERNAL_RAW_JWT_ML_DSA_VERIFIER_H_
+#define TINK_JWT_INTERNAL_RAW_JWT_ML_DSA_VERIFIER_H_
 
 #include <memory>
 
-#include "tink/jwt/internal/jwt_public_key_verify_internal.h"
-#include "tink/key_manager.h"
+#include "absl/status/statusor.h"
+#include "tink/jwt/jwt_ml_dsa_public_key.h"
+#include "tink/public_key_verify.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
+namespace jwt_internal {
 
-std::unique_ptr<KeyManager<JwtPublicKeyVerifyInternal>>
-MakeJwtMlDsaVerifyKeyManager();
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRawJwtMlDsaVerify(
+    const JwtMlDsaPublicKey& jwt_ml_dsa_public_key);
 
-}  // namespace internal
+}  // namespace jwt_internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_JWT_INTERNAL_JWT_ML_DSA_VERIFY_KEY_MANAGER_H_
+#endif  // TINK_JWT_INTERNAL_RAW_JWT_ML_DSA_VERIFIER_H_

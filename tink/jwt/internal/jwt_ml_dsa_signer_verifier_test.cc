@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -26,6 +27,8 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/jwt/internal/jwt_ml_dsa_signer.h"
 #include "tink/jwt/internal/jwt_ml_dsa_verifier.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_signer.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_verifier.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
@@ -34,6 +37,8 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/partial_key_access.h"
+#include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/restricted_data.h"
 #include "tink/util/test_util.h"
 
@@ -254,6 +259,48 @@ INSTANTIATE_TEST_SUITE_P(
                     /*id_requirement=*/std::nullopt,
                     test::HexDecodeOrDie(kMlDsa87PublicKeyBytes),
                     test::HexDecodeOrDie(kMlDsa87PrivateSeedBytes)}));
+
+TEST_P(JwtMlDsaSignerVerifierTest, CreateRawSucceeds) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(test_case.kid_strategy, test_case.algorithm);
+  ASSERT_THAT(parameters, IsOk());
+
+  JwtMlDsaPublicKey::Builder builder =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicKeyBytes(test_case.public_key_bytes);
+  if (test_case.id_requirement.has_value()) {
+    builder.SetIdRequirement(*test_case.id_requirement);
+  }
+  if (test_case.custom_kid.has_value()) {
+    builder.SetCustomKid(*test_case.custom_kid);
+  }
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_seed = RestrictedData(test_case.private_key_bytes,
+                                               InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> private_key = JwtMlDsaPrivateKey::Create(
+      *public_key, private_seed, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewRawJwtMlDsaSign(*private_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      NewRawJwtMlDsaVerify(*public_key);
+  ASSERT_THAT(verifier, IsOk());
+
+  std::string message = "Some message";
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
+}
 
 TEST_P(JwtMlDsaSignerVerifierTest, CreateSucceeds) {
   TestCase test_case = GetParam();

@@ -29,10 +29,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
-#include "openssl/bn.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/output_prefix_util.h"
@@ -70,17 +68,15 @@ class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override;
 
-  internal::InlineBignum modulus_;
-  internal::InlineBignum public_exponent_;
-  internal::SslUniquePtr<RSA> rsa_;
-  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
-  std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
-  bool has_output_prefix_;
-  bool has_legacy_message_suffix_;
-
  private:
   absl::Status VerifyWithoutPrefix(absl::string_view signature,
                                    absl::string_view data) const;
+
+  const internal::SslUniquePtr<RSA> rsa_;
+  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+  std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
+  const bool has_output_prefix_;
+  const bool has_legacy_message_suffix_;
 };
 
 absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
@@ -203,39 +199,11 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
 
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
-  internal::SslUniquePtr<RSA> rsa(RSA_new());
-  if (rsa.get() == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal, "RSA allocation error");
-  }
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<RSA> rsa,
+                        internal::RsaPublicKeyToRsa(pub_key));
 
-  std::unique_ptr<RsaSsaPkcs1VerifyBoringSslImpl> verify(
-      new RsaSsaPkcs1VerifyBoringSslImpl(std::move(rsa), *sig_hash,
-                                         output_prefix, message_suffix));
-  if (!BN_bin2bn(reinterpret_cast<const uint8_t*>(pub_key.n.data()),
-                 pub_key.n.size(), verify->modulus_.get())) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Could not convert modulus to BIGNUM.");
-  }
-  if (!BN_bin2bn(reinterpret_cast<const uint8_t*>(pub_key.e.data()),
-                 pub_key.e.size(), verify->public_exponent_.get())) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Could not convert public exponent to BIGNUM.");
-  }
-  status =
-      internal::ValidateRsaModulusSize(BN_num_bits(verify->modulus_.get()));
-  if (!status.ok()) {
-    return status;
-  }
-  if (!RSA_set0_key(verify->rsa_.get(), verify->modulus_.get(),
-                    verify->public_exponent_.get(),
-                    /*d=*/nullptr)) {
-    return absl::Status(absl::StatusCode::kInternal, "Could not set RSA key.");
-  }
-  // A successful RSA_set0_key() takes ownership of the BIGNUMs, hence we
-  // release them here.
-  verify->modulus_.release();
-  verify->public_exponent_.release();
-  return verify;
+  return std::make_unique<RsaSsaPkcs1VerifyBoringSslImpl>(
+      std::move(rsa), *sig_hash, output_prefix, message_suffix);
 }
 
 }  // namespace subtle

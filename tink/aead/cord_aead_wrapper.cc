@@ -66,11 +66,11 @@ class CordAeadSetWrapper : public CordAead {
 absl::StatusOr<absl::Cord> CordAeadSetWrapper::Encrypt(
     absl::Cord plaintext, absl::Cord associated_data) const {
   auto encrypt_result = aead_set_->get_primary()->get_primitive().Encrypt(
-      plaintext, associated_data);
+      std::move(plaintext), std::move(associated_data));
   if (!encrypt_result.ok()) return encrypt_result.status();
   absl::Cord result;
   result.Append(aead_set_->get_primary()->get_identifier());
-  result.Append(encrypt_result.value());
+  result.Append(std::move(*encrypt_result));
   return result;
 }
 

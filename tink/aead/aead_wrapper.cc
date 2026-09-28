@@ -20,17 +20,21 @@
 #include <string>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/aead.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
+#include "tink/subtle/subtle_util.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -87,21 +91,44 @@ class AeadSetWrapper : public Aead {
 absl::StatusOr<std::string> AeadSetWrapper::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   associated_data = internal::EnsureStringNonNull(associated_data);
+  const std::string& key_id = aead_set_->get_primary()->get_identifier();
   const Aead& primitive = aead_set_->get_primary()->get_primitive();
-  absl::StatusOr<std::string> ciphertext =
-      primitive.Encrypt(plaintext, associated_data);
-  if (!ciphertext.ok()) {
-    if (monitoring_encryption_client_ != nullptr) {
-      monitoring_encryption_client_->LogFailure();
+  std::string ciphertext;
+  if (const internal::ZeroCopyAead* zero_copy_primitive =
+          internal::MaybeZeroCopyFromAead(primitive);
+      zero_copy_primitive != nullptr) {
+    const size_t prefix_size = key_id.size();
+    const int64_t max_raw_ciphertext_size =
+        zero_copy_primitive->MaxEncryptionSize(plaintext.size());
+    subtle::ResizeStringUninitialized(&ciphertext,
+                                      prefix_size + max_raw_ciphertext_size);
+    absl::c_copy(key_id, ciphertext);
+    absl::StatusOr<int64_t> raw_ciphertext_size = zero_copy_primitive->Encrypt(
+        plaintext, associated_data,
+        absl::MakeSpan(ciphertext).subspan(prefix_size));
+    if (!raw_ciphertext_size.ok()) {
+      if (monitoring_encryption_client_ != nullptr) {
+        monitoring_encryption_client_->LogFailure();
+      }
+      return raw_ciphertext_size.status();
     }
-    return ciphertext.status();
+    ciphertext.resize(prefix_size + *raw_ciphertext_size);
+  } else {
+    absl::StatusOr<std::string> raw_ciphertext =
+        primitive.Encrypt(plaintext, associated_data);
+    if (!raw_ciphertext.ok()) {
+      if (monitoring_encryption_client_ != nullptr) {
+        monitoring_encryption_client_->LogFailure();
+      }
+      return raw_ciphertext.status();
+    }
+    ciphertext = absl::StrCat(key_id, *raw_ciphertext);
   }
   if (monitoring_encryption_client_ != nullptr) {
     monitoring_encryption_client_->Log(aead_set_->get_primary()->get_key_id(),
                                        plaintext.size());
   }
-  const std::string& key_id = aead_set_->get_primary()->get_identifier();
-  return absl::StrCat(key_id, *ciphertext);
+  return ciphertext;
 }
 
 absl::StatusOr<std::string> AeadSetWrapper::Decrypt(

@@ -57,6 +57,14 @@ absl::StatusOr<std::string> AeadFromZeroCopy::Decrypt(
   return result;
 }
 
+const ZeroCopyAead* MaybeZeroCopyFromAead(const Aead& aead) {
+  auto* maybe_zero_copy_aead = dynamic_cast<const AeadFromZeroCopy*>(&aead);
+  if (maybe_zero_copy_aead == nullptr) {
+    return nullptr;
+  }
+  return maybe_zero_copy_aead->aead_.get();
+}
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

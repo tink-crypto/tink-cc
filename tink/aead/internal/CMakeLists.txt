@@ -1347,3 +1347,30 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME dummy_zero_copy_aead
+  SRCS
+    dummy_zero_copy_aead.h
+  DEPS
+    tink::aead::internal::zero_copy_aead
+    absl::algorithm_container
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::string_view
+    absl::span
+    tink::util::test_util
+  TESTONLY
+)
+
+tink_cc_test(
+  NAME dummy_zero_copy_aead_test
+  SRCS
+    dummy_zero_copy_aead_test.cc
+  DEPS
+    tink::aead::internal::dummy_zero_copy_aead
+    gmock
+    absl::status_matchers
+    absl::span
+)

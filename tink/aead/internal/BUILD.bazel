@@ -1386,3 +1386,31 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "dummy_zero_copy_aead",
+    testonly = 1,
+    hdrs = ["dummy_zero_copy_aead.h"],
+    include_prefix = "tink/aead/internal",
+    deps = [
+        ":zero_copy_aead",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "dummy_zero_copy_aead_test",
+    srcs = ["dummy_zero_copy_aead_test.cc"],
+    deps = [
+        ":dummy_zero_copy_aead",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/types:span",
+        "@googletest//:gtest_main",
+    ],
+)

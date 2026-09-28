@@ -51,9 +51,16 @@ class AeadFromZeroCopy : public Aead {
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 
+  friend const ZeroCopyAead* MaybeZeroCopyFromAead(const Aead& aead);
+
  private:
   const std::unique_ptr<ZeroCopyAead> aead_;
 };
+
+// Returns the underlying zero-copy AEAD for a given AEAD, or nullptr if there
+// is none due to the AEAD not being an `AeadFromZeroCopy` .This allows
+// callers to encrypt directly into a preallocated buffer.
+const ZeroCopyAead* MaybeZeroCopyFromAead(const Aead& aead);
 
 }  // namespace internal
 }  // namespace tink

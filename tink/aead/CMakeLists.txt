@@ -8,17 +8,21 @@ tink_cc_library(
     aead_wrapper.cc
     aead_wrapper.h
   DEPS
+    absl::algorithm_container
     absl::memory
     absl::status
     absl::strings
+    absl::span
     tink::core::aead
     tink::core::crypto_format
     tink::core::primitive_wrapper
+    tink::aead::internal::aead_from_zero_copy
     tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::primitive_set
     tink::internal::registry_impl
     tink::internal::util
+    tink::subtle::subtle_util
     tink::util::status
     tink::util::statusor
 )
@@ -843,6 +847,9 @@ tink_cc_test(
     tink::core::aead
     tink::core::crypto_format
     tink::core::registry
+    tink::aead::internal::aead_from_zero_copy
+    tink::aead::internal::dummy_zero_copy_aead
+    tink::aead::internal::mock_zero_copy_aead
     tink::internal::monitoring
     tink::internal::monitoring_client_mocks
     tink::internal::primitive_set

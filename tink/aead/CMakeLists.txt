@@ -1854,6 +1854,7 @@ tink_cc_test(
     tink::core::aead
     tink::core::keyset_handle
     tink::config::global_registry
+    tink::internal::ssl_util
 )
 
 tink_cc_library(

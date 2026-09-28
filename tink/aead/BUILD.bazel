@@ -2014,6 +2014,7 @@ cc_test(
         "//tink:aead",
         "//tink:keyset_handle",
         "//tink/config:global_registry",
+        "//tink/internal:ssl_util",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",

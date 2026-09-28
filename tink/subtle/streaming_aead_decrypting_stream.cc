@@ -76,6 +76,19 @@ absl::Status ReadFromStream(InputStream* input_stream, int count,
   return absl::OkStatus();
 }
 
+// Returns OK if 'input_stream' is exhausted, i.e. the ciphertext ended with
+// the last segment; returns INVALID_ARGUMENT if unauthenticated trailing data
+// follows the last segment.
+absl::Status VerifyEndOfStream(InputStream* input_stream) {
+  std::vector<uint8_t> trailing_data;
+  absl::Status status = ReadFromStream(input_stream, 1, &trailing_data);
+  if (status.code() == absl::StatusCode::kOutOfRange) return absl::OkStatus();
+  if (!status.ok()) return status;
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "Ciphertext contains trailing data after the last segment.");
+}
+
 }  // anonymous namespace
 
 // static
@@ -148,6 +161,7 @@ absl::StatusOr<int> StreamingAeadDecryptingStream::Next(const void** data) {
           /* segment_number = */ segment_number_,
           /* is_last_segment = */ read_last_segment_,
           &pt_buffer_);
+      if (status_.ok()) status_ = VerifyEndOfStream(ct_source_.get());
     }
     if (!status_.ok()) return status_;
     *data = pt_buffer_.data();
@@ -192,6 +206,7 @@ absl::StatusOr<int> StreamingAeadDecryptingStream::Next(const void** data) {
         /* segment_number = */ segment_number_,
         /* is_last_segment = */ read_last_segment_,
         &pt_buffer_);
+    if (status_.ok()) status_ = VerifyEndOfStream(ct_source_.get());
   }
   if (!status_.ok()) return status_;
   *data = pt_buffer_.data();

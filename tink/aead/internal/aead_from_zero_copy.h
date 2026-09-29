@@ -38,6 +38,11 @@ namespace internal {
 //
 // std::unique_ptr<Aead> aead =
 //   std::make_unique<AeadFromZeroCopy>(std::move(zero_copy_aead));
+//
+// This can also be used as a base class to provide an `Aead` interface; in that
+// case, do _not_ implement encryption and decryption in the subclass, but in a
+// separate `ZeroCopyAead`-derived class that is to be passed to the inherited
+// constructor.
 class AeadFromZeroCopy : public Aead {
  public:
   explicit AeadFromZeroCopy(std::unique_ptr<ZeroCopyAead> aead)

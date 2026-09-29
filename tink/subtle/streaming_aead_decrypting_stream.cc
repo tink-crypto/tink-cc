@@ -102,7 +102,7 @@ absl::StatusOr<std::unique_ptr<InputStream>> StreamingAeadDecryptingStream::New(
     return absl::Status(absl::StatusCode::kInternal,
                         "Size of the first segment must be greater than 0.");
   }
-  dec_stream->ct_buffer_.resize(first_segment_size);
+  dec_stream->ct_buffer_.resize(first_segment_size + 1);
   dec_stream->position_ = 0;
   dec_stream->segment_number_ = 0;
   dec_stream->is_initialized_ = false;
@@ -135,20 +135,15 @@ absl::StatusOr<int> StreamingAeadDecryptingStream::Next(const void** data) {
       return status_;
     }
     read_last_segment_ = (status_.code() == absl::StatusCode::kOutOfRange);
+    if (!read_last_segment_) {
+      ct_source_->BackUp(1);
+      ct_buffer_.pop_back();
+    }
     status_ = segment_decrypter_->DecryptSegment(
         ct_buffer_,
         /* segment_number = */ segment_number_,
         /* is_last_segment = */ read_last_segment_,
         &pt_buffer_);
-    if (!status_.ok() && !read_last_segment_) {
-      // Try decrypting as the last segment, if haven't tried yet.
-      read_last_segment_ = true;
-      status_ = segment_decrypter_->DecryptSegment(
-          ct_buffer_,
-          /* segment_number = */ segment_number_,
-          /* is_last_segment = */ read_last_segment_,
-          &pt_buffer_);
-    }
     if (!status_.ok()) return status_;
     *data = pt_buffer_.data();
     position_ = pt_buffer_.size();
@@ -173,26 +168,21 @@ absl::StatusOr<int> StreamingAeadDecryptingStream::Next(const void** data) {
     return status_;
   }
   segment_number_++;
-  ct_buffer_.resize(segment_decrypter_->get_ciphertext_segment_size());
+  ct_buffer_.resize(segment_decrypter_->get_ciphertext_segment_size() + 1);
   status_ = ReadFromStream(ct_source_.get(), ct_buffer_.size(), &ct_buffer_);
   if (!status_.ok() && (status_.code() != absl::StatusCode::kOutOfRange)) {
     return status_;
   }
   read_last_segment_ = (status_.code() == absl::StatusCode::kOutOfRange);
+  if (!read_last_segment_) {
+    ct_source_->BackUp(1);
+    ct_buffer_.pop_back();
+  }
   status_ = segment_decrypter_->DecryptSegment(
       ct_buffer_,
       /* segment_number = */ segment_number_,
       /* is_last_segment = */ read_last_segment_,
       &pt_buffer_);
-  if (!status_.ok() && !read_last_segment_) {
-    // Try decrypting as the last segment, if haven't tried yet.
-    read_last_segment_ = true;
-    status_ = segment_decrypter_->DecryptSegment(
-        ct_buffer_,
-        /* segment_number = */ segment_number_,
-        /* is_last_segment = */ read_last_segment_,
-        &pt_buffer_);
-  }
   if (!status_.ok()) return status_;
   *data = pt_buffer_.data();
   pt_buffer_offset_ = 0;

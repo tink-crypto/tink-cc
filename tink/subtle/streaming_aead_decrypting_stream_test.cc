@@ -222,6 +222,35 @@ TEST_F(StreamingAeadDecryptingStreamTest, OneSegmentPlaintext) {
   EXPECT_EQ(absl::StatusCode::kOutOfRange, next_result.status().code());
 }
 
+TEST_F(StreamingAeadDecryptingStreamTest, TrailingBytesAfterFullFinalSegment) {
+  int pt_segment_size = 512;
+  int header_size = 64;
+
+  for (int num_segments : {1, 2, 3}) {
+    SCOPED_TRACE(absl::StrCat("num_segments = ", num_segments));
+    int pt_size =
+        (pt_segment_size - header_size) + (num_segments - 1) * pt_segment_size;
+    std::string pt = Random::GetRandomBytes(pt_size);
+    DummyStreamSegmentEncrypter seg_enc(pt_segment_size, header_size,
+                                        /* ct_offset = */ 0);
+    std::string ct = seg_enc.GenerateCiphertext(pt);
+    ASSERT_EQ(ct.size(),
+              num_segments * seg_enc.get_ciphertext_segment_size());
+
+    ValidationRefs refs;
+    std::unique_ptr<InputStream> dec_stream = GetDecryptingStream(
+        pt_segment_size, header_size,
+        /* ct_offset = */ 0, absl::StrCat(ct, "trailing garbage"), &refs);
+
+    std::string decrypted;
+    absl::Status status = test::ReadFromStream(dec_stream.get(), &decrypted);
+    EXPECT_THAT(status, Not(IsOk()));
+    EXPECT_EQ(status.code(), absl::StatusCode::kInvalidArgument);
+    EXPECT_PRED_FORMAT2(testing::IsSubstring, "unexpected last-segment marker",
+                        std::string(status.message()));
+  }
+}
+
 
 TEST_F(StreamingAeadDecryptingStreamTest, OneSegmentAndOneBytePlaintext) {
   int pt_segment_size = 512;

@@ -17,7 +17,6 @@
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -26,13 +25,16 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "tink/aead.h"
+#include "tink/aead/aes_ctr_hmac_aead_key.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/aead/internal/zero_copy_aes_ctr_hmac_boringssl.h"
 #include "tink/input_stream.h"
-#include "tink/mac.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/mac/hmac_key_manager.h"
-#include "tink/subtle/aes_ctr_boringssl.h"
-#include "tink/subtle/encrypt_then_authenticate.h"
-#include "tink/subtle/ind_cpa_cipher.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/enums.h"
 #include "tink/util/input_stream_util.h"
@@ -86,21 +88,60 @@ absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::CreateKey(
 absl::StatusOr<std::unique_ptr<Aead>>
 AesCtrHmacAeadKeyManager::AeadFactory::Create(
     const AesCtrHmacAeadKeyProto& key) const {
-  auto aes_ctr_result = subtle::AesCtrBoringSsl::New(
-      util::SecretDataFromStringView(key.aes_ctr_key().key_value()),
-      key.aes_ctr_key().params().iv_size());
-  if (!aes_ctr_result.ok()) return aes_ctr_result.status();
-
-  auto hmac_result = HmacKeyManager().GetPrimitive<Mac>(key.hmac_key());
-  if (!hmac_result.ok()) return hmac_result.status();
-
-  auto cipher_res = subtle::EncryptThenAuthenticate::New(
-      std::move(aes_ctr_result.value()), std::move(hmac_result.value()),
-      key.hmac_key().params().tag_size());
-  if (!cipher_res.ok()) {
-    return cipher_res.status();
+  AesCtrHmacAeadParameters::HashType hash_type;
+  switch (key.hmac_key().params().hash()) {
+    case google::crypto::tink::HashType::SHA1:
+      hash_type = AesCtrHmacAeadParameters::HashType::kSha1;
+      break;
+    case google::crypto::tink::HashType::SHA224:
+      hash_type = AesCtrHmacAeadParameters::HashType::kSha224;
+      break;
+    case google::crypto::tink::HashType::SHA256:
+      hash_type = AesCtrHmacAeadParameters::HashType::kSha256;
+      break;
+    case google::crypto::tink::HashType::SHA384:
+      hash_type = AesCtrHmacAeadParameters::HashType::kSha384;
+      break;
+    case google::crypto::tink::HashType::SHA512:
+      hash_type = AesCtrHmacAeadParameters::HashType::kSha512;
+      break;
+    default:
+      return absl::Status(absl::StatusCode::kUnimplemented,
+                          "Unsupported hash type");
   }
-  return std::move(cipher_res.value());
+
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(key.aes_ctr_key().key_value().size())
+          .SetHmacKeySizeInBytes(key.hmac_key().key_value().size())
+          .SetIvSizeInBytes(key.aes_ctr_key().params().iv_size())
+          .SetTagSizeInBytes(key.hmac_key().params().tag_size())
+          .SetHashType(hash_type)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
+          .Build();
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  absl::StatusOr<AesCtrHmacAeadKey> aead_key =
+      AesCtrHmacAeadKey::Builder()
+          .SetParameters(*parameters)
+          .SetAesKeyBytes(RestrictedData(key.aes_ctr_key().key_value(),
+                                         InsecureSecretKeyAccess::Get()))
+          .SetHmacKeyBytes(RestrictedData(key.hmac_key().key_value(),
+                                          InsecureSecretKeyAccess::Get()))
+          .Build(GetPartialKeyAccess());
+  if (!aead_key.ok()) {
+    return aead_key.status();
+  }
+
+  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
+      internal::ZeroCopyAesCtrHmacBoringSsl::New(*aead_key);
+  if (!zero_copy_aead.ok()) {
+    return zero_copy_aead.status();
+  }
+  return std::make_unique<internal::AeadFromZeroCopy>(
+      *std::move(zero_copy_aead));
 }
 
 absl::Status AesCtrHmacAeadKeyManager::ValidateKey(

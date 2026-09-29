@@ -1374,3 +1374,67 @@ tink_cc_test(
     absl::status_matchers
     absl::span
 )
+
+tink_cc_library(
+  NAME zero_copy_aes_ctr_hmac_boringssl
+  SRCS
+    zero_copy_aes_ctr_hmac_boringssl.cc
+    zero_copy_aes_ctr_hmac_boringssl.h
+  DEPS
+    tink::aead::internal::zero_copy_aead
+    absl::absl_check
+    absl::memory
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::internal::aes_util
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME zero_copy_aes_ctr_hmac_boringssl_test
+  SRCS
+    zero_copy_aes_ctr_hmac_boringssl_test.cc
+  DEPS
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_aes_ctr_hmac_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::span
+    tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_ctr_hmac_aead_test_vectors
+    tink::subtle::aes_ctr_boringssl
+    tink::subtle::common_enums
+    tink::subtle::encrypt_then_authenticate
+    tink::subtle::hmac_boringssl
+    tink::subtle::ind_cpa_cipher
+    tink::subtle::random
+    tink::subtle::subtle_util
+    tink::util::secret_data
+    tink::util::test_util
+)

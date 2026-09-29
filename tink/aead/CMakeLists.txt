@@ -203,6 +203,8 @@ tink_cc_library(
     aes_ctr_hmac_aead_key_manager.cc
     aes_ctr_hmac_aead_key_manager.h
   DEPS
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_parameters
     absl::memory
     absl::status
     absl::statusor
@@ -211,12 +213,14 @@ tink_cc_library(
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
-    tink::core::mac
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::internal::aead_from_zero_copy
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_aes_ctr_hmac_boringssl
     tink::internal::fips_utils
     tink::mac::hmac_key_manager
-    tink::subtle::aes_ctr_boringssl
-    tink::subtle::encrypt_then_authenticate
-    tink::subtle::ind_cpa_cipher
     tink::subtle::random
     tink::util::constants
     tink::util::enums

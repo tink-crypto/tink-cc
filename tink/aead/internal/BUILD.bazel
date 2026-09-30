@@ -1479,3 +1479,49 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "zero_copy_xchacha20_poly1305_boringssl",
+    srcs = ["zero_copy_xchacha20_poly1305_boringssl.cc"],
+    hdrs = ["zero_copy_xchacha20_poly1305_boringssl.h"],
+    include_prefix = "tink/aead/internal",
+    deps = [
+        ":ssl_aead",
+        ":zero_copy_aead",
+        "//tink:secret_data",
+        "//tink/internal:fips_utils",
+        "//tink/subtle:random",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "zero_copy_xchacha20_poly1305_boringssl_test",
+    srcs = ["zero_copy_xchacha20_poly1305_boringssl_test.cc"],
+    data = ["//:testvectors_v1"],
+    deps = [
+        ":wycheproof_aead",
+        ":zero_copy_aead",
+        ":zero_copy_xchacha20_poly1305_boringssl",
+        "//tink:secret_data",
+        "//tink/config:tink_fips",
+        "//tink/internal:ssl_util",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
+        "@googletest//:gtest_main",
+    ],
+)

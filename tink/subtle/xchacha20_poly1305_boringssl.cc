@@ -16,35 +16,21 @@
 
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 
-#include <algorithm>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <utility>
-#include <vector>
 
 #include "absl/memory/memory.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl/status/statusor.h"
 #include "tink/aead.h"
-#include "tink/aead/internal/ssl_aead.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/aead/internal/zero_copy_xchacha20_poly1305_boringssl.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/util.h"
-#include "tink/subtle/random.h"
-#include "tink/subtle/subtle_util.h"
-#include "tink/util/errors.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
-
-constexpr int kNonceSizeInBytes = 24;
-constexpr int kTagSizeInBytes = 16;
 
 absl::StatusOr<std::unique_ptr<Aead>> XChacha20Poly1305BoringSsl::New(
     SecretData key) {
@@ -52,8 +38,8 @@ absl::StatusOr<std::unique_ptr<Aead>> XChacha20Poly1305BoringSsl::New(
   if (!status.ok()) {
     return status;
   }
-  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
-      internal::CreateXchacha20Poly1305OneShotCrypter(key);
+  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> aead =
+      internal::ZeroCopyXChacha20Poly1305BoringSsl::New(std::move(key));
   if (!aead.ok()) {
     return aead.status();
   }
@@ -62,49 +48,9 @@ absl::StatusOr<std::unique_ptr<Aead>> XChacha20Poly1305BoringSsl::New(
   return std::move(aead_impl);
 }
 
-absl::StatusOr<std::string> XChacha20Poly1305BoringSsl::Encrypt(
-    absl::string_view plaintext, absl::string_view associated_data) const {
-  const int64_t kCiphertextSize =
-      kNonceSizeInBytes + aead_->CiphertextSize(plaintext.size());
-  std::string ct;
-  ResizeStringUninitialized(&ct, kCiphertextSize);
-  absl::Status res =
-      Random::GetRandomBytes(absl::MakeSpan(ct).subspan(0, kNonceSizeInBytes));
-  if (!res.ok()) {
-    return res;
-  }
-  auto nonce = absl::string_view(ct).substr(0, kNonceSizeInBytes);
-  auto ciphertext_and_tag_buffer =
-      absl::MakeSpan(ct).subspan(kNonceSizeInBytes);
-  absl::StatusOr<int64_t> written_bytes = aead_->Encrypt(
-      plaintext, associated_data, nonce, ciphertext_and_tag_buffer);
-  if (!written_bytes.ok()) {
-    return written_bytes.status();
-  }
-  return ct;
-}
-
-absl::StatusOr<std::string> XChacha20Poly1305BoringSsl::Decrypt(
-    absl::string_view ciphertext, absl::string_view associated_data) const {
-  if (ciphertext.size() < kNonceSizeInBytes + kTagSizeInBytes) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        absl::StrCat("Ciphertext too short; expected at least ",
-                                     kNonceSizeInBytes + kTagSizeInBytes,
-                                     " got ", ciphertext.size()));
-  }
-  const int64_t kPlaintextSize =
-      aead_->PlaintextSize(ciphertext.size() - kNonceSizeInBytes);
-  std::string plaintext;
-  ResizeStringUninitialized(&plaintext, kPlaintextSize);
-  auto nonce = ciphertext.substr(0, kNonceSizeInBytes);
-  auto encrypted = ciphertext.substr(kNonceSizeInBytes);
-  absl::StatusOr<int64_t> written_bytes = aead_->Decrypt(
-      encrypted, associated_data, nonce, absl::MakeSpan(plaintext));
-  if (!written_bytes.ok()) {
-    return written_bytes.status();
-  }
-  return plaintext;
-}
+XChacha20Poly1305BoringSsl::XChacha20Poly1305BoringSsl(
+    std::unique_ptr<internal::ZeroCopyAead> aead)
+    : AeadFromZeroCopy(std::move(aead)) {}
 
 }  // namespace subtle
 }  // namespace tink

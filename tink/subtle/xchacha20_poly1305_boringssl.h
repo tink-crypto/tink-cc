@@ -18,22 +18,21 @@
 #define TINK_SUBTLE_XCHACHA20_POLY1305_BORINGSSL_H_
 
 #include <memory>
-#include <string>
-#include <utility>
 
-#include "absl/strings/string_view.h"
+#include "absl/status/statusor.h"
 #include "tink/aead.h"
-#include "tink/aead/internal/ssl_aead.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 
-class XChacha20Poly1305BoringSsl : public Aead {
+class XChacha20Poly1305BoringSsl
+    : public internal::AeadFromZeroCopy /* implements `Aead` */ {
  public:
   // Constructs a new Aead cipher for XChacha20-Poly1305.
   // Currently supported key size is 256 bits.
@@ -41,23 +40,12 @@ class XChacha20Poly1305BoringSsl : public Aead {
   // The tag size is fixed to 16 bytes.
   static absl::StatusOr<std::unique_ptr<Aead>> New(SecretData key);
 
-  absl::StatusOr<std::string> Encrypt(
-      absl::string_view plaintext,
-      absl::string_view associated_data) const override;
-
-  absl::StatusOr<std::string> Decrypt(
-      absl::string_view ciphertext,
-      absl::string_view associated_data) const override;
-
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
   explicit XChacha20Poly1305BoringSsl(
-      std::unique_ptr<internal::SslOneShotAead> aead)
-      : aead_(std::move(aead)) {}
-
-  const std::unique_ptr<internal::SslOneShotAead> aead_;
+      std::unique_ptr<internal::ZeroCopyAead> aead);
 };
 
 }  // namespace subtle

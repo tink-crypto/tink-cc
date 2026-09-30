@@ -51,7 +51,7 @@ constexpr int kTagSizeInBytes = 16;
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::testing::AllOf;
+using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
@@ -158,7 +158,7 @@ TEST_P(AesGcmSivBoringSslWycheproofTest, Decrypt) {
     EXPECT_NE(test_vector.expected, "invalid");
     EXPECT_EQ(*plaintext, test_vector.msg);
   } else {
-    EXPECT_THAT(test_vector.expected, Not(AllOf(Eq("valid"), Eq("acceptable"))))
+    EXPECT_THAT(test_vector.expected, Not(AnyOf(Eq("valid"), Eq("acceptable"))))
         << "Could not decrypt test with tcId: " << test_vector.id
         << " iv_size: " << test_vector.nonce.size()
         << " tag_size: " << test_vector.tag.size()

@@ -57,7 +57,7 @@ constexpr absl::string_view kAssociatedData = "Some data to authenticate.";
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::testing::AllOf;
+using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::TestWithParam;
@@ -209,7 +209,7 @@ TEST_P(ZeroCopyXChacha20Poly1305BoringSslWycheproofTest, Decrypt) {
     EXPECT_EQ(plaintext, test_vector.msg)
         << "Incorrect decryption: " << test_vector.id;
   } else {
-    EXPECT_THAT(test_vector.expected, Not(AllOf(Eq("valid"), Eq("acceptable"))))
+    EXPECT_THAT(test_vector.expected, Not(AnyOf(Eq("valid"), Eq("acceptable"))))
         << "Could not decrypt test with tcId: " << test_vector.id
         << " iv_size: " << test_vector.nonce.size()
         << " tag_size: " << test_vector.tag.size()

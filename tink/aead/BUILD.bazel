@@ -2011,6 +2011,7 @@ cc_test(
 
 cc_test(
     name = "aead_benchmarks",
+    size = "large",
     srcs = ["aead_benchmarks.cc"],
     deps = [
         ":aead_config",

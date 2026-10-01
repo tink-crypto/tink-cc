@@ -70,8 +70,19 @@ void BM_Aes256CtrHmacSha256Encrypt(benchmark::State& state) {
   Encrypt(state, AeadKeyTemplates::Aes256CtrHmacSha256());
 }
 
+void BM_Aes256EaxEncrypt(benchmark::State& state) {
+  Encrypt(state, AeadKeyTemplates::Aes256Eax());
+}
+
 void BM_Aes256GcmEncrypt(benchmark::State& state) {
   Encrypt(state, AeadKeyTemplates::Aes256Gcm());
+}
+
+void BM_Aes256GcmSivEncrypt(benchmark::State& state) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "Unimplemented with OpenSSL";
+  }
+  Encrypt(state, AeadKeyTemplates::Aes256GcmSiv());
 }
 
 void BM_XChaCha20Poly1305Encrypt(benchmark::State& state) {
@@ -84,7 +95,13 @@ void BM_XChaCha20Poly1305Encrypt(benchmark::State& state) {
 BENCHMARK(BM_Aes256CtrHmacSha256Encrypt)
     ->RangeMultiplier(kMultipler)
     ->Range(kMinSize, kMaxSize);
+BENCHMARK(BM_Aes256EaxEncrypt)
+    ->RangeMultiplier(kMultipler)
+    ->Range(kMinSize, kMaxSize);
 BENCHMARK(BM_Aes256GcmEncrypt)
+    ->RangeMultiplier(kMultipler)
+    ->Range(kMinSize, kMaxSize);
+BENCHMARK(BM_Aes256GcmSivEncrypt)
     ->RangeMultiplier(kMultipler)
     ->Range(kMinSize, kMaxSize);
 BENCHMARK(BM_XChaCha20Poly1305Encrypt)
@@ -114,8 +131,19 @@ void BM_Aes256CtrHmacSha256Decrypt(benchmark::State& state) {
   Decrypt(state, AeadKeyTemplates::Aes256CtrHmacSha256());
 }
 
+void BM_Aes256EaxDecrypt(benchmark::State& state) {
+  Decrypt(state, AeadKeyTemplates::Aes256Eax());
+}
+
 void BM_Aes256GcmDecrypt(benchmark::State& state) {
   Decrypt(state, AeadKeyTemplates::Aes256Gcm());
+}
+
+void BM_Aes256GcmSivDecrypt(benchmark::State& state) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "Unimplemented with OpenSSL";
+  }
+  Decrypt(state, AeadKeyTemplates::Aes256GcmSiv());
 }
 
 void BM_XChaCha20Poly1305Decrypt(benchmark::State& state) {
@@ -128,7 +156,13 @@ void BM_XChaCha20Poly1305Decrypt(benchmark::State& state) {
 BENCHMARK(BM_Aes256CtrHmacSha256Decrypt)
     ->RangeMultiplier(kMultipler)
     ->Range(kMinSize, kMaxSize);
+BENCHMARK(BM_Aes256EaxDecrypt)
+    ->RangeMultiplier(kMultipler)
+    ->Range(kMinSize, kMaxSize);
 BENCHMARK(BM_Aes256GcmDecrypt)
+    ->RangeMultiplier(kMultipler)
+    ->Range(kMinSize, kMaxSize);
+BENCHMARK(BM_Aes256GcmSivDecrypt)
     ->RangeMultiplier(kMultipler)
     ->Range(kMinSize, kMaxSize);
 BENCHMARK(BM_XChaCha20Poly1305Decrypt)

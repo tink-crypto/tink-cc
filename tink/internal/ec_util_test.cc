@@ -30,6 +30,7 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/secret_data.h"
 #include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -45,10 +46,10 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -551,6 +552,22 @@ TEST(EcUtilTest, CurveTypeFromEcGroupUnimplemented) {
   EXPECT_THAT(
       CurveTypeFromEcGroup(EC_GROUP_new_by_curve_name(NID_secp224r1)).status(),
       StatusIs(absl::StatusCode::kUnimplemented));
+}
+
+TEST(EcUtilTest, ToSubtleEllipticCurveTypeSuccess) {
+  EXPECT_THAT(ToSubtleEllipticCurveType(EcdsaParameters::CurveType::kNistP256),
+              IsOkAndHolds(EllipticCurveType::NIST_P256));
+  EXPECT_THAT(ToSubtleEllipticCurveType(EcdsaParameters::CurveType::kNistP384),
+              IsOkAndHolds(EllipticCurveType::NIST_P384));
+  EXPECT_THAT(ToSubtleEllipticCurveType(EcdsaParameters::CurveType::kNistP521),
+              IsOkAndHolds(EllipticCurveType::NIST_P521));
+}
+
+TEST(EcUtilTest, ToSubtleEllipticCurveTypeUnknownFails) {
+  EXPECT_THAT(ToSubtleEllipticCurveType(
+                  EcdsaParameters::CurveType::
+                      kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(EcUtilTest, EcGroupFromCurveTypeSuccess) {

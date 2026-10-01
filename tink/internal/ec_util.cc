@@ -23,7 +23,6 @@
 
 #include "absl/log/absl_check.h"
 #include "absl/log/log.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -47,6 +46,7 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/secret_data.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/subtle_util.h"
@@ -691,6 +691,21 @@ absl::StatusOr<EllipticCurveType> CurveTypeFromEcGroup(const EC_GROUP* group) {
     default:
       return absl::Status(absl::StatusCode::kUnimplemented,
                           "Unsupported elliptic curve");
+  }
+}
+
+absl::StatusOr<EllipticCurveType> ToSubtleEllipticCurveType(
+    EcdsaParameters::CurveType curve_type) {
+  switch (curve_type) {
+    case EcdsaParameters::CurveType::kNistP256:
+      return EllipticCurveType::NIST_P256;
+    case EcdsaParameters::CurveType::kNistP384:
+      return EllipticCurveType::NIST_P384;
+    case EcdsaParameters::CurveType::kNistP521:
+      return EllipticCurveType::NIST_P521;
+    default:
+      return absl::InvalidArgumentError(
+          absl::StrCat("Unknown curve type: ", curve_type));
   }
 }
 

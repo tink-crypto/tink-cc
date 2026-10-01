@@ -26,6 +26,7 @@
 #include "openssl/ec.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/secret_data.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -140,6 +141,11 @@ absl::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
 // Returns the curve type associated with the given `group`.
 absl::StatusOr<crypto::tink::subtle::EllipticCurveType> CurveTypeFromEcGroup(
     const EC_GROUP *group);
+
+// Returns the `subtle::EllipticCurveType` corresponding to the given
+// `EcdsaParameters::CurveType`.
+absl::StatusOr<crypto::tink::subtle::EllipticCurveType>
+ToSubtleEllipticCurveType(EcdsaParameters::CurveType curve_type);
 
 // Returns OpenSSL/BoringSSL's EC_POINT constructed from the curve type,
 // big-endian representation of public key's x-coordinate and y-coordinate.

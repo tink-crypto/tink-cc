@@ -164,13 +164,13 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     absl::log
     absl::absl_check
-    absl::memory
     absl::status
     absl::statusor
     absl::strings
     absl::span
     crypto
     tink::core::secret_data
+    tink::signature::ecdsa_parameters
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::subtle_util
@@ -419,11 +419,12 @@ tink_cc_test(
     absl::strings
     absl::span
     crypto
+    tink::core::secret_data
     tink::internal::testing::wycheproof_util
+    tink::signature::ecdsa_parameters
     tink::subtle::common_enums
     tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

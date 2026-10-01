@@ -697,18 +697,15 @@ cc_library(
     hdrs = ["aes_gcm_siv_boringssl.h"],
     include_prefix = "tink/subtle",
     deps = [
-        ":random",
-        ":subtle_util",
         "//tink:aead",
-        "//tink/aead/internal:ssl_aead",
+        "//tink:secret_data",
+        "//tink/aead/internal:aead_from_zero_copy",
+        "//tink/aead/internal:zero_copy_aead",
+        "//tink/aead/internal:zero_copy_aes_gcm_siv_boringssl",
         "//tink/internal:fips_utils",
         "//tink/util:secret_data",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/types:span",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 

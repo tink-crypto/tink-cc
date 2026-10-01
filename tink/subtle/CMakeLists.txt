@@ -658,18 +658,15 @@ tink_cc_library(
     aes_gcm_siv_boringssl.cc
     aes_gcm_siv_boringssl.h
   DEPS
-    tink::subtle::random
-    tink::subtle::subtle_util
     absl::memory
-    absl::status
-    absl::strings
-    absl::span
+    absl::statusor
     tink::core::aead
-    tink::aead::internal::ssl_aead
+    tink::core::secret_data
+    tink::aead::internal::aead_from_zero_copy
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_aes_gcm_siv_boringssl
     tink::internal::fips_utils
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

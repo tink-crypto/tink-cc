@@ -1485,3 +1485,49 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME zero_copy_aes_gcm_siv_boringssl
+  SRCS
+    zero_copy_aes_gcm_siv_boringssl.cc
+    zero_copy_aes_gcm_siv_boringssl.h
+  DEPS
+    tink::aead::internal::ssl_aead
+    tink::aead::internal::zero_copy_aead
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::secret_data
+    tink::internal::fips_utils
+    tink::internal::util
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME zero_copy_aes_gcm_siv_boringssl_test
+  SRCS
+    zero_copy_aes_gcm_siv_boringssl_test.cc
+  DATA
+    wycheproof::testvectors_v1
+  DEPS
+    tink::aead::internal::wycheproof_aead
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_aes_gcm_siv_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::secret_data
+    tink::config::tink_fips
+    tink::internal::ssl_util
+    tink::subtle::subtle_util
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+)

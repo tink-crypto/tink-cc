@@ -18,15 +18,14 @@
 #define TINK_SUBTLE_AES_GCM_SIV_BORINGSSL_H_
 
 #include <memory>
-#include <string>
-#include <utility>
 
-#include "absl/strings/string_view.h"
+#include "absl/status/statusor.h"
 #include "tink/aead.h"
-#include "tink/aead/internal/ssl_aead.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -49,26 +48,16 @@ namespace subtle {
 // https://cyber.biu.ac.il/aes-gcm-siv/
 // or Section 6.3 of this paper:
 // https://eprint.iacr.org/2017/702.pdf
-class AesGcmSivBoringSsl : public Aead {
+class AesGcmSivBoringSsl
+    : public internal::AeadFromZeroCopy /* implements `Aead` */ {
  public:
   static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key);
-
-  absl::StatusOr<std::string> Encrypt(
-      absl::string_view plaintext,
-      absl::string_view associated_data) const override;
-
-  absl::StatusOr<std::string> Decrypt(
-      absl::string_view ciphertext,
-      absl::string_view associated_data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  explicit AesGcmSivBoringSsl(std::unique_ptr<internal::SslOneShotAead> aead)
-      : aead_(std::move(aead)) {}
-
-  const std::unique_ptr<internal::SslOneShotAead> aead_;
+  explicit AesGcmSivBoringSsl(std::unique_ptr<internal::ZeroCopyAead> aead);
 };
 
 }  // namespace subtle

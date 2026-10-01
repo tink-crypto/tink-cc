@@ -307,6 +307,7 @@ cc_test(
 cc_test(
     name = "ml_dsa_sign_boringssl_test",
     srcs = ["ml_dsa_sign_boringssl_test.cc"],
+    tags = ["fips"],
     deps = [
         ":ml_dsa_key_creator",
         ":ml_dsa_sign_boringssl",
@@ -314,7 +315,6 @@ cc_test(
         "//tink/internal:fips_utils",
         "//tink/signature:ml_dsa_parameters",
         "//tink/signature:ml_dsa_private_key",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",

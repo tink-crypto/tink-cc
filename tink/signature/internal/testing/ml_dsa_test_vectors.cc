@@ -24,13 +24,11 @@
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
-#include "absl/log/absl_log.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
@@ -549,7 +547,6 @@ constexpr absl::string_view kHexSignatureWithTinkPrefix87 =
     "E2F808BCD0E3F4FC495E8CACCFD2DFEBF1F7F908445D96B1B4C5C91D637175BC00000000"
     "00000000000000000000000000000000050911191F2A3237";
 
-#ifndef TINK_USE_ONLY_FIPS
 // Creates an ML-DSA private key for test vectors.
 MlDsaPrivateKey CreatePrivateKey(MlDsaParameters::Instance instance,
                                  MlDsaParameters::Variant variant,
@@ -640,7 +637,6 @@ const MlDsaTestVectorMap& CreateMlDsaTestVectorsMap() {
       });
   return *test_vectors;
 }
-#endif
 
 }  // namespace
 
@@ -649,12 +645,6 @@ const MlDsaTestVectorMap& CreateMlDsaTestVectorsMap() {
 const std::vector<SignatureTestVector>& CreateMlDsaTestVectors() {
   static const absl::NoDestructor<std::vector<SignatureTestVector>>
       test_vectors([] {
-#ifdef TINK_USE_ONLY_FIPS
-        return std::vector<SignatureTestVector>{};
-#else
-        if (internal::IsFipsModeEnabled()) {
-          return std::vector<SignatureTestVector>{};
-        }
         std::vector<SignatureTestVector> result;
         result.reserve(CreateMlDsaTestVectorsMap().size());
         for (const auto& [unused_params, test_vector] :
@@ -662,7 +652,6 @@ const std::vector<SignatureTestVector>& CreateMlDsaTestVectors() {
           result.push_back(test_vector);
         }
         return result;
-#endif
       }());
   return *test_vectors;
 }
@@ -671,18 +660,11 @@ const std::vector<SignatureTestVector>& CreateMlDsaTestVectors() {
 // NIST FIPS 204.
 const SignatureTestVector& GetMlDsaTestVector(
     MlDsaParameters::Instance instance, MlDsaParameters::Variant variant) {
-#ifdef TINK_USE_ONLY_FIPS
-  ABSL_LOG(FATAL) << "ML-DSA test vectors are not available in FIPS mode.";
-#else
-  if (internal::IsFipsModeEnabled()) {
-    ABSL_LOG(FATAL) << "ML-DSA test vectors are not available in FIPS mode.";
-  }
   const MlDsaTestVectorMap& map = CreateMlDsaTestVectorsMap();
   auto it = map.find(std::pair(instance, variant));
   ABSL_CHECK(it != map.end())
       << "No ML-DSA test vector found for instance and variant.";
   return it->second;
-#endif
 }
 
 }  // namespace crypto::tink::internal

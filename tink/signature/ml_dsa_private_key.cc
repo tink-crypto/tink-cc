@@ -26,9 +26,9 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
+#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
 #include "openssl/mem.h"
@@ -50,9 +50,9 @@ namespace tink {
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
     return absl::InvalidArgumentError(
@@ -78,9 +78,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
     return absl::InvalidArgumentError(
@@ -109,9 +109,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   util::SecretUniquePtr<MLDSA44_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA44_private_key>();
@@ -185,9 +185,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA65_private_key>();
@@ -261,9 +261,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA87_private_key>();
@@ -337,9 +337,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   util::SecretUniquePtr<MLDSA44_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA44_private_key>();
@@ -410,9 +410,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA65_private_key>();
@@ -483,9 +483,9 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "ML-DSA is only supported in non-FIPS BoringSSL builds.");
+      "ML-DSA is only supported in BoringSSL builds.");
 #else
   util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA87_private_key>();

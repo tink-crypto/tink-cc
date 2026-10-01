@@ -146,7 +146,6 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )

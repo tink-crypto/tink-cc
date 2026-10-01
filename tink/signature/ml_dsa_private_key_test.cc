@@ -49,59 +49,11 @@ using ::testing::HasSubstr;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-#ifdef TINK_USE_ONLY_FIPS
-using MlDsaPrivateKeyTest = TestWithParam<MlDsaParameters::Instance>;
-
-INSTANTIATE_TEST_SUITE_P(MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
-                         testing::Values(MlDsaParameters::Instance::kMlDsa44,
-                                         MlDsaParameters::Instance::kMlDsa65,
-                                         MlDsaParameters::Instance::kMlDsa87));
-
-TEST_P(MlDsaPrivateKeyTest, CreateFipsFails) {
-  MlDsaParameters::Instance instance = GetParam();
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  int pub_key_bytes = instance == MlDsaParameters::Instance::kMlDsa44   ? 1312
-                      : instance == MlDsaParameters::Instance::kMlDsa65 ? 1952
-                                                                        : 2592;
-  std::string public_key_bytes = subtle::Random::GetRandomBytes(pub_key_bytes);
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, public_key_bytes,
-                             /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  RestrictedData private_seed_bytes = RestrictedData(32);
-  EXPECT_THAT(
-      MlDsaPrivateKey::Create(*public_key, private_seed_bytes,
-                              GetPartialKeyAccess())
-          .status(),
-      StatusIs(
-          absl::StatusCode::kUnimplemented,
-          HasSubstr("ML-DSA is only supported in non-FIPS BoringSSL builds.")));
-}
-
-TEST_P(MlDsaPrivateKeyTest, CreateFromSeedFipsFails) {
-  MlDsaParameters::Instance instance = GetParam();
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kTink);
-  ASSERT_THAT(parameters, IsOk());
-
-  RestrictedData private_seed_bytes = RestrictedData(32);
-  EXPECT_THAT(
-      MlDsaPrivateKey::Create(*parameters, private_seed_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess())
-          .status(),
-      StatusIs(
-          absl::StatusCode::kUnimplemented,
-          HasSubstr("ML-DSA is only supported in non-FIPS BoringSSL builds.")));
-}
-#else
 using MlDsaPrivateKeyTest = TestWithParam<internal::SignatureTestVector>;
 
 INSTANTIATE_TEST_SUITE_P(MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
                          ValuesIn(internal::CreateMlDsaTestVectors()));
+
 TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
   const internal::SignatureTestVector& test_vector = GetParam();
   const auto* test_private_key = static_cast<const MlDsaPrivateKey*>(
@@ -380,7 +332,6 @@ TEST(MlDsaPrivateKeyTest, MoveAssignment) {
 
   EXPECT_THAT(other_private_key, Eq(expected));
 }
-#endif  // TINK_USE_ONLY_FIPS
 
 }  // namespace
 }  // namespace tink

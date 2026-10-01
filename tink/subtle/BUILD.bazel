@@ -561,8 +561,9 @@ cc_library(
     include_prefix = "tink/subtle",
     deps = [
         ":random",
-        ":subtle_util",
         "//tink:aead",
+        "//tink/aead/internal:aead_from_zero_copy",
+        "//tink/aead/internal:zero_copy_aead",
         "//tink/internal:aes_util",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:dfsan_forwarders",
@@ -1195,6 +1196,8 @@ cc_test(
     tags = ["fips"],
     deps = [
         ":aes_eax_boringssl",
+        "//tink/aead/internal:aead_from_zero_copy",
+        "//tink/aead/internal:zero_copy_aead",
         "//tink/config:tink_fips",
         "//tink/internal/testing:wycheproof_util",
         "//tink/util:secret_data",
@@ -1204,6 +1207,7 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:span",
         "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],

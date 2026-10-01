@@ -16,10 +16,11 @@
 
 #include "tink/subtle/aes_eax_boringssl.h"
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <string>
 #include <utility>
 
 #include "absl/algorithm/container.h"
@@ -27,9 +28,13 @@
 #include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "openssl/aes.h"
 #include "tink/aead.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -37,7 +42,6 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/random.h"
-#include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -95,7 +99,7 @@ absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitAesKey(
   return std::move(aeskey);
 }
 
-class AesEaxBoringSslImpl : public Aead {
+class AesEaxBoringSslImpl : public internal::ZeroCopyAead {
  public:
   static constexpr int kTagSize = 16;
   static constexpr int kBlockSize = 16;
@@ -131,12 +135,25 @@ class AesEaxBoringSslImpl : public Aead {
   absl::Status CtrCrypt(const Block& N, absl::string_view in,
                         absl::Span<char> out) const;
 
-  absl::StatusOr<std::string> Encrypt(
-      absl::string_view plaintext,
-      absl::string_view associated_data) const override;
-  absl::StatusOr<std::string> Decrypt(
-      absl::string_view ciphertext,
-      absl::string_view associated_data) const override;
+  int64_t MaxEncryptionSize(int64_t plaintext_size) const override {
+    return plaintext_size + nonce_size_ + kTagSize;
+  }
+
+  absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+                                  absl::string_view associated_data,
+                                  absl::Span<char> buffer) const override;
+
+  int64_t MaxDecryptionSize(int64_t ciphertext_size) const override {
+    const int64_t overhead = nonce_size_ + kTagSize;
+    if (ciphertext_size < overhead) {
+      return 0;
+    }
+    return ciphertext_size - overhead;
+  }
+
+  absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+                                  absl::string_view associated_data,
+                                  absl::Span<char> buffer) const override;
 
  private:
   const util::SecretUniquePtr<AES_KEY> aeskey_;
@@ -246,44 +263,54 @@ absl::Status AesEaxBoringSslImpl::CtrCrypt(const Block& N, absl::string_view in,
   return internal::AesCtr128Crypt(in, ctr, aeskey_.get(), out);
 }
 
-absl::StatusOr<std::string> AesEaxBoringSslImpl::Encrypt(
-    absl::string_view plaintext, absl::string_view associated_data) const {
+absl::StatusOr<int64_t> AesEaxBoringSslImpl::Encrypt(
+    absl::string_view plaintext, absl::string_view associated_data,
+    absl::Span<char> buffer) const {
   // BoringSSL expects a non-null pointer for plaintext and associated_data,
   // regardless of whether the size is 0.
   plaintext = internal::EnsureStringNonNull(plaintext);
   associated_data = internal::EnsureStringNonNull(associated_data);
 
-  size_t ciphertext_size = plaintext.size() + nonce_size_ + kTagSize;
-  std::string ciphertext;
-  ResizeStringUninitialized(&ciphertext, ciphertext_size);
-  return internal::CallWithCoreDumpProtection(
-      [&]() -> absl::StatusOr<std::string> {
-        // The ciphertext region is allowed to leak: this never fails and
-        // the ciphertext can afterwards be given to the adversary.
-        crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
-            ciphertext.data(), ciphertext.size());
-        const std::string nonce = Random::GetRandomBytes(nonce_size_);
-        const Block N = Omac(nonce, 0);
-        const Block H = Omac(associated_data, 1);
-        uint8_t* ct_start =
-            reinterpret_cast<uint8_t*>(&ciphertext[nonce_size_]);
-        ABSL_RETURN_IF_ERROR(CtrCrypt(
-            N, plaintext, absl::MakeSpan(ciphertext).subspan(nonce_size_)));
-        Block mac = Omac(absl::MakeSpan(ct_start, plaintext.size()), 2);
-        XorBlock(N.data(), &mac);
-        XorBlock(H.data(), &mac);
-        absl::c_copy(nonce, ciphertext.begin());
-        absl::c_copy_n(mac, kTagSize, &ciphertext[ciphertext_size - kTagSize]);
-        // Declassify the ciphertext: this is now safe to give to the adversary.
-        // (Note: we currently do not propagate labels of the associated data).
-        crypto::tink::internal::DfsanClearLabel(ciphertext.data(),
-                                                ciphertext_size);
-        return ciphertext;
-      });
+  size_t ciphertext_size = MaxEncryptionSize(plaintext.size());
+  if (buffer.size() < ciphertext_size) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Encryption buffer too small; expected at least ",
+                     ciphertext_size, " bytes, got ", buffer.size()));
+  }
+  if (internal::BuffersOverlap(
+          plaintext, absl::string_view(buffer.data(), buffer.size()))) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Plaintext and output buffer must not overlap");
+  }
+
+  return internal::CallWithCoreDumpProtection([&]() -> absl::StatusOr<int64_t> {
+    // The ciphertext region is allowed to leak: this never fails and
+    // the ciphertext can afterwards be given to the adversary.
+    crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
+        buffer.data(), ciphertext_size);
+    absl::Span<char> nonce = buffer.subspan(0, nonce_size_);
+    ABSL_RETURN_IF_ERROR(Random::GetRandomBytes(nonce));
+    const Block N = Omac(absl::string_view(nonce.data(), nonce.size()), 0);
+    const Block H = Omac(associated_data, 1);
+    absl::Span<char> raw_ciphertext =
+        buffer.subspan(nonce_size_, plaintext.size());
+    ABSL_RETURN_IF_ERROR(CtrCrypt(N, plaintext, raw_ciphertext));
+    Block mac = Omac(
+        absl::string_view(raw_ciphertext.data(), raw_ciphertext.size()), 2);
+    XorBlock(N.data(), &mac);
+    XorBlock(H.data(), &mac);
+    absl::c_copy_n(mac, kTagSize, &buffer[ciphertext_size - kTagSize]);
+    // Declassify the ciphertext: this is now safe to give to the adversary.
+    // (Note: we currently do not propagate labels of the associated data).
+    crypto::tink::internal::DfsanClearLabel(buffer.data(), ciphertext_size);
+    return ciphertext_size;
+  });
 }
 
-absl::StatusOr<std::string> AesEaxBoringSslImpl::Decrypt(
-    absl::string_view ciphertext, absl::string_view associated_data) const {
+absl::StatusOr<int64_t> AesEaxBoringSslImpl::Decrypt(
+    absl::string_view ciphertext, absl::string_view associated_data,
+    absl::Span<char> buffer) const {
   // BoringSSL expects a non-null pointer for associated_data,
   // regardless of whether the size is 0.
   associated_data = internal::EnsureStringNonNull(associated_data);
@@ -294,44 +321,50 @@ absl::StatusOr<std::string> AesEaxBoringSslImpl::Decrypt(
                         "Ciphertext too short");
   }
   size_t out_size = ct_size - kTagSize - nonce_size_;
+  if (buffer.size() < out_size) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Decryption buffer too small; expected at least ",
+                     out_size, " bytes, got ", buffer.size()));
+  }
+  if (internal::BuffersOverlap(
+          ciphertext, absl::string_view(buffer.data(), buffer.size()))) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Ciphertext and output buffer must not overlap");
+  }
   absl::string_view nonce = ciphertext.substr(0, nonce_size_);
   absl::string_view encrypted = ciphertext.substr(nonce_size_, out_size);
   absl::string_view tag = ciphertext.substr(ct_size - kTagSize, kTagSize);
-  return internal::CallWithCoreDumpProtection(
-      [&]() -> absl::StatusOr<std::string> {
-        const Block N = Omac(nonce, 0);
-        const Block H = Omac(associated_data, 1);
-        Block mac = Omac(encrypted, 2);
-        XorBlock(N.data(), &mac);
-        XorBlock(H.data(), &mac);
-        const uint8_t* sig = reinterpret_cast<const uint8_t*>(tag.data());
-        if (!EqualBlocks(mac.data(), sig)) {
-          return absl::Status(absl::StatusCode::kInvalidArgument,
-                              "Tag mismatch");
-        }
-        std::string plaintext;
-        ResizeStringUninitialized(&plaintext, out_size);
-        // The plaintext region is allowed to leak. In successful decryptions,
-        // the adversary can already get the plaintext via core dumps (since
-        // the API specifies that the plaintext is in a std::string, so this is
-        // the users responsibility). Hence, this gives adversaries access to
-        // data which is stored *during* the computation, and data which would
-        // be erased because the tag is wrong. Since EAX is a counter mode, this
-        // means that the adversary can potentially obtain key streams for IVs
-        // for which he does either not know a valid tag (which seems useless if
-        // he didn't see a valid ciphertext) or without querying the actual
-        // ciphertext (which does not seem useful). Hence, we declare this to be
-        // sufficiently safe at the moment.
-        char* plaintext_start = &plaintext[0];
-        crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
-            plaintext_start, out_size);
-        ABSL_RETURN_IF_ERROR(CtrCrypt(N, encrypted, absl::MakeSpan(plaintext)));
-        // Declassify the plaintext: this is now safe to give to the adversary
-        // (since the API specifies that the plaintext is in a std::string which
-        // can leak so the user is responsible for this).
-        crypto::tink::internal::DfsanClearLabel(plaintext_start, out_size);
-        return plaintext;
-      });
+  return internal::CallWithCoreDumpProtection([&]() -> absl::StatusOr<int64_t> {
+    const Block N = Omac(nonce, 0);
+    const Block H = Omac(associated_data, 1);
+    Block mac = Omac(encrypted, 2);
+    XorBlock(N.data(), &mac);
+    XorBlock(H.data(), &mac);
+    const uint8_t* sig = reinterpret_cast<const uint8_t*>(tag.data());
+    if (!EqualBlocks(mac.data(), sig)) {
+      return absl::Status(absl::StatusCode::kInvalidArgument, "Tag mismatch");
+    }
+    // The plaintext region is allowed to leak. In successful decryptions,
+    // the adversary can already get the plaintext via core dumps (since
+    // the API specifies that the plaintext is in a caller-provided buffer,
+    // so this is the users responsibility). Hence, this gives adversaries
+    // access to data which is stored *during* the computation, and data
+    // which would be erased because the tag is wrong. Since EAX is a
+    // counter mode, this means that the adversary can potentially obtain
+    // key streams for IVs for which he does either not know a valid tag
+    // (which seems useless if he didn't see a valid ciphertext) or without
+    // querying the actual ciphertext (which does not seem useful). Hence,
+    // we declare this to be sufficiently safe at the moment.
+    crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
+        buffer.data(), out_size);
+    ABSL_RETURN_IF_ERROR(CtrCrypt(N, encrypted, buffer.subspan(0, out_size)));
+    // Declassify the plaintext: this is now safe to give to the adversary
+    // (since the API specifies that the plaintext is in a caller-provided
+    // buffer which can leak so the user is responsible for this).
+    crypto::tink::internal::DfsanClearLabel(buffer.data(), out_size);
+    return out_size;
+  });
 }
 
 }  // namespace
@@ -351,8 +384,9 @@ absl::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
       [&]() -> absl::StatusOr<std::unique_ptr<Aead>> {
         ABSL_ASSIGN_OR_RETURN(util::SecretUniquePtr<AES_KEY> aeskey,
                               InitAesKey(key));
-        return std::make_unique<AesEaxBoringSslImpl>(std::move(aeskey),
-                                                     nonce_size_in_bytes);
+        return std::make_unique<internal::AeadFromZeroCopy>(
+            std::make_unique<AesEaxBoringSslImpl>(std::move(aeskey),
+                                                  nonce_size_in_bytes));
       });
 }
 

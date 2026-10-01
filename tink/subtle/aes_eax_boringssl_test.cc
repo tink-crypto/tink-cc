@@ -17,6 +17,7 @@
 #include "tink/subtle/aes_eax_boringssl.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -28,7 +29,10 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "openssl/err.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/testing/wycheproof_util.h"
 #include "tink/util/secret_data.h"
@@ -42,6 +46,7 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
@@ -355,6 +360,62 @@ TEST(AesEaxBoringSslTest, TestFipsOnly) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(subtle::AesEaxBoringSsl::New(key256, 16).status(),
               StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(AesEaxBoringSslTest, TestZeroCopy) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  SecretData key = util::SecretDataFromStringView(
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  constexpr size_t kNonceSize = 12;
+  constexpr size_t kTagSize = 16;
+  absl::StatusOr<std::unique_ptr<Aead>> cipher =
+      AesEaxBoringSsl::New(key, kNonceSize);
+  ASSERT_THAT(cipher, IsOk());
+  const internal::ZeroCopyAead* zc_cipher =
+      internal::MaybeZeroCopyFromAead(**cipher);
+  ASSERT_NE(zc_cipher, nullptr);
+
+  std::string message = "Some data to encrypt.";
+  std::string associated_data = "Some data to authenticate.";
+
+  EXPECT_EQ(zc_cipher->MaxEncryptionSize(message.size()),
+            message.size() + kNonceSize + kTagSize);
+  for (int64_t ct_size = 0; ct_size <= int64_t{kNonceSize + kTagSize};
+       ++ct_size) {
+    EXPECT_EQ(zc_cipher->MaxDecryptionSize(ct_size), 0);
+  }
+
+  std::string ciphertext(zc_cipher->MaxEncryptionSize(message.size()), '\0');
+  EXPECT_THAT(zc_cipher->Encrypt(
+                  message, associated_data,
+                  absl::MakeSpan(ciphertext).subspan(0, ciphertext.size() - 1)),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(zc_cipher->Encrypt(
+                  absl::string_view(ciphertext).substr(0, message.size()),
+                  associated_data, absl::MakeSpan(ciphertext)),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  ASSERT_THAT(
+      zc_cipher->Encrypt(message, associated_data, absl::MakeSpan(ciphertext)),
+      IsOkAndHolds<int64_t>(ciphertext.size()));
+
+  std::string plaintext(zc_cipher->MaxDecryptionSize(ciphertext.size()), '\0');
+  EXPECT_THAT(zc_cipher->Decrypt(
+                  ciphertext, associated_data,
+                  absl::MakeSpan(plaintext).subspan(0, plaintext.size() - 1)),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      zc_cipher->Decrypt(ciphertext, associated_data,
+                         absl::MakeSpan(ciphertext).subspan(0, message.size())),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  ASSERT_THAT(zc_cipher->Decrypt(ciphertext, associated_data,
+                                 absl::MakeSpan(plaintext)),
+              IsOkAndHolds(message.size()));
+  EXPECT_EQ(plaintext, message);
 }
 
 }  // namespace

@@ -193,7 +193,6 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
-    tink::util::test_matchers
     tink::util::test_util
   TAGS
     exclude_if_openssl

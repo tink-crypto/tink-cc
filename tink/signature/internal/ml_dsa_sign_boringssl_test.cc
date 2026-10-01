@@ -54,7 +54,8 @@ class MlDsaSignBoringSslTest : public TestWithParam<TestCase> {
  protected:
   void SetUp() override {
     if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-      GTEST_SKIP() << "kOnlyUseFips is set but BoringCrypto is unavailable.";
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
     }
   }
 };

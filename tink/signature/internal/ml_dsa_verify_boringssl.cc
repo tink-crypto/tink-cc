@@ -46,8 +46,9 @@ namespace {
 #ifdef OPENSSL_IS_BORINGSSL
 class MlDsa44VerifyBoringSsl : public PublicKeyVerify {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       MlDsaPublicKey public_key, absl::string_view context);
@@ -129,8 +130,9 @@ absl::Status MlDsa44VerifyBoringSsl::Verify(absl::string_view signature,
 
 class MlDsa65VerifyBoringSsl : public PublicKeyVerify {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       MlDsaPublicKey public_key, absl::string_view context);
@@ -212,8 +214,9 @@ absl::Status MlDsa65VerifyBoringSsl::Verify(absl::string_view signature,
 
 class MlDsa87VerifyBoringSsl : public PublicKeyVerify {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       MlDsaPublicKey public_key, absl::string_view context);

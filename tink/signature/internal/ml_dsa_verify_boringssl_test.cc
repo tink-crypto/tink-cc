@@ -17,6 +17,7 @@
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -38,7 +39,6 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -53,7 +53,16 @@ using ::testing::HasSubstr;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-using MlDsaVerifyBoringSslTest = TestWithParam<MlDsaParameters::Instance>;
+class MlDsaVerifyBoringSslTest
+    : public TestWithParam<MlDsaParameters::Instance> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
 INSTANTIATE_TEST_SUITE_P(MlDsaVerifyBoringSslTestSuite,
                          MlDsaVerifyBoringSslTest,
@@ -62,10 +71,6 @@ INSTANTIATE_TEST_SUITE_P(MlDsaVerifyBoringSslTestSuite,
                                 MlDsaParameters::Instance::kMlDsa87));
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextTooLongFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -85,10 +90,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextTooLongFails) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -119,10 +120,6 @@ TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyWithContextRawWorks) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -154,10 +151,6 @@ TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyWithContextRawWorks) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -188,10 +181,6 @@ TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyWithContextTinkWorks) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -223,10 +212,6 @@ TEST_P(MlDsaVerifyBoringSslTest, BasicSignVerifyWithContextTinkWorks) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -250,10 +235,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithWrongSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -278,10 +259,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithWrongSignatureFails) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithModifiedSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -315,10 +292,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithModifiedSignatureFails) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithModifiedSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -367,10 +340,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithModifiedSignatureFails) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithModifiedOutputPrefixFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -405,10 +374,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithModifiedOutputPrefixFails) {
 
 TEST_P(MlDsaVerifyBoringSslTest,
        VerifyWithContextWithModifiedOutputPrefixFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -443,10 +408,6 @@ TEST_P(MlDsaVerifyBoringSslTest,
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -478,10 +439,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
 }
 
 TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithWrongMessageFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -511,48 +468,6 @@ TEST_P(MlDsaVerifyBoringSslTest, VerifyWithContextWithWrongMessageFails) {
   EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Signature is not valid")));
-}
-
-TEST_P(MlDsaVerifyBoringSslTest, FipsMode) {
-  if (!IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips.";
-  }
-
-  MlDsaParameters::Instance instance = GetParam();
-
-  absl::StatusOr<MlDsaParameters> key_parameters =
-      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(key_parameters, IsOk());
-
-  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, /*id_requirement=*/std::nullopt);
-  ASSERT_THAT(private_key, IsOk());
-
-  // Create a new signer.
-  EXPECT_THAT(NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey()).status(),
-              StatusIs(absl::StatusCode::kInternal));
-}
-
-TEST_P(MlDsaVerifyBoringSslTest, FipsModeWithContext) {
-  if (!IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips.";
-  }
-
-  MlDsaParameters::Instance instance = GetParam();
-
-  absl::StatusOr<MlDsaParameters> key_parameters =
-      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(key_parameters, IsOk());
-
-  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*key_parameters, /*id_requirement=*/std::nullopt);
-  ASSERT_THAT(private_key, IsOk());
-
-  // Create a new signer.
-  EXPECT_THAT(NewMlDsaVerifyWithContextBoringSsl((*private_key)->GetPublicKey(),
-                                                 "some context")
-                  .status(),
-              StatusIs(absl::StatusCode::kInternal));
 }
 
 // Test vector based on the ML-DSA-44 standard.
@@ -690,7 +605,7 @@ constexpr absl::string_view kHexSignatureWithTinkPrefix44 =
     "132a3b477993a1acc1f5ff0e14186069758d8fa4a8b8cbd0000000000000"
     "000000000000000000000000000000000000000000101d2835";
 
-TEST(MlDsaVerifyBoringSslTest, TestVectorSignVerify44) {
+TEST_F(MlDsaVerifyBoringSslTest, TestVectorSignVerify44) {
   absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa44, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -911,7 +826,7 @@ constexpr absl::string_view kHexSignatureWithTinkPrefix65 =
     "8497A20F2D3C467E803F697DA800000000000000000000000000000000000000080F141A"
     "2024";
 
-TEST(MlDsaVerifyBoringSslTest, TestVectorSignVerify65) {
+TEST_F(MlDsaVerifyBoringSslTest, TestVectorSignVerify65) {
   absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -1040,7 +955,7 @@ constexpr absl::string_view kHexSignatureWithContextWithTinkPrefix65 =
     "1e27372c93cbfa589dace54350526768747c999dafc92354568beb00000000000000000000"
     "00000000000000000000000000000003060a0e191e";
 
-TEST(MlDsaVerifyBoringSslTest, TestVectorSignVerifyWithContext65) {
+TEST_F(MlDsaVerifyBoringSslTest, TestVectorSignVerifyWithContext65) {
   absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -1297,7 +1212,7 @@ constexpr absl::string_view kHexSignatureWithTinkPrefix87 =
     "E2F808BCD0E3F4FC495E8CACCFD2DFEBF1F7F908445D96B1B4C5C91D637175BC00000000"
     "00000000000000000000000000000000050911191F2A3237";
 
-TEST(MlDsaVerifyBoringSslTest, TestVectorSignVerify87) {
+TEST_F(MlDsaVerifyBoringSslTest, TestVectorSignVerify87) {
   absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -1462,7 +1377,7 @@ constexpr absl::string_view kHexSignatureWithContextWithTinkPrefix87 =
     "a7cc0e25545b00000000000000000000000000000000000000000000000000000000000005"
     "0b10192025292d";
 
-TEST(MlDsaVerifyBoringSslTest, TestVectorSignVerifyWithContext87) {
+TEST_F(MlDsaVerifyBoringSslTest, TestVectorSignVerifyWithContext87) {
   absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());

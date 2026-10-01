@@ -1140,10 +1140,8 @@ tink_cc_library(
     ecdsa_key_creator.cc
     ecdsa_key_creator.h
   DEPS
-    absl::memory
     absl::status
     absl::statusor
-    absl::string_view
     absl::optional
     tink::core::big_integer
     tink::core::ec_point

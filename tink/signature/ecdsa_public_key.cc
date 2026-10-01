@@ -16,6 +16,7 @@
 
 #include "tink/signature/ecdsa_public_key.h"
 
+#include <optional>
 #include <string>
 
 #include "absl/base/attributes.h"
@@ -23,9 +24,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "tink/internal/output_prefix_util.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#include "tink/internal/output_prefix_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -46,32 +46,22 @@ namespace {
 
 absl::Status ValidatePublicPoint(EcdsaParameters::CurveType curve_type,
                                  const EcPoint& point) {
-  subtle::EllipticCurveType curve;
-  switch (curve_type) {
-    case EcdsaParameters::CurveType::kNistP256:
-      curve = subtle::EllipticCurveType::NIST_P256;
-      break;
-    case EcdsaParameters::CurveType::kNistP384:
-      curve = subtle::EllipticCurveType::NIST_P384;
-      break;
-    case EcdsaParameters::CurveType::kNistP521:
-      curve = subtle::EllipticCurveType::NIST_P521;
-      break;
-    default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          absl::StrCat("Unknown curve type: ", curve_type));
+  absl::StatusOr<subtle::EllipticCurveType> curve =
+      internal::ToSubtleEllipticCurveType(curve_type);
+  if (!curve.ok()) {
+    return curve.status();
   }
   // Internally calls EC_POINT_set_affine_coordinates_GFp, which, in BoringSSL
   // and OpenSSL versions > 1.1.0, already checks if the point is on the curve.
   absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
-      internal::GetEcPoint(curve, point.GetX().GetValue(),
+      internal::GetEcPoint(*curve, point.GetX().GetValue(),
                            point.GetY().GetValue());
   if (!ec_point.ok()) {
     return ec_point.status();
   }
 
   absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
-      internal::EcGroupFromCurveType(curve);
+      internal::EcGroupFromCurveType(*curve);
   if (!group.ok()) {
     return group.status();
   }
@@ -79,7 +69,7 @@ absl::Status ValidatePublicPoint(EcdsaParameters::CurveType curve_type,
       1) {
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("EC public point is not on curve ",
-                                     subtle::EnumToString(curve)));
+                                     subtle::EnumToString(*curve)));
   }
   return absl::OkStatus();
 }

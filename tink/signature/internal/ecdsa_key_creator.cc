@@ -18,10 +18,8 @@
 
 #include <memory>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 
 #include "tink/big_integer.h"
@@ -39,29 +37,11 @@
 namespace crypto {
 namespace tink {
 namespace internal {
-namespace {
-
-absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
-    EcdsaParameters::CurveType curve_type) {
-  switch (curve_type) {
-    case EcdsaParameters::CurveType::kNistP256:
-      return subtle::EllipticCurveType::NIST_P256;
-    case EcdsaParameters::CurveType::kNistP384:
-      return subtle::EllipticCurveType::NIST_P384;
-    case EcdsaParameters::CurveType::kNistP521:
-      return subtle::EllipticCurveType::NIST_P521;
-    default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Invalid ECDSA curve type.");
-  }
-}
-
-}  // namespace
 
 absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
     const EcdsaParameters& params, absl::optional<int> id_requirement) {
   absl::StatusOr<subtle::EllipticCurveType> curve_type =
-      ToSubtleEllipticCurve(params.GetCurveType());
+      ToSubtleEllipticCurveType(params.GetCurveType());
   if (!curve_type.ok()) {
     return curve_type.status();
   }

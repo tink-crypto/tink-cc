@@ -49,28 +49,14 @@ namespace crypto {
 namespace tink {
 namespace {
 
-absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
-    EcdsaParameters::CurveType curve_type) {
-  switch (curve_type) {
-    case EcdsaParameters::CurveType::kNistP256:
-      return subtle::EllipticCurveType::NIST_P256;
-    case EcdsaParameters::CurveType::kNistP384:
-      return subtle::EllipticCurveType::NIST_P384;
-    case EcdsaParameters::CurveType::kNistP521:
-      return subtle::EllipticCurveType::NIST_P521;
-    default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          absl::StrCat("Unknown curve type: ", curve_type));
-  }
-}
-
 absl::Status ValidateKeyPair(const EcdsaPublicKey& public_key,
                              const RestrictedData& private_key_value,
                              PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
   absl::StatusOr<subtle::EllipticCurveType> curve =
-      SubtleCurveType(public_key.GetParameters().GetCurveType());
+      internal::ToSubtleEllipticCurveType(
+          public_key.GetParameters().GetCurveType());
   if (!curve.ok()) {
     return curve.status();
   }

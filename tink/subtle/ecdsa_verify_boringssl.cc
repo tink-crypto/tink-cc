@@ -55,21 +55,6 @@ namespace subtle {
 
 namespace {
 
-absl::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
-    EcdsaParameters::CurveType curve_type) {
-  switch (curve_type) {
-    case EcdsaParameters::CurveType::kNistP256:
-      return NIST_P256;
-    case EcdsaParameters::CurveType::kNistP384:
-      return NIST_P384;
-    case EcdsaParameters::CurveType::kNistP521:
-      return NIST_P521;
-    default:
-      return absl::InvalidArgumentError(absl::StrCat(
-          "Invalid curve in EcdsaVerifyBoringSsl::New: ", curve_type));
-  }
-}
-
 absl::StatusOr<HashType> ConvertHashType(EcdsaParameters::HashType hash_type) {
   switch (hash_type) {
     case EcdsaParameters::HashType::kSha256:
@@ -179,9 +164,9 @@ absl::Status EcdsaVerifyBoringSslImpl::Verify(absl::string_view signature,
 
 absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     const EcdsaPublicKey& public_key) {
-  ABSL_ASSIGN_OR_RETURN(
-      subtle::EllipticCurveType converted_curve_type,
-      ConvertCurveType(public_key.GetParameters().GetCurveType()));
+  ABSL_ASSIGN_OR_RETURN(subtle::EllipticCurveType converted_curve_type,
+                        internal::ToSubtleEllipticCurveType(
+                            public_key.GetParameters().GetCurveType()));
   ABSL_ASSIGN_OR_RETURN(
       HashType converted_hash_type,
       ConvertHashType(public_key.GetParameters().GetHashType()));

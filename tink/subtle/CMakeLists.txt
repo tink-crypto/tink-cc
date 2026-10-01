@@ -969,11 +969,12 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_cmac_boringssl
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
-    absl::optional
+    benchmark::benchmark_main
     tink::core::insecure_secret_key_access_testonly
     tink::core::mac
     tink::core::partial_key_access

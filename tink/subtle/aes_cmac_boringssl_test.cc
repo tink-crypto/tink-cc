@@ -19,17 +19,19 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/config/tink_fips.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/mac.h"
@@ -365,6 +367,135 @@ TEST(AesCmacTinkTestVectorsTest, WrongPrefixVerifyFails) {
   tag[1] ^= 0x01;
   EXPECT_THAT((*mac)->VerifyMac(tag, message), Not(IsOk()));
 }
+
+void AesCmacComputeBenchmark(benchmark::State& state, int key_size,
+                             AesCmacParameters::Variant variant) {
+  if (IsFipsModeEnabled()) {
+    state.SetLabel("Not supported in FIPS-only mode");
+    return;
+  }
+  absl::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(key_size, kTagSize, variant);
+  ABSL_CHECK_OK(parameters.status());
+  std::optional<int> id_requirement =
+      variant == AesCmacParameters::Variant::kNoPrefix
+          ? std::nullopt
+          : std::make_optional(1877);
+  absl::StatusOr<AesCmacKey> key =
+      AesCmacKey::Create(*parameters, RestrictedData(key_size), id_requirement,
+                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(key.status());
+  absl::StatusOr<std::unique_ptr<Mac>> cmac = AesCmacBoringSsl::New(*key);
+  ABSL_CHECK_OK(cmac.status());
+
+  std::string data(state.range(0), 'x');
+  benchmark::DoNotOptimize(data);
+  for (auto s : state) {
+    absl::StatusOr<std::string> tag = (*cmac)->ComputeMac(data);
+    benchmark::DoNotOptimize(tag);
+    ABSL_CHECK_OK(tag.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_AesCmac128NoPrefixCompute(benchmark::State& state) {
+  AesCmacComputeBenchmark(state, /*key_size=*/16,
+                          AesCmacParameters::Variant::kNoPrefix);
+}
+
+void BM_AesCmac128LegacyCompute(benchmark::State& state) {
+  AesCmacComputeBenchmark(state, /*key_size=*/16,
+                          AesCmacParameters::Variant::kLegacy);
+}
+
+void BM_AesCmac256NoPrefixCompute(benchmark::State& state) {
+  AesCmacComputeBenchmark(state, /*key_size=*/32,
+                          AesCmacParameters::Variant::kNoPrefix);
+}
+
+void BM_AesCmac256LegacyCompute(benchmark::State& state) {
+  AesCmacComputeBenchmark(state, /*key_size=*/32,
+                          AesCmacParameters::Variant::kLegacy);
+}
+
+constexpr int64_t kMaxDataSize = 1 << 23;  // 8 MiB
+
+BENCHMARK(BM_AesCmac128NoPrefixCompute)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+BENCHMARK(BM_AesCmac128LegacyCompute)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+BENCHMARK(BM_AesCmac256NoPrefixCompute)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+BENCHMARK(BM_AesCmac256LegacyCompute)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+
+void AesCmacVerifyBenchmark(benchmark::State& state, int key_size,
+                            AesCmacParameters::Variant variant) {
+  if (IsFipsModeEnabled()) {
+    state.SetLabel("Not supported in FIPS-only mode");
+    return;
+  }
+  absl::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(key_size, kTagSize, variant);
+  ABSL_CHECK_OK(parameters.status());
+  std::optional<int> id_requirement =
+      variant == AesCmacParameters::Variant::kNoPrefix
+          ? std::nullopt
+          : std::make_optional(1877);
+  absl::StatusOr<AesCmacKey> key =
+      AesCmacKey::Create(*parameters, RestrictedData(key_size), id_requirement,
+                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(key.status());
+  absl::StatusOr<std::unique_ptr<Mac>> cmac = AesCmacBoringSsl::New(*key);
+  ABSL_CHECK_OK(cmac.status());
+
+  std::string data(state.range(0), 'x');
+  absl::StatusOr<std::string> tag = (*cmac)->ComputeMac(data);
+  ABSL_CHECK_OK(tag.status());
+  absl::Status status;
+  for (auto s : state) {
+    benchmark::DoNotOptimize(status = (*cmac)->VerifyMac(*tag, data));
+    ABSL_CHECK_OK(status);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_AesCmac128NoPrefixVerify(benchmark::State& state) {
+  AesCmacVerifyBenchmark(state, /*key_size=*/16,
+                         AesCmacParameters::Variant::kNoPrefix);
+}
+
+void BM_AesCmac128LegacyVerify(benchmark::State& state) {
+  AesCmacVerifyBenchmark(state, /*key_size=*/16,
+                         AesCmacParameters::Variant::kLegacy);
+}
+
+void BM_AesCmac256NoPrefixVerify(benchmark::State& state) {
+  AesCmacVerifyBenchmark(state, /*key_size=*/32,
+                         AesCmacParameters::Variant::kNoPrefix);
+}
+
+void BM_AesCmac256LegacyVerify(benchmark::State& state) {
+  AesCmacVerifyBenchmark(state, /*key_size=*/32,
+                         AesCmacParameters::Variant::kLegacy);
+}
+
+BENCHMARK(BM_AesCmac128NoPrefixVerify)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+BENCHMARK(BM_AesCmac128LegacyVerify)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+BENCHMARK(BM_AesCmac256NoPrefixVerify)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
+BENCHMARK(BM_AesCmac256LegacyVerify)
+    ->RangeMultiplier(128)
+    ->Range(32, kMaxDataSize);
 
 }  // namespace
 }  // namespace subtle

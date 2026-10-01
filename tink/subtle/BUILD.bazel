@@ -1018,7 +1018,6 @@ cc_test(
 
 cc_test(
     name = "aes_cmac_boringssl_test",
-    size = "small",
     srcs = ["aes_cmac_boringssl_test.cc"],
     tags = ["fips"],
     deps = [
@@ -1037,11 +1036,12 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/types:optional",
+        "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],
 )

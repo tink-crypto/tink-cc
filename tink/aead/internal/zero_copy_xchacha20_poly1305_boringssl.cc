@@ -29,6 +29,7 @@
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/util.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 
@@ -73,6 +74,14 @@ absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Encrypt(
         absl::StrCat("Encryption buffer too small; expected at least ",
                      bytes_needed, " bytes, got ", buffer.size()));
   }
+
+  absl::string_view buffer_string(buffer.data(), buffer.size());
+  if (BuffersOverlap(plaintext, buffer_string)) {
+    return absl::Status(
+        absl::StatusCode::kFailedPrecondition,
+        "Plaintext and ciphertext buffers overlap; this is disallowed");
+  }
+
   absl::Span<char> nonce_buffer = buffer.subspan(0, kNonceSizeInBytes);
   absl::Span<char> encrypted_buffer = buffer.subspan(kNonceSizeInBytes);
 
@@ -108,6 +117,14 @@ absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Decrypt(
         absl::StrCat("Ciphertext too short; expected at least ",
                      kOverheadInBytes, " got ", ciphertext.size()));
   }
+
+  absl::string_view buffer_string(buffer.data(), buffer.size());
+  if (BuffersOverlap(ciphertext, buffer_string)) {
+    return absl::Status(
+        absl::StatusCode::kFailedPrecondition,
+        "Plaintext and ciphertext buffers overlap; this is disallowed");
+  }
+
   absl::string_view nonce = ciphertext.substr(0, kNonceSizeInBytes);
   absl::string_view encrypted = ciphertext.substr(kNonceSizeInBytes);
 

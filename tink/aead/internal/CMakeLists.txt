@@ -1455,6 +1455,7 @@ tink_cc_library(
     absl::span
     tink::core::secret_data
     tink::internal::fips_utils
+    tink::internal::util
     tink::subtle::random
 )
 

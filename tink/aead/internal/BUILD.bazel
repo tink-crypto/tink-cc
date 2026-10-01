@@ -1490,6 +1490,7 @@ cc_library(
         ":zero_copy_aead",
         "//tink:secret_data",
         "//tink/internal:fips_utils",
+        "//tink/internal:util",
         "//tink/subtle:random",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",

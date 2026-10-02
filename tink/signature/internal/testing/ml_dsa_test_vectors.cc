@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -25,6 +26,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -35,13 +37,10 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/util/test_util.h"
 
 namespace crypto::tink::internal {
 
 namespace {
-
-using ::crypto::tink::test::HexDecodeOrDie;
 
 // ML-DSA-44 test vectors from ml_dsa_verify_boringssl_test.cc.
 constexpr absl::string_view kHexPublicKey44 =
@@ -557,14 +556,16 @@ MlDsaPrivateKey CreatePrivateKey(MlDsaParameters::Instance instance,
       MlDsaParameters::Create(instance, variant);
   ABSL_CHECK_OK(parameters.status());
 
-  absl::StatusOr<MlDsaPublicKey> public_key =
-      MlDsaPublicKey::Create(*parameters, HexDecodeOrDie(pub_hex),
-                             id_requirement, GetPartialKeyAccess());
+  std::string pub_bytes;
+  ABSL_CHECK(absl::HexStringToBytes(pub_hex, &pub_bytes));
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+      *parameters, pub_bytes, id_requirement, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
 
+  std::string priv_bytes;
+  ABSL_CHECK(absl::HexStringToBytes(priv_hex, &priv_bytes));
   absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(HexDecodeOrDie(priv_hex), InsecureSecretKeyAccess::Get()),
+      *public_key, RestrictedData(priv_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
   return *private_key;
@@ -579,8 +580,12 @@ SignatureTestVector MakeMlDsaTestVector(MlDsaParameters::Instance instance,
                                         absl::string_view msg_hex) {
   MlDsaPrivateKey private_key =
       CreatePrivateKey(instance, variant, pub_hex, priv_hex, id_requirement);
+  std::string sig_bytes;
+  ABSL_CHECK(absl::HexStringToBytes(sig_hex, &sig_bytes));
+  std::string msg_bytes;
+  ABSL_CHECK(absl::HexStringToBytes(msg_hex, &msg_bytes));
   return SignatureTestVector(std::make_unique<MlDsaPrivateKey>(private_key),
-                             HexDecodeOrDie(sig_hex), HexDecodeOrDie(msg_hex));
+                             sig_bytes, msg_bytes);
 }
 
 using MlDsaTestVectorMap = absl::flat_hash_map<

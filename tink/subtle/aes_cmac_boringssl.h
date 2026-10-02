@@ -53,15 +53,6 @@ class AesCmacBoringSsl : public Mac {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  // Computes and returns the CMAC for 'data'.
-  absl::StatusOr<std::string> ComputeMacNoPrefix(
-      absl::string_view data) const;
-
-  // Verifies if 'mac' is a correct CMAC for 'data'.
-  // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.
-  absl::Status VerifyMacNoPrefix(absl::string_view mac,
-                             absl::string_view data) const;
-
   AesCmacBoringSsl(SecretData key, uint32_t tag_size,
                    absl::string_view output_prefix,
                    absl::string_view message_suffix)

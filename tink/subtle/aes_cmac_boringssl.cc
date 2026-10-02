@@ -26,7 +26,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/cmac.h"
 #include "openssl/evp.h"
@@ -61,10 +60,12 @@ static constexpr size_t kMaxTagSize = 16;
 
 namespace {
 
-// Computes the CMAC of `data` using `key` and writes the result to
+// Computes the CMAC of `data` + `suffix` using `key` and writes the result to
 // `tag_ptr[0..kMaxTagSize-1]`.
+//
+// `data` and `suffix` are separate arguments so the caller can avoid a copy.
 bool ComputeMacInternal(const SecretData& key, uint8_t* tag_ptr,
-                        absl::string_view data) {
+                        absl::string_view data, absl::string_view suffix) {
   internal::SslUniquePtr<CMAC_CTX> context(CMAC_CTX_new());
   absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCbcCipherForKeySize(key.size());
@@ -72,11 +73,14 @@ bool ComputeMacInternal(const SecretData& key, uint8_t* tag_ptr,
     return false;
   }
   const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(data.data());
+  const uint8_t* suffix_ptr = reinterpret_cast<const uint8_t*>(suffix.data());
   size_t len = 0;
   return internal::CallWithCoreDumpProtection([&]() {
     if (CMAC_Init(context.get(), key.data(), key.size(), *cipher, nullptr) <=
             0 ||
         CMAC_Update(context.get(), data_ptr, data.size()) <= 0 ||
+        (!suffix.empty() &&
+         CMAC_Update(context.get(), suffix_ptr, suffix.size()) <= 0) ||
         CMAC_Final(context.get(), tag_ptr, &len) == 0) {
       return false;
     }
@@ -135,29 +139,38 @@ absl::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(
           : ""))};
 }
 
-absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMacNoPrefix(
+absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
 
-  std::string result;
-  ResizeStringUninitialized(&result, kMaxTagSize);
-  uint8_t* result_ptr = reinterpret_cast<uint8_t*>(&result[0]);
-  internal::ScopedAssumeRegionCoreDumpSafe scoped(result_ptr, kMaxTagSize);
-  if (!ComputeMacInternal(key_, result_ptr, data)) {
+  const size_t output_prefix_size = output_prefix_.size();
+  std::string result = output_prefix_;
+  ResizeStringUninitialized(&result, output_prefix_size + kMaxTagSize);
+
+  uint8_t* result_mac_ptr =
+      reinterpret_cast<uint8_t*>(&result[output_prefix_size]);
+  internal::ScopedAssumeRegionCoreDumpSafe scoped(result_mac_ptr, kMaxTagSize);
+  if (!ComputeMacInternal(key_, result_mac_ptr, data, message_suffix_)) {
     return absl::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
   }
   // Declassify the tag. Safe because it is in a std::string anyhow and can
   // be given to the adversary (though the core dump could expose longer tags
   // than the user will).
-  crypto::tink::internal::DfsanClearLabel(result_ptr, kMaxTagSize);
-  result.resize(tag_size_);
+  crypto::tink::internal::DfsanClearLabel(result_mac_ptr, kMaxTagSize);
+  result.resize(output_prefix_size + tag_size_);
+
   return result;
 }
 
-absl::Status AesCmacBoringSsl::VerifyMacNoPrefix(
-    absl::string_view mac, absl::string_view data) const {
+absl::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
+                                         absl::string_view data) const {
+  if (!absl::StartsWith(mac, output_prefix_)) {
+    return absl::InvalidArgumentError("Prefix mismatch");
+  }
+  mac.remove_prefix(output_prefix_.size());
+
   if (mac.size() != tag_size_) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Incorrect tag size: expected %d, found %d", tag_size_,
@@ -165,7 +178,7 @@ absl::Status AesCmacBoringSsl::VerifyMacNoPrefix(
   }
   internal::SecretBuffer computed_mac(kMaxTagSize);
 
-  if (!ComputeMacInternal(key_, computed_mac.data(), data)) {
+  if (!ComputeMacInternal(key_, computed_mac.data(), data, message_suffix_)) {
     return absl::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
   }
   computed_mac.resize(tag_size_);
@@ -176,37 +189,6 @@ absl::Status AesCmacBoringSsl::VerifyMacNoPrefix(
                         "CMAC verification failed");
   }
   return absl::OkStatus();
-}
-
-absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
-    absl::string_view data) const {
-  absl::StatusOr<std::string> raw_sig;
-  if (!message_suffix_.empty()) {
-    std::string message = absl::StrCat(data, message_suffix_);
-    raw_sig = ComputeMacNoPrefix(message);
-  } else {
-    raw_sig = ComputeMacNoPrefix(data);
-  }
-  if (output_prefix_.empty()) {
-    return raw_sig;
-  }
-  if (!raw_sig.ok()) {
-    return raw_sig;
-  }
-  return absl::StrCat(output_prefix_, *raw_sig);
-}
-
-absl::Status AesCmacBoringSsl::VerifyMac(
-    absl::string_view mac, absl::string_view data) const {
-  if (!absl::StartsWith(mac, output_prefix_)) {
-    return absl::InvalidArgumentError("Prefix mismatch");
-  }
-  mac.remove_prefix(output_prefix_.size());
-  if (message_suffix_.empty()) {
-    return VerifyMacNoPrefix(mac, data);
-  } else {
-    return VerifyMacNoPrefix(mac, absl::StrCat(data, message_suffix_));
-  }
 }
 
 }  // namespace subtle

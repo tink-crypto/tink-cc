@@ -27,7 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"  // IWYU pragma: keep
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/slhdsa.h"
 #endif
 #include "tink/insecure_secret_key_access.h"
@@ -45,7 +45,7 @@ namespace internal {
 
 namespace {
 
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#if defined(OPENSSL_IS_BORINGSSL)
 using SignFunc = int (*)(uint8_t*, const uint8_t*, const uint8_t*, size_t,
                          const uint8_t*, size_t);
 
@@ -76,8 +76,9 @@ absl::StatusOr<size_t> GetSignatureSize(
 
 class SlhDsaSignBoringSsl : public PublicKeySign {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   explicit SlhDsaSignBoringSsl(const SlhDsaPrivateKey& private_key)
       : private_key_(private_key) {}
@@ -136,9 +137,9 @@ absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
     const SlhDsaPrivateKey& private_key) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
+      "SLH-DSA is only supported in BoringSSL builds.");
 #else
   auto status = internal::CheckFipsCompatibility<SlhDsaSignBoringSsl>();
   if (!status.ok()) {

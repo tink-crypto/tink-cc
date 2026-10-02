@@ -17,6 +17,7 @@
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -38,7 +39,6 @@
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -51,11 +51,17 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::HasSubstr;
 
-TEST(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
+class SlhDsaVerifyBoringSslTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
   }
+};
 
+TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -86,11 +92,7 @@ TEST(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
 
-TEST(SlhDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
+TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -122,11 +124,7 @@ TEST(SlhDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
 
-TEST(SlhDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
+TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -155,11 +153,7 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
                        HasSubstr("invalid signature length")));
 }
 
-TEST(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
+TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -207,11 +201,7 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
                        HasSubstr("Signature is not valid")));
 }
 
-TEST(SlhDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
+TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -253,11 +243,7 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
                        HasSubstr("invalid output prefix")));
 }
 
-TEST(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
-
+TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -289,28 +275,6 @@ TEST(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
                        HasSubstr("Signature is not valid")));
 }
 
-TEST(SlhDsaVerifyBoringSslTest, FipsMode) {
-  if (!IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips.";
-  }
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
-  ASSERT_THAT(private_key, IsOk());
-
-  // Create a new signer.
-  EXPECT_THAT(
-      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey()).status(),
-      StatusIs(absl::StatusCode::kInternal));
-}
-
 struct TestVector {
   std::string test_name;
   SlhDsaParameters::HashType hash_type;
@@ -324,12 +288,18 @@ struct TestVector {
   bool expect_valid;
 };
 
-using SlhDsaVerifyBoringSslTestVectorTest = testing::TestWithParam<TestVector>;
+class SlhDsaVerifyBoringSslTestVectorTest
+    : public testing::TestWithParam<TestVector> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
 TEST_P(SlhDsaVerifyBoringSslTestVectorTest, SignAndVerify) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
   const TestVector& param = GetParam();
   if (!param.expect_valid) {
     GTEST_SKIP() << "Test vector has an invalid signature.";
@@ -371,9 +341,6 @@ TEST_P(SlhDsaVerifyBoringSslTestVectorTest, SignAndVerify) {
 }
 
 TEST_P(SlhDsaVerifyBoringSslTestVectorTest, VerifyInvalidSignatureFails) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
-  }
   const TestVector& param = GetParam();
   if (param.expect_valid) {
     GTEST_SKIP() << "Test vector has a valid signature.";

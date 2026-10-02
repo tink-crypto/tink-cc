@@ -169,7 +169,6 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::fips_utils
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key

@@ -461,6 +461,7 @@ cc_library(
 cc_test(
     name = "slh_dsa_sign_boringssl_test",
     srcs = ["slh_dsa_sign_boringssl_test.cc"],
+    tags = ["fips"],
     deps = [
         ":slh_dsa_key_creator",
         ":slh_dsa_sign_boringssl",
@@ -468,8 +469,6 @@ cc_test(
         "//tink/internal:fips_utils",
         "//tink/signature:slh_dsa_parameters",
         "//tink/signature:slh_dsa_private_key",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/types:optional",
@@ -502,6 +501,7 @@ cc_library(
 cc_test(
     name = "slh_dsa_verify_boringssl_test",
     srcs = ["slh_dsa_verify_boringssl_test.cc"],
+    tags = ["fips"],
     deps = [
         ":slh_dsa_key_creator",
         ":slh_dsa_sign_boringssl",
@@ -515,7 +515,6 @@ cc_test(
         "//tink/signature:slh_dsa_parameters",
         "//tink/signature:slh_dsa_private_key",
         "//tink/signature:slh_dsa_public_key",
-        "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",

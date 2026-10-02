@@ -312,7 +312,6 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_sign_boringssl
     gmock
-    absl::status
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -321,7 +320,6 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
-    tink::util::test_matchers
   TAGS
     exclude_if_openssl
 )
@@ -370,7 +368,6 @@ tink_cc_test(
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
-    tink::util::test_matchers
     tink::util::test_util
   TAGS
     exclude_if_openssl

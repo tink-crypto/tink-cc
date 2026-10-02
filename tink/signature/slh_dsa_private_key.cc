@@ -29,7 +29,7 @@
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/util/secret_data.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/mem.h"
 #include "openssl/slhdsa.h"
 #endif
@@ -41,7 +41,7 @@
 #include "tink/restricted_data.h"
 #include "tink/signature/slh_dsa_public_key.h"
 
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#if defined(OPENSSL_IS_BORINGSSL)
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
 #endif
 
@@ -50,7 +50,7 @@ namespace tink {
 
 namespace {
 
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS)
+#if defined(OPENSSL_IS_BORINGSSL)
 absl::Status GetPublicFromPrivate(
     const internal::SlhDsaParameterSet& parameter_set,
     std::string& public_key_bytes, const SecretData& private_key_bytes) {
@@ -98,9 +98,9 @@ absl::Status GetKeyPairFromSeed(
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
+      "SLH-DSA is only supported in BoringSSL builds.");
 #else
   // Only 64-byte, 96-byte and 128-byte private keys are supported.
   if (private_key_bytes.size() != 64 && private_key_bytes.size() != 96 &&
@@ -158,9 +158,9 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaParameters& parameters, const RestrictedData& private_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
+      "SLH-DSA is only supported in BoringSSL builds.");
 #else
   // Only 64-byte, 96-byte and 128-byte private keys are supported.
   if (private_key_bytes.size() != 64 && private_key_bytes.size() != 96 &&
@@ -214,9 +214,9 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::CreateFromSeed(
     const SlhDsaParameters& parameters,
     const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL) || defined(TINK_USE_ONLY_FIPS)
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::UnimplementedError(
-      "SLH-DSA is only supported in non-FIPS BoringSSL builds.");
+      "SLH-DSA is only supported in BoringSSL builds.");
 #else
   // Only 48-byte, 72-byte and 96-byte private keys are supported.
   if (private_seed_bytes.size() != 48 && private_seed_bytes.size() != 72 &&

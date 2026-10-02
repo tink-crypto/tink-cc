@@ -28,7 +28,7 @@
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
+#include "tink/internal/fips_utils.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
@@ -54,88 +54,11 @@ using ::testing::HasSubstr;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-#ifdef TINK_USE_ONLY_FIPS
-struct TestCase {
-  SlhDsaParameters::HashType hash_type;
-  int private_key_size_in_bytes;
-  int public_key_size_in_bytes;
-  SlhDsaParameters::SignatureType signature_type;
-  SlhDsaParameters::Variant variant;
-};
-
-using SlhDsaPrivateKeyTest = TestWithParam<TestCase>;
-
-INSTANTIATE_TEST_SUITE_P(
-    SlhDsaPrivateKeyTestSuite, SlhDsaPrivateKeyTest,
-    testing::Values(TestCase{SlhDsaParameters::HashType::kSha2,
-                             /*private_key_size_in_bytes=*/64,
-                             /*public_key_size_in_bytes=*/32,
-                             SlhDsaParameters::SignatureType::kSmallSignature,
-                             SlhDsaParameters::Variant::kTink},
-                    TestCase{SlhDsaParameters::HashType::kShake,
-                             /*private_key_size_in_bytes=*/128,
-                             /*public_key_size_in_bytes=*/64,
-                             SlhDsaParameters::SignatureType::kFastSigning,
-                             SlhDsaParameters::Variant::kTink}));
-
-TEST_P(SlhDsaPrivateKeyTest, CreateFipsFails) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  std::string public_key_bytes =
-      subtle::Random::GetRandomBytes(test_case.public_key_size_in_bytes);
-  absl::StatusOr<SlhDsaPublicKey> public_key =
-      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
-                              /*id_requirement=*/123, GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  RestrictedData private_key_bytes = RestrictedData(
-      subtle::Random::GetRandomBytes(test_case.private_key_size_in_bytes),
-      InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      SlhDsaPrivateKey::Create(*public_key, private_key_bytes,
-                               GetPartialKeyAccess())
-          .status(),
-      StatusIs(absl::StatusCode::kUnimplemented,
-               HasSubstr(
-                   "SLH-DSA is only supported in non-FIPS BoringSSL builds.")));
-}
-
-TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedFipsFails) {
-  TestCase test_case = GetParam();
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      test_case.hash_type, test_case.private_key_size_in_bytes,
-      test_case.signature_type, test_case.variant);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<internal::SlhDsaParameterSet> parameter_set =
-      internal::GetSlhDsaParameterSet(*parameters);
-  ASSERT_THAT(parameter_set, IsOk());
-
-  RestrictedData seed =
-      RestrictedData(subtle::Random::GetRandomBytes(
-                         parameter_set->GetPrivateSeedSizeInBytes()),
-                     InsecureSecretKeyAccess::Get());
-
-  EXPECT_THAT(
-      SlhDsaPrivateKey::CreateFromSeed(*parameters, seed,
-                                       /*id_requirement=*/123,
-                                       GetPartialKeyAccess())
-          .status(),
-      StatusIs(absl::StatusCode::kUnimplemented,
-               HasSubstr(
-                   "SLH-DSA is only supported in non-FIPS BoringSSL builds.")));
-}
-#else
 using SlhDsaPrivateKeyTest = TestWithParam<internal::SignatureTestVector>;
 
 INSTANTIATE_TEST_SUITE_P(SlhDsaPrivateKeyTestSuite, SlhDsaPrivateKeyTest,
                          ValuesIn(internal::CreateSlhDsaTestVectors()));
+
 TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
   const internal::SignatureTestVector& test_vector = GetParam();
   const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
@@ -217,6 +140,11 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedSucceeds) {
 }
 
 TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedGeneratesConsistentKeyPair) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+  }
+
   const internal::SignatureTestVector& test_vector = GetParam();
   const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
       test_vector.signature_private_key.get());
@@ -545,7 +473,6 @@ TEST(SlhDsaPrivateKeyTest, MoveAssignment) {
 
   EXPECT_THAT(other_key, Eq(expected));
 }
-#endif  // TINK_USE_ONLY_FIPS
 
 }  // namespace
 }  // namespace tink

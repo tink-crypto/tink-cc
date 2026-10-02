@@ -31,7 +31,6 @@
 #include "absl/types/optional.h"
 #include "openssl/opensslv.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
@@ -1830,9 +1829,6 @@ const SignatureTestVector& CreateSlhDsaShake256fFastTinkTestVector() {
 const std::vector<SignatureTestVector>& CreateSlhDsaTestVectors() {
   static const absl::NoDestructor<std::vector<SignatureTestVector>>
       test_vectors([] {
-        if (internal::IsFipsModeEnabled()) {
-          return std::vector<SignatureTestVector>{};
-        }
 #ifndef OPENSSL_IS_BORINGSSL
         return std::vector<SignatureTestVector>{};
 #else
@@ -1852,9 +1848,6 @@ const SignatureTestVector& GetSlhDsaTestVector(
     SlhDsaParameters::HashType hash_type,
     SlhDsaParameters::SignatureType sig_type,
     SlhDsaParameters::Variant variant) {
-  if (internal::IsFipsModeEnabled()) {
-    ABSL_LOG(FATAL) << "SLH-DSA test vectors are not available in FIPS mode.";
-  }
 #ifndef OPENSSL_IS_BORINGSSL
   ABSL_LOG(FATAL)
       << "SLH-DSA test vectors are not available in non-BoringSSL builds.";

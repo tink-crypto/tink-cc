@@ -17,11 +17,11 @@
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
@@ -31,7 +31,6 @@
 #include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -39,7 +38,6 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::absl_testing::StatusIs;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -49,7 +47,15 @@ struct TestCase {
   std::string output_prefix;
 };
 
-using SlhDsaSignBoringSslTest = TestWithParam<TestCase>;
+class SlhDsaSignBoringSslTest : public TestWithParam<TestCase> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
 INSTANTIATE_TEST_SUITE_P(
     SlhDsaSignBoringSslTestSuite, SlhDsaSignBoringSslTest,
@@ -58,11 +64,6 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{SlhDsaParameters::Variant::kNoPrefix, std::nullopt, ""}));
 
 TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
-  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   TestCase test_case = GetParam();
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
@@ -93,11 +94,6 @@ TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
 }
 
 TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
-  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
@@ -127,28 +123,6 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   EXPECT_EQ((*second_signature).size(), SLHDSA_SHA2_128S_SIGNATURE_BYTES);
 
   EXPECT_NE(*first_signature, *second_signature);
-}
-
-TEST_F(SlhDsaSignBoringSslTest, FipsMode) {
-  if (!internal::IsFipsModeEnabled() || internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP()
-        << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
-  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kNoPrefix);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt);
-  ASSERT_THAT(private_key, IsOk());
-
-  // Create a new signer.
-  EXPECT_THAT(NewSlhDsaSignBoringSsl(*private_key.value()).status(),
-              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

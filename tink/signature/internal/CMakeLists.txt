@@ -1740,7 +1740,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    absl::optional
     crypto
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access

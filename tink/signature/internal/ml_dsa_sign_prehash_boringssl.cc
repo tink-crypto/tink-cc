@@ -52,8 +52,9 @@ namespace {
 
 class MlDsa44SignPrehashBoringSsl : public SignPrehash {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<SignPrehash>> New(
       const MlDsaPrivateKey& private_key);
@@ -66,8 +67,7 @@ class MlDsa44SignPrehashBoringSsl : public SignPrehash {
       : private_key_(std::move(private_key)),
         boringssl_private_key_(std::move(boringssl_private_key)),
         prehash_prefix_(
-            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {
-  }
+            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {}
 
  private:
   MlDsaPrivateKey private_key_;
@@ -146,8 +146,9 @@ absl::StatusOr<std::string> MlDsa44SignPrehashBoringSsl::Sign(
 
 class MlDsa65SignPrehashBoringSsl : public SignPrehash {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<SignPrehash>> New(
       const MlDsaPrivateKey& private_key);
@@ -160,8 +161,7 @@ class MlDsa65SignPrehashBoringSsl : public SignPrehash {
       : private_key_(std::move(private_key)),
         boringssl_private_key_(std::move(boringssl_private_key)),
         prehash_prefix_(
-            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {
-  }
+            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {}
 
  private:
   MlDsaPrivateKey private_key_;
@@ -240,8 +240,9 @@ absl::StatusOr<std::string> MlDsa65SignPrehashBoringSsl::Sign(
 
 class MlDsa87SignPrehashBoringSsl : public SignPrehash {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<SignPrehash>> New(
       const MlDsaPrivateKey& private_key);
@@ -254,8 +255,7 @@ class MlDsa87SignPrehashBoringSsl : public SignPrehash {
       : private_key_(std::move(private_key)),
         boringssl_private_key_(std::move(boringssl_private_key)),
         prehash_prefix_(
-            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {
-  }
+            GetPrehashPrefix(private_key_.GetPublicKey().GetIdRequirement())) {}
 
  private:
   MlDsaPrivateKey private_key_;

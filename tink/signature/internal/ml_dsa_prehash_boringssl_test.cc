@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -26,7 +27,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "openssl/mldsa.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
@@ -49,11 +49,19 @@ using ::testing::Values;
 struct TestCase {
   MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string expected_prehash_prefix;
 };
 
-using MlDsaPrehashBoringSslTest = TestWithParam<TestCase>;
+class MlDsaPrehashBoringSslTest : public TestWithParam<TestCase> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaPrehashBoringSslTestSuite, MlDsaPrehashBoringSslTest,
@@ -68,11 +76,6 @@ INSTANTIATE_TEST_SUITE_P(
                     0x02030405, std::string("\xff\x02\x03\x04\x05", 5)}));
 
 TEST_P(MlDsaPrehashBoringSslTest, PrehashOutputLengthAndPrefixAreCorrect) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   TestCase test_case = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -98,11 +101,6 @@ TEST_P(MlDsaPrehashBoringSslTest, PrehashOutputLengthAndPrefixAreCorrect) {
 }
 
 TEST_P(MlDsaPrehashBoringSslTest, PrehashIsDeterministic) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   TestCase test_case = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -132,11 +130,6 @@ TEST_P(MlDsaPrehashBoringSslTest, PrehashIsDeterministic) {
 }
 
 TEST_P(MlDsaPrehashBoringSslTest, DifferentMessagesProduceDifferentPrehashes) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   TestCase test_case = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -161,11 +154,10 @@ TEST_P(MlDsaPrehashBoringSslTest, DifferentMessagesProduceDifferentPrehashes) {
 }
 
 TEST(MlDsaPrehashBoringSslNonParamTest, AcceptsVariants) {
-  if (internal::IsFipsModeEnabled()) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+        << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
   }
-
   // Test kTink is accepted
   auto tink_params = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);

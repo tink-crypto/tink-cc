@@ -1669,6 +1669,7 @@ cc_library(
 cc_test(
     name = "ml_dsa_prehash_boringssl_test",
     srcs = ["ml_dsa_prehash_boringssl_test.cc"],
+    tags = ["fips"],
     deps = [
         ":ml_dsa_key_creator",
         ":ml_dsa_prehash_boringssl",
@@ -1718,6 +1719,7 @@ cc_test(
     name = "ml_dsa_sign_prehash_boringssl_test",
     srcs = ["ml_dsa_sign_prehash_boringssl_test.cc"],
     data = ["//:testvectors_v1"],
+    tags = ["fips"],
     deps = [
         ":ml_dsa_key_creator",
         ":ml_dsa_prehash_boringssl",
@@ -1738,7 +1740,6 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],

@@ -47,8 +47,9 @@ namespace {
 
 class MlDsa44PrehashBoringSsl : public Prehash {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<Prehash>> New(
       MlDsaPublicKey public_key);
@@ -110,8 +111,9 @@ absl::StatusOr<std::string> MlDsa44PrehashBoringSsl::Compute(
 
 class MlDsa65PrehashBoringSsl : public Prehash {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<Prehash>> New(
       MlDsaPublicKey public_key);
@@ -173,8 +175,9 @@ absl::StatusOr<std::string> MlDsa65PrehashBoringSsl::Compute(
 
 class MlDsa87PrehashBoringSsl : public Prehash {
  public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
+      [[maybe_unused]] =
+          crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
   static absl::StatusOr<std::unique_ptr<Prehash>> New(
       MlDsaPublicKey public_key);

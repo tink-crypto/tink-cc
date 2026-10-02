@@ -56,11 +56,19 @@ using ::testing::Values;
 struct TestCase {
   MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
-  absl::optional<int> id_requirement;
+  std::optional<int> id_requirement;
   std::string expected_output_prefix;
 };
 
-using MlDsaSignPrehashBoringSslTest = TestWithParam<TestCase>;
+class MlDsaSignPrehashBoringSslTest : public TestWithParam<TestCase> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaSignPrehashBoringSslTestSuite, MlDsaSignPrehashBoringSslTest,
@@ -75,11 +83,6 @@ INSTANTIATE_TEST_SUITE_P(
                     0x02030400, ""}));
 
 TEST_P(MlDsaSignPrehashBoringSslTest, SignPrehashWithInvalidPrefixFails) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   TestCase test_case = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -111,11 +114,6 @@ TEST_P(MlDsaSignPrehashBoringSslTest, SignPrehashWithInvalidPrefixFails) {
 }
 
 TEST_P(MlDsaSignPrehashBoringSslTest, SignPrehashWithInvalidLengthFails) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   TestCase test_case = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -135,11 +133,10 @@ TEST_P(MlDsaSignPrehashBoringSslTest, SignPrehashWithInvalidLengthFails) {
 }
 
 TEST(MlDsaSignPrehashBoringSslNonParamTest, AcceptVariants) {
-  if (internal::IsFipsModeEnabled()) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
+        << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
   }
-
   // Test kTink is accepted
   auto tink_params = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
@@ -157,20 +154,23 @@ TEST(MlDsaSignPrehashBoringSslNonParamTest, AcceptVariants) {
   EXPECT_THAT(NewMlDsaSignPrehashBoringSsl(**noprefix_key).status(), IsOk());
 }
 
-using MlDsaSignPrehashRawTest = TestWithParam<MlDsaParameters::Instance>;
+class MlDsaSignPrehashRawTest
+    : public TestWithParam<MlDsaParameters::Instance> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
-INSTANTIATE_TEST_SUITE_P(
-    MlDsaSignPrehashRawTestSuite, MlDsaSignPrehashRawTest,
-    Values(MlDsaParameters::Instance::kMlDsa44,
-           MlDsaParameters::Instance::kMlDsa65,
-           MlDsaParameters::Instance::kMlDsa87));
+INSTANTIATE_TEST_SUITE_P(MlDsaSignPrehashRawTestSuite, MlDsaSignPrehashRawTest,
+                         Values(MlDsaParameters::Instance::kMlDsa44,
+                                MlDsaParameters::Instance::kMlDsa65,
+                                MlDsaParameters::Instance::kMlDsa87));
 
 TEST_P(MlDsaSignPrehashRawTest, SignVerifyFlowWithRawKeyWorks) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   MlDsaParameters::Instance instance = GetParam();
 
   absl::StatusOr<MlDsaParameters> key_parameters =
@@ -210,7 +210,16 @@ struct WycheproofTestCase {
   std::string filename;
 };
 
-using MlDsaSignPrehashWycheproofTest = TestWithParam<WycheproofTestCase>;
+class MlDsaSignPrehashWycheproofTest
+    : public TestWithParam<WycheproofTestCase> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP()
+          << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+  }
+};
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaSignPrehashWycheproofTestSuite, MlDsaSignPrehashWycheproofTest,
@@ -222,11 +231,6 @@ INSTANTIATE_TEST_SUITE_P(
                               "mldsa_87_sign_seed_test.json"}));
 
 TEST_P(MlDsaSignPrehashWycheproofTest, PrehashSignVerifyWycheproofTestVectors) {
-  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-
   WycheproofTestCase test_case = GetParam();
 
   absl::StatusOr<google::protobuf::Struct> parsed_input =
@@ -244,12 +248,11 @@ TEST_P(MlDsaSignPrehashWycheproofTest, PrehashSignVerifyWycheproofTestVectors) {
     std::string private_seed_bytes = wycheproof_testing::GetBytesFromHexValue(
         test_group.struct_value().fields().at("privateSeed"));
     RestrictedData private_seed(private_seed_bytes,
-                               InsecureSecretKeyAccess::Get());
+                                InsecureSecretKeyAccess::Get());
     constexpr uint32_t kKeyId = 0x01020304;
-    absl::StatusOr<MlDsaPrivateKey> private_key =
-        MlDsaPrivateKey::Create(*key_parameters, private_seed,
-                                /*id_requirement=*/kKeyId,
-                                GetPartialKeyAccess());
+    absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+        *key_parameters, private_seed,
+        /*id_requirement=*/kKeyId, GetPartialKeyAccess());
     ASSERT_THAT(private_key, IsOk());
 
     absl::StatusOr<std::unique_ptr<Prehash>> prehasher =

@@ -165,10 +165,13 @@ tink_cc_library(
     absl::log
     absl::absl_check
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::span
     crypto
+    tink::core::big_integer
+    tink::core::ec_point
     tink::core::secret_data
     tink::signature::ecdsa_parameters
     tink::subtle::common_enums
@@ -411,6 +414,7 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::internal::ssl_util
+    protobuf::libprotobuf
     gmock
     absl::absl_check
     absl::status
@@ -419,9 +423,12 @@ tink_cc_test(
     absl::strings
     absl::span
     crypto
+    tink::core::big_integer
+    tink::core::ec_point
     tink::core::secret_data
     tink::internal::testing::wycheproof_util
     tink::signature::ecdsa_parameters
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::subtle_util
     tink::util::secret_data

@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
@@ -30,6 +31,8 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/big_integer.h"
+#include "tink/ec_point.h"
 #include "tink/secret_data.h"
 #include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -60,6 +63,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::EcdsaParameters;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::
     GetEllipticCurveTypeFromValue;
@@ -1016,6 +1020,285 @@ INSTANTIATE_TEST_SUITE_P(
     ValuesIn(GetEcUtilComputeEcdhSharedSecretParams()),
     [](const TestParamInfo<EcUtilComputeEcdhSharedSecretTest::ParamType>&
            info) { return info.param.testcase_name; });
+
+struct PointEncodingTestCase {
+  std::string test_name;
+  EllipticCurveType curve;
+  EcPoint point;
+  std::string expected_uncompressed;
+  std::string expected_compressed;
+};
+
+// Test vector from Project Wycheproof:
+// testvectors_v1/ecdh_secp256r1_ecpoint_test.json (tcId: 1 for uncompressed,
+// tcId: 2 for compressed).
+PointEncodingTestCase GetP256TestCase() {
+  std::string x = test::HexDecodeOrDie(
+      "62d5bd3372af75fe85a040715d0f502428e07046868b0bfdfa61d731afe44f26");
+  std::string y = test::HexDecodeOrDie(
+      "ac333a93a9e70a81cd5a95b5bf8d13990eb741c8c38872b4a07d275a014e30cf");
+  std::string expected_uncompressed = test::HexDecodeOrDie(
+      "0462d5bd3372af75fe85a040715d0f502428e07046868b0bfdfa61d731afe44f26"
+      "ac333a93a9e70a81cd5a95b5bf8d13990eb741c8c38872b4a07d275a014e30cf");
+  std::string expected_compressed = test::HexDecodeOrDie(
+      "0362d5bd3372af75fe85a040715d0f502428e07046868b0bfdfa61d731afe44f26");
+  return PointEncodingTestCase{
+      /*test_name=*/"P256",
+      /*curve=*/EllipticCurveType::NIST_P256,
+      /*point=*/EcPoint(BigInteger(x), BigInteger(y)),
+      /*expected_uncompressed=*/expected_uncompressed,
+      /*expected_compressed=*/expected_compressed,
+  };
+}
+
+// Test vector from Project Wycheproof:
+// testvectors_v1/ecdh_secp384r1_ecpoint_test.json (tcId: 1 for uncompressed,
+// tcId: 2 for compressed).
+PointEncodingTestCase GetP384TestCase() {
+  std::string x = test::HexDecodeOrDie(
+      "790a6e059ef9a5940163183d4a7809135d29791643fc43a2f17ee8bf677ab84f"
+      "791b64a6be15969ffa012dd9185d8796");
+  std::string y = test::HexDecodeOrDie(
+      "d9b954baa8a75e82df711b3b56eadff6b0f668c3b26b4b1aeb308a1fcc1c680d"
+      "329a6705025f1c98a0b5e5bfcb163caa");
+  std::string expected_uncompressed = test::HexDecodeOrDie(
+      "04790a6e059ef9a5940163183d4a7809135d29791643fc43a2f17ee8bf677ab84f791b64"
+      "a6be15969ffa012dd9185d8796d9b954baa8a75e82df711b3b56eadff6b0f668c3"
+      "b26b4b1aeb308a1fcc1c680d329a6705025f1c98a0b5e5bfcb163caa");
+  std::string expected_compressed = test::HexDecodeOrDie(
+      "02790a6e059ef9a5940163183d4a7809135d29791643fc43a2f17ee8bf677ab84f"
+      "791b64a6be15969ffa012dd9185d8796");
+  return PointEncodingTestCase{
+      /*test_name=*/"P384",
+      /*curve=*/EllipticCurveType::NIST_P384,
+      /*point=*/EcPoint(BigInteger(x), BigInteger(y)),
+      /*expected_uncompressed=*/expected_uncompressed,
+      /*expected_compressed=*/expected_compressed,
+  };
+}
+
+// Test vector from Project Wycheproof:
+// testvectors_v1/ecdh_secp521r1_ecpoint_test.json (tcId: 1 for uncompressed,
+// tcId: 2 for compressed).
+PointEncodingTestCase GetP521TestCase() {
+  std::string x = test::HexDecodeOrDie(
+      "0064da3e94733db536a74a0d8a5cb2265a31c54a1da6529a198377fbd38575d9"
+      "d79769ca2bdf2d4c972642926d444891a652e7f492337251adf1613cf3077999"
+      "b5ce");
+  std::string y = test::HexDecodeOrDie(
+      "00e04ad19cf9fd4722b0c824c069f70c3c0e7ebc5288940dfa92422152ae4a4f"
+      "79183ced375afb54db1409ddf338b85bb6dbfc5950163346bb63a90a70c5aba0"
+      "98f7");
+  std::string expected_uncompressed = test::HexDecodeOrDie(
+      "04"
+      "0064da3e94733db536a74a0d8a5cb2265a31c54a1da6529a198377fbd38575d9"
+      "d79769ca2bdf2d4c972642926d444891a652e7f492337251adf1613cf3077999"
+      "b5ce"
+      "00e04ad19cf9fd4722b0c824c069f70c3c0e7ebc5288940dfa92422152ae4a4f"
+      "79183ced375afb54db1409ddf338b85bb6dbfc5950163346bb63a90a70c5aba0"
+      "98f7");
+  std::string expected_compressed = test::HexDecodeOrDie(
+      "03"
+      "0064da3e94733db536a74a0d8a5cb2265a31c54a1da6529a198377fbd38575d9"
+      "d79769ca2bdf2d4c972642926d444891a652e7f492337251adf1613cf3077999"
+      "b5ce");
+  return PointEncodingTestCase{
+      /*test_name=*/"P521",
+      /*curve=*/EllipticCurveType::NIST_P521,
+      /*point=*/EcPoint(BigInteger(x), BigInteger(y)),
+      /*expected_uncompressed=*/expected_uncompressed,
+      /*expected_compressed=*/expected_compressed,
+  };
+}
+
+std::vector<PointEncodingTestCase> GetPointEncodingTestCases() {
+  return {GetP256TestCase(), GetP384TestCase(), GetP521TestCase()};
+}
+
+using EcUtilPointEncodingTest = TestWithParam<PointEncodingTestCase>;
+
+TEST_P(EcUtilPointEncodingTest, EncodeUncompressed) {
+  const PointEncodingTestCase& test = GetParam();
+  EXPECT_THAT(EncodeEcPointToString(test.curve, EcPointFormat::UNCOMPRESSED,
+                                    test.point),
+              IsOkAndHolds(test.expected_uncompressed));
+}
+
+TEST_P(EcUtilPointEncodingTest, EncodeCompressed) {
+  const PointEncodingTestCase& test = GetParam();
+  EXPECT_THAT(
+      EncodeEcPointToString(test.curve, EcPointFormat::COMPRESSED, test.point),
+      IsOkAndHolds(test.expected_compressed));
+}
+
+TEST_P(EcUtilPointEncodingTest, DecodeUncompressed) {
+  const PointEncodingTestCase& test = GetParam();
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::UNCOMPRESSED,
+                              test.expected_uncompressed),
+              IsOkAndHolds(test.point));
+}
+
+TEST_P(EcUtilPointEncodingTest, DecodeCompressed) {
+  const PointEncodingTestCase& test = GetParam();
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::COMPRESSED,
+                              test.expected_compressed),
+              IsOkAndHolds(test.point));
+}
+
+TEST_P(EcUtilPointEncodingTest, DecodeRejectsWrongPrefix) {
+  const PointEncodingTestCase& test = GetParam();
+
+  // Using compressed prefix on uncompressed encoding and vice versa.
+  std::string wrong_prefix_uncompressed = test.expected_uncompressed;
+  wrong_prefix_uncompressed[0] = test.expected_compressed[0];
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::UNCOMPRESSED,
+                              wrong_prefix_uncompressed)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  std::string wrong_prefix_compressed = test.expected_compressed;
+  wrong_prefix_compressed[0] = test.expected_uncompressed[0];
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::COMPRESSED,
+                              wrong_prefix_compressed)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  wrong_prefix_compressed[0] = '\x05';
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::COMPRESSED,
+                              wrong_prefix_compressed)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_P(EcUtilPointEncodingTest, DecodeRejectsWrongLength) {
+  const PointEncodingTestCase& test = GetParam();
+
+  // Truncated.
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::UNCOMPRESSED,
+                              test.expected_uncompressed.substr(
+                                  0, test.expected_uncompressed.size() - 1))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::COMPRESSED,
+                              test.expected_compressed.substr(
+                                  0, test.expected_compressed.size() - 1))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // Extra byte.
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::UNCOMPRESSED,
+                              absl::StrCat(test.expected_uncompressed,
+                                           absl::string_view("\0", 1)))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(DecodeToEcPoint(test.curve, EcPointFormat::COMPRESSED,
+                              absl::StrCat(test.expected_compressed,
+                                           absl::string_view("\0", 1)))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // Empty string.
+  EXPECT_THAT(
+      DecodeToEcPoint(test.curve, EcPointFormat::UNCOMPRESSED, "").status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_P(EcUtilPointEncodingTest, DecodeRejectsPointNotOnCurve) {
+  const PointEncodingTestCase& test = GetParam();
+
+  std::string corrupted = test.expected_uncompressed;
+  corrupted.back() ^= 0x01;
+  EXPECT_THAT(
+      DecodeToEcPoint(test.curve, EcPointFormat::UNCOMPRESSED, corrupted)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_P(EcUtilPointEncodingTest, EncodeRejectsPointNotOnCurve) {
+  const PointEncodingTestCase& test = GetParam();
+
+  std::string y(test.point.GetY().GetValue());
+  y.back() ^= 0x01;
+  EcPoint off_curve(test.point.GetX(), BigInteger(y));
+  EXPECT_THAT(
+      EncodeEcPointToString(test.curve, EcPointFormat::UNCOMPRESSED, off_curve)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EcUtilPointEncodingTests, EcUtilPointEncodingTest,
+    ValuesIn(GetPointEncodingTestCases()),
+    [](const TestParamInfo<EcUtilPointEncodingTest::ParamType>& info) {
+      return info.param.test_name;
+    });
+
+TEST(EcUtilPointEncodingTest, CrossCurveMismatchRejectsEncoding) {
+  PointEncodingTestCase p256_test = GetP256TestCase();
+  // A P-256 point is not on P-384.
+  EXPECT_THAT(
+      EncodeEcPointToString(EllipticCurveType::NIST_P384,
+                            EcPointFormat::UNCOMPRESSED, p256_test.point)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // A P-256 encoding is not a valid P-384 encoding.
+  EXPECT_THAT(
+      DecodeToEcPoint(EllipticCurveType::NIST_P384, EcPointFormat::UNCOMPRESSED,
+                      p256_test.expected_uncompressed)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilPointEncodingTest, UnsupportedFormatRejects) {
+  PointEncodingTestCase p256_test = GetP256TestCase();
+  EXPECT_THAT(
+      EncodeEcPointToString(EllipticCurveType::NIST_P256,
+                            EcPointFormat::DO_NOT_USE_CRUNCHY_UNCOMPRESSED,
+                            p256_test.point)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      EncodeEcPointToString(EllipticCurveType::NIST_P256,
+                            EcPointFormat::UNKNOWN_FORMAT, p256_test.point)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(DecodeToEcPoint(EllipticCurveType::NIST_P256,
+                              EcPointFormat::DO_NOT_USE_CRUNCHY_UNCOMPRESSED,
+                              absl::StrCat(p256_test.point.GetX().GetValue(),
+                                           p256_test.point.GetY().GetValue()))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(DecodeToEcPoint(EllipticCurveType::NIST_P256,
+                              EcPointFormat::UNKNOWN_FORMAT,
+                              p256_test.expected_uncompressed)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilPointEncodingTest, UnsupportedCurveRejects) {
+  PointEncodingTestCase p256_test = GetP256TestCase();
+  EXPECT_THAT(
+      EncodeEcPointToString(EllipticCurveType::CURVE25519,
+                            EcPointFormat::UNCOMPRESSED, p256_test.point)
+          .status(),
+      Not(IsOk()));
+  EXPECT_THAT(
+      EncodeEcPointToString(EllipticCurveType::UNKNOWN_CURVE,
+                            EcPointFormat::UNCOMPRESSED, p256_test.point)
+          .status(),
+      Not(IsOk()));
+  EXPECT_THAT(DecodeToEcPoint(EllipticCurveType::CURVE25519,
+                              EcPointFormat::UNCOMPRESSED,
+                              p256_test.expected_uncompressed)
+                  .status(),
+              Not(IsOk()));
+  EXPECT_THAT(DecodeToEcPoint(EllipticCurveType::UNKNOWN_CURVE,
+                              EcPointFormat::UNCOMPRESSED,
+                              p256_test.expected_uncompressed)
+                  .status(),
+              Not(IsOk()));
+}
 
 }  // namespace
 }  // namespace internal

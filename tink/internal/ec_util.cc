@@ -24,12 +24,15 @@
 #include "absl/log/absl_check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#include "tink/big_integer.h"
+#include "tink/ec_point.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -717,6 +720,71 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(EllipticCurveType curve,
     return group.status();
   }
   return SslGetEcPointFromCoordinates(group->get(), pubx, puby);
+}
+
+namespace {
+
+absl::Status ValidatePointFormat(EcPointFormat format) {
+  if (format != EcPointFormat::UNCOMPRESSED &&
+      format != EcPointFormat::COMPRESSED) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Unsupported point format: ", subtle::EnumToString(format),
+                     "; expected UNCOMPRESSED or COMPRESSED"));
+  }
+  return absl::OkStatus();
+}
+
+absl::Status PointErrorAsInvalidArgument(const absl::Status& status) {
+  return absl::InvalidArgumentError(status.message());
+}
+
+}  // namespace
+
+absl::StatusOr<EcPoint> DecodeToEcPoint(EllipticCurveType curve,
+                                        EcPointFormat format,
+                                        absl::string_view encoded_point) {
+  ABSL_RETURN_IF_ERROR(ValidatePointFormat(format));
+  ABSL_ASSIGN_OR_RETURN(SslUniquePtr<EC_GROUP> group,
+                        EcGroupFromCurveType(curve));
+  ABSL_ASSIGN_OR_RETURN(int32_t field_size, EcFieldSizeInBytes(curve));
+
+  absl::StatusOr<SslUniquePtr<EC_POINT>> point =
+      EcPointDecode(curve, format, encoded_point);
+  if (!point.ok()) {
+    return PointErrorAsInvalidArgument(point.status());
+  }
+
+  SslUniquePtr<BIGNUM> x(BN_new());
+  SslUniquePtr<BIGNUM> y(BN_new());
+  if (x == nullptr || y == nullptr) {
+    return absl::InternalError("BN_new failed");
+  }
+  if (EC_POINT_get_affine_coordinates_GFp(group.get(), point->get(), x.get(),
+                                          y.get(), /*ctx=*/nullptr) != 1) {
+    return absl::InternalError("EC_POINT_get_affine_coordinates_GFp failed");
+  }
+  ABSL_ASSIGN_OR_RETURN(std::string x_bytes,
+                        BignumToString(x.get(), field_size));
+  ABSL_ASSIGN_OR_RETURN(std::string y_bytes,
+                        BignumToString(y.get(), field_size));
+  return EcPoint(BigInteger(x_bytes), BigInteger(y_bytes));
+}
+
+absl::StatusOr<std::string> EncodeEcPointToString(EllipticCurveType curve,
+                                                  EcPointFormat format,
+                                                  const EcPoint& point) {
+  ABSL_RETURN_IF_ERROR(ValidatePointFormat(format));
+  // Fail with the group's error (e.g. UNIMPLEMENTED) for unsupported curves
+  // before interpreting the coordinates.
+  ABSL_RETURN_IF_ERROR(EcGroupFromCurveType(curve).status());
+
+  // `GetEcPoint` fails if the coordinates do not describe a point on `curve`.
+  absl::StatusOr<SslUniquePtr<EC_POINT>> ssl_point =
+      GetEcPoint(curve, point.GetX().GetValue(), point.GetY().GetValue());
+  if (!ssl_point.ok()) {
+    return PointErrorAsInvalidArgument(ssl_point.status());
+  }
+  return EcPointEncode(curve, format, ssl_point->get());
 }
 
 absl::StatusOr<SecretData> ComputeEcdhSharedSecret(EllipticCurveType curve,

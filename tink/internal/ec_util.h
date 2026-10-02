@@ -24,6 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/ec.h"
+#include "tink/ec_point.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
@@ -120,6 +121,24 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
 absl::StatusOr<std::string> EcPointEncode(
     crypto::tink::subtle::EllipticCurveType curve_type,
     crypto::tink::subtle::EcPointFormat format, const EC_POINT *point);
+
+// Decodes `encoded_point` into an `EcPoint` on `curve`.
+//
+// `format` must be either `subtle::EcPointFormat::UNCOMPRESSED`
+// (`0x04 || X || Y`) or `subtle::EcPointFormat::COMPRESSED`
+// (`0x02 || X` or `0x03 || X`); coordinates are expected to be left-padded to
+// the field size. Returns an INVALID_ARGUMENT error if the encoding has the
+// wrong length or prefix byte, or if the point is not on `curve`.
+absl::StatusOr<EcPoint> DecodeToEcPoint(subtle::EllipticCurveType curve,
+                                        subtle::EcPointFormat format,
+                                        absl::string_view encoded_point);
+
+// Encodes `point`, which must be on `curve`, using `format` (either
+// `UNCOMPRESSED` or `COMPRESSED`). Coordinates are left-padded to the field
+// size. Returns an INVALID_ARGUMENT error if `point` is not on `curve`.
+absl::StatusOr<std::string> EncodeEcPointToString(
+    subtle::EllipticCurveType curve, subtle::EcPointFormat format,
+    const EcPoint& point);
 
 // Returns the encoding size of a point on the specified elliptic curve
 // `curve_type` when the given point `format` is used.

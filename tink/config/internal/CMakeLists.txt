@@ -1,1 +1,44 @@
 tink_module(config::internal)
+
+tink_cc_library(
+  NAME fips_140_2_test_params
+  SRCS
+    fips_140_2_test_params.cc
+    fips_140_2_test_params.h
+  DEPS
+    absl::absl_check
+    absl::status
+    absl::statusor
+    tink::core::parameters
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::aead::aes_ctr_hmac_aead_proto_serialization
+    tink::aead::aes_eax_parameters
+    tink::aead::aes_eax_proto_serialization
+    tink::aead::aes_gcm_parameters
+    tink::aead::aes_gcm_proto_serialization
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::aes_gcm_siv_proto_serialization
+    tink::aead::x_aes_gcm_parameters
+    tink::aead::x_aes_gcm_proto_serialization
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_proto_serialization
+    tink::mac::aes_cmac_parameters
+    tink::mac::aes_cmac_proto_serialization
+    tink::mac::hmac_parameters
+    tink::mac::hmac_proto_serialization
+    tink::prf::aes_cmac_prf_parameters
+    tink::prf::aes_cmac_prf_proto_serialization
+    tink::prf::hkdf_prf_parameters
+    tink::prf::hkdf_prf_proto_serialization
+    tink::prf::hmac_prf_parameters
+    tink::prf::hmac_prf_proto_serialization
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_proto_serialization
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_proto_serialization
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_proto_serialization
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_proto_serialization
+  TESTONLY
+)

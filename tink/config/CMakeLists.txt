@@ -253,27 +253,44 @@ tink_cc_test(
     tink::config::fips_140_2
     tink::config::key_gen_fips_140_2
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
+    absl::statusor
     tink::core::aead
     tink::core::chunked_mac
+    tink::core::key_gen_configuration
+    tink::core::key_status
     tink::core::keyset_handle
+    tink::core::keyset_handle_builder
     tink::core::mac
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::aead::aead_key_templates
     tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
+    tink::aead::aes_gcm_siv_key_manager
+    tink::aead::x_aes_gcm_key_manager
+    tink::aead::xchacha20_poly1305_key_manager
+    tink::config::internal::fips_140_2_test_params
     tink::internal::configuration_impl
     tink::internal::fips_utils
+    tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::mac::aes_cmac_key_manager
     tink::mac::hmac_key_manager
+    tink::prf::aes_cmac_prf_key_manager
+    tink::prf::hkdf_prf_key_manager
     tink::prf::hmac_prf_key_manager
     tink::prf::prf_set
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_sign_key_manager
+    tink::signature::ed25519_verify_key_manager
+    tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::util::statusor
     tink::util::test_matchers
@@ -288,10 +305,13 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
+    absl::statusor
+    tink::core::key_status
     tink::core::keyset_handle
     tink::aead::aead_key_templates
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_gcm_key_manager
+    tink::config::internal::fips_140_2_test_params
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store

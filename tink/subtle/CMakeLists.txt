@@ -1107,11 +1107,13 @@ tink_cc_test(
     tink::subtle::stream_segment_encrypter
     tink::subtle::streaming_aead_test_util
     gmock
+    absl::absl_check
     absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
+    benchmark::benchmark_main
     tink::core::random_access_stream
     tink::config::tink_fips
     tink::internal::test_random_access_stream

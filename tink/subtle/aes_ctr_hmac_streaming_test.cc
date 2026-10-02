@@ -16,14 +16,17 @@
 
 #include "tink/subtle/aes_ctr_hmac_streaming.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -588,6 +591,69 @@ TEST(AesCtrHmacStreamingTest, TestFipsOnly) {
   EXPECT_THAT(AesCtrHmacStreaming::New(std::move(params)).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
+
+void BM_AesCtrHmacStreamSegmentEncrypter(benchmark::State& state) {
+  if (IsFipsModeEnabled()) {
+    state.SetLabel("Not supported in FIPS-only mode");
+    return;
+  }
+  AesCtrHmacStreaming::Params params = ValidParams();
+  params.ciphertext_segment_size = std::max<int>(
+      params.ciphertext_segment_size, state.range(0) + params.tag_size);
+  absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> enc =
+      AesCtrHmacStreamSegmentEncrypter::New(params, "associated data");
+  ABSL_CHECK_OK(enc.status());
+
+  std::vector<uint8_t> pt(state.range(0), 'p');
+  std::vector<uint8_t> ct(state.range(0) + params.tag_size);
+  for (auto s : state) {
+    benchmark::DoNotOptimize(pt);
+    absl::Status status =
+        (*enc)->EncryptSegment(pt, /*is_last_segment=*/false, &ct);
+    benchmark::DoNotOptimize(ct);
+    ABSL_CHECK_OK(status);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_AesCtrHmacStreamSegmentDecrypter(benchmark::State& state) {
+  if (IsFipsModeEnabled()) {
+    state.SetLabel("Not supported in FIPS-only mode");
+    return;
+  }
+  AesCtrHmacStreaming::Params params = ValidParams();
+  params.ciphertext_segment_size = std::max<int>(
+      params.ciphertext_segment_size, state.range(0) + params.tag_size);
+  absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> enc =
+      AesCtrHmacStreamSegmentEncrypter::New(params, "associated data");
+  ABSL_CHECK_OK(enc.status());
+  absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> dec =
+      AesCtrHmacStreamSegmentDecrypter::New(params, "associated data");
+  ABSL_CHECK_OK(dec.status());
+  ABSL_CHECK_OK((*dec)->Init((*enc)->get_header()));
+
+  std::vector<uint8_t> pt(state.range(0), 'p');
+  std::vector<uint8_t> ct;
+  ABSL_CHECK_OK((*enc)->EncryptSegment(pt, /*is_last_segment=*/true, &ct));
+  std::vector<uint8_t> decrypted(state.range(0));
+  for (auto s : state) {
+    benchmark::DoNotOptimize(ct);
+    absl::Status status = (*dec)->DecryptSegment(
+        ct, /*segment_number=*/0, /*is_last_segment=*/true, &decrypted);
+    benchmark::DoNotOptimize(decrypted);
+    ABSL_CHECK_OK(status);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+constexpr int64_t kMaxDataSize = 1 << 24;  // 16 MiB
+
+BENCHMARK(BM_AesCtrHmacStreamSegmentEncrypter)
+    ->RangeMultiplier(16)
+    ->Range(256, kMaxDataSize);
+BENCHMARK(BM_AesCtrHmacStreamSegmentDecrypter)
+    ->RangeMultiplier(16)
+    ->Range(256, kMaxDataSize);
 
 }  // namespace
 }  // namespace subtle

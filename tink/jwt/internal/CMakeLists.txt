@@ -142,12 +142,14 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_internal
     protobuf::libprotobuf
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
     absl::time
     absl::optional
+    benchmark::benchmark_main
     tink::core::mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
@@ -636,10 +638,12 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_impl
     protobuf::libprotobuf
     gmock
+    absl::absl_check
     absl::status_matchers
     absl::statusor
     absl::strings
     absl::time
+    benchmark::benchmark_main
     tink::internal::ec_util
     tink::internal::testing::ec_test_vectors
     tink::jwt::jwt_validator

@@ -16,14 +16,17 @@
 
 #include "tink/jwt/internal/jwt_mac_impl.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "google/protobuf/struct.pb.h"
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -660,6 +663,73 @@ TEST(JwtMacImplTest, NonStringTypeHeaderIsRejectedWithDefaultValidator) {
                                             /*kid=*/std::nullopt);
   EXPECT_THAT(numeric_type_result, Not(IsOk()));
 }
+
+void BM_ComputeMacAndEncodeWithKid(benchmark::State& state) {
+  absl::StatusOr<std::unique_ptr<JwtMacInternal>> jwt_mac = CreateJwtMac();
+  ABSL_CHECK_OK(jwt_mac.status());
+
+  absl::StatusOr<RawJwt> raw_jwt =
+      RawJwtBuilder()
+          .SetTypeHeader("typeHeader")
+          .SetJwtId("id123")
+          .AddStringClaim("claim", std::string(state.range(0), 'x'))
+          .WithoutExpiration()
+          .Build();
+  ABSL_CHECK_OK(raw_jwt.status());
+
+  for (auto s : state) {
+    benchmark::DoNotOptimize(raw_jwt);
+    absl::StatusOr<std::string> compact =
+        (*jwt_mac)->ComputeMacAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
+    benchmark::DoNotOptimize(compact);
+    ABSL_CHECK_OK(compact.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_VerifyMacAndDecodeWithKid(benchmark::State& state) {
+  absl::StatusOr<std::unique_ptr<JwtMacInternal>> jwt_mac = CreateJwtMac();
+  ABSL_CHECK_OK(jwt_mac.status());
+
+  absl::StatusOr<RawJwt> raw_jwt =
+      RawJwtBuilder()
+          .SetTypeHeader("typeHeader")
+          .SetJwtId("id123")
+          .AddStringClaim("claim", std::string(state.range(0), 'x'))
+          .WithoutExpiration()
+          .Build();
+  ABSL_CHECK_OK(raw_jwt.status());
+
+  absl::StatusOr<std::string> compact =
+      (*jwt_mac)->ComputeMacAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
+  ABSL_CHECK_OK(compact.status());
+
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectTypeHeader("typeHeader")
+                                               .AllowMissingExpiration()
+                                               .Build();
+  ABSL_CHECK_OK(validator.status());
+
+  for (auto s : state) {
+    benchmark::DoNotOptimize(compact);
+    benchmark::DoNotOptimize(validator);
+    absl::StatusOr<VerifiedJwt> verified_jwt =
+        (*jwt_mac)->VerifyMacAndDecodeWithKid(*compact, *validator,
+                                              /*kid=*/std::nullopt);
+    benchmark::DoNotOptimize(verified_jwt);
+    ABSL_CHECK_OK(verified_jwt.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+constexpr int64_t kMaxPayloadSize = 1 << 14;  // 16 KiB
+
+BENCHMARK(BM_ComputeMacAndEncodeWithKid)
+    ->RangeMultiplier(8)
+    ->Range(32, kMaxPayloadSize);
+BENCHMARK(BM_VerifyMacAndDecodeWithKid)
+    ->RangeMultiplier(8)
+    ->Range(32, kMaxPayloadSize);
 
 }  // namespace
 }  // namespace jwt_internal

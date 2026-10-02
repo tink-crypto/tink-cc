@@ -14,6 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,8 +22,10 @@
 #include <vector>
 
 #include "google/protobuf/struct.pb.h"
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -555,6 +558,95 @@ TEST(JwtSignatureImplTest, FailsWithInvalidTokens) {
                   ,
               Not(IsOk()));
 }
+
+void BM_SignAndEncodeWithKid(benchmark::State& state) {
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ABSL_CHECK_OK(sign.status());
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::Raw(*std::move(sign), "ES256");
+
+  absl::StatusOr<RawJwt> raw_jwt =
+      RawJwtBuilder()
+          .SetTypeHeader("typeHeader")
+          .SetJwtId("id123")
+          .AddStringClaim("claim", std::string(state.range(0), 'x'))
+          .WithoutExpiration()
+          .Build();
+  ABSL_CHECK_OK(raw_jwt.status());
+
+  for (auto s : state) {
+    benchmark::DoNotOptimize(raw_jwt);
+    absl::StatusOr<std::string> compact =
+        jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
+    benchmark::DoNotOptimize(compact);
+    ABSL_CHECK_OK(compact.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_VerifyAndDecodeWithKid(benchmark::State& state) {
+  const internal::EcKey& ec_key =
+      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ABSL_CHECK_OK(sign.status());
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::Raw(*std::move(sign), "ES256");
+
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(
+          ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ABSL_CHECK_OK(verify.status());
+  std::unique_ptr<JwtPublicKeyVerifyImpl> jwt_verify =
+      JwtPublicKeyVerifyImpl::Raw(*std::move(verify), "ES256");
+
+  absl::StatusOr<RawJwt> raw_jwt =
+      RawJwtBuilder()
+          .SetTypeHeader("typeHeader")
+          .SetJwtId("id123")
+          .AddStringClaim("claim", std::string(state.range(0), 'x'))
+          .WithoutExpiration()
+          .Build();
+  ABSL_CHECK_OK(raw_jwt.status());
+
+  absl::StatusOr<std::string> compact =
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/std::nullopt);
+  ABSL_CHECK_OK(compact.status());
+
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectTypeHeader("typeHeader")
+                                               .AllowMissingExpiration()
+                                               .Build();
+  ABSL_CHECK_OK(validator.status());
+
+  for (auto s : state) {
+    benchmark::DoNotOptimize(compact);
+    benchmark::DoNotOptimize(validator);
+    absl::StatusOr<VerifiedJwt> verified_jwt =
+        jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                           /*kid=*/std::nullopt);
+    benchmark::DoNotOptimize(verified_jwt);
+    ABSL_CHECK_OK(verified_jwt.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+constexpr int64_t kMaxPayloadSize = 1 << 14;  // 16 KiB
+
+BENCHMARK(BM_SignAndEncodeWithKid)
+    ->RangeMultiplier(8)
+    ->Range(32, kMaxPayloadSize);
+BENCHMARK(BM_VerifyAndDecodeWithKid)
+    ->RangeMultiplier(8)
+    ->Range(32, kMaxPayloadSize);
 
 }  // namespace
 }  // namespace jwt_internal

@@ -32,66 +32,18 @@
 #include "openssl/ec.h"
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/md_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-namespace {
-
-// Transforms ECDSA DER signature encoding to IEEE_P1363 encoding.
-//
-// The IEEE_P1363 signature's format is r || s, where r and s are zero-padded
-// and have the same size in bytes as the order of the curve. For example, for
-// NIST P-256 curve, r and s are zero-padded to 32 bytes.
-//
-// The DER signature is encoded using ASN.1
-// (https://tools.ietf.org/html/rfc5480#appendix-A): ECDSA-Sig-Value :: =
-// SEQUENCE { r INTEGER, s INTEGER }. In particular, the encoding is: 0x30 ||
-// totalLength || 0x02 || r's length || r || 0x02 || s's length || s.
-absl::StatusOr<std::string> DerToIeee(absl::string_view der,
-                                      const EC_KEY* key) {
-  size_t field_size_in_bytes =
-      (EC_GROUP_get_degree(EC_KEY_get0_group(key)) + 7) / 8;
-
-  const uint8_t* der_ptr = reinterpret_cast<const uint8_t*>(der.data());
-  // Note: d2i_ECDSA_SIG is deprecated in BoringSSL, but it isn't in OpenSSL.
-  internal::SslUniquePtr<ECDSA_SIG> ecdsa(
-      d2i_ECDSA_SIG(nullptr, &der_ptr, der.size()));
-  if (ecdsa == nullptr ||
-      der_ptr != reinterpret_cast<const uint8_t*>(der.data() + der.size())) {
-    return absl::Status(absl::StatusCode::kInternal, "d2i_ECDSA_SIG failed");
-  }
-
-  const BIGNUM* r_bn;
-  const BIGNUM* s_bn;
-  ECDSA_SIG_get0(ecdsa.get(), &r_bn, &s_bn);
-  absl::StatusOr<std::string> r =
-      internal::BignumToString(r_bn, field_size_in_bytes);
-  if (!r.ok()) {
-    return r.status();
-  }
-  absl::StatusOr<std::string> s =
-      internal::BignumToString(s_bn, field_size_in_bytes);
-  if (!s.ok()) {
-    return s.status();
-  }
-  return absl::StrCat(*r, *s);
-}
-
-}  // namespace
 
 // static
 absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
@@ -179,14 +131,10 @@ absl::StatusOr<std::string> EcdsaRawSignBoringSsl::SignDigest(
   // We now remove DFSan labels from the signature - this is fine to leak.
   DfsanClearLabel(buffer.data(), *signature_length);
   if (encoding_ == subtle::EcdsaSignatureEncoding::IEEE_P1363) {
-    auto status_or_sig =
-        DerToIeee(absl::string_view(reinterpret_cast<char*>(buffer.data()),
-                                    *signature_length),
-                  key_.get());
-    if (!status_or_sig.ok()) {
-      return status_or_sig.status();
-    }
-    return status_or_sig.value();
+    return internal::EcSignatureDerToIeee(
+        EC_KEY_get0_group(key_.get()),
+        absl::string_view(reinterpret_cast<char*>(buffer.data()),
+                          *signature_length));
   }
 
   return std::string(reinterpret_cast<char*>(buffer.data()), *signature_length);

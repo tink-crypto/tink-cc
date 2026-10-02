@@ -707,6 +707,46 @@ TEST_P(EcUtilWycheproofTest, EcSignatureIeeeToDer) {
   }
 }
 
+TEST_P(EcUtilWycheproofTest, EcSignatureDerToIeeeRoundTrip) {
+  const WycheproofTest& wycheproof_test = GetParam();
+
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectorsV1(wycheproof_test.filename);
+  ASSERT_THAT(parsed_input, IsOk());
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    EllipticCurveType curve =
+        GetEllipticCurveTypeFromValue(test_group.struct_value()
+                                          .fields()
+                                          .at("publicKey")
+                                          .struct_value()
+                                          .fields()
+                                          .at("curve"));
+    if (curve == EllipticCurveType::UNKNOWN_CURVE) {
+      continue;
+    }
+    absl::StatusOr<SslUniquePtr<EC_GROUP>> ec_group =
+        EcGroupFromCurveType(curve);
+    ASSERT_THAT(ec_group, IsOk());
+    for (const auto& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      const auto& test_fields = test.struct_value().fields();
+      std::string result = test_fields.at("result").string_value();
+      if (result != "valid") {
+        continue;
+      }
+      std::string sig = GetBytesFromHexValue(test_fields.at("sig"));
+      absl::StatusOr<std::string> der_encoded =
+          EcSignatureIeeeToDer(ec_group->get(), sig);
+      ASSERT_THAT(der_encoded, IsOk());
+      EXPECT_THAT(EcSignatureDerToIeee(ec_group->get(), *der_encoded),
+                  IsOkAndHolds(sig));
+    }
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(
     EcUtilWycheproofTestInstantiation, EcUtilWycheproofTest,
     ValuesIn<WycheproofTest>({
@@ -717,6 +757,72 @@ INSTANTIATE_TEST_SUITE_P(
     [](const TestParamInfo<EcUtilWycheproofTest::ParamType>& info) {
       return info.param.test_name;
     });
+
+// P-256 signature from //third_party/tink/cc/signature/internal/testing.
+constexpr absl::string_view kP256DerSignatureHex =
+    "3046022100baca7d618e43d44f2754a5368f60b4a41925e2c04d27a672b276ae1f4b3c63"
+    "a2022100d404a3015cb229f7cb036c2b5f77cc546065eed4b75837cec2883d1e35d5eb9f";
+constexpr absl::string_view kP256IeeeSignatureHex =
+    "baca7d618e43d44f2754a5368f60b4a41925e2c04d27a672b276ae1f4b3c63a2"
+    "d404a3015cb229f7cb036c2b5f77cc546065eed4b75837cec2883d1e35d5eb9f";
+
+TEST(EcUtilTest, EcSignatureDerToIeeeKnownAnswer) {
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
+      EcGroupFromCurveType(EllipticCurveType::NIST_P256);
+  ASSERT_THAT(group, IsOk());
+  EXPECT_THAT(EcSignatureDerToIeee(group->get(),
+                                   test::HexDecodeOrDie(kP256DerSignatureHex)),
+              IsOkAndHolds(test::HexDecodeOrDie(kP256IeeeSignatureHex)));
+}
+
+TEST(EcUtilTest, EcSignatureDerToIeeePadsShortIntegers) {
+  // r = 1, s = 2 encoded as minimal DER INTEGERs; the IEEE encoding must be
+  // zero-padded to the field size.
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
+      EcGroupFromCurveType(EllipticCurveType::NIST_P256);
+  ASSERT_THAT(group, IsOk());
+  std::string expected(31, '\0');
+  expected.push_back('\x01');
+  expected.append(31, '\0');
+  expected.push_back('\x02');
+  EXPECT_THAT(EcSignatureDerToIeee(group->get(),
+                                   test::HexDecodeOrDie("3006020101020102")),
+              IsOkAndHolds(expected));
+}
+
+TEST(EcUtilTest, EcSignatureDerToIeeeRejectsTrailingBytes) {
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
+      EcGroupFromCurveType(EllipticCurveType::NIST_P256);
+  ASSERT_THAT(group, IsOk());
+  EXPECT_THAT(EcSignatureDerToIeee(
+                  group->get(),
+                  absl::StrCat(test::HexDecodeOrDie(kP256DerSignatureHex), "x"))
+                  .status(),
+              Not(IsOk()));
+}
+
+TEST(EcUtilTest, EcSignatureDerToIeeeRejectsTruncatedInput) {
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
+      EcGroupFromCurveType(EllipticCurveType::NIST_P256);
+  ASSERT_THAT(group, IsOk());
+  std::string der = test::HexDecodeOrDie(kP256DerSignatureHex);
+  EXPECT_THAT(EcSignatureDerToIeee(group->get(), der.substr(0, der.size() - 1))
+                  .status(),
+              Not(IsOk()));
+  EXPECT_THAT(EcSignatureDerToIeee(group->get(), "").status(), Not(IsOk()));
+}
+
+TEST(EcUtilTest, EcSignatureDerToIeeeRejectsNonMinimalInteger) {
+  // r is encoded with a superfluous leading zero byte (0x00 0x01), which is
+  // not valid DER.
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
+      EcGroupFromCurveType(EllipticCurveType::NIST_P256);
+  ASSERT_THAT(group, IsOk());
+  EXPECT_THAT(EcSignatureDerToIeee(group->get(),
+                                   test::HexDecodeOrDie("300702020001020102"))
+                  .status(),
+              Not(IsOk()));
+}
 
 using EcKeyFromSslEcKeyTestWithParam =
     testing::TestWithParam<EllipticCurveType>;

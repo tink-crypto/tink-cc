@@ -167,6 +167,13 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(
 absl::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
                                                  absl::string_view ieee_sig);
 
+// Transforms ECDSA DER signature encoding to IEEE_P1363 encoding. This is the
+// inverse of `EcSignatureIeeeToDer`; see its documentation for a description of
+// the two formats. Returns an error if `der_sig` is not a well-formed DER
+// encoded ECDSA-Sig-Value, or if it contains trailing bytes.
+absl::StatusOr<std::string> EcSignatureDerToIeee(const EC_GROUP* group,
+                                                 absl::string_view der_sig);
+
 // Returns the ECDH's shared secret between two peers A and B using A's private
 // key `priv_key` and B's public key `pub_key`. Returns error if `pub_key`
 // is not on `priv_key`'s curve `curve`.

@@ -45,6 +45,8 @@ namespace {
 
 struct AesCmacTestVectorParams {
   absl::string_view test_name;
+  AesCmacParameters::Variant variant;
+  std::optional<int> id_requirement;
   absl::string_view key_hex;
   absl::string_view msg_hex;
   absl::string_view tag_hex;
@@ -57,12 +59,10 @@ TinkAesCmacTestVector MakeAesCmacTestVector(
   std::string key_bytes = HexDecodeOrDie(params.key_hex);
   absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
       /*key_size_in_bytes=*/key_bytes.size(),
-      /*cryptographic_tag_size_in_bytes=*/16,
-      AesCmacParameters::Variant::kNoPrefix);
+      /*cryptographic_tag_size_in_bytes=*/16, params.variant);
   ABSL_CHECK_OK(parameters.status());
-  absl::StatusOr<AesCmacKey> key =
-      AesCmacKey::Create(*parameters, RestrictedData(key_bytes, ska),
-                         /*id_requirement=*/std::nullopt, pka);
+  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+      *parameters, RestrictedData(key_bytes, ska), params.id_requirement, pka);
   ABSL_CHECK_OK(key.status());
   return TinkAesCmacTestVector{
       std::string(params.test_name),
@@ -72,27 +72,47 @@ TinkAesCmacTestVector MakeAesCmacTestVector(
   };
 }
 
-using AesCmacTestVectorMap = absl::flat_hash_map<int, TinkAesCmacTestVector>;
+using AesCmacTestVectorMap =
+    absl::flat_hash_map<std::pair<int, AesCmacParameters::Variant>,
+                        TinkAesCmacTestVector>;
 
 const AesCmacTestVectorMap& CreateAesCmacTestVectorsMap() {
   static const absl::NoDestructor<AesCmacTestVectorMap> test_vectors(
       AesCmacTestVectorMap{
           // From Wycheproof aes_cmac_test.json (tcId: 1)
-          {16, MakeAesCmacTestVector(AesCmacTestVectorParams{
-                   /*test_name=*/"WYCHEPROOF_128_BIT_TEST_VECTOR",
-                   /*key_hex=*/"e34f15c7bd819930fe9d66e0c166e61c",
-                   /*msg_hex=*/"",
-                   /*tag_hex=*/"d47afca1d857a5933405b1eb7a5cb7af",
-               })},
+          {{16, AesCmacParameters::Variant::kNoPrefix},
+           MakeAesCmacTestVector(AesCmacTestVectorParams{
+               /*test_name=*/"WYCHEPROOF_128_BIT_TEST_VECTOR",
+               /*variant=*/AesCmacParameters::Variant::kNoPrefix,
+               /*id_requirement=*/std::nullopt,
+               /*key_hex=*/"e34f15c7bd819930fe9d66e0c166e61c",
+               /*msg_hex=*/"",
+               /*tag_hex=*/"d47afca1d857a5933405b1eb7a5cb7af",
+           })},
           // From Wycheproof aes_cmac_test.json (tcId: 205)
-          {32, MakeAesCmacTestVector(AesCmacTestVectorParams{
-                   /*test_name=*/"WYCHEPROOF_256_BIT_TEST_VECTOR",
-                   /*key_hex=*/
-                   "7bf9e536b66a215c22233fe2daaa743a898b9acb9f7802de70b40e3d6e"
-                   "43ef97",
-                   /*msg_hex=*/"",
-                   /*tag_hex=*/"736c7b56957db774c5ddf7c7a70ba8a8",
-               })},
+          {{32, AesCmacParameters::Variant::kNoPrefix},
+           MakeAesCmacTestVector(AesCmacTestVectorParams{
+               /*test_name=*/"WYCHEPROOF_256_BIT_TEST_VECTOR",
+               /*variant=*/AesCmacParameters::Variant::kNoPrefix,
+               /*id_requirement=*/std::nullopt,
+               /*key_hex=*/
+               "7bf9e536b66a215c22233fe2daaa743a898b9acb9f7802de70b40e3d6e"
+               "43ef97",
+               /*msg_hex=*/"",
+               /*tag_hex=*/"736c7b56957db774c5ddf7c7a70ba8a8",
+           })},
+          // From Java AesCmacTestUtil.TAG_WITH_KEY_PREFIX_TYPE_LEGACY
+          {{16, AesCmacParameters::Variant::kLegacy},
+           MakeAesCmacTestVector(AesCmacTestVectorParams{
+               /*test_name=*/"TAG_WITH_KEY_PREFIX_TYPE_LEGACY",
+               /*variant=*/AesCmacParameters::Variant::kLegacy,
+               /*id_requirement=*/1877,
+               /*key_hex=*/"00112233445566778899aabbccddeeff",
+               /*msg_hex=*/
+               "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+               "bbbbbbbbbbbbbb",
+               /*tag_hex=*/"00000007554816512e20d15db74f1de942d86a2f7b",
+           })},
       });
   return *test_vectors;
 }
@@ -116,7 +136,8 @@ const std::vector<TinkAesCmacTestVector>& AesCmacTestVectors() {
 
 const TinkAesCmacTestVector& GetAesCmacTestVector(int key_size_in_bytes) {
   const AesCmacTestVectorMap& test_vectors_map = CreateAesCmacTestVectorsMap();
-  auto it = test_vectors_map.find(key_size_in_bytes);
+  auto it = test_vectors_map.find(
+      {key_size_in_bytes, AesCmacParameters::Variant::kNoPrefix});
   ABSL_CHECK(it != test_vectors_map.end())
       << "TinkAesCmacTestVector not found for AES-CMAC key with size "
       << key_size_in_bytes;

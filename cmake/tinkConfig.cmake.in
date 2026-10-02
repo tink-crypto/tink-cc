@@ -1,0 +1,24 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(absl REQUIRED)
+find_dependency(Protobuf REQUIRED CONFIG)
+# Try CONFIG mode first (installed BoringSSL), then module mode (system OpenSSL).
+find_package(OpenSSL CONFIG QUIET)
+if(NOT OpenSSL_FOUND)
+  find_dependency(OpenSSL 1.1.1 REQUIRED)
+endif()
+
+# Tink internals reference a plain "crypto" target for the crypto backend.
+# Create it as an interface to OpenSSL::Crypto when not already defined.
+if(NOT TARGET crypto)
+  add_library(crypto INTERFACE IMPORTED)
+  set_target_properties(crypto PROPERTIES
+    INTERFACE_LINK_LIBRARIES "OpenSSL::Crypto")
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/tinkTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/tinkAliases.cmake")
+
+check_required_components(tink)

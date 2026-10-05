@@ -27,12 +27,15 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/secret_data.h"
 #include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -1298,6 +1301,49 @@ TEST(EcUtilPointEncodingTest, UnsupportedCurveRejects) {
                               p256_test.expected_uncompressed)
                   .status(),
               Not(IsOk()));
+}
+
+TEST(EcUtilTest, ComputePublicPointSuccess) {
+  absl::StatusOr<EcPoint> p256_point = ComputePublicPoint(
+      EllipticCurveType::NIST_P256,
+      P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()));
+  ASSERT_THAT(p256_point, IsOk());
+  EXPECT_THAT(*p256_point, Eq(P256Point()));
+
+  absl::StatusOr<EcPoint> p384_point = ComputePublicPoint(
+      EllipticCurveType::NIST_P384,
+      P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()));
+  ASSERT_THAT(p384_point, IsOk());
+  EXPECT_THAT(*p384_point, Eq(P384Point()));
+
+  absl::StatusOr<EcPoint> p521_point = ComputePublicPoint(
+      EllipticCurveType::NIST_P521,
+      P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()));
+  ASSERT_THAT(p521_point, IsOk());
+  EXPECT_THAT(*p521_point, Eq(P521Point()));
+}
+
+TEST(EcUtilTest, ComputePublicPointZeroScalarFails) {
+  EXPECT_THAT(
+      ComputePublicPoint(EllipticCurveType::NIST_P256, std::string(32, '\0')),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, ComputePublicPointOrderScalarFails) {
+  // NIST P-256 group order n
+  std::string order_bytes;
+  ASSERT_TRUE(absl::HexStringToBytes(
+      "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551",
+      &order_bytes));
+  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::NIST_P256, order_bytes),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, ComputePublicPointInvalidCurveFails) {
+  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::UNKNOWN_CURVE, "scalar"),
+              StatusIs(absl::StatusCode::kUnimplemented));
+  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::CURVE25519, "scalar"),
+              StatusIs(absl::StatusCode::kUnimplemented));
 }
 
 }  // namespace

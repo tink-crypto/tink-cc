@@ -787,6 +787,71 @@ absl::StatusOr<std::string> EncodeEcPointToString(EllipticCurveType curve,
   return EcPointEncode(curve, format, ssl_point->get());
 }
 
+absl::StatusOr<crypto::tink::EcPoint> ComputePublicPoint(
+    EllipticCurveType curve, absl::string_view priv_key_value) {
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group = EcGroupFromCurveType(curve);
+  if (!group.ok()) {
+    return group.status();
+  }
+  SslUniquePtr<EC_GROUP> ssl_group = *std::move(group);
+
+  // 1. Validate 1 <= d < order.
+  absl::StatusOr<SslUniquePtr<BIGNUM>> priv_bn = StringToBignum(priv_key_value);
+  if (!priv_bn.ok()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Invalid private key scalar: ", priv_bn.status().message()));
+  }
+  SslUniquePtr<BIGNUM> priv_bn_val = *std::move(priv_bn);
+  if (BN_is_zero(priv_bn_val.get()) || BN_is_negative(priv_bn_val.get())) {
+    return absl::InvalidArgumentError(
+        "Invalid private key scalar: must be 1 <= d < order.");
+  }
+  const BIGNUM* order = EC_GROUP_get0_order(ssl_group.get());
+  if (order == nullptr || BN_cmp(priv_bn_val.get(), order) >= 0) {
+    return absl::InvalidArgumentError(
+        "Invalid private key scalar: must be 1 <= d < order.");
+  }
+
+  // 2. Compute public point W = d * G.
+  SslUniquePtr<EC_POINT> pub_point(EC_POINT_new(ssl_group.get()));
+  if (pub_point == nullptr) {
+    return absl::InternalError("Failed to allocate EC_POINT");
+  }
+  int mul_res = CallWithCoreDumpProtection([&]() {
+    return EC_POINT_mul(ssl_group.get(), pub_point.get(), priv_bn_val.get(),
+                        /*q=*/nullptr, /*m=*/nullptr, /*ctx=*/nullptr);
+  });
+  if (mul_res != 1) {
+    return absl::InternalError("EC_POINT_mul failed");
+  }
+
+  // 3. Retrieve coordinates.
+  absl::StatusOr<EcPointCoordinates> coords =
+      SslGetEcPointCoordinates(ssl_group.get(), pub_point.get());
+  if (!coords.ok()) {
+    return coords.status();
+  }
+  EcPointCoordinates point_coords = *std::move(coords);
+
+  absl::StatusOr<int32_t> field_size = EcFieldSizeInBytes(curve);
+  if (!field_size.ok()) {
+    return field_size.status();
+  }
+  int32_t field_size_val = *field_size;
+
+  absl::StatusOr<std::string> x_str =
+      BignumToString(point_coords.x.get(), field_size_val);
+  if (!x_str.ok()) {
+    return x_str.status();
+  }
+  absl::StatusOr<std::string> y_str =
+      BignumToString(point_coords.y.get(), field_size_val);
+  if (!y_str.ok()) {
+    return y_str.status();
+  }
+  return EcPoint{BigInteger(std::move(*x_str)), BigInteger(std::move(*y_str))};
+}
+
 absl::StatusOr<SecretData> ComputeEcdhSharedSecret(EllipticCurveType curve,
                                                    const BIGNUM* priv_key,
                                                    const EC_POINT* pub_key) {

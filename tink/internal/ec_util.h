@@ -172,6 +172,16 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(
     crypto::tink::subtle::EllipticCurveType curve, absl::string_view pubx,
     absl::string_view puby);
 
+// Returns the public `EcPoint` corresponding to the private key scalar
+// `priv_key_value` for the given `curve`.
+//
+// Validates that 1 <= priv_key_value < order (returns an INVALID_ARGUMENT error
+// otherwise), computes the public point W = priv_key_value * G, and returns its
+// affine coordinates as an `EcPoint`.
+absl::StatusOr<crypto::tink::EcPoint> ComputePublicPoint(
+    crypto::tink::subtle::EllipticCurveType curve,
+    absl::string_view priv_key_value);
+
 // Transforms ECDSA IEEE_P1363 signature encoding to DER encoding.
 //
 // The IEEE_P1363 signature's format is r || s, where r and s are zero-padded

@@ -424,10 +424,11 @@ tink_cc_test(
     crypto
     tink::core::big_integer
     tink::core::ec_point
+    tink::core::insecure_secret_key_access_testonly
     tink::core::secret_data
+    tink::internal::testing::ec_test_vectors
     tink::internal::testing::wycheproof_util
     tink::signature::ecdsa_parameters
-    tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::subtle_util
     tink::util::secret_data

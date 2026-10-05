@@ -165,9 +165,7 @@ tink_cc_library(
   DEPS
     tink::util::buffer
     tink::util::constants
-    tink::util::enums
     tink::util::protobuf_helper
-    tink::util::secret_data
     absl::core_headers
     absl::absl_check
     absl::memory
@@ -193,25 +191,14 @@ tink_cc_library(
     tink::core::public_key_verify
     tink::core::random_access_stream
     tink::core::streaming_aead
-    tink::aead::aes_ctr_hmac_aead_key_manager
-    tink::aead::aes_gcm_key_manager
     tink::aead::cord_aead
-    tink::aead::xchacha20_poly1305_key_manager
-    tink::daead::aes_siv_key_manager
-    tink::internal::ec_util
     tink::keyderivation::keyset_deriver
     tink::subtle::common_enums
-    tink::proto::aes_ctr_cc_proto
-    tink::proto::aes_ctr_hmac_aead_cc_proto
-    tink::proto::aes_gcm_cc_proto
-    tink::proto::aes_siv_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::ecies_aead_hkdf_cc_proto
     tink::proto::ed25519_cc_proto
-    tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto
-    tink::proto::xchacha20_poly1305_cc_proto
   TESTONLY
 )
 

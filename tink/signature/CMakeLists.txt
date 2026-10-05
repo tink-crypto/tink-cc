@@ -1687,12 +1687,9 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    crypto
     tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(

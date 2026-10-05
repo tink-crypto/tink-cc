@@ -29,7 +29,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "openssl/mldsa.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ml_dsa_parameters.h"
@@ -86,14 +85,18 @@ INSTANTIATE_TEST_SUITE_P(
                     MlDsaParameters::Variant::kNoPrefixWithPrehashId,
                     0x02040608, ""}));
 
+constexpr int kMlDsa44PublicKeyBytes = 1312;
+constexpr int kMlDsa65PublicKeyBytes = 1952;
+constexpr int kMlDsa87PublicKeyBytes = 2592;
+
 int PublicKeyBytes(MlDsaParameters::Instance instance) {
   switch (instance) {
     case MlDsaParameters::Instance::kMlDsa44:
-      return MLDSA44_PUBLIC_KEY_BYTES;
+      return kMlDsa44PublicKeyBytes;
     case MlDsaParameters::Instance::kMlDsa65:
-      return MLDSA65_PUBLIC_KEY_BYTES;
+      return kMlDsa65PublicKeyBytes;
     case MlDsaParameters::Instance::kMlDsa87:
-      return MLDSA87_PUBLIC_KEY_BYTES;
+      return kMlDsa87PublicKeyBytes;
     default:
       ABSL_LOG(FATAL) << "Unsupported ML-DSA instance";
   }

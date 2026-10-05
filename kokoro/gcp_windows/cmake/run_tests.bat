@@ -29,6 +29,20 @@ if %errorlevel% neq 0 EXIT /B 1
 MKDIR "build"
 CD "build"
 
+@REM Kokoro Windows SSH sessions may not populate TEMP/TMP, causing
+@REM GoogleTest's testing::TempDir() to fall back to \temp\.
+IF NOT DEFINED TEMP (
+  IF EXIST T:\tmp (
+    SET TEMP=T:\tmp
+  ) ELSE (
+    MKDIR "%CD%\tmp"
+    SET TEMP=%CD%\tmp
+  )
+)
+IF NOT DEFINED TMP (
+  SET TMP=!TEMP!
+)
+
 %CMAKE_BIN% -G"Visual Studio 17 2022" -A x64 -S .. -B . ^
   -DCMAKE_CXX_STANDARD_REQUIRED=ON ^
   -DCMAKE_CXX_STANDARD=17 ^

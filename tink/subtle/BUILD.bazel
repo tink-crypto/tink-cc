@@ -1300,6 +1300,7 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],
 )
@@ -1332,6 +1333,7 @@ cc_test(
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
+        "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],
 )
@@ -1756,6 +1758,44 @@ cc_test(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@google_benchmark//:benchmark_main",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ecdsa_sign_boringssl_benchmark",
+    srcs = ["ecdsa_sign_boringssl_benchmark.cc"],
+    deps = [
+        ":ecdsa_sign_boringssl",
+        "//tink:public_key_sign",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature/internal/testing:ecdsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
+        "@google_benchmark//:benchmark_main",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ecdsa_verify_boringssl_benchmark",
+    srcs = ["ecdsa_verify_boringssl_benchmark.cc"],
+    deps = [
+        ":ecdsa_sign_boringssl",
+        ":ecdsa_verify_boringssl",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature/internal/testing:ecdsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
         "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],

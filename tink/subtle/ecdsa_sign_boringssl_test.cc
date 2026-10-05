@@ -90,8 +90,11 @@ const EcdsaPrivateKey& GetPrivateKey(
   const internal::SignatureTestVector& test_vector =
       internal::GetEcdsaTestVector(curve, hash_type, encoding,
                                    EcdsaParameters::Variant::kNoPrefix);
-  return *dynamic_cast<const EcdsaPrivateKey*>(
+  const EcdsaPrivateKey* private_key = dynamic_cast<const EcdsaPrivateKey*>(
       test_vector.signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr)
+      << "Selected test vector is not an EcdsaPrivateKey.";
+  return *private_key;
 }
 
 INSTANTIATE_TEST_SUITE_P(

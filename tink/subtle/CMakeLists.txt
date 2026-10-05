@@ -1225,6 +1225,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::string_view
+    benchmark::benchmark_main
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::fips_utils
@@ -1250,6 +1251,7 @@ tink_cc_test(
     absl::status_macros
     absl::status_matchers
     absl::strings
+    benchmark::benchmark_main
     tink::core::big_integer
     tink::core::ec_point
     tink::core::partial_key_access
@@ -1673,4 +1675,42 @@ tink_cc_test(
     tink::core::deterministic_aead
     tink::core::secret_data
     tink::config::tink_fips
+)
+
+tink_cc_test(
+  NAME ecdsa_sign_boringssl_benchmark
+  SRCS
+    ecdsa_sign_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::ecdsa_sign_boringssl
+    gmock
+    absl::absl_check
+    absl::status
+    absl::string_view
+    benchmark::benchmark_main
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_test(
+  NAME ecdsa_verify_boringssl_benchmark
+  SRCS
+    ecdsa_verify_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::ecdsa_sign_boringssl
+    tink::subtle::ecdsa_verify_boringssl
+    gmock
+    absl::absl_check
+    absl::status
+    benchmark::benchmark_main
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
 )

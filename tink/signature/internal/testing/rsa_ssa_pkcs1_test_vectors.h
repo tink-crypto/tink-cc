@@ -19,6 +19,7 @@
 
 #include <vector>
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 
 namespace crypto {
 namespace tink {
@@ -36,6 +37,12 @@ const SignatureTestVector& Create3072BitsTestVector();
 const SignatureTestVector& CreateWycheproof3072BitsTestVector();
 const SignatureTestVector& Create4096BitsTestVector();
 const SignatureTestVector& Create4096BitsTestVector2();
+
+// Returns static test vector for RSA-SSA-PKCS1 for the given modulus size,
+// signature hash type, and variant.
+const SignatureTestVector& GetRsaSsaPkcs1TestVector(
+    int modulus_size_in_bits, RsaSsaPkcs1Parameters::HashType sig_hash_type,
+    RsaSsaPkcs1Parameters::Variant variant);
 
 }  // namespace internal
 }  // namespace tink

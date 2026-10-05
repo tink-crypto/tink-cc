@@ -16,12 +16,15 @@
 
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 #include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
@@ -956,14 +959,81 @@ const SignatureTestVector& Create2048BitsTestVector() {
   return *test_vector;
 }
 
+namespace {
+
+using RsaSsaPkcs1TestVectorMap =
+    absl::flat_hash_map<std::tuple<int, RsaSsaPkcs1Parameters::HashType,
+                                   RsaSsaPkcs1Parameters::Variant>,
+                        const SignatureTestVector*>;
+
+RsaSsaPkcs1TestVectorMap CreateRsaSsaPkcs1TestVectorsMap() {
+  // This map is used to look up a single test vector for a configuration; as
+  // such, having one item per configuration suffices. By convention, the first
+  // defined test vector per configuration is used.
+  RsaSsaPkcs1TestVectorMap vectors{
+      {{2048, RsaSsaPkcs1Parameters::HashType::kSha256,
+        RsaSsaPkcs1Parameters::Variant::kNoPrefix},
+       &CreateTestVector0()},
+      {{2048, RsaSsaPkcs1Parameters::HashType::kSha512,
+        RsaSsaPkcs1Parameters::Variant::kNoPrefix},
+       &CreateTestVector1()},
+      {{2048, RsaSsaPkcs1Parameters::HashType::kSha512,
+        RsaSsaPkcs1Parameters::Variant::kTink},
+       &CreateTestVector2()},
+      {{2048, RsaSsaPkcs1Parameters::HashType::kSha512,
+        RsaSsaPkcs1Parameters::Variant::kCrunchy},
+       &CreateTestVector3()},
+      {{2048, RsaSsaPkcs1Parameters::HashType::kSha256,
+        RsaSsaPkcs1Parameters::Variant::kLegacy},
+       &CreateTestVector4()},
+      {{3072, RsaSsaPkcs1Parameters::HashType::kSha256,
+        RsaSsaPkcs1Parameters::Variant::kNoPrefix},
+       &Create3072BitsTestVector()},
+      {{2048, RsaSsaPkcs1Parameters::HashType::kSha384,
+        RsaSsaPkcs1Parameters::Variant::kNoPrefix},
+       &CreateTestVector5()},
+  };
+  if (!internal::IsFipsModeEnabled()) {
+    vectors[{4096, RsaSsaPkcs1Parameters::HashType::kSha384,
+             RsaSsaPkcs1Parameters::Variant::kNoPrefix}] =
+        &Create4096BitsTestVector();
+  }
+  return vectors;
+}
+
+}  // namespace
+
 std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
   std::vector<SignatureTestVector> test_vectors = {
-      CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-      CreateTestVector3(), CreateTestVector4(), CreateTestVector5()};
+      CreateTestVector0(),
+      CreateTestVector1(),
+      CreateTestVector2(),
+      CreateTestVector3(),
+      CreateTestVector4(),
+      Create3072BitsTestVector(),
+      // TODO(b/569913544): Fix and add this test vector.
+      // CreateWycheproof3072BitsTestVector(),
+      CreateTestVector5(),
+      // TODO(b/569913544): Fix and add this test vector.
+      // Create2048BitsTestVector(),
+  };
   if (!internal::IsFipsModeEnabled()) {
     test_vectors.push_back(Create4096BitsTestVector());
+    // TODO(b/569913544): Fix and add this test vector.
+    // test_vectors.push_back(Create4096BitsTestVector2());
   }
   return test_vectors;
+}
+
+const SignatureTestVector& GetRsaSsaPkcs1TestVector(
+    int modulus_size_in_bits, RsaSsaPkcs1Parameters::HashType sig_hash_type,
+    RsaSsaPkcs1Parameters::Variant variant) {
+  const RsaSsaPkcs1TestVectorMap& map = CreateRsaSsaPkcs1TestVectorsMap();
+  auto it = map.find(std::tuple(modulus_size_in_bits, sig_hash_type, variant));
+  ABSL_CHECK(it != map.end())
+      << "No RSA-SSA-PKCS1 test vector found for modulus size, signature hash "
+         "type, and variant.";
+  return *it->second;
 }
 
 }  // namespace internal

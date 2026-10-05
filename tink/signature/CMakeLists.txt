@@ -716,10 +716,13 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::secret_data
     tink::internal::ec_util
     tink::internal::output_prefix_util
     tink::internal::ssl_unique_ptr
+    tink::internal::util
     tink::subtle::common_enums
+    tink::util::secret_data
     tink::util::statusor
 )
 
@@ -1498,6 +1501,7 @@ tink_cc_test(
     absl::absl_log
     absl::status
     absl::status_matchers
+    absl::strings
     absl::string_view
     crypto
     tink::core::big_integer
@@ -1506,7 +1510,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::test_util
 )
 
 tink_cc_test(

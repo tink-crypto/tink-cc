@@ -28,6 +28,7 @@
 #include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -39,7 +40,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -92,11 +92,16 @@ const EcdsaPublicKey& GetTestPublicKey(EcdsaParameters::CurveType curve_type) {
 
 // Test case for P-256 downloaded from NIST CAVP.
 const EcPoint& GetP256EcPoint() {
-  static const absl::NoDestructor<EcPoint> point(
-      BigInteger(test::HexDecodeOrDie(
-          "700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287")),
-      BigInteger(test::HexDecodeOrDie(
-          "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ac")));
+  static const absl::NoDestructor<EcPoint> point([] {
+    std::string x_bytes, y_bytes;
+    ABSL_CHECK(absl::HexStringToBytes(
+        "700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287",
+        &x_bytes));
+    ABSL_CHECK(absl::HexStringToBytes(
+        "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ac",
+        &y_bytes));
+    return EcPoint(BigInteger(x_bytes), BigInteger(y_bytes));
+  }());
   return *point;
 }
 
@@ -209,11 +214,14 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
 TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidPointFails) {
   // Creates an invalid EC point, by modifying the Y coordinate of
   // GetP256EcPoint().
-  EcPoint invalid_point(
-      BigInteger(test::HexDecodeOrDie(
-          "700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287")),
-      BigInteger(test::HexDecodeOrDie(
-          "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ad")));
+  std::string x_bytes, y_bytes;
+  ASSERT_TRUE(absl::HexStringToBytes(
+      "700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287",
+      &x_bytes));
+  ASSERT_TRUE(absl::HexStringToBytes(
+      "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ad",
+      &y_bytes));
+  EcPoint invalid_point(BigInteger{x_bytes}, BigInteger{y_bytes});
 
   absl::StatusOr<EcdsaParameters> params =
       EcdsaParameters::Builder()
@@ -488,6 +496,66 @@ TEST(EcdsaPublicKeyTest, MoveAssignment) {
   *moved = std::move(*public_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(EcdsaPublicKeyTest, GetPaddedXAndY) {
+  // P-256 (coordinate field size: 32 bytes)
+  const EcdsaPublicKey& p256_key =
+      GetTestPublicKey(EcdsaParameters::CurveType::kNistP256);
+  EXPECT_EQ(p256_key.GetPaddedX().size(), 32);
+  EXPECT_EQ(p256_key.GetPaddedY().size(), 32);
+
+  // P-384 (coordinate field size: 48 bytes)
+  const EcdsaPublicKey& p384_key =
+      GetTestPublicKey(EcdsaParameters::CurveType::kNistP384);
+  EXPECT_EQ(p384_key.GetPaddedX().size(), 48);
+  EXPECT_EQ(p384_key.GetPaddedY().size(), 48);
+
+  // P-521 (coordinate field size: 66 bytes)
+  // Note: the test vector's Y coordinate is 65 bytes without padding.
+  const EcdsaPublicKey& p521_key =
+      GetTestPublicKey(EcdsaParameters::CurveType::kNistP521);
+  EXPECT_EQ(
+      p521_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue().size(),
+      65);
+  EXPECT_EQ(p521_key.GetPaddedX().size(), 66);
+  EXPECT_EQ(p521_key.GetPaddedY().size(), 66);
+  EXPECT_EQ(p521_key.GetPaddedY()[0], '\0');
+}
+
+TEST(EcdsaPublicKeyTest, GetPaddedXWithLeadingZerosP256) {
+  // Test vector from Wycheproof with leading zero bytes in x coordinate:
+  // X has 3 leading 0x00 bytes.
+  std::string x_hex =
+      "00000003fa15f963949d5f03a6f5c7f86f9e0015eeb23aebbff1173937ba748e";
+  std::string y_hex =
+      "1099872070e8e87c555fa13659cca5d7fadcfcb0023ea889548ca48af2ba7e71";
+
+  absl::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string x_bytes, y_bytes;
+  ASSERT_TRUE(absl::HexStringToBytes(x_hex, &x_bytes));
+  ASSERT_TRUE(absl::HexStringToBytes(y_hex, &y_bytes));
+
+  EcPoint point(BigInteger{x_bytes}, BigInteger{y_bytes});
+  // BigInteger strips the 3 leading zeros, so GetValue().size() is 29.
+  EXPECT_EQ(point.GetX().GetValue().size(), 29);
+
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, point, /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  EXPECT_EQ(public_key->GetPaddedX().size(), 32);
+  EXPECT_EQ(public_key->GetPaddedX(), x_bytes);
+  EXPECT_EQ(public_key->GetPaddedY().size(), 32);
+  EXPECT_EQ(public_key->GetPaddedY(), y_bytes);
 }
 
 }  // namespace

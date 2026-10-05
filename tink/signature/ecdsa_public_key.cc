@@ -28,6 +28,7 @@
 #include "tink/internal/output_prefix_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
+#include "openssl/ec.h"
 #include "openssl/ec_key.h"
 #else
 #include "openssl/ec.h"
@@ -35,10 +36,13 @@
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -153,6 +157,24 @@ bool EcdsaPublicKey::operator==(const Key& other) const {
   return GetParameters() == that->GetParameters() &&
          id_requirement_ == that->id_requirement_ &&
          public_point_ == that->public_point_;
+}
+
+std::string EcdsaPublicKey::GetPaddedX() const {
+  absl::StatusOr<SecretData> padded_x = internal::ParseBigIntToFixedLength(
+      public_point_.GetX().GetValue(), parameters_.GetPrivateKeyLength());
+  if (!padded_x.ok()) {
+    return "";
+  }
+  return std::string(util::SecretDataAsStringView(*padded_x));
+}
+
+std::string EcdsaPublicKey::GetPaddedY() const {
+  absl::StatusOr<SecretData> padded_y = internal::ParseBigIntToFixedLength(
+      public_point_.GetY().GetValue(), parameters_.GetPrivateKeyLength());
+  if (!padded_y.ok()) {
+    return "";
+  }
+  return std::string(util::SecretDataAsStringView(*padded_y));
 }
 
 }  // namespace tink

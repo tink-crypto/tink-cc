@@ -51,6 +51,16 @@ class EcdsaPublicKey final : public SignaturePublicKey {
     return public_point_;
   }
 
+  // Returns the affine x-coordinate left-padded with zero bytes to match the
+  // curve's coordinate field size (32 bytes for P-256, 48 bytes for P-384, 66
+  // bytes for P-521).
+  std::string GetPaddedX() const;
+
+  // Returns the affine y-coordinate left-padded with zero bytes to match the
+  // curve's coordinate field size (32 bytes for P-256, 48 bytes for P-384, 66
+  // bytes for P-521).
+  std::string GetPaddedY() const;
+
   absl::string_view GetOutputPrefix() const override { return output_prefix_; }
 
   const EcdsaParameters& GetParameters() const override { return parameters_; }

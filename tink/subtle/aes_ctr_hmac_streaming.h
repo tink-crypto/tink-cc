@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/mac.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/nonce_based_streaming_aead.h"
 #include "tink/subtle/stream_segment_decrypter.h"
@@ -131,12 +132,11 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
   void IncSegmentNumber() override { segment_number_++; }
 
  private:
-  AesCtrHmacStreamSegmentEncrypter(SecretData key_value,
-                                   absl::string_view header,
-                                   absl::string_view nonce_prefix,
-                                   int ciphertext_segment_size,
-                                   int ciphertext_offset, int tag_size,
-                                   std::unique_ptr<Mac> mac)
+  AesCtrHmacStreamSegmentEncrypter(
+      SecretData key_value, absl::string_view header,
+      absl::string_view nonce_prefix, int ciphertext_segment_size,
+      int ciphertext_offset, int tag_size,
+      std::unique_ptr<internal::StatefulMacFactory> mac)
       : key_value_(std::move(key_value)),
         header_(header.begin(), header.end()),
         nonce_prefix_(nonce_prefix),
@@ -152,7 +152,7 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
   const int ciphertext_segment_size_;
   const int ciphertext_offset_;
   const int tag_size_;
-  const std::unique_ptr<Mac> mac_;
+  const std::unique_ptr<internal::StatefulMacFactory> mac_;
   int64_t segment_number_;
 };
 
@@ -212,7 +212,7 @@ class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
   bool is_initialized_ = false;
   SecretData key_value_;
   std::string nonce_prefix_;
-  std::unique_ptr<Mac> mac_;
+  std::unique_ptr<internal::StatefulMacFactory> mac_;
 };
 
 }  // namespace subtle

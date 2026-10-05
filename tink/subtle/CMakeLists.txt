@@ -504,6 +504,7 @@ tink_cc_library(
     tink::subtle::random
     tink::subtle::stream_segment_decrypter
     tink::subtle::stream_segment_encrypter
+    absl::core_headers
     absl::absl_check
     absl::memory
     absl::status
@@ -518,7 +519,10 @@ tink_cc_library(
     tink::internal::dfsan_forwarders
     tink::internal::endian
     tink::internal::fips_utils
+    tink::internal::safe_stringops
     tink::internal::ssl_unique_ptr
+    tink::mac::internal::stateful_hmac_boringssl
+    tink::mac::internal::stateful_mac
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

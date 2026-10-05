@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/optimization.h"
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -38,7 +39,10 @@
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/endian.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/mac/internal/stateful_hmac_boringssl.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
@@ -183,10 +187,8 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
                       params.key_size, &key_value, &hmac_key_value);
   if (!status.ok()) return status;
 
-  auto hmac_result = HmacBoringSsl::New(params.tag_algo, params.tag_size,
-                                        std::move(hmac_key_value));
-  if (!hmac_result.ok()) return hmac_result.status();
-  auto mac = std::move(hmac_result.value());
+  auto mac = std::make_unique<internal::StatefulHmacBoringSslFactory>(
+      params.tag_algo, params.tag_size, std::move(hmac_key_value));
 
   return {absl::WrapUnique(new AesCtrHmacStreamSegmentEncrypter(
       std::move(key_value), header, nonce_prefix,
@@ -296,8 +298,15 @@ absl::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
   absl::string_view ciphertext_string(
       reinterpret_cast<const char*>(ciphertext_buffer->data()),
       plaintext.size());
-  ABSL_ASSIGN_OR_RETURN(std::string tag, mac_->ComputeMac(absl::StrCat(
-                                             nonce, ciphertext_string)));
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<internal::StatefulMac> mac_state,
+                        mac_->Create());
+  ABSL_RETURN_IF_ERROR(mac_state->Update(nonce));
+  ABSL_RETURN_IF_ERROR(mac_state->Update(ciphertext_string));
+  ABSL_ASSIGN_OR_RETURN(SecretData tag, mac_state->FinalizeAsSecretData());
+
+  // Declassify the tag: it can depend on the key, but that's intentional.
+  DfsanClearLabel(tag.data(), tag.size());
+
   memcpy(ciphertext_buffer->data() + plaintext.size(),
          reinterpret_cast<const uint8_t*>(tag.data()), tag_size_);
 
@@ -347,10 +356,8 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
                            &key_value_, &hmac_key_value);
   if (!status.ok()) return status;
 
-  auto hmac_result =
-      HmacBoringSsl::New(tag_algo_, tag_size_, std::move(hmac_key_value));
-  if (!hmac_result.ok()) return hmac_result.status();
-  mac_ = std::move(hmac_result.value());
+  mac_ = std::make_unique<internal::StatefulHmacBoringSslFactory>(
+      tag_algo_, tag_size_, std::move(hmac_key_value));
 
   is_initialized_ = true;
   return absl::OkStatus();
@@ -432,10 +439,16 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
       reinterpret_cast<const char*>(ciphertext.data()), ciphertext.size());
   absl::string_view tag = ciphertext_view.substr(pt_size);
   absl::string_view ciphertext_string = ciphertext_view.substr(0, pt_size);
-  absl::Status status =
-      mac_->VerifyMac(tag, absl::StrCat(nonce, ciphertext_string));
-  if (!status.ok()) {
-    return status;
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<internal::StatefulMac> mac_state,
+                        mac_->Create());
+  ABSL_RETURN_IF_ERROR(mac_state->Update(nonce));
+  ABSL_RETURN_IF_ERROR(mac_state->Update(ciphertext_string));
+  ABSL_ASSIGN_OR_RETURN(SecretData tag_from_mac,
+                        mac_state->FinalizeAsSecretData());
+  if (!internal::SafeCryptoMemEquals(tag.data(), tag_from_mac.data(),
+                                     tag_size_)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "MAC tag verification failed");
   }
 
   ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,

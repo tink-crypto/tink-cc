@@ -28,8 +28,8 @@
 #include <string>
 #include <utility>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -37,9 +37,6 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -54,8 +51,7 @@ using ::absl_testing::StatusIs;
 std::unique_ptr<std::istream> GetTestIstream(absl::string_view filename,
                                              int size,
                                              std::string* file_contents) {
-  std::string full_filename =
-      absl::StrCat(crypto::tink::test::TmpDir(), "/", filename);
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
   (*file_contents) = subtle::Random::GetRandomBytes(size);
   std::ofstream output (full_filename, std::ofstream::binary);
   if (!output.write(file_contents->data(), size) || output.tellp() != size) {

@@ -22,15 +22,13 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <ostream>
+#include <memory>
 #include <string>
 #include <thread>  // NOLINT(build/c++11)
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
@@ -39,10 +37,6 @@
 #include "tink/random_access_stream.h"
 #include "tink/subtle/random.h"
 #include "tink/util/buffer.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -54,7 +48,7 @@ using ::absl_testing::StatusIs;
 
 // Opens test file `filename` and returns a file descriptor to it.
 absl::StatusOr<int> OpenTestFileToRead(absl::string_view filename) {
-  std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
   int fd = open(full_filename.c_str(), O_RDONLY);
   if (fd == -1) {
     return absl::Status(absl::StatusCode::kInternal,

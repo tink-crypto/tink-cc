@@ -313,12 +313,7 @@ tink_cc_test(
     file_input_stream_test.cc
   DEPS
     tink::util::file_input_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::strings
@@ -334,12 +329,7 @@ tink_cc_test(
     file_output_stream_test.cc
   DEPS
     tink::util::file_output_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::strings
@@ -356,12 +346,7 @@ tink_cc_test(
   DEPS
     tink::util::buffer
     tink::util::file_random_access_stream
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::strings
@@ -378,11 +363,7 @@ tink_cc_test(
     istream_input_stream_test.cc
   DEPS
     tink::util::istream_input_stream
-    tink::util::status
-    tink::util::test_matchers
-    tink::util::test_util
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -397,11 +378,8 @@ tink_cc_test(
     ostream_output_stream_test.cc
   DEPS
     tink::util::ostream_output_stream
-    tink::util::status
-    tink::util::test_matchers
-    tink::util::test_util
     gmock
-    absl::memory
+    absl::status
     absl::status_matchers
     absl::strings
     tink::internal::test_file_util

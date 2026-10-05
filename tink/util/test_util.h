@@ -67,9 +67,6 @@ namespace test {
 // Various utilities for testing.
 ///////////////////////////////////////////////////////////////////////////////
 
-// Reads the test file specified by `filename`, and returns its contents.
-std::string ReadTestFile(absl::string_view filename);
-
 // Converts a hexadecimal string into a string of bytes.
 // Returns a status if the size of the input is odd or if the input contains
 // characters that are not hexadecimal.
@@ -81,9 +78,6 @@ std::string HexDecodeOrDie(absl::string_view hex);
 
 // Converts a string of bytes into a hexadecimal string.
 std::string HexEncode(absl::string_view bytes);
-
-// Returns a temporary directory suitable for temporary testing files.
-std::string TmpDir();
 
 // Adds the given 'keyData' with specified status, key_id, and
 // output_prefix_type to the keyset.

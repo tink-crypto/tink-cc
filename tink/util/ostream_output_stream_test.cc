@@ -25,16 +25,14 @@
 #include <string>
 #include <utility>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -44,8 +42,7 @@ using ::absl_testing::IsOk;
 
 // Creates a new test ostream which will write to the file 'filename'.
 std::unique_ptr<std::ostream> GetTestOstream(absl::string_view filename) {
-  std::string full_filename =
-      absl::StrCat(crypto::tink::test::TmpDir(), "/", filename);
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
   auto test_ostream =
       std::make_unique<std::ofstream>(full_filename, std::ofstream::binary);
   return std::move(test_ostream);
@@ -90,7 +87,7 @@ TEST_F(OstreamOutputStreamTest, WritingStreams) {
         std::make_unique<util::OstreamOutputStream>(std::move(output));
     auto status = WriteToStream(output_stream.get(), stream_contents);
     ASSERT_THAT(status, IsOk());
-    std::string ostream_contents = test::ReadTestFile(filename);
+    std::string ostream_contents = internal::ReadTestFile(filename);
     EXPECT_EQ(stream_size, ostream_contents.size());
     EXPECT_EQ(stream_contents, ostream_contents);
   }
@@ -113,7 +110,7 @@ TEST_F(OstreamOutputStreamTest, CustomBufferSizes) {
     output_stream->BackUp(buffer_size);
     auto status = WriteToStream(output_stream.get(), stream_contents);
     ASSERT_THAT(status, IsOk());
-    std::string ostream_contents = test::ReadTestFile(filename);
+    std::string ostream_contents = internal::ReadTestFile(filename);
     EXPECT_EQ(stream_size, ostream_contents.size());
     EXPECT_EQ(stream_contents, ostream_contents);
   }
@@ -199,7 +196,7 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
   auto status = WriteToStream(
       output_stream.get(), stream_contents.substr(output_stream->Position()));
   ASSERT_THAT(status, IsOk());
-  std::string ostream_contents = test::ReadTestFile(filename);
+  std::string ostream_contents = internal::ReadTestFile(filename);
   EXPECT_EQ(stream_size, ostream_contents.size());
   EXPECT_EQ(stream_contents, ostream_contents);
 }

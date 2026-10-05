@@ -21,23 +21,17 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
-#include <iostream>
-#include <ostream>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/test_file_util.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -47,7 +41,7 @@ using ::absl_testing::IsOk;
 
 // Opens test file `filename` and returns a file descriptor to it.
 absl::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {
-  std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
   mode_t mode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
   int fd = open(full_filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, mode);
   if (fd == -1) {
@@ -98,7 +92,7 @@ TEST_F(FileOutputStreamTest, WritingStreams) {
     auto output_stream = std::make_unique<util::FileOutputStream>(*output_fd);
     auto status = WriteToStream(output_stream.get(), stream_contents);
     ASSERT_THAT(status, IsOk());
-    std::string file_contents = test::ReadTestFile(filename);
+    std::string file_contents = internal::ReadTestFile(filename);
     EXPECT_EQ(stream_size, file_contents.size());
     EXPECT_EQ(stream_contents, file_contents);
   }
@@ -123,7 +117,7 @@ TEST_F(FileOutputStreamTest, CustomBufferSizes) {
     output_stream->BackUp(buffer_size);
     auto status = WriteToStream(output_stream.get(), stream_contents);
     ASSERT_THAT(status, IsOk());
-    std::string file_contents = test::ReadTestFile(filename);
+    std::string file_contents = internal::ReadTestFile(filename);
     EXPECT_EQ(stream_size, file_contents.size());
     EXPECT_EQ(stream_contents, file_contents);
   }
@@ -212,7 +206,7 @@ TEST_F(FileOutputStreamTest, BackupAndPosition) {
   auto status = WriteToStream(
       output_stream.get(), stream_contents.substr(output_stream->Position()));
   ASSERT_THAT(status, IsOk());
-  std::string file_contents = test::ReadTestFile(filename);
+  std::string file_contents = internal::ReadTestFile(filename);
   EXPECT_EQ(stream_size, file_contents.size());
   EXPECT_EQ(stream_contents, file_contents);
 }

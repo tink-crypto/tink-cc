@@ -52,7 +52,6 @@ tink_cc_library(
     gmock
     tink::subtle::random
     tink::util::status
-    tink::util::test_util
   TESTONLY
 )
 

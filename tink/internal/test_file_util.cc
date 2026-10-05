@@ -16,8 +16,11 @@
 
 #include "tink/internal/test_file_util.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <ios>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -29,8 +32,6 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -38,13 +39,25 @@ namespace internal {
 
 absl::Status CreateTestFile(absl::string_view filename,
                             absl::string_view file_content) {
-  std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
   std::ofstream output_stream(full_filename, std::ios::binary);
   if (!output_stream) {
     return absl::Status(absl::StatusCode::kInternal, "Cannot open file");
   }
   output_stream.write(file_content.data(), file_content.size());
   return absl::OkStatus();
+}
+
+std::string ReadTestFile(absl::string_view filename) {
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
+  std::ifstream input_stream(full_filename, std::ios::binary);
+  if (!input_stream) {
+    std::clog << "Cannot open file " << full_filename << '\n';
+    exit(1);
+  }
+  std::stringstream buffer;
+  buffer << input_stream.rdbuf();
+  return buffer.str();
 }
 
 std::string GetTestFileNamePrefix() {
@@ -69,7 +82,7 @@ std::string GetTestFileNamePrefix() {
     test_name = test_name_parts[0];
   }
   return absl::StrCat(test_suite_name, "_", test_name, "_",
-                      test::HexEncode(random_string));
+                      absl::BytesToHexString(random_string));
 }
 
 }  // namespace internal

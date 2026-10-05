@@ -22,12 +22,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <fstream>
-#include <ios>
-#include <iostream>
 #include <memory>  // IWYU pragma: keep
-#include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -52,18 +47,6 @@ namespace crypto {
 namespace tink {
 namespace test {
 
-std::string ReadTestFile(absl::string_view filename) {
-  std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
-  std::ifstream input_stream(full_filename, std::ios::binary);
-  if (!input_stream) {
-    std::clog << "Cannot open file " << full_filename << '\n';
-    exit(1);
-  }
-  std::stringstream buffer;
-  buffer << input_stream.rdbuf();
-  return buffer.str();
-}
-
 absl::StatusOr<std::string> HexDecode(absl::string_view hex) {
   std::string decoded;
   const bool result = absl::HexStringToBytes(hex, &decoded);
@@ -87,22 +70,6 @@ std::string HexEncode(absl::string_view bytes) {
     res[2 * i + 1] = hexchars[c % 16];
   }
   return res;
-}
-
-std::string TmpDir() {
-  // Try the following environment variables in order:
-  //  - TEST_TMPDIR: Set by `bazel test`.
-  //  - TMPDIR: Set by some Tink tests.
-  //  - TEMP, TMP: Set on Windows; they contain the tmp dir's path.
-  for (const std::string& tmp_env_variable :
-       {"TEST_TMPDIR", "TMPDIR", "TEMP", "TMP"}) {
-    const char* env = getenv(tmp_env_variable.c_str());
-    if (env && env[0] != '\0') {
-      return env;
-    }
-  }
-  // Tmp dir on Linux/macOS.
-  return "/tmp";
 }
 
 void AddKeyData(const google::crypto::tink::KeyData& key_data, uint32_t key_id,

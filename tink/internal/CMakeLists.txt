@@ -1432,7 +1432,6 @@ tink_cc_test(
     absl::strings
     tink::core::big_integer
     tink::core::insecure_secret_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::util::secret_data

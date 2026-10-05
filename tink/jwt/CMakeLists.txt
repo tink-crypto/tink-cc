@@ -309,7 +309,6 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::internal::bn_util
@@ -390,7 +389,6 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
@@ -465,7 +463,6 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr

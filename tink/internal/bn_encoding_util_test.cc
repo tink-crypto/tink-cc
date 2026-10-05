@@ -29,7 +29,6 @@
 #include "absl/strings/string_view.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"

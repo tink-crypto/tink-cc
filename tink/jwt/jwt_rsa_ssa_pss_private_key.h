@@ -28,7 +28,6 @@
 #include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 
 namespace crypto {

@@ -42,6 +42,11 @@ absl::Status IsHashTypeSafeForSignature(
 absl::StatusOr<std::string> ComputeHash(absl::string_view input,
                                         const EVP_MD &hasher);
 
+// Returns the hash of `pieces` concatenated, using the hash function
+// `hash_type`.
+absl::StatusOr<std::string> ComputeHash(
+    absl::Span<const absl::string_view> pieces, const EVP_MD& hasher);
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

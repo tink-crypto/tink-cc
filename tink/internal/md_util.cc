@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/internal/err_util.h"
+#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
@@ -83,6 +84,34 @@ absl::StatusOr<std::string> ComputeHash(absl::string_view input,
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Openssl internal error computing hash: ",
                                      internal::GetSslErrors()));
+  }
+  digest.resize(digest_length);
+  return digest;
+}
+
+absl::StatusOr<std::string> ComputeHash(
+    absl::Span<const absl::string_view> pieces, const EVP_MD& hasher) {
+  std::string digest;
+  subtle::ResizeStringUninitialized(&digest, EVP_MAX_MD_SIZE);
+  uint32_t digest_length = 0;
+  internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
+  if (!md_ctx) {
+    return absl::InternalError("Could not create EVP_MD_CTX.");
+  }
+  if (1 != EVP_DigestInit_ex(md_ctx.get(), &hasher, /*impl=*/nullptr)) {
+    return absl::InternalError("Could not initialize digest.");
+  }
+  for (const auto& piece : pieces) {
+    auto piece_nonnull = EnsureStringNonNull(piece);
+    if (1 != EVP_DigestUpdate(md_ctx.get(), piece_nonnull.data(),
+                              piece_nonnull.size())) {
+      return absl::InternalError("Could not update digest.");
+    }
+  }
+  if (1 != EVP_DigestFinal_ex(md_ctx.get(),
+                              reinterpret_cast<uint8_t*>(digest.data()),
+                              &digest_length)) {
+    return absl::InternalError("Could not compute digest.");
   }
   digest.resize(digest_length);
   return digest;

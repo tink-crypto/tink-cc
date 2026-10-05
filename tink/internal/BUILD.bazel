@@ -250,6 +250,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":err_util",
+        ":ssl_unique_ptr",
         ":util",
         "//tink/subtle:common_enums",
         "//tink/subtle:subtle_util",

@@ -442,6 +442,7 @@ tink_cc_library(
     md_util.h
   DEPS
     tink::internal::err_util
+    tink::internal::ssl_unique_ptr
     tink::internal::util
     absl::status
     absl::strings

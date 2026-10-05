@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
@@ -123,28 +124,20 @@ absl::StatusOr<std::string> EcdsaSignBoringSslImpl::SignWithoutPrefix(
   data = internal::EnsureStringNonNull(data);
 
   // Compute the digest.
-  unsigned int digest_size;
-  uint8_t digest[EVP_MAX_MD_SIZE];
-  if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
-                      nullptr)) {
-    return absl::InternalError("Could not compute digest.");
+  absl::StatusOr<std::string> digest =
+      internal::ComputeHash({data, message_suffix_}, *hash_);
+  if (!digest.ok()) {
+    return digest.status();
   }
 
   // Compute the signature.
-  return digest_signer_->SignDigest(
-      absl::string_view(reinterpret_cast<char*>(digest), digest_size));
+  return digest_signer_->SignDigest(*digest);
 }
 
 absl::StatusOr<std::string> EcdsaSignBoringSslImpl::Sign(
     absl::string_view data) const {
   std::string signature_without_prefix;
-  if (message_suffix_.empty()) {
-    ABSL_ASSIGN_OR_RETURN(signature_without_prefix, SignWithoutPrefix(data));
-  } else {
-    ABSL_ASSIGN_OR_RETURN(
-        signature_without_prefix,
-        SignWithoutPrefix(absl::StrCat(data, message_suffix_)));
-  }
+  ABSL_ASSIGN_OR_RETURN(signature_without_prefix, SignWithoutPrefix(data));
   if (output_prefix_.empty()) {
     return signature_without_prefix;
   }

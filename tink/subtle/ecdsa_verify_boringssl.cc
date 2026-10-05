@@ -116,11 +116,10 @@ absl::Status EcdsaVerifyBoringSslImpl::VerifyWithoutPrefix(
   data = internal::EnsureStringNonNull(data);
 
   // Compute the digest.
-  unsigned int digest_size;
-  uint8_t digest[EVP_MAX_MD_SIZE];
-  if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
-                      nullptr)) {
-    return absl::InternalError("Could not compute digest.");
+  absl::StatusOr<std::string> digest =
+      internal::ComputeHash({data, message_suffix_}, *hash_);
+  if (!digest.ok()) {
+    return digest.status();
   }
 
   std::string derSig(signature);
@@ -131,9 +130,10 @@ absl::Status EcdsaVerifyBoringSslImpl::VerifyWithoutPrefix(
   }
 
   // Verify the signature.
-  if (1 != ECDSA_verify(0 /* unused */, digest, digest_size,
-                        reinterpret_cast<const uint8_t*>(derSig.data()),
-                        derSig.size(), key_.get())) {
+  if (1 != ECDSA_verify(
+               0 /* unused */, reinterpret_cast<const uint8_t*>(digest->data()),
+               digest->size(), reinterpret_cast<const uint8_t*>(derSig.data()),
+               derSig.size(), key_.get())) {
     // signature is invalid
     return absl::InvalidArgumentError("Signature is not valid.");
   }
@@ -148,13 +148,6 @@ absl::Status EcdsaVerifyBoringSslImpl::Verify(absl::string_view signature,
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
     return absl::InvalidArgumentError("OutputPrefix does not match");
-  }
-  // Creates a copy of the data with the message_suffix_ appended if not empty.
-  // Needs to stay alive until this method is done, as data will point to it.
-  std::string data_with_suffix;
-  if (!message_suffix_.empty()) {
-    data_with_suffix = absl::StrCat(data, message_suffix_);
-    data = data_with_suffix;
   }
   return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
                              data);

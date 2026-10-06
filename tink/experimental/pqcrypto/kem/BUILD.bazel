@@ -10,7 +10,6 @@ cc_library(
     name = "ml_kem_parameters",
     srcs = ["ml_kem_parameters.cc"],
     hdrs = ["ml_kem_parameters.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
     deps = [
         "//tink:parameters",
         "//tink/experimental/kem:kem_parameters",
@@ -24,7 +23,6 @@ cc_library(
     name = "ml_kem_private_key",
     srcs = ["ml_kem_private_key.cc"],
     hdrs = ["ml_kem_private_key.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
     deps = [
         ":ml_kem_public_key",
         "//tink:insecure_secret_key_access",
@@ -49,7 +47,6 @@ cc_library(
     name = "ml_kem_public_key",
     srcs = ["ml_kem_public_key.cc"],
     hdrs = ["ml_kem_public_key.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
     deps = [
         ":ml_kem_parameters",
         "//tink:key",
@@ -130,7 +127,6 @@ cc_library(
     name = "ml_kem_proto_serialization",
     srcs = ["ml_kem_proto_serialization.cc"],
     hdrs = ["ml_kem_proto_serialization.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
     deps = [
         ":ml_kem_parameters",
         ":ml_kem_private_key",

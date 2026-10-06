@@ -26,7 +26,6 @@ alias(
 cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = ["@abseil-cpp//absl/base:nullability"],
 )
@@ -81,7 +80,6 @@ cc_library(
         "tink_config.h",
         "version.h",
     ],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":aead",
@@ -159,7 +157,6 @@ cc_library(
 cc_library(
     name = "input_stream",
     hdrs = ["input_stream.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status",
@@ -170,7 +167,6 @@ cc_library(
 cc_library(
     name = "output_stream",
     hdrs = ["output_stream.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status",
@@ -181,7 +177,6 @@ cc_library(
 cc_library(
     name = "random_access_stream",
     hdrs = ["random_access_stream.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/util:buffer",
@@ -193,7 +188,6 @@ cc_library(
 cc_library(
     name = "output_stream_with_result",
     hdrs = ["output_stream_with_result.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":output_stream",
@@ -205,7 +199,6 @@ cc_library(
 cc_library(
     name = "aead",
     hdrs = ["aead.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
@@ -216,7 +209,6 @@ cc_library(
 cc_library(
     name = "deterministic_aead",
     hdrs = ["deterministic_aead.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status",
@@ -228,7 +220,6 @@ cc_library(
 cc_library(
     name = "streaming_aead",
     hdrs = ["streaming_aead.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":input_stream",
@@ -242,7 +233,6 @@ cc_library(
 cc_library(
     name = "streaming_mac",
     hdrs = ["streaming_mac.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":output_stream_with_result",
@@ -255,7 +245,6 @@ cc_library(
 cc_library(
     name = "chunked_mac",
     hdrs = ["chunked_mac.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/util:status",
@@ -267,7 +256,6 @@ cc_library(
 cc_library(
     name = "hybrid_decrypt",
     hdrs = ["hybrid_decrypt.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
@@ -278,7 +266,6 @@ cc_library(
 cc_library(
     name = "hybrid_encrypt",
     hdrs = ["hybrid_encrypt.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
@@ -289,7 +276,6 @@ cc_library(
 cc_library(
     name = "mac",
     hdrs = ["mac.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status",
@@ -301,7 +287,6 @@ cc_library(
 cc_library(
     name = "public_key_sign",
     hdrs = ["public_key_sign.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
@@ -312,7 +297,6 @@ cc_library(
 cc_library(
     name = "public_key_verify",
     hdrs = ["public_key_verify.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status",
@@ -323,7 +307,6 @@ cc_library(
 cc_library(
     name = "keyset_reader",
     hdrs = ["keyset_reader.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:tink_cc_proto",
@@ -334,7 +317,6 @@ cc_library(
 cc_library(
     name = "keyset_writer",
     hdrs = ["keyset_writer.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:tink_cc_proto",
@@ -346,7 +328,6 @@ cc_library(
     name = "binary_keyset_reader",
     srcs = ["core/binary_keyset_reader.cc"],
     hdrs = ["binary_keyset_reader.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":keyset_reader",
@@ -365,7 +346,6 @@ cc_library(
     name = "binary_keyset_writer",
     srcs = ["core/binary_keyset_writer.cc"],
     hdrs = ["binary_keyset_writer.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":keyset_writer",
@@ -383,7 +363,6 @@ cc_library(
 cc_library(
     name = "json_keyset_reader",
     hdrs = ["json_keyset_reader.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = ["//tink/json:json_keyset_reader"],
 )
@@ -391,7 +370,6 @@ cc_library(
 cc_library(
     name = "json_keyset_writer",
     hdrs = ["json_keyset_writer.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = ["//tink/json:json_keyset_writer"],
 )
@@ -400,7 +378,6 @@ cc_library(
     name = "crypto_format",
     srcs = ["core/crypto_format.cc"],
     hdrs = ["crypto_format.h"],
-    include_prefix = "tink",
     deps = [
         "//proto:tink_cc_proto",
         "//tink/internal:endian",
@@ -415,14 +392,12 @@ cc_library(
     name = "primitive_set",
     srcs = ["primitive_set.h"],
     hdrs = ["primitive_set.h"],
-    include_prefix = "tink",
     deps = ["//tink/internal:primitive_set"],
 )
 
 cc_library(
     name = "primitive_wrapper",
     hdrs = ["primitive_wrapper.h"],
-    include_prefix = "tink",
     deps = [
         ":primitive_set",
         "@abseil-cpp//absl/status:statusor",
@@ -432,7 +407,6 @@ cc_library(
 cc_library(
     name = "registry",
     hdrs = ["registry.h"],
-    include_prefix = "tink",
     deps = [
         ":key_manager",
         ":primitive_set",
@@ -457,7 +431,6 @@ cc_library(
     name = "version",
     srcs = ["core/version.cc"],
     hdrs = [":version_h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
 )
 
@@ -473,7 +446,6 @@ cc_library(
         "keyset_handle_builder.h",
         "legacy_get_keyset_info.h",
     ],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":aead",
@@ -545,7 +517,6 @@ cc_library(
     name = "cleartext_keyset_handle",
     srcs = ["core/cleartext_keyset_handle.cc"],
     hdrs = ["cleartext_keyset_handle.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":annotations",
@@ -567,7 +538,6 @@ cc_library(
     name = "key_manager",
     srcs = ["core/key_manager.cc"],
     hdrs = ["key_manager.h"],
-    include_prefix = "tink",
     deps = [
         "//proto:tink_cc_proto",
         "//tink/util:errors",
@@ -585,7 +555,6 @@ cc_library(
     name = "keyset_manager",
     srcs = ["core/keyset_manager.cc"],
     hdrs = ["keyset_manager.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":key_gen_configuration",
@@ -608,7 +577,6 @@ cc_library(
 cc_library(
     name = "kms_client",
     hdrs = ["kms_client.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":aead",
@@ -621,7 +589,6 @@ cc_library(
     name = "kms_clients",
     srcs = ["core/kms_clients.cc"],
     hdrs = ["kms_clients.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":kms_client",
@@ -639,14 +606,12 @@ cc_library(
 cc_library(
     name = "core/template_util",
     hdrs = ["core/template_util.h"],
-    include_prefix = "tink",
     deps = ["@abseil-cpp//absl/meta:type_traits"],
 )
 
 cc_library(
     name = "core/key_type_manager",
     hdrs = ["core/key_type_manager.h"],
-    include_prefix = "tink",
     deps = [
         ":core/template_util",
         ":input_stream",
@@ -663,7 +628,6 @@ cc_library(
 cc_library(
     name = "core/key_manager_impl",
     hdrs = ["core/key_manager_impl.h"],
-    include_prefix = "tink",
     deps = [
         ":core/key_type_manager",
         ":core/template_util",
@@ -687,7 +651,6 @@ cc_library(
 cc_library(
     name = "core/private_key_type_manager",
     hdrs = ["core/private_key_type_manager.h"],
-    include_prefix = "tink",
     deps = [
         ":core/key_type_manager",
         ":core/template_util",
@@ -699,7 +662,6 @@ cc_library(
 cc_library(
     name = "core/private_key_manager_impl",
     hdrs = ["core/private_key_manager_impl.h"],
-    include_prefix = "tink",
     deps = [
         ":core/key_manager_impl",
         ":core/key_type_manager",
@@ -720,14 +682,12 @@ cc_library(
 cc_library(
     name = "parameters",
     hdrs = ["parameters.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "key",
     hdrs = ["key.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":parameters",
@@ -738,7 +698,6 @@ cc_library(
 cc_library(
     name = "private_key",
     hdrs = ["private_key.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [":key"],
 )
@@ -746,14 +705,12 @@ cc_library(
 cc_library(
     name = "partial_key_access_token",
     hdrs = ["partial_key_access_token.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "partial_key_access",
     hdrs = ["partial_key_access.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [":partial_key_access_token"],
 )
@@ -761,13 +718,11 @@ cc_library(
 cc_library(
     name = "secret_key_access_token",
     hdrs = ["secret_key_access_token.h"],
-    include_prefix = "tink",
 )
 
 cc_library(
     name = "insecure_secret_key_access",
     hdrs = ["insecure_secret_key_access.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [":secret_key_access_token"],
 )
@@ -776,7 +731,6 @@ cc_library(
     name = "restricted_data",
     srcs = ["core/restricted_data.cc"],
     hdrs = ["restricted_data.h"],
-    include_prefix = "tink",
     deps = [
         ":secret_key_access_token",
         "//tink/subtle:random",
@@ -789,14 +743,12 @@ cc_library(
 cc_library(
     name = "key_status",
     hdrs = ["key_status.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "configuration",
     hdrs = ["configuration.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/internal:configuration_helper",
@@ -808,7 +760,6 @@ cc_library(
 cc_library(
     name = "key_gen_configuration",
     hdrs = ["key_gen_configuration.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":key",
@@ -825,7 +776,6 @@ cc_library(
     name = "big_integer",
     srcs = ["core/big_integer.cc"],
     hdrs = ["big_integer.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/strings:string_view",
@@ -836,14 +786,12 @@ cc_library(
 cc_library(
     name = "restricted_big_integer",
     hdrs = ["restricted_big_integer.h"],
-    include_prefix = "tink",
     deps = ["@abseil-cpp//absl/status"],
 )
 
 cc_library(
     name = "ec_point",
     hdrs = ["ec_point.h"],
-    include_prefix = "tink",
     deps = [":big_integer"],
 )
 
@@ -851,7 +799,6 @@ cc_library(
     name = "proto_parameters_format",
     srcs = ["core/proto_parameters_format.cc"],
     hdrs = ["proto_parameters_format.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":parameters",
@@ -871,7 +818,6 @@ cc_library(
     name = "proto_keyset_format",
     srcs = ["core/proto_keyset_format.cc"],
     hdrs = ["proto_keyset_format.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         ":aead",
@@ -1354,7 +1300,6 @@ cc_test(
 cc_library(
     name = "secret_data",
     hdrs = ["secret_data.h"],
-    include_prefix = "tink",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/internal:sanitizing_allocator",

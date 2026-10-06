@@ -9,7 +9,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/streamingaead/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -57,7 +56,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/streamingaead/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -73,7 +71,6 @@ cc_library(
     name = "aes_gcm_hkdf_streaming_proto_serialization_impl",
     srcs = ["aes_gcm_hkdf_streaming_proto_serialization_impl.cc"],
     hdrs = ["aes_gcm_hkdf_streaming_proto_serialization_impl.h"],
-    include_prefix = "tink/streamingaead/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -139,7 +136,6 @@ cc_library(
     name = "aes_ctr_hmac_streaming_proto_serialization_impl",
     srcs = ["aes_ctr_hmac_streaming_proto_serialization_impl.cc"],
     hdrs = ["aes_ctr_hmac_streaming_proto_serialization_impl.h"],
-    include_prefix = "tink/streamingaead/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",

@@ -7,7 +7,6 @@ licenses(["notice"])
 cc_library(
     name = "kem_decapsulate",
     hdrs = ["kem_decapsulate.h"],
-    include_prefix = "tink/kem",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:keyset_handle",
@@ -19,7 +18,6 @@ cc_library(
 cc_library(
     name = "kem_encapsulate",
     hdrs = ["kem_encapsulate.h"],
-    include_prefix = "tink/kem",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:keyset_handle",

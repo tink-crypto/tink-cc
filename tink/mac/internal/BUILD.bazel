@@ -9,7 +9,6 @@ cc_library(
     name = "chunked_mac_impl",
     srcs = ["chunked_mac_impl.cc"],
     hdrs = ["chunked_mac_impl.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         ":stateful_cmac_boringssl",
         ":stateful_hmac_boringssl",
@@ -37,7 +36,6 @@ cc_library(
     name = "chunked_mac_wrapper",
     srcs = ["chunked_mac_wrapper.cc"],
     hdrs = ["chunked_mac_wrapper.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         "//proto:tink_cc_proto",
         "//tink:chunked_mac",
@@ -57,7 +55,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/mac/internal",
     visibility = ["//visibility:public"],
     deps = [
         ":chunked_mac_wrapper",
@@ -75,7 +72,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/mac/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -91,7 +87,6 @@ cc_library(
     name = "stateful_hmac_boringssl",
     srcs = ["stateful_hmac_boringssl.cc"],
     hdrs = ["stateful_hmac_boringssl.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         ":stateful_mac",
         "//tink:secret_data",
@@ -115,7 +110,6 @@ cc_library(
     name = "stateful_cmac_boringssl",
     srcs = ["stateful_cmac_boringssl.cc"],
     hdrs = ["stateful_cmac_boringssl.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         ":stateful_mac",
         "//tink:secret_data",
@@ -139,7 +133,6 @@ cc_library(
 cc_library(
     name = "stateful_mac",
     hdrs = ["stateful_mac.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         "//tink/util:secret_data",
         "//tink/util:status",
@@ -153,7 +146,6 @@ cc_library(
     name = "aes_cmac_proto_serialization_impl",
     srcs = ["aes_cmac_proto_serialization_impl.cc"],
     hdrs = ["aes_cmac_proto_serialization_impl.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -361,7 +353,6 @@ cc_library(
     name = "hmac_proto_serialization_impl",
     srcs = ["hmac_proto_serialization_impl.cc"],
     hdrs = ["hmac_proto_serialization_impl.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         ":hmac_proto_structs",
         "//tink:partial_key_access",
@@ -420,7 +411,6 @@ cc_test(
 cc_library(
     name = "hmac_proto_structs",
     hdrs = ["hmac_proto_structs.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         "//proto:hmac_cc_tinkpb",
         "@abseil-cpp//absl/base:core_headers",
@@ -445,7 +435,6 @@ cc_library(
     testonly = 1,
     srcs = ["aes_cmac_test_vectors.cc"],
     hdrs = ["aes_cmac_test_vectors.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",
@@ -468,7 +457,6 @@ cc_library(
     testonly = 1,
     srcs = ["hmac_test_vectors.cc"],
     hdrs = ["hmac_test_vectors.h"],
-    include_prefix = "tink/mac/internal",
     deps = [
         "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",

@@ -11,7 +11,6 @@ cc_library(
     name = "hybrid_test_vectors",
     testonly = 1,
     hdrs = ["hybrid_test_vectors.h"],
-    include_prefix = "tink/hybrid/internal/testing",
     deps = [
         "//tink/hybrid:hybrid_private_key",
         "@abseil-cpp//absl/strings:string_view",
@@ -23,7 +22,6 @@ cc_library(
     testonly = 1,
     srcs = ["hpke_test_vectors.cc"],
     hdrs = ["hpke_test_vectors.h"],
-    include_prefix = "tink/hybrid/internal/testing",
     tags = ["requires_boringcrypto_update"],
     deps = [
         ":hybrid_test_vectors",
@@ -52,7 +50,6 @@ cc_library(
     testonly = 1,
     srcs = ["ecies_aead_hkdf_test_vectors.cc"],
     hdrs = ["ecies_aead_hkdf_test_vectors.h"],
-    include_prefix = "tink/hybrid/internal/testing",
     deps = [
         ":hybrid_test_vectors",
         "//tink:insecure_secret_key_access",
@@ -78,7 +75,6 @@ cc_library(
     testonly = 1,
     srcs = ["ecies_test_util.cc"],
     hdrs = ["ecies_test_util.h"],
-    include_prefix = "tink/hybrid/internal/testing",
     deps = [
         "//proto:aes_ctr_cc_proto",
         "//proto:aes_ctr_hmac_aead_cc_proto",

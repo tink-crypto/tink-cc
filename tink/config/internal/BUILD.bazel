@@ -9,7 +9,6 @@ cc_library(
     testonly = 1,
     srcs = ["fips_140_2_test_params.cc"],
     hdrs = ["fips_140_2_test_params.h"],
-    include_prefix = "tink/config/internal",
     deps = [
         "//tink:parameters",
         "//tink/aead:aes_ctr_hmac_aead_parameters",

@@ -9,7 +9,6 @@ cc_library(
     name = "ml_kem_raw_decapsulate_boringssl",
     srcs = ["ml_kem_raw_decapsulate_boringssl.cc"],
     hdrs = ["ml_kem_raw_decapsulate_boringssl.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
@@ -64,7 +63,6 @@ cc_library(
     name = "ml_kem_raw_encapsulate_boringssl",
     srcs = ["ml_kem_raw_encapsulate_boringssl.cc"],
     hdrs = ["ml_kem_raw_encapsulate_boringssl.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
@@ -107,7 +105,6 @@ cc_library(
     testonly = 1,
     srcs = ["ml_kem_test_util.cc"],
     hdrs = ["ml_kem_test_util.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",
@@ -143,7 +140,6 @@ cc_library(
     name = "ml_kem_decapsulate_aes_gcm",
     srcs = ["ml_kem_decapsulate_aes_gcm.cc"],
     hdrs = ["ml_kem_decapsulate_aes_gcm.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         ":ml_kem_raw_decapsulate_boringssl",
         "//tink:key_status",
@@ -205,7 +201,6 @@ cc_library(
     name = "ml_kem_encapsulate_aes_gcm",
     srcs = ["ml_kem_encapsulate_aes_gcm.cc"],
     hdrs = ["ml_kem_encapsulate_aes_gcm.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         ":ml_kem_raw_encapsulate_boringssl",
         "//tink:key_status",

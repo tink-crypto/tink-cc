@@ -10,7 +10,6 @@ cc_library(
     name = "tink_config",
     srcs = ["tink_config.cc"],
     hdrs = ["tink_config.h"],
-    include_prefix = "tink/config",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/daead:deterministic_aead_config",
@@ -26,7 +25,6 @@ cc_library(
     name = "config_util",
     srcs = ["config_util.cc"],
     hdrs = ["config_util.h"],
-    include_prefix = "tink/config",
     deps = ["//proto:config_cc_proto"],
 )
 
@@ -39,7 +37,6 @@ cc_library(
     name = "tink_fips",
     srcs = ["tink_fips.cc"],
     hdrs = ["tink_fips.h"],
-    include_prefix = "tink/config",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/internal:fips_utils",
@@ -53,7 +50,6 @@ cc_library(
     name = "global_registry",
     srcs = ["global_registry.cc"],
     hdrs = ["global_registry.h"],
-    include_prefix = "tink/config",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -68,7 +64,6 @@ cc_library(
     name = "fips_140_2",
     srcs = ["fips_140_2.cc"],
     hdrs = ["fips_140_2.h"],
-    include_prefix = "tink/config",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -98,7 +93,6 @@ cc_library(
     name = "key_gen_fips_140_2",
     srcs = ["key_gen_fips_140_2.cc"],
     hdrs = ["key_gen_fips_140_2.h"],
-    include_prefix = "tink/config",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -121,7 +115,6 @@ cc_library(
 cc_library(
     name = "v0",
     hdrs = ["v0.h"],
-    include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     deps = [
         ":config_2026",
@@ -133,7 +126,6 @@ cc_library(
 cc_library(
     name = "key_gen_v0",
     hdrs = ["key_gen_v0.h"],
-    include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     deps = [
         ":key_gen_config_2026",
@@ -308,7 +300,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     deps = [
         "//tink:configuration",
@@ -376,7 +367,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/config",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [

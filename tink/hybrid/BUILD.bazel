@@ -9,7 +9,6 @@ cc_library(
     name = "hybrid_config",
     srcs = ["hybrid_config.cc"],
     hdrs = ["hybrid_config.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":ecies_aead_hkdf_private_key_manager",
@@ -31,7 +30,6 @@ cc_library(
     name = "hpke_config",
     srcs = ["hpke_config.cc"],
     hdrs = ["hpke_config.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [
@@ -52,7 +50,6 @@ cc_library(
     name = "hybrid_decrypt_wrapper",
     srcs = ["hybrid_decrypt_wrapper.cc"],
     hdrs = ["hybrid_decrypt_wrapper.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:tink_cc_proto",
@@ -76,7 +73,6 @@ cc_library(
     name = "hybrid_encrypt_wrapper",
     srcs = ["hybrid_encrypt_wrapper.cc"],
     hdrs = ["hybrid_encrypt_wrapper.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:tink_cc_proto",
@@ -100,21 +96,18 @@ cc_library(
     name = "hybrid_decrypt_factory",
     srcs = ["hybrid_decrypt_factory.cc"],
     hdrs = ["hybrid_decrypt_factory.h"],
-    include_prefix = "tink/hybrid",
 )
 
 cc_library(
     name = "hybrid_encrypt_factory",
     srcs = ["hybrid_encrypt_factory.cc"],
     hdrs = ["hybrid_encrypt_factory.h"],
-    include_prefix = "tink/hybrid",
 )
 
 cc_library(
     name = "hybrid_key_templates",
     srcs = ["hybrid_key_templates.cc"],
     hdrs = ["hybrid_key_templates.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:common_cc_proto",
@@ -131,7 +124,6 @@ cc_library(
     name = "ecies_aead_hkdf_hybrid_decrypt",
     srcs = ["ecies_aead_hkdf_hybrid_decrypt.cc"],
     hdrs = ["ecies_aead_hkdf_hybrid_decrypt.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:private"],
     deps = [
         "//proto:ecies_aead_hkdf_cc_proto",
@@ -155,7 +147,6 @@ cc_library(
     name = "ecies_aead_hkdf_hybrid_encrypt",
     srcs = ["ecies_aead_hkdf_hybrid_encrypt.cc"],
     hdrs = ["ecies_aead_hkdf_hybrid_encrypt.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:private"],
     deps = [
         "//proto:ecies_aead_hkdf_cc_proto",
@@ -176,7 +167,6 @@ cc_library(
     name = "ecies_aead_hkdf_private_key_manager",
     srcs = ["ecies_aead_hkdf_private_key_manager.cc"],
     hdrs = ["ecies_aead_hkdf_private_key_manager.h"],
-    include_prefix = "tink/hybrid",
     deps = [
         ":ecies_aead_hkdf_hybrid_decrypt",
         ":ecies_aead_hkdf_public_key_manager",
@@ -210,7 +200,6 @@ cc_library(
     name = "ecies_aead_hkdf_public_key_manager",
     srcs = ["ecies_aead_hkdf_public_key_manager.cc"],
     hdrs = ["ecies_aead_hkdf_public_key_manager.h"],
-    include_prefix = "tink/hybrid",
     deps = [
         ":ecies_aead_hkdf_hybrid_encrypt",
         "//proto:common_cc_proto",
@@ -237,7 +226,6 @@ cc_library(
     name = "failing_hybrid",
     srcs = ["failing_hybrid.cc"],
     hdrs = ["failing_hybrid.h"],
-    include_prefix = "tink/hybrid",
     deps = [
         "//tink:hybrid_decrypt",
         "//tink:hybrid_encrypt",
@@ -252,7 +240,6 @@ cc_library(
 cc_library(
     name = "hybrid_parameters",
     hdrs = ["hybrid_parameters.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
@@ -260,7 +247,6 @@ cc_library(
 cc_library(
     name = "hybrid_public_key",
     hdrs = ["hybrid_public_key.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
@@ -272,7 +258,6 @@ cc_library(
 cc_library(
     name = "hybrid_private_key",
     hdrs = ["hybrid_private_key.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
@@ -288,7 +273,6 @@ cc_library(
     name = "hpke_parameters",
     srcs = ["hpke_parameters.cc"],
     hdrs = ["hpke_parameters.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
@@ -302,7 +286,6 @@ cc_library(
     name = "hpke_public_key",
     srcs = ["hpke_public_key.cc"],
     hdrs = ["hpke_public_key.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":hpke_parameters",
@@ -325,7 +308,6 @@ cc_library(
     name = "hpke_private_key",
     srcs = ["hpke_private_key.cc"],
     hdrs = ["hpke_private_key.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [
@@ -357,7 +339,6 @@ cc_library(
 cc_library(
     name = "hpke_proto_serialization",
     hdrs = ["hpke_proto_serialization.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     deps = [
         "//tink/hybrid/internal:hpke_proto_serialization_impl",
@@ -370,7 +351,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [
@@ -384,7 +364,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [
@@ -397,7 +376,6 @@ cc_library(
 cc_library(
     name = "config_v0",
     hdrs = ["config_v0.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [
@@ -410,7 +388,6 @@ cc_library(
 cc_library(
     name = "key_gen_config_v0",
     hdrs = ["key_gen_config_v0.h"],
-    include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
     visibility = ["//visibility:public"],
     deps = [
@@ -424,7 +401,6 @@ cc_library(
     name = "ecies_parameters",
     srcs = ["ecies_parameters.cc"],
     hdrs = ["ecies_parameters.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
@@ -445,7 +421,6 @@ cc_library(
     name = "ecies_public_key",
     srcs = ["ecies_public_key.cc"],
     hdrs = ["ecies_public_key.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":ecies_parameters",
@@ -471,7 +446,6 @@ cc_library(
     name = "ecies_private_key",
     srcs = ["ecies_private_key.cc"],
     hdrs = ["ecies_private_key.h"],
-    include_prefix = "tink/hybrid",
     visibility = ["//visibility:public"],
     deps = [
         ":ecies_parameters",
@@ -504,7 +478,6 @@ cc_library(
 cc_library(
     name = "ecies_proto_serialization",
     hdrs = ["ecies_proto_serialization.h"],
-    include_prefix = "tink/hybrid",
     deps = [
         "//tink/hybrid/internal:ecies_proto_serialization_impl",
         "//tink/internal:mutable_serialization_registry",

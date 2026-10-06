@@ -9,7 +9,6 @@ cc_library(
     name = "tink_type_resolver",
     srcs = ["tink_type_resolver.cc"],
     hdrs = ["tink_type_resolver.h"],
-    include_prefix = "tink/json/internal",
     deps = [
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/strings",

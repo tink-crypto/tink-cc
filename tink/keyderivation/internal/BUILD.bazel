@@ -9,7 +9,6 @@ cc_library(
     name = "prf_based_deriver",
     srcs = ["prf_based_deriver.cc"],
     hdrs = ["prf_based_deriver.h"],
-    include_prefix = "tink/keyderivation/internal",
     deps = [
         ":config_prf_for_deriver",
         ":key_derivers",
@@ -82,7 +81,6 @@ cc_test(
 cc_library(
     name = "prf_based_deriver_key_manager",
     hdrs = ["prf_based_deriver_key_manager.h"],
-    include_prefix = "tink/keyderivation/internal",
     deps = [
         ":prf_based_deriver",
         "//proto:prf_based_deriver_cc_proto",
@@ -135,7 +133,6 @@ cc_library(
     name = "key_derivers",
     srcs = ["key_derivers.cc"],
     hdrs = ["key_derivers.h"],
-    include_prefix = "tink/keyderivation/internal",
     deps = [
         "//proto:aes_gcm_cc_proto",
         "//proto:tink_cc_proto",
@@ -303,7 +300,6 @@ cc_test(
 cc_library(
     name = "config_prf_for_deriver",
     hdrs = ["config_prf_for_deriver.h"],
-    include_prefix = "tink/keyderivation/internal",
     deps = [
         "//tink:configuration",
         "//tink/internal:configuration_impl",
@@ -336,7 +332,6 @@ cc_library(
     name = "prf_based_key_derivation_proto_serialization_impl",
     srcs = ["prf_based_key_derivation_proto_serialization_impl.cc"],
     hdrs = ["prf_based_key_derivation_proto_serialization_impl.h"],
-    include_prefix = "tink/keyderivation/internal",
     deps = [
         "//proto:prf_based_deriver_cc_proto",
         "//proto:tink_cc_proto",
@@ -377,7 +372,6 @@ cc_library(
     testonly = 1,
     srcs = ["prf_based_key_derivation_test_vectors.cc"],
     hdrs = ["prf_based_key_derivation_test_vectors.h"],
-    include_prefix = "tink/keyderivation/internal",
     deps = [
         "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",
@@ -437,7 +431,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/keyderivation/internal",
     visibility = ["//visibility:public"],
     deps = [
         ":prf_based_deriver_key_manager",
@@ -453,7 +446,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/keyderivation/internal",
     visibility = ["//visibility:public"],
     deps = [
         ":prf_based_deriver_key_manager",

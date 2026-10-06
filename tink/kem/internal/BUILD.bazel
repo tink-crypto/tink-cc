@@ -8,7 +8,6 @@ licenses(["notice"])
 cc_library(
     name = "raw_kem_decapsulate",
     hdrs = ["raw_kem_decapsulate.h"],
-    include_prefix = "tink/kem/internal",
     deps = [
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -19,7 +18,6 @@ cc_library(
 cc_library(
     name = "raw_kem_encapsulate",
     hdrs = ["raw_kem_encapsulate.h"],
-    include_prefix = "tink/kem/internal",
     deps = [
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -30,7 +28,6 @@ cc_library(
     name = "kem_decapsulate_wrapper",
     srcs = ["kem_decapsulate_wrapper.cc"],
     hdrs = ["kem_decapsulate_wrapper.h"],
-    include_prefix = "tink/kem/internal",
     deps = [
         "//proto:tink_cc_proto",
         "//tink:crypto_format",
@@ -91,7 +88,6 @@ cc_library(
     name = "kem_encapsulate_wrapper",
     srcs = ["kem_encapsulate_wrapper.cc"],
     hdrs = ["kem_encapsulate_wrapper.h"],
-    include_prefix = "tink/kem/internal",
     deps = [
         "//proto:tink_cc_proto",
         "//tink:primitive_wrapper",

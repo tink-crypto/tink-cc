@@ -10,7 +10,6 @@ licenses(["notice"])
 cc_library(
     name = "keyset_deriver",
     hdrs = ["keyset_deriver.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:keyset_handle",
@@ -23,7 +22,6 @@ cc_library(
     name = "keyset_deriver_wrapper",
     srcs = ["keyset_deriver_wrapper.cc"],
     hdrs = ["keyset_deriver_wrapper.h"],
-    include_prefix = "tink/keyderivation",
     deps = [
         ":keyset_deriver",
         "//proto:tink_cc_proto",
@@ -45,7 +43,6 @@ cc_library(
     name = "key_derivation_config",
     srcs = ["key_derivation_config.cc"],
     hdrs = ["key_derivation_config.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         ":keyset_deriver_wrapper",
@@ -63,7 +60,6 @@ cc_library(
     name = "key_derivation_key_templates",
     srcs = ["key_derivation_key_templates.cc"],
     hdrs = ["key_derivation_key_templates.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         ":keyset_deriver",
@@ -79,7 +75,6 @@ cc_library(
 cc_library(
     name = "key_derivation_key",
     hdrs = ["key_derivation_key.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         ":key_derivation_parameters",
@@ -90,7 +85,6 @@ cc_library(
 cc_library(
     name = "key_derivation_parameters",
     hdrs = ["key_derivation_parameters.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
@@ -99,7 +93,6 @@ cc_library(
     name = "prf_based_key_derivation_parameters",
     srcs = ["prf_based_key_derivation_parameters.cc"],
     hdrs = ["prf_based_key_derivation_parameters.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         ":key_derivation_parameters",
@@ -116,7 +109,6 @@ cc_library(
     name = "prf_based_key_derivation_key",
     srcs = ["prf_based_key_derivation_key.cc"],
     hdrs = ["prf_based_key_derivation_key.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         ":key_derivation_key",
@@ -136,7 +128,6 @@ cc_library(
 cc_library(
     name = "prf_based_key_derivation_proto_serialization",
     hdrs = ["prf_based_key_derivation_proto_serialization.h"],
-    include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/internal:mutable_serialization_registry",
@@ -399,7 +390,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/keyderivation",
     deps = [
         "//tink:configuration",
         "//tink/keyderivation/internal:config_2026",
@@ -411,7 +401,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/keyderivation",
     deps = [
         "//tink:key_gen_configuration",
         "//tink/keyderivation/internal:key_gen_config_2026",

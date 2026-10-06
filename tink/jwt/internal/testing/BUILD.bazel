@@ -12,7 +12,6 @@ cc_library(
     testonly = 1,
     srcs = ["jwt_rsa_ssa_test_vectors.cc"],
     hdrs = ["jwt_rsa_ssa_test_vectors.h"],
-    include_prefix = "tink/jwt/internal/testing",
     deps = [
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",
@@ -25,7 +24,6 @@ cc_library(
     testonly = 1,
     srcs = ["jwt_hmac_test_vectors.cc"],
     hdrs = ["jwt_hmac_test_vectors.h"],
-    include_prefix = "tink/jwt/internal/testing",
     deps = [
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
@@ -46,7 +44,6 @@ cc_library(
     testonly = 1,
     srcs = ["jwt_ecdsa_test_vectors.cc"],
     hdrs = ["jwt_ecdsa_test_vectors.h"],
-    include_prefix = "tink/jwt/internal/testing",
     deps = [
         "//tink:big_integer",
         "//tink:ec_point",
@@ -71,7 +68,6 @@ cc_library(
     testonly = 1,
     srcs = ["jwt_ml_dsa_test_vectors.cc"],
     hdrs = ["jwt_ml_dsa_test_vectors.h"],
-    include_prefix = "tink/jwt/internal/testing",
     deps = [
         "//tink/jwt:jwt_ml_dsa_parameters",
         "//tink/util:test_util",

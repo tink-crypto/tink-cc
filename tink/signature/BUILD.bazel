@@ -9,7 +9,6 @@ cc_library(
     name = "prehash",
     srcs = ["prehash.cc"],
     hdrs = ["prehash.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
@@ -21,7 +20,6 @@ cc_library(
     name = "sign_prehash",
     srcs = ["sign_prehash.cc"],
     hdrs = ["sign_prehash.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/status:statusor",
@@ -33,7 +31,6 @@ cc_library(
     name = "public_key_verify_wrapper",
     srcs = ["public_key_verify_wrapper.cc"],
     hdrs = ["public_key_verify_wrapper.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//proto:tink_cc_proto",
         "//tink:crypto_format",
@@ -59,14 +56,12 @@ cc_library(
     name = "public_key_verify_factory",
     srcs = ["public_key_verify_factory.cc"],
     hdrs = ["public_key_verify_factory.h"],
-    include_prefix = "tink/signature",
 )
 
 cc_library(
     name = "public_key_sign_wrapper",
     srcs = ["public_key_sign_wrapper.cc"],
     hdrs = ["public_key_sign_wrapper.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//proto:tink_cc_proto",
         "//tink:crypto_format",
@@ -89,14 +84,12 @@ cc_library(
     name = "public_key_sign_factory",
     srcs = ["public_key_sign_factory.cc"],
     hdrs = ["public_key_sign_factory.h"],
-    include_prefix = "tink/signature",
 )
 
 cc_library(
     name = "signature_key_templates",
     srcs = ["signature_key_templates.cc"],
     hdrs = ["signature_key_templates.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:common_cc_proto",
@@ -121,7 +114,6 @@ cc_library(
     name = "ecdsa_sign_key_manager",
     srcs = ["ecdsa_sign_key_manager.cc"],
     hdrs = ["ecdsa_sign_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         ":ecdsa_verify_key_manager",
         "//proto:ecdsa_cc_proto",
@@ -154,7 +146,6 @@ cc_library(
     name = "ecdsa_verify_key_manager",
     srcs = ["ecdsa_verify_key_manager.cc"],
     hdrs = ["ecdsa_verify_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//proto:ecdsa_cc_proto",
         "//proto:tink_cc_proto",
@@ -182,7 +173,6 @@ cc_library(
     name = "ed25519_sign_key_manager",
     srcs = ["ed25519_sign_key_manager.cc"],
     hdrs = ["ed25519_sign_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         ":ed25519_verify_key_manager",
         "//proto:ed25519_cc_proto",
@@ -214,7 +204,6 @@ cc_library(
     name = "ed25519_verify_key_manager",
     srcs = ["ed25519_verify_key_manager.cc"],
     hdrs = ["ed25519_verify_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//proto:ed25519_cc_proto",
         "//proto:tink_cc_proto",
@@ -239,7 +228,6 @@ cc_library(
     name = "sig_util",
     srcs = ["sig_util.cc"],
     hdrs = ["sig_util.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink:public_key_sign",
         "//tink:public_key_verify",
@@ -251,7 +239,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_sign_key_manager",
     srcs = ["rsa_ssa_pkcs1_sign_key_manager.cc"],
     hdrs = ["rsa_ssa_pkcs1_sign_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         ":rsa_ssa_pkcs1_verify_key_manager",
         ":sig_util",
@@ -285,7 +272,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_verify_key_manager",
     srcs = ["rsa_ssa_pkcs1_verify_key_manager.cc"],
     hdrs = ["rsa_ssa_pkcs1_verify_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//proto:rsa_ssa_pkcs1_cc_proto",
         "//proto:tink_cc_proto",
@@ -315,7 +301,6 @@ cc_library(
     name = "rsa_ssa_pss_sign_key_manager",
     srcs = ["rsa_ssa_pss_sign_key_manager.cc"],
     hdrs = ["rsa_ssa_pss_sign_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         ":rsa_ssa_pss_verify_key_manager",
         ":sig_util",
@@ -350,7 +335,6 @@ cc_library(
     name = "rsa_ssa_pss_verify_key_manager",
     srcs = ["rsa_ssa_pss_verify_key_manager.cc"],
     hdrs = ["rsa_ssa_pss_verify_key_manager.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//proto:rsa_ssa_pss_cc_proto",
         "//proto:tink_cc_proto",
@@ -382,7 +366,6 @@ cc_library(
     name = "signature_config",
     srcs = ["signature_config.cc"],
     hdrs = ["signature_config.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":ecdsa_proto_serialization",
@@ -419,7 +402,6 @@ cc_library(
     name = "failing_signature",
     srcs = ["failing_signature.cc"],
     hdrs = ["failing_signature.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink:public_key_sign",
         "//tink:public_key_verify",
@@ -434,7 +416,6 @@ cc_library(
 cc_library(
     name = "signature_parameters",
     hdrs = ["signature_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
@@ -442,7 +423,6 @@ cc_library(
 cc_library(
     name = "signature_public_key",
     hdrs = ["signature_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -454,7 +434,6 @@ cc_library(
 cc_library(
     name = "signature_private_key",
     hdrs = ["signature_private_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -470,7 +449,6 @@ cc_library(
     name = "ed25519_parameters",
     srcs = ["ed25519_parameters.cc"],
     hdrs = ["ed25519_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -485,7 +463,6 @@ cc_library(
     name = "ed25519_public_key",
     srcs = ["ed25519_public_key.cc"],
     hdrs = ["ed25519_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":ed25519_parameters",
@@ -506,7 +483,6 @@ cc_library(
     name = "ed25519_private_key",
     srcs = ["ed25519_private_key.cc"],
     hdrs = ["ed25519_private_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":ed25519_parameters",
@@ -529,7 +505,6 @@ cc_library(
 cc_library(
     name = "ed25519_proto_serialization",
     hdrs = ["ed25519_proto_serialization.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/signature/internal:ed25519_proto_serialization_impl",
@@ -541,7 +516,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_parameters",
     srcs = ["rsa_ssa_pkcs1_parameters.cc"],
     hdrs = ["rsa_ssa_pkcs1_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -563,7 +537,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_public_key",
     srcs = ["rsa_ssa_pkcs1_public_key.cc"],
     hdrs = ["rsa_ssa_pkcs1_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pkcs1_parameters",
@@ -587,7 +560,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_private_key",
     srcs = ["rsa_ssa_pkcs1_private_key.cc"],
     hdrs = ["rsa_ssa_pkcs1_private_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pkcs1_parameters",
@@ -611,7 +583,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -624,7 +595,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -636,7 +606,6 @@ cc_library(
 cc_library(
     name = "config_v0",
     hdrs = ["config_v0.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":config_2026",
@@ -648,7 +617,6 @@ cc_library(
 cc_library(
     name = "key_gen_config_v0",
     hdrs = ["key_gen_config_v0.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":key_gen_config_2026",
@@ -660,7 +628,6 @@ cc_library(
 cc_library(
     name = "rsa_ssa_pkcs1_proto_serialization",
     hdrs = ["rsa_ssa_pkcs1_proto_serialization.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/signature/internal:rsa_ssa_pkcs1_proto_serialization_impl",
@@ -672,7 +639,6 @@ cc_library(
     name = "rsa_ssa_pss_parameters",
     srcs = ["rsa_ssa_pss_parameters.cc"],
     hdrs = ["rsa_ssa_pss_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -696,7 +662,6 @@ cc_library(
     name = "rsa_ssa_pss_public_key",
     srcs = ["rsa_ssa_pss_public_key.cc"],
     hdrs = ["rsa_ssa_pss_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pss_parameters",
@@ -720,7 +685,6 @@ cc_library(
     name = "rsa_ssa_pss_private_key",
     srcs = ["rsa_ssa_pss_private_key.cc"],
     hdrs = ["rsa_ssa_pss_private_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pss_parameters",
@@ -745,7 +709,6 @@ cc_library(
 cc_library(
     name = "rsa_ssa_pss_proto_serialization",
     hdrs = ["rsa_ssa_pss_proto_serialization.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/signature/internal:rsa_ssa_pss_proto_serialization_impl",
@@ -757,7 +720,6 @@ cc_library(
     name = "ecdsa_parameters",
     srcs = ["ecdsa_parameters.cc"],
     hdrs = ["ecdsa_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -774,7 +736,6 @@ cc_library(
     name = "ecdsa_public_key",
     srcs = ["ecdsa_public_key.cc"],
     hdrs = ["ecdsa_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":ecdsa_parameters",
@@ -804,7 +765,6 @@ cc_library(
     name = "ecdsa_private_key",
     srcs = ["ecdsa_private_key.cc"],
     hdrs = ["ecdsa_private_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":ecdsa_parameters",
@@ -836,7 +796,6 @@ cc_library(
 cc_library(
     name = "ecdsa_proto_serialization",
     hdrs = ["ecdsa_proto_serialization.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/signature/internal:ecdsa_proto_serialization_impl",
@@ -848,7 +807,6 @@ cc_library(
     name = "ml_dsa_parameters",
     srcs = ["ml_dsa_parameters.cc"],
     hdrs = ["ml_dsa_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -862,7 +820,6 @@ cc_library(
     name = "ml_dsa_private_key",
     srcs = ["ml_dsa_private_key.cc"],
     hdrs = ["ml_dsa_private_key.h"],
-    include_prefix = "tink/signature",
     tags = ["fips"],
     visibility = ["//visibility:public"],
     deps = [
@@ -891,7 +848,6 @@ cc_library(
     name = "ml_dsa_public_key",
     srcs = ["ml_dsa_public_key.cc"],
     hdrs = ["ml_dsa_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":ml_dsa_parameters",
@@ -913,7 +869,6 @@ cc_library(
     name = "slh_dsa_parameters",
     srcs = ["slh_dsa_parameters.cc"],
     hdrs = ["slh_dsa_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -929,7 +884,6 @@ cc_library(
     name = "slh_dsa_private_key",
     srcs = ["slh_dsa_private_key.cc"],
     hdrs = ["slh_dsa_private_key.h"],
-    include_prefix = "tink/signature",
     tags = ["fips"],
     visibility = ["//visibility:public"],
     deps = [
@@ -1884,7 +1838,6 @@ cc_library(
     name = "slh_dsa_public_key",
     srcs = ["slh_dsa_public_key.cc"],
     hdrs = ["slh_dsa_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_public_key",
@@ -1924,7 +1877,6 @@ cc_library(
     name = "composite_ml_dsa_parameters",
     srcs = ["composite_ml_dsa_parameters.cc"],
     hdrs = ["composite_ml_dsa_parameters.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
@@ -1952,7 +1904,6 @@ cc_library(
     name = "composite_ml_dsa_private_key",
     srcs = ["composite_ml_dsa_private_key.cc"],
     hdrs = ["composite_ml_dsa_private_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":composite_ml_dsa_parameters",
@@ -1994,7 +1945,6 @@ cc_library(
     name = "composite_ml_dsa_public_key",
     srcs = ["composite_ml_dsa_public_key.cc"],
     hdrs = ["composite_ml_dsa_public_key.h"],
-    include_prefix = "tink/signature",
     visibility = ["//visibility:public"],
     deps = [
         ":composite_ml_dsa_parameters",
@@ -2048,7 +1998,6 @@ cc_test(
 cc_library(
     name = "composite_ml_dsa_proto_serialization",
     hdrs = ["composite_ml_dsa_proto_serialization.h"],
-    include_prefix = "tink/signature",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/signature/internal:composite_ml_dsa_proto_serialization_impl",

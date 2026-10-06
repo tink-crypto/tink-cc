@@ -9,7 +9,6 @@ cc_library(
     name = "raw_jwt",
     srcs = ["raw_jwt.cc"],
     hdrs = ["raw_jwt.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/jwt/internal:json_util",
@@ -26,7 +25,6 @@ cc_library(
     name = "verified_jwt",
     srcs = ["verified_jwt.cc"],
     hdrs = ["verified_jwt.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":raw_jwt",
@@ -40,7 +38,6 @@ cc_library(
     name = "jwt_validator",
     srcs = ["jwt_validator.cc"],
     hdrs = ["jwt_validator.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":raw_jwt",
@@ -56,7 +53,6 @@ cc_library(
 cc_library(
     name = "jwt_mac",
     hdrs = ["jwt_mac.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_validator",
@@ -70,7 +66,6 @@ cc_library(
 cc_library(
     name = "jwt_public_key_sign",
     hdrs = ["jwt_public_key_sign.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":raw_jwt",
@@ -81,7 +76,6 @@ cc_library(
 cc_library(
     name = "jwt_public_key_verify",
     hdrs = ["jwt_public_key_verify.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_validator",
@@ -95,7 +89,6 @@ cc_library(
     name = "jwt_mac_config",
     srcs = ["jwt_mac_config.cc"],
     hdrs = ["jwt_mac_config.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_hmac_proto_serialization",
@@ -113,7 +106,6 @@ cc_library(
     name = "jwt_key_templates",
     srcs = ["jwt_key_templates.cc"],
     hdrs = ["jwt_key_templates.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:common_cc_proto",
@@ -134,7 +126,6 @@ cc_library(
     name = "jwk_set_converter",
     srcs = ["jwk_set_converter.cc"],
     hdrs = ["jwk_set_converter.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//proto:jwt_ecdsa_cc_proto",
@@ -164,7 +155,6 @@ cc_library(
     name = "jwt_signature_config",
     srcs = ["jwt_signature_config.cc"],
     hdrs = ["jwt_signature_config.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_proto_serialization",
@@ -189,7 +179,6 @@ cc_library(
 cc_library(
     name = "jwt_mac_parameters",
     hdrs = ["jwt_mac_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
@@ -197,7 +186,6 @@ cc_library(
 cc_library(
     name = "jwt_mac_key",
     hdrs = ["jwt_mac_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_mac_parameters",
@@ -210,7 +198,6 @@ cc_library(
     name = "jwt_hmac_parameters",
     srcs = ["jwt_hmac_parameters.cc"],
     hdrs = ["jwt_hmac_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_mac_parameters",
@@ -225,7 +212,6 @@ cc_library(
     name = "jwt_hmac_key",
     srcs = ["jwt_hmac_key.cc"],
     hdrs = ["jwt_hmac_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_hmac_parameters",
@@ -245,7 +231,6 @@ cc_library(
 cc_library(
     name = "jwt_hmac_proto_serialization",
     hdrs = ["jwt_hmac_proto_serialization.h"],
-    include_prefix = "tink/jwt",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/jwt/internal:jwt_hmac_proto_serialization_impl",
@@ -256,7 +241,6 @@ cc_library(
 cc_library(
     name = "jwt_signature_parameters",
     hdrs = ["jwt_signature_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
@@ -264,7 +248,6 @@ cc_library(
 cc_library(
     name = "jwt_signature_public_key",
     hdrs = ["jwt_signature_public_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
@@ -276,7 +259,6 @@ cc_library(
 cc_library(
     name = "jwt_signature_private_key",
     hdrs = ["jwt_signature_private_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
@@ -291,7 +273,6 @@ cc_library(
     name = "jwt_ecdsa_parameters",
     srcs = ["jwt_ecdsa_parameters.cc"],
     hdrs = ["jwt_ecdsa_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
@@ -305,7 +286,6 @@ cc_library(
     name = "jwt_ecdsa_public_key",
     srcs = ["jwt_ecdsa_public_key.cc"],
     hdrs = ["jwt_ecdsa_public_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_parameters",
@@ -330,7 +310,6 @@ cc_library(
     name = "jwt_ecdsa_private_key",
     srcs = ["jwt_ecdsa_private_key.cc"],
     hdrs = ["jwt_ecdsa_private_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_parameters",
@@ -362,7 +341,6 @@ cc_library(
 cc_library(
     name = "jwt_ecdsa_proto_serialization",
     hdrs = ["jwt_ecdsa_proto_serialization.h"],
-    include_prefix = "tink/jwt",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/jwt/internal:jwt_ecdsa_proto_serialization_impl",
@@ -374,7 +352,6 @@ cc_library(
     name = "jwt_rsa_ssa_pkcs1_parameters",
     srcs = ["jwt_rsa_ssa_pkcs1_parameters.cc"],
     hdrs = ["jwt_rsa_ssa_pkcs1_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
@@ -397,7 +374,6 @@ cc_library(
     name = "jwt_rsa_ssa_pkcs1_public_key",
     srcs = ["jwt_rsa_ssa_pkcs1_public_key.cc"],
     hdrs = ["jwt_rsa_ssa_pkcs1_public_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pkcs1_parameters",
@@ -419,7 +395,6 @@ cc_library(
     name = "jwt_rsa_ssa_pkcs1_private_key",
     srcs = ["jwt_rsa_ssa_pkcs1_private_key.cc"],
     hdrs = ["jwt_rsa_ssa_pkcs1_private_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pkcs1_public_key",
@@ -443,7 +418,6 @@ cc_library(
 cc_library(
     name = "jwt_rsa_ssa_pkcs1_proto_serialization",
     hdrs = ["jwt_rsa_ssa_pkcs1_proto_serialization.h"],
-    include_prefix = "tink/jwt",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/jwt/internal:jwt_rsa_ssa_pkcs1_proto_serialization_impl",
@@ -455,7 +429,6 @@ cc_library(
     name = "jwt_rsa_ssa_pss_parameters",
     srcs = ["jwt_rsa_ssa_pss_parameters.cc"],
     hdrs = ["jwt_rsa_ssa_pss_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
@@ -478,7 +451,6 @@ cc_library(
     name = "jwt_rsa_ssa_pss_public_key",
     srcs = ["jwt_rsa_ssa_pss_public_key.cc"],
     hdrs = ["jwt_rsa_ssa_pss_public_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pss_parameters",
@@ -500,7 +472,6 @@ cc_library(
     name = "jwt_rsa_ssa_pss_private_key",
     srcs = ["jwt_rsa_ssa_pss_private_key.cc"],
     hdrs = ["jwt_rsa_ssa_pss_private_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_rsa_ssa_pss_public_key",
@@ -524,7 +495,6 @@ cc_library(
 cc_library(
     name = "jwt_rsa_ssa_pss_proto_serialization",
     hdrs = ["jwt_rsa_ssa_pss_proto_serialization.h"],
-    include_prefix = "tink/jwt",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/jwt/internal:jwt_rsa_ssa_pss_proto_serialization_impl",
@@ -536,7 +506,6 @@ cc_library(
     name = "jwt_mac_config_2026",
     srcs = ["jwt_mac_config_2026.cc"],
     hdrs = ["jwt_mac_config_2026.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -549,7 +518,6 @@ cc_library(
     name = "jwt_mac_key_gen_config_2026",
     srcs = ["jwt_mac_key_gen_config_2026.cc"],
     hdrs = ["jwt_mac_key_gen_config_2026.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -561,7 +529,6 @@ cc_library(
 cc_library(
     name = "jwt_mac_config_v0",
     hdrs = ["jwt_mac_config_v0.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_mac_config_2026",
@@ -573,7 +540,6 @@ cc_library(
 cc_library(
     name = "jwt_mac_key_gen_config_v0",
     hdrs = ["jwt_mac_key_gen_config_v0.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_mac_key_gen_config_2026",
@@ -586,7 +552,6 @@ cc_library(
     name = "jwt_signature_config_2026",
     srcs = ["jwt_signature_config_2026.cc"],
     hdrs = ["jwt_signature_config_2026.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -599,7 +564,6 @@ cc_library(
     name = "jwt_signature_key_gen_config_2026",
     srcs = ["jwt_signature_key_gen_config_2026.cc"],
     hdrs = ["jwt_signature_key_gen_config_2026.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -611,7 +575,6 @@ cc_library(
 cc_library(
     name = "jwt_signature_config_v0",
     hdrs = ["jwt_signature_config_v0.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_config_2026",
@@ -623,7 +586,6 @@ cc_library(
 cc_library(
     name = "jwt_signature_key_gen_config_v0",
     hdrs = ["jwt_signature_key_gen_config_v0.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_key_gen_config_2026",
@@ -1193,7 +1155,6 @@ cc_library(
     name = "jwt_ml_dsa_parameters",
     srcs = ["jwt_ml_dsa_parameters.cc"],
     hdrs = ["jwt_ml_dsa_parameters.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
@@ -1221,7 +1182,6 @@ cc_library(
     name = "jwt_ml_dsa_public_key",
     srcs = ["jwt_ml_dsa_public_key.cc"],
     hdrs = ["jwt_ml_dsa_public_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_ml_dsa_parameters",
@@ -1260,7 +1220,6 @@ cc_library(
     name = "jwt_ml_dsa_private_key",
     srcs = ["jwt_ml_dsa_private_key.cc"],
     hdrs = ["jwt_ml_dsa_private_key.h"],
-    include_prefix = "tink/jwt",
     visibility = ["//visibility:public"],
     deps = [
         ":jwt_ml_dsa_parameters",
@@ -1346,7 +1305,6 @@ cc_test(
 cc_library(
     name = "jwt_ml_dsa_proto_serialization",
     hdrs = ["jwt_ml_dsa_proto_serialization.h"],
-    include_prefix = "tink/jwt",
     deps = [
         "//tink/internal:mutable_serialization_registry",
         "//tink/jwt/internal:jwt_ml_dsa_proto_serialization_impl",

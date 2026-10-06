@@ -9,7 +9,6 @@ cc_library(
     name = "aead_util",
     srcs = ["aead_util.cc"],
     hdrs = ["aead_util.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink/util:errors",
         "//tink/util:statusor",
@@ -25,7 +24,6 @@ cc_library(
     testonly = 1,
     srcs = ["wycheproof_aead.cc"],
     hdrs = ["wycheproof_aead.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink/internal/testing:wycheproof_util",
         "//tink/util:statusor",
@@ -38,7 +36,6 @@ cc_library(
     name = "ssl_aead",
     srcs = ["ssl_aead.cc"],
     hdrs = ["ssl_aead.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":aead_util",
         "//tink:secret_data",
@@ -65,7 +62,6 @@ cc_library(
     name = "cord_aes_gcm_boringssl",
     srcs = ["cord_aes_gcm_boringssl.cc"],
     hdrs = ["cord_aes_gcm_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":aead_util",
         ":cord_utils",
@@ -88,7 +84,6 @@ cc_library(
 cc_library(
     name = "zero_copy_aead",
     hdrs = ["zero_copy_aead.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink/util:statusor",
         "@abseil-cpp//absl/strings",
@@ -100,7 +95,6 @@ cc_library(
     name = "mock_zero_copy_aead",
     testonly = 1,
     hdrs = ["mock_zero_copy_aead.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":zero_copy_aead",
         "//tink/util:statusor",
@@ -114,7 +108,6 @@ cc_library(
     name = "aead_from_zero_copy",
     srcs = ["aead_from_zero_copy.cc"],
     hdrs = ["aead_from_zero_copy.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":zero_copy_aead",
         "//tink:aead",
@@ -132,7 +125,6 @@ cc_library(
     name = "zero_copy_aead_wrapper",
     srcs = ["zero_copy_aead_wrapper.cc"],
     hdrs = ["zero_copy_aead_wrapper.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":zero_copy_aead",
         "//tink:aead",
@@ -153,7 +145,6 @@ cc_library(
     name = "zero_copy_aes_gcm_boringssl",
     srcs = ["zero_copy_aes_gcm_boringssl.cc"],
     hdrs = ["zero_copy_aes_gcm_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":ssl_aead",
         ":zero_copy_aead",
@@ -180,7 +171,6 @@ cc_library(
     name = "key_gen_config_2026",
     srcs = ["key_gen_config_2026.cc"],
     hdrs = ["key_gen_config_2026.h"],
-    include_prefix = "tink/aead/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -200,7 +190,6 @@ cc_library(
     name = "config_2026",
     srcs = ["config_2026.cc"],
     hdrs = ["config_2026.h"],
-    include_prefix = "tink/aead/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -222,7 +211,6 @@ cc_library(
     name = "legacy_kms_envelope_aead_proto_serialization_impl",
     srcs = ["legacy_kms_envelope_aead_proto_serialization_impl.cc"],
     hdrs = ["legacy_kms_envelope_aead_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:parameters",
         "//tink:restricted_data",
@@ -450,7 +438,6 @@ cc_library(
     name = "cord_utils",
     srcs = ["cord_utils.cc"],
     hdrs = ["cord_utils.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/log:absl_check",
@@ -479,7 +466,6 @@ cc_library(
     name = "cord_x_aes_gcm_boringssl",
     srcs = ["cord_x_aes_gcm_boringssl.cc"],
     hdrs = ["cord_x_aes_gcm_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":base_x_aes_gcm",
         ":cord_aes_gcm_boringssl",
@@ -530,7 +516,6 @@ cc_library(
     name = "base_x_aes_gcm",
     srcs = ["base_x_aes_gcm.cc"],
     hdrs = ["base_x_aes_gcm.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
@@ -578,7 +563,6 @@ cc_library(
     name = "zero_copy_x_aes_gcm_boringssl",
     srcs = ["zero_copy_x_aes_gcm_boringssl.cc"],
     hdrs = ["zero_copy_x_aes_gcm_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":base_x_aes_gcm",
         ":zero_copy_aead",
@@ -628,7 +612,6 @@ cc_library(
     name = "xchacha20_poly1305_proto_serialization_impl",
     srcs = ["xchacha20_poly1305_proto_serialization_impl.cc"],
     hdrs = ["xchacha20_poly1305_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":xchacha20_poly1305_proto_format",
         "//tink:partial_key_access",
@@ -692,7 +675,6 @@ cc_library(
     name = "chacha20_poly1305_proto_serialization_impl",
     srcs = ["chacha20_poly1305_proto_serialization_impl.cc"],
     hdrs = ["chacha20_poly1305_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -754,7 +736,6 @@ cc_library(
     name = "x_aes_gcm_proto_serialization_impl",
     srcs = ["x_aes_gcm_proto_serialization_impl.cc"],
     hdrs = ["x_aes_gcm_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -815,7 +796,6 @@ cc_library(
     name = "legacy_kms_aead_proto_serialization_impl",
     srcs = ["legacy_kms_aead_proto_serialization_impl.cc"],
     hdrs = ["legacy_kms_aead_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -873,7 +853,6 @@ cc_library(
     name = "aes_gcm_proto_serialization_impl",
     srcs = ["aes_gcm_proto_serialization_impl.cc"],
     hdrs = ["aes_gcm_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":aes_gcm_proto_format",
         "//tink:partial_key_access",
@@ -937,7 +916,6 @@ cc_library(
     name = "aes_gcm_siv_proto_serialization_impl",
     srcs = ["aes_gcm_siv_proto_serialization_impl.cc"],
     hdrs = ["aes_gcm_siv_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -1000,7 +978,6 @@ cc_library(
     name = "aes_ctr_hmac_aead_proto_serialization_impl",
     srcs = ["aes_ctr_hmac_aead_proto_serialization_impl.cc"],
     hdrs = ["aes_ctr_hmac_aead_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":aes_ctr_hmac_proto_structs",
         "//tink:partial_key_access",
@@ -1067,7 +1044,6 @@ cc_library(
     name = "aes_eax_proto_serialization_impl",
     srcs = ["aes_eax_proto_serialization_impl.cc"],
     hdrs = ["aes_eax_proto_serialization_impl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -1187,7 +1163,6 @@ cc_test(
 cc_library(
     name = "aes_gcm_proto_format",
     hdrs = ["aes_gcm_proto_format.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
@@ -1209,7 +1184,6 @@ cc_test(
 cc_library(
     name = "xchacha20_poly1305_proto_format",
     hdrs = ["xchacha20_poly1305_proto_format.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
@@ -1230,7 +1204,6 @@ cc_test(
 cc_library(
     name = "aes_ctr_hmac_proto_structs",
     hdrs = ["aes_ctr_hmac_proto_structs.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         "//tink:secret_data",
         "//tink/internal:proto_parser_fields",
@@ -1259,7 +1232,6 @@ cc_library(
     name = "kms_aead_config_2026",
     srcs = ["kms_aead_config_2026.cc"],
     hdrs = ["kms_aead_config_2026.h"],
-    include_prefix = "tink/aead/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
@@ -1275,7 +1247,6 @@ cc_library(
     name = "kms_aead_key_gen_config_2026",
     srcs = ["kms_aead_key_gen_config_2026.cc"],
     hdrs = ["kms_aead_key_gen_config_2026.h"],
-    include_prefix = "tink/aead/internal",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
@@ -1326,7 +1297,6 @@ cc_library(
     name = "cord_aes_gcm_siv_boringssl",
     srcs = ["cord_aes_gcm_siv_boringssl.cc"],
     hdrs = ["cord_aes_gcm_siv_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":aead_util",
         ":cord_utils",
@@ -1391,7 +1361,6 @@ cc_library(
     name = "dummy_zero_copy_aead",
     testonly = 1,
     hdrs = ["dummy_zero_copy_aead.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":zero_copy_aead",
         "//tink/util:test_util",
@@ -1419,7 +1388,6 @@ cc_library(
     name = "zero_copy_aes_ctr_hmac_boringssl",
     srcs = ["zero_copy_aes_ctr_hmac_boringssl.cc"],
     hdrs = ["zero_copy_aes_ctr_hmac_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":zero_copy_aead",
         "//tink:insecure_secret_key_access",
@@ -1484,7 +1452,6 @@ cc_library(
     name = "zero_copy_xchacha20_poly1305_boringssl",
     srcs = ["zero_copy_xchacha20_poly1305_boringssl.cc"],
     hdrs = ["zero_copy_xchacha20_poly1305_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":ssl_aead",
         ":zero_copy_aead",
@@ -1531,7 +1498,6 @@ cc_library(
     name = "zero_copy_aes_gcm_siv_boringssl",
     srcs = ["zero_copy_aes_gcm_siv_boringssl.cc"],
     hdrs = ["zero_copy_aes_gcm_siv_boringssl.h"],
-    include_prefix = "tink/aead/internal",
     deps = [
         ":ssl_aead",
         ":zero_copy_aead",

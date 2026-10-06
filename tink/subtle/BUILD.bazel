@@ -19,7 +19,6 @@ PUBLIC_APIS = [
 cc_library(
     name = "subtle",
     hdrs = PUBLIC_APIS,
-    include_prefix = "tink/subtle",
     visibility = ["//visibility:public"],
     deps = [
         ":aes_gcm_boringssl",
@@ -53,7 +52,6 @@ cc_library(
 cc_library(
     name = "ind_cpa_cipher",
     hdrs = ["ind_cpa_cipher.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink/util:statusor",
         "@abseil-cpp//absl/strings",
@@ -64,7 +62,6 @@ cc_library(
     name = "ecies_hkdf_recipient_kem_boringssl",
     srcs = ["ecies_hkdf_recipient_kem_boringssl.cc"],
     hdrs = ["ecies_hkdf_recipient_kem_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":hkdf",
@@ -87,7 +84,6 @@ cc_library(
     name = "ecies_hkdf_sender_kem_boringssl",
     srcs = ["ecies_hkdf_sender_kem_boringssl.cc"],
     hdrs = ["ecies_hkdf_sender_kem_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":hkdf",
@@ -109,7 +105,6 @@ cc_library(
     name = "ec_util",
     srcs = ["ec_util.cc"],
     hdrs = ["ec_util.h"],
-    include_prefix = "tink/subtle",
     visibility = ["//visibility:public"],
     deps = [
         ":common_enums",
@@ -124,7 +119,6 @@ cc_library(
     name = "ed25519_sign_boringssl",
     srcs = ["ed25519_sign_boringssl.cc"],
     hdrs = ["ed25519_sign_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
@@ -151,7 +145,6 @@ cc_library(
     name = "ed25519_verify_boringssl",
     srcs = ["ed25519_verify_boringssl.cc"],
     hdrs = ["ed25519_verify_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink:partial_key_access",
         "//tink:public_key_verify",
@@ -175,7 +168,6 @@ cc_library(
     name = "hkdf",
     srcs = ["hkdf.cc"],
     hdrs = ["hkdf.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":subtle_util",
@@ -199,7 +191,6 @@ cc_library(
     name = "aes_cmac_boringssl",
     srcs = ["aes_cmac_boringssl.cc"],
     hdrs = ["aes_cmac_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":subtle_util",
         "//tink:insecure_secret_key_access",
@@ -230,7 +221,6 @@ cc_library(
     name = "hmac_boringssl",
     srcs = ["hmac_boringssl.cc"],
     hdrs = ["hmac_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         "//tink:mac",
@@ -256,7 +246,6 @@ cc_library(
     name = "ecdsa_sign_boringssl",
     srcs = ["ecdsa_sign_boringssl.cc"],
     hdrs = ["ecdsa_sign_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":subtle_util_boringssl",
@@ -288,7 +277,6 @@ cc_library(
     name = "ecdsa_verify_boringssl",
     srcs = ["ecdsa_verify_boringssl.cc"],
     hdrs = ["ecdsa_verify_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":subtle_util_boringssl",
@@ -314,7 +302,6 @@ cc_library(
     name = "rsa_ssa_pss_verify_boringssl",
     srcs = ["rsa_ssa_pss_verify_boringssl.cc"],
     hdrs = ["rsa_ssa_pss_verify_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         "//tink:partial_key_access",
@@ -341,7 +328,6 @@ cc_library(
     name = "rsa_ssa_pss_sign_boringssl",
     srcs = ["rsa_ssa_pss_sign_boringssl.cc"],
     hdrs = ["rsa_ssa_pss_sign_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":subtle_util",
@@ -372,7 +358,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_verify_boringssl",
     srcs = ["rsa_ssa_pkcs1_verify_boringssl.cc"],
     hdrs = ["rsa_ssa_pkcs1_verify_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         "//tink:partial_key_access",
@@ -399,7 +384,6 @@ cc_library(
     name = "rsa_ssa_pkcs1_sign_boringssl",
     srcs = ["rsa_ssa_pkcs1_sign_boringssl.cc"],
     hdrs = ["rsa_ssa_pkcs1_sign_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":subtle_util",
@@ -432,7 +416,6 @@ cc_library(
     name = "aes_gcm_boringssl",
     srcs = ["aes_gcm_boringssl.cc"],
     hdrs = ["aes_gcm_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink:aead",
         "//tink/aead/internal:aead_from_zero_copy",
@@ -452,7 +435,6 @@ cc_library(
     name = "aes_gcm_hkdf_stream_segment_decrypter",
     srcs = ["aes_gcm_hkdf_stream_segment_decrypter.cc"],
     hdrs = ["aes_gcm_hkdf_stream_segment_decrypter.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":aes_gcm_hkdf_stream_segment_encrypter",
         ":common_enums",
@@ -475,7 +457,6 @@ cc_library(
     name = "aes_gcm_hkdf_stream_segment_encrypter",
     srcs = ["aes_gcm_hkdf_stream_segment_encrypter.cc"],
     hdrs = ["aes_gcm_hkdf_stream_segment_encrypter.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":random",
         ":stream_segment_encrypter",
@@ -499,7 +480,6 @@ cc_library(
     name = "aes_gcm_hkdf_streaming",
     srcs = ["aes_gcm_hkdf_streaming.cc"],
     hdrs = ["aes_gcm_hkdf_streaming.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":aes_gcm_hkdf_stream_segment_decrypter",
         ":aes_gcm_hkdf_stream_segment_encrypter",
@@ -524,7 +504,6 @@ cc_library(
     name = "aes_ctr_hmac_streaming",
     srcs = ["aes_ctr_hmac_streaming.cc"],
     hdrs = ["aes_ctr_hmac_streaming.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":hkdf",
@@ -562,7 +541,6 @@ cc_library(
     name = "aes_eax_boringssl",
     srcs = ["aes_eax_boringssl.cc"],
     hdrs = ["aes_eax_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":random",
         "//tink:aead",
@@ -592,7 +570,6 @@ cc_library(
     name = "encrypt_then_authenticate",
     srcs = ["encrypt_then_authenticate.cc"],
     hdrs = ["encrypt_then_authenticate.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":ind_cpa_cipher",
         "//tink:aead",
@@ -610,7 +587,6 @@ cc_library(
     name = "aes_ctr_boringssl",
     srcs = ["aes_ctr_boringssl.cc"],
     hdrs = ["aes_ctr_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":ind_cpa_cipher",
         ":random",
@@ -636,7 +612,6 @@ cc_library(
     name = "random",
     srcs = ["random.cc"],
     hdrs = ["random.h"],
-    include_prefix = "tink/subtle",
     visibility = ["//visibility:public"],
     deps = [
         ":subtle_util",
@@ -655,7 +630,6 @@ cc_library(
     name = "xchacha20_poly1305_boringssl",
     srcs = ["xchacha20_poly1305_boringssl.cc"],
     hdrs = ["xchacha20_poly1305_boringssl.h"],
-    include_prefix = "tink/subtle",
     tags = ["fips"],
     deps = [
         "//tink:aead",
@@ -674,7 +648,6 @@ cc_library(
     name = "aes_siv_boringssl",
     srcs = ["aes_siv_boringssl.cc"],
     hdrs = ["aes_siv_boringssl.h"],
-    include_prefix = "tink/subtle",
     tags = ["fips"],
     deps = [
         ":subtle_util",
@@ -699,7 +672,6 @@ cc_library(
     name = "aes_gcm_siv_boringssl",
     srcs = ["aes_gcm_siv_boringssl.cc"],
     hdrs = ["aes_gcm_siv_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink:aead",
         "//tink:secret_data",
@@ -717,7 +689,6 @@ cc_library(
     name = "common_enums",
     srcs = ["common_enums.cc"],
     hdrs = ["common_enums.h"],
-    include_prefix = "tink/subtle",
     deps = ["@abseil-cpp//absl/strings"],
 )
 
@@ -725,14 +696,12 @@ cc_library(
     name = "subtle_util",
     srcs = ["subtle_util.cc"],
     hdrs = ["subtle_util.h"],
-    include_prefix = "tink/subtle",
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "subtle_util_boringssl",
     hdrs = ["subtle_util_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         "//tink/aead/internal:aead_util",
@@ -755,14 +724,12 @@ cc_library(
 cc_library(
     name = "stream_segment_decrypter",
     hdrs = ["stream_segment_decrypter.h"],
-    include_prefix = "tink/subtle",
     deps = ["//tink/util:status"],
 )
 
 cc_library(
     name = "stream_segment_encrypter",
     hdrs = ["stream_segment_encrypter.h"],
-    include_prefix = "tink/subtle",
     deps = ["//tink/util:status"],
 )
 
@@ -770,7 +737,6 @@ cc_library(
     name = "streaming_aead_decrypting_stream",
     srcs = ["streaming_aead_decrypting_stream.cc"],
     hdrs = ["streaming_aead_decrypting_stream.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":stream_segment_decrypter",
         "//tink:input_stream",
@@ -786,7 +752,6 @@ cc_library(
     name = "streaming_aead_encrypting_stream",
     srcs = ["streaming_aead_encrypting_stream.cc"],
     hdrs = ["streaming_aead_encrypting_stream.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":stream_segment_encrypter",
         "//tink:output_stream",
@@ -802,7 +767,6 @@ cc_library(
     name = "nonce_based_streaming_aead",
     srcs = ["nonce_based_streaming_aead.cc"],
     hdrs = ["nonce_based_streaming_aead.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":decrypting_random_access_stream",
         ":stream_segment_decrypter",
@@ -823,7 +787,6 @@ cc_library(
     testonly = 1,
     srcs = ["test_util.cc"],
     hdrs = ["test_util.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":nonce_based_streaming_aead",
         ":stream_segment_decrypter",
@@ -842,7 +805,6 @@ cc_library(
     testonly = 1,
     srcs = ["aead_test_util.cc"],
     hdrs = ["aead_test_util.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":test_util",
         "//tink:aead",
@@ -860,7 +822,6 @@ cc_library(
     testonly = 1,
     srcs = ["streaming_aead_test_util.cc"],
     hdrs = ["streaming_aead_test_util.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":test_util",
         "//tink:input_stream",
@@ -883,7 +844,6 @@ cc_library(
     testonly = 1,
     srcs = ["hybrid_test_util.cc"],
     hdrs = ["hybrid_test_util.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink:hybrid_decrypt",
         "//tink:hybrid_encrypt",
@@ -897,7 +857,6 @@ cc_library(
     name = "decrypting_random_access_stream",
     srcs = ["decrypting_random_access_stream.cc"],
     hdrs = ["decrypting_random_access_stream.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":stream_segment_decrypter",
         "//tink:random_access_stream",
@@ -918,7 +877,6 @@ cc_library(
     name = "streaming_mac_impl",
     srcs = ["streaming_mac_impl.cc"],
     hdrs = ["streaming_mac_impl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         "//tink:output_stream_with_result",
         "//tink:streaming_mac",
@@ -939,7 +897,6 @@ cc_library(
     name = "pem_parser_boringssl",
     srcs = ["pem_parser_boringssl.cc"],
     hdrs = ["pem_parser_boringssl.h"],
-    include_prefix = "tink/subtle",
     deps = [
         ":common_enums",
         ":subtle_util_boringssl",

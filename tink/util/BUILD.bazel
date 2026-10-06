@@ -9,7 +9,6 @@ cc_library(
     name = "buffer",
     srcs = ["buffer.cc"],
     hdrs = ["buffer.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":status",
@@ -23,7 +22,6 @@ cc_library(
     name = "constants",
     srcs = ["constants.cc"],
     hdrs = ["constants.h"],
-    include_prefix = "tink/util",
     deps = ["@abseil-cpp//absl/base:core_headers"],
 )
 
@@ -31,7 +29,6 @@ cc_library(
     name = "secret_data",
     srcs = ["secret_data.cc"],
     hdrs = ["secret_data.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":secret_data_internal_class",
@@ -50,7 +47,6 @@ cc_library(
 cc_library(
     name = "secret_proto",
     hdrs = ["secret_proto.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":secret_data",
@@ -67,7 +63,6 @@ cc_library(
 cc_library(
     name = "errors",
     hdrs = ["errors.h"],
-    include_prefix = "tink/util",
     deps = [
         ":status",
         "@abseil-cpp//absl/status",
@@ -79,7 +74,6 @@ cc_library(
     name = "enums",
     srcs = ["enums.cc"],
     hdrs = ["enums.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":status",
@@ -96,7 +90,6 @@ cc_library(
 cc_library(
     name = "status",
     hdrs = ["status.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/base:core_headers",
@@ -107,7 +100,6 @@ cc_library(
 cc_library(
     name = "statusor",
     hdrs = ["statusor.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":status",
@@ -120,7 +112,6 @@ cc_library(
     name = "validation",
     srcs = ["validation.cc"],
     hdrs = ["validation.h"],
-    include_prefix = "tink/util",
     deps = [
         ":errors",
         ":status",
@@ -133,7 +124,6 @@ cc_library(
     name = "file_input_stream",
     srcs = ["file_input_stream.cc"],
     hdrs = ["file_input_stream.h"],
-    include_prefix = "tink/util",
     target_compatible_with = select({
         "@platforms//os:windows": ["@platforms//:incompatible"],
         "//conditions:default": [],
@@ -152,7 +142,6 @@ cc_library(
     name = "file_output_stream",
     srcs = ["file_output_stream.cc"],
     hdrs = ["file_output_stream.h"],
-    include_prefix = "tink/util",
     target_compatible_with = select({
         "@platforms//os:windows": ["@platforms//:incompatible"],
         "//conditions:default": [],
@@ -172,7 +161,6 @@ cc_library(
     name = "file_random_access_stream",
     srcs = ["file_random_access_stream.cc"],
     hdrs = ["file_random_access_stream.h"],
-    include_prefix = "tink/util",
     target_compatible_with = select({
         "@platforms//os:windows": ["@platforms//:incompatible"],
         "//conditions:default": [],
@@ -194,7 +182,6 @@ cc_library(
     name = "istream_input_stream",
     srcs = ["istream_input_stream.cc"],
     hdrs = ["istream_input_stream.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":errors",
@@ -210,7 +197,6 @@ cc_library(
     name = "ostream_output_stream",
     srcs = ["ostream_output_stream.cc"],
     hdrs = ["ostream_output_stream.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":errors",
@@ -227,7 +213,6 @@ cc_library(
     testonly = 1,
     srcs = ["test_util.cc"],
     hdrs = ["test_util.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":buffer",
@@ -273,7 +258,6 @@ cc_library(
     name = "test_matchers",
     testonly = 1,
     hdrs = ["test_matchers.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":secret_data",
@@ -287,7 +271,6 @@ cc_library(
 cc_library(
     name = "protobuf_helper",
     hdrs = ["protobuf_helper.h"],
-    include_prefix = "tink/util",
     deps = ["@protobuf"],
 )
 
@@ -296,7 +279,6 @@ cc_library(
     testonly = 1,
     srcs = ["test_keyset_handle.cc"],
     hdrs = ["test_keyset_handle.h"],
-    include_prefix = "tink/util",
     deps = [
         ":secret_proto",
         "//proto:tink_cc_proto",
@@ -309,7 +291,6 @@ cc_library(
     name = "input_stream_util",
     srcs = ["input_stream_util.cc"],
     hdrs = ["input_stream_util.h"],
-    include_prefix = "tink/util",
     deps = [
         ":secret_data",
         ":statusor",
@@ -326,7 +307,6 @@ cc_library(
     name = "keyset_util",
     srcs = ["keyset_util.cc"],
     hdrs = ["keyset_util.h"],
-    include_prefix = "tink/util",
     deps = ["//proto:tink_cc_proto"],
 )
 
@@ -335,7 +315,6 @@ cc_library(
     testonly = 1,
     srcs = ["fake_kms_client.cc"],
     hdrs = ["fake_kms_client.h"],
-    include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
         ":errors",
@@ -612,7 +591,6 @@ cc_test(
 cc_library(
     name = "secret_data_internal_class",
     hdrs = ["secret_data_internal_class.h"],
-    include_prefix = "tink/util",
     deps = [
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:endian",

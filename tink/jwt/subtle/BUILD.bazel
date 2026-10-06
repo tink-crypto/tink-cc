@@ -9,7 +9,6 @@ cc_library(
     name = "create_jwt_ml_dsa_key",
     srcs = ["create_jwt_ml_dsa_key.cc"],
     hdrs = ["create_jwt_ml_dsa_key.h"],
-    include_prefix = "tink/jwt/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/jwt:jwt_ml_dsa_parameters",
@@ -38,7 +37,6 @@ cc_library(
     name = "create_jwt_ecdsa_key",
     srcs = ["create_jwt_ecdsa_key.cc"],
     hdrs = ["create_jwt_ecdsa_key.h"],
-    include_prefix = "tink/jwt/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/jwt:jwt_ecdsa_parameters",
@@ -67,7 +65,6 @@ cc_library(
     name = "create_jwt_rsa_ssa_pss_key",
     srcs = ["create_jwt_rsa_ssa_pss_key.cc"],
     hdrs = ["create_jwt_rsa_ssa_pss_key.h"],
-    include_prefix = "tink/jwt/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/jwt:jwt_rsa_ssa_pss_parameters",
@@ -96,7 +93,6 @@ cc_library(
     name = "create_jwt_rsa_ssa_pkcs1_key",
     srcs = ["create_jwt_rsa_ssa_pkcs1_key.cc"],
     hdrs = ["create_jwt_rsa_ssa_pkcs1_key.h"],
-    include_prefix = "tink/jwt/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/jwt:jwt_rsa_ssa_pkcs1_parameters",
@@ -125,7 +121,6 @@ cc_library(
     name = "create_jwt_hmac_key",
     srcs = ["create_jwt_hmac_key.cc"],
     hdrs = ["create_jwt_hmac_key.h"],
-    include_prefix = "tink/jwt/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/jwt:jwt_hmac_key",

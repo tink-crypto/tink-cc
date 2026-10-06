@@ -9,7 +9,6 @@ cc_library(
     name = "composite_ml_dsa_sign_boringssl",
     srcs = ["composite_ml_dsa_sign_boringssl.cc"],
     hdrs = ["composite_ml_dsa_sign_boringssl.h"],
-    include_prefix = "tink/signature/subtle",
     deps = [
         "//tink:public_key_sign",
         "//tink/internal:fips_utils",
@@ -56,7 +55,6 @@ cc_library(
     name = "composite_ml_dsa_verify_boringssl",
     srcs = ["composite_ml_dsa_verify_boringssl.cc"],
     hdrs = ["composite_ml_dsa_verify_boringssl.h"],
-    include_prefix = "tink/signature/subtle",
     deps = [
         "//tink:public_key_verify",
         "//tink/internal:fips_utils",
@@ -108,7 +106,6 @@ cc_library(
     name = "create_ecdsa_key",
     srcs = ["create_ecdsa_key.cc"],
     hdrs = ["create_ecdsa_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:ecdsa_parameters",
@@ -136,7 +133,6 @@ cc_library(
     name = "create_ed25519_key",
     srcs = ["create_ed25519_key.cc"],
     hdrs = ["create_ed25519_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:ed25519_parameters",
@@ -166,7 +162,6 @@ cc_library(
     name = "create_rsa_ssa_pkcs1_key",
     srcs = ["create_rsa_ssa_pkcs1_key.cc"],
     hdrs = ["create_rsa_ssa_pkcs1_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:rsa_ssa_pkcs1_parameters",
@@ -196,7 +191,6 @@ cc_library(
     name = "create_rsa_ssa_pss_key",
     srcs = ["create_rsa_ssa_pss_key.cc"],
     hdrs = ["create_rsa_ssa_pss_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:rsa_ssa_pss_parameters",
@@ -226,7 +220,6 @@ cc_library(
     name = "create_ml_dsa_key",
     srcs = ["create_ml_dsa_key.cc"],
     hdrs = ["create_ml_dsa_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:ml_dsa_parameters",
@@ -256,7 +249,6 @@ cc_library(
     name = "create_composite_ml_dsa_key",
     srcs = ["create_composite_ml_dsa_key.cc"],
     hdrs = ["create_composite_ml_dsa_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:composite_ml_dsa_parameters",
@@ -285,7 +277,6 @@ cc_library(
     name = "create_slh_dsa_key",
     srcs = ["create_slh_dsa_key.cc"],
     hdrs = ["create_slh_dsa_key.h"],
-    include_prefix = "tink/signature/subtle",
     visibility = ["//visibility:public"],
     deps = [
         "//tink/signature:slh_dsa_parameters",

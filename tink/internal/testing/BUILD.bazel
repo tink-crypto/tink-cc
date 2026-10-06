@@ -11,7 +11,6 @@ licenses(["notice"])
 cc_library(
     name = "equals_proto_key_serialization",
     hdrs = ["equals_proto_key_serialization.h"],
-    include_prefix = "tink/internal/testing",
     deps = [
         "//tink/internal:internal_insecure_secret_key_access",
         "//tink/internal:tink_proto_structs",
@@ -44,7 +43,6 @@ cc_library(
     name = "field_with_number",
     srcs = ["field_with_number.cc"],
     hdrs = ["field_with_number.h"],
-    include_prefix = "tink/internal/testing",
     deps = [
         "//tink:insecure_secret_key_access",
         "//tink:restricted_data",
@@ -86,7 +84,6 @@ cc_library(
     testonly = 1,
     srcs = ["wycheproof_util.cc"],
     hdrs = ["wycheproof_util.h"],
-    include_prefix = "tink/internal/testing",
     deps = [
         "//tink/internal:test_file_util",
         "//tink/subtle:common_enums",
@@ -106,7 +103,6 @@ cc_library(
     testonly = 1,
     srcs = ["ec_test_vectors.cc"],
     hdrs = ["ec_test_vectors.h"],
-    include_prefix = "tink/internal/testing",
     deps = [
         "//tink:big_integer",
         "//tink:ec_point",

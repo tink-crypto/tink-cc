@@ -9,7 +9,6 @@ cc_library(
     name = "signature_key_parser",
     srcs = ["signature_key_parser.cc"],
     hdrs = ["signature_key_parser.h"],
-    include_prefix = "tink/pem",
     visibility = ["//visibility:public"],
     deps = [
         "//tink:big_integer",

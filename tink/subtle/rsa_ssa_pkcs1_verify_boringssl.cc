@@ -58,8 +58,7 @@ class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
       : rsa_(std::move(rsa)),
         sig_hash_(sig_hash),
         has_output_prefix_(!output_prefix.empty()),
-        has_legacy_message_suffix_(message_suffix ==
-                                   absl::string_view("\0", 1)) {
+        legacy_message_suffix_(message_suffix) {
     if (has_output_prefix_) {
       absl::c_copy(output_prefix, output_prefix_data_.begin());
     }
@@ -76,7 +75,7 @@ class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
   std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
   const bool has_output_prefix_;
-  const bool has_legacy_message_suffix_;
+  const std::string legacy_message_suffix_;
 };
 
 absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
@@ -85,8 +84,9 @@ absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
 
-  ABSL_ASSIGN_OR_RETURN(std::string digest,
-                        internal::ComputeHash(data, *sig_hash_));
+  ABSL_ASSIGN_OR_RETURN(
+      std::string digest,
+      internal::ComputeHash({data, legacy_message_suffix_}, *sig_hash_));
 
   if (RSA_verify(EVP_MD_type(sig_hash_),
                  /*digest=*/reinterpret_cast<const uint8_t*>(digest.data()),
@@ -104,27 +104,17 @@ absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
 
 absl::Status RsaSsaPkcs1VerifyBoringSslImpl::Verify(
     absl::string_view signature, absl::string_view data) const {
-  if (!has_output_prefix_ && !has_legacy_message_suffix_) {
+  if (!has_output_prefix_) {
     return VerifyWithoutPrefix(signature, data);
   }
   absl::string_view output_prefix(
       output_prefix_data_.data(),
       has_output_prefix_ ? output_prefix_data_.size() : 0);
-  if (has_output_prefix_ && !absl::StartsWith(signature, output_prefix)) {
+  if (!absl::StartsWith(signature, output_prefix)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
-  // Stores a copy of the data in case has_legacy_message_suffix_ is true.
-  // Needs to stay alive until this method is done.
-  std::string data_copy_holder;
-  if (has_legacy_message_suffix_) {
-    data_copy_holder = absl::StrCat(data, absl::string_view("\0", 1));
-    data = data_copy_holder;
-  }
-  return VerifyWithoutPrefix(has_output_prefix_
-                                 ? absl::StripPrefix(signature, output_prefix)
-                                 : signature,
-                             data);
+  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix), data);
 }
 
 }  // namespace

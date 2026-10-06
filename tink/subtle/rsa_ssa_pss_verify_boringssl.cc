@@ -154,7 +154,8 @@ absl::Status RsaSsaPssVerifyBoringSslImpl::VerifyWithoutPrefix(
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
-  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
+  absl::StatusOr<std::string> digest =
+      internal::ComputeHash({data, message_suffix_}, *sig_hash_);
   if (!digest.ok()) {
     return digest.status();
   }
@@ -164,19 +165,12 @@ absl::Status RsaSsaPssVerifyBoringSslImpl::VerifyWithoutPrefix(
 
 absl::Status RsaSsaPssVerifyBoringSslImpl::Verify(
     absl::string_view signature, absl::string_view data) const {
-  if (output_prefix_.empty() && message_suffix_.empty()) {
+  if (output_prefix_.empty()) {
     return VerifyWithoutPrefix(signature, data);
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
-  }
-  // Stores a copy of the data in case message_suffix_ is not empty.
-  // Needs to stay alive until this method is done.
-  std::string data_copy_holder;
-  if (!message_suffix_.empty()) {
-    data_copy_holder = absl::StrCat(data, message_suffix_);
-    data = data_copy_holder;
   }
   return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
                              data);

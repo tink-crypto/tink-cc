@@ -20,10 +20,7 @@
 #include <memory>
 #include <utility>
 
-#include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
@@ -49,6 +46,18 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
   static absl::StatusOr<EcdsaPrivateKey> Create(
       const EcdsaPublicKey& public_key, RestrictedData private_key_value,
       PartialKeyAccessToken token);
+
+  // Creates an EcdsaPrivateKey directly from the private scalar d.
+  //
+  // Internally:
+  // 1. Validates 1 <= d < order (returns InvalidArgumentError otherwise).
+  // 2. Computes the public point W = d * G on the curve specified by
+  // parameters.
+  // 3. Builds the internal EcdsaPublicKey and constructs the verified
+  // EcdsaPrivateKey.
+  static absl::StatusOr<EcdsaPrivateKey> Create(
+      const EcdsaParameters& parameters,
+      const RestrictedData& private_key_value, PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateKey(PartialKeyAccessToken token) const {
     return private_key_value_;

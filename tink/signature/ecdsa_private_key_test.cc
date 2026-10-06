@@ -28,6 +28,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
@@ -667,6 +668,119 @@ TEST(EcdsaPrivateKeyTest, MoveAssignment) {
   *moved = std::move(*private_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(EcdsaPrivateKeyTest, CreateFromScalarSuccess) {
+  for (EcdsaParameters::CurveType curve_type :
+       {EcdsaParameters::CurveType::kNistP256,
+        EcdsaParameters::CurveType::kNistP384,
+        EcdsaParameters::CurveType::kNistP521}) {
+    const EcdsaPrivateKey& test_key = GetTestPrivateKey(curve_type);
+    absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+        test_key.GetParameters(), test_key.GetPrivateKey(GetPartialKeyAccess()),
+        GetPartialKeyAccess());
+    ASSERT_THAT(private_key, IsOk());
+    EXPECT_THAT(*private_key, Eq(test_key));
+    EXPECT_THAT(private_key->GetPublicKey(), Eq(test_key.GetPublicKey()));
+  }
+}
+
+TEST(EcdsaPrivateKeyTest, CreateFromScalarZeroFails) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData zero_scalar(std::string(32, '\0'),
+                             InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      EcdsaPrivateKey::Create(*parameters, zero_scalar, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcdsaPrivateKeyTest, CreateFromScalarOrderFails) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  // NIST P-256 group order n
+  std::string order_bytes;
+  ASSERT_TRUE(absl::HexStringToBytes(
+      "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551",
+      &order_bytes));
+  RestrictedData order_scalar(order_bytes, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      EcdsaPrivateKey::Create(*parameters, order_scalar, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // n + 1
+  std::string order_plus_one_bytes;
+  ASSERT_TRUE(absl::HexStringToBytes(
+      "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632552",
+      &order_plus_one_bytes));
+  RestrictedData order_plus_one_scalar(order_plus_one_bytes,
+                                       InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(EcdsaPrivateKey::Create(*parameters, order_plus_one_scalar,
+                                      GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcdsaPrivateKeyTest, CreateFromScalarInvalidLengthFails) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  // 31 bytes instead of 32
+  RestrictedData too_short(std::string(31, '\x01'),
+                           InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      EcdsaPrivateKey::Create(*parameters, too_short, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // 33 bytes instead of 32
+  RestrictedData too_long(std::string(33, '\x01'),
+                          InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      EcdsaPrivateKey::Create(*parameters, too_long, GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcdsaPrivateKeyTest, CreateFromScalarParametersWithIdRequirementFails) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const EcdsaPrivateKey& test_key =
+      GetTestPrivateKey(EcdsaParameters::CurveType::kNistP256);
+  EXPECT_THAT(EcdsaPrivateKey::Create(
+                  *parameters, test_key.GetPrivateKey(GetPartialKeyAccess()),
+                  GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

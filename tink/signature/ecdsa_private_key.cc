@@ -17,15 +17,16 @@
 #include "tink/signature/ecdsa_private_key.h"
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/util.h"
 #include "tink/secret_data.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -126,6 +127,39 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
   }
 
   return EcdsaPrivateKey(public_key, std::move(private_key_value));
+}
+
+absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
+    const EcdsaParameters& parameters, const RestrictedData& private_key_value,
+    PartialKeyAccessToken token) {
+  if (parameters.HasIdRequirement()) {
+    return absl::InvalidArgumentError(
+        "Cannot create key without ID requirement with parameters with ID "
+        "requirement");
+  }
+  int key_length = parameters.GetPrivateKeyLength();
+  if (private_key_value.size() != key_length) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Private key length ", private_key_value.size(),
+                     " is different from expected length ", key_length));
+  }
+
+  absl::StatusOr<subtle::EllipticCurveType> curve =
+      internal::ToSubtleEllipticCurveType(parameters.GetCurveType());
+  if (!curve.ok()) {
+    return curve.status();
+  }
+
+  absl::StatusOr<EcPoint> ec_point = internal::ComputePublicPoint(
+      *curve, private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
+  if (!ec_point.ok()) {
+    return ec_point.status();
+  }
+
+  EcdsaPublicKey public_key(parameters, *ec_point,
+                            /*id_requirement=*/std::nullopt,
+                            /*output_prefix=*/"");
+  return EcdsaPrivateKey(public_key, private_key_value);
 }
 
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(

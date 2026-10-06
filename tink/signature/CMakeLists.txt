@@ -734,12 +734,9 @@ tink_cc_library(
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key
     tink::signature::signature_private_key
-    absl::core_headers
     absl::status
     absl::statusor
     absl::strings
-    absl::synchronization
-    absl::optional
     crypto
     tink::core::ec_point
     tink::core::insecure_secret_key_access
@@ -1524,6 +1521,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
+    absl::strings
     crypto
     tink::core::big_integer
     tink::core::ec_point

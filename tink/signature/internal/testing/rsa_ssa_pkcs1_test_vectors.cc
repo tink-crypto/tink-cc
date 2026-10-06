@@ -139,76 +139,69 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
   return *private_key;
 }
 
+// Extracted from
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_2048_sig_gen_test.json
 RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters2(
     const RsaSsaPkcs1Parameters& parameters,
     std::optional<int> id_requirement) {
   std::string public_modulus;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "s1EKK81M5kTFtZSuUFnhKy8FS2WNXaWVmi_fGHG4CLw98-"
-      "Yo0nkuUarVwSS0O9pFPcpc3kvPKOe9Tv-6DLS3Qru21aATy2PRqjqJ4CYn71OYtSwM_"
-      "ZfSCKvrjXybzgu-sBmobdtYm-sppbdL-GEHXGd8gdQw8DDCZSR6-dPJFAzLZTCdB-Ctwe_"
-      "RXPF-ewVdfaOGjkZIzDoYDw7n-OHnsYCYozkbTOcWHpjVevipR-IBpGPi1rvKgFnlcG6d_"
-      "tj0hWRl_6cS7RqhjoiNEtxqoJzpXs_"
-      "Kg8xbCxXbCchkf11STA8udiCjQWuWI8rcDwl69XMmHJjIQAqhKvOOQ8rYTQ",
+      "orRRoH0KpfluRVZxUTVQUUqKW0YuvvcXCU-h_ugiJOY3-XRtP3yv0xh42AMltu9aFwD2WQO0"
+      "aUKeidbqyIRQl7WrOTGJ25JRLtincRoSU_rNIPecFegkfz0-QuRuSMmOJUov6XZTE6A-_48X"
+      "4aApOXofomqNzib0kO2BKZYV2YFMItphBCjgnH2WWFlCZvXAIdD87KCNlFoSvoLeTR7Oa0wD"
+      "FFtdNJXU7VQR64eNrwX9evw-Ca2g8RJkIvWQl1oZaYFvSGmLy7obTZyuedRg2Pn4Xnl1AF2b"
+      "wixOWsD3waRdElaaYoB9O5oC5aUw53MGb0U9H1tMLpz3ggKD90K51Q",
       &public_modulus));
   std::string p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "7BJc834xCi_0YmO5suBinWOQAF7IiRPU-3G9TdhWEkSYquupg9e6K9lC5k0iP-t6I69NYF7-"
-      "6mvXDTmv6Z01o6oV50oXaHeAk74O3UqNCbLe9tybZ_-FdkYlwuGSNttMQBzjCiVy0-y0-"
-      "Wm3rRnFIsAtd0RlZ24aN3bFTWJINIs",
+      "3EMQUPeC6JT7UkgkfZjLfVi40eJPO1XQQcVuTeCGsNW7AovaQu610jTVaB5YCdQV5qKJrUz7"
+      "94-Xj2w1gU9Q7r_xxbgKafeI6B5rq13ap4Np1lnRQ-xvF-eYE6V1z62cVpFWuQET4ukRCtnn"
+      "tIock0im5lMyEZEpDqNs-zpbGPE",
       &p));
   RestrictedData p_data =
       RestrictedData(WithoutLeadingZeros(p), InsecureSecretKeyAccess::Get());
   std::string q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "wnQqvNmJe9SwtnH5c_yCqPhKv1cF_4jdQZSGI6_p3KYNxlQzkHZ_"
-      "6uvrU5V27ov6YbX8vKlKfO91oJFQxUD6lpTdgAStI3GMiJBJIZNpyZ9EWNSvwUj28H34cySp"
-      "bZ"
-      "z3s4XdhiJBShgy-fKURvBQwtWmQHZJ3EGrcOI7PcwiyYc",
+      "vRqB55d_mJgSInOuMiK1mOpfsZ606rw4MIpeMhlmA7LlAP-3n1uIaBZhHevEcvrEVUQHC-sF"
+      "fJQTeKaGivO3oD0_mIDsR9XgiblPveVCq6mujXLFcIjXq_WxMfOQmPe8Fg-QU2q8lJL9Tgbz"
+      "7XKZ1Ll7sDZ3IH2VZp8UDPvCDyU",
       &q));
   RestrictedData q_data =
       RestrictedData(WithoutLeadingZeros(q), InsecureSecretKeyAccess::Get());
   std::string d;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "GlAtDupse2niHVg5EB9wVFbtDvhS-0f-"
-      "IQcfVMXzPIzrBmxi1yfjLSbFgTcyn4nTGVMlt5UmTBldhUcvdQfb0JYdKVH5NaJrNPCsJNFU"
-      "kO"
-      "ESiptxOJFbx9v6j-OWNXExxUOunJhQc2jZzrCMHGGYo-"
-      "2nrqGFoOl2zULCLQDwA9nxnZbqTJr8v-"
-      "FEHMyALPsGifWdgExqTk9ATBUXR0XtbLi8iO8LM7oNKoDjXkO8kPNQBS5yAW51sA01ejgcnA"
-      "1G"
-      "cGnKZgiHyYd2Y0n8xDRgtKpRa84Hnt2HuhZDB7dSwnftlSitO6C_"
-      "GHc0ntO3lmpsJAEQQJv00PreDGj9rdhH_Q",
+      "difu81Z7KicmjlIFPs0xw6cXLMud3O6BmzBqWzxmt1c8pPqI78bzxKAL-grnE59kVDpNrD0F"
+      "gj9v9HfPzshP4qx6aLFyBLOQIy4RAxDE6JnE58EJZ9tKzeBC278Z2-ALS0dB3hAgqqr_tQVM"
+      "eXyfE299k6w_yMr_ZlQkLXgh6-5Re_U39ENmoP3UWuBbmQnC5swe2Sge_0OZ92yWuWIz7Cmu"
+      "C78NdSsjT8GXOJ9RBQqhrNAcB0w6yPvbnqi2UalZlejbStXEO2yGc-WhJufulLjf9MWvwBJZ"
+      "vI2naVC65vi65xX1CYWw1vZtBMb-87cAcg7s3N8XG7ex7L5yicRnwQ",
       &d));
   absl::StatusOr<SecretData> d_data =
       ParseBigIntToFixedLength(d, (parameters.GetModulusSizeInBits() + 7) / 8);
   ABSL_CHECK_OK(d_data.status());
   std::string prime_exponent_p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "lql5jSUCY0ALtidzQogWJ-B87N-RGHsBuJ_0cxQYinwg-ySAAVbSyF1WZujfbO_5-"
-      "YBN362A_"
-      "1dn3lbswCnHK_bHF9-fZNqvwprPnceQj5oK1n4g6JSZNsy6GNAhosT-"
-      "uwQ0misgR8SQE4W25dDGkdEYsz-BgCsyrCcu8J5C-tU",
+      "qUtSiyjykVmRIdkZUv_Rx_IdfBR52Z1HiIX7Fhhw7hIYvwhHJhLb5Ul-jZxlBojgnHhpYa4-"
+      "LDVNxIrjRRR1nEwjxFiEiJYdwGtBTmHA4ef7vSkj0xUy_iifltoiBxHljBQBmAjgBBQnaTO7"
+      "B-TvubSps3ZWkXIFIJ8z8JUV18E",
       &prime_exponent_p));
   absl::StatusOr<SecretData> prime_exponent_p_data =
       ParseBigIntToFixedLength(prime_exponent_p, p_data.size());
   ABSL_CHECK_OK(prime_exponent_p_data.status());
   std::string prime_exponent_q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "BVT0GwuH9opFcis74M9KseFlA0wakQAquPKenvni2rb-57JFW6-0IDfp0vflM_"
-      "NIoUdBL9cggL58JjP12ALJHDnmvOzj5nXlmZUDPFVzcCDa2eizDQS4KK37kwStVKEaNaT1Bw"
-      "mH"
-      "asWxGCNrp2pNfJopHdlgexad4dGCOFaRmZ8",
+      "OvDnKpM67wn_JQPfeLr-1THAL_GivEN8VAzcvUrTVDXPURdjWWVDSAYpsRTKf3gP9--jLqDL"
+      "bgANbZ6h8u9x_Zz5lIQioWVVfjfnVe3-cNkLkgUC60eLyYpj94jOOg-FbW7eclGjg7-o-kgK"
+      "gaklr3s8xTjEurjJ91l_-2gBHY0",
       &prime_exponent_q));
   absl::StatusOr<SecretData> prime_exponent_q_data =
       ParseBigIntToFixedLength(prime_exponent_q, q_data.size());
   ABSL_CHECK_OK(prime_exponent_q_data.status());
   std::string q_inverse;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "HGQBidm_6MYjgzIQp2xCDG9E5ddg4lmRbOwq4rFWRWlg_ZXidHZgw4lWIlDwVQSc-"
-      "rflwwOVSThKeiquscgk069wlIKoz5tYcCKgCx8HIttQ8zyybcIN0iRdUmXfYe4pg8k4whZ9z"
-      "uE"
-      "h_EtEecI35yjPYzq2CowOzQT85-O6pVk",
+      "JkD7-8_vsWPueoe2SDpm7kH5VtkPqKeTm_wELuCSSxt5k9BEX3WNUZM-hRecAyCwyWi0ipHD"
+      "i1vpI-EJfAxWL4jUIpS2onWbr6VCinTxJwh05F9vzGDyFgLeXszRQ88xJB9ZIbWtOYP7VO8X"
+      "vjsoU2flDJmcZyR7VS_kv86UX3s",
       &q_inverse));
   absl::StatusOr<SecretData> q_inverse_data =
       ParseBigIntToFixedLength(q_inverse, p_data.size());
@@ -332,65 +325,67 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor3072BitParameters(
   return *private_key;
 }
 
+// Extracted from
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_3072_sig_gen_test.json
 RsaSsaPkcs1PrivateKey PrivateKeyFor3072BitParameters2(
     const RsaSsaPkcs1Parameters& parameters,
     std::optional<int> id_requirement) {
   std::string public_modulus;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "2R8NAPGqtYDirA6DdjjecAT8loviExWh7yojSWkEXdS8GUXrU5gu6z_pfOhKJsfUZHhP9-Vh"
-      "zuVw4m1BReFP_M5wQw7zL6zRnoDMzoqbZgQGX_HlCn-o_dQyyk57K4WMiKlmJuOhCoMVlvkc"
-      "LyLIPhoCZ_x98SHTM387D6aoxgbtkDHB-DuSE96oMtxdyunAO0eAmVPXXZZvNbyxD__SM0Wm"
-      "7icUw4iXKYCTitYSPZyXkWkguUEu4ahOHTRbg4ZuKzsCEnOEaBrKA4QBo5urXkZy1kk81KKT"
-      "uTMlLj_AbY5DSPDha5muWPeXK0O7anoEKV0RLuUJ-vquOd5tBk9iLD88i0_ObYNnMMEoXZDF"
-      "SNtit5WWR5Tq8UOtQnNgoug_Wx-KILCNGM29R08hwb9C5vHhN4kN-SiI2DzEBZdVlyCbegn0"
-      "3Jmfq4LU69d-DWa9idg_pWSgPjVgl3-04PunoDOfkiHcDJlAJYHLlUcqbBG26A6RBZ-8FEcL"
-      "emjY5Q5T",
+      "xv4jeSVmAjwmUofFrG9xVBwJlNEdBZ7mQDmG76IcJLUb2R2IYvnfeaTjKOPifIPfJgslqbQ0"
+      "IK_8RLUejXUltvKcNypAUQRzIAdSemLtgvrHP0iSqA4JaCpBpYzTRwF_O-fYATNPktkyGq_V"
+      "O1G_-r_HUs_Mrgse4Dva_55CjMHBF_GslrT-I_jCPmOBGGpm_VkokzmuVcS82tv_hKvapTIk"
+      "DU4dKLLQSB2t07JGVXyo_hgJKBdzCznm7jeP_MhbGf_ckWqbmRprZtSpx7q19eejciEBFC56"
+      "QQjBXVc7FSieB-RurqB7QsKry6Mw6ZVUtGVhZbtMDbK2OToH7KV1xRqTxOFb2w90eQlEfj7-"
+      "NMZ8qJVLUw5WogobbYTUXtG806pY7AbxhO5YV6qoGeHMqaJvTijWuXfTORbbmJbSUtGvp2Li"
+      "h8sNOEzHW_5T9Oki0C3QpIHAQuLTBrSzwYk3HldbJeAAWhZM9p3Ql25NW-R2gG6mvmCE5xq0"
+      "9axcGxID",
       &public_modulus));
   std::string p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "8mG_wJd4bhw00SPBnNDQtsxlvvUnIMigA4krDnRhGIgJmrlsAyoHi3fgAL6Q1bmPuOQIPNky"
-      "atrQUOxsuS9Vtb-AZrEGXj-_0TPuzay3XM66ZnPSGEupoKlYM_t-DCfGB3d5R-rP5wLdzu3x"
-      "amX-l4q1NVIHgI-ipZDxczuZ2RZJYu1c-YtHjNAoj_FhlDrRo_3RNTXHUvYiz44MXDukOru6"
-      "-QHcRX-vEeCSIkc671PRdgYfo6cHQbq41UCpWeHH",
+      "9eyhbg6DaWsO2ayKgSVF2rpV8gqWTE5jQ2BKfyvihg_On6FqHMkhIJOd64jf9oVQOD6thR-s"
+      "B60bLoqbK7aVJdls6rt-6DzlDwjWSRB_RJoUUhpok_PzxcWnA7L8KL_P4mGk9_RQVYCA3q6q"
+      "tlHHqa5YbB5_XFLNqT5AqskI5OM1eYT8EWr5y-lTm8eo07NRpz6lwkE9HaLgtEi0VGcKyon_"
+      "5zsUAem4VU_D8j1skEYjJRodKZYsqbJtlzNFvExf",
       &p));
   std::string q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "5VH4x-83GMB6qfUSej_oQ55w-6dDUkJnNV-Ala9k_XwLR1bMQ1VbthV6SIBG8cyZiOcWlBZB"
-      "FrJQKD3VC3iUpFaRjWz46Dv-CFq-Zbvv55HP4XhlSJGrgtZvcMhadXVzoFEDlgU2PDirnasx"
-      "EQqTxz-gm29xBoYz7Y_Qd-6AXALVWQkONGoo1xhqa19oBLZfZVs0oqbEa4FQGytHFUzu_mts"
-      "IP5zzfdk_HaPck-vKUiycOa1JRhxBGR21DkLXi8V",
+      "zyVEb1nPUSkZ3b_PotlnBJWtkrbyldYQMgV_nabb78RRCmI8K0elIgCCo7xCrxoUT5jJ7k_a"
+      "5Bvg7FAczJSysGQBkQmbNVYRFg3rMn6KzgGLiYAl70cOQ3PsHZf2aeKY4dhFxlU8ClRsyxaN"
+      "W1ENvmAY_U7Zo1Rfm9uBlo9KbXx5Dlw0cpqO-0lghvoTACSauLKPOJUde-4cEnrDxNC9WW7e"
+      "4enRd4HbuCJ9e112zouLzgPF0zm5dXmBYQhIxVzd",
       &q));
   std::string d;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "AquVF1vhg5XwM7mB-GQ-qBYHnTpfL2jmsvBLus1l1lmVbqIjgMWwXghNMNISh2ORwyKPqTbS"
-      "-x5rQv2g_eEFgNBxJQH8D6wKb-6ZljiyLJEEGw34iSaEx4pijYZlkWV1EwEyVmwaQOzXySGL"
-      "LTE6UTk0ql66lcqatFluOoUMMlNHfKx__DOPWls0qlt3c9VoHdKFTF1xmp8NAxYs_0tgJG1I"
-      "3kjwwm7dnQ8NwXlchBF287zdQCoDD5doToekUHvIvUY-q0mUXKjM3ryitMXIsV20D8sSU0zv"
-      "12wTDpXFgGoco_tDWUd3gPQ3h3gT7J8fJBXxayJoFVo5khMlLQuIN7d15KIiMBKyDHZ8eUpB"
-      "BEEWhFkK579-QieUnVnZTL-FdG0vppCDmGWR6bCvUQgKt8H0vvDZb6u3MY5koDqTrmL1L8lB"
-      "ujoesry87t5ZPc1sSvBFn7d6uQ926tcNv7ckmxfWK3QOKqQ28pn9uUBxqhUY6XymugDwFIr8"
-      "8xbd1QfR",
+      "cqxrttmlcm5FS1QwxxElxumtX9QuHFoYqDQ-nYPXIhQ4ayMIwLjsXsZ1nc_NaiH4i4zq9GQD"
+      "kj64asPRSoWS6V3gRi4UCFw_F9sAXcT6yHtKLR7eXPhR1XRchlGkQ4wKTXRq1y5BkgeWRyjD"
+      "Ab83mgHAlOlpM3b3IRN9Pcdu5HyXkPvVkLfWqNYm4hsnfvF6Tk9-AXHBFG4ewyT6l_MNOhuu"
+      "CPjV9uks_BIWZSOcQpFnNZ6WUENLKdIBUZA1at_uEvJbNBsI8St_7GN5WYr31cwk_n8A3h1H"
+      "EzzjrYtr4cmoVOM_uVLhZKxt0qkFIYbuFE7n3ZhqjwOJHQ2iHteFFtzcKsic3dyLVEcx1m-d"
+      "ib8XpQxtmHpZiwLJONw2UhuIHqmU5Mj7K6j9AB9zM11N0b2-F30wk884g2V8n_lE6PXJzeVI"
+      "t8GwdBkpsNdJd-zaaU2UCu_Z0vx1Mj4LOhFLmf6vPiUY9RWNH9nZU6ogrxWOZ9J-LOLxjZf9"
+      "AvNpmBl5",
       &d));
   std::string prime_exponent_p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "dcWRSp9O4RHLiCN7nBrKj0fZ2GN-U6uoNI-d4DQkSaswH4IhPZhaeiYRLctqzK6RayFB728J"
-      "1Gnl9qwqWADsAJfAaCV0Fq-bIKe_TSizH-FDKSz11OBO18XxGbEFmhppWo9u2sb5piH6bOWo"
-      "_C36-t9nFTV6d7lTKme3Kmq3Yog1uF_lYUuPxJgQXYDIDSJXYvudf-FVrLX0TC2VS-ue7Pry"
-      "6rNAuHRGOMWJvCYoOMndaR-ol_g8ym9UCCqXHxlZ",
+      "Y1ellnnSaAFRTGlAwg62ezcOhOn18PkxbAQ308t8hD9abm2cGei9sxUuk_kEz-bmkvHu0noK"
+      "2kb5VgGz0SK-eT2tm90F1PbUaRBez8EUSDgdwVTdrfa8IMZJQ1tINYXWilJ7e5Z75S414L6a"
+      "Q3Ahwc-l9HcVZ8wjPBzjrpnrN9r4vRAVa0vVgKPOnH05G9uyPmc2OpR0BcbIEsvT3MyLNWot"
+      "r9DTsjohtoS0WOSrOFS82b4EzcnWXO6xCoUxxHDt",
       &prime_exponent_p));
   std::string prime_exponent_q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "EZ1MSL89Mi-GvItQkgdapecDsrDUYPssxlLBo73HOhlPHHm0Uu-5jbD0paEE0gnvOS7W8yUK"
-      "dt3Xfl_Rf4IRmNX1dDGMpPoGt0mRGmtnMBhpKV6AGSTnUbN69-TL3f3ZldTjO6DG27VWqVO-"
-      "_xoa49ElWwsiWWfxkSvczXmKbobhMGebqbcF0A_WDM1VRhdkGHr6_gtlRwS1zIB0g1RXfz9t"
-      "HNOuvYFlRmcs-ZDZWYh1_GocO-82rymwXvjKwL9J",
+      "BNrav8FbGovcD1Zvh2GRCIp5hvbCuMBLoOCAHTHL9dKkE5o5zsnfFOzuIuhGp9P0peju0qcM"
+      "ekws-VznT-QsS_YME1omSRm7TMkGuig9GJbwrkhSm0kPDIWrAwaMv-6Pprtq5zsYLSXNZvUg"
+      "WwOLTurxqv4uG6Xel8iNQPoaxHYmYC_JCuaUc09E8-TojRhOiAWnVawpBL6P6d72t6YsyevP"
+      "TXwtbJ-ehrJIPpvyLOUYYbu05z5zGk2-uod3LSk",
       &prime_exponent_q));
   std::string q_inverse;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "mZ_WBLgVj7lBYYkXJAVGwypzTKi0h32c75dDiHzTSh2Imgvv-K4bwwQGHrOdVpr1_gsmRrbR"
-      "rX2sejeexpWo6cy0TOTxwReM8qvXQa_Pusny-LdJOCBnc0e98IwWtIH7FNKjV4I7tvrys3Mo"
-      "MP8nvn6-yOajJczx6MJKUpu1dJgh_e2oslUo_aDkc_vFFht2S4SBNZicK9SZFLttJEhMgYIb"
-      "wwqhxKcCsi8UTLL3w1nBpo11WcAPgFoXzuI9KD0Z",
+      "IUofcxMOSLM2_gG5UIhezbNEPZPn6Mpi-w2pa9QjdZ2L5VLIvkTxOfvubsJLdfvwdE-sTaq_"
+      "VIj-bDYA2bjpqSJIH8dKej1iJmLbjIUxjeSO6LcW8ZQp-1lJkNpwXr3372YT3Wv4hcFq1l6f"
+      "5sKAOGvul2wl26_4-_abrtlRC-Xt7T-Q4LpKl-XIGiGJ8RRnB0Wrle3aIVvQX9x4kp-gz-iw"
+      "HIPyrsk-OtGjNP2FqoeU6s-VWuXazUWyaHQfyhlc",
       &q_inverse));
 
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
@@ -536,78 +531,80 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
   return *private_key;
 }
 
+// Extracted from
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_4096_sig_gen_test.json
 RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters2(
     const RsaSsaPkcs1Parameters& parameters,
     std::optional<int> id_requirement) {
   std::string public_modulus;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "owtidA4lqrAZNOptm5IJDP8sDOmDGUHrmDdqLaq9pq_OJUYX9txXn5fCmfqJyl90b-NpMHWh"
-      "NXdLcDsAi46ITqbqJaXMa5L5syjXcTlAEJD65p6-Mns2Y2MG_4tKE-bnXUPrbPhWqIhEKp4D"
-      "orvCLQA_6Xxz_eSjptscVuHVyPteXJN9YOJ1KVSguxlKK4T1ChK-GDSTuANf9Ws48bQO04hc"
-      "uGR0k0L7fVd-1YZLtC_Rsx4tQOI8cZIzXJo_xrKHDJ8_swN88hxs6ifzlpb1Yc4LYLXw35S_"
-      "ll6DZNjB_B6ml1XuZVQOBRxUAqw9k6HGWFPLtCMbZhmvsHtY58eJjS8O_rEZiZq3vn9REOf_"
-      "z5eiJrxt-bWsfiFkU2nfr1ldBWlGleXasBTtGwaGrgZXQ6T5fxWpJyOZDGnIit8EJ-P1w1tW"
-      "EtEDgVHl5ONZ3oUOkQuEGy1Ywv67XHc-cH0XEnjy6bINH0_AUnT2BDAk6mRLjtfN311_ekA2"
-      "YwzjIg7KkT_MTT9j2ANqSadsC5w9PYFfYdmMN8Enkf4wD8OamwX_KKXF9UBw8Cm11CFOh0kS"
-      "w5K9kunIcKZweSeg34Zthy3Px7DBM2Ie8fHAHcSFkgpmkgqBXMNfTO7aQOXe3vMqplQ27zYO"
-      "TBDsHJcMWZD2N37haATJ8A9qenUcb7zpc9E",
+      "46595b9E3n01fiOMjf8GPKcTRwd3q3hrSViE56m6Hd5l3n0rW-Pyt9GDDPbKjtXAXT8JSqrr"
+      "HdLksu3ghhMQmpujTH4r-EUCJZdDdEWfFtosFBksY3mF_r677wHwOB540P1jt2A49ePTXcfS"
+      "JDljNmr112hfG8_JncuR6UyTAZBoNTEi7dA8w-YV4Xwb8d18Q9rob0ekAjj7WUBBzr26JfP-"
+      "lZOmwym398R26rdiXRe6e-eIaTa3M_jc5ubJN_WI2hMVwRF6vSnIOJXZWYjRf5_XYjlg2OQz"
+      "18aEFQf_L6rDbg4ZpB6yzM2yosD66WZxmpnSA8kkNJvA7qE3Tv0-IwmbLRh5IgFv0BQIdSCm"
+      "c2NocyK5DXqJDY9EZKjHlNKj8gcMzTsOu8orQrv466bywL-ACLVhbue4Finr_5epOluGGYna"
+      "oQ2nyOO8ewzbCV9s4Rhc-P09ygNes-UFy-Ai2B2TlFoUSAa5_gugfzq5xw5ytft3rG5MfgOq"
+      "Lc58XvInq6Gs1Iwdk-DibwHo8eQ6qXiA0V1skksGDR-s4h0Dp5bIYwH0p0M55HKy-WzQdVdB"
+      "y53zU1B3OBrahNG8CEamxEyKjTz-G3qZE9Hz168sXqTmfOCn7TwAWCBv0TrZzK1aghLz7NeI"
+      "NoprYUgXjHxeqNbThSJ_LHagRyFuXiBrHtE",
       &public_modulus));
   std::string p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "2yC_8PVT3Bdt6Guq5Lk6yVZzxvcVuz8RuEi-yB3koN-EYSG2OFqiVssqnmaZZZahtbUyJXy_"
-      "B4gZuL87v3gBRBgBq_5JDKhOXXSC7mIR8E2DBL4SJoTR3IzfctFL-FvXYOwND1Aw5e9ioM6y"
-      "daLVfZXz1j455NKpfbDiQ3k78y6DAwzAoL6jiCTm0RiLQXA8wppPYAKNiV7PZKnMs7Iox-Zs"
-      "sdsxau2SQzxjsERfHMA0YOM0QO0qI_kB7siSXnZx4wL30ial50HoKYLmfFhBniIQUxnO_86b"
-      "wm7Yn4tZBCspdPYJf0I6IuJlZwK42IE6X95VfWrbbn-k5Yz48Hdpcw",
+      "-NurWsBHmwDGl1H_zQ3l45jesL8M8Zplngm2rMTFaXhZAbdYieJ6bO6KMJcIptaKUb2T6LJb"
+      "hqXCFQtP_5Ygl02qaBTDYB3Oj9zM4avm5nN8lI_Zt8ij2QMqM5vG7oSO5PpU9RPDV1t6iTJf"
+      "fJexvrW2Bv6W8rMpP0zqwZTAkBNO-TCgSILx6Wg4woJ9jqUSz0dKS1ZA9G7iWA34tZpq_KTB"
+      "4fmjuoIjK52yfp8rSNUYHseB33laqH6ErRXglf5D1Gpu2w1H1ihkh3aSx1TCk1R4Z3_kzppC"
+      "kGOdikSOfiw5O8VATxTdN-tmtLI__QcdNG_W5Z0y8K4cECn2VtdPZw",
       &p));
   RestrictedData p_data =
       RestrictedData(WithoutLeadingZeros(p), InsecureSecretKeyAccess::Get());
   std::string q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "vnrCYzg2WTyJGXXd7RN9QPnhhRn5IzMEjxGBsLnsEgdQL1xfDRzVg2W_8-gLNQsBmQseqF4m"
-      "P4rfS2qZ6sEyVUhV0lXCJTu69yLkG4k8gcyZM1YAaLIm4UfUWbmnPvGvKrlqKzmp5AE4WnE6"
-      "hgq9O2rZFX3WwlCPGFnLhHF9TVM6etCuknNOCFlWxAqfphJVXmgkfmclI4aOBs3CPmJSRTdD"
-      "WhQpJMfEZrLMie8oHCMK5v4SOukkieODQH5tueWoWfj31uOmi--RRJRCAib-QSMEnDJOsNzM"
-      "4LfuE4L7uQsD2Hqq1ZbSMr41LYPgoBusZk_6lI_85BmAa2gCnFDsqw",
+      "6jc9zFaNE0WwOB3hkhccINjIwyxaW6y4Sr1yy5b-xJL-TtNdemXlc52Fn7meKy5DxZDHjsuc"
+      "B6QNd5OqeNyzHeI2uXNbby8JzqcOqSEnWoEoIby-OGm4iDvrJAkzT44KlvRSgVfePyMxgkDm"
+      "XT3Kmj1D3gg0W8Ls5LrGjHoh0pxaz6IwxRjJhzY8N6zStvbL1p__mdOmGcYmi-AT06i5bCgX"
+      "5gaGPT2MEjMG_n9rjcAn2rpopnhL_0FLNSZJvHdp659hwCu4x2J4FEhPJ5kjPIGJjGeSVvEL"
+      "yr70aE7ISyWd8XUaSaFTwOhDV-6MyeNenlYWr5sAQE5VRSst8IeVBw",
       &q));
   RestrictedData q_data =
       RestrictedData(WithoutLeadingZeros(q), InsecureSecretKeyAccess::Get());
   std::string prime_exponent_p;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "q9tAjjNqBLhfW6RtkBrxzww9mzMX2RX6yMRM1FgVglIq2Z798a6rmVSX5UlkTzdXNlKYtKvk"
-      "inykZ6-bpWvx2jzVutWg5wttAoCpW1qQ5R11fxeu1oTerpHRgZRCd9NX1Mzs5TCoWP1pJeNW"
-      "NUpzE56ycTm2YA8UHN7IZdDEQtIcsBylSqyZRuJiIGWWeckT7i_lxs_Zv34bO8CsKda1gynl"
-      "34ugc1NFnfPT31-QFNVtfvtSdQVMQpA9gs_Nc8aDRV6DjE8BWKDo-v2N1MHHHMVsdjBMl3Wr"
-      "1U7oGCDKvKk5R2DbS_Jd9BQJIUQSQsL_TEbsV4Oh-0Six-HLL5UHnw",
+      "w7RlDmpWJZS3mHrY8xZx6snmnxKwCDSGo4E6EqZwJWCKhqn8S_s6kf4J2Op92E6x2lR_RCk3"
+      "hy1F8yzBTdtvZ-2hDFb_ys_GCSb4TKTWYfcCSwbRjhGQoPI3NvzTtfGzOmmPdGiFX2bGd6yQ"
+      "oTfehX77VobSiKzSzEAeAfyMbwFwQtG1yzCHNCpNMNJUEWDJ6Q5EY_jB_jhRcjQSmiaE6ohb"
+      "HO4oj10WcY-DtsZP0OgcHuCAxxD1dbqBdmjVBMA_8YV-BnBsRQPhAxMBnRaQKjLsuWA_vSZd"
+      "IJXmZ71AXgNDQzj9OPPMgNR0IbhoUAFPO1SUqGA2lkYmNaP6YRLUEw",
       &prime_exponent_p));
   std::string prime_exponent_q;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "rXTcz73AwEKAFs9e6SV2SlVDKRId7g_nduFaWLT2ZPSD8J0NccNwK9fclSAaFJORQOz_XhNe"
-      "gT7VWLgascx9KWxVutSdl4ptF-COGQVANHM8j6MhfDW_cicXGR4XTxqHiUCPjg1UyGzUBIhX"
-      "4vikmhcS2J9fklQJ-wLKcjFnCaNg_bZLQtH9nVy9xohmGbVYSEBN-02yZEeDzm5RFL40bROG"
-      "IeF6FiRUlbD80h8XR4ghxXhY4Yyt2WN1gqWfBko8pLIz_1wPrh7bCrh3473eizJ4YETvo99u"
-      "MrVL-DivQjLlrZ0HNLnDcLIFew084JBSzljGt8LnaFBQwX5V4kNPQQ",
+      "tD93K76gK2jCSS2V31wxpYWwW6PSliLCYaKSqeO2hYmqdPdtRTkN8IAVyeqLsyeTuIPHUDma"
+      "BrdWNeRKmWEf56uj-eyxPUux_HvMaJS_OIOVYwFiUv_pp86VE9KQznS96ZZ1uFzrCSQIgfl4"
+      "T-Gx_imQBVvDD6tfrFehXZLQXMk_ifOEHOsKjShMB3zVXUFpde8EQloDxmocWCFGoOmEaZwh"
+      "aEE1JgQrvAXRKCLfnuN2yHoU96g0tGiHfIvOy2AK_-5UyBPdzHQXfWR4pjzQRUxbktZSZN50"
+      "-L8kUPHwawS0HJLGfEvPrPISgaVwbB6zPp96LgLXmqWuMeEdJbLyGQ",
       &prime_exponent_q));
   std::string q_inverse;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "lHnCy4vPcdXtvcT2UkDOWG6QarY2MgQgzxkGFw068B92f8q3aIgGKOwnlTWJRUoClECfeBJ2"
-      "ZvRewH04E5tERcdjj7OdwYqRr12cKOy0f5zrsc4Z5I3L4mEFbuzBB_bTynFfN0evJOauamWM"
-      "Q0pozsathGZMiBZ8wlVnsMrCMCqxCcZr0zm-UVjGdHKgGoHpzxne4nYrvpsOr9y7lpkQcNlW"
-      "2zAHyytNKwrO-WojP_jd7blwwRwJh_GzvB7IsdlafhBkTJT-b7Zw02OGlJbQ4lzNlWTyg_VZ"
-      "gvnHUQjEcMgb87jyjH6FM2g9SUW1OMTWgwg2EKdXn56N0eDIsVxbjg",
+      "jS_QDRbPo_27OplYHMTPPm4x7Wnc3cYqmJUw-FmssG3fCqjWECDW9wCnznGRa0Cclj4C2WqP"
+      "9-0V8JFlCRPNDEmQPY0Dbz0hkU7JNNgID4kb5TxFZmqBO29djl8irCAswaDFEx8G5ftH4MJa"
+      "VZmgjSheAqTtJhH6tH7-CydgS_hxfsEVNbAt9pILyH5g07Fy19cOvwSCrFnU9tNBJPz0YBZf"
+      "4G-uJ2pdycZAfmkcyz_WdUML5r4DbKGILrSKr-CjvgPg9vmjW77Hsb5UUu6yHeqCQnDZBkcq"
+      "mh-zhqCs2Z2d9NPPKOw6HbzsDvsnKWsPVA76aVgoZDuVwy0Be_xSdQ",
       &q_inverse));
   std::string d;
   ABSL_CHECK(absl::WebSafeBase64Unescape(
-      "UNv2icPyXkJTXfDdRwgXwQBT4lt0jvQoWScyW0-QGriZrdajT-Ra-GUVN7QO3fSVFGBd7JCJ"
-      "0LBHE3PPg2a-pvMUsHMXfEo51-ZrYlWYNh8Qr4sOnI6KnKOh9t4ncNNU7uYePb6zi4V4-QHA"
-      "n9YqKJM1HyB_jez0VG3aEiSSF8jCNXtX9NKadFLqG6AhLpATzlkZOXvpvpq93kK8zPIVYEcC"
-      "ZNg9EENp4fGgj1i49rW4c_KFUuZgP5rYKha9hldHrrTTrH4QWypJwZ7qqUZYj5bWAbJ5sQhe"
-      "M77PvxXYrqasy-TsBAi5o0M3TtQI_cx_R5LXNZErp2kZvpaNsvU8e6M00PpseA7aezb0NzN7"
-      "RzTo3Muy6SywZIy37kjnND6t4u_AEDp6uoo2hnk8yT9Hpirc1Nz7p6IsRDZjjU6PULQkgofq"
-      "18jMnH9djABnWsBrx_yMVVnHPD0Pp5pwxbH0kJaxkBFBYpxSNZYA_mUgwrPKsX3YHwJForM4"
-      "Vf_Min2zlIFba3f0z2szMZFn3zkCUrfJnqSrrAAuDVCufARtVjHh8COrULBReYDrDKIyu8dL"
-      "KXrO4oCsUriq95W1TJ-TuMl-5mZ9CO55iwkQpAOEYv_M7fSuZYdq-8-nRPUqg0Da66K2cMD7"
-      "3Y2PlvyVRH1O3j-bYkci-YzE7Eqv3ml4Ivk",
+      "hfmTk7GtMM60v3jjqFq8rMwTh-RZAsllOE-iRT-WiSTpBLba4MONe6UJXIOMReh5vWTubsWM"
+      "fIwwjylyyPJG_vM-cDB-ZyUUUlJkGvMs3iGbdmgpuo8zzecmZ0nYtO0ZYsD4AFvaqLZbFgAT"
+      "I8WxH8Bo0UxVSuRGW1gCkCnDB1SWPVagmxfB6fRmQ7zoJLaT_Mm_pFufor8tCCPLlYAHHXYq"
+      "BJJRut29p0owP4WRl_3yeh6QInlT7H0wX57GIOuWj9xTHLzQYKdJbiKfNxRPUq4X63CgEICY"
+      "EQx7hHSkMMRnI0egxvZZeDJCP4sXGmhxyOtirV-asmpEaSbsiMpz2MX3wSM1GRMqbaDzt15S"
+      "cQfUaZ5-3J4dAowRfNbNWoTAV6m1ezt8FXGvgCMzbO1u5y8ZrDuSshQp09uUCsOHG3gdnCun"
+      "AYT3tjhuTU4WNAKF9eIuiS1H4EdaG85Nfo3CyVgM2GhOQUIhZes8sVrWey-57k-2NIKrg4wQ"
+      "7PoVcwppL40PHKdAeL_3ABWzoerYvbiXJyQY9vJefAM8FClRSt-v99vmhiP30X9A8yZ0n91P"
+      "qwwkv-kMF76HpJiZwV2D1STwTA9VEK2rQ8nd-A4btLaLcAoIZnRogktbXTWGYLDCeO2c-PWG"
+      "WEiH4gZXpg98QVD1PoyfiubztUbYQTX7ABE",
       &d));
 
   absl::StatusOr<SecretData> d_data =
@@ -818,7 +815,7 @@ const SignatureTestVector& Create3072BitsTestVector() {
 }
 
 // Extracted from
-// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_3072_test.json
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_3072_sig_gen_test.json
 const SignatureTestVector& CreateWycheproof3072BitsTestVector() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
@@ -829,10 +826,23 @@ const SignatureTestVector& CreateWycheproof3072BitsTestVector() {
             .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
             .Build();
     ABSL_CHECK_OK(parameters.status());
+    constexpr std::string_view kSignature =
+        "9858e2557c6b99fbd84bc7eac3e31283a4efb351ff019343760a1e282368938e"
+        "29ad902d3eb6cb29b35a036dfbcc7e06d2f1d15548df59ced35326295375bacd"
+        "7a9d28a01b4e8acfb676d80b6295e19c6b7a259df56456e1df72f6a746e9cd31"
+        "fed9b79b35d7a30a7aa257e9e8ac60ea886042b9194e7a383d1c9f71c84511fa"
+        "f6c96f7ae0e690112b26bb60cf7bb10f684e4fbe2a3a1b1c0caa9b1bdc79fde2"
+        "3fb758c2ba57880a4de461ecd2bc696689438183e2b9724fa68258f461bb4405"
+        "425620a4d95c87ddd83e04be381bc743b05d26ede2ceff8a858636baadf56ef1"
+        "dab54080da0f516307c579833717def053c8906d4f102448ab22693e7f52d585"
+        "0193a40ccf0d68d1303953771a73924e4bcddd8486e1477d96250bf6b480a5f4"
+        "b822822183694c52a2edacb331564444f0335d3b17d511ece59889b6d961767a"
+        "3192d7f081caf7e671addb3757451776d4bd3b03f7b689843dcd59019ae4f292"
+        "dba54738a88b86cc6ce3b123c61a446f4878b627a7f3585d8ab7bca9b258f10b";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
             PrivateKeyFor3072BitParameters2(*parameters, std::nullopt)),
-        HexDecodeOrDie("aa"), HexDecodeOrDie("aa"));
+        HexDecodeOrDie(kSignature), HexDecodeOrDie("61"));
   }());
   return *test_vector;
 }
@@ -874,7 +884,8 @@ const SignatureTestVector& Create4096BitsTestVector() {
   return *test_vector;
 }
 
-// Extracted from third_party/wycheproof/testvectors/rsa_pkcs1_4096_test.json
+// Extracted from
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_4096_sig_gen_test.json
 const SignatureTestVector& Create4096BitsTestVector2() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
@@ -886,26 +897,26 @@ const SignatureTestVector& Create4096BitsTestVector2() {
             .Build();
     ABSL_CHECK_OK(parameters.status());
     constexpr std::string_view kSignature =
-        "4e59909b7e8a0c5db68266b9afa27df8cacf9f2da785cf80430080157f6c419e"
-        "d7a5e361a7c30995ee4fc65e2d8f6c1a8eba973af303f145ae2a59c1af6a8ab3"
-        "275481fcf8f2849e29c5793af6626c7a8e315ad0f98f649d72fddfff3c263680"
-        "efd5799a91dde449ac3edbf85e44d3f283caf571935f3b869c199e00b11ad702"
-        "417ddbd57322a2d76a669a7ec52433512feee5ead55b5be1b9ed6c4cf8cd476e"
-        "bf040972febf70716bb0d9424cf3b27e128189e55bb88f6d54168ab791d03a71"
-        "f664018035a27119f05330cde46defd051ba7620912e45fb906572cc45801dde"
-        "364323f19991110ae0edc9a0057cdd301755d3aac16f0aec5bf2cb90a71ae9fa"
-        "333dc22f918745e94c93ad9eb68658b7909c0ef79076cef26d1c7570bb69ecc3"
-        "de41ffc9c9c8445d7d24fab0cbc017f8539fa295f6510e6ebea87c8c1bd2322b"
-        "0853a422d22c215e95efc5aae94475809c6ac9fa459be04cdbfec9343f16c560"
-        "1cb7e337723066156303e74f649ec6fc3f4b696ed9b158477b9c70751bf6877f"
-        "033b84107941dee9d8d283aa3ed1bac98efb49a18846956ffc30ae0485dd5427"
-        "ea84944a67516e9065fecca50a92f49b867049f2b06687969e5603a8eda7b947"
-        "9fc11fc8a122c20574ff9594c42a852afac6537f0ee586dc59ababbed77fc370"
-        "b53579e505298971246f8253a21062e0a97ab45a1612d2502d1db714b1511fbb";
+        "798f597e9ad4ba8b3d00a9527f4e785af5c55994e2953046a1b9062945e8dfa3"
+        "5eedb1e31af3daf1955d7b0afe74fbc53739b1aa02fa2dba629c31b211cd513e"
+        "2248ed847dd579406ab603d3369de3bb07143a581734fd8b1ca0358c4fda6390"
+        "45be1f192b233efb8848bb2c544e4e188e0c7ce311bb4841077d15051c6f6b31"
+        "998ddd8a7bd30d75b7b3c824358bccb35f8ffa8c0fc5ac37ed71cdd48ed3c026"
+        "9a638317756bdc9287043be1b4f3c6ef6423f1d0d38857c195e7be81c3778648"
+        "ab889474109ff3c7be0fec790d3f5f50b966e3df40c566f572f8f252d09e97d4"
+        "c90442badf820c7db74d6fbb004bd7eb53c0b1a871bb9f480821bbb48b363c85"
+        "c9866bf8a86de9c6732a3136f2c80e88a29540a9036b72fb8f4c898e7b487c41"
+        "d0f693c91309bb3bc06f1e3b2fa9918c31ba2a4b82a37a927784a7c7d2aadc33"
+        "01524ce2708774c3e2189ca188b3d85a33348d28ed6f080a06452bf8316d483e"
+        "6a5e28b831797f85a8ca5ca922bcd94b9045f588ea9e15f2a20dd26817eeb80b"
+        "3421c5de72db98843dc719cfb1aff1f927ee1df1bb718732159bec70d5b6d0f9"
+        "8a3fd5d42c31ecf4124cb1759f183838d676eca2cadb4d57f2d6a52cd0115ffe"
+        "c0fd79c99aa78df8c6b54797a590bfefd4c34e4c3f39750ba47f4d8002a131b8"
+        "70ff8e65c6c37b75e5c54c8a2bc2fdacedb41f30ed8bc9029819b7064b6514a1";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
             PrivateKeyFor4096BitParameters2(*parameters, std::nullopt)),
-        HexDecodeOrDie(kSignature), HexDecodeOrDie("aa"));
+        HexDecodeOrDie(kSignature), HexDecodeOrDie("61"));
   }());
   return *test_vector;
 }
@@ -941,6 +952,8 @@ const SignatureTestVector& CreateTestVector5() {
 
 }  // namespace
 
+// Extracted from
+// https://github.com/C2SP/wycheproof/blob/main/testvectors_v1/rsa_pkcs1_2048_sig_gen_test.json
 const SignatureTestVector& Create2048BitsTestVector() {
   static const absl::NoDestructor<SignatureTestVector> test_vector([]() {
     absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
@@ -951,10 +964,19 @@ const SignatureTestVector& Create2048BitsTestVector() {
             .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
             .Build();
     ABSL_CHECK_OK(parameters.status());
+    constexpr std::string_view kSignature =
+        "38c042a00d6f27742a46f1f963a7b2e04f0eac637849631a491b8e4e58fc721c"
+        "6ce620d5e705dc8e73409c3909c1c68b6bdb2b30f882cf2797e65030b38c4e7d"
+        "af6fef9d1f115c890086cf54ca3e7c2b21dcbfd1250ed1d925810970f17dbf48"
+        "2d1784f296adee9ace6979075c1e12f5580cfb322e8737db9d127d38e1b99ed8"
+        "7ec49448a18a6fee650d3c27e4a2a86a3d6e3ce4fe64120be60872fa07a3f78a"
+        "112715c167fb6c900698ba1afd824087a4cf733335c4a6d5120e3b29bc42f3b3"
+        "d5db79973e4e321e0910a288d18cdba172d060283c4f4c6656e9175a18b756b7"
+        "d06251e9060bbfcab04978853eec6032850a0e757bc0c61ad38aa4eb6bb6d907";
     return SignatureTestVector(
         std::make_unique<RsaSsaPkcs1PrivateKey>(
             PrivateKeyFor2048BitParameters2(*parameters, std::nullopt)),
-        HexDecodeOrDie("aa"), HexDecodeOrDie("aa"));
+        HexDecodeOrDie(kSignature), HexDecodeOrDie("61"));
   }());
   return *test_vector;
 }
@@ -1011,16 +1033,13 @@ std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
       CreateTestVector3(),
       CreateTestVector4(),
       Create3072BitsTestVector(),
-      // TODO(b/569913544): Fix and add this test vector.
-      // CreateWycheproof3072BitsTestVector(),
+      CreateWycheproof3072BitsTestVector(),
       CreateTestVector5(),
-      // TODO(b/569913544): Fix and add this test vector.
-      // Create2048BitsTestVector(),
+      Create2048BitsTestVector(),
   };
   if (!internal::IsFipsModeEnabled()) {
     test_vectors.push_back(Create4096BitsTestVector());
-    // TODO(b/569913544): Fix and add this test vector.
-    // test_vectors.push_back(Create4096BitsTestVector2());
+    test_vectors.push_back(Create4096BitsTestVector2());
   }
   return test_vectors;
 }

@@ -22,6 +22,7 @@
 #include "openssl/crypto.h"
 #include "tink/aead/aead_config.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
 #include "tink/util/test_matchers.h"
@@ -73,7 +74,8 @@ TEST(TinkFipsTest, CompatibilityChecksWithBoringCrypto) {
   Registry::Reset();
 
   // Tink is not build in FIPS mode, but the FIPS mode is enabled at runtime.
-  EXPECT_THAT(crypto::tink::RestrictToFips(), IsOk());
+  EXPECT_THAT(internal::RegistryImpl::GlobalInstance().RestrictToFipsIfEmpty(),
+              IsOk());
 
   // In FIPS only mode compatibility checks should disallow algorithms
   // with the FipsCompatibility::kNone flag.
@@ -96,7 +98,8 @@ TEST(TinkFipsTest, CompatibilityChecksWithoutBoringCrypto) {
   Registry::Reset();
 
   // Tink is not build in FIPS mode, but the FIPS mode is enabled at runtime.
-  EXPECT_THAT(crypto::tink::RestrictToFips(), IsOk());
+  EXPECT_THAT(internal::RegistryImpl::GlobalInstance().RestrictToFipsIfEmpty(),
+              IsOk());
 
   // In FIPS only mode compatibility checks should disallow algorithms
   // with the FipsCompatibility::kNone flag.
@@ -110,19 +113,6 @@ TEST(TinkFipsTest, CompatibilityChecksWithoutBoringCrypto) {
       StatusIs(absl::StatusCode::kInternal));
 
   internal::UnSetFipsRestricted();
-}
-
-TEST(TinkFipsTest, FailIfRegistryNotEmpty) {
-  if (internal::kUseOnlyFips) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
-  Registry::Reset();
-  internal::UnSetFipsRestricted();
-
-  EXPECT_THAT(AeadConfig::Register(), IsOk());
-  EXPECT_THAT(crypto::tink::RestrictToFips(),
-              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

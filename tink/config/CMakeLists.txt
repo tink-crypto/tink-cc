@@ -216,6 +216,7 @@ tink_cc_test(
     tink::core::registry
     tink::aead::aead_config
     tink::internal::fips_utils
+    tink::internal::registry_impl
     tink::util::status
     tink::util::test_matchers
 )

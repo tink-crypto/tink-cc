@@ -120,11 +120,7 @@ SecretData Message::SerializeAsSecretData() const {
     auto serialization_state = SerializationState(buffer, &result_crc);
     ABSL_QCHECK(Serialize(serialization_state));
     ABSL_QCHECK(serialization_state.GetBuffer().empty());
-#ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-    return util::SecretDataFromStringView(out.AsStringView());
-#else
     return SecretData(std::move(out), result_crc);
-#endif
   });
 }
 

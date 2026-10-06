@@ -82,15 +82,10 @@ bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
     return false;
   }
   absl::string_view secret_bytes = serialized.RemainingData().substr(0, length);
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  value_ = util::SecretDataFromStringView(secret_bytes);
-  serialized.Advance(length);
-#else
   value_ = CallWithCoreDumpProtection([&]() {
     absl::crc32c_t crc = serialized.AdvanceAndGetCrc(length);
     return SecretData(secret_bytes, crc);
   });
-#endif
   return true;
 }
 bool SecretDataField::SerializeWithTagInto(
@@ -111,12 +106,8 @@ bool SecretDataField::SerializeWithTagInto(
     return false;
   }
   SafeMemCopy(out.GetBuffer().data(), data_view.data(), data_view.size());
-#ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  out.Advance(data_view.size());
-#else
   CallWithCoreDumpProtection(
       [&]() { out.AdvanceWithCrc(data_view.size(), value.GetCrc32c()); });
-#endif
   return true;
 }
 size_t SecretDataField::GetSerializedSizeIncludingTag() const {

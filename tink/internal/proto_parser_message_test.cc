@@ -329,8 +329,6 @@ TEST(MessageTest, OneofCopyConstructorWorks) {
   EXPECT_EQ(msg1.my_oneof_1_case(), OneofTestMessageTP::kFieldA);
 }
 
-#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
-
 // Serializes a varint using a wrong CRC.
 absl::Status SerializeVarintWrongCrc(uint64_t value,
                                      SerializationState& output) {
@@ -422,8 +420,6 @@ TEST(MessageTest, SerializeAsSecretDataFails) {
   EXPECT_THAT(buffer.ValidateCrc32c(), Not(IsOk()));
 }
 
-#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
-
 TEST(MessageTest, SerializeAsSecretDataSuccess) {
   OuterStruct s;
   s.mutable_inner_member()->set_uint32_member_1(0x23);
@@ -433,11 +429,9 @@ TEST(MessageTest, SerializeAsSecretDataSuccess) {
       util::SecretDataAsStringView(buffer),
       Eq(FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
                                           FieldWithNumber(2).IsVarint(0x7a)})));
-#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
   EXPECT_THAT(buffer.ValidateCrc32c(), IsOk());
   EXPECT_THAT(buffer.GetCrc32c(),
               Eq(absl::ComputeCrc32c(s.SerializeAsString())));
-#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
 }
 
 TEST(MessageTest, SerializeAsStringSuccess) {
@@ -490,11 +484,9 @@ TEST(MessageTest, ParseFromStringWithCrcSuccess) {
   EXPECT_THAT(s.inner_member_field.value().uint32_member_2(), Eq(0x7a));
   EXPECT_THAT(util::SecretDataAsStringView(s.secret_data_field.value()),
               Eq("secret_data"));
-#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
   EXPECT_THAT(s.secret_data_field.value().ValidateCrc32c(), IsOk());
   EXPECT_THAT(s.secret_data_field.value().GetCrc32c(),
               Eq(absl::ComputeCrc32c("secret_data")));
-#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
 }
 
 TEST(MessageTest, SerializeAndParse) {
@@ -502,11 +494,9 @@ TEST(MessageTest, SerializeAndParse) {
   s.mutable_inner_member()->set_uint32_member_1(0x23);
   s.mutable_inner_member()->set_uint32_member_2(0x7a);
   SecretData bytes = s.SerializeAsSecretData();
-#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
   EXPECT_THAT(bytes.ValidateCrc32c(), IsOk());
   EXPECT_THAT(bytes.GetCrc32c(),
               Eq(absl::ComputeCrc32c(s.SerializeAsString())));
-#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
   s.Clear();
   EXPECT_THAT(s.inner_member().uint32_member_1(), Eq(0));
   EXPECT_THAT(s.inner_member().uint32_member_2(), Eq(0));

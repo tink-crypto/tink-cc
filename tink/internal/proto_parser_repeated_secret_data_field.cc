@@ -46,15 +46,10 @@ bool RepeatedSecretDataField::ConsumeIntoMember(ParsingState& parsing_state) {
     return false;
   }
   absl::string_view data = parsing_state.RemainingData().substr(0, length);
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  parsing_state.Advance(length);
-  value_.push_back(crypto::tink::util::SecretDataFromStringView(data));
-#else
   CallWithCoreDumpProtection([&]() {
     absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(length);
     value_.push_back(SecretData(data, crc));
   });
-#endif
   return true;
 }
 
@@ -75,14 +70,10 @@ bool RepeatedSecretDataField::SerializeWithTagInto(
     }
     SafeMemCopy(serialization_state.GetBuffer().data(), data_view.data(),
                 data_view.size());
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-    serialization_state.Advance(data_view.size());
-#else
     CallWithCoreDumpProtection([&]() {
       serialization_state.AdvanceWithCrc(data_view.size(),
                                          secret_data.GetCrc32c());
     });
-#endif
   }
   return true;
 }

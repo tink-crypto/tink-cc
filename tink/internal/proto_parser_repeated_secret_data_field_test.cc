@@ -50,11 +50,7 @@ using ::testing::SizeIs;
 using ::testing::Test;
 
 absl::crc32c_t GetCrc32c(const SecretData& secret_data) {
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  return absl::ComputeCrc32c(SecretDataAsStringView(secret_data));
-#else
   return secret_data.GetCrc32c();
-#endif
 }
 
 TEST(RepeatedSecretDataField, ClearWorks) {
@@ -196,8 +192,6 @@ TEST(RepeatedSecretDataField, SerializeMultipleSecretDatasWorks) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(13));
 }
 
-#if not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-
 // Tests that when serializing a SecretDataField, the resulting CRC
 // is computed from the CRC of the field (and not the actual data).
 TEST(RepeatedSecretDataField, SerializeCrcIsComputedFromCrc) {
@@ -220,8 +214,6 @@ TEST(RepeatedSecretDataField, SerializeCrcIsComputedFromCrc) {
       crc,
       Eq(absl::ComputeCrc32c(absl::StrCat(HexDecodeOrDie("0a11"), text2))));
 }
-
-#endif  // not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 
 TEST(RepeatedSecretDataField, SerializeTooSmallBuffer) {
   RepeatedSecretDataField field(1);

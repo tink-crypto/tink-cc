@@ -131,11 +131,7 @@ inline absl::string_view SecretDataAsStringView(
 
 inline ::crypto::tink::SecretData SecretDataFromStringView(
     absl::string_view secret) {
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  return {secret.begin(), secret.end()};
-#else
   return internal::SecretDataInternalClassFromStringView(secret);
-#endif
 }
 
 inline ::crypto::tink::SecretData SecretDataFromSpan(
@@ -146,55 +142,24 @@ inline ::crypto::tink::SecretData SecretDataFromSpan(
 
 namespace internal {
 
-// This function is needed within Tink because the open source implementation
-// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
-// SecretData(buffer);
 inline crypto::tink::SecretData AsSecretData(
     const ::crypto::tink::internal::SecretBuffer& buffer) {
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  return SecretDataFromStringView(buffer.AsStringView());
-#else
   return crypto::tink::SecretData(buffer);
-#endif
 }
 
-// This function is needed within Tink because the open source implementation
-// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
-// SecretData(std::move(buffer));
 inline crypto::tink::SecretData AsSecretData(
     ::crypto::tink::internal::SecretBuffer&& buffer) {
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  // This needs to make a copy since we cannot give a vector an already
-  // allocated slice.
-  return SecretDataFromStringView(buffer.AsStringView());
-#else
   return crypto::tink::SecretData(std::move(buffer));
-#endif
 }
 
-// This function is needed within Tink because the open source implementation
-// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
-// data.AsSecretBuffer()
 inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
     const crypto::tink::SecretData& data) {
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  return crypto::tink::internal::SecretBuffer(SecretDataAsStringView(data));
-#else
   return data.AsSecretBuffer();
-#endif
 }
 
-// This function is needed within Tink because the open source implementation
-// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
-// std::move(data).AsSecretBuffer()
 inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
     crypto::tink::SecretData&& data) {
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  // This needs to make a copy since we cannot steal the data from a vector
-  return crypto::tink::internal::SecretBuffer(SecretDataAsStringView(data));
-#else
   return std::move(data).AsSecretBuffer();
-#endif
 }
 
 }  // namespace internal

@@ -16,7 +16,6 @@
 
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -57,12 +56,8 @@ class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
                                  absl::string_view message_suffix)
       : rsa_(std::move(rsa)),
         sig_hash_(sig_hash),
-        has_output_prefix_(!output_prefix.empty()),
-        legacy_message_suffix_(message_suffix) {
-    if (has_output_prefix_) {
-      absl::c_copy(output_prefix, output_prefix_data_.begin());
-    }
-  }
+        output_prefix_(output_prefix),
+        legacy_message_suffix_(message_suffix) {}
 
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override;
@@ -73,8 +68,7 @@ class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
 
   const internal::SslUniquePtr<RSA> rsa_;
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
-  std::array<char, internal::kOutputPrefixSize> output_prefix_data_;
-  const bool has_output_prefix_;
+  const std::string output_prefix_;
   const std::string legacy_message_suffix_;
 };
 
@@ -104,17 +98,15 @@ absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
 
 absl::Status RsaSsaPkcs1VerifyBoringSslImpl::Verify(
     absl::string_view signature, absl::string_view data) const {
-  if (!has_output_prefix_) {
+  if (output_prefix_.empty()) {
     return VerifyWithoutPrefix(signature, data);
   }
-  absl::string_view output_prefix(
-      output_prefix_data_.data(),
-      has_output_prefix_ ? output_prefix_data_.size() : 0);
-  if (!absl::StartsWith(signature, output_prefix)) {
+  if (!absl::StartsWith(signature, output_prefix_)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
-  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix), data);
+  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
+                             data);
 }
 
 }  // namespace

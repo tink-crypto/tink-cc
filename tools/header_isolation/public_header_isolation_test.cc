@@ -312,7 +312,6 @@
 #include "tink/public_key_verify_factory.h"
 #include "tink/random_access_stream.h"
 #include "tink/registry.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"

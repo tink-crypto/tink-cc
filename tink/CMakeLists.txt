@@ -772,14 +772,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME restricted_big_integer
-  SRCS
-    restricted_big_integer.h
-  DEPS
-    absl::status
-)
-
-tink_cc_library(
   NAME ec_point
   SRCS
     ec_point.h

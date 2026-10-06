@@ -784,12 +784,6 @@ cc_library(
 )
 
 cc_library(
-    name = "restricted_big_integer",
-    hdrs = ["restricted_big_integer.h"],
-    deps = ["@abseil-cpp//absl/status"],
-)
-
-cc_library(
     name = "ec_point",
     hdrs = ["ec_point.h"],
     deps = [":big_integer"],

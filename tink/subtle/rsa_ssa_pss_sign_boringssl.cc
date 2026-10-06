@@ -156,8 +156,9 @@ class RsaSsaPssSignBoringSslImpl : public RsaSsaPssSignBoringSsl {
 absl::StatusOr<std::string> RsaSsaPssSignBoringSslImpl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
-  ABSL_ASSIGN_OR_RETURN(std::string digest,
-                        internal::ComputeHash(data, *sig_hash_));
+  ABSL_ASSIGN_OR_RETURN(
+      std::string digest,
+      internal::ComputeHash({data, message_suffix_}, *sig_hash_));
 
   ABSL_ASSIGN_OR_RETURN(
       std::string signature, internal::CallWithCoreDumpProtection([&]() {
@@ -169,20 +170,15 @@ absl::StatusOr<std::string> RsaSsaPssSignBoringSslImpl::SignWithoutPrefix(
 
 absl::StatusOr<std::string> RsaSsaPssSignBoringSslImpl::Sign(
     absl::string_view data) const {
-  absl::StatusOr<std::string> signature_without_prefix_;
-  if (message_suffix_.empty()) {
-    signature_without_prefix_ = SignWithoutPrefix(data);
-  } else {
-    signature_without_prefix_ =
-        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
-  }
-  if (!signature_without_prefix_.ok()) {
-    return signature_without_prefix_.status();
+  absl::StatusOr<std::string> signature_without_prefix;
+  signature_without_prefix = SignWithoutPrefix(data);
+  if (!signature_without_prefix.ok()) {
+    return signature_without_prefix.status();
   }
   if (output_prefix_.empty()) {
-    return signature_without_prefix_;
+    return signature_without_prefix;
   }
-  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+  return absl::StrCat(output_prefix_, *signature_without_prefix);
 }
 
 }  // namespace

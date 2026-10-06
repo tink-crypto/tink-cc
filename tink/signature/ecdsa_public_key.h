@@ -76,6 +76,8 @@ class EcdsaPublicKey final : public SignaturePublicKey {
   };
 
  private:
+  friend class EcdsaPrivateKey;
+
   explicit EcdsaPublicKey(const EcdsaParameters& parameters,
                           const EcPoint& public_point,
                           std::optional<int> id_requirement,

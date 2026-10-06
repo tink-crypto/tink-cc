@@ -74,6 +74,8 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
   };
 
  private:
+  friend class EcdsaPublicKey;
+
   explicit EcdsaPrivateKey(const EcdsaPublicKey& public_key,
                            RestrictedData private_key_value)
       : public_key_(public_key),

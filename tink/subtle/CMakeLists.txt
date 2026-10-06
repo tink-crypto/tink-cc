@@ -1714,3 +1714,81 @@ tink_cc_test(
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_test(
+  NAME rsa_ssa_pkcs1_sign_boringssl_benchmark
+  SRCS
+    rsa_ssa_pkcs1_sign_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
+    gmock
+    absl::absl_check
+    absl::statusor
+    benchmark::benchmark_main
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pkcs1_verify_boringssl_benchmark
+  SRCS
+    rsa_ssa_pkcs1_verify_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
+    tink::subtle::rsa_ssa_pkcs1_verify_boringssl
+    gmock
+    absl::absl_check
+    absl::status
+    absl::statusor
+    benchmark::benchmark_main
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pss_sign_boringssl_benchmark
+  SRCS
+    rsa_ssa_pss_sign_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::rsa_ssa_pss_sign_boringssl
+    gmock
+    absl::absl_check
+    absl::statusor
+    benchmark::benchmark_main
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pss_verify_boringssl_benchmark
+  SRCS
+    rsa_ssa_pss_verify_boringssl_benchmark.cc
+  DEPS
+    tink::subtle::rsa_ssa_pss_sign_boringssl
+    tink::subtle::rsa_ssa_pss_verify_boringssl
+    gmock
+    absl::absl_check
+    absl::status
+    absl::statusor
+    benchmark::benchmark_main
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

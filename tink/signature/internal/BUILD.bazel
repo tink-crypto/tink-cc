@@ -136,29 +136,6 @@ cc_library(
 )
 
 cc_library(
-    name = "config_fips_140_2",
-    srcs = ["config_fips_140_2.cc"],
-    hdrs = ["config_fips_140_2.h"],
-    include_prefix = "tink/signature/internal",
-    deps = [
-        "//tink:configuration",
-        "//tink/internal:configuration_impl",
-        "//tink/internal:fips_utils",
-        "//tink/signature:ecdsa_sign_key_manager",
-        "//tink/signature:ecdsa_verify_key_manager",
-        "//tink/signature:public_key_sign_wrapper",
-        "//tink/signature:public_key_verify_wrapper",
-        "//tink/signature:rsa_ssa_pkcs1_sign_key_manager",
-        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
-        "//tink/signature:rsa_ssa_pss_sign_key_manager",
-        "//tink/signature:rsa_ssa_pss_verify_key_manager",
-        "//tink/util:status",
-        "@abseil-cpp//absl/memory",
-        "@abseil-cpp//absl/status",
-    ],
-)
-
-cc_library(
     name = "ml_dsa_verify_boringssl",
     srcs = ["ml_dsa_verify_boringssl.cc"],
     hdrs = ["ml_dsa_verify_boringssl.h"],
@@ -175,38 +152,6 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@boringssl//:crypto",
-    ],
-)
-
-cc_test(
-    name = "config_fips_140_2_test",
-    srcs = ["config_fips_140_2_test.cc"],
-    deps = [
-        ":config_fips_140_2",
-        ":key_gen_config_2026",
-        "//tink:configuration",
-        "//tink:key_gen_configuration",
-        "//tink:key_status",
-        "//tink:keyset_handle",
-        "//tink:public_key_sign",
-        "//tink:public_key_verify",
-        "//tink/internal:configuration_impl",
-        "//tink/internal:fips_utils",
-        "//tink/internal:key_type_info_store",
-        "//tink/internal:keyset_wrapper_store",
-        "//tink/signature:ecdsa_verify_key_manager",
-        "//tink/signature:ed25519_parameters",
-        "//tink/signature:ed25519_verify_key_manager",
-        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
-        "//tink/signature:rsa_ssa_pss_verify_key_manager",
-        "//tink/signature/internal/testing:ecdsa_test_vectors",
-        "//tink/signature/internal/testing:ed25519_test_vectors",
-        "//tink/signature/internal/testing:rsa_ssa_pkcs1_test_vectors",
-        "//tink/signature/internal/testing:rsa_ssa_pss_test_vectors",
-        "//tink/signature/internal/testing:signature_test_vector",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@abseil-cpp//absl/status:statusor",
-        "@googletest//:gtest_main",
     ],
 )
 

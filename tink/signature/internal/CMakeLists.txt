@@ -26,28 +26,6 @@ tink_cc_library(
     tink::util::statusor
 )
 
-tink_cc_library(
-  NAME config_fips_140_2
-  SRCS
-    config_fips_140_2.cc
-    config_fips_140_2.h
-  DEPS
-    absl::memory
-    absl::status
-    tink::core::configuration
-    tink::internal::configuration_impl
-    tink::internal::fips_utils
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::ecdsa_verify_key_manager
-    tink::signature::public_key_sign_wrapper
-    tink::signature::public_key_verify_wrapper
-    tink::signature::rsa_ssa_pkcs1_sign_key_manager
-    tink::signature::rsa_ssa_pkcs1_verify_key_manager
-    tink::signature::rsa_ssa_pss_sign_key_manager
-    tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::util::status
-)
-
 tink_cc_test(
   NAME ecdsa_raw_sign_boringssl_test
   SRCS
@@ -65,40 +43,6 @@ tink_cc_test(
     tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::subtle::ecdsa_verify_boringssl
-)
-
-tink_cc_test(
-  NAME config_fips_140_2_test
-  SRCS
-    config_fips_140_2_test.cc
-  DEPS
-    tink::signature::internal::config_fips_140_2
-    tink::signature::internal::key_gen_config_2026
-    gmock
-    absl::status_matchers
-    absl::statusor
-    tink::core::configuration
-    tink::core::key_gen_configuration
-    tink::core::key_status
-    tink::core::keyset_handle
-    tink::core::public_key_sign
-    tink::core::public_key_verify
-    tink::internal::configuration_impl
-    tink::internal::fips_utils
-    tink::internal::key_type_info_store
-    tink::internal::keyset_wrapper_store
-    tink::signature::ecdsa_verify_key_manager
-    tink::signature::ed25519_parameters
-    tink::signature::ed25519_verify_key_manager
-    tink::signature::rsa_ssa_pkcs1_verify_key_manager
-    tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::signature::internal::testing::ecdsa_test_vectors
-    tink::signature::internal::testing::ed25519_test_vectors
-    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
-    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
-    tink::signature::internal::testing::signature_test_vector
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(

@@ -61,8 +61,8 @@ if (TINK_BUILD_TESTS)
   else()
     http_archive(
       NAME googletest
-      URL https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz
-      SHA256 65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
+      URL https://github.com/google/googletest/releases/download/v1.18.0/googletest-1.18.0.tar.gz
+      SHA256 6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
     )
   endif()
 
@@ -104,8 +104,8 @@ endif()
 if (NOT TINK_USE_INSTALLED_ABSEIL)
   http_archive(
     NAME abseil
-    URL https://github.com/abseil/abseil-cpp/releases/download/20260526.0/abseil-cpp-20260526.0.tar.gz
-    SHA256 6e1aee535473414164bf83e4ebc40240dec71a4701f8a642d906e95bea1aea0c
+    URL https://github.com/abseil/abseil-cpp/releases/download/20260817.0/abseil-cpp-20260817.0.tar.gz
+    SHA256 f7e05179df39c45434cad433f5783840bb3788ef322976f9138bc6b72b3a107d
   )
 else()
   # This is everything that needs to be done here. Abseil already defines its
@@ -121,11 +121,11 @@ if (NOT TARGET crypto)
     # We save the old value to restore it later
     set(INITIAL_BUILD_TESTING ${BUILD_TESTING})
     set(BUILD_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
-    # Release from 2026-08-13.
+    # Release from 2026-09-29.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/releases/download/0.20260813.0/boringssl-0.20260813.0.tar.gz
-      SHA256 37e23cb9a5fa54f01b07cadd653cebc1d1b235945439a6c334fea58ea47b5b0a
+      URL https://github.com/google/boringssl/releases/download/0.20260929.0/boringssl-0.20260929.0.tar.gz
+      SHA256 04da9ba0664e0a7f028e961c38d604f2cc6dac852a84ca0e51dc1fa051d4c8fe
     )
     # Restore the previous value of BUILD_TESTING
     set(BUILD_TESTING ${INITIAL_BUILD_TESTING} CACHE BOOL "Tink dependency override" FORCE)
@@ -150,8 +150,8 @@ if (NOT TINK_USE_INSTALLED_PROTOBUF)
 
   http_archive(
     NAME protobuf
-    URL https://github.com/protocolbuffers/protobuf/releases/download/v30.2/protobuf-30.2.zip
-    SHA256 6544e5ceec7f29d00397193360435ca8b3c4e843de3cf5698a99d36b72d65342
+    URL https://github.com/protocolbuffers/protobuf/releases/download/v36.2/protobuf-36.2.zip
+    SHA256 ec61440905b46d42dc58ce7b490f0469263a21f93407f741c97e9b6b09533eb6
   )
 else()
   find_package(Protobuf REQUIRED CONFIG)

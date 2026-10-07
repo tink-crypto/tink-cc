@@ -1574,12 +1574,6 @@ cc_library(
 )
 
 cc_library(
-    name = "secret_data_with_crc",
-    hdrs = ["secret_data_with_crc.h"],
-    deps = ["//tink/util:secret_data_internal_class"],
-)
-
-cc_library(
     name = "output_prefix_util",
     hdrs = ["output_prefix_util.h"],
 )

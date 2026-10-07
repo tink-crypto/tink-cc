@@ -1296,8 +1296,14 @@ cc_library(
     hdrs = ["secret_data.h"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tink/internal:sanitizing_allocator",
-        "//tink/util:secret_data_internal_class",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:endian",
+        "//tink/internal:safe_stringops",
+        "//tink/internal:secret_buffer",
+        "@abseil-cpp//absl/crc:crc32c",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
     ],
 )
 
@@ -1308,7 +1314,11 @@ cc_test(
         ":secret_data",
         "//tink/internal:secret_buffer",
         "//tink/util:secret_data",
+        "@abseil-cpp//absl/crc:crc32c",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
         "@google_benchmark//:benchmark_main",
         "@googletest//:gtest_main",
     ],

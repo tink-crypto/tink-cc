@@ -450,7 +450,6 @@ tink_cc_library(
     absl::span
     crypto
     tink::core::secret_data
-    tink::util::secret_data_internal_class
     tink::internal::call_with_core_dump_protection
     tink::internal::safe_stringops
     tink::internal::sanitizing_allocator
@@ -560,19 +559,4 @@ tink_cc_test(
     tink::util::test_matchers
     gmock
     absl::status
-)
-
-tink_cc_library(
-  NAME secret_data_internal_class
-  SRCS
-    secret_data_internal_class.h
-  DEPS
-    absl::crc32c
-    absl::status
-    absl::string_view
-    absl::span
-    tink::internal::call_with_core_dump_protection
-    tink::internal::endian
-    tink::internal::safe_stringops
-    tink::internal::secret_buffer
 )

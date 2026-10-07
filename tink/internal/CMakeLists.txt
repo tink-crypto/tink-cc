@@ -1552,14 +1552,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME secret_data_with_crc
-  SRCS
-    secret_data_with_crc.h
-  DEPS
-    tink::util::secret_data_internal_class
-)
-
-tink_cc_library(
   NAME output_prefix_util
   SRCS
     output_prefix_util.h

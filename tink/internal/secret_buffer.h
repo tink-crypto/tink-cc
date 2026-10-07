@@ -119,7 +119,7 @@ class SecretBuffer {
       return;
     }
     // Add 4 extra bytes to store the CRC32C of the data. This is going to be
-    // populated in SecretDataInternalClass.
+    // populated in SecretData.
     ABSL_CHECK_LE(new_cap,
                   std::numeric_limits<size_t>::max() - sizeof(uint32_t))
         << "SecretBuffer::reserve new_cap out of bounds";

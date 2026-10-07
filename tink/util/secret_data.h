@@ -31,8 +31,7 @@
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
 #include "tink/internal/secret_buffer.h"
-#include "tink/secret_data.h"
-#include "tink/util/secret_data_internal_class.h"  // IWYU pragma: export
+#include "tink/secret_data.h"  // IWYU pragma: export
 
 namespace crypto {
 namespace tink {

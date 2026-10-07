@@ -17,10 +17,19 @@
 #ifndef TINK_SECRET_DATA_H_
 #define TINK_SECRET_DATA_H_
 
-#include <vector>  // IWYU pragma: keep
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <utility>
 
-#include "tink/internal/sanitizing_allocator.h"  // IWYU pragma: keep
-#include "tink/util/secret_data_internal_class.h"  // IWYU pragma: export
+#include "absl/crc/crc32c.h"
+#include "absl/status/status.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/endian.h"
+#include "tink/internal/safe_stringops.h"
+#include "tink/internal/secret_buffer.h"
 
 namespace crypto {
 namespace tink {
@@ -28,6 +37,10 @@ namespace tink {
 // Stores secret (sensitive) data and makes sure it's marked as such and
 // destroyed in a safe way.
 // This should be the first choice when handling key/key derived values.
+//
+// Within Google, we achieve this by hooking into core dump collection.
+// In OSS Tink, SecretData overwrites the memory contents when the destructor
+// is invoked.
 //
 // Example:
 // class MyCryptoPrimitive {
@@ -38,7 +51,170 @@ namespace tink {
 //  private:
 //   const crypto::tink::SecretData key_;
 // }
-class SecretData;
+class SecretData {
+ public:
+  using value_type = uint8_t;
+  using const_reference = const uint8_t&;
+  using const_iterator = const uint8_t*;
+
+  static constexpr size_t kMaxCount = std::numeric_limits<size_t>::max();
+
+  SecretData() = default;
+  explicit SecretData(size_t size, uint8_t value = 0)
+      : SecretData(crypto::tink::internal::SecretBuffer(size, value)) {}
+  SecretData(const SecretData& other) { *this = other; }
+  SecretData(SecretData&& other) noexcept { *this = std::move(other); }
+  SecretData& operator=(const SecretData& other) {
+    if (this != &other) {
+      buffer_ = other.buffer_;
+      if (!buffer_.empty()) {
+        crypto::tink::internal::SafeMemCopy(crc32c_data(), other.crc32c_data(),
+                                            sizeof(uint32_t));
+      }
+    }
+    return *this;
+  }
+  SecretData& operator=(SecretData&& other) noexcept {
+    swap(other);
+    return *this;
+  }
+
+  explicit SecretData(absl::string_view view)
+      : SecretData(crypto::tink::internal::SecretBuffer(view)) {}
+
+  explicit SecretData(absl::Span<const uint8_t> span)
+      : SecretData(crypto::tink::internal::SecretBuffer(span)) {}
+
+  explicit SecretData(crypto::tink::internal::SecretBuffer other)
+      : buffer_(std::move(other)) {
+    if (!buffer_.empty()) {
+      crypto::tink::internal::CallWithCoreDumpProtection([this] {
+        absl::crc32c_t crc = absl::ComputeCrc32c(AsStringView());
+        crypto::tink::internal::StoreBigEndian32(crc32c_data(),
+                                                 static_cast<uint32_t>(crc));
+      });
+    }
+  }
+
+  // Constructs a SecretData with the given `view` and `crc32c`.
+  //
+  // NOTE:
+  //  * This is not core-dump-safe as the CRC32C may leak; it should only be
+  //  called within a CallWithCoreDumpProtection.
+  //  * if `view` is empty, `crc32c` is ignored and always considered to be 0.
+  explicit SecretData(absl::string_view view, absl::crc32c_t crc32c)
+      : SecretData(crypto::tink::internal::SecretBuffer(view), crc32c) {}
+  // Constructs a SecretData with the given `span` and `crc32c`.
+  //
+  // NOTE:
+  //  * This is not core-dump-safe as the CRC32C may leak; it should only be
+  //  called within a CallWithCoreDumpProtection.
+  //  * if `span` is empty, `crc32c` is ignored and always considered to be 0.
+  explicit SecretData(absl::Span<const uint8_t> span, absl::crc32c_t crc32c)
+      : SecretData(crypto::tink::internal::SecretBuffer(span), crc32c) {}
+  // Constructs a SecretData with the given `buffer` and `crc32c`.
+  //
+  // NOTE:
+  //  * This is not core-dump-safe as the CRC32C may leak; it should only be
+  //  called within a CallWithCoreDumpProtection.
+  //  * if `buffer` is empty, `crc32c` is ignored and always considered to be 0.
+  explicit SecretData(crypto::tink::internal::SecretBuffer buffer,
+                      absl::crc32c_t crc32c)
+      : buffer_(std::move(buffer)) {
+    if (!buffer_.empty()) {
+      crypto::tink::internal::StoreBigEndian32(crc32c_data(),
+                                               static_cast<uint32_t>(crc32c));
+    }
+  }
+
+  ~SecretData() = default;
+
+  const uint8_t& operator[](size_t pos) const { return buffer_[pos]; }
+
+  const uint8_t* data() const { return buffer_.data(); }
+
+  const_iterator begin() const { return buffer_.data(); }
+  const_iterator end() const { return buffer_.data() + buffer_.size(); }
+
+  absl::string_view AsStringView() const { return buffer_.AsStringView(); }
+
+  bool empty() const { return buffer_.empty(); }
+  size_t size() const { return buffer_.size(); }
+  size_t max_size() const { return kMaxCount; }
+  size_t capacity() const { return buffer_.capacity(); }
+  void clear() { buffer_.clear(); }
+
+  void swap(SecretData& other) noexcept {
+    using std::swap;
+    swap(buffer_, other.buffer_);
+  }
+
+  crypto::tink::internal::SecretBuffer AsSecretBuffer() const& {
+    return buffer_;
+  }
+
+  crypto::tink::internal::SecretBuffer AsSecretBuffer() && {
+    crypto::tink::internal::SecretBuffer res = std::move(buffer_);
+    return res;
+  }
+
+  // Returns the CRC32C of the data.
+  //
+  // NOTE: This function is not core-dump-safe as the CRC32C may leak. It should
+  // only be called within a CallWithCoreDumpProtection.
+  absl::crc32c_t GetCrc32c() const {
+    if (crc32c_data() == nullptr) {
+      return absl::crc32c_t(0);
+    }
+    return absl::crc32c_t(
+        crypto::tink::internal::LoadBigEndian32(crc32c_data()));
+  }
+
+  absl::Status ValidateCrc32c() const {
+    return crypto::tink::internal::CallWithCoreDumpProtection([this]() {
+      absl::crc32c_t crc = absl::ComputeCrc32c(buffer_.AsStringView());
+      absl::crc32c_t stored_crc = GetCrc32c();
+      if (crc != stored_crc) {
+        return absl::DataLossError("CRC32C mismatch");
+      }
+      return absl::OkStatus();
+    });
+  }
+
+  friend void swap(SecretData& lhs, SecretData& rhs) noexcept { lhs.swap(rhs); }
+
+ private:
+  uint8_t* crc32c_data() {
+    if (buffer_.empty()) {
+      return nullptr;
+    }
+    return buffer_.data() + buffer_.size();
+  }
+  const uint8_t* crc32c_data() const {
+    if (buffer_.empty()) {
+      return nullptr;
+    }
+    return buffer_.data() + buffer_.size();
+  }
+
+  crypto::tink::internal::SecretBuffer buffer_;
+};
+
+// Compares the first `size()` bytes + the CRC32C. Ignores the capacity of the
+// buffers.
+inline bool operator==(const SecretData& lhs, const SecretData& rhs) {
+  if (lhs.empty() && rhs.empty()) {
+    return true;
+  }
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+  return crypto::tink::internal::SafeCryptoMemEquals(
+      lhs.data(), rhs.data(), lhs.size() + sizeof(uint32_t));
+}
+inline bool operator!=(const SecretData& lhs, const SecretData& rhs) {
+  return !(lhs == rhs);
+}
 
 }  // namespace tink
 }  // namespace crypto

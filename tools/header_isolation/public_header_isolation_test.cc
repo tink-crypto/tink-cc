@@ -454,7 +454,6 @@
 #include "tink/util/ostream_output_stream.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_data_internal_class.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"

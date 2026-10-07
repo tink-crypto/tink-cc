@@ -1274,8 +1274,14 @@ tink_cc_library(
   SRCS
     secret_data.h
   DEPS
-    tink::internal::sanitizing_allocator
-    tink::util::secret_data_internal_class
+    absl::crc32c
+    absl::status
+    absl::string_view
+    absl::span
+    tink::internal::call_with_core_dump_protection
+    tink::internal::endian
+    tink::internal::safe_stringops
+    tink::internal::secret_buffer
   PUBLIC
 )
 
@@ -1286,7 +1292,11 @@ tink_cc_test(
   DEPS
     tink::core::secret_data
     gmock
+    absl::crc32c
+    absl::status_matchers
+    absl::strings
     absl::string_view
+    absl::span
     benchmark::benchmark_main
     tink::internal::secret_buffer
     tink::util::secret_data

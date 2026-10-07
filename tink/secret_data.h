@@ -20,7 +20,7 @@
 #include <vector>  // IWYU pragma: keep
 
 #include "tink/internal/sanitizing_allocator.h"  // IWYU pragma: keep
-#include "tink/util/secret_data_internal_class.h"
+#include "tink/util/secret_data_internal_class.h"  // IWYU pragma: export
 
 namespace crypto {
 namespace tink {
@@ -38,8 +38,7 @@ namespace tink {
 //  private:
 //   const crypto::tink::SecretData key_;
 // }
-
-using SecretData = ::crypto::tink::util::internal::SecretDataInternalClass;
+class SecretData;
 
 }  // namespace tink
 }  // namespace crypto

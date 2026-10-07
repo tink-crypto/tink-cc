@@ -33,11 +33,7 @@
 namespace crypto {
 namespace tink {
 
-namespace util {
-namespace internal {
-class SecretDataInternalClass;
-}  // namespace internal
-}  // namespace util
+class SecretData;
 
 namespace internal {
 
@@ -194,7 +190,7 @@ class SecretBuffer {
   bool operator!=(const SecretBuffer& other) const { return !(*this == other); }
 
  private:
-  friend class ::crypto::tink::util::internal::SecretDataInternalClass;
+  friend class ::crypto::tink::SecretData;
 
   size_t buffer_size() const { return capacity_ + sizeof(uint32_t); }
 

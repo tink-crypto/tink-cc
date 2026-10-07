@@ -33,6 +33,9 @@ namespace crypto {
 namespace tink {
 namespace util {
 namespace internal {
+
+using SecretDataInternalClass = ::crypto::tink::SecretData;
+
 namespace {
 
 using ::absl_testing::IsOk;
@@ -77,7 +80,7 @@ TEST(SecretDataInternalClassTest, ValueCtor) {
 
 TEST(SecretDataInternalClassTest, CopyCtor) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   SecretDataInternalClass other = data;
   ASSERT_THAT(data.size(), Eq(3));
   EXPECT_THAT(data.ValidateCrc32c(), IsOk());
@@ -90,7 +93,7 @@ TEST(SecretDataInternalClassTest, CopyCtor) {
 
 TEST(SecretDataInternalClassTest, CopyAssign) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   SecretDataInternalClass other;
   EXPECT_TRUE(other.empty());
   other = data;
@@ -113,7 +116,7 @@ TEST(SecretDataInternalClassTest, CopyAssign) {
 
 TEST(SecretDataInternalClassTest, MoveCtor) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   EXPECT_THAT(data.ValidateCrc32c(), IsOk());
   EXPECT_THAT(data.GetCrc32c(), Eq(kTestDataCrc));
   SecretDataInternalClass other = std::move(data);
@@ -127,7 +130,7 @@ TEST(SecretDataInternalClassTest, MoveCtor) {
 
 TEST(SecretDataInternalClassTest, MoveAssign) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   EXPECT_THAT(data.ValidateCrc32c(), IsOk());
   EXPECT_THAT(data.GetCrc32c(), Eq(kTestDataCrc));
   SecretDataInternalClass other;
@@ -143,7 +146,7 @@ TEST(SecretDataInternalClassTest, MoveAssign) {
 
 TEST(SecretDataInternalClassTest, AsStringView) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   EXPECT_THAT(data.AsStringView(), Eq(kTestData));
   EXPECT_THAT(data.ValidateCrc32c(), IsOk());
   EXPECT_THAT(data.GetCrc32c(), Eq(kTestDataCrc));
@@ -151,7 +154,7 @@ TEST(SecretDataInternalClassTest, AsStringView) {
 
 TEST(SecretDataInternalClassTest, Iteration) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   EXPECT_THAT(data.size(), Eq(3));
   size_t i = 0;
   for (auto it = data.begin(); it != data.end(); ++it, ++i) {
@@ -168,9 +171,9 @@ TEST(SecretDataInternalClassTest, Iteration) {
 
 TEST(SecretDataInternalClassTest, Swap) {
   SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
+      SecretDataInternalClass(kTestData);
   SecretDataInternalClass other =
-      SecretDataInternalClassFromStringView(kNextTestData);
+      SecretDataInternalClass(kNextTestData);
   using std::swap;
   swap(data, other);
   for (size_t i = 0; i < kNextTestData.size(); ++i) {
@@ -187,7 +190,7 @@ TEST(SecretDataInternalClassTest, Swap) {
 
 TEST(SecretDataInternalClassDeathTest, IterationOutOfBounds) {
   SecretDataInternalClass secret_data =
-      SecretDataInternalClassFromStringView("Hello world!");
+      SecretDataInternalClass("Hello world!");
   EXPECT_DEATH(secret_data[secret_data.size()],
                testing::HasSubstr("operator[] pos out of bounds"));
   EXPECT_DEATH(secret_data[secret_data.size() + 1],
@@ -197,21 +200,21 @@ TEST(SecretDataInternalClassDeathTest, IterationOutOfBounds) {
   // R-value overload.
   {
     SecretDataInternalClass secret_data =
-        SecretDataInternalClassFromStringView("Hello world!");
+        SecretDataInternalClass("Hello world!");
     size_t secret_data_size = secret_data.size();
     EXPECT_DEATH(std::move(secret_data)[secret_data_size],
                  testing::HasSubstr("operator[] pos out of bounds"));
   }
   {
     SecretDataInternalClass secret_data =
-        SecretDataInternalClassFromStringView("Hello world!");
+        SecretDataInternalClass("Hello world!");
     size_t secret_data_size = secret_data.size();
     EXPECT_DEATH(std::move(secret_data)[secret_data_size + 1],
                  testing::HasSubstr("operator[] pos out of bounds"));
   }
   {
     SecretDataInternalClass secret_data =
-        SecretDataInternalClassFromStringView("Hello world!");
+        SecretDataInternalClass("Hello world!");
     EXPECT_DEATH(std::move(secret_data)[-1],
                  testing::HasSubstr("operator[] pos out of bounds"));
   }

@@ -131,7 +131,7 @@ inline absl::string_view SecretDataAsStringView(
 
 inline ::crypto::tink::SecretData SecretDataFromStringView(
     absl::string_view secret) {
-  return internal::SecretDataInternalClassFromStringView(secret);
+  return ::crypto::tink::SecretData(secret);
 }
 
 inline ::crypto::tink::SecretData SecretDataFromSpan(

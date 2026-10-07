@@ -464,9 +464,7 @@
 
 // Evaluates to if ( + 0) != -999 if BoringSSL macro redefinition occurs.
 #if (OPENSSL_IS_BORINGSSL + 0) != -999
-#error "Public Tink headers must not leak BoringSSL symbols into downstream binaries."
+#error "Public Tink headers must not leak BoringSSL symbols."
 #endif
 
-int main() {
-  return 0;
-}
+int main() { return 0; }

@@ -417,8 +417,10 @@ cc_test(
 cc_test(
     name = "rsa_util_test",
     srcs = ["rsa_util_test.cc"],
+    tags = ["fips"],
     deps = [
         ":bn_util",
+        ":fips_utils",
         ":rsa_util",
         ":ssl_unique_ptr",
         "//tink:secret_data",

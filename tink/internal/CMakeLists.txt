@@ -372,6 +372,7 @@ tink_cc_test(
     rsa_util_test.cc
   DEPS
     tink::internal::bn_util
+    tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     gmock

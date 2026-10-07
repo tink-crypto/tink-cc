@@ -207,13 +207,6 @@ TEST_F(SignatureConfigTest, RegisterNonFipsTemplates) {
   non_fips_key_templates.push_back(SignatureKeyTemplates::Ed25519());
   non_fips_key_templates.push_back(
       SignatureKeyTemplates::Ed25519WithRawOutput());
-  // 4096-bit RSA is not validated.
-  non_fips_key_templates.push_back(
-      SignatureKeyTemplates::RsaSsaPkcs14096Sha512F4());
-  non_fips_key_templates.push_back(
-      SignatureKeyTemplates::RsaSsaPss4096Sha384Sha384F4());
-  non_fips_key_templates.push_back(
-      SignatureKeyTemplates::RsaSsaPss4096Sha512Sha512F4());
 
   for (auto key_template : non_fips_key_templates) {
     EXPECT_THAT(

@@ -340,21 +340,6 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, TestAllowedFipsModuli) {
               IsOk());
 }
 
-TEST_F(RsaSsaPkcs1VerifyBoringSslTest, TestRestrictedFipsModuli) {
-  if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
-  }
-
-  internal::RsaPublicKey public_key;
-  // Any arbitrary 4096-bit modulus is sufficient here.
-  public_key.n = std::string(512, '\x80');
-  public_key.e = "\x01\x00\x01";
-  internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
-
-  EXPECT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(public_key, params).status(),
-              StatusIs(absl::StatusCode::kInternal));
-}
-
 using RsaSsaPkcs1VerifyBoringSslTestVectorTest =
     testing::TestWithParam<internal::SignatureTestVector>;
 

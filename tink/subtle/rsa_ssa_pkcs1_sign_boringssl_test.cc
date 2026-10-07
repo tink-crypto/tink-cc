@@ -199,21 +199,6 @@ TEST_F(RsaPkcs1SignBoringsslTest, TestFipsFailWithoutBoringCrypto) {
               StatusIs(absl::StatusCode::kInternal));
 }
 
-TEST_F(RsaPkcs1SignBoringsslTest, TestRestrictedFipsModuli) {
-  if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
-  }
-
-  internal::RsaPrivateKey private_key;
-  // Any arbitrary 4096-bit modulus is sufficient here.
-  private_key.n = std::string(512, '\x80');
-  private_key.e = "\x01\x00\x01";
-
-  internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
-  EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(private_key, params).status(),
-              StatusIs(absl::StatusCode::kInternal));
-}
-
 TEST_F(RsaPkcs1SignBoringsslTest, TestAllowedFipsModuli) {
   if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
@@ -244,7 +229,8 @@ TEST_P(RsaSsaPkcs1SignBoringSSLTestVectorTest, ComputeSignatureInTestVector) {
   ASSERT_THAT(typed_key, NotNull());
   if (internal::IsFipsModeEnabled() &&
       typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
     // Users wants FIPS but modulus size doesn't support FIPS
     ASSERT_THAT(RsaSsaPkcs1SignBoringSsl::New(*typed_key), Not(IsOk()));
     return;

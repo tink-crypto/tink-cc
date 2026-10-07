@@ -303,7 +303,7 @@ std::vector<Fips1402TestCase> AllowedSignatureParameters() {
                          EcdsaParameters::SignatureEncoding::kIeeeP1363,
                          EcdsaParameters::Variant::kTink)),
       // RSA-SSA-PKCS1: modulus size x hash. Variant is spread across rows. In
-      // FIPS mode, Tink only accepts 2048 and 3072 bit moduli.
+      // FIPS mode, Tink only accepts 2048, 3072 and 4096 bit moduli.
       MakeTestCase("RsaSsaPkcs1_2048_Sha256_Tink",
                    RsaSsaPkcs1(2048, RsaSsaPkcs1Parameters::HashType::kSha256,
                                RsaSsaPkcs1Parameters::Variant::kTink)),
@@ -322,6 +322,15 @@ std::vector<Fips1402TestCase> AllowedSignatureParameters() {
       MakeTestCase("RsaSsaPkcs1_3072_Sha512_Raw",
                    RsaSsaPkcs1(3072, RsaSsaPkcs1Parameters::HashType::kSha512,
                                RsaSsaPkcs1Parameters::Variant::kNoPrefix)),
+      MakeTestCase("RsaSsaPkcs1_4096_Sha256_Tink",
+                   RsaSsaPkcs1(4096, RsaSsaPkcs1Parameters::HashType::kSha256,
+                               RsaSsaPkcs1Parameters::Variant::kTink)),
+      MakeTestCase("RsaSsaPkcs1_4096_Sha384_Raw",
+                   RsaSsaPkcs1(4096, RsaSsaPkcs1Parameters::HashType::kSha384,
+                               RsaSsaPkcs1Parameters::Variant::kNoPrefix)),
+      MakeTestCase("RsaSsaPkcs1_4096_Sha512_Tink",
+                   RsaSsaPkcs1(4096, RsaSsaPkcs1Parameters::HashType::kSha512,
+                               RsaSsaPkcs1Parameters::Variant::kTink)),
       // RSA-SSA-PSS: modulus size x hash. Salt length (0 or hash length) and
       // variant are spread across rows.
       MakeTestCase("RsaSsaPss_2048_Sha256_Salt32_Tink",
@@ -341,6 +350,15 @@ std::vector<Fips1402TestCase> AllowedSignatureParameters() {
                              RsaSsaPssParameters::Variant::kTink)),
       MakeTestCase("RsaSsaPss_3072_Sha512_Salt0_Tink",
                    RsaSsaPss(3072, RsaSsaPssParameters::HashType::kSha512, 0,
+                             RsaSsaPssParameters::Variant::kTink)),
+      MakeTestCase("RsaSsaPss_4096_Sha256_Salt32_Raw",
+                   RsaSsaPss(4096, RsaSsaPssParameters::HashType::kSha256, 32,
+                             RsaSsaPssParameters::Variant::kNoPrefix)),
+      MakeTestCase("RsaSsaPss_4096_Sha384_Salt0_Tink",
+                   RsaSsaPss(4096, RsaSsaPssParameters::HashType::kSha384, 0,
+                             RsaSsaPssParameters::Variant::kTink)),
+      MakeTestCase("RsaSsaPss_4096_Sha512_Salt64_Tink",
+                   RsaSsaPss(4096, RsaSsaPssParameters::HashType::kSha512, 64,
                              RsaSsaPssParameters::Variant::kTink)),
   };
 }
@@ -397,21 +415,11 @@ std::vector<Fips1402TestCase> DeniedPrfParameters() {
 
 std::vector<Fips1402TestCase> DeniedSignatureParameters() {
   return {
-      // RSA with a 4096 bit modulus. FIPS 140-2 relies on FIPS 186-4, which
-      // only specifies RSA key generation for 2048 and 3072 bit moduli (see
-      // `ValidateRsaModulusSize` in internal/rsa_util.cc and
-      // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf).
-      //
       // There is no row for RSA moduli smaller than 2048 bits (e.g. 1024,
       // which FIPS 186-4 does allow): Tink rejects them in all modes, so
       // `RsaSsaPkcs1Parameters` and `RsaSsaPssParameters` cannot be built with
       // such sizes.
-      MakeTestCase("RsaSsaPkcs1_4096_Sha256_Tink",
-                   RsaSsaPkcs1(4096, RsaSsaPkcs1Parameters::HashType::kSha256,
-                               RsaSsaPkcs1Parameters::Variant::kTink)),
-      MakeTestCase("RsaSsaPss_4096_Sha256_Salt32_Raw",
-                   RsaSsaPss(4096, RsaSsaPssParameters::HashType::kSha256, 32,
-                             RsaSsaPssParameters::Variant::kNoPrefix)),
+      //
       // Key types which are not part of the FIPS configs.
       MakeTestCase("Ed25519_Tink", Ed25519Parameters::Create(
                                        Ed25519Parameters::Variant::kTink)),

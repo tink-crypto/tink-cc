@@ -233,23 +233,6 @@ TEST_F(RsaPssSignBoringsslTest, TestFipsFailWithoutBoringCrypto) {
               StatusIs(absl::StatusCode::kInternal));
 }
 
-TEST_F(RsaPssSignBoringsslTest, TestRestrictedFipsModuli) {
-  if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
-  }
-
-  // Create a random 4096-bit modulus and 65537 public exponent.
-  internal::RsaPrivateKey private_key;
-  private_key.n = std::string(512, '\x80');
-  private_key.e = "\x01\x00\x01";
-
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA256,
-                                   /*salt_length=*/32};
-  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(private_key, params).status(),
-              StatusIs(absl::StatusCode::kInternal));
-}
-
 TEST_F(RsaPssSignBoringsslTest, TestAllowedFipsModuli) {
   if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";

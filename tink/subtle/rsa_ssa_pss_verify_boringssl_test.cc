@@ -381,27 +381,6 @@ TEST(RsaSsaPssVerifyBoringSslTest, TestAllowedFipsModuli) {
               IsOk());
 }
 
-TEST(RsaSsaPssVerifyBoringSslTest, TestRestrictedFipsModuli) {
-  if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
-  }
-
-  // In FIPS mode, 4096-bit RSA keys cannot be constructed using Tink's Key
-  // builder (which validates FIPS restrictions and rejects 4096-bit keys).
-  // Since RsaSsaPssVerifyBoringSsl validates the modulus size directly on the
-  // input struct, we supply a 4096-bit (512-byte) modulus directly.
-  internal::RsaPublicKey public_key;
-  public_key.n = std::string(512, '\x80');
-  public_key.e = "\x01\x00\x01";
-  internal::RsaSsaPssParams params = {
-      /*sig_hash=*/HashType::SHA256,
-      /*mgf1_hash=*/HashType::SHA256,
-      /*salt_length=*/32,
-  };
-  EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(public_key, params).status(),
-              StatusIs(absl::StatusCode::kInternal));
-}
-
 using RsaSsaPssVerifyBoringSslTestVectorTest =
     testing::TestWithParam<internal::SignatureTestVector>;
 

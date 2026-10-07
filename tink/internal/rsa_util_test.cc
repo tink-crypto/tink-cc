@@ -35,6 +35,7 @@
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
@@ -260,8 +261,21 @@ TEST(RsaUtilTest, ValidateRsaModulusSize) {
   EXPECT_THAT(ValidateRsaModulusSize(2048), IsOk());
   EXPECT_THAT(ValidateRsaModulusSize(3072), IsOk());
   EXPECT_THAT(ValidateRsaModulusSize(4096), IsOk());
-  EXPECT_THAT(ValidateRsaModulusSize(1024), Not(IsOk()));
+  EXPECT_THAT(ValidateRsaModulusSize(1024),
+              StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(ValidateRsaModulusSize(2047), Not(IsOk()));
+  if (internal::IsFipsModeEnabled()) {
+    EXPECT_THAT(ValidateRsaModulusSize(2560),
+                StatusIs(absl::StatusCode::kInternal));
+    EXPECT_THAT(ValidateRsaModulusSize(6144),
+                StatusIs(absl::StatusCode::kInternal));
+    EXPECT_THAT(ValidateRsaModulusSize(8192),
+                StatusIs(absl::StatusCode::kInternal));
+  } else {
+    EXPECT_THAT(ValidateRsaModulusSize(2560), IsOk());
+    EXPECT_THAT(ValidateRsaModulusSize(6144), IsOk());
+    EXPECT_THAT(ValidateRsaModulusSize(8192), IsOk());
+  }
 }
 
 TEST(RsaUtilTest, ValidateRsaPublicExponent) {

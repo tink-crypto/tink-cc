@@ -62,16 +62,15 @@ absl::Status ValidateRsaModulusSize(size_t modulus_size) {
                      " only modulus size >= 2048-bit is supported"));
   }
 
-  // In FIPS only mode we check here if the modulus is 2048- or 3072-bit, as
-  // these are the only size which is covered by the FIPS validation and
-  // supported by Tink. See
-  // https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/3318
+  // In FIPS only mode we make sure that the modulus size is one of the
+  // sizes for which Tink has FIPS-validated key types.
   if (IsFipsModeEnabled()) {
-    if (modulus_size != 2048 && modulus_size != 3072) {
+    if (modulus_size != 2048 && modulus_size != 3072 && modulus_size != 4096) {
       return absl::Status(
           absl::StatusCode::kInternal,
-          absl::StrCat("Modulus size is ", modulus_size,
-                       " only modulus size 2048 or 3072 is supported."));
+          absl::StrCat(
+              "Modulus size is ", modulus_size,
+              " only modulus sizes 2048, 3072 or 4096 are supported."));
     }
   }
 

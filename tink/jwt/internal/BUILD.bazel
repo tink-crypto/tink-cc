@@ -1972,6 +1972,7 @@ cc_library(
     name = "jwt_ml_dsa_signature_config",
     srcs = ["jwt_ml_dsa_signature_config.cc"],
     hdrs = ["jwt_ml_dsa_signature_config.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":raw_jwt_ml_dsa_sign_key_manager",
         ":raw_jwt_ml_dsa_verify_key_manager",

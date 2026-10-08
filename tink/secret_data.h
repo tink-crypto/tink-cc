@@ -45,8 +45,7 @@ namespace tink {
 // Example:
 // class MyCryptoPrimitive {
 //  public:
-//   MyCryptoPrimitive(absl::string_view key_value) :
-//     key_(crypto::tink::util::SecretDataFromStringView(key_value)) {}
+//   MyCryptoPrimitive(absl::string_view key_value) : key_(key_value) {}
 //   [...]
 //  private:
 //   const crypto::tink::SecretData key_;

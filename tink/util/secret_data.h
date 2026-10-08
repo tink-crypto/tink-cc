@@ -52,15 +52,11 @@ using SecretData [[deprecated(
     "Use ::crypto::tink::SecretData instead")]] ABSL_REFACTOR_INLINE =
     ::crypto::tink::SecretData;
 
-// Constant-time comparison for SecretData
-// SecretDataEquals should be used instead of regular operator== in most cases.
+// Constant-time comparison for SecretData.
+[[deprecated("Use SecretData::operator== instead")]] ABSL_REFACTOR_INLINE
 inline bool SecretDataEquals(const crypto::tink::SecretData& lhs,
                              const crypto::tink::SecretData& rhs) {
-  if (lhs.size() != rhs.size()) {
-    return false;
-  }
-  return ::crypto::tink::internal::SafeCryptoMemEquals(lhs.data(), rhs.data(),
-                                                       lhs.size());
+  return lhs == rhs;
 }
 
 // Stores secret (sensitive) object and makes sure it's marked as such and
@@ -123,41 +119,54 @@ SecretUniquePtr<T> MakeSecretUniquePtr(Args&&... args) {
 }
 
 // Convenience conversion functions
-inline absl::string_view SecretDataAsStringView(
+[[deprecated(
+    "Use ::crypto::tink::SecretData::AsStringView instead")]]
+ABSL_REFACTOR_INLINE inline absl::string_view SecretDataAsStringView(
     const ::crypto::tink::SecretData& secret) {
-  return {reinterpret_cast<const char*>(secret.data()), secret.size()};
+  return secret.AsStringView();
 }
 
-inline ::crypto::tink::SecretData SecretDataFromStringView(
+[[deprecated(
+    "Use the ::crypto::tink::SecretData constructor instead")]]
+ABSL_REFACTOR_INLINE inline ::crypto::tink::SecretData SecretDataFromStringView(
     absl::string_view secret) {
   return ::crypto::tink::SecretData(secret);
 }
 
-inline ::crypto::tink::SecretData SecretDataFromSpan(
+[[deprecated(
+    "Use the ::crypto::tink::SecretData constructor instead")]]
+ABSL_REFACTOR_INLINE inline ::crypto::tink::SecretData SecretDataFromSpan(
     absl::Span<const uint8_t> span) {
-  return SecretDataFromStringView(absl::string_view(
-      reinterpret_cast<const char*>(span.data()), span.size()));
+  return ::crypto::tink::SecretData(span);
 }
 
 namespace internal {
 
-inline crypto::tink::SecretData AsSecretData(
+[[deprecated(
+    "Use the ::crypto::tink::SecretData constructor instead")]]
+ABSL_REFACTOR_INLINE inline ::crypto::tink::SecretData AsSecretData(
     const ::crypto::tink::internal::SecretBuffer& buffer) {
-  return crypto::tink::SecretData(buffer);
+  return ::crypto::tink::SecretData(buffer);
 }
 
-inline crypto::tink::SecretData AsSecretData(
+[[deprecated(
+    "Use the ::crypto::tink::SecretData constructor instead")]]
+ABSL_REFACTOR_INLINE inline ::crypto::tink::SecretData AsSecretData(
     ::crypto::tink::internal::SecretBuffer&& buffer) {
-  return crypto::tink::SecretData(std::move(buffer));
+  return ::crypto::tink::SecretData(std::move(buffer));
 }
 
-inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
-    const crypto::tink::SecretData& data) {
+[[deprecated(
+    "Use ::crypto::tink::SecretData::AsSecretBuffer instead")]]
+ABSL_REFACTOR_INLINE inline ::crypto::tink::internal::SecretBuffer
+AsSecretBuffer(const ::crypto::tink::SecretData& data) {
   return data.AsSecretBuffer();
 }
 
-inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
-    crypto::tink::SecretData&& data) {
+[[deprecated(
+    "Use ::crypto::tink::SecretData::AsSecretBuffer instead")]]
+ABSL_REFACTOR_INLINE inline ::crypto::tink::internal::SecretBuffer
+AsSecretBuffer(::crypto::tink::SecretData&& data) {
   return std::move(data).AsSecretBuffer();
 }
 

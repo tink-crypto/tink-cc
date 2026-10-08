@@ -932,7 +932,6 @@ absl::StatusOr<std::string> EcSignatureDerToIeee(const EC_GROUP* group,
                                                  absl::string_view der_sig) {
   const size_t kFieldSizeInBytes = SslEcFieldSizeInBytes(group);
 
-#ifdef OPENSSL_IS_BORINGSSL
   // `ECDSA_SIG_from_bytes` rejects malformed DER and trailing bytes.
   SslUniquePtr<ECDSA_SIG> ecdsa(ECDSA_SIG_from_bytes(
       reinterpret_cast<const uint8_t*>(der_sig.data()), der_sig.size()));
@@ -940,16 +939,6 @@ absl::StatusOr<std::string> EcSignatureDerToIeee(const EC_GROUP* group,
     return absl::Status(absl::StatusCode::kInternal,
                         "ECDSA_SIG_from_bytes failed");
   }
-#else
-  const uint8_t* der_ptr = reinterpret_cast<const uint8_t*>(der_sig.data());
-  // Note: d2i_ECDSA_SIG is deprecated in BoringSSL, but it isn't in OpenSSL.
-  SslUniquePtr<ECDSA_SIG> ecdsa(
-      d2i_ECDSA_SIG(nullptr, &der_ptr, der_sig.size()));
-  if (ecdsa == nullptr || der_ptr != reinterpret_cast<const uint8_t*>(
-                                         der_sig.data() + der_sig.size())) {
-    return absl::Status(absl::StatusCode::kInternal, "d2i_ECDSA_SIG failed");
-  }
-#endif
 
   const BIGNUM* r_bn;
   const BIGNUM* s_bn;

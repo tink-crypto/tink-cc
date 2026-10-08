@@ -691,9 +691,10 @@ TEST_P(EcUtilWycheproofTest, EcSignatureIeeeToDer) {
       ASSERT_THAT(der_encoded, IsOk());
 
       // Make sure we can reconstruct the IEEE format: [ s || r ].
-      SslUniquePtr<ECDSA_SIG> ecdsa_sig(ECDSA_SIG_from_bytes(
-          reinterpret_cast<const uint8_t*>(der_encoded->data()),
-          der_encoded->size()));
+      const uint8_t* der_sig_data_ptr =
+          reinterpret_cast<const uint8_t*>(der_encoded->data());
+      SslUniquePtr<ECDSA_SIG> ecdsa_sig(d2i_ECDSA_SIG(
+          /*out=*/nullptr, &der_sig_data_ptr, der_encoded->size()));
       ASSERT_THAT(ecdsa_sig, Not(IsNull()));
       // Owned by OpenSSL/BoringSSL.
       const BIGNUM* r;

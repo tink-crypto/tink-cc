@@ -6,7 +6,6 @@
 [cmake_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-gcp-ubuntu.svg
 [cmake_openssl_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-openssl-gcp-ubuntu.svg
 [cmake_openssl3_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-openssl3-gcp-ubuntu.svg
-[cmake_installed_deps_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-installed_deps-gcp-ubuntu.svg
 
 <!-- macOS --->
 
@@ -25,7 +24,6 @@ Bazel                        | [![Bazel_GcpUbuntu][bazel_gcp_ubuntu]](#)        
 CMake                        | [![CMake_GcpUbuntu][cmake_gcp_ubuntu]](#)                     | [![CMake_MacOs][cmake_macos]](#)                 | [![CMake_GcpWindows][cmake_gcp_windows]](#)
 CMake w/ OpenSSL             | [![CMake_OpenSsl_GcpUbuntu][cmake_openssl_gcp_ubuntu]](#)     | [![CMake_OpenSsl_MacOs][cmake_openssl_macos]](#) | N/A
 CMake w/ OpenSSL3            | [![CMake_OpenSsl3_GcpUbuntu][cmake_openssl3_gcp_ubuntu]](#)   | N/A                                              | N/A
-CMake w/ Installed Deps      | [![CMake_Installed_Deps][cmake_installed_deps_gcp_ubuntu]](#) | N/A                                              | N/A
 
 
 > [!NOTE] We plan to change Tink to always require BoringSSL as a backend

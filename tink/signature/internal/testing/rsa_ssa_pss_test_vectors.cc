@@ -32,7 +32,6 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -1012,13 +1011,11 @@ const std::vector<SignatureTestVector>& CreateRsaSsaPssTestVectors() {
   static const absl::NoDestructor<std::vector<SignatureTestVector>>
       test_vectors([] {
         std::vector<SignatureTestVector> vectors = {
-            CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-            CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
-            CreateTestVector6(), CreateTestVector7()};
-
-        if (!internal::IsFipsModeEnabled()) {
-          vectors.push_back(Create4096BitTestVector());
-        }
+            CreateTestVector0(),      CreateTestVector1(),
+            CreateTestVector2(),      CreateTestVector3(),
+            CreateTestVector4(),      CreateTestVector5(),
+            CreateTestVector6(),      CreateTestVector7(),
+            Create4096BitTestVector()};
         return vectors;
       }());
   return *test_vectors;

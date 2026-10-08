@@ -351,7 +351,8 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
   ASSERT_THAT(typed_key, NotNull());
   if (internal::IsFipsModeEnabled() &&
       typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
     // Users wants FIPS but modulus size doesn't support FIPS
     ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
                 Not(IsOk()));
@@ -378,7 +379,8 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
   ASSERT_THAT(typed_key, NotNull());
   if (internal::IsFipsModeEnabled() &&
       typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
     // Users wants FIPS but modulus size doesn't support FIPS
     ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
                 Not(IsOk()));

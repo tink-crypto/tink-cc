@@ -10,7 +10,6 @@ tink_cc_library(
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
-    absl::memory
     absl::statusor
     absl::strings
     absl::optional
@@ -19,7 +18,6 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::fips_utils
     tink::internal::util
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
@@ -72,7 +70,6 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::fips_utils
     tink::internal::util
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key

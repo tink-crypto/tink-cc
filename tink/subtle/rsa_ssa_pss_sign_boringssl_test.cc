@@ -265,7 +265,8 @@ TEST_P(RsaSsaPssSignBoringSSLTestVectorTest, FreshSignatureInTestVector) {
   ASSERT_THAT(typed_key, NotNull());
   if (internal::IsFipsModeEnabled() &&
       typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
     // Users wants FIPS but modulus size doesn't support FIPS
     ASSERT_THAT(RsaSsaPssSignBoringSsl::New(*typed_key), Not(IsOk()));
     return;

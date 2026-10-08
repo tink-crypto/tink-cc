@@ -26,13 +26,11 @@
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -992,7 +990,7 @@ RsaSsaPkcs1TestVectorMap CreateRsaSsaPkcs1TestVectorsMap() {
   // This map is used to look up a single test vector for a configuration; as
   // such, having one item per configuration suffices. By convention, the first
   // defined test vector per configuration is used.
-  RsaSsaPkcs1TestVectorMap vectors{
+  return RsaSsaPkcs1TestVectorMap{
       {{2048, RsaSsaPkcs1Parameters::HashType::kSha256,
         RsaSsaPkcs1Parameters::Variant::kNoPrefix},
        &CreateTestVector0()},
@@ -1014,19 +1012,15 @@ RsaSsaPkcs1TestVectorMap CreateRsaSsaPkcs1TestVectorsMap() {
       {{2048, RsaSsaPkcs1Parameters::HashType::kSha384,
         RsaSsaPkcs1Parameters::Variant::kNoPrefix},
        &CreateTestVector5()},
-  };
-  if (!internal::IsFipsModeEnabled()) {
-    vectors[{4096, RsaSsaPkcs1Parameters::HashType::kSha384,
-             RsaSsaPkcs1Parameters::Variant::kNoPrefix}] =
-        &Create4096BitsTestVector();
-  }
-  return vectors;
+      {{4096, RsaSsaPkcs1Parameters::HashType::kSha384,
+        RsaSsaPkcs1Parameters::Variant::kNoPrefix},
+       &Create4096BitsTestVector()}};
 }
 
 }  // namespace
 
 std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
-  std::vector<SignatureTestVector> test_vectors = {
+  return {
       CreateTestVector0(),
       CreateTestVector1(),
       CreateTestVector2(),
@@ -1036,12 +1030,9 @@ std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
       CreateWycheproof3072BitsTestVector(),
       CreateTestVector5(),
       Create2048BitsTestVector(),
+      Create4096BitsTestVector(),
+      Create4096BitsTestVector2(),
   };
-  if (!internal::IsFipsModeEnabled()) {
-    test_vectors.push_back(Create4096BitsTestVector());
-    test_vectors.push_back(Create4096BitsTestVector2());
-  }
-  return test_vectors;
 }
 
 const SignatureTestVector& GetRsaSsaPkcs1TestVector(

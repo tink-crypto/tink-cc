@@ -1829,11 +1829,9 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::raw_jwt_ml_dsa_sign_key_manager
     tink::jwt::internal::raw_jwt_ml_dsa_verify_key_manager
-    absl::memory
     absl::status
     crypto
     tink::core::registry
-    tink::internal::fips_utils
     tink::jwt::jwt_ml_dsa_proto_serialization
     tink::signature::public_key_sign_wrapper
     tink::signature::public_key_verify_wrapper

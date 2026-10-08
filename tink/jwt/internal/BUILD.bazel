@@ -1977,11 +1977,9 @@ cc_library(
         ":raw_jwt_ml_dsa_sign_key_manager",
         ":raw_jwt_ml_dsa_verify_key_manager",
         "//tink:registry",
-        "//tink/internal:fips_utils",
         "//tink/jwt:jwt_ml_dsa_proto_serialization",
         "//tink/signature:public_key_sign_wrapper",
         "//tink/signature:public_key_verify_wrapper",
-        "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@boringssl//:crypto",
     ],
@@ -1990,6 +1988,7 @@ cc_library(
 cc_test(
     name = "jwt_ml_dsa_signature_config_test",
     srcs = ["jwt_ml_dsa_signature_config_test.cc"],
+    tags = ["fips"],
     deps = [
         ":jwt_ml_dsa_signature_config",
         "//tink:keyset_handle",

@@ -50,7 +50,8 @@ class JwtSignatureConfigTest : public ::testing::Test {
 
 TEST_F(JwtSignatureConfigTest, GetPrimitiveFromJwtMlDsaParameters) {
   if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
-    GTEST_SKIP() << "JWT ML-DSA not supported in FIPS-only mode";
+    GTEST_SKIP()
+        << "JWT ML-DSA in FIPS mode requires BoringSSL with FIPS mode enabled.";
   }
   if (!IsBoringSsl()) {
     GTEST_SKIP() << "JWT ML-DSA requires BoringSSL.";

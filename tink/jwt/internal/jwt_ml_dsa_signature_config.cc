@@ -16,10 +16,10 @@
 
 #include "tink/jwt/internal/jwt_ml_dsa_signature_config.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#include "tink/internal/fips_utils.h"
 #include "tink/jwt/internal/raw_jwt_ml_dsa_sign_key_manager.h"
 #include "tink/jwt/internal/raw_jwt_ml_dsa_verify_key_manager.h"
 #include "tink/jwt/jwt_ml_dsa_proto_serialization.h"
@@ -44,11 +44,6 @@ absl::Status JwtMlDsaSignatureRegisterForPython() {
       std::make_unique<PublicKeyVerifyWrapper>());
   if (!status.ok()) {
     return status;
-  }
-
-  // TODO: b/485221516 - Move JWT ML-DSA key type above this check.
-  if (IsFipsModeEnabled()) {
-    return absl::OkStatus();
   }
 
   // Tink implements PQC signatures with BoringSSL, not OpenSSL.

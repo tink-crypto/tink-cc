@@ -58,13 +58,6 @@ class CleartextKeysetHandle {
   static absl::StatusOr<google::crypto::tink::Keyset> GetKeysetOrError(
       const KeysetHandle& handle, SecretKeyAccessToken token);
 
-  // Creates a KeysetHandle object for the given 'keyset'.
-  // Will return an invalid KeysetHandle on error.
-  [[deprecated(
-      "Use GetKeysetHandleOrError instead, as failure will be an option in the "
-      "future")]] static std::unique_ptr<KeysetHandle>
-  GetKeysetHandle(const google::crypto::tink::Keyset& keyset);
-
   // Returns a Keyset-proto from the given 'keyset_handle'.
   [[deprecated(
       "Use GetKeysetOrError instead, as failure will be an option in the "

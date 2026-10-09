@@ -147,26 +147,6 @@ TEST_F(CleartextKeysetHandleTest, GetKeysetOrError) {
   EXPECT_TRUE(message_differencer.Compare(*got_keyset, keyset)) << differences;
 }
 
-TEST_F(CleartextKeysetHandleTest, GetKeysetHandle) {
-  Keyset keyset;
-  Keyset::Key key;
-  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
-             KeyData::SYMMETRIC, &keyset);
-  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
-            KeyData::SYMMETRIC, &keyset);
-  keyset.set_primary_key_id(42);
-
-  std::unique_ptr<KeysetHandle> handle =
-      CleartextKeysetHandle::GetKeysetHandle(keyset);
-  ASSERT_NE(handle, nullptr);
-  std::string differences;
-  MessageDifferencer message_differencer;
-  message_differencer.ReportDifferencesToString(&differences);
-  EXPECT_TRUE(message_differencer.Compare(
-      CleartextKeysetHandle::GetKeyset(*handle), keyset))
-      << differences;
-}
-
 TEST_F(CleartextKeysetHandleTest, GetKeyset) {
   Keyset keyset;
   Keyset::Key key;

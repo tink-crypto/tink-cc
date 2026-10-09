@@ -99,14 +99,6 @@ absl::StatusOr<Keyset> CleartextKeysetHandle::GetKeysetOrError(
 }
 
 // static
-std::unique_ptr<KeysetHandle> CleartextKeysetHandle::GetKeysetHandle(
-    const Keyset& keyset) {
-  std::unique_ptr<KeysetHandle> handle =
-      absl::WrapUnique(new KeysetHandle(util::SecretProto<Keyset>(keyset)));
-  return handle;
-}
-
-// static
 const Keyset& CleartextKeysetHandle::GetKeyset(
     const KeysetHandle& keyset_handle) {
   return keyset_handle.get_keyset();

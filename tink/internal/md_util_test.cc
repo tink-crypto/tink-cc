@@ -127,6 +127,14 @@ TEST_P(MdUtilComputeHashSamplesTest, ComputesHash) {
   std::string expected_digest =
       test::HexDecodeOrDie(params.expected_digest_hex);
   EXPECT_THAT(ComputeHash(data, **hasher), IsOkAndHolds(expected_digest));
+  EXPECT_THAT(ComputeHash(std::vector<absl::string_view>{data}, **hasher),
+              IsOkAndHolds(expected_digest));
+  EXPECT_THAT(ComputeHash({"", data}, **hasher), IsOkAndHolds(expected_digest));
+  EXPECT_THAT(ComputeHash({data, ""}, **hasher), IsOkAndHolds(expected_digest));
+  EXPECT_THAT(ComputeHash({data.substr(0, data.size() / 2),
+                           data.substr(data.size() / 2)},
+                          **hasher),
+              IsOkAndHolds(expected_digest));
 }
 
 INSTANTIATE_TEST_SUITE_P(MdUtilComputeHashSamplesTests,

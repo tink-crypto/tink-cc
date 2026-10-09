@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "openssl/evp.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -99,19 +100,25 @@ absl::StatusOr<std::string> ComputeHash(
     return absl::InternalError("Could not create EVP_MD_CTX.");
   }
   if (1 != EVP_DigestInit_ex(md_ctx.get(), &hasher, /*impl=*/nullptr)) {
-    return absl::InternalError("Could not initialize digest.");
+    return absl::InternalError(absl::StrCat(
+        "Openssl internal error initializing digest: ",
+        internal::GetSslErrors()));
   }
   for (const auto& piece : pieces) {
-    auto piece_nonnull = EnsureStringNonNull(piece);
-    if (1 != EVP_DigestUpdate(md_ctx.get(), piece_nonnull.data(),
-                              piece_nonnull.size())) {
-      return absl::InternalError("Could not update digest.");
+    if (piece.empty()) {
+      continue;
+    }
+    if (1 != EVP_DigestUpdate(md_ctx.get(), piece.data(), piece.size())) {
+      return absl::InternalError(
+          absl::StrCat("Openssl internal error updating digest: ",
+                       internal::GetSslErrors()));
     }
   }
   if (1 != EVP_DigestFinal_ex(md_ctx.get(),
                               reinterpret_cast<uint8_t*>(digest.data()),
                               &digest_length)) {
-    return absl::InternalError("Could not compute digest.");
+    return absl::InternalError(absl::StrCat(
+        "Openssl internal error computing digest: ", internal::GetSslErrors()));
   }
   digest.resize(digest_length);
   return digest;

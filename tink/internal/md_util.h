@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "openssl/evp.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/status.h"

@@ -448,6 +448,7 @@ tink_cc_library(
     tink::internal::util
     absl::status
     absl::strings
+    absl::span
     crypto
     tink::subtle::common_enums
     tink::subtle::subtle_util

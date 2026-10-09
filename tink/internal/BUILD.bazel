@@ -244,6 +244,7 @@ cc_library(
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:span",
         "@boringssl//:crypto",
     ],
 )

@@ -121,6 +121,12 @@ if (NOT TARGET crypto)
     # We save the old value to restore it later
     set(INITIAL_BUILD_TESTING ${BUILD_TESTING})
     set(BUILD_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
+
+    # Prefix BoringSSL's symbols so they cannot collide with an OpenSSL (or
+    # another BoringSSL) linked into the same binary. Tink's own sources are
+    # compiled with the matching define in Tink's top-level CMakeLists.txt.
+    set(BORINGSSL_PREFIX "bssl_tink")
+
     # Release from 2026-09-29.
     http_archive(
       NAME boringssl
@@ -130,6 +136,10 @@ if (NOT TARGET crypto)
     # Restore the previous value of BUILD_TESTING
     set(BUILD_TESTING ${INITIAL_BUILD_TESTING} CACHE BOOL "Tink dependency override" FORCE)
     # BoringSSL targets do not carry include directory info, this fixes it.
+    # TODO: b/537605175 - Make `crypto` a PRIVATE dependency of Tink targets
+    # once no public Tink header includes OpenSSL headers. Until then, this
+    # include directory propagates to every target that links Tink, so code
+    # that uses another OpenSSL may pick up BoringSSL's headers instead.
     target_include_directories(crypto PUBLIC
       "$<BUILD_INTERFACE:${boringssl_SOURCE_DIR}/src/include>")
   else()

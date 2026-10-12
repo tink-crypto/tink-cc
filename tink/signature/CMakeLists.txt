@@ -578,8 +578,6 @@ tink_cc_library(
     tink::signature::config_2026
     absl::core_headers
     tink::core::configuration
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -590,8 +588,6 @@ tink_cc_library(
     tink::signature::key_gen_config_2026
     absl::core_headers
     tink::core::key_gen_configuration
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1114,8 +1110,6 @@ tink_cc_test(
     tink::proto::ed25519_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1645,8 +1639,6 @@ tink_cc_test(
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::subtle::random
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1772,8 +1764,6 @@ tink_cc_test(
     tink::signature::internal::testing::signature_test_vector
     tink::signature::internal::testing::slh_dsa_test_vectors
     tink::subtle::random
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1812,8 +1802,6 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1861,8 +1849,6 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1882,8 +1868,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1915,8 +1899,6 @@ tink_cc_library(
     tink::core::partial_key_access_token
     tink::internal::output_prefix_util
     tink::internal::util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1939,8 +1921,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1951,8 +1931,6 @@ tink_cc_library(
     absl::status
     tink::internal::mutable_serialization_registry
     tink::signature::internal::composite_ml_dsa_proto_serialization_impl
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1994,8 +1972,6 @@ tink_cc_test(
     tink::proto::composite_ml_dsa_cc_proto
     tink::proto::ml_dsa_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -2007,8 +1983,6 @@ tink_cc_library(
     absl::absl_check
     tink::core::configuration
     tink::signature::internal::config_2026
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -2020,7 +1994,5 @@ tink_cc_library(
     absl::absl_check
     tink::core::key_gen_configuration
     tink::signature::internal::key_gen_config_2026
-  TAGS
-    exclude_if_openssl
 )
 

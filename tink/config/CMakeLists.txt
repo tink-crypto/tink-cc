@@ -112,8 +112,6 @@ tink_cc_library(
     tink::config::config_2026
     absl::core_headers
     tink::core::configuration
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -124,8 +122,6 @@ tink_cc_library(
     tink::config::key_gen_config_2026
     absl::core_headers
     tink::core::key_gen_configuration
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -144,8 +140,6 @@ tink_cc_library(
     tink::prf::internal::config_2026
     tink::signature::internal::config_2026
     tink::streamingaead::internal::config_2026
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -164,8 +158,6 @@ tink_cc_library(
     tink::prf::internal::key_gen_config_2026
     tink::signature::internal::key_gen_config_2026
     tink::streamingaead::internal::key_gen_config_2026
-  TAGS
-    exclude_if_openssl
 )
 
 # tests
@@ -342,8 +334,6 @@ tink_cc_test(
     tink::mac::hmac_key_manager
     tink::prf::hmac_prf_key_manager
     tink::signature::ed25519_verify_key_manager
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -391,6 +381,4 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
-  TAGS
-    exclude_if_openssl
 )

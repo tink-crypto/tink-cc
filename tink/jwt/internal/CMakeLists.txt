@@ -1600,8 +1600,6 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::jwt_ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1646,8 +1644,6 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_proto_serialization
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1732,8 +1728,6 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1797,8 +1791,6 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_proto_serialization
     tink::util::protobuf_helper
     tink::proto::jwt_ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1855,8 +1847,6 @@ tink_cc_test(
     tink::internal::mutable_serialization_registry
     tink::internal::ssl_util
     tink::jwt::jwt_ml_dsa_parameters
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(

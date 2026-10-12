@@ -24,8 +24,6 @@ tink_cc_library(
     tink::subtle::ed25519_sign_boringssl
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::subtle::rsa_ssa_pss_sign_boringssl
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -46,8 +44,6 @@ tink_cc_test(
     tink::signature::composite_ml_dsa_private_key
     tink::signature::internal::testing::composite_ml_dsa_test_util
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -75,8 +71,6 @@ tink_cc_library(
     tink::subtle::ed25519_verify_boringssl
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -101,8 +95,6 @@ tink_cc_test(
     tink::signature::internal::testing::composite_ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -231,8 +223,6 @@ tink_cc_library(
     tink::signature::ml_dsa_private_key
     tink::signature::internal::ml_dsa_key_creator
   PUBLIC
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -248,8 +238,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -264,8 +252,6 @@ tink_cc_library(
     tink::signature::composite_ml_dsa_private_key
     tink::signature::internal::composite_ml_dsa_key_creator
   PUBLIC
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -280,8 +266,6 @@ tink_cc_test(
     absl::statusor
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_private_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -296,8 +280,6 @@ tink_cc_library(
     tink::signature::slh_dsa_private_key
     tink::signature::internal::slh_dsa_key_creator
   PUBLIC
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -312,6 +294,4 @@ tink_cc_test(
     absl::statusor
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
-  TAGS
-    exclude_if_openssl
 )

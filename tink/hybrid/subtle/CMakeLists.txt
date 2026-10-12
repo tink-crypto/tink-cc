@@ -40,8 +40,6 @@ tink_cc_library(
     tink::hybrid::hpke_private_key
     tink::hybrid::internal::hpke_key_creator
   PUBLIC
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -56,6 +54,4 @@ tink_cc_test(
     absl::statusor
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
-  TAGS
-    exclude_if_openssl
 )

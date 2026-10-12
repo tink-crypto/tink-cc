@@ -38,8 +38,6 @@ tink_cc_library(
     tink::hybrid::internal::hpke_private_key_manager
     tink::hybrid::internal::hpke_public_key_manager
     tink::util::status
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -292,8 +290,6 @@ tink_cc_library(
     tink::internal::output_prefix_util
     tink::subtle::common_enums
     tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -324,8 +320,6 @@ tink_cc_library(
     tink::internal::xwing_util
     tink::subtle::common_enums
     tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -336,8 +330,6 @@ tink_cc_library(
     absl::status
     tink::hybrid::internal::hpke_proto_serialization_impl
     tink::internal::mutable_serialization_registry
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -348,8 +340,6 @@ tink_cc_library(
     tink::hybrid::config_2026
     absl::core_headers
     tink::core::configuration
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -360,8 +350,6 @@ tink_cc_library(
     tink::hybrid::key_gen_config_2026
     absl::core_headers
     tink::core::key_gen_configuration
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -532,8 +520,6 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -606,8 +592,6 @@ tink_cc_test(
     tink::proto::ecies_aead_hkdf_cc_proto
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -757,8 +741,6 @@ tink_cc_test(
     tink::internal::ec_util
     tink::subtle::common_enums
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -784,8 +766,6 @@ tink_cc_test(
     tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -820,8 +800,6 @@ tink_cc_test(
     tink::internal::testing::field_with_number
     tink::subtle::common_enums
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -955,8 +933,6 @@ tink_cc_library(
     absl::absl_check
     tink::core::configuration
     tink::hybrid::internal::config_2026
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -974,8 +950,6 @@ tink_cc_test(
     tink::core::hybrid_encrypt
     tink::core::keyset_handle
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -987,7 +961,5 @@ tink_cc_library(
     absl::absl_check
     tink::core::key_gen_configuration
     tink::hybrid::internal::key_gen_config_2026
-  TAGS
-    exclude_if_openssl
 )
 

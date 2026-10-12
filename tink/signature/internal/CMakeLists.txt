@@ -86,8 +86,6 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -134,8 +132,6 @@ tink_cc_test(
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -179,8 +175,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -222,8 +216,6 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::slh_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -264,8 +256,6 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -313,8 +303,6 @@ tink_cc_test(
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -696,8 +684,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -765,8 +751,6 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::slh_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -812,8 +796,6 @@ tink_cc_library(
     tink::signature::ml_dsa_public_key
     tink::signature::signature_private_key
     tink::signature::signature_public_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -855,8 +837,6 @@ tink_cc_test(
     tink::proto::composite_ml_dsa_cc_proto
     tink::proto::ml_dsa_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -872,8 +852,6 @@ tink_cc_library(
     tink::internal::boringssl
     tink::signature::composite_ml_dsa_parameters
     tink::subtle::subtle_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -888,8 +866,6 @@ tink_cc_test(
     tink::signature::composite_ml_dsa_parameters
     tink::util::test_matchers
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -957,8 +933,6 @@ tink_cc_test(
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::proto::ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -976,8 +950,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1028,8 +1000,6 @@ tink_cc_test(
     tink::signature::internal::testing::signature_test_vector
     tink::signature::internal::testing::slh_dsa_test_vectors
     tink::proto::slh_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1067,8 +1037,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::slh_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1147,8 +1115,6 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1190,8 +1156,6 @@ tink_cc_test(
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1219,8 +1183,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::signature_private_key
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1241,8 +1203,6 @@ tink_cc_test(
     tink::signature::composite_ml_dsa_private_key
     tink::signature::composite_ml_dsa_proto_serialization
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1457,8 +1417,6 @@ tink_cc_library(
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1504,8 +1462,6 @@ tink_cc_test(
     tink::signature::internal::testing::slh_dsa_test_vectors
     tink::util::test_util
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1540,8 +1496,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::slh_dsa_parameters
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1561,8 +1515,6 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     tink::signature::slh_dsa_parameters
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1633,8 +1585,6 @@ tink_cc_test(
     tink::signature::ml_dsa_public_key
     tink::signature::prehash
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1689,8 +1639,6 @@ tink_cc_test(
     tink::signature::ml_dsa_public_key
     tink::signature::prehash
     tink::signature::sign_prehash
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1801,6 +1749,4 @@ tink_cc_test(
     tink::signature::sign_prehash
     tink::util::test_util
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )

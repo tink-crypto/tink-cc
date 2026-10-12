@@ -15,8 +15,6 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -39,8 +37,6 @@ tink_cc_library(
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -66,8 +62,6 @@ tink_cc_library(
     tink::util::secret_data
     tink::util::statusor
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -89,8 +83,6 @@ tink_cc_library(
     tink::hybrid::hpke_public_key
     tink::util::statusor
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -103,8 +95,6 @@ tink_cc_library(
     tink::util::status
     tink::util::validation
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -137,8 +127,6 @@ tink_cc_library(
     tink::util::validation
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -162,8 +150,6 @@ tink_cc_library(
     tink::util::statusor
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -180,8 +166,6 @@ tink_cc_library(
     tink::util::test_util
     tink::proto::hpke_cc_proto
   TESTONLY
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -198,8 +182,6 @@ tink_cc_library(
     tink::internal::output_prefix_util
     tink::subtle::common_enums
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -215,8 +197,6 @@ tink_cc_library(
     tink::internal::boringssl
     tink::util::statusor
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -236,8 +216,6 @@ tink_cc_library(
     tink::util::status
     tink::util::statusor
   TESTONLY
-  TAGS
-    exclude_if_openssl
 )
 
 # tests
@@ -258,8 +236,6 @@ tink_cc_test(
     tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -279,8 +255,6 @@ tink_cc_test(
     tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -307,8 +281,6 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_util
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -335,8 +307,6 @@ tink_cc_test(
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -352,8 +322,6 @@ tink_cc_test(
     tink::util::status
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -382,8 +350,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -399,8 +365,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -417,8 +381,6 @@ tink_cc_test(
     tink::internal::boringssl
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -435,8 +397,6 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -624,8 +584,6 @@ tink_cc_library(
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -664,8 +622,6 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_util
     tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -693,8 +649,6 @@ tink_cc_library(
     tink::hybrid::hybrid_decrypt_wrapper
     tink::hybrid::hybrid_encrypt_wrapper
     tink::internal::configuration_impl
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -723,8 +677,6 @@ tink_cc_test(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::proto::tink_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -742,8 +694,6 @@ tink_cc_library(
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
     tink::internal::key_gen_configuration_impl
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -803,8 +753,6 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::xwing_util
     tink::subtle::common_enums
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -820,6 +768,4 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
-  TAGS
-    exclude_if_openssl
 )

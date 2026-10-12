@@ -145,8 +145,6 @@ tink_cc_library(
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
   TESTONLY
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -172,8 +170,6 @@ tink_cc_library(
     tink::signature::slh_dsa_public_key
     tink::util::test_util
   TESTONLY
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -223,8 +219,6 @@ tink_cc_library(
     tink::signature::signature_private_key
     tink::util::secret_data
   TESTONLY
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -236,8 +230,6 @@ tink_cc_test(
     gmock
     absl::optional
     tink::signature::composite_ml_dsa_parameters
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -279,6 +271,4 @@ tink_cc_library(
     tink::util::secret_data
     tink::util::test_util
   TESTONLY
-  TAGS
-    exclude_if_openssl
 )

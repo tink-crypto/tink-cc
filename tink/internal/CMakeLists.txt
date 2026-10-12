@@ -1861,8 +1861,6 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::secret_data
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1877,8 +1875,6 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -1896,8 +1892,6 @@ tink_cc_library(
     tink::core::secret_data
     tink::subtle::subtle_util
     tink::util::secret_data
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_test(
@@ -1913,8 +1907,6 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(
@@ -2116,8 +2108,6 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::ml_dsa_cc_proto
-  TAGS
-    exclude_if_openssl
 )
 
 tink_cc_library(

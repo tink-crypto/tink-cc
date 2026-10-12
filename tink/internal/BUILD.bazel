@@ -442,6 +442,7 @@ cc_test(
     name = "ec_util_test",
     srcs = ["ec_util_test.cc"],
     data = ["//:testvectors_v1"],
+    tags = ["fips"],
     deps = [
         ":bn_util",
         ":ec_util",

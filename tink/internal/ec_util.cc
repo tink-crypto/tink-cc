@@ -412,14 +412,8 @@ absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
 
 absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
                                const SecretData& secret_seed) {
-  // EC_KEY_derive_from_secret() is neither defined in the version of BoringSSL
-  // used when FIPS-only mode is enabled at compile time, nor currently
-  // implemented for OpenSSL.
-#if defined(TINK_USE_ONLY_FIPS)
-  return absl::Status(
-      absl::StatusCode::kUnimplemented,
-      "Deriving EC keys from a secret seed is not allowed in FIPS mode");
-#elif !defined(OPENSSL_IS_BORINGSSL)
+  // EC_KEY_derive_from_secret() is not defined in OpenSSL.
+#if !defined(OPENSSL_IS_BORINGSSL)
   return absl::Status(
       absl::StatusCode::kUnimplemented,
       "Deriving EC keys from a secret seed is not supported with OpenSSL");

@@ -285,37 +285,37 @@ absl::StatusOr<RsaPrivateKey> RsaPrivateKeyAdjustEncodingLengths(
   return CallWithCoreDumpProtection(
       [&private_key]() -> absl::StatusOr<RsaPrivateKey> {
         absl::string_view trimmed_p =
-            WithoutLeadingZeros(util::SecretDataAsStringView(private_key.p));
+            WithoutLeadingZeros(private_key.p.AsStringView());
 
         absl::string_view trimmed_q =
-            WithoutLeadingZeros(util::SecretDataAsStringView(private_key.q));
+            WithoutLeadingZeros(private_key.q.AsStringView());
 
         absl::StatusOr<SecretData> adjusted_dp = ParseBigIntToFixedLength(
-            util::SecretDataAsStringView(private_key.dp), trimmed_p.size());
+            private_key.dp.AsStringView(), trimmed_p.size());
         if (!adjusted_dp.ok()) {
           return adjusted_dp.status();
         }
 
         absl::StatusOr<SecretData> adjusted_dq = ParseBigIntToFixedLength(
-            util::SecretDataAsStringView(private_key.dq), trimmed_q.size());
+            private_key.dq.AsStringView(), trimmed_q.size());
         if (!adjusted_dq.ok()) {
           return adjusted_dq.status();
         }
 
         absl::StatusOr<SecretData> adjusted_crt = ParseBigIntToFixedLength(
-            util::SecretDataAsStringView(private_key.crt), trimmed_p.size());
+            private_key.crt.AsStringView(), trimmed_p.size());
         if (!adjusted_crt.ok()) {
           return adjusted_crt.status();
         }
 
         absl::StatusOr<SecretData> adjusted_d = ParseBigIntToFixedLength(
-            util::SecretDataAsStringView(private_key.d), private_key.n.size());
+            private_key.d.AsStringView(), private_key.n.size());
         if (!adjusted_d.ok()) {
           return adjusted_d.status();
         }
 
-        private_key.p = util::SecretDataFromStringView(trimmed_p);
-        private_key.q = util::SecretDataFromStringView(trimmed_q);
+        private_key.p = SecretData(trimmed_p);
+        private_key.q = SecretData(trimmed_q);
         private_key.dp = std::move(*adjusted_dp);
         private_key.dq = std::move(*adjusted_dq);
         private_key.crt = std::move(*adjusted_crt);
@@ -378,12 +378,12 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsaFixedSizeInputs(
   return CallWithCoreDumpProtection([&]() -> absl::StatusOr<
                                               internal::SslUniquePtr<RSA>> {
     /// Checks for sizes and leading zeros.
-    const absl::string_view p_sd = util::SecretDataAsStringView(private_key.p);
+    const absl::string_view p_sd = private_key.p.AsStringView();
     if (p_sd.size() > 1 && p_sd[0] == 0) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Prime factor p has leading zeros");
     }
-    const absl::string_view q_sd = util::SecretDataAsStringView(private_key.q);
+    const absl::string_view q_sd = private_key.q.AsStringView();
     if (q_sd.size() > 1 && q_sd[0] == 0) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Prime factor q has leading zeros");

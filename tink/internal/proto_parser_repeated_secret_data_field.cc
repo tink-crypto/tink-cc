@@ -60,7 +60,7 @@ bool RepeatedSecretDataField::SerializeWithTagInto(
                                          FieldNumber(), serialization_state)) {
       return false;
     }
-    absl::string_view data_view = util::SecretDataAsStringView(secret_data);
+    absl::string_view data_view = secret_data.AsStringView();
 
     if (!SerializeVarint(data_view.size(), serialization_state)) {
       return false;

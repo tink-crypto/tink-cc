@@ -86,7 +86,7 @@ absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM *bn, size_t len) {
   if (!res.ok()) {
     return res;
   }
-  return util::internal::AsSecretData(std::move(secret_data));
+  return SecretData(std::move(secret_data));
 }
 
 absl::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(

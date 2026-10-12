@@ -65,7 +65,7 @@ bool SecretDataField::RequiresSerialization() const {
     case ProtoFieldOptions::kImplicit:
       // With kImplicit, value_ is always set and is serialized only if it is
       // not equal to the default value.
-      return !util::SecretDataEquals(*value_, default_value());
+      return *value_ != default_value();
     default:
       ABSL_DCHECK(false) << "Unknown options: " << static_cast<int>(options_);
       return false;
@@ -101,7 +101,7 @@ bool SecretDataField::SerializeWithTagInto(
   if (!SerializeVarint(value.size(), out)) {
     return false;
   }
-  absl::string_view data_view = util::SecretDataAsStringView(value);
+  absl::string_view data_view = value.AsStringView();
   if (out.GetBuffer().size() < data_view.size()) {
     return false;
   }

@@ -459,8 +459,7 @@ absl::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {
   if (!res.ok()) {
     return res;
   }
-  key->private_key =
-      util::internal::AsSecretData(std::move(x22519_priv_key_buffer));
+  key->private_key = SecretData(std::move(x22519_priv_key_buffer));
   return std::move(key);
 }
 
@@ -508,7 +507,7 @@ absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   if (!res.ok()) {
     return res;
   }
-  key->private_key = util::internal::AsSecretData(std::move(priv_key_buffer));
+  key->private_key = SecretData(std::move(priv_key_buffer));
   return std::move(key);
 }
 
@@ -537,7 +536,7 @@ absl::StatusOr<SecretData> ComputeX25519SharedSecret(
     return absl::Status(absl::StatusCode::kInternal,
                         "Secret generation failed");
   }
-  return util::internal::AsSecretData(std::move(shared_secret));
+  return SecretData(std::move(shared_secret));
 }
 
 absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
@@ -560,7 +559,7 @@ absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
   if (!res.ok()) {
     return res;
   }
-  key->private_key = util::internal::AsSecretData(priv_key_buffer);
+  key->private_key = SecretData(std::move(priv_key_buffer));
   return std::move(key);
 }
 

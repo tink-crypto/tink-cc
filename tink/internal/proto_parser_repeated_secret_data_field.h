@@ -62,13 +62,13 @@ class RepeatedSecretDataField : public Field {
   }
   void add_values(SecretData value) { value_.push_back(std::move(value)); }
   void add_values(absl::string_view value) {
-    value_.push_back(crypto::tink::util::SecretDataFromStringView(value));
+    value_.push_back(SecretData(value));
   }
   void set_value(int index, SecretData value) {
     value_[index] = std::move(value);
   }
   void set_value(int index, absl::string_view value) {
-    value_[index] = crypto::tink::util::SecretDataFromStringView(value);
+    value_[index] = SecretData(value);
   }
 
   const std::vector<SecretData>& value() const { return value_; }

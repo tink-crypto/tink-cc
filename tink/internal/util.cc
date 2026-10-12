@@ -82,7 +82,7 @@ absl::StatusOr<SecretData> ParseBigIntToFixedLength(absl::string_view val,
     int start = length - val.size();
     SecretBuffer buffer(length, 0);
     SafeMemCopy(buffer.data() + start, val.data(), val.size());
-    return util::internal::AsSecretData(std::move(buffer));
+    return SecretData(std::move(buffer));
   } else {
     // val is longer than what we have room -- we need to check that val starts
     // with zeros. We use SafeCryptoMemEquals to minimize leakage in case it
@@ -93,7 +93,7 @@ absl::StatusOr<SecretData> ParseBigIntToFixedLength(absl::string_view val,
       return absl::InvalidArgumentError("Integer too large");
     }
     val.remove_prefix(to_truncate);
-    return util::SecretDataFromStringView(val);
+    return SecretData(val);
   }
 }
 

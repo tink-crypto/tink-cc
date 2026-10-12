@@ -56,7 +56,7 @@ absl::StatusOr<std::string> GetValueOfFixedLength(
 absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedData& big_integer, int length, SecretKeyAccessToken token) {
   if (big_integer.size() == length) {
-    return util::SecretDataFromStringView(big_integer.GetSecret(token));
+    return big_integer.Get(token);
   }
 
   if (big_integer.size() > length) {
@@ -71,7 +71,7 @@ absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
   crypto::tink::internal::SafeMemCopy(
       padded.data() + length - big_integer.size(),
       big_integer.GetSecret(token).data(), big_integer.GetSecret(token).size());
-  return util::internal::AsSecretData(padded);
+  return SecretData(std::move(padded));
 }
 
 }  // namespace internal

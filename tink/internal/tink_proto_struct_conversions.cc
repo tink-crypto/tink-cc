@@ -52,7 +52,7 @@ google::crypto::tink::internal::KeyDataTP ToKeyDataTP(
     ::google::crypto::tink::KeyData key_data) {
   google::crypto::tink::internal::KeyDataTP key_data_tp;
   key_data_tp.set_type_url(std::move(*key_data.mutable_type_url()));
-  key_data_tp.set_value(util::SecretDataFromStringView(key_data.value()));
+  key_data_tp.set_value(SecretData(key_data.value()));
   key_data_tp.set_key_material_type(
       static_cast<google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP>(
           key_data.key_material_type()));
@@ -63,8 +63,7 @@ google::crypto::tink::internal::KeyDataTP ToKeyDataTP(
     google::crypto::tink::internal::KeyDataTP key_data) {
   ::google::crypto::tink::KeyData key_data_proto;
   key_data_proto.set_type_url(key_data.type_url());
-  key_data_proto.set_value(
-      crypto::tink::util::SecretDataAsStringView(key_data.value()));
+  key_data_proto.set_value(key_data.value().AsStringView());
   key_data_proto.set_key_material_type(
       static_cast<::google::crypto::tink::KeyData::KeyMaterialType>(
           key_data.key_material_type()));

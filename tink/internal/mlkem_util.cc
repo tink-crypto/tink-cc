@@ -55,7 +55,7 @@ absl::StatusOr<MlKemKey> GenerateMlKem768Key() {
   if (!status.ok()) {
     return status;
   }
-  key.private_key = util::internal::AsSecretData(std::move(private_key_buffer));
+  key.private_key = SecretData(std::move(private_key_buffer));
   return key;
 }
 
@@ -73,7 +73,7 @@ absl::StatusOr<MlKemKey> GenerateMlKem1024Key() {
   if (!status.ok()) {
     return status;
   }
-  key.private_key = util::internal::AsSecretData(std::move(private_key_buffer));
+  key.private_key = SecretData(std::move(private_key_buffer));
   return key;
 }
 

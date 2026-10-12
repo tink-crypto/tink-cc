@@ -448,7 +448,7 @@ tink_cc_library(
     absl::core_headers
     absl::string_view
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::safe_stringops

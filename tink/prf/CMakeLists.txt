@@ -489,7 +489,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle

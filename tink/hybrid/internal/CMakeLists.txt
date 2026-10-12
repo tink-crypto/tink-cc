@@ -30,7 +30,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::secret_buffer
@@ -119,7 +119,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::key_type_manager
     tink::core::private_key_type_manager
     tink::core::template_util
@@ -212,7 +212,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::util::statusor
     tink::proto::hpke_cc_proto
   TAGS
@@ -231,7 +231,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::internal::ssl_unique_ptr
     tink::util::status
     tink::util::statusor
@@ -275,7 +275,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
@@ -414,7 +414,7 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
   TAGS
@@ -641,7 +641,7 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
     tink::core::parameters
@@ -681,7 +681,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::configuration
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -737,7 +737,7 @@ tink_cc_library(
     tink::hybrid::internal::hpke_public_key_manager
     absl::memory
     absl::status
-    crypto
+    tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
@@ -791,7 +791,7 @@ tink_cc_library(
     absl::status
     absl::status_macros
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data

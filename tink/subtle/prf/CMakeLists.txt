@@ -40,7 +40,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::input_stream
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders

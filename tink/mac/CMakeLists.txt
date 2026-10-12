@@ -182,7 +182,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
@@ -313,7 +313,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::chunked_mac
     tink::core::insecure_secret_key_access
     tink::core::key

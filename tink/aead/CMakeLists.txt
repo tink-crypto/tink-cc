@@ -1114,7 +1114,7 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::key_status
     tink::core::keyset_handle
@@ -1513,7 +1513,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access

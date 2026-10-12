@@ -309,7 +309,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::str_format
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
@@ -395,7 +395,7 @@ tink_cc_library(
     absl::strings
     absl::str_format
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
@@ -423,7 +423,7 @@ tink_cc_library(
     absl::str_format
     absl::synchronization
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -445,7 +445,7 @@ tink_cc_library(
     ecies_proto_serialization.h
   DEPS
     absl::status
-    crypto
+    tink::internal::boringssl
     tink::hybrid::internal::ecies_proto_serialization_impl
     tink::internal::mutable_serialization_registry
 )
@@ -469,7 +469,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::crypto_format
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -750,7 +750,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
     tink::hybrid::internal::testing::hpke_test_vectors
@@ -775,7 +775,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
@@ -804,7 +804,7 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
@@ -858,7 +858,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::key
@@ -886,7 +886,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
@@ -916,7 +916,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access

@@ -7,7 +7,7 @@ tink_cc_library(
   SRCS
     ssl_util.h
   DEPS
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_library(
@@ -84,7 +84,7 @@ tink_cc_library(
   SRCS
     ssl_unique_ptr.h
   DEPS
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_library(
@@ -93,7 +93,7 @@ tink_cc_library(
     err_util.cc
     err_util.h
   DEPS
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_library(
@@ -145,7 +145,7 @@ tink_cc_library(
   DEPS
     absl::core_headers
     absl::status
-    crypto
+    tink::internal::boringssl
     tink::util::status
 )
 
@@ -168,7 +168,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::secret_data
@@ -191,7 +191,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::subtle::subtle_util
     tink::util::secret_data
     tink::util::status
@@ -214,7 +214,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::subtle::common_enums
     tink::util::secret_data
@@ -302,7 +302,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::key_manager_impl
     tink::core::key_type_manager
@@ -343,7 +343,7 @@ tink_cc_test(
     tink::internal::err_util
     gmock
     absl::strings
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_test(
@@ -358,7 +358,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -380,7 +380,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::subtle::random
     tink::util::secret_data
@@ -397,7 +397,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::util::status
     tink::util::test_matchers
 )
@@ -422,7 +422,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access_testonly
@@ -449,7 +449,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::subtle::common_enums
     tink::subtle::subtle_util
     tink::util::status
@@ -465,7 +465,7 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::subtle::common_enums
     tink::util::status
     tink::util::statusor
@@ -483,7 +483,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -500,7 +500,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::subtle::subtle_util
     tink::util::secret_data
     tink::util::status
@@ -1378,7 +1378,7 @@ tink_cc_library(
   SRCS
     safe_stringops.h
   DEPS
-    crypto
+    tink::internal::boringssl
     tink::internal::call_with_core_dump_protection
 )
 
@@ -1406,7 +1406,7 @@ tink_cc_library(
     absl::strings
     absl::str_format
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::restricted_data
     tink::core::secret_data
     tink::core::secret_key_access_token
@@ -1676,7 +1676,7 @@ tink_cc_library(
   DEPS
     absl::config
     absl::core_headers
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_test(
@@ -1858,7 +1858,7 @@ tink_cc_library(
     absl::log
     absl::status
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::util::secret_data
   TAGS
@@ -1892,7 +1892,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::subtle::subtle_util
     tink::util::secret_data
@@ -2174,7 +2174,7 @@ tink_cc_library(
     safe_stringops_oss.h
   DEPS
     tink::internal::call_with_core_dump_protection
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_library(
@@ -2184,7 +2184,7 @@ tink_cc_library(
   DEPS
     absl::config
     absl::core_headers
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_library(

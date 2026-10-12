@@ -13,7 +13,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::chunked_mac
     tink::core::secret_data
     tink::internal::dfsan_forwarders
@@ -56,7 +56,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::md_util
@@ -80,7 +80,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection

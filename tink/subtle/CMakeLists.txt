@@ -24,7 +24,7 @@ tink_cc_library(
     absl::core_headers
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::deterministic_aead
     tink::core::mac
@@ -62,7 +62,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::ec_util
@@ -84,7 +84,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::ec_util
     tink::internal::fips_utils
@@ -102,7 +102,7 @@ tink_cc_library(
     tink::subtle::common_enums
     absl::core_headers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::internal::ec_util
 )
 
@@ -115,7 +115,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::str_format
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -142,7 +142,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::str_format
-    crypto
+    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::ec_util
@@ -167,7 +167,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::internal::call_with_core_dump_protection
     tink::internal::md_util
     tink::internal::safe_stringops
@@ -190,7 +190,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::mac
     tink::core::partial_key_access
@@ -219,7 +219,7 @@ tink_cc_library(
     absl::status
     absl::status_macros
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::mac
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
@@ -245,7 +245,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
@@ -276,7 +276,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::ec_util
@@ -300,7 +300,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
@@ -327,7 +327,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -356,7 +356,7 @@ tink_cc_library(
     absl::status
     absl::status_macros
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::fips_utils
@@ -383,7 +383,7 @@ tink_cc_library(
     absl::status
     absl::status_macros
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -485,7 +485,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::internal::fips_utils
     tink::util::secret_data
     tink::util::statusor
@@ -512,7 +512,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::mac
     tink::core::secret_data
     tink::internal::aes_util
@@ -542,7 +542,7 @@ tink_cc_library(
     absl::status_macros
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
@@ -589,7 +589,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
@@ -610,7 +610,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::secret_buffer
     tink::util::secret_data
@@ -646,7 +646,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::deterministic_aead
     tink::core::secret_data
     tink::internal::aes_util
@@ -697,7 +697,7 @@ tink_cc_library(
     tink::subtle::common_enums
     absl::core_headers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::aead::internal::aead_util
     tink::internal::aes_util
     tink::internal::bn_util
@@ -877,7 +877,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::output_stream_with_result
     tink::core::streaming_mac
     tink::internal::safe_stringops
@@ -898,7 +898,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::internal::bn_util
     tink::internal::ec_util
     tink::internal::rsa_util
@@ -1140,7 +1140,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
     tink::config::tink_fips
@@ -1280,7 +1280,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1310,7 +1310,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::public_key_verify
     tink::config::tink_fips
     tink::internal::ec_util
@@ -1336,7 +1336,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
@@ -1363,7 +1363,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1393,7 +1393,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
@@ -1419,7 +1419,7 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1647,7 +1647,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::internal::bn_util
     tink::internal::ec_util
     tink::internal::err_util

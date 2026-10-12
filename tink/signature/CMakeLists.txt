@@ -95,7 +95,7 @@ tink_cc_library(
     absl::memory
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::constants
@@ -273,7 +273,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::public_key_verify
@@ -382,7 +382,7 @@ tink_cc_library(
     absl::core_headers
     absl::memory
     absl::status
-    crypto
+    tink::internal::boringssl
     tink::core::registry
     tink::config::tink_fips
     tink::signature::internal::ml_dsa_proto_serialization
@@ -485,7 +485,7 @@ tink_cc_library(
     tink::signature::signature_private_key
     absl::status
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
@@ -516,7 +516,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
     tink::internal::bn_util
@@ -539,7 +539,7 @@ tink_cc_library(
     absl::strings
     absl::str_format
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
@@ -560,7 +560,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -617,7 +617,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
     tink::internal::bn_util
@@ -662,7 +662,7 @@ tink_cc_library(
     absl::statusor
     absl::synchronization
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -711,7 +711,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
@@ -737,7 +737,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -882,7 +882,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -909,7 +909,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1000,7 +1000,7 @@ tink_cc_test(
     absl::flat_hash_set
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
@@ -1035,7 +1035,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
@@ -1081,7 +1081,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::crypto_format
     tink::core::ec_point
@@ -1132,7 +1132,7 @@ tink_cc_test(
     tink::signature::signature_key_templates
     gmock
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::core::key_manager_impl
     tink::core::private_key_manager_impl
     tink::core::public_key_sign
@@ -1260,7 +1260,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
     tink::internal::bn_util
@@ -1281,7 +1281,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access
@@ -1306,7 +1306,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1337,7 +1337,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1369,7 +1369,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
     tink::internal::bn_util
@@ -1417,7 +1417,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1448,7 +1448,7 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1498,7 +1498,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::key
@@ -1522,7 +1522,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
@@ -1549,7 +1549,7 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
@@ -1612,7 +1612,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
@@ -1636,7 +1636,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
@@ -1663,7 +1663,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::output_prefix_util
@@ -1731,7 +1731,7 @@ tink_cc_library(
     absl::statusor
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
@@ -1758,7 +1758,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
@@ -1808,7 +1808,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
@@ -1877,7 +1877,7 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
     tink::internal::util
@@ -1934,7 +1934,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
     tink::internal::util

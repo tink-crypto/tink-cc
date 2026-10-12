@@ -212,7 +212,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::core::registry
     tink::aead::aead_config
     tink::internal::fips_utils

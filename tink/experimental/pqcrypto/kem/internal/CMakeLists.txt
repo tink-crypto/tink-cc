@@ -8,7 +8,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -36,7 +36,7 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -61,7 +61,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -84,7 +84,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    crypto
+    tink::internal::boringssl
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::internal::fips_utils
@@ -101,7 +101,7 @@ tink_cc_library(
   DEPS
     absl::status
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -141,7 +141,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
@@ -170,7 +170,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::insecure_secret_key_access_testonly
     tink::core::keyset_handle
@@ -201,7 +201,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder

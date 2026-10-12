@@ -60,7 +60,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_parameters

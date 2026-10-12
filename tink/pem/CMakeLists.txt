@@ -12,7 +12,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::partial_key_access_token

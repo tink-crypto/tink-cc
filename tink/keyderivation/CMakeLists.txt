@@ -244,7 +244,7 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access

@@ -11,7 +11,7 @@ tink_cc_library(
     absl::flat_hash_set
     absl::status
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::util::errors
     tink::util::statusor
 )
@@ -44,7 +44,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
@@ -70,7 +70,7 @@ tink_cc_library(
     absl::cord
     absl::string_view
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::aead::cord_aead
     tink::internal::ssl_unique_ptr
     tink::subtle::random
@@ -211,7 +211,7 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    crypto
+    tink::internal::boringssl
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -255,7 +255,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::cord
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::secret_data
     tink::aead::cord_aead
@@ -300,7 +300,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -401,7 +401,7 @@ tink_cc_library(
     absl::cord
     absl::str_format
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::secret_data
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key
@@ -447,7 +447,7 @@ tink_cc_library(
     absl::statusor
     absl::str_format
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::secret_data
@@ -1299,7 +1299,7 @@ tink_cc_library(
     absl::cord
     absl::string_view
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -1330,7 +1330,7 @@ tink_cc_test(
     absl::strings
     absl::cord
     absl::string_view
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
@@ -1390,7 +1390,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::span
-    crypto
+    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::secret_data

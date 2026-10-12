@@ -768,7 +768,7 @@ tink_cc_library(
     big_integer.h
   DEPS
     absl::string_view
-    crypto
+    tink::internal::boringssl
 )
 
 tink_cc_library(

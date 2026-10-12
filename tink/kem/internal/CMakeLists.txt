@@ -56,7 +56,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::aead
     tink::core::keyset_handle
     tink::core::registry
@@ -110,7 +110,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::optional
-    crypto
+    tink::internal::boringssl
     tink::core::registry
     tink::aead::aead_config
     tink::aead::aes_gcm_parameters

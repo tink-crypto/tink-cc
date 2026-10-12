@@ -146,6 +146,11 @@ else()
   message(STATUS "crypto Include Dir: ${crypto_INCLUDE_DIR}")
 endif()
 
+# Tink targets link against BoringSSL through this Tink-specific name.
+# TODO: b/537605175 - Back this target with a private, statically linked,
+# Tink-prefixed BoringSSL that never reuses an existing `crypto` target.
+add_library(tink::internal::boringssl ALIAS crypto)
+
 if (NOT TINK_USE_INSTALLED_PROTOBUF)
   set(protobuf_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)
   set(protobuf_BUILD_EXAMPLES OFF CACHE BOOL "Tink dependency override" FORCE)

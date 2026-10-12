@@ -9,7 +9,6 @@ option(TINK_USE_INSTALLED_ABSEIL "Build Tink linking to Abseil installed in the 
 option(TINK_USE_INSTALLED_GOOGLETEST "Build Tink linking to GTest installed in the system" OFF)
 option(TINK_USE_INSTALLED_PROTOBUF "Build Tink linking to Protobuf installed in the system" OFF)
 option(TINK_USE_INSTALLED_BENCHMARK "Build Tink linking to benchmark installed in the system" OFF)
-option(USE_ONLY_FIPS "Enables the FIPS only mode in Tink" OFF)
 
 set(CPACK_GENERATOR TGZ)
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})

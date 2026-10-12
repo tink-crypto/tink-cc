@@ -28,11 +28,6 @@ cc_library(
     deps = ["//proto:config_cc_proto"],
 )
 
-bool_flag(
-    name = "use_only_fips",
-    build_setting_default = False,
-)
-
 cc_library(
     name = "tink_fips",
     srcs = ["tink_fips.cc"],

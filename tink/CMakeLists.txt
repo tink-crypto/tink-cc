@@ -21,12 +21,6 @@ if(TARGET fipsmodule AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(fipsmodule PRIVATE "-Wno-error=maybe-uninitialized")
 endif()
 
-# Configuration settings for the build.
-
-if(USE_ONLY_FIPS)
-    target_compile_definitions(tink_internal_fips_utils PUBLIC TINK_USE_ONLY_FIPS)
-endif()
-
 # Public libraries.
 
 set(TINK_VERSION_H "${TINK_GENFILE_DIR}/tink/version.h")

@@ -130,20 +130,10 @@ cc_library(
     ],
 )
 
-config_setting(
-    name = "fips_enabled",
-    flag_values = {"//tink/config:use_only_fips": "True"},
-    visibility = ["//visibility:public"],
-)
-
 cc_library(
     name = "fips_utils",
     srcs = ["fips_utils.cc"],
     hdrs = ["fips_utils.h"],
-    defines = select({
-        "fips_enabled": ["TINK_USE_ONLY_FIPS"],
-        "//conditions:default": [],
-    }),
     deps = [
         "//tink/util:status",
         "@abseil-cpp//absl/base:core_headers",

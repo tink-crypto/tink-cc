@@ -85,7 +85,7 @@ absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
     return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize keyset");
   }
-  return util::internal::AsSecretData(std::move(result));
+  return SecretData(std::move(result));
 }
 
 absl::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(

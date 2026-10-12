@@ -116,7 +116,7 @@ class HkdfPrfKeyManager
     google::crypto::tink::HkdfPrfKey key;
     key.set_version(get_version());
     *key.mutable_params() = key_format.params();
-    key.set_key_value(util::SecretDataAsStringView(*randomness));
+    key.set_key_value(randomness->AsStringView());
     return key;
   }
 

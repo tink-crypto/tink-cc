@@ -82,13 +82,11 @@ MATCHER_P(EqualsKey, key, "is equals to the expected key") {
 }
 
 MATCHER_P(EqualsSecretData, data, "is equal to the expected secret data") {
-  if (::crypto::tink::util::SecretDataEquals(arg, data)) {
+  if (arg == data) {
     return true;
   }
-  *result_listener << "Expected: "
-                   << ::crypto::tink::util::SecretDataAsStringView(arg);
-  *result_listener << "\nActual: "
-                   << ::crypto::tink::util::SecretDataAsStringView(data);
+  *result_listener << "Expected: " << arg.AsStringView();
+  *result_listener << "\nActual: " << data.AsStringView();
   return false;
 }
 

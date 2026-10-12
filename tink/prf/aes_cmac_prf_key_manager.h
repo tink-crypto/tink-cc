@@ -117,7 +117,7 @@ class AesCmacPrfKeyManager
     }
     google::crypto::tink::AesCmacPrfKey key;
     key.set_version(get_version());
-    key.set_key_value(util::SecretDataAsStringView(*randomness));
+    key.set_key_value(randomness->AsStringView());
     return key;
   }
 

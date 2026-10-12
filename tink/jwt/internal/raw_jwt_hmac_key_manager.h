@@ -71,7 +71,7 @@ class RawJwtHmacKeyManager
       }
       return subtle::HmacBoringSsl::New(
           util::Enums::ProtoToSubtle(hash_type), tag_size,
-          util::SecretDataFromStringView(jwt_hmac_key.key_value()));
+          SecretData(jwt_hmac_key.key_value()));
     }
   };
 

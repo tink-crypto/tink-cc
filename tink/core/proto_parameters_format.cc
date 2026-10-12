@@ -32,7 +32,7 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::internal::KeyTemplateTP;
+using ::google::crypto::tink::internal::KeyTemplateTP;
 
 absl::StatusOr<std::string> SerializeParametersToProtoFormat(
     const Parameters& parameters) {

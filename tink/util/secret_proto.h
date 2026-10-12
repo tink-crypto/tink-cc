@@ -120,7 +120,7 @@ class SecretProto {
       return absl::Status(absl::StatusCode::kInternal,
                           "Could not serialize proto");
     }
-    return internal::AsSecretData(std::move(buffer));
+    return ::crypto::tink::SecretData(std::move(buffer));
   }
 
  private:

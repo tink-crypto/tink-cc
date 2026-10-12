@@ -73,7 +73,7 @@ absl::StatusOr<SecretData> ReadSecretBytesFromStream(
   absl::StatusOr<SecretBuffer> result =
       ReadBytesFromStreamImpl<SecretBuffer>(num_bytes, input_stream);
   if (!result.ok()) { return result.status(); }
-  return util::internal::AsSecretData(*std::move(result));
+  return SecretData(*std::move(result));
 }
 
 }  // namespace tink

@@ -49,7 +49,7 @@ class RestrictedData {
   // Creates a new RestrictedData object that wraps `secret`. Note that creating
   // a `token` requires access to `InsecureSecretKeyAccess::Get()`.
   explicit RestrictedData(absl::string_view secret, SecretKeyAccessToken token)
-      : secret_(util::SecretDataFromStringView(secret)) {}
+      : secret_(secret) {}
 
   // Creates a new RestrictedData object that wraps `secret`. Note that creating
   // a `token` requires access to `InsecureSecretKeyAccess::Get()`.
@@ -64,7 +64,7 @@ class RestrictedData {
   // Returns the secret for this RestrictedData object. Note that creating a
   // `token` requires access to `InsecureSecretKeyAccess::Get()`.
   absl::string_view GetSecret(SecretKeyAccessToken token) const {
-    return util::SecretDataAsStringView(secret_);
+    return secret_.AsStringView();
   }
   const SecretData& Get(SecretKeyAccessToken token) const { return secret_; }
 
@@ -72,7 +72,7 @@ class RestrictedData {
 
   // Constant-time comparison operators.
   bool operator==(const RestrictedData& other) const {
-    return util::SecretDataEquals(secret_, other.secret_);
+    return secret_ == other.secret_;
   }
   bool operator!=(const RestrictedData& other) const {
     return !(*this == other);

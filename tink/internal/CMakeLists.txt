@@ -143,10 +143,8 @@ tink_cc_library(
     fips_utils.cc
     fips_utils.h
   DEPS
-    absl::core_headers
     absl::status
     tink::internal::boringssl
-    tink::util::status
 )
 
 tink_cc_library(

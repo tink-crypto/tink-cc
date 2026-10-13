@@ -79,7 +79,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManager) {
 }
 
 TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerNoBoringCrypto) {
-  if (!kUseOnlyFips || IsFipsEnabledInSsl()) {
+  if (!IsFipsModeEnabled() || IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Only supported in FIPS-mode with BoringCrypto not available.";
   }

@@ -1343,7 +1343,6 @@ cc_test(
         "//tink/signature/internal/testing:ed25519_test_vectors",
         "//tink/signature/internal/testing:signature_test_vector",
         "//tink/util:test_util",
-        "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",

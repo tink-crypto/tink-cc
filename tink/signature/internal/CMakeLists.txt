@@ -1576,7 +1576,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    absl::optional
     tink::internal::boringssl
     tink::core::partial_key_access
     tink::internal::fips_utils

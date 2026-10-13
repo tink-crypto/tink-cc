@@ -1305,7 +1305,6 @@ tink_cc_test(
   DEPS
     tink::subtle::ed25519_verify_boringssl
     gmock
-    absl::no_destructor
     absl::absl_check
     absl::status
     absl::status_matchers

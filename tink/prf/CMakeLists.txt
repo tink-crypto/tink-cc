@@ -490,13 +490,11 @@ tink_cc_test(
     absl::status_matchers
     absl::optional
     tink::internal::boringssl
-    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::registry
     tink::core::restricted_data
-    tink::core::secret_key_access_token
     tink::config::global_registry
     tink::internal::fips_utils
     tink::internal::legacy_proto_key

@@ -18,21 +18,13 @@
 
 #include <atomic>
 
-#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "openssl/crypto.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-
-#ifdef TINK_USE_ONLY_FIPS
-ABSL_CONST_INIT const bool kUseOnlyFips = true;
-#else
-ABSL_CONST_INIT const bool kUseOnlyFips = false;
-#endif
 
 static std::atomic<bool> is_fips_restricted(false);
 
@@ -40,7 +32,7 @@ void SetFipsRestricted() { is_fips_restricted = true; }
 
 void UnSetFipsRestricted() { is_fips_restricted = false; }
 
-bool IsFipsModeEnabled() { return kUseOnlyFips || is_fips_restricted; }
+bool IsFipsModeEnabled() { return is_fips_restricted; }
 
 bool IsFipsEnabledInSsl() {
 #ifdef OPENSSL_IS_BORINGSSL

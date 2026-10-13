@@ -17,18 +17,11 @@
 #ifndef TINK_INTERNAL_FIPS_UTILS_H_
 #define TINK_INTERNAL_FIPS_UTILS_H_
 
-#include "absl/base/attributes.h"
-#include "tink/util/status.h"
+#include "absl/status/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-
-// This flag indicates whether Tink was build in FIPS only mode. If the flag
-// is set, then usage of algorithms will be restricted to algorithms which
-// utilize the FIPS validated BoringCrypto module. TODO(kste): Check if this can
-// be removed.
-ABSL_CONST_INIT extern const bool kUseOnlyFips;
 
 // This function will return true if Tink has been built in FIPS mode or if
 // the FIPS restrictions have been enabled at runtime.

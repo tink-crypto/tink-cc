@@ -135,8 +135,6 @@ cc_library(
     srcs = ["fips_utils.cc"],
     hdrs = ["fips_utils.h"],
     deps = [
-        "//tink/util:status",
-        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@boringssl//:crypto",
     ],

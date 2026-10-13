@@ -32,7 +32,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/opensslv.h"
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(BORINGSSL_FIPS) && \
+#if defined(OPENSSL_IS_BORINGSSL) && \
     (!defined(BORINGSSL_API_VERSION) || BORINGSSL_API_VERSION >= 42)
 #include "openssl/aead.h"
 #include "openssl/crypto.h"
@@ -319,16 +319,16 @@ absl::StatusOr<std::unique_ptr<CordAead>> NewCordAesGcmSivBoringSsl(
     const SecretData& key, absl::string_view output_prefix) {
   return absl::Status(
       absl::StatusCode::kUnimplemented,
-      "AES-GCM-SIV is not supported when using OpenSSL, BoringCrypto FIPS, or "
-      "an older BoringSSL version");
+      "AES-GCM-SIV is not supported when using OpenSSL or an older BoringSSL "
+      "version");
 }
 
 absl::StatusOr<std::unique_ptr<CordAead>> NewCordAesGcmSivBoringSsl(
     const AesGcmSivKey& key) {
   return absl::Status(
       absl::StatusCode::kUnimplemented,
-      "AES-GCM-SIV is not supported when using OpenSSL, BoringCrypto FIPS, or "
-      "an older BoringSSL version");
+      "AES-GCM-SIV is not supported when using OpenSSL or an older BoringSSL "
+      "version");
 }
 
 }  // namespace internal

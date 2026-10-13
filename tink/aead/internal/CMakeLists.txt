@@ -1531,3 +1531,39 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME aes_gcm_key_creator
+  SRCS
+    aes_gcm_key_creator.cc
+    aes_gcm_key_creator.h
+  DEPS
+    absl::statusor
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME aes_gcm_key_creator_test
+  SRCS
+    aes_gcm_key_creator_test.cc
+  DEPS
+    tink::aead::internal::aes_gcm_key_creator
+    gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::partial_key_access
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
+)

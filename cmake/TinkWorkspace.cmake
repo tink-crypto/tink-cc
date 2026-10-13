@@ -113,43 +113,9 @@ else()
   find_package(absl REQUIRED)
 endif()
 
-# Don't fetch BoringSSL if target `crypto` is already defined.
-if (NOT TARGET crypto)
-  # Disable BoringSSL benchmarks and tests.
-  # We save the old value to restore it later
-  set(INITIAL_BUILD_TESTING ${BUILD_TESTING})
-  set(BUILD_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
-
-  # Prefix BoringSSL's symbols so they cannot collide with an OpenSSL (or
-  # another BoringSSL) linked into the same binary. Tink's own sources are
-  # compiled with the matching define in Tink's top-level CMakeLists.txt.
-  set(BORINGSSL_PREFIX "bssl_tink")
-
-  # Release from 2026-09-29.
-  http_archive(
-    NAME boringssl
-    URL https://github.com/google/boringssl/releases/download/0.20260929.0/boringssl-0.20260929.0.tar.gz
-    SHA256 04da9ba0664e0a7f028e961c38d604f2cc6dac852a84ca0e51dc1fa051d4c8fe
-  )
-  # Restore the previous value of BUILD_TESTING
-  set(BUILD_TESTING ${INITIAL_BUILD_TESTING} CACHE BOOL "Tink dependency override" FORCE)
-  # BoringSSL targets do not carry include directory info, this fixes it.
-  # TODO: b/537605175 - Make `crypto` a PRIVATE dependency of Tink targets
-  # once no public Tink header includes OpenSSL headers. Until then, this
-  # include directory propagates to every target that links Tink, so code
-  # that uses another OpenSSL may pick up BoringSSL's headers instead.
-  target_include_directories(crypto PUBLIC
-    "$<BUILD_INTERFACE:${boringssl_SOURCE_DIR}/src/include>")
-else()
-  message(STATUS "Using an already declared `crypto` target")
-  get_target_property(crypto_INCLUDE_DIR crypto INTERFACE_INCLUDE_DIRECTORIES)
-  message(STATUS "crypto Include Dir: ${crypto_INCLUDE_DIR}")
-endif()
-
-# Tink targets link against BoringSSL through this Tink-specific name.
-# TODO: b/537605175 - Back this target with a private, statically linked,
-# Tink-prefixed BoringSSL that never reuses an existing `crypto` target.
-add_library(tink::internal::boringssl ALIAS crypto)
+# Tink always builds and links its own private, statically linked BoringSSL,
+# exposed as tink::internal::boringssl.
+include(TinkBoringSSL)
 
 if (NOT TINK_USE_INSTALLED_PROTOBUF)
   set(protobuf_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)

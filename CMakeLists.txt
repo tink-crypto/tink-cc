@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Tink VERSION 2.9.2 LANGUAGES CXX)
+project(Tink VERSION 2.9.2 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

@@ -25,19 +25,8 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/evp.h"
-#include "tink/internal/secret_buffer.h"
-// BoringSSL and OpenSSL have incompatible ways to compute HKDF: BoringSSL
-// provides a one-shot API HKDF, while OpenSSL doesn't make that API public, but
-// instead provides this functionality over the EVP interface, which in turn
-// doesn't provide means to compute HKDF in BoringSSL. As a consequence, we need
-// to selectively include the correct header and use different implementations.
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#include "openssl/hkdf.h"
-#else
 #include "openssl/kdf.h"
-#endif
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/safe_stringops.h"
@@ -64,13 +53,6 @@ absl::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
   const uint8_t *ikm_ptr = reinterpret_cast<const uint8_t *>(ikm.data());
   const uint8_t *salt_ptr = reinterpret_cast<const uint8_t *>(salt.data());
   const uint8_t *info_ptr = reinterpret_cast<const uint8_t *>(info.data());
-#ifdef OPENSSL_IS_BORINGSSL
-  if (HKDF(out_key.data(), out_key.size(), evp_md, ikm_ptr, ikm.size(),
-           salt_ptr, salt.size(), info_ptr, info.size()) != 1) {
-    return absl::Status(absl::StatusCode::kInternal, "HKDF failed");
-  }
-  return absl::OkStatus();
-#else
   internal::SslUniquePtr<EVP_PKEY_CTX> pctx(
       EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, /*e=*/nullptr));
   if (pctx == nullptr || EVP_PKEY_derive_init(pctx.get()) <= 0 ||
@@ -86,7 +68,6 @@ absl::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
     return absl::Status(absl::StatusCode::kInternal, "HKDF failed");
   }
   return absl::OkStatus();
-#endif
 }
 
 }  // namespace

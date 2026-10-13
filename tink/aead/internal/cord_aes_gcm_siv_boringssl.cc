@@ -32,8 +32,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/opensslv.h"
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS) && \
-    !defined(BORINGSSL_FIPS) &&                                      \
+#if defined(OPENSSL_IS_BORINGSSL) && !defined(BORINGSSL_FIPS) && \
     (!defined(BORINGSSL_API_VERSION) || BORINGSSL_API_VERSION >= 42)
 #include "openssl/aead.h"
 #include "openssl/crypto.h"

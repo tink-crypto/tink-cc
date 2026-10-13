@@ -85,7 +85,7 @@ bool IsAesGcmSivSupported() {
   if (!internal::IsBoringSsl()) {
     return false;
   }
-#if defined(BORINGSSL_FIPS) || defined(TINK_USE_ONLY_FIPS)
+#if defined(BORINGSSL_FIPS)
   return false;
 #endif
   return !internal::IsFipsModeEnabled();
@@ -596,7 +596,7 @@ TEST(CordAesGcmSivBoringSslNegativeTest, FipsModeDisabled) {
   if (!internal::IsBoringSsl()) {
     GTEST_SKIP() << "Unimplemented with OpenSSL";
   }
-#if defined(BORINGSSL_FIPS) || defined(TINK_USE_ONLY_FIPS)
+#if defined(BORINGSSL_FIPS)
   GTEST_SKIP() << "Unimplemented with BoringSSL FIPS";
 #endif
   if (!internal::IsFipsModeEnabled()) {
@@ -617,8 +617,7 @@ TEST(CordAesGcmSivBoringSslNegativeTest, FipsModeDisabled) {
 }
 
 TEST(CordAesGcmSivBoringSslNegativeTest, DisabledInBoringSslFipsOrOpenSsl) {
-#if defined(OPENSSL_IS_BORINGSSL) && !defined(TINK_USE_ONLY_FIPS) && \
-    !defined(BORINGSSL_FIPS)
+#if defined(OPENSSL_IS_BORINGSSL) && !defined(BORINGSSL_FIPS)
   GTEST_SKIP() << "Supported in standard BoringSSL";
 #else
   absl::StatusOr<AesGcmSivKey> key128 =

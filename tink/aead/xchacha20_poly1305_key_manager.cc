@@ -31,7 +31,7 @@ absl::StatusOr<std::unique_ptr<Aead>>
 XChaCha20Poly1305KeyManager::AeadFactory::Create(
     const google::crypto::tink::XChaCha20Poly1305Key& key) const {
   return subtle::XChacha20Poly1305BoringSsl::New(
-      util::SecretDataFromStringView(key.key_value()));
+      SecretData(key.key_value()));
 }
 
 }  // namespace tink

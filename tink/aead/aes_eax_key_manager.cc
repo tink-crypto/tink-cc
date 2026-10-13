@@ -30,7 +30,7 @@ namespace tink {
 absl::StatusOr<std::unique_ptr<Aead>> AesEaxKeyManager::AeadFactory::Create(
     const google::crypto::tink::AesEaxKey& key) const {
   return subtle::AesEaxBoringSsl::New(
-      util::SecretDataFromStringView(key.key_value()), key.params().iv_size());
+      SecretData(key.key_value()), key.params().iv_size());
 }
 
 }  // namespace tink

@@ -33,7 +33,7 @@ namespace tink {
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmKeyManager::AeadFactory::Create(
     const google::crypto::tink::AesGcmKey& key) const {
   auto aes_gcm_result = subtle::AesGcmBoringSsl::New(
-      util::SecretDataFromStringView(key.key_value()));
+      SecretData(key.key_value()));
   if (!aes_gcm_result.ok()) return aes_gcm_result.status();
   return {std::move(aes_gcm_result.value())};
 }
@@ -42,7 +42,7 @@ absl::StatusOr<std::unique_ptr<CordAead>>
 AesGcmKeyManager::CordAeadFactory::Create(
     const google::crypto::tink::AesGcmKey& key) const {
   auto cord_aes_gcm_result = crypto::tink::internal::CordAesGcmBoringSsl::New(
-      util::SecretDataFromStringView(key.key_value()));
+      SecretData(key.key_value()));
   if (!cord_aes_gcm_result.ok()) return cord_aes_gcm_result.status();
   return {std::move(cord_aes_gcm_result.value())};
 }

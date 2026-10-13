@@ -38,7 +38,7 @@ namespace tink {
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmSivKeyManager::AeadFactory::Create(
     const google::crypto::tink::AesGcmSivKey& key) const {
   return subtle::AesGcmSivBoringSsl::New(
-      util::SecretDataFromStringView(key.key_value()));
+      SecretData(key.key_value()));
 }
 
 absl::StatusOr<std::unique_ptr<CordAead>>

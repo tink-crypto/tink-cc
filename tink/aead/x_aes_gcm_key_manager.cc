@@ -100,7 +100,7 @@ absl::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
   }
   return ::crypto::tink::XAesGcmKey::Create(
       *x_aes_gcm_params,
-      RestrictedData(util::SecretDataFromStringView(key.key_value()),
+      RestrictedData(SecretData(key.key_value()),
                      InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
 }

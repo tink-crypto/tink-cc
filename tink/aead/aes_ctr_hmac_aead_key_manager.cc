@@ -259,7 +259,7 @@ absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
 
   AesCtrKeyProto* aes_ctr_key = key.mutable_aes_ctr_key();
   aes_ctr_key->set_version(get_version());
-  aes_ctr_key->set_key_value(util::SecretDataAsStringView(*aes_ctr_randomness));
+  aes_ctr_key->set_key_value(aes_ctr_randomness->AsStringView());
   *aes_ctr_key->mutable_params() = key_format.aes_ctr_key_format().params();
 
   status = ValidateKey(key);

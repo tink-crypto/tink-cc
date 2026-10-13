@@ -129,7 +129,7 @@ absl::StatusOr<SecretData> DerivePerMessageKeyImpl(const CMAC_CTX& cmac_ctx,
   if (!status.ok()) {
     return status;
   }
-  return util::internal::AsSecretData(std::move(derived_key));
+  return SecretData(std::move(derived_key));
 }
 
 absl::Status InitializeCmacContext(SslUniquePtr<CMAC_CTX>& cmac_ctx,

@@ -120,7 +120,7 @@ class AesEaxKeyTP : public Message {
   const SecretData& key_value() const { return key_value_.value(); }
   SecretData* mutable_key_value() { return key_value_.mutable_value(); }
   void set_key_value(absl::string_view value) {
-    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+    *key_value_.mutable_value() = SecretData(value);
   }
 
  private:

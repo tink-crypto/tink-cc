@@ -125,8 +125,7 @@ class SubtleUtilBoringSSL {
     }
     Ed25519Key subtle_key;
     subtle_key.public_key = (*key)->public_key;
-    subtle_key.private_key =
-        std::string(util::SecretDataAsStringView((*key)->private_key));
+    subtle_key.private_key = std::string((*key)->private_key.AsStringView());
     return std::make_unique<Ed25519Key>(std::move(subtle_key));
   }
 
@@ -140,8 +139,7 @@ class SubtleUtilBoringSSL {
     }
     Ed25519Key subtle_key;
     subtle_key.public_key = (*key)->public_key;
-    subtle_key.private_key =
-        std::string(util::SecretDataAsStringView((*key)->private_key));
+    subtle_key.private_key = std::string((*key)->private_key.AsStringView());
     return std::make_unique<Ed25519Key>(std::move(subtle_key));
   }
 

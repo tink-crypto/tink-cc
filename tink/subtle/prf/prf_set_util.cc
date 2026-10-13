@@ -85,8 +85,7 @@ class PrfFromStatefulMacFactory : public Prf {
           absl::StrCat("PRF only supports outputs up to ", output->size(),
                        " bytes, but ", output_length, " bytes were requested"));
     }
-    return std::string(
-        util::SecretDataAsStringView(*output).substr(0, output_length));
+    return std::string(output->AsStringView().substr(0, output_length));
   }
 
  private:

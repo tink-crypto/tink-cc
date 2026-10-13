@@ -55,8 +55,6 @@ namespace subtle {
 
 namespace {
 
-using ::crypto::tink::util::SecretDataFromStringView;
-
 class RsaSsaPkcs1SignBoringSslImpl : public RsaSsaPkcs1SignBoringSsl {
  public:
   RsaSsaPkcs1SignBoringSslImpl(internal::SslUniquePtr<RSA> private_key,
@@ -137,20 +135,18 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
       key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
   private_key.e = std::string(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  private_key.d = SecretDataFromStringView(
-      key.GetPrivateExponentData().GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.p =
-      SecretDataFromStringView(key.GetPrimePData(GetPartialKeyAccess())
-                                   .GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.q =
-      SecretDataFromStringView(key.GetPrimeQData(GetPartialKeyAccess())
-                                   .GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.dp = SecretDataFromStringView(
-      key.GetPrimeExponentPData().GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.dq = SecretDataFromStringView(
-      key.GetPrimeExponentQData().GetSecret(InsecureSecretKeyAccess::Get()));
-  private_key.crt = SecretDataFromStringView(
-      key.GetCrtCoefficientData().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.d =
+      key.GetPrivateExponentData().Get(InsecureSecretKeyAccess::Get());
+  private_key.p = key.GetPrimePData(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get());
+  private_key.q = key.GetPrimeQData(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get());
+  private_key.dp =
+      key.GetPrimeExponentPData().Get(InsecureSecretKeyAccess::Get());
+  private_key.dq =
+      key.GetPrimeExponentQData().Get(InsecureSecretKeyAccess::Get());
+  private_key.crt =
+      key.GetCrtCoefficientData().Get(InsecureSecretKeyAccess::Get());
   internal::RsaSsaPkcs1Params params;
   switch (key.GetParameters().GetHashType()) {
     case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha256:

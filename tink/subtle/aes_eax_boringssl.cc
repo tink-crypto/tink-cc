@@ -193,13 +193,13 @@ SecretData AesEaxBoringSslImpl::ComputeB() const {
   internal::SecretBuffer block(kBlockSize, 0);
   EncryptBlock(&block);
   MultiplyByX(block.data(), block.data());
-  return util::internal::AsSecretData(std::move(block));
+  return SecretData(std::move(block));
 }
 
 SecretData AesEaxBoringSslImpl::ComputeP() const {
   internal::SecretBuffer rv(kBlockSize, 0);
   MultiplyByX(b_.data(), rv.data());
-  return util::internal::AsSecretData(std::move(rv));
+  return SecretData(std::move(rv));
 }
 
 AesEaxBoringSslImpl::Block AesEaxBoringSslImpl::Pad(

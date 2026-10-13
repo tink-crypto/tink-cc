@@ -108,13 +108,13 @@ SecretData AesSivBoringSslImpl::ComputeCmacK1() const {
     EncryptBlock(cmac_k1.data(), cmac_k1.data());
     MultiplyByX(cmac_k1.data());
   });
-  return util::internal::AsSecretData(std::move(cmac_k1));
+  return SecretData(std::move(cmac_k1));
 }
 
 SecretData AesSivBoringSslImpl::ComputeCmacK2() const {
-  internal::SecretBuffer cmac_k2 = util::internal::AsSecretBuffer(cmac_k1_);
+  internal::SecretBuffer cmac_k2 = cmac_k1_.AsSecretBuffer();
   CallWithCoreDumpProtection([&]() { MultiplyByX(cmac_k2.data()); });
-  return util::internal::AsSecretData(cmac_k2);
+  return SecretData(std::move(cmac_k2));
 }
 
 void AesSivBoringSslImpl::EncryptBlock(const uint8_t in[kBlockSize],

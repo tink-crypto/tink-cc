@@ -72,7 +72,7 @@ SecretData Random::GetRandomKeyBytes(size_t length) {
   internal::SecretBuffer buf(length, 0);
   ABSL_CHECK_OK(GetRandomBytes(
       absl::MakeSpan(reinterpret_cast<char*>(buf.data()), buf.size())));
-  return util::internal::AsSecretData(std::move(buf));
+  return SecretData(std::move(buf));
 }
 
 }  // namespace subtle

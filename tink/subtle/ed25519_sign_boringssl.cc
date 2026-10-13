@@ -157,9 +157,10 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
     const Ed25519PrivateKey &key) {
-  internal::SecretBuffer private_key = util::internal::AsSecretBuffer(
+  internal::SecretBuffer private_key =
       key.GetPrivateKeyBytes(GetPartialKeyAccess())
-          .Get(InsecureSecretKeyAccess::Get()));
+          .Get(InsecureSecretKeyAccess::Get())
+          .AsSecretBuffer();
   std::string public_key =
       std::string(key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
   size_t private_key_size = private_key.size();
@@ -168,8 +169,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
          public_key.size());
 
   return New(
-      util::internal::AsSecretData(std::move(private_key)),
-      key.GetOutputPrefix(),
+      SecretData(std::move(private_key)), key.GetOutputPrefix(),
       key.GetParameters().GetVariant() == Ed25519Parameters::Variant::kLegacy
           ? std::string(1, 0)
           : "");

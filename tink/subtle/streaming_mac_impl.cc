@@ -106,7 +106,7 @@ ComputeMacOutputStream::CloseStreamAndComputeResult() {
   if (!result.ok()) {
     return result.status();
   }
-  return std::string(util::SecretDataAsStringView(*result));
+  return std::string(result->AsStringView());
 }
 
 void ComputeMacOutputStream::BackUp(int count) {

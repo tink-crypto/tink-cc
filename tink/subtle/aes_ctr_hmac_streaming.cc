@@ -83,12 +83,9 @@ static absl::Status DeriveKeys(const SecretData& ikm, HashType hkdf_algo,
                                        derived_key_material_size);
   if (!hkdf_result.ok()) return hkdf_result.status();
   SecretData key_material = std::move(hkdf_result.value());
-  absl::string_view key_material_view =
-      util::SecretDataAsStringView(key_material);
-  *hmac_key_value =
-      util::SecretDataFromStringView(key_material_view.substr(key_size));
-  *key_value =
-      util::SecretDataFromStringView(key_material_view.substr(0, key_size));
+  absl::string_view key_material_view = key_material.AsStringView();
+  *hmac_key_value = SecretData(key_material_view.substr(key_size));
+  *key_value = SecretData(key_material_view.substr(0, key_size));
   return absl::OkStatus();
 }
 

@@ -925,24 +925,29 @@ absl::StatusOr<std::string> EcSignatureDerToIeee(const EC_GROUP* group,
                                                  absl::string_view der_sig) {
   const size_t kFieldSizeInBytes = SslEcFieldSizeInBytes(group);
 
-#ifdef OPENSSL_IS_BORINGSSL
-  // `ECDSA_SIG_from_bytes` rejects malformed DER and trailing bytes.
-  SslUniquePtr<ECDSA_SIG> ecdsa(ECDSA_SIG_from_bytes(
-      reinterpret_cast<const uint8_t*>(der_sig.data()), der_sig.size()));
-  if (ecdsa == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "ECDSA_SIG_from_bytes failed");
-  }
-#else
   const uint8_t* der_ptr = reinterpret_cast<const uint8_t*>(der_sig.data());
-  // Note: d2i_ECDSA_SIG is deprecated in BoringSSL, but it isn't in OpenSSL.
+  // d2i_ECDSA_SIG is deprecated in BoringSSL in favor of ECDSA_SIG_from_bytes.
+  // It is used because this code must also compile against OpenSSL, which
+  // does not have ECDSA_SIG_from_bytes. Trailing bytes are rejected by
+  // checking that the whole input was consumed.
   SslUniquePtr<ECDSA_SIG> ecdsa(
       d2i_ECDSA_SIG(nullptr, &der_ptr, der_sig.size()));
   if (ecdsa == nullptr || der_ptr != reinterpret_cast<const uint8_t*>(
                                          der_sig.data() + der_sig.size())) {
     return absl::Status(absl::StatusCode::kInternal, "d2i_ECDSA_SIG failed");
   }
-#endif
+  // OpenSSL's d2i_ECDSA_SIG accepts BER (e.g. non-minimal integer encodings),
+  // while BoringSSL's only accepts DER. Re-encoding the signature and comparing
+  // it with the input ensures that only strict DER is accepted with both.
+  absl::StatusOr<std::string> reencoded_der =
+      SslEcdsaSignatureToBytes(ecdsa.get());
+  if (!reencoded_der.ok()) {
+    return reencoded_der.status();
+  }
+  if (*reencoded_der != der_sig) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "ECDSA signature decoding failed");
+  }
 
   const BIGNUM* r_bn;
   const BIGNUM* s_bn;

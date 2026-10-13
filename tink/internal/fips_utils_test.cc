@@ -43,7 +43,7 @@ class FipsCompatibleWithBoringCrypto {
 };
 
 TEST(FipsUtilsTest, CompatibilityInNonFipsMode) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -52,7 +52,7 @@ TEST(FipsUtilsTest, CompatibilityInNonFipsMode) {
 }
 
 TEST(FipsUtilsTest, CompatibilityInFipsMode) {
-  if (!kUseOnlyFips || !IsFipsEnabledInSsl()) {
+  if (!IsFipsModeEnabled() || !IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test should only run in FIPS mode with Boringcrypto available.";
   }
@@ -63,7 +63,7 @@ TEST(FipsUtilsTest, CompatibilityInFipsMode) {
 }
 
 TEST(TinkFipsTest, CompatibilityInFipsModeWithoutBoringCrypto) {
-  if (!kUseOnlyFips || IsFipsEnabledInSsl()) {
+  if (!IsFipsModeEnabled() || IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Test only run if BoringCrypto module is not available.";
   }
 

@@ -851,7 +851,7 @@ TEST_F(RegistryTest, KeysetWrappingTest) {
 
 // Tests that wrapping of a keyset works.
 TEST_F(RegistryTest, TransformingKeysetWrappingTest) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -878,7 +878,7 @@ TEST_F(RegistryTest, TransformingKeysetWrappingTest) {
 // Aead, but the wrapper is in fact from something else into Aead, we give a
 // correct error message.
 TEST_F(RegistryTest, TransformingPrimitiveWrapperCustomKeyManager) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -934,7 +934,7 @@ TEST_F(RegistryTest, GetKeyManagerErrorMessage) {
 }
 
 TEST_F(RegistryTest, RegisterKeyTypeManager) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -944,7 +944,7 @@ TEST_F(RegistryTest, RegisterKeyTypeManager) {
 }
 
 TEST_F(RegistryTest, RegisterFipsKeyTypeManager) {
-  if (!kUseOnlyFips || !IsFipsEnabledInSsl()) {
+  if (!IsFipsModeEnabled() || !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Only supported in FIPS-mode with BoringCrypto available.";
   }
 
@@ -959,7 +959,7 @@ TEST_F(RegistryTest, RegisterFipsKeyTypeManager) {
 }
 
 TEST_F(RegistryTest, RegisterFipsKeyTypeManagerNoBoringCrypto) {
-  if (!kUseOnlyFips || IsFipsEnabledInSsl()) {
+  if (!IsFipsModeEnabled() || IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Only supported in FIPS-mode with BoringCrypto not available.";
   }
@@ -975,7 +975,7 @@ TEST_F(RegistryTest, RegisterFipsKeyTypeManagerNoBoringCrypto) {
 }
 
 TEST_F(RegistryTest, KeyTypeManagerGetFirstKeyManager) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -996,7 +996,7 @@ TEST_F(RegistryTest, KeyTypeManagerGetFirstKeyManager) {
 }
 
 TEST_F(RegistryTest, KeyTypeManagerGetSecondKeyManager) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1015,7 +1015,7 @@ TEST_F(RegistryTest, KeyTypeManagerGetSecondKeyManager) {
 }
 
 TEST_F(RegistryTest, KeyTypeManagerNotSupportedPrimitive) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1033,7 +1033,7 @@ TEST_F(RegistryTest, KeyTypeManagerNotSupportedPrimitive) {
 // get_key_manager, the key manager previously obtained with "get_key_manager()"
 // remains valid.
 TEST_F(RegistryTest, GetKeyManagerRemainsValidForKeyTypeManagers) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1052,7 +1052,7 @@ TEST_F(RegistryTest, GetKeyManagerRemainsValidForKeyTypeManagers) {
 }
 
 TEST_F(RegistryTest, KeyTypeManagerNewKey) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1077,7 +1077,7 @@ TEST_F(RegistryTest, KeyTypeManagerNewKey) {
 }
 
 TEST_F(RegistryTest, KeyTypeManagerNewKeyInvalidSize) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1095,7 +1095,7 @@ TEST_F(RegistryTest, KeyTypeManagerNewKeyInvalidSize) {
 }
 
 TEST_F(RegistryTest, KeyTypeManagerDeriveKey) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1126,7 +1126,7 @@ TEST_F(RegistryTest, KeyTypeManagerDeriveKey) {
 // The same, but we register the key manager twice. This should catch some of
 // the possible lifetime issues.
 TEST_F(RegistryTest, KeyTypeManagerDeriveKeyRegisterTwice) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1184,7 +1184,7 @@ TEST_F(RegistryTest, KeyManagerDeriveNotRegistered) {
 }
 
 TEST_F(RegistryTest, RegisterKeyTypeManagerTwiceMoreRestrictive) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1197,7 +1197,7 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerTwiceMoreRestrictive) {
 }
 
 TEST_F(RegistryTest, RegisterKeyTypeManagerTwice) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1216,7 +1216,7 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerTwice) {
 }
 
 TEST_F(RegistryTest, RegisterKeyTypeManagerLessRestrictive) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1229,7 +1229,7 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerLessRestrictive) {
 }
 
 TEST_F(RegistryTest, RegisterKeyTypeManagerBeforeKeyManager) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1244,7 +1244,7 @@ TEST_F(RegistryTest, RegisterKeyTypeManagerBeforeKeyManager) {
 }
 
 TEST_F(RegistryTest, RegisterKeyTypeManagerAfterKeyManager) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1395,7 +1395,7 @@ CreateTestPublicKeyManagerFipsCompatible() {
 }
 
 TEST_F(RegistryTest, RegisterAsymmetricKeyManagers) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1407,7 +1407,7 @@ TEST_F(RegistryTest, RegisterAsymmetricKeyManagers) {
 }
 
 TEST_F(RegistryTest, AsymmetricMoreRestrictiveNewKey) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1424,7 +1424,7 @@ TEST_F(RegistryTest, AsymmetricMoreRestrictiveNewKey) {
 }
 
 TEST_F(RegistryTest, AsymmetricSameNewKey) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1449,7 +1449,7 @@ TEST_F(RegistryTest, AsymmetricSameNewKey) {
 }
 
 TEST_F(RegistryTest, AsymmetricLessRestrictiveGivesError) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1470,7 +1470,7 @@ TEST_F(RegistryTest, AsymmetricLessRestrictiveGivesError) {
 // remains valid.
 
 TEST_F(RegistryTest, RegisterAsymmetricKeyManagersGetKeyManagerStaysValid) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1499,7 +1499,7 @@ TEST_F(RegistryTest, RegisterAsymmetricKeyManagersGetKeyManagerStaysValid) {
 }
 
 TEST_F(RegistryTest, AsymmetricPrivateRegisterAlone) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1526,7 +1526,7 @@ TEST_F(RegistryTest, AsymmetricPrivateRegisterAlone) {
 }
 
 TEST_F(RegistryTest, AsymmetricGetPrimitiveA) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1544,7 +1544,7 @@ TEST_F(RegistryTest, AsymmetricGetPrimitiveA) {
 }
 
 TEST_F(RegistryTest, AsymmetricGetPrimitiveB) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1562,7 +1562,7 @@ TEST_F(RegistryTest, AsymmetricGetPrimitiveB) {
 }
 
 TEST_F(RegistryTest, AsymmetricGetPublicPrimitiveA) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1580,7 +1580,7 @@ TEST_F(RegistryTest, AsymmetricGetPublicPrimitiveA) {
 }
 
 TEST_F(RegistryTest, AsymmetricGetPublicPrimitiveB) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1598,7 +1598,7 @@ TEST_F(RegistryTest, AsymmetricGetPublicPrimitiveB) {
 }
 
 TEST_F(RegistryTest, AsymmetricGetWrongPrimitiveError) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1625,7 +1625,7 @@ class PrivateKeyManagerImplTest : public testing::Test {
 };
 
 TEST_F(PrivateKeyManagerImplTest, AsymmetricFactoryNewKeyFromMessage) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1652,7 +1652,7 @@ TEST_F(PrivateKeyManagerImplTest, AsymmetricFactoryNewKeyFromMessage) {
 }
 
 TEST_F(PrivateKeyManagerImplTest, AsymmetricNewKeyDisallowed) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1674,7 +1674,7 @@ TEST_F(PrivateKeyManagerImplTest, AsymmetricNewKeyDisallowed) {
 }
 
 TEST_F(RegistryTest, AsymmetricGetPublicKeyData) {
-  if (kUseOnlyFips && !IsFipsEnabledInSsl()) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Not supported if FIPS-mode is used and BoringCrypto is "
                     "not available";
   }
@@ -1701,7 +1701,7 @@ class TestPrivateKeyTypeManager2 : public TestPrivateKeyTypeManager {};
 class TestPublicKeyTypeManager2 : public TestPublicKeyTypeManager {};
 
 TEST_F(RegistryTest, RegisterAssymmetricReregistrationWithWrongClasses) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1743,7 +1743,7 @@ class TestPublicKeyTypeManagerWithDifferentKeyType
 };
 
 TEST_F(RegistryTest, RegisterAssymmetricReregistrationWithNewKeyType) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1850,7 +1850,7 @@ class RegistryImplTest : public ::testing::Test {
 
 // Check that we can call the registry again from within NewKeyData
 TEST_F(RegistryImplTest, CanDelegateCreateKey) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1879,7 +1879,7 @@ TEST_F(RegistryImplTest, CanDelegateCreateKey) {
 
 // Check that we can call the registry again from within NewKeyData
 TEST_F(RegistryImplTest, CanDelegateDeriveKey) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1907,7 +1907,7 @@ TEST_F(RegistryImplTest, CanDelegateDeriveKey) {
 }
 
 TEST_F(RegistryImplTest, CanDelegateGetPublicKey) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
@@ -1948,7 +1948,7 @@ TEST_F(RegistryImplTest, FipsRestrictionSucceedsWhenSettingMultipleTimes) {
 }
 
 TEST_F(RegistryImplTest, FipsRestrictionSucceedsIfBuildInFipsMode) {
-  if (!kUseOnlyFips) {
+  if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported when Tink is not built in FIPS mode.";
   }
   RegistryImpl registry_impl;
@@ -1956,7 +1956,7 @@ TEST_F(RegistryImplTest, FipsRestrictionSucceedsIfBuildInFipsMode) {
 }
 
 TEST_F(RegistryImplTest, FipsFailsIfNotEmpty) {
-  if (kUseOnlyFips) {
+  if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 

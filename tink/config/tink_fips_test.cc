@@ -48,18 +48,16 @@ class FipsCompatibleWithBoringCrypto {
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 };
 
-TEST(TinkFipsTest, FipsEnabledWhenBuiltInFipsMode) {
-  // Check if the built flag is set.
-  if (!internal::kUseOnlyFips) {
+TEST(TinkFipsTest, FipsEnabledInFipsOnlyMode) {
+  if (!internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
   EXPECT_THAT(IsFipsModeEnabled(), Eq(true));
 }
 
-TEST(TinkFipsTest, FipsDisabledWhenNotBuildInFipsMode) {
-  // Check if the built flag is set.
-  if (internal::kUseOnlyFips) {
+TEST(TinkFipsTest, FipsDisabledWhenNotInFipsOnlyMode) {
+  if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 

@@ -32,11 +32,8 @@
 #include "openssl/bn.h"
 #include "openssl/ec.h"
 #include "tink/internal/ssl_unique_ptr.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
-#endif
 #include "openssl/evp.h"
 #include "openssl/pem.h"
 #include "openssl/rsa.h"

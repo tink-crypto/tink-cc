@@ -220,7 +220,7 @@ tink_cc_library(
   SRCS
     protobuf_helper.h
   DEPS
-    protobuf::libprotobuf-lite
+    protobuf::libprotobuf
 )
 
 tink_cc_library(

@@ -159,7 +159,7 @@ function(tink_cc_library)
   endif()
 
   if(NOT _is_headers_only_lib)
-    add_library(${_target_name} STATIC "")
+    add_library(${_target_name} "")
     target_sources(${_target_name} PRIVATE ${tink_cc_library_SRCS})
     target_include_directories(${_target_name} PUBLIC ${TINK_INCLUDE_DIRS})
     target_link_libraries(${_target_name} PUBLIC ${tink_cc_library_DEPS})

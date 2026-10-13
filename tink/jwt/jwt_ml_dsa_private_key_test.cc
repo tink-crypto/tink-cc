@@ -49,40 +49,6 @@ using ::testing::HasSubstr;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-#ifdef TINK_USE_ONLY_FIPS
-using JwtMlDsaPrivateKeyTest = TestWithParam<JwtMlDsaParameters::Algorithm>;
-
-INSTANTIATE_TEST_SUITE_P(JwtMlDsaPrivateKeyTestSuite, JwtMlDsaPrivateKeyTest,
-                         Values(JwtMlDsaParameters::Algorithm::kMlDsa44,
-                                JwtMlDsaParameters::Algorithm::kMlDsa65,
-                                JwtMlDsaParameters::Algorithm::kMlDsa87));
-
-TEST_P(JwtMlDsaPrivateKeyTest, CreateFipsFails) {
-  JwtMlDsaParameters::Algorithm algorithm = GetParam();
-  absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
-      JwtMlDsaParameters::KidStrategy::kIgnored, algorithm);
-  ASSERT_THAT(parameters, IsOk());
-
-  const jwt_internal::JwtMlDsaTestVector& test_vector =
-      jwt_internal::GetJwtMlDsaTestVector(algorithm);
-  absl::StatusOr<JwtMlDsaPublicKey> public_key =
-      JwtMlDsaPublicKey::Builder()
-          .SetParameters(*parameters)
-          .SetPublicKeyBytes(test_vector.public_key_bytes)
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  RestrictedData private_seed_bytes = RestrictedData(
-      test_vector.private_seed_bytes, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      JwtMlDsaPrivateKey::Create(*public_key, private_seed_bytes,
-                                 GetPartialKeyAccess())
-          .status(),
-      StatusIs(
-          absl::StatusCode::kUnimplemented,
-          HasSubstr("ML-DSA is only supported in non-FIPS BoringSSL builds.")));
-}
-#else
 struct TestCase {
   JwtMlDsaParameters::KidStrategy kid_strategy;
   JwtMlDsaParameters::Algorithm algorithm;
@@ -524,7 +490,6 @@ TEST(JwtMlDsaPrivateKeyTest, MoveAssignment) {
 
   EXPECT_THAT(*moved, Eq(expected));
 }
-#endif  // TINK_USE_ONLY_FIPS
 
 }  // namespace
 }  // namespace tink

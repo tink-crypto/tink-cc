@@ -83,8 +83,8 @@ absl::StatusOr<SecretData> Hkdf::ComputeHkdf(HashType hash,
   }
 
   internal::SecretBuffer out_key(out_len);
-  absl::Status result = CallWithCoreDumpProtection([&]() {
-    return SslHkdf(*evp_md, util::SecretDataAsStringView(ikm), salt, info,
+  absl::Status result = CallWithCoreDumpProtection([&, evp_md = *evp_md]() {
+    return SslHkdf(evp_md, util::SecretDataAsStringView(ikm), salt, info,
                    absl::MakeSpan(out_key.data(), out_key.size()));
   });
   if (!result.ok()) {

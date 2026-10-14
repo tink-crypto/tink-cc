@@ -659,6 +659,43 @@ TEST(RsaUtilTest, RsaCheckPublicKeyModulusSmallerThanExp) {
   EXPECT_THAT(RsaCheckPublicKey(key->get()), Not(IsOk()));
 }
 
+TEST(RsaUtilTest, RsaCheckPublicKeyModulusTooSmall) {
+  // An odd 504-bit modulus, smaller than the minimum of 512 bits.
+  const std::string modulus_too_small =
+      absl::StrCat(std::string(125, 'f'), "1");
+  absl::StatusOr<internal::SslUniquePtr<RSA>> key =
+      NewRsaPublicKey(modulus_too_small, RSA_F4);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(RsaCheckPublicKey(key->get()), Not(IsOk()));
+}
+
+TEST(RsaUtilTest, RsaCheckPublicKeyModulusEven) {
+  // k2048BitRsaModulus with its last bit cleared.
+  std::string even_modulus(k2048BitRsaModulus);
+  ASSERT_EQ(even_modulus.back(), 'd');
+  even_modulus.back() = 'c';
+  absl::StatusOr<internal::SslUniquePtr<RSA>> key =
+      NewRsaPublicKey(even_modulus, RSA_F4);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(RsaCheckPublicKey(key->get()), Not(IsOk()));
+}
+
+TEST(RsaUtilTest, RsaCheckPublicKeyModulusNegative) {
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+      internal::StringToBignum(test::HexDecodeOrDie(k2048BitRsaModulus));
+  ASSERT_THAT(n, IsOk());
+  BN_set_negative(n->get(), 1);
+  internal::SslUniquePtr<BIGNUM> e(BN_new());
+  ASSERT_EQ(BN_set_word(e.get(), RSA_F4), kSslSuccess);
+  internal::SslUniquePtr<RSA> key(RSA_new());
+  ASSERT_EQ(RSA_set0_key(key.get(), n->get(), e.get(), /*d=*/nullptr),
+            kSslSuccess);
+  // RSA_set0_key takes ownership of the arguments.
+  n->release();
+  e.release();
+  EXPECT_THAT(RsaCheckPublicKey(key.get()), Not(IsOk()));
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

@@ -33,7 +33,6 @@
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/internal/util.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -43,6 +42,9 @@ namespace tink {
 namespace internal {
 
 constexpr int kMaxRsaModulusSizeBits = 16 * 1024;
+// Same lower bound as BoringSSL's `RSA_check_key` for public keys. Tink's key
+// types require at least 2048 bits (see `ValidateRsaModulusSize`).
+constexpr int kMinRsaModulusSizeBits = 512;
 // Mitigate DoS attacks by limiting the exponent size. 33 bits was chosen as
 // the limit based on the recommendations in [1] and [2]. Windows CryptoAPI
 // doesn't support values larger than 32 bits [3], so it is unlikely that
@@ -492,15 +494,9 @@ absl::Status RsaCheckPublicKey(const RSA* key) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "RSA key is null");
   }
 
-  // BoringSSL `RSA_check_key` supports checking the public key.
-  if (internal::IsBoringSsl()) {
-    if (RSA_check_key(key) != 1) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Invalid RSA key format");
-    }
-    return absl::OkStatus();
-  }
-
+  // These are the checks of BoringSSL's `RSA_check_key` for public keys.
+  // OpenSSL's `RSA_check_key` fails for public keys, so they are implemented
+  // here with functions that both libraries provide.
   const BIGNUM* n = nullptr;
   const BIGNUM* e = nullptr;
   const BIGNUM* d = nullptr;
@@ -524,6 +520,19 @@ absl::Status RsaCheckPublicKey(const RSA* key) {
             "RSA key's public modulus size is too large; expected at most ",
             kMaxRsaModulusSizeBits, " bits, got ", n_bits));
   }
+  if (n_bits < kMinRsaModulusSizeBits) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat(
+            "RSA key's public modulus size is too small; expected at least ",
+            kMinRsaModulusSizeBits, " bits, got ", n_bits));
+  }
+
+  // The modulus must be positive and odd.
+  if (BN_is_negative(n) || !BN_is_odd(n)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "RSA key's public modulus must be positive and odd");
+  }
 
   unsigned e_bits = BN_num_bits(e);
   // Valis size is 1 < e_bits <= kMaxRsaExponentBits.
@@ -533,10 +542,10 @@ absl::Status RsaCheckPublicKey(const RSA* key) {
         absl::StrCat("Invalid public exponent size of ", e_bits, " bits"));
   }
 
-  // The exponent must be odd to be relatively prime with phi(n).
-  if (!BN_is_odd(e)) {
+  // The exponent must be positive, and odd to be relatively prime with phi(n).
+  if (BN_is_negative(e) || !BN_is_odd(e)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Public exponent is not odd");
+                        "Public exponent must be positive and odd");
   }
 
   // Verify |n > e| first taking the shortcut of making sure the size in bits of

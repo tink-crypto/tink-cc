@@ -17,7 +17,6 @@
 
 #include <stddef.h>
 
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -25,14 +24,11 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -118,13 +114,18 @@ absl::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(
 }
 
 int CompareBignumWithWord(const BIGNUM *bignum, BN_ULONG word) {
-#ifdef OPENSSL_IS_BORINGSSL
-  return BN_cmp_word(bignum, word);
-#else
-  internal::SslUniquePtr<BIGNUM> bn_word(BN_new());
-  BN_set_word(bn_word.get(), word);
-  return BN_cmp(bignum, bn_word.get());
-#endif
+  // This function only uses functions that both BoringSSL and OpenSSL provide.
+  if (BN_is_negative(bignum)) {
+    return -1;
+  }
+  if (BN_num_bits(bignum) > static_cast<int>(sizeof(BN_ULONG) * 8)) {
+    return 1;
+  }
+  BN_ULONG value = BN_get_word(bignum);
+  if (value < word) {
+    return -1;
+  }
+  return value > word ? 1 : 0;
 }
 
 }  // namespace internal

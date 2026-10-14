@@ -207,7 +207,6 @@ tink_cc_library(
     tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
-    tink::internal::ssl_util
     tink::internal::util
     absl::status
     absl::statusor
@@ -352,15 +351,13 @@ tink_cc_test(
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     gmock
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
     absl::span
     tink::internal::boringssl
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

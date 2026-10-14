@@ -17,12 +17,14 @@
 
 #include <stddef.h>
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -31,9 +33,6 @@
 #include "openssl/bn.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -267,20 +266,32 @@ TEST(BnUtil, CompareBignumWithWord) {
   }
 }
 
-TEST(BnUtil, InlineBigNum) {
-  InlineBignum bn;
-  BN_set_word(bn.get(), /*value=*/0x0fffffffffffffffUL);
-  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/0x0fffffffffffffffL), 0);
+TEST(BnUtil, CompareBignumWithWordZero) {
+  internal::SslUniquePtr<BIGNUM> bn(BN_new());
+  BN_zero(bn.get());
+  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/0), 0);
+  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/1), -1);
 }
 
-TEST(BnUtil, InlineBigNumRelease) {
-  InlineBignum bn;
-  BN_set_word(bn.get(), /*value=*/0x0fffffffffffffffUL);
-  BIGNUM* bn_ptr = bn.get();
-  bn.release();
-  EXPECT_EQ(bn.get(), nullptr);
-  EXPECT_EQ(CompareBignumWithWord(bn_ptr, /*word=*/0x0fffffffffffffffL), 0);
-  BN_free(bn_ptr);
+TEST(BnUtil, CompareBignumWithWordNegative) {
+  internal::SslUniquePtr<BIGNUM> bn(BN_new());
+  BN_set_word(bn.get(), /*value=*/5);
+  BN_set_negative(bn.get(), 1);
+  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/0), -1);
+  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/5), -1);
+}
+
+TEST(BnUtil, CompareBignumWithWordLargerThanAWord) {
+  // 2^128 + 1.
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> bn = StringToBignum(
+      test::HexDecodeOrDie("0100000000000000000000000000000001"));
+  ASSERT_THAT(bn, IsOk());
+  EXPECT_EQ(CompareBignumWithWord(bn->get(), /*word=*/0), 1);
+  EXPECT_EQ(CompareBignumWithWord(bn->get(), /*word=*/1), 1);
+  EXPECT_EQ(
+      CompareBignumWithWord(bn->get(),
+                            /*word=*/std::numeric_limits<BN_ULONG>::max()),
+      1);
 }
 
 }  // namespace

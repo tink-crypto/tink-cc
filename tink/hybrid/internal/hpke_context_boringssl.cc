@@ -98,25 +98,27 @@ HpkeContextBoringSsl::SetupRecipient(const HpkeParams &params,
   }
   SecretUniquePtr<bssl::ScopedEVP_HPKE_KEY> hpke_key =
       util::MakeSecretUniquePtr<bssl::ScopedEVP_HPKE_KEY>();
-  int evp_hpke_key_init_result = CallWithCoreDumpProtection([&]() {
-    return EVP_HPKE_KEY_init(
-        hpke_key->get(), *kem,
-        reinterpret_cast<const uint8_t *>(recipient_private_key.data()),
-        recipient_private_key.size());
-  });
+  int evp_hpke_key_init_result =
+      CallWithCoreDumpProtection([&, kem = *kem]() {
+        return EVP_HPKE_KEY_init(
+            hpke_key->get(), kem,
+            reinterpret_cast<const uint8_t *>(recipient_private_key.data()),
+            recipient_private_key.size());
+      });
   if (!evp_hpke_key_init_result) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Unable to initialize BoringSSL HPKE recipient private key.");
   }
   SslUniquePtr<EVP_HPKE_CTX> context(EVP_HPKE_CTX_new());
-  int evp_hpke_ctx_setup_recipient_result = CallWithCoreDumpProtection([&]() {
-    return EVP_HPKE_CTX_setup_recipient(
-        context.get(), hpke_key->get(), *kdf, *aead,
-        reinterpret_cast<const uint8_t *>(encapsulated_key.data()),
-        encapsulated_key.size(), reinterpret_cast<const uint8_t *>(info.data()),
-        info.size());
-  });
+  int evp_hpke_ctx_setup_recipient_result =
+      CallWithCoreDumpProtection([&, kdf = *kdf, aead = *aead]() {
+        return EVP_HPKE_CTX_setup_recipient(
+            context.get(), hpke_key->get(), kdf, aead,
+            reinterpret_cast<const uint8_t *>(encapsulated_key.data()),
+            encapsulated_key.size(),
+            reinterpret_cast<const uint8_t *>(info.data()), info.size());
+      });
   if (!evp_hpke_ctx_setup_recipient_result) {
     return absl::Status(absl::StatusCode::kUnknown,
                         "Unable to set up BoringSSL HPKE recipient context.");

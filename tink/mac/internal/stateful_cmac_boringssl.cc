@@ -55,8 +55,8 @@ absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
   internal::SslUniquePtr<CMAC_CTX> ctx(CMAC_CTX_new());
 
   // Initialize the CMAC
-  if (!CallWithCoreDumpProtection([&]() {
-        return CMAC_Init(ctx.get(), key_value.data(), key_value.size(), *cipher,
+  if (!CallWithCoreDumpProtection([&, cipher = *cipher]() {
+        return CMAC_Init(ctx.get(), key_value.data(), key_value.size(), cipher,
                          nullptr /* engine */);
       })) {
     return absl::Status(absl::StatusCode::kFailedPrecondition,

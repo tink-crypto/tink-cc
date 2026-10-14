@@ -114,7 +114,9 @@ absl::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
     return priv_big_num.status();
   }
   int ec_key_set_private_key_result = internal::CallWithCoreDumpProtection(
-      [&]() { return EC_KEY_set_private_key(key.get(), priv_big_num->get()); });
+      [&, &priv_big_num = *priv_big_num]() {
+        return EC_KEY_set_private_key(key.get(), priv_big_num.get());
+      });
   if (!ec_key_set_private_key_result) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

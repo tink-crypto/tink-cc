@@ -75,8 +75,8 @@ bool ComputeMacInternal(const SecretData& key, uint8_t* tag_ptr,
   const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(data.data());
   const uint8_t* suffix_ptr = reinterpret_cast<const uint8_t*>(suffix.data());
   size_t len = 0;
-  return internal::CallWithCoreDumpProtection([&]() {
-    if (CMAC_Init(context.get(), key.data(), key.size(), *cipher, nullptr) <=
+  return internal::CallWithCoreDumpProtection([&, cipher = *cipher]() {
+    if (CMAC_Init(context.get(), key.data(), key.size(), cipher, nullptr) <=
             0 ||
         CMAC_Update(context.get(), data_ptr, data.size()) <= 0 ||
         (!suffix.empty() &&

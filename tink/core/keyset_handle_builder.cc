@@ -202,7 +202,8 @@ absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
         entry.CreateKeysetKey(*id, config);
     if (!key.ok()) return key.status();
 
-    internal::CallWithCoreDumpProtection([&]() { *keyset->add_key() = **key; });
+    internal::CallWithCoreDumpProtection(
+        [&, &key = *key]() { *keyset->add_key() = *key; });
     if (entry.IsPrimary()) {
       if (primary_id.has_value()) {
         return absl::Status(

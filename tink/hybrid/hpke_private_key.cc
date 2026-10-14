@@ -148,7 +148,9 @@ absl::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
     return priv_key.status();
   }
   int ec_key_set_private_key_result = internal::CallWithCoreDumpProtection(
-      [&] { return EC_KEY_set_private_key(key.get(), priv_key->get()); });
+      [&, &priv_key = *priv_key] {
+        return EC_KEY_set_private_key(key.get(), priv_key.get());
+      });
   if (!ec_key_set_private_key_result) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

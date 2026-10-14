@@ -278,11 +278,12 @@ absl::StatusOr<std::unique_ptr<CordAead>> New(const SecretData& key,
   if (!aead_cipher.ok()) {
     return aead_cipher.status();
   }
-  bssl::UniquePtr<EVP_AEAD_CTX> ctx(internal::CallWithCoreDumpProtection([&]() {
-    return EVP_AEAD_CTX_new(*aead_cipher,
-                            reinterpret_cast<const uint8_t*>(key.data()),
-                            key.size(), kTagSizeInBytes);
-  }));
+  bssl::UniquePtr<EVP_AEAD_CTX> ctx(
+      internal::CallWithCoreDumpProtection([&, aead_cipher = *aead_cipher]() {
+        return EVP_AEAD_CTX_new(aead_cipher,
+                                reinterpret_cast<const uint8_t*>(key.data()),
+                                key.size(), kTagSizeInBytes);
+      }));
   if (ctx == nullptr) {
     return absl::InternalError(
         absl::StrCat("EVP_AEAD_CTX_init failed: ", internal::GetSslErrors()));

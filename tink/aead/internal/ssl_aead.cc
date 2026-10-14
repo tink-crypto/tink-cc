@@ -512,8 +512,8 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
   }
 
   internal::SslUniquePtr<EVP_AEAD_CTX> context(
-      internal::CallWithCoreDumpProtection([&]() {
-        return EVP_AEAD_CTX_new(*aead_cipher, key.data(), key.size(),
+      internal::CallWithCoreDumpProtection([&, aead_cipher = *aead_cipher]() {
+        return EVP_AEAD_CTX_new(aead_cipher, key.data(), key.size(),
                                 kAesGcmTagSizeInBytes);
       }));
   if (context == nullptr) {
@@ -544,8 +544,8 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
     return aead_cipher.status();
   }
   internal::SslUniquePtr<EVP_AEAD_CTX> context(
-      internal::CallWithCoreDumpProtection([&]() {
-        return EVP_AEAD_CTX_new(*aead_cipher, key.data(), key.size(),
+      internal::CallWithCoreDumpProtection([&, aead_cipher = *aead_cipher]() {
+        return EVP_AEAD_CTX_new(aead_cipher, key.data(), key.size(),
                                 kAesGcmTagSizeInBytes);
       }));
   if (context == nullptr) {

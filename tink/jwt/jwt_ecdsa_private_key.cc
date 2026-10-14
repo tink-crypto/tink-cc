@@ -101,9 +101,10 @@ absl::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
   if (!priv_big_num.ok()) {
     return priv_big_num.status();
   }
-  if (int set_private_key_res = internal::CallWithCoreDumpProtection([&]() {
-        return EC_KEY_set_private_key(key.get(), priv_big_num->get());
-      });
+  if (int set_private_key_res = internal::CallWithCoreDumpProtection(
+          [&, &priv_big_num = *priv_big_num]() {
+            return EC_KEY_set_private_key(key.get(), priv_big_num.get());
+          });
       !set_private_key_res) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

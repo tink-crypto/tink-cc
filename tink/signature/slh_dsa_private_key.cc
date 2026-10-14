@@ -129,15 +129,16 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   public_key_bytes_regen.resize(public_key_size);
 
   absl::Status status = absl::OkStatus();
-  internal::CallWithCoreDumpProtection([&]() {
-    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes_regen[0],
-                                                   public_key_size);
+  internal::CallWithCoreDumpProtection(
+      [&, parameter_set = *parameter_set]() {
+        internal::ScopedAssumeRegionCoreDumpSafe scope(
+            &public_key_bytes_regen[0], public_key_size);
 
-    status = GetPublicFromPrivate(
-        *parameter_set, public_key_bytes_regen,
-        private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
-    internal::DfsanClearLabel(&public_key_bytes_regen[0], public_key_size);
-  });
+        status = GetPublicFromPrivate(
+            parameter_set, public_key_bytes_regen,
+            private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
+        internal::DfsanClearLabel(&public_key_bytes_regen[0], public_key_size);
+      });
   if (!status.ok()) {
     return status;
   }
@@ -187,15 +188,16 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   public_key_bytes.resize(public_key_size);
 
   absl::Status status = absl::OkStatus();
-  internal::CallWithCoreDumpProtection([&]() {
-    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
-                                                   public_key_size);
+  internal::CallWithCoreDumpProtection(
+      [&, parameter_set = *parameter_set]() {
+        internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
+                                                       public_key_size);
 
-    absl::Status status = GetPublicFromPrivate(
-        *parameter_set, public_key_bytes,
-        private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
-    internal::DfsanClearLabel(&public_key_bytes[0], public_key_size);
-  });
+        absl::Status status = GetPublicFromPrivate(
+            parameter_set, public_key_bytes,
+            private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
+        internal::DfsanClearLabel(&public_key_bytes[0], public_key_size);
+      });
   if (!status.ok()) {
     return status;
   }
@@ -245,15 +247,16 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::CreateFromSeed(
   internal::SecretBuffer private_key_bytes(private_key_size);
 
   absl::Status status = absl::OkStatus();
-  internal::CallWithCoreDumpProtection([&]() {
-    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
-                                                   public_key_size);
+  internal::CallWithCoreDumpProtection(
+      [&, parameter_set = *parameter_set]() {
+        internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes[0],
+                                                       public_key_size);
 
-    status = GetKeyPairFromSeed(
-        *parameter_set, public_key_bytes, private_key_bytes,
-        private_seed_bytes.Get(InsecureSecretKeyAccess::Get()));
-    internal::DfsanClearLabel(&public_key_bytes[0], public_key_size);
-  });
+        status = GetKeyPairFromSeed(
+            parameter_set, public_key_bytes, private_key_bytes,
+            private_seed_bytes.Get(InsecureSecretKeyAccess::Get()));
+        internal::DfsanClearLabel(&public_key_bytes[0], public_key_size);
+      });
   if (!status.ok()) {
     return status;
   }

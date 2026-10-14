@@ -59,8 +59,8 @@ absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
   // Create and initialize the HMAC context
   internal::SslUniquePtr<HMAC_CTX> ctx(HMAC_CTX_new());
   // Initialize the HMAC
-  if (!CallWithCoreDumpProtection([&]() {
-        return HMAC_Init(ctx.get(), key_value.data(), key_value.size(), *md);
+  if (!CallWithCoreDumpProtection([&, md = *md]() {
+        return HMAC_Init(ctx.get(), key_value.data(), key_value.size(), md);
       })) {
     return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "HMAC initialization failed");

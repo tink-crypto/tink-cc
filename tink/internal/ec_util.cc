@@ -823,20 +823,22 @@ absl::StatusOr<SecretData> ComputeEcdhSharedSecret(EllipticCurveType curve,
   // Compute the shared point and make sure it is on `curve`.
   internal::SslUniquePtr<EC_POINT> shared_point(
       EC_POINT_new(priv_group->get()));
-  int ec_point_mul_result = CallWithCoreDumpProtection([&]() {
-    return EC_POINT_mul(priv_group->get(), shared_point.get(), /*n=*/nullptr,
-                        pub_key, priv_key, /*ctx=*/nullptr);
-  });
+  int ec_point_mul_result =
+      CallWithCoreDumpProtection([&, &priv_group = *priv_group]() {
+        return EC_POINT_mul(priv_group.get(), shared_point.get(), /*n=*/nullptr,
+                            pub_key, priv_key, /*ctx=*/nullptr);
+      });
   if (ec_point_mul_result != 1) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Point multiplication failed");
   }
-  int ec_point_is_on_curve_result = CallWithCoreDumpProtection([&]() {
-    int result = EC_POINT_is_on_curve(priv_group->get(), shared_point.get(),
-                                      /*ctx=*/nullptr);
-    DfsanClearLabel(&result, sizeof(result));
-    return result;
-  });
+  int ec_point_is_on_curve_result =
+      CallWithCoreDumpProtection([&, &priv_group = *priv_group]() {
+        int result = EC_POINT_is_on_curve(priv_group.get(), shared_point.get(),
+                                          /*ctx=*/nullptr);
+        DfsanClearLabel(&result, sizeof(result));
+        return result;
+      });
   if (ec_point_is_on_curve_result != 1) {
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Shared point is not on curve ",

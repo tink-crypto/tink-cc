@@ -218,8 +218,8 @@ absl::Status GetRsaModAndExponents(const RsaPrivateKey& key, RSA* rsa) {
   if (!d.ok()) {
     return d.status();
   }
-  if (CallWithCoreDumpProtection([&]() {
-        return RSA_set0_key(rsa, n->get(), e->get(), d->get());
+  if (CallWithCoreDumpProtection([&, &n = *n, &e = *e, &d = *d]() {
+        return RSA_set0_key(rsa, n.get(), e.get(), d.get());
       }) != 1) {
     return absl::Status(
         absl::StatusCode::kInternal,

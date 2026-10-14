@@ -67,7 +67,6 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
-using ::crypto::tink::util::SecretDataAsStringView;
 
 bool EcdsaSignatureEncodingValid(uint32_t c) { return 0 <= c && c <= 2; }
 
@@ -161,7 +160,7 @@ class EcdsaPrivateKeyTP final : public Message {
 
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) {
-    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+    *key_value_.mutable_value() = SecretData(value);
   }
 
  private:
@@ -515,7 +514,7 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
     return public_key.status();
   }
   absl::StatusOr<SecretData> key_value = ParseBigIntToFixedLength(
-      SecretDataAsStringView(proto_key.key_value()),
+      proto_key.key_value().AsStringView(),
       public_key->GetParameters().GetPrivateKeyLength());
   if (!key_value.ok()) {
     return key_value.status();
@@ -651,7 +650,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   if (!fixed_length_key.ok()) {
     return fixed_length_key.status();
   }
-  proto_private_key.set_key_value(SecretDataAsStringView(*fixed_length_key));
+  proto_private_key.set_key_value(fixed_length_key->AsStringView());
 
   absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
       output_prefix_type =

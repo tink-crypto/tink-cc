@@ -59,7 +59,7 @@ absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::CreateKey(
   Ed25519PrivateKeyProto ed25519_private_key;
   ed25519_private_key.set_version(get_version());
   ed25519_private_key.set_key_value(
-      util::SecretDataAsStringView((*key)->private_key));
+      (*key)->private_key.AsStringView());
 
   // Build Ed25519PublicKey.
   auto ed25519_public_key = ed25519_private_key.mutable_public_key();
@@ -86,7 +86,7 @@ Ed25519SignKeyManager::PublicKeySignFactory::Create(
                         private_key.public_key().key_value().size());
 
   return subtle::Ed25519SignBoringSsl::New(
-      util::internal::AsSecretData(std::move(sk)));
+      SecretData(std::move(sk)));
 }
 
 absl::Status Ed25519SignKeyManager::ValidateKey(
@@ -124,7 +124,7 @@ absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
   Ed25519PrivateKeyProto ed25519_private_key;
   ed25519_private_key.set_version(get_version());
   ed25519_private_key.set_key_value(
-      util::SecretDataAsStringView((*key)->private_key));
+      (*key)->private_key.AsStringView());
 
   // Build Ed25519PublicKey.
   auto ed25519_public_key = ed25519_private_key.mutable_public_key();

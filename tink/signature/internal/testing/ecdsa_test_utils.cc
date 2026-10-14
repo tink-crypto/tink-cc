@@ -46,7 +46,7 @@ EcdsaPrivateKey GetEcdsaTestPrivateKey(
       internal::GetEcKey(util::Enums::ProtoToSubtle(curve_type));
   EcdsaPrivateKey ecdsa_key;
   ecdsa_key.set_version(0);
-  ecdsa_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
+  ecdsa_key.set_key_value(test_key.priv.AsStringView());
 
   google::crypto::tink::EcdsaPublicKey* public_key =
       ecdsa_key.mutable_public_key();

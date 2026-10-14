@@ -428,7 +428,7 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
       absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
           *public_key,
           RestrictedData(
-              util::internal::AsSecretData(std::move(private_seed_bytes)),
+              SecretData(std::move(private_seed_bytes)),
               InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
       ABSL_CHECK_OK(private_key);

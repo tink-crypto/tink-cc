@@ -58,7 +58,7 @@ absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
   // Build EcdsaPrivateKeyProto.
   EcdsaPrivateKeyProto ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
-  ecdsa_private_key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  ecdsa_private_key.set_key_value(ec_key.priv.AsStringView());
   auto ecdsa_public_key = ecdsa_private_key.mutable_public_key();
   ecdsa_public_key->set_version(get_version());
   ecdsa_public_key->set_x(ec_key.pub_x);
@@ -124,7 +124,7 @@ absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
   // Build EcdsaPrivateKey.
   EcdsaPrivateKeyProto ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
-  ecdsa_private_key.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  ecdsa_private_key.set_key_value(ec_key->priv.AsStringView());
   EcdsaPublicKeyProto* ecdsa_public_key =
       ecdsa_private_key.mutable_public_key();
   ecdsa_public_key->set_version(get_version());
@@ -142,7 +142,7 @@ EcdsaSignKeyManager::PublicKeySignFactory::Create(
   ec_key.curve = Enums::ProtoToSubtle(public_key.params().curve());
   ec_key.pub_x = public_key.x();
   ec_key.pub_y = public_key.y();
-  ec_key.priv = util::SecretDataFromStringView(ecdsa_private_key.key_value());
+  ec_key.priv = SecretData(ecdsa_private_key.key_value());
   auto result = subtle::EcdsaSignBoringSsl::New(
       ec_key, Enums::ProtoToSubtle(public_key.params().hash_type()),
       Enums::ProtoToSubtle(public_key.params().encoding()));

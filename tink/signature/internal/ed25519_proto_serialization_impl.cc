@@ -103,7 +103,7 @@ class Ed25519PrivateKeyTP final : public Message {
 
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) {
-    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+    *key_value_.mutable_value() = SecretData(value);
   }
 
   const Ed25519PublicKeyTP& public_key() const { return public_key_.value(); }

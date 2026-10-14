@@ -269,7 +269,7 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::CreateFromSeed(
 
   return SlhDsaPrivateKey(
       *public_key,
-      RestrictedData(util::internal::AsSecretData(private_key_bytes),
+      RestrictedData(SecretData(private_key_bytes),
                      InsecureSecretKeyAccess::Get()));
 #endif
 }

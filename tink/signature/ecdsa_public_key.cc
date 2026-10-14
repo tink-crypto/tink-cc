@@ -165,7 +165,7 @@ std::string EcdsaPublicKey::GetPaddedX() const {
   if (!padded_x.ok()) {
     return "";
   }
-  return std::string(util::SecretDataAsStringView(*padded_x));
+  return std::string(padded_x->AsStringView());
 }
 
 std::string EcdsaPublicKey::GetPaddedY() const {
@@ -174,7 +174,7 @@ std::string EcdsaPublicKey::GetPaddedY() const {
   if (!padded_y.ok()) {
     return "";
   }
-  return std::string(util::SecretDataAsStringView(*padded_y));
+  return std::string(padded_y->AsStringView());
 }
 
 }  // namespace tink

@@ -60,7 +60,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
   }
 
   RestrictedData private_key_value =
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+      RestrictedData(ec_key->priv.AsStringView(),
                      GetInsecureSecretKeyAccessInternal());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(

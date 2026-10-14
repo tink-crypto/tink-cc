@@ -237,7 +237,7 @@ SignatureTestVector CreateMlDsa65Ed2551TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -256,8 +256,7 @@ SignatureTestVector CreateMlDsa65Ed2551TestVector() {
   absl::StatusOr<Ed25519PrivateKey> ed25519_private_key =
       Ed25519PrivateKey::Create(
           *ed25519_public_key,
-          RestrictedData(util::internal::AsSecretData(
-                             std::move(ed25519_private_key_bytes)),
+          RestrictedData(SecretData(std::move(ed25519_private_key_bytes)),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ABSL_CHECK_OK(ed25519_private_key);
@@ -456,7 +455,7 @@ SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -482,7 +481,7 @@ SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
   absl::StatusOr<EcdsaPrivateKey> ecdsa_private_key = EcdsaPrivateKey::Create(
       *ecdsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(ecdsa_private_key_bytes)),
+          SecretData(std::move(ecdsa_private_key_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_private_key);
@@ -686,7 +685,7 @@ SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -712,7 +711,7 @@ SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
   absl::StatusOr<EcdsaPrivateKey> ecdsa_private_key = EcdsaPrivateKey::Create(
       *ecdsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(ecdsa_private_key_bytes)),
+          SecretData(std::move(ecdsa_private_key_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_private_key);
@@ -973,7 +972,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -1286,7 +1285,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -1584,7 +1583,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -1895,7 +1894,7 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -2187,7 +2186,7 @@ SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -2213,7 +2212,7 @@ SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
   absl::StatusOr<EcdsaPrivateKey> ecdsa_private_key = EcdsaPrivateKey::Create(
       *ecdsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(ecdsa_private_key_bytes)),
+          SecretData(std::move(ecdsa_private_key_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_private_key);
@@ -2471,7 +2470,7 @@ SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -2497,7 +2496,7 @@ SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
   absl::StatusOr<EcdsaPrivateKey> ecdsa_private_key = EcdsaPrivateKey::Create(
       *ecdsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(ecdsa_private_key_bytes)),
+          SecretData(std::move(ecdsa_private_key_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ecdsa_private_key);
@@ -2812,7 +2811,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);
@@ -3178,7 +3177,7 @@ SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector() {
   absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
       *ml_dsa_public_key,
       RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          SecretData(std::move(private_seed_bytes)),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ABSL_CHECK_OK(ml_dsa_private_key);

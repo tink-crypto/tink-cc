@@ -53,12 +53,12 @@ std::unique_ptr<RsaSsaPssPrivateKeyProto> RsaPrivateKeySubtleToProto(
     const internal::RsaPrivateKey& private_key) {
   auto key_proto = std::make_unique<RsaSsaPssPrivateKeyProto>();
   key_proto->set_version(RsaSsaPssSignKeyManager().get_version());
-  key_proto->set_d(util::SecretDataAsStringView(private_key.d));
-  key_proto->set_p(util::SecretDataAsStringView(private_key.p));
-  key_proto->set_q(util::SecretDataAsStringView(private_key.q));
-  key_proto->set_dp(util::SecretDataAsStringView(private_key.dp));
-  key_proto->set_dq(util::SecretDataAsStringView(private_key.dq));
-  key_proto->set_crt(util::SecretDataAsStringView(private_key.crt));
+  key_proto->set_d(private_key.d.AsStringView());
+  key_proto->set_p(private_key.p.AsStringView());
+  key_proto->set_q(private_key.q.AsStringView());
+  key_proto->set_dp(private_key.dp.AsStringView());
+  key_proto->set_dq(private_key.dq.AsStringView());
+  key_proto->set_crt(private_key.crt.AsStringView());
   auto* public_key_proto = key_proto->mutable_public_key();
   public_key_proto->set_version(RsaSsaPssSignKeyManager().get_version());
   public_key_proto->set_n(private_key.n);
@@ -71,12 +71,12 @@ internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
   internal::RsaPrivateKey key;
   key.n = key_proto.public_key().n();
   key.e = key_proto.public_key().e();
-  key.d = util::SecretDataFromStringView(key_proto.d());
-  key.p = util::SecretDataFromStringView(key_proto.p());
-  key.q = util::SecretDataFromStringView(key_proto.q());
-  key.dp = util::SecretDataFromStringView(key_proto.dp());
-  key.dq = util::SecretDataFromStringView(key_proto.dq());
-  key.crt = util::SecretDataFromStringView(key_proto.crt());
+  key.d = SecretData(key_proto.d());
+  key.p = SecretData(key_proto.p());
+  key.q = SecretData(key_proto.q());
+  key.dp = SecretData(key_proto.dp());
+  key.dq = SecretData(key_proto.dq());
+  key.crt = SecretData(key_proto.crt());
   return key;
 }
 

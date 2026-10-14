@@ -153,6 +153,7 @@ TEST(ReadSecretBytesTest, ReadTwice) {
   IstreamInputStream input_stream{
       std::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
   auto text_or = ReadSecretBytesFromStream(7, &input_stream);
+  ASSERT_THAT(text_or, IsOk());
   std::string text(util::SecretDataAsStringView(std::move(text_or).value()));
   EXPECT_THAT(text, Eq("0123456"));
 

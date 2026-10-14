@@ -592,6 +592,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWorks) {
           RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
 
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
 }

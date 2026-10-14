@@ -196,13 +196,14 @@ TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
       skipped++;
       continue;
     }
-    std::unique_ptr<CordAead> cipher = std::move(
-        *CordAesGcmBoringSsl::New(util::SecretDataFromStringView(tc.key)));
+    absl::StatusOr<std::unique_ptr<CordAead>> cipher =
+        CordAesGcmBoringSsl::New(util::SecretDataFromStringView(tc.key));
+    ASSERT_THAT(cipher, IsOk());
     // Convert the ciphertext to cord.
     absl::Cord ct_cord = absl::Cord(tc.nonce + tc.ct + tc.tag);
     absl::Cord associated_data_cord = absl::Cord(tc.aad);
     absl::StatusOr<absl::Cord> result =
-        cipher->Decrypt(ct_cord, associated_data_cord);
+        (*cipher)->Decrypt(ct_cord, associated_data_cord);
     if (result.ok()) {
       std::string decrypted = std::string(result->Flatten());
       if (tc.expected == "invalid") {

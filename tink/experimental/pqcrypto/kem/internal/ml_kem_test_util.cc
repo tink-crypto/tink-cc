@@ -56,6 +56,9 @@ absl::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
 
   absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       key_parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
 
   return MlKemPrivateKey::Create(
       *public_key,

@@ -272,14 +272,14 @@ class StatefulHmacBoringSslTestVectorTest
     auto create_result =
         StatefulHmacBoringSsl::New(subtle::HashType::SHA1, tag.size(),
                                    util::SecretDataFromStringView(key));
-    EXPECT_THAT(create_result, IsOk());
+    ASSERT_THAT(create_result, IsOk());
     auto hmac = std::move(create_result.value());
 
     auto update_result = hmac->Update(msg);
     EXPECT_THAT(update_result, IsOk());
 
     absl::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
-    EXPECT_THAT(finalize_result, IsOk());
+    ASSERT_THAT(finalize_result, IsOk());
 
     EXPECT_EQ(SecretDataAsStringView(*finalize_result), tag);
   }

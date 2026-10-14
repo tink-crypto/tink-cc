@@ -103,13 +103,15 @@ TEST_F(EciesHkdfSenderKemBoringSslTest, TestSenderRecipientBasic) {
         test::HexDecodeOrDie(test.info_hex), test.out_len, test.point_format);
     ASSERT_THAT(status_or_kem_key, IsOk());
     auto kem_key = std::move(status_or_kem_key.value());
-    auto ecies_recipient(
-        std::move(EciesHkdfRecipientKemBoringSsl::New(test.curve, test_key.priv)
-                      .value()));
+    auto status_or_recipient_kem =
+        EciesHkdfRecipientKemBoringSsl::New(test.curve, test_key.priv);
+    ASSERT_THAT(status_or_recipient_kem, IsOk());
+    auto ecies_recipient = std::move(status_or_recipient_kem.value());
     auto status_or_shared_secret = ecies_recipient->GenerateKey(
         kem_key->get_kem_bytes(), test.hash,
         test::HexDecodeOrDie(test.salt_hex),
         test::HexDecodeOrDie(test.info_hex), test.out_len, test.point_format);
+    ASSERT_THAT(status_or_shared_secret, IsOk());
     EXPECT_EQ(test::HexEncode(
                   util::SecretDataAsStringView(kem_key->get_symmetric_key())),
               test::HexEncode(util::SecretDataAsStringView(

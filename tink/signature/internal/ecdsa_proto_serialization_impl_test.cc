@@ -829,6 +829,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
           RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
 
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
 }
@@ -895,6 +896,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
           RestrictedData(util::SecretDataAsStringView(ec_key.priv),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
 
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
 }

@@ -28,13 +28,8 @@
 #include "tink/internal/mlkem_util.h"
 #include "tink/internal/xwing_util.h"
 #include "tink/secret_data.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
-#else
-#include "openssl/ec.h"
-#endif
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_public_key.h"
 #include "tink/insecure_secret_key_access.h"

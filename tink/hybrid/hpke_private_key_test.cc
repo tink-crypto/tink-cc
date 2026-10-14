@@ -29,9 +29,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/internal/secret_buffer.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#endif
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_public_key.h"
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"

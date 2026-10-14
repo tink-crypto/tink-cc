@@ -667,7 +667,6 @@ cc_test(
         "//tink/aead:xchacha20_poly1305_key_manager",
         "//tink/daead:aes_siv_key_manager",
         "//tink/hybrid/internal/testing:ecies_test_util",
-        "//tink/internal:ssl_util",
         "//tink/subtle:random",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
@@ -797,7 +796,6 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -823,7 +821,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -952,7 +949,6 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

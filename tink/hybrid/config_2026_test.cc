@@ -42,17 +42,11 @@ using ::testing::Values;
 
 using Config2026Test = TestWithParam<KeyTemplate>;
 
-#ifdef OPENSSL_IS_BORINGSSL
 INSTANTIATE_TEST_SUITE_P(
     Config2026TestSuite, Config2026Test,
     Values(HybridKeyTemplates::EciesP256HkdfHmacSha256Aes128Gcm(),
            HybridKeyTemplates::HpkeP256HkdfSha256Aes128Gcm(),
            HybridKeyTemplates::HpkeX25519HkdfSha256Aes128Gcm()));
-#else
-INSTANTIATE_TEST_SUITE_P(
-    Config2026TestSuite, Config2026Test,
-    Values(HybridKeyTemplates::EciesP256HkdfHmacSha256Aes128Gcm()));
-#endif
 
 TEST_P(Config2026Test, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =

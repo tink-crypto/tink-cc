@@ -35,7 +35,6 @@
 #include "tink/hybrid/internal/testing/ecies_test_util.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/registry.h"
 #include "tink/subtle/random.h"
 #include "tink/util/test_util.h"
@@ -271,9 +270,6 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesCtrAeadHybridDecryption) {
 }
 
 TEST_F(EciesAeadHkdfHybridDecryptTest, testXChaCha20Poly1305HybridDecryption) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
-  }
   // Register DEM key manager.
   std::string dem_key_type = XChaCha20Poly1305KeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(

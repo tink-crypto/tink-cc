@@ -20,11 +20,8 @@
 #include "absl/status/status.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
-#endif
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 
@@ -33,14 +30,12 @@ namespace tink {
 namespace internal {
 
 absl::Status AddHybridKeyGen2026(KeyGenConfiguration& config) {
-#ifdef OPENSSL_IS_BORINGSSL
   absl::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       std::make_unique<HpkePrivateKeyManager>(),
       std::make_unique<HpkePublicKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
-#endif
   return KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       std::make_unique<EciesAeadHkdfPrivateKeyManager>(),
       std::make_unique<EciesAeadHkdfPublicKeyManager>(), config);

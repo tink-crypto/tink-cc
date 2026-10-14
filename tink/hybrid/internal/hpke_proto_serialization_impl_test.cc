@@ -34,11 +34,6 @@
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#else
-#include "openssl/ec.h"
-#endif
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_public_key.h"

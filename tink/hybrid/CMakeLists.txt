@@ -613,7 +613,6 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_key_manager
     tink::daead::aes_siv_key_manager
     tink::hybrid::internal::testing::ecies_test_util
-    tink::internal::ssl_util
     tink::subtle::random
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
@@ -734,7 +733,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
     tink::hybrid::internal::testing::hpke_test_vectors
@@ -757,7 +755,6 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
@@ -864,7 +861,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access

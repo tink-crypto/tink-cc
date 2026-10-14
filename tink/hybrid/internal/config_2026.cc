@@ -28,8 +28,6 @@
 #include "tink/hybrid/hybrid_encrypt_wrapper.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_proto_serialization.h"
 #include "tink/hybrid/hpke_public_key.h"
@@ -37,7 +35,6 @@
 #include "tink/hybrid/internal/hpke_encrypt.h"
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
-#endif
 #include "tink/internal/configuration_impl.h"
 
 namespace crypto {
@@ -46,7 +43,6 @@ namespace internal {
 
 namespace {
 
-#ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<std::unique_ptr<HybridDecrypt>> NewHpkeDecrypt(
     const HpkePrivateKey& key) {
   return crypto::tink::internal::HpkeDecrypt::New(key);
@@ -56,7 +52,6 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> NewHpkeEncrypt(
     const HpkePublicKey& key) {
   return crypto::tink::internal::HpkeEncrypt::New(key);
 }
-#endif
 
 }  // namespace
 
@@ -72,7 +67,6 @@ absl::Status AddHybrid2026(Configuration& config) {
     return status;
   }
 
-#ifdef OPENSSL_IS_BORINGSSL
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
       std::make_unique<HpkePrivateKeyManager>(),
       std::make_unique<HpkePublicKeyManager>(), config);
@@ -93,7 +87,6 @@ absl::Status AddHybrid2026(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-#endif
   return ConfigurationImpl::AddAsymmetricKeyManagers(
       std::make_unique<EciesAeadHkdfPrivateKeyManager>(),
       std::make_unique<EciesAeadHkdfPublicKeyManager>(), config);

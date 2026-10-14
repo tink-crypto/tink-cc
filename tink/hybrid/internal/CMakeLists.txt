@@ -599,7 +599,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
     tink::core::parameters
@@ -637,7 +636,6 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
-    tink::internal::boringssl
     tink::core::configuration
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -689,7 +687,6 @@ tink_cc_library(
     tink::hybrid::internal::hpke_public_key_manager
     absl::memory
     absl::status
-    tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager

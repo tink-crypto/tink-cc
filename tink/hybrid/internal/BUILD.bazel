@@ -255,7 +255,6 @@ cc_library(
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -274,7 +273,6 @@ cc_library(
         "//tink/internal:key_gen_configuration_impl",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -726,7 +724,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

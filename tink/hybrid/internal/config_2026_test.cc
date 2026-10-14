@@ -29,9 +29,7 @@
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/key_status.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
-#endif
 #include "tink/hybrid/internal/key_gen_config_2026.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
@@ -82,25 +80,17 @@ TEST(Hybrid2026Test, KeyManagers) {
   for (const KeyTypeInfoStore* s : {*store, *key_gen_store}) {
     EXPECT_THAT(s->Get(EciesAeadHkdfPrivateKeyManager().get_key_type()),
                 IsOk());
-#ifdef OPENSSL_IS_BORINGSSL
     EXPECT_THAT(s->Get(HpkePrivateKeyManager().get_key_type()), IsOk());
-#endif
   }
 }
 
 using Hybrid2026KeyTypesTest = TestWithParam<KeyTemplate>;
 
-#ifdef OPENSSL_IS_BORINGSSL
 INSTANTIATE_TEST_SUITE_P(
     Hybrid2026KeyTypesTestSuite, Hybrid2026KeyTypesTest,
     Values(HybridKeyTemplates::EciesP256HkdfHmacSha256Aes128Gcm(),
            HybridKeyTemplates::HpkeP256HkdfSha256Aes128Gcm(),
            HybridKeyTemplates::HpkeX25519HkdfSha256Aes128Gcm()));
-#else
-INSTANTIATE_TEST_SUITE_P(
-    Hybrid2026KeyTypesTestSuite, Hybrid2026KeyTypesTest,
-    Values(HybridKeyTemplates::EciesP256HkdfHmacSha256Aes128Gcm()));
-#endif
 
 TEST_P(Hybrid2026KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
@@ -127,8 +117,6 @@ TEST_P(Hybrid2026KeyTypesTest, GetPrimitive) {
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*decrypt)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
-
-#ifdef OPENSSL_IS_BORINGSSL
 
 using HybridTestVectorTest = testing::TestWithParam<internal::HybridTestVector>;
 
@@ -188,7 +176,6 @@ TEST_P(HybridTestVectorTest, EncryptWorks) {
 
 INSTANTIATE_TEST_SUITE_P(HpkeTestVectorTest, HybridTestVectorTest,
                          testing::ValuesIn(internal::CreateHpkeTestVectors()));
-#endif
 
 }  // namespace
 }  // namespace internal

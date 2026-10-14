@@ -16,12 +16,16 @@
 
 #include "tink/aead/internal/key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_eax_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/internal/aes_gcm_key_creator.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -43,6 +47,17 @@ absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
+
+  if (absl::Status status = RegisterAesGcmProtoSerialization(); !status.ok()) {
+    return status;
+  }
+  if (absl::Status status =
+          internal::KeyGenConfigurationImpl::AddKeyCreator<AesGcmParameters>(
+              CreateAesGcmKey, config);
+      !status.ok()) {
+    return status;
+  }
+
   status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesGcmSivKeyManager>(), config);
   if (!status.ok()) {

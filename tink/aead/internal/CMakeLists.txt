@@ -1273,12 +1273,14 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
-    absl::memory
+    tink::aead::internal::aes_gcm_key_creator
     absl::status
     tink::core::key_gen_configuration
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
+    tink::aead::aes_gcm_parameters
+    tink::aead::aes_gcm_proto_serialization
     tink::aead::aes_gcm_siv_key_manager
     tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager

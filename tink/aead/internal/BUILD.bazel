@@ -173,15 +173,17 @@ cc_library(
     hdrs = ["key_gen_config_2026.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":aes_gcm_key_creator",
         "//tink:key_gen_configuration",
         "//tink/aead:aes_ctr_hmac_aead_key_manager",
         "//tink/aead:aes_eax_key_manager",
         "//tink/aead:aes_gcm_key_manager",
+        "//tink/aead:aes_gcm_parameters",
+        "//tink/aead:aes_gcm_proto_serialization",
         "//tink/aead:aes_gcm_siv_key_manager",
         "//tink/aead:x_aes_gcm_key_manager",
         "//tink/aead:xchacha20_poly1305_key_manager",
         "//tink/internal:key_gen_configuration_impl",
-        "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
     ],
 )

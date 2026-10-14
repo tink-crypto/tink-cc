@@ -59,7 +59,7 @@ absl::StatusOr<std::unique_ptr<Key>> CreateAesCtrHmacKey(
   if (!key.ok()) {
     return key.status();
   }
-  return std::make_unique<AesCtrHmacAeadKey>(*key);
+  return std::make_unique<AesCtrHmacAeadKey>(*std::move(key));
 }
 
 }  // namespace internal

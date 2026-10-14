@@ -46,7 +46,7 @@ absl::StatusOr<std::unique_ptr<Key>> CreateAesGcmKey(
   if (!key.ok()) {
     return key.status();
   }
-  return std::make_unique<AesGcmKey>(*key);
+  return std::make_unique<AesGcmKey>(*std::move(key));
 }
 
 }  // namespace internal

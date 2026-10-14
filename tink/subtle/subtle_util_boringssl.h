@@ -28,6 +28,7 @@
 #include "tink/aead/internal/aead_util.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/ec_key_from_seed.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/md_util.h"
@@ -113,7 +114,7 @@ class SubtleUtilBoringSSL {
   // Returns a new EC key for the specified curve derived from a seed.
   static absl::StatusOr<EcKey> GetNewEcKeyFromSeed(
       EllipticCurveType curve_type, const SecretData& secret_seed) {
-    return internal::NewEcKey(curve_type, secret_seed);
+    return internal::NewEcKeyFromSeed(curve_type, secret_seed);
   }
 
   // Returns a new ED25519 key.

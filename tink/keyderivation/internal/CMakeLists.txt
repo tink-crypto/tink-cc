@@ -160,6 +160,7 @@ tink_cc_library(
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
     tink::daead::aes_siv_proto_serialization
+    tink::internal::ec_key_from_seed
     tink::internal::ec_util
     tink::mac::hmac_key
     tink::mac::hmac_parameters

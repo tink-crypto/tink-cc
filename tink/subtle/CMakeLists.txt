@@ -701,6 +701,7 @@ tink_cc_library(
     tink::aead::internal::aead_util
     tink::internal::aes_util
     tink::internal::bn_util
+    tink::internal::ec_key_from_seed
     tink::internal::ec_util
     tink::internal::err_util
     tink::internal::md_util

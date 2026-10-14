@@ -30,15 +30,9 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#include "openssl/ec_key.h"
-#else
 #include "openssl/ec.h"
-#endif
 #include "openssl/crypto.h"
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
@@ -408,39 +402,6 @@ absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
   EC_KEY_set_group(key.get(), group->get());
   EC_KEY_generate_key(key.get());
   return EcKeyFromSslEcKey(curve_type, *key);
-}
-
-absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
-                               const SecretData& secret_seed) {
-  // EC_KEY_derive_from_secret() is not defined in OpenSSL.
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::Status(
-      absl::StatusCode::kUnimplemented,
-      "Deriving EC keys from a secret seed is not supported with OpenSSL");
-#else
-  if (IsFipsModeEnabled()) {
-    return absl::Status(
-        absl::StatusCode::kInternal,
-        "Deriving EC keys from a secret seed is not allowed in FIPS mode");
-  }
-  if (curve_type == EllipticCurveType::CURVE25519) {
-    return absl::Status(
-        absl::StatusCode::kInternal,
-        "Creating a X25519 key from a secret seed is not supported");
-  }
-  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
-      EcGroupFromCurveType(curve_type);
-  if (!group.ok()) {
-    return group.status();
-  }
-  SslUniquePtr<EC_KEY> key(EC_KEY_derive_from_secret(
-      group->get(), secret_seed.data(), secret_seed.size()));
-  if (key.get() == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EC_KEY_derive_from_secret failed");
-  }
-  return EcKeyFromSslEcKey(curve_type, *key);
-#endif
 }
 
 absl::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {

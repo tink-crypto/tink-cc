@@ -123,6 +123,7 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::public_key_sign
     tink::config::tink_fips
+    tink::internal::ec_key_from_seed
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::subtle::ecdsa_sign_boringssl

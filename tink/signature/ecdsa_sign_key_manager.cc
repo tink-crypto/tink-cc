@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
 #include "tink/input_stream.h"
+#include "tink/internal/ec_key_from_seed.h"
 #include "tink/internal/ec_util.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
@@ -112,7 +113,7 @@ absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
   }
 
   // Generate new EC key from the seed.
-  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKeyFromSeed(
       util::Enums::ProtoToSubtle(ecdsa_key_format.params().curve()),
       *randomness);
 

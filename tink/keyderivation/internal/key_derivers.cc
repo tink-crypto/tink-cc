@@ -45,6 +45,7 @@
 #include "tink/ec_point.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ec_key_from_seed.h"
 #include "tink/internal/ec_util.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_key.h"
@@ -340,7 +341,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
     return secret_seed.status();
   }
   absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(curve_type, *secret_seed);
+      internal::NewEcKeyFromSeed(curve_type, *secret_seed);
   if (!ec_key.ok()) {
     return ec_key.status();
   }

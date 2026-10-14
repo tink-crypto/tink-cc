@@ -48,6 +48,7 @@
 #include "tink/daead/aes_siv_proto_serialization.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ec_key_from_seed.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -285,7 +286,7 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
     EcdsaParameters::Variant variant, absl::string_view secret_seed,
     std::optional<int> id_requirement) {
   internal::EcKey key_pair =
-      internal::NewEcKey(
+      internal::NewEcKeyFromSeed(
           proto_curve_type,
           util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))
           .value();

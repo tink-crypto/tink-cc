@@ -411,7 +411,6 @@ tink_cc_test(
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
-    tink::internal::ssl_util
     protobuf::libprotobuf
     gmock
     absl::absl_check
@@ -2264,3 +2263,38 @@ tink_cc_test(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME ec_key_from_seed
+  SRCS
+    ec_key_from_seed.cc
+    ec_key_from_seed.h
+  DEPS
+    tink::internal::ec_util
+    tink::internal::fips_utils
+    tink::internal::ssl_unique_ptr
+    absl::status
+    absl::statusor
+    tink::internal::boringssl
+    tink::core::secret_data
+    tink::subtle::common_enums
+)
+
+tink_cc_test(
+  NAME ec_key_from_seed_test
+  SRCS
+    ec_key_from_seed_test.cc
+  DEPS
+    tink::internal::ec_key_from_seed
+    tink::internal::ec_util
+    tink::internal::fips_utils
+    tink::internal::ssl_util
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::secret_data
+    tink::subtle::common_enums
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+)

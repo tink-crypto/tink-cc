@@ -436,7 +436,6 @@ cc_test(
         ":ec_util",
         ":fips_utils",
         ":ssl_unique_ptr",
-        ":ssl_util",
         "//tink:big_integer",
         "//tink:ec_point",
         "//tink:insecure_secret_key_access_testonly",
@@ -2274,6 +2273,43 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ec_key_from_seed",
+    srcs = ["ec_key_from_seed.cc"],
+    hdrs = ["ec_key_from_seed.h"],
+    deps = [
+        ":ec_util",
+        ":fips_utils",
+        ":ssl_unique_ptr",
+        "//tink:secret_data",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "ec_key_from_seed_test",
+    srcs = ["ec_key_from_seed_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":ec_key_from_seed",
+        ":ec_util",
+        ":fips_utils",
+        ":ssl_util",
+        "//tink:secret_data",
+        "//tink/subtle:common_enums",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )

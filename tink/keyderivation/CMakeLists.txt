@@ -270,6 +270,7 @@ tink_cc_test(
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
     tink::daead::aes_siv_proto_serialization
+    tink::internal::ec_key_from_seed
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::mutable_serialization_registry

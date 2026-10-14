@@ -66,11 +66,6 @@ struct Ed25519Key {
 absl::StatusOr<EcKey> NewEcKey(
     crypto::tink::subtle::EllipticCurveType curve_type);
 
-// Returns a new EC key for the specified curve derived from a secret seed.
-absl::StatusOr<EcKey> NewEcKey(
-    crypto::tink::subtle::EllipticCurveType curve_type,
-    const SecretData &secret_seed);
-
 // X25519Key Utils.
 
 // Returns a new X25519Key key. It returns a kInternal error status if the

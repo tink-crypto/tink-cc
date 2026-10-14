@@ -1274,13 +1274,17 @@ tink_cc_library(
     key_gen_config_2026.h
   DEPS
     tink::aead::internal::aes_ctr_hmac_key_creator
+    tink::aead::internal::aes_eax_key_creator
     tink::aead::internal::aes_gcm_key_creator
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::aes_eax_key_manager
+    tink::aead::aes_eax_parameters
+    tink::aead::aes_eax_proto_serialization
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization
@@ -1607,4 +1611,40 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
+)
+
+tink_cc_library(
+  NAME aes_eax_key_creator
+  SRCS
+    aes_eax_key_creator.cc
+    aes_eax_key_creator.h
+  DEPS
+    absl::statusor
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::aead::aes_eax_key
+    tink::aead::aes_eax_parameters
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME aes_eax_key_creator_test
+  SRCS
+    aes_eax_key_creator_test.cc
+  DEPS
+    tink::aead::internal::aes_eax_key_creator
+    gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::partial_key_access
+    tink::aead::aes_eax_key
+    tink::aead::aes_eax_parameters
 )

@@ -19,15 +19,19 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 #include "tink/aead/aes_eax_key_manager.h"
+#include "tink/aead/aes_eax_parameters.h"
+#include "tink/aead/aes_eax_proto_serialization.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
 #include "tink/aead/internal/aes_ctr_hmac_key_creator.h"
+#include "tink/aead/internal/aes_eax_key_creator.h"
 #include "tink/aead/internal/aes_gcm_key_creator.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
@@ -81,6 +85,12 @@ absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
+
+  ABSL_RETURN_IF_ERROR(RegisterAesEaxProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<AesEaxParameters>(
+          CreateAesEaxKey, config));
+
   status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       CreateXAesGcmKeyManager(), config);
   if (!status.ok()) {

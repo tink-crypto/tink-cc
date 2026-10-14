@@ -117,6 +117,9 @@ absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
   }
   absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
       internal::NewEd25519Key(*randomness);
+  if (!key.ok()) {
+    return key.status();
+  }
 
   Ed25519PrivateKeyProto ed25519_private_key;
   ed25519_private_key.set_version(get_version());

@@ -12,6 +12,7 @@ tink_cc_library(
     tink::internal::internal_insecure_secret_key_access
     tink::internal::tink_proto_structs
     tink::util::test_util
+  TESTONLY
 )
 
 tink_cc_test(
@@ -49,6 +50,7 @@ tink_cc_library(
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::tink_proto_structs
+  TESTONLY
 )
 
 tink_cc_test(

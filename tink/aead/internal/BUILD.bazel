@@ -173,9 +173,12 @@ cc_library(
     hdrs = ["key_gen_config_2026.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":aes_ctr_hmac_key_creator",
         ":aes_gcm_key_creator",
         "//tink:key_gen_configuration",
         "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_ctr_hmac_aead_parameters",
+        "//tink/aead:aes_ctr_hmac_aead_proto_serialization",
         "//tink/aead:aes_eax_key_manager",
         "//tink/aead:aes_gcm_key_manager",
         "//tink/aead:aes_gcm_parameters",
@@ -1568,6 +1571,42 @@ cc_test(
         "//tink:partial_key_access",
         "//tink/aead:aes_gcm_key",
         "//tink/aead:aes_gcm_parameters",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "aes_ctr_hmac_key_creator",
+    srcs = ["aes_ctr_hmac_key_creator.cc"],
+    hdrs = ["aes_ctr_hmac_key_creator.h"],
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink:secret_data",
+        "//tink/aead:aes_ctr_hmac_aead_key",
+        "//tink/aead:aes_ctr_hmac_aead_parameters",
+        "//tink/subtle:random",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "aes_ctr_hmac_key_creator_test",
+    srcs = ["aes_ctr_hmac_key_creator_test.cc"],
+    deps = [
+        ":aes_ctr_hmac_key_creator",
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink/aead:aes_ctr_hmac_aead_key",
+        "//tink/aead:aes_ctr_hmac_aead_parameters",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",

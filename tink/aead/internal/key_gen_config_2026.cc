@@ -33,8 +33,11 @@
 #include "tink/aead/internal/aes_ctr_hmac_key_creator.h"
 #include "tink/aead/internal/aes_eax_key_creator.h"
 #include "tink/aead/internal/aes_gcm_key_creator.h"
+#include "tink/aead/internal/xchacha20_poly1305_key_creator.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 
@@ -96,6 +99,10 @@ absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
+  ABSL_RETURN_IF_ERROR(RegisterXChaCha20Poly1305ProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<
+          XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key, config));
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<XChaCha20Poly1305KeyManager>(), config);
 }

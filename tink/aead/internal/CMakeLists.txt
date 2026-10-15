@@ -1276,6 +1276,7 @@ tink_cc_library(
     tink::aead::internal::aes_ctr_hmac_key_creator
     tink::aead::internal::aes_eax_key_creator
     tink::aead::internal::aes_gcm_key_creator
+    tink::aead::internal::xchacha20_poly1305_key_creator
     absl::status
     absl::status_macros
     tink::core::key_gen_configuration
@@ -1291,6 +1292,8 @@ tink_cc_library(
     tink::aead::aes_gcm_siv_key_manager
     tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::internal::key_gen_configuration_impl
 )
 
@@ -1647,4 +1650,40 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::aead::aes_eax_key
     tink::aead::aes_eax_parameters
+)
+
+tink_cc_library(
+  NAME xchacha20_poly1305_key_creator
+  SRCS
+    xchacha20_poly1305_key_creator.cc
+    xchacha20_poly1305_key_creator.h
+  DEPS
+    absl::statusor
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME xchacha20_poly1305_key_creator_test
+  SRCS
+    xchacha20_poly1305_key_creator_test.cc
+  DEPS
+    tink::aead::internal::xchacha20_poly1305_key_creator
+    gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::partial_key_access
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
 )

@@ -766,3 +766,32 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
 )
+
+tink_cc_library(
+  NAME hpke_proto_structs
+  SRCS
+    hpke_proto_structs.cc
+    hpke_proto_structs.h
+  DEPS
+    absl::core_headers
+    absl::status
+    absl::statusor
+    tink::hybrid::hpke_parameters
+    tink::proto::hpke_cc_tinkpb
+    tink::proto::tink_cc_tinkpb
+)
+
+tink_cc_test(
+  NAME hpke_proto_structs_test
+  SRCS
+    hpke_proto_structs_test.cc
+  DEPS
+    tink::hybrid::internal::hpke_proto_structs
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::hybrid::hpke_parameters
+    tink::proto::hpke_cc_tinkpb
+    tink::proto::tink_cc_tinkpb
+)

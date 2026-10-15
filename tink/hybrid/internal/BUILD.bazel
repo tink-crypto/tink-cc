@@ -801,3 +801,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "hpke_proto_structs",
+    srcs = ["hpke_proto_structs.cc"],
+    hdrs = ["hpke_proto_structs.h"],
+    deps = [
+        "//proto:hpke_cc_tinkpb",
+        "//proto:tink_cc_tinkpb",
+        "//tink/hybrid:hpke_parameters",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "hpke_proto_structs_test",
+    size = "small",
+    srcs = ["hpke_proto_structs_test.cc"],
+    deps = [
+        ":hpke_proto_structs",
+        "//proto:hpke_cc_tinkpb",
+        "//proto:tink_cc_tinkpb",
+        "//tink/hybrid:hpke_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -516,3 +516,18 @@ cc_library(
         "//tink/internal:proto_parser_secret_data_field",
     ],
 )
+
+cc_library(
+    name = "hpke_cc_tinkpb",
+    hdrs = ["hpke.tinkpb.h"],
+    deps = [
+        "//tink:secret_data",
+        "//tink/internal:proto_parser_enum_field",
+        "//tink/internal:proto_parser_field",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
+        "//tink/internal:proto_parser_scalar_fields",
+        "//tink/internal:proto_parser_secret_data_field",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)

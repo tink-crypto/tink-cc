@@ -32,14 +32,13 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
-#include "tink/aead/aead_config.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/keyset_wrapper.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -47,7 +46,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_keyset_handle.h"
 #include "tink/util/test_util.h"
@@ -128,6 +126,8 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
   return std::make_unique<XChaCha20Poly1305Key>(*key);
 }
 
+// Returns a fake Aead for an XChaCha20Poly1305Key proto: these tests exercise
+// the keyset wrapper, not the AEAD.
 absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
     const google::crypto::tink::KeyData& key_data) {
   google::crypto::tink::XChaCha20Poly1305Key key;
@@ -135,17 +135,17 @@ absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse XChaCha20Poly1305Key proto");
   }
-  return subtle::XChacha20Poly1305BoringSsl::New(
-      util::SecretDataFromStringView(key.key_value()));
+  return {std::make_unique<::crypto::tink::test::DummyAead>(key.key_value())};
 }
 
+// Returns a fake Aead for an XChaCha20Poly1305Key.
 absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305Key(
     const Key& key) {
   XChaCha20Poly1305Key xchacha_key =
       dynamic_cast<const XChaCha20Poly1305Key&>(key);
-  return subtle::XChacha20Poly1305BoringSsl::New(
-      (xchacha_key.GetKeyBytes(GetPartialKeyAccess())
-           .Get(InsecureSecretKeyAccess::Get())));
+  return {std::make_unique<::crypto::tink::test::DummyAead>(
+      xchacha_key.GetKeyBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()))};
 }
 
 google::crypto::tink::KeyData OnlyTypeUrlKeyData(absl::string_view type_url) {
@@ -193,7 +193,7 @@ INSTANTIATE_TEST_SUITE_P(
                     XChaCha20Poly1305Parameters::Variant::kNoPrefix));
 
 TEST_P(KeysetWrapperImplTest, BasicFromKey) {
-  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
@@ -234,10 +234,7 @@ TEST_P(KeysetWrapperImplTest, BasicFromKey) {
 }
 
 TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
-  }
-  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
@@ -285,10 +282,7 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
 
 TEST_P(KeysetWrapperImplTest,
        AeadEncryptDecryptFailingPrimitiveGetterFromKeyFallsBackToKeyData) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
-  }
-  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
@@ -338,19 +332,15 @@ TEST_P(KeysetWrapperImplTest,
   EXPECT_THAT(*decryption, Eq(plaintext));
 }
 
-// Test values are taken from the test vector tcId 2 of the
-// Wycheproof tests:
-// https://github.com/google/wycheproof/blob/master/testvectors/xchacha20_poly1305_test.json#L33
+// Checks the ciphertext layout for a key with a fixed key ID, and the
+// decryption of a fixed ciphertext.
 TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
-  }
-  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  std::string key_bytes = test::HexDecodeOrDie(
+      "ab1562faea9f47af3ae1c3d6d030e3af230255dff3df583ced6fbbcbf9d606a9");
   absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink,
-      RestrictedData(test::HexDecodeOrDie("ab1562faea9f47af3ae1c3d6d030e3af23"
-                                          "0255dff3df583ced6fbbcbf9d606a9"),
-                     InsecureSecretKeyAccess::Get()),
+      RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/0x02030405, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
   KeysetHandleBuilder::Entry entry0 =
@@ -369,29 +359,22 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
 
-  // Check that encrypt/decrypt works.
+  // DummyAead ciphertexts are "<name size>:<ad size>:<name><ad><plaintext>",
+  // and the name is the key bytes.
+  std::string tink_prefix = test::HexDecodeOrDie(
+      absl::StrCat(/*tink_prefix*/ "01", /*key_id*/ "02030405"));
   absl::StatusOr<std::string> encryption =
       (*aead)->Encrypt(/*plaintext=*/"", /*associated_data=*/"");
   ASSERT_THAT(encryption, IsOk());
-  EXPECT_THAT(encryption->size(), Eq(key->GetOutputPrefix().size() +
-                                     /*tag_size=*/16 + /*nonce_size=*/24));
-  absl::StatusOr<std::string> decryption =
-      (*aead)->Decrypt(*encryption, /*associated_data=*/"");
-  EXPECT_THAT(encryption->substr(0, key->GetOutputPrefix().size()),
-              Eq(key->GetOutputPrefix()));
-  ASSERT_THAT(decryption, IsOk());
-  EXPECT_THAT(*decryption, Eq(""));
+  EXPECT_THAT(*encryption, Eq(absl::StrCat(tink_prefix, "32:0:", key_bytes)));
+  EXPECT_THAT((*aead)->Decrypt(*encryption, /*associated_data=*/""),
+              IsOkAndHolds(""));
 
-  // Check decryption with the fixed ciphertext.
-  std::string fixed_ct = test::HexDecodeOrDie(
-      absl::StrCat(/*tink_prefix*/ "01",
-                   /*key_id*/ "02030405",
-                   /*iv*/ "6a5e0c4617e07091b605a4de2c02dde117de2ebd53b23497",
-                   /*ct*/ "", /*tag*/ "e2697ea6877aba39d9555a00e14db041"));
-  absl::StatusOr<std::string> fixed_ct_decryption =
-      (*aead)->Decrypt(fixed_ct, /*associated_data=*/"");
-  ASSERT_THAT(fixed_ct_decryption, IsOk());
-  EXPECT_THAT(*fixed_ct_decryption, Eq(""));
+  // Check decryption with a fixed ciphertext.
+  std::string fixed_ct =
+      absl::StrCat(tink_prefix, "32:0:", key_bytes, "plaintext");
+  EXPECT_THAT((*aead)->Decrypt(fixed_ct, /*associated_data=*/""),
+              IsOkAndHolds("plaintext"));
 }
 
 TEST(KeysetWrapperImplTest, FailingGetPrimitive) {

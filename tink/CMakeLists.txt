@@ -1109,11 +1109,12 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::string_view
-    tink::subtle::subtle
+    tink::subtle::random
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::util::validation
     tink::proto::aes_gcm_cc_proto
 )
@@ -1129,7 +1130,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::string_view
-    tink::subtle::subtle
+    tink::subtle::random
     tink::util::input_stream_util
     tink::util::istream_input_stream
     tink::util::protobuf_helper
@@ -1158,7 +1159,6 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::status_matchers
-    tink::subtle::aes_gcm_boringssl
     tink::subtle::random
     tink::util::protobuf_helper
     tink::util::status

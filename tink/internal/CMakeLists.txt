@@ -244,7 +244,6 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_impl
-    tink::internal::ssl_util
     gmock
     absl::flat_hash_map
     absl::memory
@@ -262,11 +261,10 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::primitive_wrapper
     tink::core::restricted_data
-    tink::aead::aead_config
     tink::aead::aead_wrapper
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
-    tink::subtle::xchacha20_poly1305_boringssl
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::util::secret_data
     tink::util::test_keyset_handle
     tink::util::test_util
@@ -1234,16 +1232,21 @@ tink_cc_test(
     absl::optional
     tink::core::aead
     tink::core::key_manager_impl
+    tink::core::key_type_manager
+    tink::core::template_util
+    tink::core::input_stream
     tink::core::key_manager
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::aead::aes_gcm_key_manager
     tink::aead::cord_aead
-    tink::aead::kms_envelope_aead_key_manager
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::util::input_stream_util
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
+    tink::util::validation
     tink::proto::aes_gcm_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto

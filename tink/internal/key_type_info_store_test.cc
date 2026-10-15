@@ -16,6 +16,7 @@
 
 #include "tink/internal/key_type_info_store.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -27,18 +28,23 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
-#include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/cord_aead.h"
-#include "tink/aead/kms_envelope_aead_key_manager.h"
 #include "tink/core/key_manager_impl.h"
+#include "tink/core/key_type_manager.h"
+#include "tink/core/template_util.h"
+#include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/key_manager.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/util/input_stream_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
+#include "tink/util/validation.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
@@ -51,6 +57,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;
@@ -59,15 +66,86 @@ using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 
-// TODO(b/265705174): Use fake key managers to avoid relying on key manager
-// implementations.
+// A KeyTypeManager for AES-GCM key protos that returns fake Aead and CordAead
+// primitives, so that these tests do not depend on an AEAD implementation.
+class FakeAeadKeyTypeManager
+    : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat, List<Aead, CordAead>> {
+ public:
+  class AeadFactory : public PrimitiveFactory<Aead> {
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
+        const AesGcmKey& key) const override {
+      return {
+          std::make_unique<::crypto::tink::test::DummyAead>(key.key_value())};
+    }
+  };
+  class CordAeadFactory : public PrimitiveFactory<CordAead> {
+    absl::StatusOr<std::unique_ptr<CordAead>> Create(
+        const AesGcmKey& key) const override {
+      return {std::make_unique<::crypto::tink::test::DummyCordAead>(
+          key.key_value())};
+    }
+  };
+
+  FakeAeadKeyTypeManager()
+      : KeyTypeManager(std::make_unique<AeadFactory>(),
+                       std::make_unique<CordAeadFactory>()) {}
+
+  uint32_t get_version() const override { return 0; }
+
+  KeyData::KeyMaterialType key_material_type() const override {
+    return KeyData::SYMMETRIC;
+  }
+
+  const std::string& get_key_type() const override { return key_type_; }
+
+  absl::Status ValidateKey(const AesGcmKey& key) const override {
+    return ValidateAesKeySize(key.key_value().size());
+  }
+
+  absl::Status ValidateKeyFormat(
+      const AesGcmKeyFormat& key_format) const override {
+    return ValidateAesKeySize(key_format.key_size());
+  }
+
+  absl::StatusOr<AesGcmKey> CreateKey(
+      const AesGcmKeyFormat& key_format) const override {
+    AesGcmKey key;
+    key.set_version(get_version());
+    key.set_key_value(std::string(key_format.key_size(), 'k'));
+    return key;
+  }
+
+  absl::StatusOr<AesGcmKey> DeriveKey(
+      const AesGcmKeyFormat& key_format,
+      InputStream* input_stream) const override {
+    absl::StatusOr<SecretData> randomness =
+        ReadSecretBytesFromStream(key_format.key_size(), input_stream);
+    if (!randomness.ok()) {
+      return randomness.status();
+    }
+    AesGcmKey key;
+    key.set_version(get_version());
+    key.set_key_value(randomness->AsStringView());
+    return key;
+  }
+
+  FipsCompatibility FipsStatus() const override {
+    return FipsCompatibility::kRequiresBoringCrypto;
+  }
+
+ private:
+  const std::string key_type_ =
+      "type.googleapis.com/google.crypto.tink.AesGcmKey";
+};
+
 TEST(KeyTypeInfoStoreTest, AddKeyTypeManager) {
   KeyTypeInfoStore store;
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/true),
-              IsOk());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/true),
+      IsOk());
 
-  std::string type_url = AesGcmKeyManager().get_key_type();
+  std::string type_url = FakeAeadKeyTypeManager().get_key_type();
   absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), true);
@@ -85,50 +163,55 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerNoBoringCrypto) {
   }
   KeyTypeInfoStore store;
   EXPECT_THAT(
-      store.AddKeyTypeManager(std::make_unique<KmsEnvelopeAeadKeyManager>(),
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
                               /*new_key_allowed=*/true),
       StatusIs(absl::StatusCode::kInternal));
 }
 
 TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
   KeyTypeInfoStore store;
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/true),
-              IsOk());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/true),
+      IsOk());
 
-  std::string type_url = AesGcmKeyManager().get_key_type();
+  std::string type_url = FakeAeadKeyTypeManager().get_key_type();
   absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
   // new_key_allowed true -> true is allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/true),
-              IsOk());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/true),
+      IsOk());
   info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
   // new_key_allowed true -> false is allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/false),
-              IsOk());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/false),
+      IsOk());
   info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), false);
 
   // new_key_allowed false -> false is allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/false),
-              IsOk());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/false),
+      IsOk());
   info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), false);
 
   // new_key_allowed false -> true is not allowed.
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/true),
-              StatusIs(absl::StatusCode::kAlreadyExists));
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/true),
+      StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
@@ -269,7 +352,7 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
 TEST(KeyTypeInfoStoreTest, AddKeyManager) {
   KeyTypeInfoStore store;
-  AesGcmKeyManager manager;
+  FakeAeadKeyTypeManager manager;
   ASSERT_THAT(store.AddKeyManager(MakeKeyManager<Aead>(&manager),
                                   /*new_key_allowed=*/true),
               IsOk());
@@ -286,7 +369,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyManager) {
 
 TEST(KeyTypeInfoStoreTest, AddKeyManagerAndChangeNewKeyAllowed) {
   KeyTypeInfoStore store;
-  AesGcmKeyManager manager;
+  FakeAeadKeyTypeManager manager;
   ASSERT_THAT(store.AddKeyManager(MakeKeyManager<Aead>(&manager),
                                   /*new_key_allowed=*/true),
               IsOk());
@@ -328,11 +411,12 @@ TEST(KeyTypeInfoStoreTest, AddKeyManagerAndChangeNewKeyAllowed) {
 
 TEST(KeyTypeInfoStoreTest, Get) {
   KeyTypeInfoStore store;
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/true),
-              IsOk());
-  absl::StatusOr<KeyTypeInfoStore::Info *> info =
-      store.Get(AesGcmKeyManager().get_key_type());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/true),
+      IsOk());
+  absl::StatusOr<KeyTypeInfoStore::Info*> info =
+      store.Get(FakeAeadKeyTypeManager().get_key_type());
   EXPECT_THAT(info, IsOk());
 
   EXPECT_THAT(store.Get("nonexistent.type.url").status(),
@@ -343,25 +427,27 @@ TEST(KeyTypeInfoStoreTest, IsEmpty) {
   KeyTypeInfoStore store;
   EXPECT_EQ(store.IsEmpty(), true);
 
-  ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<AesGcmKeyManager>(),
-                                      /*new_key_allowed=*/true),
-              IsOk());
+  ASSERT_THAT(
+      store.AddKeyTypeManager(std::make_unique<FakeAeadKeyTypeManager>(),
+                              /*new_key_allowed=*/true),
+      IsOk());
   EXPECT_THAT(store.IsEmpty(), false);
 }
 
 TEST(KeyTypeInfoStoreInfoTest, KeyTypeManager) {
-  KeyTypeInfoStore::Info info(std::make_unique<AesGcmKeyManager>().release(),
-                              /*new_key_allowed=*/false);
+  KeyTypeInfoStore::Info info(
+      std::make_unique<FakeAeadKeyTypeManager>().release(),
+      /*new_key_allowed=*/false);
 
   EXPECT_EQ(info.key_manager_type_index(),
-            std::type_index(typeid(AesGcmKeyManager)));
+            std::type_index(typeid(FakeAeadKeyTypeManager)));
   EXPECT_EQ(info.public_key_type_manager_type_index(), std::nullopt);
 
   EXPECT_EQ(info.new_key_allowed(), false);
   info.set_new_key_allowed(true);
   EXPECT_EQ(info.new_key_allowed(), true);
 
-  std::string type_url = AesGcmKeyManager().get_key_type();
+  std::string type_url = FakeAeadKeyTypeManager().get_key_type();
   absl::StatusOr<const KeyManager<Aead> *> aead_manager =
       info.get_key_manager<Aead>(type_url);
   ASSERT_THAT(aead_manager, IsOk());
@@ -411,7 +497,7 @@ TEST(KeyTypeInfoStoreInfoTest, AsymmetricKeyTypeManagers) {
 }
 
 TEST(KeyTypeInfoStoreInfoTest, KeyManager) {
-  AesGcmKeyManager key_type_manager;
+  FakeAeadKeyTypeManager key_type_manager;
   std::unique_ptr<KeyManager<Aead>> manager =
       MakeKeyManager<Aead>(&key_type_manager);
   std::type_index type_index = std::type_index(typeid(*manager));
@@ -425,7 +511,7 @@ TEST(KeyTypeInfoStoreInfoTest, KeyManager) {
   info.set_new_key_allowed(true);
   EXPECT_EQ(info.new_key_allowed(), true);
 
-  std::string type_url = AesGcmKeyManager().get_key_type();
+  std::string type_url = FakeAeadKeyTypeManager().get_key_type();
   absl::StatusOr<const KeyManager<Aead> *> got_manager =
       info.get_key_manager<Aead>(type_url);
   ASSERT_THAT(got_manager, IsOk());
@@ -443,8 +529,9 @@ TEST(KeyTypeInfoStoreInfoTest, KeyManager) {
 }
 
 TEST(KeyTypeInfoStoreInfoTest, GetPrimitive) {
-  KeyTypeInfoStore::Info info(std::make_unique<AesGcmKeyManager>().release(),
-                              /*new_key_allowed=*/false);
+  KeyTypeInfoStore::Info info(
+      std::make_unique<FakeAeadKeyTypeManager>().release(),
+      /*new_key_allowed=*/false);
 
   AesGcmKeyFormat format;
   format.set_key_size(32);

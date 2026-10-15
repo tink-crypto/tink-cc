@@ -20,7 +20,6 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "openssl/crypto.h"
-#include "tink/aead/aead_config.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/registry.h"

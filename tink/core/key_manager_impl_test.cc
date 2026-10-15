@@ -26,7 +26,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
-#include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
@@ -75,9 +74,8 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
    public:
     absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKey& key) const override {
-      // Ignore the key and returned one with a fixed size for this test.
-      return {subtle::AesGcmBoringSsl::New(
-          util::SecretDataFromStringView(key.key_value()))};
+      // These tests check the key manager, not the AEAD: a fake AEAD is enough.
+      return {std::make_unique<test::DummyAead>(key.key_value())};
     }
   };
 
@@ -446,9 +444,8 @@ class ExampleKeyTypeManagerWithoutFactory
    public:
     absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKey& key) const override {
-      // Ignore the key and returned one with a fixed size for this test.
-      return {subtle::AesGcmBoringSsl::New(
-          util::SecretDataFromStringView(key.key_value()))};
+      // These tests check the key manager, not the AEAD: a fake AEAD is enough.
+      return {std::make_unique<test::DummyAead>(key.key_value())};
     }
   };
 

@@ -30,7 +30,6 @@
 #include "tink/core/template_util.h"
 #include "tink/key_manager.h"
 #include "tink/registry.h"
-#include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/random.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"

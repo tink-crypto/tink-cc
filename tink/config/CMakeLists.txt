@@ -206,7 +206,6 @@ tink_cc_test(
     absl::status_matchers
     tink::internal::boringssl
     tink::core::registry
-    tink::aead::aead_config
     tink::internal::fips_utils
     tink::internal::registry_impl
     tink::util::status

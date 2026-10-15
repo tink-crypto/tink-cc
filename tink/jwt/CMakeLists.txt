@@ -381,6 +381,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_private_key
     absl::core_headers
     absl::status
+    absl::status_macros
     absl::statusor
     absl::synchronization
     absl::optional
@@ -455,6 +456,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_private_key
     absl::core_headers
     absl::status
+    absl::status_macros
     absl::statusor
     absl::synchronization
     absl::optional

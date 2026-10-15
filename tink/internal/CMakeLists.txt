@@ -209,6 +209,7 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::util
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::internal::boringssl

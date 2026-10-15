@@ -559,6 +559,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::signature_private_key
     absl::status
+    absl::status_macros
     absl::statusor
     absl::optional
     tink::internal::boringssl
@@ -656,6 +657,7 @@ tink_cc_library(
     tink::signature::signature_private_key
     absl::core_headers
     absl::status
+    absl::status_macros
     absl::statusor
     absl::synchronization
     absl::optional

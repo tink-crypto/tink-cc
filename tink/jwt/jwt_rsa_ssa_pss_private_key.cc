@@ -17,11 +17,13 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "tink/internal/rsa_util.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#include "tink/internal/rsa_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -149,22 +151,18 @@ JwtRsaSsaPssPrivateKey::Builder::BuildAllowNonConstantTime(
   private_key.dq = dq_->Get(InsecureSecretKeyAccess::Get());
   private_key.crt = q_inv_->Get(InsecureSecretKeyAccess::Get());
 
-  absl::StatusOr<internal::RsaPrivateKey> adjusted_private_key =
-      internal::RsaPrivateKeyAdjustEncodingLengths(private_key);
+  ABSL_RETURN_IF_ERROR(
+      internal::RsaPrivateKeyAdjustEncodingLengths(private_key));
 
-  if (!adjusted_private_key.ok()) {
-    return adjusted_private_key.status();
-  }
-
-  p_ = RestrictedData(adjusted_private_key->p, InsecureSecretKeyAccess::Get());
-  q_ = RestrictedData(adjusted_private_key->q, InsecureSecretKeyAccess::Get());
+  p_ = RestrictedData(std::move(private_key.p), InsecureSecretKeyAccess::Get());
+  q_ = RestrictedData(std::move(private_key.q), InsecureSecretKeyAccess::Get());
   dp_ =
-      RestrictedData(adjusted_private_key->dp, InsecureSecretKeyAccess::Get());
+      RestrictedData(std::move(private_key.dp), InsecureSecretKeyAccess::Get());
   dq_ =
-      RestrictedData(adjusted_private_key->dq, InsecureSecretKeyAccess::Get());
-  d_ = RestrictedData(adjusted_private_key->d, InsecureSecretKeyAccess::Get());
-  q_inv_ =
-      RestrictedData(adjusted_private_key->crt, InsecureSecretKeyAccess::Get());
+      RestrictedData(std::move(private_key.dq), InsecureSecretKeyAccess::Get());
+  d_ = RestrictedData(std::move(private_key.d), InsecureSecretKeyAccess::Get());
+  q_inv_ = RestrictedData(std::move(private_key.crt),
+                          InsecureSecretKeyAccess::Get());
 
   return Build(token);
 }

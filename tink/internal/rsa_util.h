@@ -132,8 +132,7 @@ absl::Status GetRsaCrtParams(const RsaPrivateKey& key, RSA* rsa);
 // * `private_key.dp.size() == private_key.p.size()`
 // * `private_key.dq.size() == private_key.q.size()`
 // * `private_key.crt.size() == private_key.p.size()`
-absl::StatusOr<RsaPrivateKey> RsaPrivateKeyAdjustEncodingLengths(
-    RsaPrivateKey private_key);
+absl::Status RsaPrivateKeyAdjustEncodingLengths(RsaPrivateKey& private_key);
 
 // Creates a OpenSSL/BoringSSL RSA key from `private_key`.
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(

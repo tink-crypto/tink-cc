@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -282,10 +283,9 @@ absl::Status GetRsaCrtParams(const RsaPrivateKey& key, RSA* rsa) {
   return absl::OkStatus();
 }
 
-absl::StatusOr<RsaPrivateKey> RsaPrivateKeyAdjustEncodingLengths(
-    RsaPrivateKey private_key) {
+absl::Status RsaPrivateKeyAdjustEncodingLengths(RsaPrivateKey& private_key) {
   return CallWithCoreDumpProtection(
-      [&private_key]() -> absl::StatusOr<RsaPrivateKey> {
+      [&private_key]() -> absl::Status {
         absl::string_view trimmed_p =
             WithoutLeadingZeros(private_key.p.AsStringView());
 
@@ -318,11 +318,11 @@ absl::StatusOr<RsaPrivateKey> RsaPrivateKeyAdjustEncodingLengths(
 
         private_key.p = SecretData(trimmed_p);
         private_key.q = SecretData(trimmed_q);
-        private_key.dp = std::move(*adjusted_dp);
-        private_key.dq = std::move(*adjusted_dq);
-        private_key.crt = std::move(*adjusted_crt);
-        private_key.d = std::move(*adjusted_d);
-        return private_key;
+        private_key.dp = *std::move(adjusted_dp);
+        private_key.dq = *std::move(adjusted_dq);
+        private_key.crt = *std::move(adjusted_crt);
+        private_key.d = *std::move(adjusted_d);
+        return absl::OkStatus();
       });
 }
 
@@ -348,13 +348,11 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
                         "BoringSsl RSA allocation error");
   }
 
-  absl::StatusOr<RsaPrivateKey> adjusted_private_key =
-      RsaPrivateKeyAdjustEncodingLengths(private_key);
-  if (!adjusted_private_key.ok()) {
-    return adjusted_private_key.status();
-  }
+  RsaPrivateKey adjusted_private_key = private_key;
+  ABSL_RETURN_IF_ERROR(
+      RsaPrivateKeyAdjustEncodingLengths(adjusted_private_key));
 
-  return RsaPrivateKeyToRsaFixedSizeInputs(*adjusted_private_key);
+  return RsaPrivateKeyToRsaFixedSizeInputs(adjusted_private_key);
 }
 
 absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsaFixedSizeInputs(

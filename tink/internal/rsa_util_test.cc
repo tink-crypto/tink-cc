@@ -356,20 +356,18 @@ TEST(RsaUtilTest, GetRsaCrtParams) {
 }
 
 TEST(RsaUtilTest, RsaPrivateKeyAdjustEncodingLengthsWorks) {
-  const RsaPrivateKey& private_key = GetValidKeyPair().second;
+  RsaPrivateKey private_key = GetValidKeyPair().second;
 
-  absl::StatusOr<RsaPrivateKey> adjusted_private_key =
-      RsaPrivateKeyAdjustEncodingLengths(private_key);
-  ASSERT_THAT(adjusted_private_key, IsOk());
+  ASSERT_THAT(RsaPrivateKeyAdjustEncodingLengths(private_key), IsOk());
 
-  EXPECT_THAT(adjusted_private_key->p.size(), Ge(1));
-  EXPECT_THAT(adjusted_private_key->p[0], Ne(0));
-  EXPECT_THAT(adjusted_private_key->q.size(), Ge(1));
-  EXPECT_THAT(adjusted_private_key->q[0], Ne(0));
-  EXPECT_THAT(adjusted_private_key->d.size(), adjusted_private_key->n.size());
-  EXPECT_THAT(adjusted_private_key->dp.size(), adjusted_private_key->p.size());
-  EXPECT_THAT(adjusted_private_key->dq.size(), adjusted_private_key->q.size());
-  EXPECT_THAT(adjusted_private_key->crt.size(), adjusted_private_key->p.size());
+  EXPECT_THAT(private_key.p.size(), Ge(1));
+  EXPECT_THAT(private_key.p[0], Ne(0));
+  EXPECT_THAT(private_key.q.size(), Ge(1));
+  EXPECT_THAT(private_key.q[0], Ne(0));
+  EXPECT_THAT(private_key.d.size(), private_key.n.size());
+  EXPECT_THAT(private_key.dp.size(), private_key.p.size());
+  EXPECT_THAT(private_key.dq.size(), private_key.q.size());
+  EXPECT_THAT(private_key.crt.size(), private_key.p.size());
 }
 
 TEST(RsaUtilTest, CopiesRsaPrivateKey) {

@@ -24,6 +24,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
 endif()
 
+# Allow the linker to deduplicate libraries. Removes warnings on macOS.
+set(CMAKE_LINK_LIBRARIES_STRATEGY REORDER_FREELY)
+
 if (TINK_BUILD_TESTS)
   # We do not want to test Abseil
   set(ABSL_BUILD_TESTING OFF CACHE BOOL "" FORCE)

@@ -99,9 +99,8 @@ TEST(Ed25519SignKeyManagerTest, Create) {
   Ed25519PublicKeyProto public_key =
       Ed25519SignKeyManager().GetPublicKey(private_key).value();
 
-  auto direct_signer_or =
-      subtle::Ed25519SignBoringSsl::New(util::SecretDataFromStringView(
-          absl::StrCat(private_key.key_value(), public_key.key_value())));
+  auto direct_signer_or = subtle::Ed25519SignBoringSsl::New(SecretData(
+      absl::StrCat(private_key.key_value(), public_key.key_value())));
   ASSERT_THAT(direct_signer_or, IsOk());
 
   auto verifier_or =
@@ -121,7 +120,7 @@ TEST(Ed25519SignKeyManagerTest, CreateDifferentPrivateKey) {
       Ed25519SignKeyManager().GetPublicKey(CreateValidPrivateKey()).value();
 
   auto direct_signer_or = subtle::Ed25519SignBoringSsl::New(
-      util::SecretDataFromStringView(absl::StrCat(
+      SecretData(absl::StrCat(
           private_key.key_value(), private_key.public_key().key_value())));
   ASSERT_THAT(direct_signer_or, IsOk());
 

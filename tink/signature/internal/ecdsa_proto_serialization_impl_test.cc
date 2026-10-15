@@ -790,7 +790,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -826,7 +826,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+          RestrictedData(ec_key.priv.AsStringView(),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
@@ -857,7 +857,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -893,7 +893,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+          RestrictedData(ec_key.priv.AsStringView(),
                          InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
@@ -933,7 +933,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -971,7 +971,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersionFails) {
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(1);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -1012,7 +1012,7 @@ TEST_F(EcdsaProtoSerializationTest,
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -1053,7 +1053,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
   private_key_proto.set_version(0);
   ;
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -1185,7 +1185,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+      RestrictedData(ec_key.priv.AsStringView(),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
@@ -1216,7 +1216,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   // that parsing is correct.
   EXPECT_THAT(
       proto_key.key_value(),
-      Eq('\0' + std::string(util::SecretDataAsStringView(ec_key.priv))));
+      Eq('\0' + std::string(ec_key.priv.AsStringView())));
   EXPECT_THAT(proto_key.has_public_key(), IsTrue());
   EXPECT_THAT(proto_key.public_key().version(), Eq(0));
   EXPECT_THAT(proto_key.public_key().has_params(), IsTrue());
@@ -1253,7 +1253,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+      RestrictedData(ec_key.priv.AsStringView(),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
@@ -1284,7 +1284,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
   // that parsing is correct.
   EXPECT_THAT(
       proto_key.key_value(),
-      Eq('\0' + std::string(util::SecretDataAsStringView(ec_key.priv))));
+      Eq('\0' + std::string(ec_key.priv.AsStringView())));
   EXPECT_THAT(proto_key.has_public_key(), IsTrue());
   EXPECT_THAT(proto_key.public_key().version(), Eq(0));
   EXPECT_THAT(proto_key.public_key().has_params(), IsTrue());
@@ -1319,7 +1319,7 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+      RestrictedData(ec_key.priv.AsStringView(),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());

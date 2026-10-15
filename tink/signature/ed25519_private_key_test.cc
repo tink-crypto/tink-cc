@@ -62,9 +62,9 @@ internal::Ed25519Key GetTestEd25519Key() {
     k.public_key =
         std::string(ed25519_private_key->GetPublicKey().GetPublicKeyBytes(
             GetPartialKeyAccess()));
-    k.private_key = util::SecretDataFromStringView(
+    k.private_key =
         ed25519_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())
-            .GetSecret(InsecureSecretKeyAccess::Get()));
+            .Get(InsecureSecretKeyAccess::Get());
     return k;
   }());
   return *key;
@@ -228,7 +228,7 @@ TEST(Ed25519PrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
                                /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  std::string priv_str(util::SecretDataAsStringView(key_pair.private_key));
+  std::string priv_str(key_pair.private_key.AsStringView());
   priv_str.resize(31);
   RestrictedData private_key_bytes =
       RestrictedData(priv_str, InsecureSecretKeyAccess::Get());

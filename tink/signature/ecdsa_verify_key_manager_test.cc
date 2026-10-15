@@ -241,7 +241,7 @@ TEST(EcdsaVerifyKeyManagerTest, Create) {
   ec_key.curve = Enums::ProtoToSubtle(public_key.params().curve());
   ec_key.pub_x = public_key.x();
   ec_key.pub_y = public_key.y();
-  ec_key.priv = util::SecretDataFromStringView(private_key.key_value());
+  ec_key.priv = SecretData(private_key.key_value());
 
   auto direct_signer_or = subtle::EcdsaSignBoringSsl::New(
       ec_key, Enums::ProtoToSubtle(public_key.params().hash_type()),
@@ -277,7 +277,7 @@ TEST(EcdsaVerifyKeyManagerTest, CreateDifferentPrivateKey) {
       Enums::ProtoToSubtle(private_key.public_key().params().curve());
   ec_key.pub_x = private_key.public_key().x();
   ec_key.pub_y = private_key.public_key().y();
-  ec_key.priv = util::SecretDataFromStringView(private_key.key_value());
+  ec_key.priv = SecretData(private_key.key_value());
 
   auto direct_signer_or = subtle::EcdsaSignBoringSsl::New(
       ec_key,

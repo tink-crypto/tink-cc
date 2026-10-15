@@ -145,12 +145,12 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, Create) {
   internal::RsaPrivateKey private_key_subtle;
   private_key_subtle.n = private_key.public_key().n();
   private_key_subtle.e = private_key.public_key().e();
-  private_key_subtle.d = util::SecretDataFromStringView(private_key.d());
-  private_key_subtle.p = util::SecretDataFromStringView(private_key.p());
-  private_key_subtle.q = util::SecretDataFromStringView(private_key.q());
-  private_key_subtle.dp = util::SecretDataFromStringView(private_key.dp());
-  private_key_subtle.dq = util::SecretDataFromStringView(private_key.dq());
-  private_key_subtle.crt = util::SecretDataFromStringView(private_key.crt());
+  private_key_subtle.d = SecretData(private_key.d());
+  private_key_subtle.p = SecretData(private_key.p());
+  private_key_subtle.q = SecretData(private_key.q());
+  private_key_subtle.dp = SecretData(private_key.dp());
+  private_key_subtle.dq = SecretData(private_key.dq());
+  private_key_subtle.crt = SecretData(private_key.crt());
 
   auto direct_signer_or = subtle::RsaSsaPkcs1SignBoringSsl::New(
       private_key_subtle, {crypto::tink::subtle::HashType::SHA256});

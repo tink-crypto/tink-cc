@@ -558,6 +558,7 @@ tink_cc_library(
     hpke_proto_serialization_impl.cc
     hpke_proto_serialization_impl.h
   DEPS
+    tink::hybrid::internal::hpke_proto_structs
     absl::core_headers
     absl::status
     absl::statusor
@@ -578,12 +579,9 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser_enum_field
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_message
-    tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::proto::hpke_cc_tinkpb
 )
 
 tink_cc_test(

@@ -304,29 +304,25 @@ tink_cc_test(
     tink::core::private_key_manager_impl
     tink::core::private_key_type_manager
     tink::core::template_util
-    tink::core::hybrid_decrypt
     tink::core::input_stream
     tink::core::key_manager
     tink::core::mac
     tink::core::primitive_wrapper
+    tink::core::public_key_sign
     tink::core::registry
     tink::aead::aead_wrapper
-    tink::aead::aes_gcm_key_manager
-    tink::hybrid::ecies_aead_hkdf_private_key_manager
-    tink::hybrid::ecies_aead_hkdf_public_key_manager
-    tink::hybrid::internal::testing::ecies_test_util
-    tink::subtle::aes_gcm_boringssl
+    tink::signature::rsa_ssa_pkcs1_sign_key_manager
+    tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::subtle::random
     tink::util::input_stream_util
     tink::util::istream_input_stream
     tink::util::protobuf_helper
-    tink::util::secret_data
     tink::util::test_util
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
-    tink::proto::ecies_aead_hkdf_cc_proto
+    tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )
 
@@ -2298,3 +2294,4 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+

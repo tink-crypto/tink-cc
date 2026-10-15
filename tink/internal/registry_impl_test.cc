@@ -34,16 +34,11 @@
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_wrapper.h"
-#include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/private_key_manager_impl.h"
 #include "tink/core/private_key_type_manager.h"
 #include "tink/core/template_util.h"
-#include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
-#include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
-#include "tink/hybrid/internal/testing/ecies_test_util.h"
-#include "tink/hybrid_decrypt.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/monitoring_client_mocks.h"
@@ -51,19 +46,20 @@
 #include "tink/key_manager.h"
 #include "tink/mac.h"
 #include "tink/primitive_wrapper.h"
+#include "tink/public_key_sign.h"
 #include "tink/registry.h"
-#include "tink/subtle/aes_gcm_boringssl.h"
+#include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
+#include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/protobuf_helper.h"
-#include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
-#include "proto/ecies_aead_hkdf.pb.h"
+#include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -85,8 +81,6 @@ using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaPrivateKey;
 using ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
-using ::google::crypto::tink::EcPointFormat;
-using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
@@ -94,6 +88,8 @@ using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
+using ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
 using ::portable_proto::MessageLite;
 using ::testing::AllOf;
 using ::testing::Eq;
@@ -188,9 +184,8 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
    public:
     absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKey& key) const override {
-      // Ignore the key and returned one with a fixed size for this test.
-      return {subtle::AesGcmBoringSsl::New(
-          util::SecretDataFromStringView(key.key_value()))};
+      // These tests check the registry, not the AEAD: a fake AEAD is enough.
+      return {std::make_unique<DummyAead>(key.key_value())};
     }
   };
 
@@ -427,7 +422,7 @@ TEST_F(RegistryTest, testBasic) {
 }
 
 TEST_F(RegistryTest, testRegisterKeyManager) {
-  std::string key_type_1 = AesGcmKeyManager().get_key_type();
+  std::string key_type_1 = ExampleKeyTypeManager().get_key_type();
 
   std::unique_ptr<TestAeadKeyManager> null_key_manager = nullptr;
   auto status = Registry::RegisterKeyManager(std::move(null_key_manager), true);
@@ -444,7 +439,7 @@ TEST_F(RegistryTest, testRegisterKeyManager) {
   EXPECT_THAT(status, IsOk());
 
   // Try overriding a key manager.
-  AesGcmKeyManager key_type_manager;
+  ExampleKeyTypeManager key_type_manager;
   status = Registry::RegisterKeyManager(
       crypto::tink::internal::MakeKeyManager<Aead>(&key_type_manager), true);
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kAlreadyExists));
@@ -460,7 +455,7 @@ TEST_F(RegistryTest, testRegisterKeyManager) {
 // get_key_manager, the key manager previously obtained with "get_key_manager()"
 // remains valid.
 TEST_F(RegistryTest, GetKeyManagerRemainsValid) {
-  std::string key_type = AesGcmKeyManager().get_key_type();
+  std::string key_type = ExampleKeyTypeManager().get_key_type();
   EXPECT_THAT(Registry::RegisterKeyManager(
                   std::make_unique<TestAeadKeyManager>(key_type), true),
               IsOk());
@@ -601,51 +596,50 @@ TEST_F(RegistryTest, testNewKeyData) {
 
 TEST_F(RegistryTest, testGetPublicKeyData) {
   // Setup the registry.
-  Registry::Reset();
-  auto private_key_type_manager =
-      std::make_unique<EciesAeadHkdfPrivateKeyManager>();
+  auto private_key_type_manager = std::make_unique<RsaSsaPkcs1SignKeyManager>();
   auto public_key_type_manager =
-      std::make_unique<EciesAeadHkdfPublicKeyManager>();
+      std::make_unique<RsaSsaPkcs1VerifyKeyManager>();
 
   auto status = Registry::RegisterKeyManager(
-      internal::MakePrivateKeyManager<HybridDecrypt>(
+      internal::MakePrivateKeyManager<PublicKeySign>(
           private_key_type_manager.get(), public_key_type_manager.get()),
       true);
   ASSERT_THAT(status, IsOk());
-  AesGcmKeyManager key_type_manager;
+  ExampleKeyTypeManager key_type_manager;
   status = Registry::RegisterKeyManager(
       crypto::tink::internal::MakeKeyManager<Aead>(&key_type_manager), true);
   ASSERT_THAT(status, IsOk());
 
-  // Get a test private key.
-  google::crypto::tink::EciesAeadHkdfPrivateKey ecies_key =
-      internal::GetEciesAesGcmHkdfTestKey(
-          EllipticCurveType::NIST_P256, EcPointFormat::UNCOMPRESSED,
-          HashType::SHA256, /* aes_gcm_key_size= */ 32);
+  // Create a test private key.
+  RsaSsaPkcs1KeyFormat key_format;
+  key_format.mutable_params()->set_hash_type(HashType::SHA256);
+  key_format.set_modulus_size_in_bits(2048);
+  key_format.set_public_exponent(std::string("\x01\x00\x01", 3));  // F4
+  absl::StatusOr<RsaSsaPkcs1PrivateKey> rsa_key =
+      RsaSsaPkcs1SignKeyManager().CreateKey(key_format);
+  ASSERT_THAT(rsa_key, IsOk());
 
   // Extract public key data and check.
   auto public_key_data_result = Registry::GetPublicKeyData(
-      EciesAeadHkdfPrivateKeyManager().get_key_type(),
-      ecies_key.SerializeAsString());
+      RsaSsaPkcs1SignKeyManager().get_key_type(), rsa_key->SerializeAsString());
   ASSERT_THAT(public_key_data_result, IsOk());
   auto public_key_data = std::move(public_key_data_result.value());
-  EXPECT_EQ(EciesAeadHkdfPublicKeyManager().get_key_type(),
+  EXPECT_EQ(RsaSsaPkcs1VerifyKeyManager().get_key_type(),
             public_key_data->type_url());
   EXPECT_EQ(KeyData::ASYMMETRIC_PUBLIC, public_key_data->key_material_type());
-  EXPECT_EQ(ecies_key.public_key().SerializeAsString(),
+  EXPECT_EQ(rsa_key->public_key().SerializeAsString(),
             public_key_data->value());
 
   // Try with a wrong key type.
   auto wrong_key_type_result = Registry::GetPublicKeyData(
-      AesGcmKeyManager().get_key_type(), ecies_key.SerializeAsString());
+      ExampleKeyTypeManager().get_key_type(), rsa_key->SerializeAsString());
   EXPECT_THAT(wrong_key_type_result,
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("PrivateKeyFactory")));
 
   // Try with a bad serialized key.
   auto bad_key_result = Registry::GetPublicKeyData(
-      EciesAeadHkdfPrivateKeyManager().get_key_type(),
-      "some bad serialized key");
+      RsaSsaPkcs1SignKeyManager().get_key_type(), "some bad serialized key");
   EXPECT_THAT(bad_key_result, StatusIs(absl::StatusCode::kInvalidArgument,
                                        HasSubstr("Could not parse")));
 }
@@ -915,17 +909,17 @@ TEST_F(RegistryTest, TransformingPrimitiveWrapperCustomKeyManager) {
 // Tests that the error message in GetKeyManager contains the type_id.name() of
 // the primitive for which the key manager was actually registered.
 TEST_F(RegistryTest, GetKeyManagerErrorMessage) {
-  AesGcmKeyManager key_type_manager;
+  ExampleKeyTypeManager key_type_manager;
   EXPECT_THAT(
       Registry::RegisterKeyManager(
           crypto::tink::internal::MakeKeyManager<Aead>(&key_type_manager),
           true),
       IsOk());
   auto result =
-      Registry::get_key_manager<int>(AesGcmKeyManager().get_key_type());
+      Registry::get_key_manager<int>(ExampleKeyTypeManager().get_key_type());
   EXPECT_THAT(result,
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr(AesGcmKeyManager().get_key_type()),
+                       AllOf(HasSubstr(ExampleKeyTypeManager().get_key_type()),
                              // Note: The C++ standard does not
                              // guarantee the next line.  If some
                              // toolchain update fails it, one can

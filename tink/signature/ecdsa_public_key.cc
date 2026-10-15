@@ -24,15 +24,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#include "openssl/ec.h"
 #include "tink/internal/output_prefix_util.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#include "openssl/ec.h"
-#include "openssl/ec_key.h"
-#else
-#include "openssl/ec.h"
-#endif
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_unique_ptr.h"

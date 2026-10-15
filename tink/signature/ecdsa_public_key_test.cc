@@ -31,9 +31,6 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#endif
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/key.h"

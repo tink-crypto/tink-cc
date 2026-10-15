@@ -25,11 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#else
 #include "openssl/bn.h"
-#endif
 #include "tink/big_integer.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"

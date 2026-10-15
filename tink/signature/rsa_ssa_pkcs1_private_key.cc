@@ -23,10 +23,6 @@
 #include "absl/types/optional.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/restricted_data.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#endif
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"

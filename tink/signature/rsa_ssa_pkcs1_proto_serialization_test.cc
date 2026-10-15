@@ -34,9 +34,6 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/util/test_util.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#endif
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"

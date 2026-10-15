@@ -23,16 +23,10 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
+#include "openssl/ec.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/util.h"
 #include "tink/secret_data.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#include "openssl/ec_key.h"
-#else
-#include "openssl/ec.h"
-#endif
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"

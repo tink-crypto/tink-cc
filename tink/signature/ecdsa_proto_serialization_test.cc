@@ -28,12 +28,6 @@
 #include "absl/types/optional.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/util/secret_data.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#include "openssl/ec_key.h"
-#else
-#include "openssl/ec.h"
-#endif
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"

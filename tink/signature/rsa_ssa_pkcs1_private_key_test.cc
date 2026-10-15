@@ -32,9 +32,6 @@
 #include "absl/types/optional.h"
 #include "tink/restricted_data.h"
 #include "tink/util/test_util.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#endif
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"

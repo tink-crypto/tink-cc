@@ -24,12 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#else
 #include "openssl/bn.h"
-#endif
 #include "tink/big_integer.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/rsa_util.h"

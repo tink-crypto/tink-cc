@@ -32,9 +32,6 @@
 #include "absl/types/optional.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#endif
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"

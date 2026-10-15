@@ -46,7 +46,6 @@
 #include "tink/aead/internal/testing/chacha20_poly1305_test_vectors.h"
 #include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
 #include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
-#include "tink/aead/key_gen_config_2026.h"
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
 #include "tink/aead/legacy_kms_aead_key.h"
@@ -76,10 +75,14 @@
 #include "tink/proto_parameters_format.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
+#include "proto/aes_ctr.pb.h"
+#include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/aes_gcm_siv.pb.h"
 #include "proto/chacha20_poly1305.pb.h"
+#include "proto/common.pb.h"
+#include "proto/hmac.pb.h"
 #include "proto/kms_aead.pb.h"
 #include "proto/kms_envelope.pb.h"
 #include "proto/tink.pb.h"
@@ -523,37 +526,42 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoKeySerializationRegistered) {
            XChaCha20Poly1305Parameters::Variant::kTink)
            .aead_key);
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(AeadKeyTemplates::XChaCha20Poly1305(),
-                                KeyGenConfigAead2026());
-  ASSERT_THAT(handle, IsOk());
+  google::crypto::tink::XChaCha20Poly1305Key key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(key.GetKeyBytes(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get()));
 
-  // Fails to parse this key type, so falls back to legacy proto key.
-  const internal::LegacyProtoKey* legacy_proto_key_from_handle =
-      reinterpret_cast<const internal::LegacyProtoKey*>(
-          (*handle)->GetPrimary().GetKey().get());
-  EXPECT_THAT(legacy_proto_key_from_handle, Not(IsNull()));
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key",
+          RestrictedData(key_proto.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          key.GetIdRequirement());
+  ASSERT_THAT(proto_key_serialization, IsOk());
 
-  // Fails to serialize this key type.
-  EXPECT_THAT(KeysetHandleBuilder()
-                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-                      key, KeyStatus::kEnabled, /*is_primary=*/true))
-                  .Build()
+  // Before registration, parsing and serialization should not work.
+  EXPECT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .ParseKey(*proto_key_serialization, InsecureSecretKeyAccess::Get())
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      key, InsecureSecretKeyAccess::Get())
                   .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to serialize")));
+              StatusIs(absl::StatusCode::kNotFound));
 
+  // Registers proto serialization.
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  const XChaCha20Poly1305Key* key_from_handle =
-      reinterpret_cast<const XChaCha20Poly1305Key*>(
-          (*handle)->GetPrimary().GetKey().get());
-  EXPECT_THAT(key_from_handle, Not(IsNull()));
-
-  EXPECT_THAT(KeysetHandleBuilder()
-                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-                      key, KeyStatus::kEnabled, /*is_primary=*/true))
-                  .Build(),
+  // After registration, parsing and serialization should work.
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+                  *proto_key_serialization, InsecureSecretKeyAccess::Get()),
+              IsOk());
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      key, InsecureSecretKeyAccess::Get()),
               IsOk());
 }
 
@@ -609,41 +617,54 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
            32, AesCtrHmacAeadParameters::Variant::kTink)
            .aead_key);
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256CtrHmacSha256(),
-                                KeyGenConfigAead2026());
-  ASSERT_THAT(handle, IsOk());
+  google::crypto::tink::AesCtrHmacAeadKey key_proto;
+  key_proto.set_version(0);
+  key_proto.mutable_aes_ctr_key()->set_version(0);
+  key_proto.mutable_aes_ctr_key()->mutable_params()->set_iv_size(
+      key.GetParameters().GetIvSizeInBytes());
+  key_proto.mutable_aes_ctr_key()->set_key_value(
+      key.GetAesKeyBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
+  key_proto.mutable_hmac_key()->set_version(0);
+  key_proto.mutable_hmac_key()->mutable_params()->set_tag_size(
+      key.GetParameters().GetTagSizeInBytes());
+  key_proto.mutable_hmac_key()->mutable_params()->set_hash(
+      google::crypto::tink::HashType::SHA256);
+  key_proto.mutable_hmac_key()->set_key_value(
+      key.GetHmacKeyBytes(GetPartialKeyAccess())
+          .GetSecret(InsecureSecretKeyAccess::Get()));
 
-  // Failed to parse this key type, so fell back to legacy proto key.
-  EXPECT_THAT(dynamic_cast<const internal::LegacyProtoKey*>(
-                  (*handle)->GetPrimary().GetKey().get()),
-              Not(IsNull()));
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
+          RestrictedData(key_proto.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          key.GetIdRequirement());
+  ASSERT_THAT(proto_key_serialization, IsOk());
 
-  // Fails to serialize this key type.
-  EXPECT_THAT(KeysetHandleBuilder()
-                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-                      key, KeyStatus::kEnabled, /*is_primary=*/true))
-                  .Build()
+  // Before registration, parsing and serialization should not work.
+  EXPECT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .ParseKey(*proto_key_serialization, InsecureSecretKeyAccess::Get())
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      key, InsecureSecretKeyAccess::Get())
                   .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to serialize")));
+              StatusIs(absl::StatusCode::kNotFound));
 
+  // Registers proto serialization.
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
-      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256CtrHmacSha256(),
-                                KeyGenConfigAead2026());
-  ASSERT_THAT(handle2, IsOk());
-
-  // Parsing now creates the right key type.
-  EXPECT_THAT(dynamic_cast<const AesCtrHmacAeadKey*>(
-                  (*handle2)->GetPrimary().GetKey().get()),
-              Not(IsNull()));
-
-  EXPECT_THAT(KeysetHandleBuilder()
-                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-                      key, KeyStatus::kEnabled, /*is_primary=*/true))
-                  .Build(),
+  // After registration, parsing and serialization should work.
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+                  *proto_key_serialization, InsecureSecretKeyAccess::Get()),
+              IsOk());
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      key, InsecureSecretKeyAccess::Get()),
               IsOk());
 }
 

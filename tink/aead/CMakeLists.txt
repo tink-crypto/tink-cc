@@ -881,7 +881,6 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_parameters
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
-    tink::aead::key_gen_config_2026
     tink::aead::kms_aead_key_manager
     tink::aead::kms_envelope_aead_key_manager
     tink::aead::legacy_kms_aead_key
@@ -925,10 +924,14 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_eax_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::aes_gcm_siv_cc_proto
     tink::proto::chacha20_poly1305_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::hmac_cc_proto
     tink::proto::kms_aead_cc_proto
     tink::proto::kms_envelope_cc_proto
     tink::proto::tink_cc_proto

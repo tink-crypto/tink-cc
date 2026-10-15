@@ -35,6 +35,7 @@
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mlkem_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
@@ -46,38 +47,6 @@ namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::util::SecretDataFromStringView;
-
-// P-256 public point and private key from RFC 6979, Appendix A.2.5.
-constexpr absl::string_view kP256PublicKeyHex =
-    "0460fed4ba255a9d31c961eb74c6356d68c049b8923b61fa6ce669622e60f29fb6"
-    "7903fe1008b8bc99a41ae9e95628bc64f2f1b20c2d7e9f5177a3c294d4462299";
-constexpr absl::string_view kP256PrivateKeyHex =
-    "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721";
-
-// P-384 public point and private key from RFC 6979, Appendix A.2.6.
-constexpr absl::string_view kP384PublicKeyHex =
-    "04ec3a4e415b4e19a4568618029f427fa5da9a8bc4ae92e02e06aae5286b300c64def8f0ea"
-    "9055866064a254515480bc138015d9b72d7d57244ea8ef9ac0c621896708a59367f9dfb9"
-    "f54ca84b3f1c9db1288b231c3ae0d4fe7344fd2533264720";
-constexpr absl::string_view kP384PrivateKeyHex =
-    "6b9d3dad2e1b8c1c05b19875b6659f4de23c3b667bf297ba9aa47740787137d896d5724e"
-    "4c70a825f872c9ea60d2edf5";
-
-// P-521 public point and private key from RFC 6979, Appendix A.2.7.
-constexpr absl::string_view kP521PublicKeyHex =
-    "0401894550d0785932e00eaa23b694f213f8c3121f86dc97a04e5a7167db4e5bcd371123d4"
-    "6e45db6b5d5370a7f20fb633155d38ffa16d2bd761dcac474b9a2f5023a400493101c962"
-    "cd4d2fddf782285e64584139c2f91b47f87ff82354d6630f746a28a0db25741b5b34a828"
-    "008b22acc23f924faafbd4d33f81ea66956dfeaa2bfdfcf5";
-constexpr absl::string_view kP521PrivateKeyHex =
-    "00fad06daa62ba3b25d2fb40133da757205de67f5bb0018fee8c86e1b68c7e75caa896eb"
-    "32f1f47c70855836a6d16fcc1466f6d8fbec67db89ec0c08b0e996b83538";
-
-// X25519 public and private key from RFC 7748, Section 6.1.
-constexpr absl::string_view kX25519PublicKeyHex =
-    "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431";
-constexpr absl::string_view kX25519PrivateKeyHex =
-    "52c4a758a802cd8b936eceea314432798d5baf2d7e9235dc084ab1b9cfa2f736";
 
 // X-Wing public and private key from RFC 9180 /
 // draft-connolly-cfrg-xwing-kem-09.
@@ -211,8 +180,8 @@ struct HpkeTestVectorParams {
   HpkeParameters::AeadId aead_id;
   HpkeParameters::Variant variant;
   std::optional<int> id_requirement;
-  absl::string_view public_key_hex;
-  absl::string_view private_key_hex;
+  std::string public_key_bytes;
+  RestrictedData private_key_bytes;
   absl::string_view plaintext_hex;
   absl::string_view context_info_hex;
   absl::string_view ciphertext_hex;
@@ -227,15 +196,12 @@ HybridTestVector MakeHpkeTestVector(const HpkeTestVectorParams& params) {
           .SetVariant(params.variant)
           .Build();
   ABSL_CHECK_OK(hpke_parameters.status());
-  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *hpke_parameters, HexDecodeOrDie(params.public_key_hex),
-      params.id_requirement, GetPartialKeyAccess());
+  absl::StatusOr<HpkePublicKey> public_key =
+      HpkePublicKey::Create(*hpke_parameters, params.public_key_bytes,
+                            params.id_requirement, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
-      *public_key,
-      RestrictedData(HexDecodeOrDie(params.private_key_hex),
-                     InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
+      *public_key, params.private_key_bytes, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
@@ -266,8 +232,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm128,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kP256PublicKeyHex,
-               /*private_key_hex=*/kP256PrivateKeyHex,
+               /*public_key_bytes=*/P256PointAsString(),
+               /*private_key_bytes=*/P256SecretValue(),
                /*plaintext_hex=*/"01",
                /*context_info_hex=*/"02",
                /*ciphertext_hex=*/
@@ -288,8 +254,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm128,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kX25519PublicKeyHex,
-               /*private_key_hex=*/kX25519PrivateKeyHex,
+               /*public_key_bytes=*/X25519PublicValue(),
+               /*private_key_bytes=*/X25519SecretValue(),
                /*plaintext_hex=*/"01",
                /*context_info_hex=*/"02",
                /*ciphertext_hex=*/
@@ -308,8 +274,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm256,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kP256PublicKeyHex,
-               /*private_key_hex=*/kP256PrivateKeyHex,
+               /*public_key_bytes=*/P256PointAsString(),
+               /*private_key_bytes=*/P256SecretValue(),
                /*plaintext_hex=*/"01",
                /*context_info_hex=*/"02",
                /*ciphertext_hex=*/
@@ -330,8 +296,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kChaCha20Poly1305,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kP256PublicKeyHex,
-               /*private_key_hex=*/kP256PrivateKeyHex,
+               /*public_key_bytes=*/P256PointAsString(),
+               /*private_key_bytes=*/P256SecretValue(),
                /*plaintext_hex=*/"01",
                /*context_info_hex=*/"02",
                /*ciphertext_hex=*/
@@ -350,8 +316,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm128,
                /*variant=*/HpkeParameters::Variant::kTink,
                /*id_requirement=*/0x886688aa,
-               /*public_key_hex=*/kP256PublicKeyHex,
-               /*private_key_hex=*/kP256PrivateKeyHex,
+               /*public_key_bytes=*/P256PointAsString(),
+               /*private_key_bytes=*/P256SecretValue(),
                /*plaintext_hex=*/"01",
                /*context_info_hex=*/"02",
                /*ciphertext_hex=*/
@@ -371,8 +337,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm128,
                /*variant=*/HpkeParameters::Variant::kCrunchy,
                /*id_requirement=*/0x886688aa,
-               /*public_key_hex=*/kP256PublicKeyHex,
-               /*private_key_hex=*/kP256PrivateKeyHex,
+               /*public_key_bytes=*/P256PointAsString(),
+               /*private_key_bytes=*/P256SecretValue(),
                /*plaintext_hex=*/"01",
                /*context_info_hex=*/"02",
                /*ciphertext_hex=*/
@@ -392,8 +358,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm128,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kXWingPublicKeyHex,
-               /*private_key_hex=*/kXWingPrivateKeyHex,
+               /*public_key_bytes=*/XWingPublicValue(),
+               /*private_key_bytes=*/XWingSecretValue(),
                /*plaintext_hex=*/
                "4265617574792069732074727574682c20747275746820626561757479",
                /*context_info_hex=*/"4f6465206f6e2061204772656369616e2055726e",
@@ -449,8 +415,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm128,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kMlKem768PublicKeyHex,
-               /*private_key_hex=*/kMlKemPrivateKeyHex,
+               /*public_key_bytes=*/MlKem768PublicValue(),
+               /*private_key_bytes=*/MlKem768SecretValue(),
                /*plaintext_hex=*/
                "86526d8f8d975a50785055b1f6120e6e76e1088730919310d486016a1c62b9"
                "a797c5f8842c16260f959c1620d43632975a6c3f309b6891398c8c5a4d3148"
@@ -510,8 +476,8 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
                /*aead_id=*/HpkeParameters::AeadId::kAesGcm256,
                /*variant=*/HpkeParameters::Variant::kNoPrefix,
                /*id_requirement=*/std::nullopt,
-               /*public_key_hex=*/kMlKem1024PublicKeyHex,
-               /*private_key_hex=*/kMlKemPrivateKeyHex,
+               /*public_key_bytes=*/MlKem1024PublicValue(),
+               /*private_key_bytes=*/MlKem1024SecretValue(),
                /*plaintext_hex=*/
                "c8a4153f9b7e2d06c5478f1a3e6d9c0b25748f3e9a6c1b4d8e7f5a2b0d9e8c"
                "1f7a4b6d3e9f2a7c5b8e1d4f0a3c7b8e2d5f1a4c9b8d2e6f3a7c1b5d9e",
@@ -579,38 +545,6 @@ const HpkeTestVectorMap& CreateHpkeTestVectorsMap() {
 }
 
 }  // namespace
-
-std::string P256PointAsString() { return HexDecodeOrDie(kP256PublicKeyHex); }
-
-RestrictedData P256SecretValue() {
-  return RestrictedData(
-      SecretDataFromStringView(HexDecodeOrDie(kP256PrivateKeyHex)),
-      InsecureSecretKeyAccess::Get());
-}
-
-std::string P384PointAsString() { return HexDecodeOrDie(kP384PublicKeyHex); }
-
-RestrictedData P384SecretValue() {
-  return RestrictedData(
-      SecretDataFromStringView(HexDecodeOrDie(kP384PrivateKeyHex)),
-      InsecureSecretKeyAccess::Get());
-}
-
-std::string P521PointAsString() { return HexDecodeOrDie(kP521PublicKeyHex); }
-
-RestrictedData P521SecretValue() {
-  return RestrictedData(
-      SecretDataFromStringView(HexDecodeOrDie(kP521PrivateKeyHex)),
-      InsecureSecretKeyAccess::Get());
-}
-
-std::string X25519PublicValue() { return HexDecodeOrDie(kX25519PublicKeyHex); }
-
-RestrictedData X25519SecretValue() {
-  return RestrictedData(
-      SecretDataFromStringView(HexDecodeOrDie(kX25519PrivateKeyHex)),
-      InsecureSecretKeyAccess::Get());
-}
 
 std::string XWingPublicValue() { return HexDecodeOrDie(kXWingPublicKeyHex); }
 

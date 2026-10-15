@@ -45,6 +45,14 @@ EcPoint P256Point() {
           "7903FE1008B8BC99A41AE9E95628BC64F2F1B20C2D7E9F5177A3C294D4462299")));
 }
 
+std::string P256PointAsString() {
+  absl::StatusOr<std::string> encoded = EncodeEcPointToString(
+      subtle::EllipticCurveType::NIST_P256, subtle::EcPointFormat::UNCOMPRESSED,
+      P256Point());
+  ABSL_CHECK_OK(encoded);
+  return *encoded;
+}
+
 RestrictedData P256SecretValue() {
   return RestrictedData(
       HexDecodeOrDie(
@@ -60,6 +68,14 @@ EcPoint P384Point() {
       BigInteger(HexDecodeOrDie("0081a3a9c9e878b86755f018a8ec3c5e80921910af919b"
                                 "95f18976e35acc04efa2962e277a"
                                 "0b2c990ae92b62d6c75180ba")));
+}
+
+std::string P384PointAsString() {
+  absl::StatusOr<std::string> encoded = EncodeEcPointToString(
+      subtle::EllipticCurveType::NIST_P384, subtle::EcPointFormat::UNCOMPRESSED,
+      P384Point());
+  ABSL_CHECK_OK(encoded);
+  return *encoded;
 }
 
 RestrictedData P384SecretValue() {
@@ -81,6 +97,14 @@ EcPoint P521Point() {
           "CF5")));
 }
 
+std::string P521PointAsString() {
+  absl::StatusOr<std::string> encoded = EncodeEcPointToString(
+      subtle::EllipticCurveType::NIST_P521, subtle::EcPointFormat::UNCOMPRESSED,
+      P521Point());
+  ABSL_CHECK_OK(encoded);
+  return *encoded;
+}
+
 RestrictedData P521SecretValue() {
   return RestrictedData(
       HexDecodeOrDie(
@@ -92,13 +116,13 @@ RestrictedData P521SecretValue() {
 
 std::string X25519PublicValue() {
   return HexDecodeOrDie(
-      "90c5b6d9b337cc6c9c2e8ac44f1c0e7c41f23bdf7a04df3b9c8081c0c278352a");
+      "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431");
 }
 
 RestrictedData X25519SecretValue() {
   return RestrictedData(
       HexDecodeOrDie(
-          "97d2e385c9968fbe2dc0b85a182199ed7e0b5b4bb6060f76583c0893241f698d"),
+          "52c4a758a802cd8b936eceea314432798d5baf2d7e9235dc084ab1b9cfa2f736"),
       InsecureSecretKeyAccess::Get());
 }
 

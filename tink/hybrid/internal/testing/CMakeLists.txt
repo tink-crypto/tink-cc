@@ -31,6 +31,7 @@ tink_cc_library(
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     tink::internal::mlkem_util
+    tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
     tink::util::secret_data
     tink::util::test_util

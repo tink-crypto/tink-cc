@@ -28,16 +28,20 @@ namespace crypto::tink::internal {
 
 // Returns P-256 public point from RFC 6979, Appendix A.2.5.
 EcPoint P256Point();
+std::string P256PointAsString();
 // Returns P-256 private key from RFC 6979, Appendix A.2.5.
 RestrictedData P256SecretValue();
 // Returns P-384 public point from RFC 6979, Appendix A.2.6.
 EcPoint P384Point();
+std::string P384PointAsString();
 // Returns P-384 private key from RFC 6979, Appendix A.2.6.
 RestrictedData P384SecretValue();
 // Returns P-521 public point from RFC 6979, Appendix A.2.7.
 EcPoint P521Point();
+std::string P521PointAsString();
 // Returns P-521 private key from RFC 6979, Appendix A.2.7.
 RestrictedData P521SecretValue();
+// Returns X25519 public and private key from RFC 9180, Appendix A.3.1.
 std::string X25519PublicValue();
 RestrictedData X25519SecretValue();
 

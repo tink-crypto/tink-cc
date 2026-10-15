@@ -62,8 +62,11 @@ TEST(EcTestVectorsTest, GetEcKeyCurve25519) {
 
 TEST(EcTestVectorsTest, PointsAndSecrets) {
   EXPECT_THAT(P256Point().GetX().GetValue().empty(), IsFalse());
+  EXPECT_THAT(P256PointAsString().size(), Eq(65));
   EXPECT_THAT(P384Point().GetX().GetValue().empty(), IsFalse());
+  EXPECT_THAT(P384PointAsString().size(), Eq(97));
   EXPECT_THAT(P521Point().GetX().GetValue().empty(), IsFalse());
+  EXPECT_THAT(P521PointAsString().size(), Eq(133));
   EXPECT_THAT(X25519PublicValue().empty(), IsFalse());
 }
 

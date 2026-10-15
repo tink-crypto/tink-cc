@@ -27,6 +27,7 @@
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/internal/mlkem_util.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 
@@ -54,22 +55,6 @@ struct HpkeKeyPairBytes {
   std::string public_key_bytes;
   RestrictedData private_key_bytes;
 };
-
-// NIST P-256 test key pair from RFC 6979, Appendix A.2.5.
-std::string P256PointAsString();
-RestrictedData P256SecretValue();
-
-// NIST P-384 test key pair from RFC 6979, Appendix A.2.6.
-std::string P384PointAsString();
-RestrictedData P384SecretValue();
-
-// NIST P-521 test key pair from RFC 6979, Appendix A.2.7.
-std::string P521PointAsString();
-RestrictedData P521SecretValue();
-
-// X25519 test key pair from RFC 7748, Section 6.1.
-std::string X25519PublicValue();
-RestrictedData X25519SecretValue();
 
 // X-Wing test key pair from RFC 9180 / draft-connolly-cfrg-xwing-kem-09.
 std::string XWingPublicValue();

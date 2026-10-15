@@ -30,9 +30,12 @@
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/aes_gcm_siv_proto_serialization.h"
 #include "tink/aead/internal/aes_ctr_hmac_key_creator.h"
 #include "tink/aead/internal/aes_eax_key_creator.h"
 #include "tink/aead/internal/aes_gcm_key_creator.h"
+#include "tink/aead/internal/aes_gcm_siv_key_creator.h"
 #include "tink/aead/internal/xchacha20_poly1305_key_creator.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
@@ -83,6 +86,11 @@ absl::Status AddAeadKeyGen2026(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
+  ABSL_RETURN_IF_ERROR(RegisterAesGcmSivProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<AesGcmSivParameters>(
+          CreateAesGcmSivKey, config));
+
   status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesEaxKeyManager>(), config);
   if (!status.ok()) {

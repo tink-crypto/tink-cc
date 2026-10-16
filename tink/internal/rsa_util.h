@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
+#include "tink/big_integer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
@@ -110,6 +111,9 @@ absl::Status ValidateRsaPublicExponent(const BIGNUM* exponent);
 // Validates whether `exponent` is a valid bignum, is odd, greater than 65536
 // and smaller than 32 bits.
 absl::Status ValidateRsaPublicExponent(absl::string_view exponent);
+
+// Returns the default RSA public exponent F4 (65537), big-endian encoded.
+const BigInteger& GetRsaDefaultPublicExponent();
 
 // Creates a new RSA key pair and populates `private_key` and `public_key`.
 absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM* e,

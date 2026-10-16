@@ -34,6 +34,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
+#include "tink/big_integer.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -297,6 +298,23 @@ TEST(RsaUtilTest, ValidateRsaPublicExponent) {
       internal::BignumToString(e_bn.get(), BN_num_bytes(e_bn.get()));
   ASSERT_THAT(e_str, IsOk());
   EXPECT_THAT(ValidateRsaPublicExponent(*e_str), IsOk());
+}
+
+TEST(RsaUtilTest, GetRsaDefaultPublicExponent) {
+  const BigInteger& e = GetRsaDefaultPublicExponent();
+  EXPECT_EQ(e.GetValue(), absl::string_view("\x01\x00\x01", 3));
+  EXPECT_EQ(e.SizeInBytes(), 3);
+
+  internal::SslUniquePtr<BIGNUM> f4(BN_new());
+  ASSERT_EQ(BN_set_word(f4.get(), RSA_F4), kSslSuccess);
+  absl::StatusOr<std::string> f4_str =
+      internal::BignumToString(f4.get(), BN_num_bytes(f4.get()));
+  ASSERT_THAT(f4_str, IsOk());
+  EXPECT_EQ(e.GetValue(), *f4_str);
+  EXPECT_THAT(ValidateRsaPublicExponent(e.GetValue()), IsOk());
+
+  // Always returns the same object.
+  EXPECT_EQ(&e, &GetRsaDefaultPublicExponent());
 }
 
 // Checks if a BIGNUM is equal to a string value.

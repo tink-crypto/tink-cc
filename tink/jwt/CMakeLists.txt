@@ -346,9 +346,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
-    tink::internal::bn_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
 )
 
 tink_cc_library(
@@ -421,9 +419,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
-    tink::internal::bn_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
 )
 
 tink_cc_library(

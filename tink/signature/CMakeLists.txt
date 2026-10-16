@@ -520,9 +520,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
-    tink::internal::bn_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
     tink::util::status
     tink::util::statusor
 )
@@ -609,7 +607,6 @@ tink_cc_library(
     rsa_ssa_pss_parameters.h
   DEPS
     tink::signature::signature_parameters
-    absl::absl_check
     absl::status
     absl::statusor
     absl::strings
@@ -618,9 +615,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
-    tink::internal::bn_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
     tink::util::statusor
 )
 

@@ -16,32 +16,17 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 
-#include <string>
-
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#else
-#include "openssl/bn.h"
-#endif
 #include "tink/big_integer.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
 
 namespace crypto {
 namespace tink {
-namespace {
-
-constexpr int kF4 = 65537;
-
-}  // namespace
 
 JwtRsaSsaPssParameters::Builder&
 JwtRsaSsaPssParameters::Builder::SetAlgorithm(Algorithm algorithm) {
@@ -142,12 +127,7 @@ bool JwtRsaSsaPssParameters::operator==(const Parameters& other) const {
 // Returns the big endian encoded F4 value, which is the default value of the
 // public exponent.
 BigInteger JwtRsaSsaPssParameters::Builder::CreateDefaultPublicExponent() {
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  BN_set_word(e.get(), kF4);
-
-  std::string F4_string =
-      internal::BignumToString(e.get(), BN_num_bytes(e.get())).value();
-  return BigInteger(F4_string);
+  return internal::GetRsaDefaultPublicExponent();
 }
 
 }  // namespace tink

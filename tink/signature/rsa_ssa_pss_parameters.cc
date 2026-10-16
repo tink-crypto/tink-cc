@@ -17,27 +17,17 @@
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 
 #include <set>
-#include <string>
 
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/bn.h"
 #include "tink/big_integer.h"
-#include "tink/internal/bn_util.h"
 #include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
 
 namespace crypto {
 namespace tink {
-namespace {
-
-constexpr int kF4 = 65537;
-
-}  // namespace
 
 RsaSsaPssParameters::Builder&
 RsaSsaPssParameters::Builder::SetModulusSizeInBits(int modulus_size_in_bits) {
@@ -188,13 +178,7 @@ bool RsaSsaPssParameters::operator==(const Parameters& other) const {
 
 // Returns the big endian encoded F4 value as a public exponent default.
 BigInteger RsaSsaPssParameters::Builder::CreateDefaultPublicExponent() {
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  BN_set_word(e.get(), kF4);
-
-  absl::StatusOr<std::string> F4_string =
-      internal::BignumToString(e.get(), BN_num_bytes(e.get()));
-  ABSL_CHECK_OK(F4_string.status());
-  return BigInteger(*F4_string);
+  return internal::GetRsaDefaultPublicExponent();
 }
 
 }  // namespace tink

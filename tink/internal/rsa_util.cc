@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
@@ -29,6 +30,7 @@
 #include "openssl/bn.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "openssl/rsa.h"
+#include "tink/big_integer.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/err_util.h"
@@ -112,6 +114,13 @@ absl::Status ValidateRsaPublicExponent(absl::string_view exponent) {
     return e.status();
   }
   return ValidateRsaPublicExponent(e->get());
+}
+
+const BigInteger& GetRsaDefaultPublicExponent() {
+  // The explicit length is required because of the embedded NUL byte.
+  static const absl::NoDestructor<BigInteger> kF4(
+      absl::string_view("\x01\x00\x01", 3));
+  return *kF4;
 }
 
 absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM* e,

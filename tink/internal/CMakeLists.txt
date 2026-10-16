@@ -209,11 +209,13 @@ tink_cc_library(
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    absl::no_destructor
     absl::status
     absl::status_macros
     absl::statusor
     absl::strings
     tink::internal::boringssl
+    tink::core::big_integer
     tink::core::secret_data
     tink::subtle::common_enums
     tink::util::secret_data
@@ -372,6 +374,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     tink::internal::boringssl
+    tink::core::big_integer
     tink::core::secret_data
     tink::subtle::random
     tink::util::secret_data

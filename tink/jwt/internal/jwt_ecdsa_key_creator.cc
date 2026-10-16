@@ -79,7 +79,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> CreateJwtEcdsaPrivateKey(
                         pub_builder.Build(GetPartialKeyAccess()));
 
   RestrictedData private_key_value =
-      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+      RestrictedData(ec_key.priv.AsStringView(),
                      GetInsecureSecretKeyAccessInternal());
 
   return JwtEcdsaPrivateKey::Create(public_key, private_key_value,

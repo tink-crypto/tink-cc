@@ -498,7 +498,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<SecretData> private_key_value = ParseBigIntToFixedLength(
-      util::SecretDataAsStringView(proto_private_key.key_value()),
+      proto_private_key.key_value().AsStringView(),
       parameters->GetPrivateKeyLength());
   if (!private_key_value.ok()) {
     return private_key_value.status();

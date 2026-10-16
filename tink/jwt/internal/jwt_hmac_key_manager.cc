@@ -72,7 +72,7 @@ JwtHmacKeyManager::JwtMacFactory::Create(const JwtHmacKey& jwt_hmac_key) const {
   }
   absl::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(
       util::Enums::ProtoToSubtle(hash_type), tag_size,
-      util::SecretDataFromStringView(jwt_hmac_key.key_value()));
+      SecretData(jwt_hmac_key.key_value()));
   if (!mac.ok()) {
     return mac.status();
   }

@@ -117,12 +117,12 @@ TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
   internal::RsaPrivateKey private_key_subtle;
   private_key_subtle.n = vector.n;
   private_key_subtle.e = vector.e;
-  private_key_subtle.d = util::SecretDataFromStringView(vector.d);
-  private_key_subtle.p = util::SecretDataFromStringView(vector.p);
-  private_key_subtle.q = util::SecretDataFromStringView(vector.q);
-  private_key_subtle.dp = util::SecretDataFromStringView(vector.dp);
-  private_key_subtle.dq = util::SecretDataFromStringView(vector.dq);
-  private_key_subtle.crt = util::SecretDataFromStringView(vector.q_inv);
+  private_key_subtle.d = SecretData(vector.d);
+  private_key_subtle.p = SecretData(vector.p);
+  private_key_subtle.q = SecretData(vector.q);
+  private_key_subtle.dp = SecretData(vector.dp);
+  private_key_subtle.dq = SecretData(vector.dq);
+  private_key_subtle.crt = SecretData(vector.q_inv);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::RsaSsaPkcs1SignBoringSsl::New(

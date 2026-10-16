@@ -68,7 +68,6 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
-using ::crypto::tink::util::SecretDataAsStringView;
 
 using JwtRsaSsaPkcs1ProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization,
@@ -439,49 +438,49 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
   RestrictedData p_data =
       internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
         return RestrictedData(
-            WithoutLeadingZeros(SecretDataAsStringView(private_key.p())),
+            WithoutLeadingZeros(private_key.p().AsStringView()),
             InsecureSecretKeyAccess::Get());
       });
 
   RestrictedData q_data =
       internal::CallWithCoreDumpProtection([&]() -> RestrictedData {
         return RestrictedData(
-            WithoutLeadingZeros(SecretDataAsStringView(private_key.q())),
+            WithoutLeadingZeros(private_key.q().AsStringView()),
             InsecureSecretKeyAccess::Get());
       });
 
   absl::StatusOr<SecretData> dp_data = ParseBigIntToFixedLength(
-      SecretDataAsStringView(private_key.dp()), p_data.size());
+      private_key.dp().AsStringView(), p_data.size());
   if (!dp_data.ok()) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Failed to parse dp: expected length ", p_data.size(), ", got ",
-        SecretDataAsStringView(private_key.dp()).size()));
+        private_key.dp().AsStringView().size()));
   }
 
   absl::StatusOr<SecretData> dq_data = ParseBigIntToFixedLength(
-      SecretDataAsStringView(private_key.dq()), q_data.size());
+      private_key.dq().AsStringView(), q_data.size());
   if (!dq_data.ok()) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Failed to parse dq: expected length ", q_data.size(), ", got ",
-        SecretDataAsStringView(private_key.dq()).size()));
+        private_key.dq().AsStringView().size()));
   }
 
   absl::StatusOr<SecretData> crt_data = ParseBigIntToFixedLength(
-      SecretDataAsStringView(private_key.crt()), p_data.size());
+      private_key.crt().AsStringView(), p_data.size());
   if (!crt_data.ok()) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Failed to parse crt: expected length ", p_data.size(), ", got ",
-        SecretDataAsStringView(private_key.crt()).size()));
+        private_key.crt().AsStringView().size()));
   }
 
   absl::StatusOr<SecretData> d_data = ParseBigIntToFixedLength(
-      SecretDataAsStringView(private_key.d()),
+      private_key.d().AsStringView(),
       (public_key->GetParameters().GetModulusSizeInBits() + 7) / 8);
   if (!d_data.ok()) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Failed to parse d: expected length ",
         (public_key->GetParameters().GetModulusSizeInBits() + 7) / 8, ", got ",
-        SecretDataAsStringView(private_key.d()).size()));
+        private_key.d().AsStringView().size()));
   }
 
   return JwtRsaSsaPkcs1PrivateKey::Builder()

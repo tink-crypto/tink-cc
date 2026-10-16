@@ -62,7 +62,7 @@ absl::StatusOr<VerifiedJwt> CreateVerifiedJwt(const RawJwt& raw_jwt) {
   }
   absl::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(
       util::Enums::ProtoToSubtle(google::crypto::tink::HashType::SHA256), 32,
-      util::SecretDataFromStringView(key_value));
+      SecretData(key_value));
   if (!mac.ok()) {
     return mac.status();
   }

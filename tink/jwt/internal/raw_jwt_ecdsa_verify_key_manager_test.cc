@@ -73,7 +73,7 @@ JwtEcdsaPrivateKey CreateValidEs256PrivateKey() {
       internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
   JwtEcdsaPrivateKey key;
   key.set_version(0);
-  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  key.set_key_value(ec_key.priv.AsStringView());
   JwtEcdsaPublicKey* public_key = key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_algorithm(JwtEcdsaAlgorithm::ES256);
@@ -87,7 +87,7 @@ JwtEcdsaPrivateKey CreateValidEs384PrivateKey() {
       internal::GetEcKey(subtle::EllipticCurveType::NIST_P384);
   JwtEcdsaPrivateKey key;
   key.set_version(0);
-  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  key.set_key_value(ec_key.priv.AsStringView());
   JwtEcdsaPublicKey* public_key = key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_algorithm(JwtEcdsaAlgorithm::ES384);
@@ -116,7 +116,6 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyUnknownAlgorithm) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-
 TEST(EcdsaSignKeyManagerTest, Create) {
   JwtEcdsaPrivateKey private_key = CreateValidEs256PrivateKey();
   absl::StatusOr<JwtEcdsaPublicKey> public_key =
@@ -127,7 +126,7 @@ TEST(EcdsaSignKeyManagerTest, Create) {
   ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P256);
   ec_key.pub_x = public_key->x();
   ec_key.pub_y = public_key->y();
-  ec_key.priv = util::SecretDataFromStringView(private_key.key_value());
+  ec_key.priv = SecretData(private_key.key_value());
 
   absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> direct_signer =
       subtle::EcdsaSignBoringSsl::New(
@@ -156,7 +155,7 @@ TEST(EcdsaSignKeyManagerTest, CreateDifferentPrivateKey) {
   ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P256);
   ec_key.pub_x = public_key->x();
   ec_key.pub_y = public_key->y();
-  ec_key.priv = util::SecretDataFromStringView(private_key.key_value());
+  ec_key.priv = SecretData(private_key.key_value());
 
   absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> direct_signer =
       subtle::EcdsaSignBoringSsl::New(

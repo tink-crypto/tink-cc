@@ -59,7 +59,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> RawJwtEcdsaSignKeyManager::CreateKey(
   JwtEcdsaPrivateKey jwt_ecdsa_private_key;
   jwt_ecdsa_private_key.set_version(get_version());
   jwt_ecdsa_private_key.set_key_value(
-      util::SecretDataAsStringView(ec_key->priv));
+      ec_key->priv.AsStringView());
   auto jwt_ecdsa_public_key = jwt_ecdsa_private_key.mutable_public_key();
   jwt_ecdsa_public_key->set_version(get_version());
   jwt_ecdsa_public_key->set_x(ec_key->pub_x);
@@ -83,7 +83,7 @@ RawJwtEcdsaSignKeyManager::PublicKeySignFactory::Create(
   ec_key.pub_x = public_key.x();
   ec_key.pub_y = public_key.y();
   ec_key.priv =
-      util::SecretDataFromStringView(jwt_ecdsa_private_key.key_value());
+      SecretData(jwt_ecdsa_private_key.key_value());
   absl::StatusOr<google::crypto::tink::HashType> hash_type =
       RawJwtEcdsaVerifyKeyManager::HashForEcdsaAlgorithm(
           public_key.algorithm());

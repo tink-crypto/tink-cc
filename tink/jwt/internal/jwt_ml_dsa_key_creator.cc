@@ -93,7 +93,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa44Key(
   }
 
   SecretData secret_data =
-      util::internal::AsSecretData(std::move(private_seed_bytes));
+      SecretData(std::move(private_seed_bytes));
 
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
                           std::move(secret_data));
@@ -118,7 +118,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa65Key(
   }
 
   SecretData secret_data =
-      util::internal::AsSecretData(std::move(private_seed_bytes));
+      SecretData(std::move(private_seed_bytes));
 
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
                           std::move(secret_data));
@@ -142,7 +142,7 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
   }
 
   SecretData secret_data =
-      util::internal::AsSecretData(std::move(private_seed_bytes));
+      SecretData(std::move(private_seed_bytes));
 
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
                           std::move(secret_data));

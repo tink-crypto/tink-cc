@@ -236,7 +236,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
   google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  private_key_proto.set_key_value(ec_key.priv.AsStringView());
 
   absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
@@ -269,7 +269,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
 
   absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
-      RestrictedData(util::SecretDataAsStringView(ec_key.priv),
+      RestrictedData(ec_key.priv.AsStringView(),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());

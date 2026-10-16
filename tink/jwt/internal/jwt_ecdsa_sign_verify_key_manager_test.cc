@@ -145,7 +145,7 @@ JwtEcdsaPrivateKey CreateValidEs256PrivateKey() {
       internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
   JwtEcdsaPrivateKey key;
   key.set_version(0);
-  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  key.set_key_value(ec_key.priv.AsStringView());
   JwtEcdsaPublicKey* public_key = key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_algorithm(JwtEcdsaAlgorithm::ES256);
@@ -159,7 +159,7 @@ JwtEcdsaPrivateKey CreateValidEs384PrivateKey() {
       internal::GetEcKey(subtle::EllipticCurveType::NIST_P384);
   JwtEcdsaPrivateKey key;
   key.set_version(0);
-  key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
+  key.set_key_value(ec_key.priv.AsStringView());
   JwtEcdsaPublicKey* public_key = key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_algorithm(JwtEcdsaAlgorithm::ES384);

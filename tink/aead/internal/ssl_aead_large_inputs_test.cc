@@ -27,13 +27,9 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 // We test SslOneShotAead implementations against a very large input.
@@ -130,22 +126,20 @@ std::vector<TestParams> GetTestParams() {
       {/*test_name=*/"AesGcm128", /*cipher=*/"aes_gcm",
        /*tag_size=*/kAesGcmTagSizeInBytes,
        /*iv_hex=*/kAesGcmIvHex,
-       /*key_hex=*/k128Key}};
-  if (IsBoringSsl()) {
-    params.push_back({/*test_name=*/"AesGcmSiv256", /*cipher=*/"aes_gcm_siv",
-                      /*tag_size=*/kAesGcmTagSizeInBytes,
-                      /*iv_hex=*/kAesGcmIvHex,
-                      /*key_hex=*/k256Key});
-    params.push_back({/*test_name=*/"AesGcmSiv128", /*cipher=*/"aes_gcm_siv",
-                      /*tag_size=*/kAesGcmTagSizeInBytes,
-                      /*iv_hex=*/kAesGcmIvHex,
-                      /*key_hex=*/k128Key});
-    params.push_back({/*test_name=*/"Xchacha20Poly1305",
-                      /*cipher=*/"xchacha20_poly1305",
-                      /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
-                      /*iv_hex=*/kXchacha20Poly1305IvHex,
-                      /*key_hex=*/k256Key});
-  }
+       /*key_hex=*/k128Key},
+      {/*test_name=*/"AesGcmSiv256", /*cipher=*/"aes_gcm_siv",
+       /*tag_size=*/kAesGcmTagSizeInBytes,
+       /*iv_hex=*/kAesGcmIvHex,
+       /*key_hex=*/k256Key},
+      {/*test_name=*/"AesGcmSiv128", /*cipher=*/"aes_gcm_siv",
+       /*tag_size=*/kAesGcmTagSizeInBytes,
+       /*iv_hex=*/kAesGcmIvHex,
+       /*key_hex=*/k128Key},
+      {/*test_name=*/"Xchacha20Poly1305",
+       /*cipher=*/"xchacha20_poly1305",
+       /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
+       /*iv_hex=*/kXchacha20Poly1305IvHex,
+       /*key_hex=*/k256Key}};
   return params;
 }
 

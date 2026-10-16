@@ -33,11 +33,9 @@
 #include "absl/types/span.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -425,24 +423,22 @@ std::vector<SslOneShotAeadTestParams> GetSslOneShotAeadTestParams() {
       {/*test_name=*/"AesGcm128", /*cipher=*/CipherType::kAesGcm,
        /*tag_size=*/kAesGcmTagSizeInBytes,
        /*iv_hex=*/kAesGcmIvHex,
-       /*key_hex=*/k128Key}};
-  if (IsBoringSsl()) {
-    params.push_back({/*test_name=*/"AesGcmSiv256",
-                      /*cipher=*/CipherType::kAesGcmSiv,
-                      /*tag_size=*/kAesGcmTagSizeInBytes,
-                      /*iv_hex=*/kAesGcmIvHex,
-                      /*key_hex=*/k256Key});
-    params.push_back({/*test_name=*/"AesGcmSiv128",
-                      /*cipher=*/CipherType::kAesGcmSiv,
-                      /*tag_size=*/kAesGcmTagSizeInBytes,
-                      /*iv_hex=*/kAesGcmIvHex,
-                      /*key_hex=*/k128Key});
-    params.push_back({/*test_name=*/"Xchacha20Poly1305",
-                      /*cipher=*/CipherType::kXchacha20Poly1305,
-                      /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
-                      /*iv_hex=*/kXchacha20Poly1305IvHex,
-                      /*key_hex=*/k256Key});
-  }
+       /*key_hex=*/k128Key},
+      {/*test_name=*/"AesGcmSiv256",
+       /*cipher=*/CipherType::kAesGcmSiv,
+       /*tag_size=*/kAesGcmTagSizeInBytes,
+       /*iv_hex=*/kAesGcmIvHex,
+       /*key_hex=*/k256Key},
+      {/*test_name=*/"AesGcmSiv128",
+       /*cipher=*/CipherType::kAesGcmSiv,
+       /*tag_size=*/kAesGcmTagSizeInBytes,
+       /*iv_hex=*/kAesGcmIvHex,
+       /*key_hex=*/k128Key},
+      {/*test_name=*/"Xchacha20Poly1305",
+       /*cipher=*/CipherType::kXchacha20Poly1305,
+       /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
+       /*iv_hex=*/kXchacha20Poly1305IvHex,
+       /*key_hex=*/k256Key}};
   return params;
 }
 
@@ -471,9 +467,6 @@ TEST(SslOneShotAeadTest, AesGcmTestInvalidKeySizes) {
 }
 
 TEST(SslOneShotAeadTest, AesGcmSivTestInvalidKeySizes) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "AES-GCM-SIV not supported with OpenSSL";
-  }
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
@@ -491,9 +484,6 @@ TEST(SslOneShotAeadTest, AesGcmSivTestInvalidKeySizes) {
 }
 
 TEST(SslOneShotAeadTest, Xchacha20Poly1305TestInvalidKeySizes) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "Xchacha20-Poly1305 not supported with OpenSSL";
-  }
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
@@ -511,9 +501,6 @@ TEST(SslOneShotAeadTest, Xchacha20Poly1305TestInvalidKeySizes) {
 }
 
 TEST(SslOneShotAeadTest, Xchacha20Poly1305TestFipsOnly) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "Xchacha20-Poly1305 not supported with OpenSSL";
-  }
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
@@ -676,23 +663,21 @@ std::vector<SslOneShotAeadWycheproofTestParams> GetWycheproofTestParams() {
                       /*tag_size=*/16,
                       /*key_sizes=*/{16, 32}, test_vector});
   }
-  if (IsBoringSsl()) {
-    for (const WycheproofTestVector& test_vector :
-         ReadWycheproofTestVectors("aes_gcm_siv_test.json")) {
-      params.push_back({/*test_name=*/"AesGcmSiv",
-                        /*cipher_name=*/CipherType::kAesGcmSiv,
-                        /*nonce_size=*/12,
-                        /*tag_size=*/16,
-                        /*key_sizes=*/{16, 32}, test_vector});
-    }
-    for (const WycheproofTestVector& test_vector :
-         ReadWycheproofTestVectors("xchacha20_poly1305_test.json")) {
-      params.push_back({/*test_name=*/"Xchacha20Poly1305",
-                        /*cipher_name=*/CipherType::kXchacha20Poly1305,
-                        /*nonce_size=*/24,
-                        /*tag_size=*/16,
-                        /*key_sizes=*/{32}, test_vector});
-    }
+  for (const WycheproofTestVector& test_vector :
+       ReadWycheproofTestVectors("aes_gcm_siv_test.json")) {
+    params.push_back({/*test_name=*/"AesGcmSiv",
+                      /*cipher_name=*/CipherType::kAesGcmSiv,
+                      /*nonce_size=*/12,
+                      /*tag_size=*/16,
+                      /*key_sizes=*/{16, 32}, test_vector});
+  }
+  for (const WycheproofTestVector& test_vector :
+       ReadWycheproofTestVectors("xchacha20_poly1305_test.json")) {
+    params.push_back({/*test_name=*/"Xchacha20Poly1305",
+                      /*cipher_name=*/CipherType::kXchacha20Poly1305,
+                      /*nonce_size=*/24,
+                      /*tag_size=*/16,
+                      /*key_sizes=*/{32}, test_vector});
   }
   return params;
 }

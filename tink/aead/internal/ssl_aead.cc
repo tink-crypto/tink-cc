@@ -15,26 +15,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/aead/internal/ssl_aead.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <memory>
-#include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "openssl/aead.h"
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/aead/internal/aead_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -52,279 +47,6 @@ ABSL_CONST_INIT const int kAesGcmTagSizeInBytes = 16;
 ABSL_CONST_INIT const int kAesGcmSivTagSizeInBytes = 16;
 
 namespace {
-
-// Encrypts/Decrypts `data` and writes the result into `out`. The direction
-// (encrypt/decrypt) is given by `context`. `out` is assumed to be large enough
-// to hold the encrypted/decrypted content.
-absl::StatusOr<int64_t> UpdateCipher(EVP_CIPHER_CTX *context,
-                                     absl::string_view data,
-                                     absl::Span<char> out) {
-  // We encrypt/decrypt in chunks of at most MAX int.
-  const int64_t kMaxChunkSize = std::numeric_limits<int>::max();
-  if (out.size() < data.size()) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "UpdateCipher: output buffer too small");
-  }
-  const int64_t original_out_size = out.size();
-  while (!data.empty()) {
-    const int chunk_size =
-        std::min(kMaxChunkSize, static_cast<int64_t>(data.size()));
-    auto* buffer_ptr = reinterpret_cast<uint8_t*>(out.data());
-    int written_bytes = 0;
-    if (EVP_CipherUpdate(context, buffer_ptr, &written_bytes,
-                         reinterpret_cast<const uint8_t*>(data.data()),
-                         chunk_size) <= 0) {
-      const bool is_encrypting = EVP_CIPHER_CTX_encrypting(context) == 1;
-      return absl::Status(
-          absl::StatusCode::kInternal,
-          absl::StrCat(is_encrypting ? "Encryption" : "Decryption", " failed"));
-    }
-    data = data.substr(chunk_size);
-    out = out.subspan(written_bytes);
-  }
-  return original_out_size - out.size();
-}
-
-class OpenSslOneShotAeadImpl : public SslOneShotAead {
- public:
-  explicit OpenSslOneShotAeadImpl(const SecretData &key,
-                                  const EVP_CIPHER *cipher, size_t tag_size)
-      : key_(key), cipher_(cipher), tag_size_(tag_size) {}
-
-  absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
-                                  absl::string_view associated_data,
-                                  absl::string_view iv,
-                                  absl::Span<char> out) const override {
-    absl::string_view plaintext_data = internal::EnsureStringNonNull(plaintext);
-    absl::string_view ad = internal::EnsureStringNonNull(associated_data);
-
-    const int64_t min_out_buff_size = CiphertextSize(plaintext.size());
-    ABSL_CHECK_GE(min_out_buff_size, 0);
-    if (out.size() < static_cast<size_t>(min_out_buff_size)) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Encryption buffer too small; expected at least ",
-                       min_out_buff_size, " bytes, got ", out.size()));
-    }
-
-    if (BuffersOverlap(plaintext, absl::string_view(out.data(), out.size()))) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Plaintext and output buffer must not overlap");
-    }
-
-    if (associated_data.size() >
-        static_cast<size_t>(std::numeric_limits<int>::max())) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Associated data too large; expected at most ",
-                       std::numeric_limits<int>::max(), " got ",
-                       associated_data.size()));
-    }
-
-    return internal::CallWithCoreDumpProtection(
-        [&]() { return EncryptSensitive(plaintext_data, ad, iv, out); });
-  }
-
-  absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
-                                  absl::string_view associated_data,
-                                  absl::string_view iv,
-                                  absl::Span<char> out) const override {
-    absl::string_view ad = internal::EnsureStringNonNull(associated_data);
-
-    if (ciphertext.size() < tag_size_) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Ciphertext buffer too small; expected at least ",
-                       tag_size_, " got ", ciphertext.size()));
-    }
-
-    const int64_t min_out_buff_size = PlaintextSize(ciphertext.size());
-    ABSL_CHECK_GE(min_out_buff_size, 0);
-    if (out.size() < static_cast<size_t>(min_out_buff_size)) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Output buffer too small; expected at least ",
-                       min_out_buff_size, " got ", out.size()));
-    }
-
-    if (BuffersOverlap(ciphertext, absl::string_view(out.data(), out.size()))) {
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Ciphertext and output buffer must not overlap");
-    }
-
-    if (associated_data.size() >
-        static_cast<size_t>(std::numeric_limits<int>::max())) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Associated data too large; expected at most ",
-                       std::numeric_limits<int>::max(), " got ",
-                       associated_data.size()));
-    }
-
-    return internal::CallWithCoreDumpProtection(
-        [&]() { return DecryptSensitive(ciphertext, ad, iv, out); });
-  }
-
-  int64_t CiphertextSize(int64_t plaintext_length) const override {
-    return plaintext_length + tag_size_;
-  }
-
-  int64_t PlaintextSize(int64_t ciphertext_length) const override {
-    ABSL_CHECK_GE(ciphertext_length, 0);
-    if (static_cast<size_t>(ciphertext_length) < tag_size_) {
-      return 0;
-    }
-    return ciphertext_length - tag_size_;
-  }
-
- private:
-  absl::StatusOr<uint64_t> EncryptSensitive(absl::string_view plaintext_data,
-                                            absl::string_view ad,
-                                            absl::string_view iv,
-                                            absl::Span<char> out) const {
-    absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
-        GetContext(iv, /*encryption=*/true);
-    if (!context.ok()) {
-      return context.status();
-    }
-
-    // Set the associated data.
-    int len = 0;
-    if (EVP_EncryptUpdate(context->get(), /*out=*/nullptr, &len,
-                          reinterpret_cast<const uint8_t *>(ad.data()),
-                          ad.size()) <= 0) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Failed to set associated data");
-    }
-
-    absl::StatusOr<int64_t> raw_ciphertext_bytes =
-        UpdateCipher(context->get(), plaintext_data, out);
-    if (!raw_ciphertext_bytes.ok()) {
-      return raw_ciphertext_bytes.status();
-    }
-
-    if (EVP_EncryptFinal_ex(context->get(), /*out=*/nullptr, &len) <= 0) {
-      return absl::Status(absl::StatusCode::kInternal, "Finalization failed");
-    }
-
-    // Write the tag after the ciphertext.
-    absl::Span<char> tag = out.subspan(*raw_ciphertext_bytes, tag_size_);
-    if (EVP_CIPHER_CTX_ctrl(context->get(), EVP_CTRL_AEAD_GET_TAG, tag_size_,
-                            reinterpret_cast<uint8_t *>(tag.data())) <= 0) {
-      return absl::Status(absl::StatusCode::kInternal, "Failed to get the tag");
-    }
-    return *raw_ciphertext_bytes + tag_size_;
-  }
-
-  absl::StatusOr<uint64_t> DecryptSensitive(absl::string_view ciphertext,
-                                            absl::string_view ad,
-                                            absl::string_view iv,
-                                            absl::Span<char> out) const {
-    absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
-        GetContext(iv, /*encryption=*/false);
-    if (!context.ok()) {
-      return context.status();
-    }
-
-    int len = 0;
-    // Add the associated data.
-    if (EVP_DecryptUpdate(context->get(), /*out=*/nullptr, &len,
-                          reinterpret_cast<const uint8_t *>(ad.data()),
-                          ad.size()) <= 0) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Failed to set associated_data");
-    }
-
-    const int64_t raw_ciphertext_size = ciphertext.size() - tag_size_;
-    // "Unpack" the ciphertext.
-    absl::string_view raw_ciphertext =
-        ciphertext.substr(0, raw_ciphertext_size);
-    // This copy is needed since EVP_CIPHER_CTX_ctrl requires a non-const
-    // pointer even if the EVP_CTRL_AEAD_SET_TAG operation doesn't modify the
-    // content of the buffer.
-    auto tag = std::string(ciphertext.substr(raw_ciphertext_size, tag_size_));
-
-    // Set the tag.
-    if (EVP_CIPHER_CTX_ctrl(context->get(), EVP_CTRL_AEAD_SET_TAG, tag_size_,
-                            reinterpret_cast<uint8_t *>(&tag[0])) <= 0) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Could not set authentication tag");
-    }
-
-    // If out.empty() accessing the 0th element would result in an out of
-    // bound violation. This makes sure we pass a pointer to at least one byte
-    // when calling into OpenSSL.
-    char buffer_if_size_is_zero = '\0';
-    auto out_buffer = absl::Span<char>(&buffer_if_size_is_zero, /*length=*/1);
-    if (!out.empty()) {
-      const int64_t min_out_buff_size = PlaintextSize(ciphertext.size());
-      out_buffer = out.subspan(0, min_out_buff_size);
-    }
-
-    // Zero the plaintext buffer in case decryption fails before returning an
-    // error.
-    auto output_eraser =
-        absl::MakeCleanup([out] { OPENSSL_cleanse(out.data(), out.size()); });
-
-    absl::StatusOr<int64_t> written_bytes =
-        UpdateCipher(context->get(), raw_ciphertext, out_buffer);
-    if (!written_bytes.ok()) {
-      return written_bytes.status();
-    }
-
-    if (!EVP_DecryptFinal_ex(context->get(), /*out=*/nullptr, &len)) {
-      return absl::Status(absl::StatusCode::kInternal, "Authentication failed");
-    }
-
-    // Decryption executed correctly, cancel cleanup on the output buffer.
-    std::move(output_eraser).Cancel();
-    return *written_bytes;
-  }
-
-  // Returns a new EVP_CIPHER_CTX for encryption (`ecryption` == true) or
-  // decryption (`encryption` == false).
-  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> GetContext(
-      absl::string_view iv, bool encryption) const {
-    internal::SslUniquePtr<EVP_CIPHER_CTX> context(EVP_CIPHER_CTX_new());
-    if (context == nullptr) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "EVP_CIPHER_CTX_new failed");
-    }
-    const int encryption_flag = encryption ? 1 : 0;
-    if (EVP_CipherInit_ex(context.get(), cipher_, /*engine=*/nullptr,
-                          /*key=*/nullptr, /*iv=*/nullptr,
-                          encryption_flag) <= 0) {
-      return absl::Status(
-          absl::StatusCode::kInternal,
-          absl::StrCat("Failed initializializing context for ",
-                       encryption ? "encryption" : "decryption"));
-    }
-    // Set the size for IV first, then set the IV bytes.
-    if (EVP_CIPHER_CTX_ctrl(context.get(), EVP_CTRL_AEAD_SET_IVLEN, iv.size(),
-                            /*ptr=*/nullptr) <= 0) {
-      return absl::Status(
-          absl::StatusCode::kInternal,
-          absl::StrCat("Failed stting size of the IV to ", iv.size()));
-    }
-    if (EVP_CipherInit_ex(context.get(), /*cipher=*/nullptr, /*engine=*/nullptr,
-                          reinterpret_cast<const uint8_t *>(key_.data()),
-                          reinterpret_cast<const uint8_t *>(iv.data()),
-                          encryption_flag) <= 0) {
-      return absl::Status(
-          absl::StatusCode::kInternal,
-          absl::StrCat("Failed to set key of size ", key_.size(),
-                       "and IV of size ", iv.size()));
-    }
-
-    return std::move(context);
-  }
-
-  const SecretData key_;
-  const EVP_CIPHER *cipher_;
-  const size_t tag_size_;
-};
-
-#ifdef OPENSSL_IS_BORINGSSL
 
 // Implementation of the one-shot AEAD cypter. This is purposely internal to
 // an anonymous namespace to disallow direct use of this class other than
@@ -498,13 +220,10 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
   const size_t tag_size_;
 };
 
-#endif
-
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
     const SecretData &key) {
-#ifdef OPENSSL_IS_BORINGSSL
   absl::StatusOr<const EVP_AEAD *> aead_cipher =
       GetAesGcmAeadForKeySize(key.size());
   if (!aead_cipher.ok()) {
@@ -523,21 +242,10 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
   }
   return {std::make_unique<BoringSslOneShotAeadImpl>(std::move(context),
                                                      kAesGcmTagSizeInBytes)};
-#else
-  absl::StatusOr<const EVP_CIPHER *> aead_cipher =
-      GetAesGcmCipherForKeySize(key.size());
-  if (!aead_cipher.ok()) {
-    return aead_cipher.status();
-  }
-
-  return absl::make_unique<OpenSslOneShotAeadImpl>(key, *aead_cipher,
-                                                   kAesGcmTagSizeInBytes);
-#endif
 }
 
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
     const SecretData &key) {
-#ifdef OPENSSL_IS_BORINGSSL
   absl::StatusOr<const EVP_AEAD *> aead_cipher =
       GetAesGcmSivAeadCipherForKeySize(key.size());
   if (!aead_cipher.ok()) {
@@ -555,15 +263,10 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
   }
   return {std::make_unique<BoringSslOneShotAeadImpl>(std::move(context),
                                                      kAesGcmSivTagSizeInBytes)};
-#else
-  return absl::Status(absl::StatusCode::kUnimplemented,
-                      "AES-GCM-SIV is unimplemented for OpenSSL");
-#endif
 }
 
 absl::StatusOr<std::unique_ptr<SslOneShotAead>>
 CreateXchacha20Poly1305OneShotCrypter(const SecretData &key) {
-#ifdef OPENSSL_IS_BORINGSSL
   if (key.size() != 32) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -583,10 +286,6 @@ CreateXchacha20Poly1305OneShotCrypter(const SecretData &key) {
   }
   return {std::make_unique<BoringSslOneShotAeadImpl>(
       std::move(context), kXchacha20Poly1305TagSizeInBytes)};
-#else
-  return absl::Status(absl::StatusCode::kUnimplemented,
-                      "Xchacha20-Poly1305 is unimplemented for OpenSSL");
-#endif
 }
 
 }  // namespace internal

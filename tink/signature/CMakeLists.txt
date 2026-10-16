@@ -1997,3 +1997,20 @@ tink_cc_library(
     tink::signature::internal::key_gen_config_2026
 )
 
+tink_cc_test(
+  NAME ecdsa_public_key_benchmark
+  SRCS
+    ecdsa_public_key_benchmark.cc
+  DEPS
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    gmock
+    absl::absl_check
+    absl::statusor
+    benchmark::benchmark_main
+    tink::core::ec_point
+    tink::core::partial_key_access
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

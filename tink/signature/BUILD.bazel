@@ -2044,3 +2044,21 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "ecdsa_public_key_benchmark",
+    srcs = ["ecdsa_public_key_benchmark.cc"],
+    deps = [
+        ":ecdsa_parameters",
+        ":ecdsa_private_key",
+        ":ecdsa_public_key",
+        "//tink:ec_point",
+        "//tink:partial_key_access",
+        "//tink/signature/internal/testing:ecdsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@google_benchmark//:benchmark_main",
+        "@googletest//:gtest_main",
+    ],
+)

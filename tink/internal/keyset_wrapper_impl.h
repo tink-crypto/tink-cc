@@ -90,17 +90,15 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
       absl::StatusOr<std::unique_ptr<const Key>> key =
           internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
               *serialization, internal::GetInsecureSecretKeyAccessInternal());
-
       absl::StatusOr<std::unique_ptr<P>> primitive;
-      if (!key.ok() ||
-          primitive_getter_from_key_(*key.value()).status().code() ==
-              absl::StatusCode::kNotFound) {
-        // Try the legacy way.
-        primitive = primitive_getter_(proto_key.key_data());
-      } else {
+      if (key.ok()) {
         primitive = primitive_getter_from_key_(*key.value());
       }
-
+      // Try the legacy way.
+      if (!key.ok() ||
+          primitive.status().code() == absl::StatusCode::kNotFound) {
+        primitive = primitive_getter_(proto_key.key_data());
+      }
       if (!primitive.ok()) {
         return primitive.status();
       }

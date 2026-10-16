@@ -1702,16 +1702,23 @@ tink_cc_test(
   SRCS
     ecdsa_verify_boringssl_benchmark.cc
   DEPS
+    tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
+    tink::subtle::subtle_util_boringssl
     gmock
     absl::absl_check
+    absl::absl_log
     absl::status
+    absl::statusor
     benchmark::benchmark_main
+    tink::core::ec_point
+    tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )

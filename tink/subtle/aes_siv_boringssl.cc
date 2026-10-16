@@ -31,6 +31,7 @@
 #include "absl/types/span.h"
 #include "openssl/aes.h"
 #include "tink/deterministic_aead.h"
+#include "tink/internal/aes_ctr128.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"

@@ -16,63 +16,14 @@
 #include "tink/internal/aes_util.h"
 
 #include <cstdint>
-#include <string>
-#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "openssl/aes.h"
 #include "openssl/evp.h"
-#include "tink/util/statusor.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifndef OPENSSL_IS_BORINGSSL
-// This is needed to use block128_f, which is necessary when OpenSSL is used.
-#include "openssl/modes.h"
-#endif
-#include "tink/internal/util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-
-absl::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
-                            const AES_KEY* key, absl::Span<char> out) {
-  if (out.size() < data.size()) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Invalid size for output buffer; expected at least ",
-                     data.size(), " got ", out.size()));
-  }
-
-  // Only full overlap or no overlap is allowed.
-  if (!BuffersAreIdentical(data, absl::string_view(out.data(), out.size())) &&
-      BuffersOverlap(data, absl::string_view(out.data(), out.size()))) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Buffers must not partially overlap");
-  }
-
-  unsigned int num = 0;
-  uint8_t ecount_buf[AesBlockSize()];
-  // OpenSSL >= v1.1.0 public APIs no longer exposes an AES_ctr128_encrypt
-  // function; as an alternative we use CRYPTO_ctr128_encrypt when OpenSSL is
-  // used as a backend. The latter is not part of the public API of BoringSSL,
-  // so we must selectively compile using either of them.
-#ifdef OPENSSL_IS_BORINGSSL
-  AES_ctr128_encrypt(reinterpret_cast<const uint8_t*>(data.data()),
-                     reinterpret_cast<uint8_t*>(out.data()), data.size(), key,
-                     iv, ecount_buf, &num);
-#else
-  CRYPTO_ctr128_encrypt(reinterpret_cast<const uint8_t*>(data.data()),
-                        reinterpret_cast<uint8_t*>(out.data()), data.size(),
-                        key, iv, ecount_buf, &num,
-                        reinterpret_cast<block128_f>(AES_encrypt));
-#endif
-  return absl::OkStatus();
-}
 
 absl::StatusOr<const EVP_CIPHER *> GetAesCtrCipherForKeySize(
     uint32_t key_size_in_bytes) {

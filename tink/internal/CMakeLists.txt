@@ -468,7 +468,6 @@ tink_cc_library(
     aes_util.cc
     aes_util.h
   DEPS
-    tink::internal::util
     absl::status
     absl::strings
     absl::span
@@ -487,15 +486,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    absl::strings
-    absl::span
     tink::internal::boringssl
-    tink::subtle::subtle_util
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_library(
@@ -2296,3 +2287,33 @@ tink_cc_test(
     tink::util::test_util
 )
 
+tink_cc_library(
+  NAME aes_ctr128
+  SRCS
+    aes_ctr128.cc
+    aes_ctr128.h
+  DEPS
+    tink::internal::aes_util
+    tink::internal::util
+    absl::status
+    absl::strings
+    absl::span
+    tink::internal::boringssl
+)
+
+tink_cc_test(
+  NAME aes_ctr128_test
+  SRCS
+    aes_ctr128_test.cc
+  DEPS
+    tink::internal::aes_ctr128
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::strings
+    absl::span
+    tink::internal::boringssl
+    tink::subtle::subtle_util
+    tink::util::secret_data
+    tink::util::test_util
+)

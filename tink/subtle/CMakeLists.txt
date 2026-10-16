@@ -546,7 +546,7 @@ tink_cc_library(
     tink::core::aead
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
-    tink::internal::aes_util
+    tink::internal::aes_ctr128
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
@@ -649,6 +649,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::deterministic_aead
     tink::core::secret_data
+    tink::internal::aes_ctr128
     tink::internal::aes_util
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils

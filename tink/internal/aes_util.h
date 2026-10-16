@@ -33,14 +33,6 @@ namespace internal {
 // AES block size in bytes.
 constexpr int AesBlockSize() { return 16; }
 
-// Wrapper for BoringSSL/OpenSSL low-level functions that encrypt/decrypt (same
-// operation in CTR mode) `data`, with IV `iv` and key `key`. The result is
-// written to `out`. `out` may fully overlap with `data`; partial overlaps will
-// result in an kInvalidArgument error. `iv` is incremented of the number of
-// blocks that were encrypted/decrypted.
-absl::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
-                            const AES_KEY* key, absl::Span<char> out);
-
 // Returns a pointer to an AES-CTR EVP_CIPHER for the given key size
 // `key_size_in_bytes`.
 absl::StatusOr<const EVP_CIPHER *> GetAesCtrCipherForKeySize(

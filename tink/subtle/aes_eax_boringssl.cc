@@ -35,7 +35,7 @@
 #include "tink/aead.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/internal/aes_util.h"
+#include "tink/internal/aes_ctr128.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"

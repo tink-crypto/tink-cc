@@ -475,7 +475,6 @@ cc_library(
     srcs = ["aes_util.cc"],
     hdrs = ["aes_util.h"],
     deps = [
-        ":util",
         "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -492,16 +491,8 @@ cc_test(
     srcs = ["aes_util_test.cc"],
     deps = [
         ":aes_util",
-        "//tink/subtle:subtle_util",
-        "//tink/util:secret_data",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/types:span",
         "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
@@ -2311,3 +2302,34 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "aes_ctr128",
+    srcs = ["aes_ctr128.cc"],
+    hdrs = ["aes_ctr128.h"],
+    deps = [
+        ":aes_util",
+        ":util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:span",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "aes_ctr128_test",
+    size = "small",
+    srcs = ["aes_ctr128_test.cc"],
+    deps = [
+        ":aes_ctr128",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:span",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)

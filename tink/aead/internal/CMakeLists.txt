@@ -37,7 +37,9 @@ tink_cc_library(
   DEPS
     tink::aead::internal::aead_util
     absl::core_headers
+    absl::cleanup
     absl::absl_check
+    absl::memory
     absl::status
     absl::statusor
     absl::strings
@@ -232,8 +234,10 @@ tink_cc_test(
     absl::span
     tink::core::secret_data
     tink::internal::fips_utils
+    tink::internal::ssl_util
     tink::subtle::subtle_util
     tink::util::secret_data
+    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -322,9 +326,13 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::span
+    tink::internal::ssl_util
     tink::internal::util
     tink::subtle::subtle_util
     tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
     tink::util::test_util
 )
 

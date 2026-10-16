@@ -1343,3 +1343,16 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "jwt_rsa_ssa_parameters_benchmark",
+    srcs = ["jwt_rsa_ssa_parameters_benchmark.cc"],
+    deps = [
+        ":jwt_rsa_ssa_pkcs1_parameters",
+        ":jwt_rsa_ssa_pss_parameters",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@google_benchmark//:benchmark_main",
+        "@googletest//:gtest_main",
+    ],
+)

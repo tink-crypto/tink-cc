@@ -2014,3 +2014,16 @@ tink_cc_test(
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_test(
+  NAME rsa_ssa_parameters_benchmark
+  SRCS
+    rsa_ssa_parameters_benchmark.cc
+  DEPS
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pss_parameters
+    gmock
+    absl::absl_check
+    absl::statusor
+    benchmark::benchmark_main
+)

@@ -1303,3 +1303,16 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::jwt_ml_dsa_cc_proto
 )
+
+tink_cc_test(
+  NAME jwt_rsa_ssa_parameters_benchmark
+  SRCS
+    jwt_rsa_ssa_parameters_benchmark.cc
+  DEPS
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    gmock
+    absl::absl_check
+    absl::statusor
+    benchmark::benchmark_main
+)

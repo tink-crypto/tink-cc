@@ -2062,3 +2062,16 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "rsa_ssa_parameters_benchmark",
+    srcs = ["rsa_ssa_parameters_benchmark.cc"],
+    deps = [
+        ":rsa_ssa_pkcs1_parameters",
+        ":rsa_ssa_pss_parameters",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@google_benchmark//:benchmark_main",
+        "@googletest//:gtest_main",
+    ],
+)

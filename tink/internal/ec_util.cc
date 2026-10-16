@@ -15,12 +15,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/ec_util.h"
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -30,18 +32,18 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
-#include "tink/big_integer.h"
-#include "tink/ec_point.h"
-#include "openssl/ec.h"
 #include "openssl/crypto.h"
+#include "openssl/ec.h"
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
+#include "tink/big_integer.h"
+#include "tink/ec_point.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/util.h"
 #include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
@@ -83,27 +85,59 @@ absl::StatusOr<std::string> SslEcPointEncode(
   return encoded_point;
 }
 
+// Field size of NIST P-521, the largest curve supported by Tink.
+constexpr size_t kMaxCoordinateSizeInBytes = (521 + 7) / 8;  // 66
+
+size_t SslEcFieldSizeInBytes(const EC_GROUP* group) {
+  unsigned degree_bits = EC_GROUP_get_degree(group);
+  return (degree_bits + 7) / 8;
+}
+
 // Returns an EC_POINT from `group`, and encoded (bigendian string
 // representation of BIGNUMs) point coordinates `pubx`, `puby`.
 absl::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromCoordinates(
     const EC_GROUP* group, absl::string_view pubx, absl::string_view puby) {
-  absl::StatusOr<SslUniquePtr<BIGNUM>> bn_x = StringToBignum(pubx);
-  if (!bn_x.ok()) {
-    return bn_x.status();
+  const size_t field_len = SslEcFieldSizeInBytes(group);
+
+  absl::string_view pub_x_no_leading_zeros = WithoutLeadingZeros(pubx);
+  absl::string_view pub_y_no_leading_zeros = WithoutLeadingZeros(puby);
+
+  if (pub_x_no_leading_zeros.size() > field_len ||
+      pub_y_no_leading_zeros.size() > field_len) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Coordinates too large");
   }
-  absl::StatusOr<SslUniquePtr<BIGNUM>> bn_y = StringToBignum(puby);
-  if (!bn_y.ok()) {
-    return bn_y.status();
+
+  // To allow stack allocation of the public point we limit the size Tink
+  // supports: P-256, P-384, and P-521. P-521 has a 66-byte field length, so the
+  // stack usage is 133 bytes.
+  if (field_len > kMaxCoordinateSizeInBytes) {
+    return absl::Status(absl::StatusCode::kInternal, "Unsupported field size");
   }
-  SslUniquePtr<EC_POINT> pub_key(EC_POINT_new(group));
-  // In BoringSSL and OpenSSL > 1.1.0 EC_POINT_set_affine_coordinates_GFp
-  // already checks if the point is on the curve.
-  if (EC_POINT_set_affine_coordinates_GFp(group, pub_key.get(), bn_x->get(),
-                                          bn_y->get(), nullptr) != 1) {
+
+  // Uncompressed format: 0x04 || X || Y.
+  // Max stack usage: 133 bytes.
+  std::array<uint8_t, 1 + 2 * kMaxCoordinateSizeInBytes> buffer = {};
+
+  auto coordinates = absl::Span<uint8_t>(buffer).subspan(0, 1 + 2 * field_len);
+  coordinates[0] = POINT_CONVERSION_UNCOMPRESSED;  // 0x04
+  auto x = coordinates.subspan(1, field_len);
+  auto y = coordinates.last(field_len);
+
+  absl::c_copy(pub_x_no_leading_zeros,
+               x.last(pub_x_no_leading_zeros.size()).begin());
+  absl::c_copy(pub_y_no_leading_zeros,
+               y.last(pub_y_no_leading_zeros.size()).begin());
+
+  SslUniquePtr<EC_POINT> point(EC_POINT_new(group));
+  // Already checks that point is on curve.
+  if (EC_POINT_oct2point(group, point.get(),
+                         reinterpret_cast<const uint8_t*>(buffer.data()),
+                         1 + 2 * field_len, nullptr) != 1) {
     return absl::Status(absl::StatusCode::kInternal,
-                        "EC_POINT_set_affine_coordinates_GFp failed");
+                        "EC_POINT_oct2point failed");
   }
-  return std::move(pub_key);
+  return std::move(point);
 }
 
 // Returns an EC_POINT from an `encoded` point with format `format` and curve
@@ -193,11 +227,6 @@ absl::StatusOr<EcPointCoordinates> SslGetEcPointCoordinates(
 
 size_t ScalarSizeInBytes(const EC_GROUP* group) {
   return BN_num_bytes(EC_GROUP_get0_order(group));
-}
-
-size_t SslEcFieldSizeInBytes(const EC_GROUP* group) {
-  unsigned degree_bits = EC_GROUP_get_degree(group);
-  return (degree_bits + 7) / 8;
 }
 
 enum SslEvpPkeyType {

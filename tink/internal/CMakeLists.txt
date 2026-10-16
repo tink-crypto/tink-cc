@@ -156,9 +156,10 @@ tink_cc_library(
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
-    tink::internal::fips_utils
     tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
+    tink::internal::util
+    absl::algorithm_container
     absl::log
     absl::absl_check
     absl::status

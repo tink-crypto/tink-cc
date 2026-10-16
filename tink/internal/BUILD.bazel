@@ -233,6 +233,7 @@ cc_library(
         "//tink/subtle:subtle_util",
         "//tink/util:status",
         "//tink/util:statusor",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",

@@ -17,20 +17,20 @@
 
 #include <stdint.h>
 
+#include <cstddef>
 #include <string>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/evp.h"
 #include "tink/internal/err_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/ssl_unique_ptr.h"  // IWYU pragma: keep
 #include "tink/internal/util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -93,12 +93,18 @@ absl::StatusOr<std::string> ComputeHash(absl::string_view input,
 absl::StatusOr<std::string> ComputeHash(
     absl::Span<const absl::string_view> pieces, const EVP_MD& hasher) {
   std::string digest;
-  subtle::ResizeStringUninitialized(&digest, EVP_MAX_MD_SIZE);
-  uint32_t digest_length = 0;
+  const size_t digest_size = EVP_MD_size(&hasher);
+  subtle::ResizeStringUninitialized(&digest, digest_size);
+
+#if defined(OPENSSL_IS_BORINGSSL)
+  bssl::ScopedEVP_MD_CTX md_ctx;
+  EVP_MD_CTX_init(md_ctx.get());
+#else
   internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
   if (!md_ctx) {
     return absl::InternalError("Could not create EVP_MD_CTX.");
   }
+#endif
   if (1 != EVP_DigestInit_ex(md_ctx.get(), &hasher, /*impl=*/nullptr)) {
     return absl::InternalError(absl::StrCat(
         "Openssl internal error initializing digest: ",
@@ -114,13 +120,14 @@ absl::StatusOr<std::string> ComputeHash(
                        internal::GetSslErrors()));
     }
   }
+  uint32_t output_length = 0;
   if (1 != EVP_DigestFinal_ex(md_ctx.get(),
                               reinterpret_cast<uint8_t*>(digest.data()),
-                              &digest_length)) {
+                              &output_length)) {
     return absl::InternalError(absl::StrCat(
         "Openssl internal error computing digest: ", internal::GetSslErrors()));
   }
-  digest.resize(digest_length);
+  ABSL_DCHECK_EQ(output_length, digest_size);
   return digest;
 }
 

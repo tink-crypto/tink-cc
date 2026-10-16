@@ -439,6 +439,7 @@ tink_cc_library(
     tink::internal::err_util
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    absl::absl_check
     absl::status
     absl::strings
     absl::span

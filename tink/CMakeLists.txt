@@ -1295,3 +1295,29 @@ tink_cc_test(
     tink::internal::secret_buffer
     tink::util::secret_data
 )
+
+tink_cc_test(
+  NAME keyset_handle_get_primitive_benchmark
+  SRCS
+    core/keyset_handle_get_primitive_benchmark.cc
+  DEPS
+    tink::core::aead
+    tink::core::configuration
+    tink::core::keyset_handle
+    tink::core::keyset_manager
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    gmock
+    absl::absl_check
+    absl::statusor
+    benchmark::benchmark_main
+    tink::aead::aead_config
+    tink::aead::aead_key_templates
+    tink::config::config_2026
+    tink::config::global_registry
+    tink::internal::ssl_util
+    tink::signature::ml_dsa_parameters
+    tink::signature::signature_config
+    tink::signature::signature_key_templates
+    tink::proto::tink_cc_proto
+)

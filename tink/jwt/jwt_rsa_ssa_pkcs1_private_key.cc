@@ -22,14 +22,11 @@
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#include "tink/internal/rsa_util.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
-#endif
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
 #include "tink/key.h"

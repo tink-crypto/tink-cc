@@ -27,11 +27,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/call_with_core_dump_protection.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
-#endif
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
@@ -73,7 +70,6 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> BuildJwtMlDsaKey(
   return std::make_unique<JwtMlDsaPrivateKey>(*key);
 }
 
-#ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa44Key(
     const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement) {
   if (parameters.GetAlgorithm() != JwtMlDsaParameters::Algorithm::kMlDsa44) {
@@ -147,16 +143,11 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
   return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
                           std::move(secret_data));
 }
-#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsaKey(
     const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   switch (parameters.GetAlgorithm()) {
     case JwtMlDsaParameters::Algorithm::kMlDsa44:
       return CreateJwtMlDsa44Key(parameters, id_requirement);
@@ -168,7 +159,6 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsaKey(
       return absl::InvalidArgumentError(
           "Only ML-DSA-44, ML-DSA-65, and ML-DSA-87 are supported");
   }
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

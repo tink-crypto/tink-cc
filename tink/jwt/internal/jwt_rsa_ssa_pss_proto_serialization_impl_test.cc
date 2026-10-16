@@ -32,14 +32,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/serialization_registry.h"
-#include "tink/internal/testing/field_with_number.h"
-#include "tink/internal/tink_proto_structs.h"
-#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
-#include "tink/secret_key_access_token.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
-#endif
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
@@ -48,6 +41,10 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/internal/testing/field_with_number.h"
+#include "tink/internal/tink_proto_structs.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
@@ -55,6 +52,7 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_key_access_token.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
 

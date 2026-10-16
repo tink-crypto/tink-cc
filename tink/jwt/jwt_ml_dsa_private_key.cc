@@ -21,10 +21,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
-#endif
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/key.h"
@@ -90,10 +87,6 @@ absl::Status ValidateKeyPair(const JwtMlDsaPublicKey& jwt_ml_dsa_public_key,
 absl::StatusOr<JwtMlDsaPrivateKey> JwtMlDsaPrivateKey::Create(
     const JwtMlDsaPublicKey& public_key,
     const RestrictedData& private_seed_bytes, PartialKeyAccessToken token) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
     return absl::InvalidArgumentError(
         absl::StrCat("Private key length ", private_seed_bytes.size(),
@@ -107,7 +100,6 @@ absl::StatusOr<JwtMlDsaPrivateKey> JwtMlDsaPrivateKey::Create(
   }
 
   return JwtMlDsaPrivateKey(public_key, private_seed_bytes);
-#endif
 }
 
 bool JwtMlDsaPrivateKey::operator==(const Key& other) const {

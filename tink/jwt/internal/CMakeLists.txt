@@ -1535,7 +1535,6 @@ tink_cc_test(
     tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::core::keyset_handle
-    tink::internal::ssl_util
     tink::jwt::jwt_ml_dsa_parameters
 )
 

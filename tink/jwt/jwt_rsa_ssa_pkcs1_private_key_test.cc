@@ -31,21 +31,19 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
-#include "tink/key.h"
-#include "tink/restricted_data.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
-#endif
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {

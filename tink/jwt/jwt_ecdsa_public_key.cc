@@ -26,16 +26,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/endian.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
-#else
-#include "openssl/ec.h"
-#endif
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/endian.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/key.h"

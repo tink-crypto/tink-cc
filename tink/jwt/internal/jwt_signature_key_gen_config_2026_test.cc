@@ -22,7 +22,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/statusor.h"
 #include "absl/status/status_matchers.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
@@ -35,10 +34,6 @@ namespace {
 using ::absl_testing::IsOk;
 
 TEST(JwtMlDsaSignatureKeyGenConfig2026Test, JwtMlDsaCreateKeysetHandleWorks) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "JWT ML-DSA requires BoringSSL.";
-  }
-
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
 

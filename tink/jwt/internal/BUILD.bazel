@@ -1254,7 +1254,6 @@ cc_test(
         ":jwt_signature_key_gen_config_2026",
         "//tink:key_gen_configuration",
         "//tink:keyset_handle",
-        "//tink/internal:ssl_util",
         "//tink/jwt:jwt_ml_dsa_parameters",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",

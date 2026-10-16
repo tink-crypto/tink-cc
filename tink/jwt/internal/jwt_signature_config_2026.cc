@@ -25,7 +25,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/configuration.h"
 #include "tink/ec_point.h"
 #include "tink/internal/configuration_impl.h"
@@ -738,8 +737,6 @@ absl::Status AddJwtSignature2026(Configuration& config) {
     return status;
   }
 
-  // Tink implements PQC signatures with BoringSSL, not OpenSSL.
-#ifdef OPENSSL_IS_BORINGSSL
   // JWT ML-DSA
   status = RegisterJwtMlDsaProtoSerialization();
   if (!status.ok()) {
@@ -758,7 +755,6 @@ absl::Status AddJwtSignature2026(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-#endif
 
   return absl::OkStatus();
 }

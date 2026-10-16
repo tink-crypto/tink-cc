@@ -807,10 +807,6 @@ INSTANTIATE_TEST_SUITE_P(JwtDeterministicSignatureTestSuite,
                          testing::ValuesIn(GetJwtSignatureTestVectors()));
 
 TEST(JwtSignature2026Test, GetJwtMlDsaPrimitive) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "JWT ML-DSA requires BoringSSL.";
-  }
-
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
   Configuration config;

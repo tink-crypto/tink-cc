@@ -53,9 +53,6 @@ TEST_F(JwtSignatureConfigTest, GetPrimitiveFromJwtMlDsaParameters) {
     GTEST_SKIP()
         << "JWT ML-DSA in FIPS mode requires BoringSSL with FIPS mode enabled.";
   }
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "JWT ML-DSA requires BoringSSL.";
-  }
 
   ASSERT_THAT(JwtMlDsaSignatureRegisterForPython(), IsOk());
 

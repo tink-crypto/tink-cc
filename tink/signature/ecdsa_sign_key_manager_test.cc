@@ -28,10 +28,13 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "tink/config/global_registry.h"
+#include "tink/configuration.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/configuration_impl.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
@@ -39,11 +42,13 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/signature/signature_config.h"
+#include "tink/signature/public_key_sign_wrapper.h"
+#include "tink/signature/public_key_verify_wrapper.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
@@ -500,12 +505,48 @@ TEST_P(NistCurveParamsDeriveTest, TestVectors) {
               Eq(test::HexDecodeOrDie(std::get<2>(GetParam()))));
 }
 
+// Adds to `config` only what the test vector tests below need.
+absl::Status AddEcdsa(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+      std::make_unique<PublicKeySignWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+      std::make_unique<PublicKeyVerifyWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
+      std::make_unique<EcdsaSignKeyManager>(),
+      std::make_unique<EcdsaVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return RegisterEcdsaProtoSerialization();
+}
+
+// Adds to `config` only what the test vector tests below need.
+absl::Status AddEcdsaKeyGen(KeyGenConfiguration& config) {
+  absl::Status status =
+      internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+          std::make_unique<EcdsaSignKeyManager>(),
+          std::make_unique<EcdsaVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return RegisterEcdsaProtoSerialization();
+}
+
 using EcdsaSignKeyManagerTestVectorTest =
     testing::TestWithParam<internal::SignatureTestVector>;
 
 // Ecdsa is randomized, so we can compute the signature.
 TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
-  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddEcdsa(config), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddEcdsaKeyGen(key_gen_config), IsOk());
   const internal::SignatureTestVector& param = GetParam();
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -515,16 +556,19 @@ TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
           .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
 }
 
 TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyFreshSignature) {
-  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddEcdsa(config), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddEcdsaKeyGen(key_gen_config), IsOk());
   const internal::SignatureTestVector& param = GetParam();
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -534,22 +578,25 @@ TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyFreshSignature) {
           .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      handle->GetPrimitive<PublicKeySign>(ConfigGlobalRegistry());
+      handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(signer, IsOk());
   absl::StatusOr<std::string> fresh_signature = (*signer)->Sign("some message");
   ASSERT_THAT(fresh_signature, IsOk());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(*fresh_signature, "some message"), IsOk());
 }
 
 TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyWrongMessage) {
-  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddEcdsa(config), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddEcdsaKeyGen(key_gen_config), IsOk());
   const internal::SignatureTestVector& param = GetParam();
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -559,10 +606,10 @@ TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyWrongMessage) {
           .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(
       (*verifier)->Verify(param.signature, absl::StrCat("x", param.message)),

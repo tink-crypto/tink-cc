@@ -926,23 +926,28 @@ tink_cc_test(
   DEPS
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_public_key
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
-    tink::signature::signature_config
+    tink::signature::public_key_sign_wrapper
+    tink::signature::public_key_verify_wrapper
     gmock
     absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
+    tink::core::configuration
     tink::core::insecure_secret_key_access
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::config::global_registry
+    tink::internal::configuration_impl
     tink::internal::ec_util
+    tink::internal::key_gen_configuration_impl
     tink::internal::ssl_util
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
@@ -1019,25 +1024,32 @@ tink_cc_test(
   SRCS
     rsa_ssa_pss_sign_key_manager_test.cc
   DEPS
+    tink::signature::public_key_sign_wrapper
+    tink::signature::public_key_verify_wrapper
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_proto_serialization
     tink::signature::rsa_ssa_pss_public_key
     tink::signature::rsa_ssa_pss_sign_key_manager
-    tink::signature::signature_config
+    tink::signature::rsa_ssa_pss_verify_key_manager
     gmock
     absl::flat_hash_set
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
     tink::internal::boringssl
+    tink::core::configuration
     tink::core::insecure_secret_key_access_testonly
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::config::global_registry
     tink::internal::bn_util
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors

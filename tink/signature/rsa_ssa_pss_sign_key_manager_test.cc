@@ -22,16 +22,20 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
-#include "tink/config/global_registry.h"
+#include "tink/configuration.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/configuration_impl.h"
+#include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
@@ -39,10 +43,13 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/public_key_sign_wrapper.h"
+#include "tink/signature/public_key_verify_wrapper.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
+#include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
-#include "tink/signature/signature_config.h"
+#include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 #include "proto/common.pb.h"
@@ -381,13 +388,49 @@ TEST(RsaSsaPssSignKeyManagerTest, CreateWrongKey) {
               Not(IsOk()));
 }
 
+// Adds to `config` only what the test vector tests below need.
+absl::Status AddRsaSsaPss(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+      std::make_unique<PublicKeySignWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+      std::make_unique<PublicKeyVerifyWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = internal::ConfigurationImpl::AddAsymmetricKeyManagers(
+      std::make_unique<RsaSsaPssSignKeyManager>(),
+      std::make_unique<RsaSsaPssVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return RegisterRsaSsaPssProtoSerialization();
+}
+
+// Adds to `config` only what the test vector tests below need.
+absl::Status AddRsaSsaPssKeyGen(KeyGenConfiguration& config) {
+  absl::Status status =
+      internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+          std::make_unique<RsaSsaPssSignKeyManager>(),
+          std::make_unique<RsaSsaPssVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  return RegisterRsaSsaPssProtoSerialization();
+}
+
 using RsaSsaPssSignKeyManagerTestVectorTest =
     testing::TestWithParam<internal::SignatureTestVector>;
 
 // RsaSsaPss is probabilistic -- we can only verify the signature in the test
 // vector.
 TEST_P(RsaSsaPssSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
-  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddRsaSsaPss(config), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddRsaSsaPssKeyGen(key_gen_config), IsOk());
   const internal::SignatureTestVector& param = GetParam();
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -397,17 +440,20 @@ TEST_P(RsaSsaPssSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
           .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
 }
 
 TEST_P(RsaSsaPssSignKeyManagerTestVectorTest,
        VerifySignatureInTestVectorFailsOnWrongMessage) {
-  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddRsaSsaPss(config), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddRsaSsaPssKeyGen(key_gen_config), IsOk());
   const internal::SignatureTestVector& param = GetParam();
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
@@ -417,10 +463,10 @@ TEST_P(RsaSsaPssSignKeyManagerTestVectorTest,
           .Build();
   ASSERT_THAT(handle, IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+      handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(
       (*verifier)->Verify(param.signature, absl::StrCat(param.message, "x")),

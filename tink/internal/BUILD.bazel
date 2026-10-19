@@ -142,7 +142,6 @@ cc_library(
 
 cc_library(
     name = "err_util",
-    srcs = ["err_util.cc"],
     hdrs = ["err_util.h"],
     deps = ["@boringssl//:crypto"],
 )

@@ -90,7 +90,6 @@ tink_cc_library(
 tink_cc_library(
   NAME err_util
   SRCS
-    err_util.cc
     err_util.h
   DEPS
     tink::internal::boringssl

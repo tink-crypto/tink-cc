@@ -47,6 +47,7 @@ TEST(GetSslErrorsTest, ReturnsExpectedErrorrs) {
   BIOerr(BIO_F_BIO_CTRL, BIO_R_UNSUPPORTED_METHOD);
 #endif
   std::string error = GetSslErrors();
+  ASSERT_FALSE(error.empty());
 
   // OpenSSL/BoringSSL returns each error as a null terminated char*; since we
   // accumulate each of them into a std::string, the resulting string will be

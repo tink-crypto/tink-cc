@@ -293,8 +293,6 @@ cc_test(
     srcs = ["aead_util_test.cc"],
     deps = [
         ":aead_util",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@boringssl//:crypto",

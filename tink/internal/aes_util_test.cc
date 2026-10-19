@@ -24,6 +24,11 @@
 #include "openssl/aes.h"
 #include "openssl/evp.h"
 
+#ifdef OPENSSL_IS_BORINGSSL
+#include "openssl/cipher.h"
+#include "openssl/nid.h"
+#endif
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -32,14 +37,17 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::testing::Not;
+using ::testing::ResultOf;
 
 TEST(AesUtilTest, GetAesCtrCipherForKeySize) {
   for (int i = 0; i < 64; i++) {
     absl::StatusOr<const EVP_CIPHER *> cipher = GetAesCtrCipherForKeySize(i);
     if (i == 16) {
-      EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_128_ctr()));
+      EXPECT_THAT(cipher,
+                  IsOkAndHolds(ResultOf(EVP_CIPHER_nid, NID_aes_128_ctr)));
     } else if (i == 32) {
-      EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_256_ctr()));
+      EXPECT_THAT(cipher,
+                  IsOkAndHolds(ResultOf(EVP_CIPHER_nid, NID_aes_256_ctr)));
     } else {
       EXPECT_THAT(cipher, Not(IsOk()));
     }
@@ -50,9 +58,11 @@ TEST(AesUtilTest, GetAesCbcCipherForKeySize) {
   for (int i = 0; i < 64; i++) {
     absl::StatusOr<const EVP_CIPHER *> cipher = GetAesCbcCipherForKeySize(i);
     if (i == 16) {
-      EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_128_cbc()));
+      EXPECT_THAT(cipher,
+                  IsOkAndHolds(ResultOf(EVP_CIPHER_nid, NID_aes_128_cbc)));
     } else if (i == 32) {
-      EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_256_cbc()));
+      EXPECT_THAT(cipher,
+                  IsOkAndHolds(ResultOf(EVP_CIPHER_nid, NID_aes_256_cbc)));
     } else {
       EXPECT_THAT(cipher, Not(IsOk()));
     }

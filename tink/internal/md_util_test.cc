@@ -29,6 +29,11 @@
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
+#ifdef OPENSSL_IS_BORINGSSL
+#include "openssl/digest.h"
+#include "openssl/nid.h"
+#endif
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -38,19 +43,21 @@ using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::subtle::HashType;
 using ::testing::Not;
+using ::testing::ResultOf;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
 TEST(MdUtil, EvpHashFromHashType) {
-  EXPECT_THAT(EvpHashFromHashType(HashType::SHA1), IsOkAndHolds(EVP_sha1()));
+  EXPECT_THAT(EvpHashFromHashType(HashType::SHA1),
+              IsOkAndHolds(ResultOf(EVP_MD_type, NID_sha1)));
   EXPECT_THAT(EvpHashFromHashType(HashType::SHA224),
-              IsOkAndHolds(EVP_sha224()));
+              IsOkAndHolds(ResultOf(EVP_MD_type, NID_sha224)));
   EXPECT_THAT(EvpHashFromHashType(HashType::SHA256),
-              IsOkAndHolds(EVP_sha256()));
+              IsOkAndHolds(ResultOf(EVP_MD_type, NID_sha256)));
   EXPECT_THAT(EvpHashFromHashType(HashType::SHA384),
-              IsOkAndHolds(EVP_sha384()));
+              IsOkAndHolds(ResultOf(EVP_MD_type, NID_sha384)));
   EXPECT_THAT(EvpHashFromHashType(HashType::SHA512),
-              IsOkAndHolds(EVP_sha512()));
+              IsOkAndHolds(ResultOf(EVP_MD_type, NID_sha512)));
   EXPECT_THAT(EvpHashFromHashType(HashType::UNKNOWN_HASH).status(),
               Not(IsOk()));
 }

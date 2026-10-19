@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -30,14 +29,12 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "openssl/err.h"
+#include "tink/aead.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/testing/wycheproof_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -251,18 +248,6 @@ TEST(AesEaxBoringSslTest, TestEmpty) {
   EXPECT_EQ(0, pt.value().size());
 }
 
-static std::string GetError() {
-  auto err = ERR_peek_last_error();
-  // Sometimes there is no error message on the stack.
-  if (err == 0) {
-    return "";
-  }
-  std::string lib(ERR_lib_error_string(err));
-  std::string func(ERR_func_error_string(err));
-  std::string reason(ERR_reason_error_string(err));
-  return lib + ":" + func + ":" + reason;
-}
-
 // Test with test vectors from project Wycheproof.
 // AesEaxBoringSsl does not allow to pass in IVs. Therefore this test
 // can only test decryption.
@@ -325,7 +310,8 @@ bool WycheproofTest(const google::protobuf::Struct& parsed_input,
         if (expected == "valid" || expected == "acceptable") {
           ADD_FAILURE() << "Could not decrypt test with tcId:" << id
                         << " iv_size:" << iv_size << " tag_size:" << tag_size
-                        << " key_size:" << key_size << " error:" << GetError();
+                        << " key_size:" << key_size
+                        << " error:" << result.status();
           errors++;
         }
       }

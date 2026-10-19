@@ -30,7 +30,6 @@
 #include "absl/strings/cord_test_helpers.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#include "openssl/err.h"
 #include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/wycheproof_aead.h"
@@ -167,18 +166,6 @@ TEST_F(CordAesGcmBoringSslTest, ModifiedCord) {
   }
 }
 
-static std::string GetError() {
-  auto err = ERR_peek_last_error();
-  // Sometimes there is no error message on the stack.
-  if (err == 0) {
-    return "";
-  }
-  std::string lib(ERR_lib_error_string(err));
-  std::string func(ERR_func_error_string(err));
-  std::string reason(ERR_reason_error_string(err));
-  return lib + ":" + func + ":" + reason;
-}
-
 TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
   std::vector<WycheproofTestVector> all_test_vectors =
       ReadWycheproofTestVectors("aes_gcm_test.json");
@@ -217,7 +204,8 @@ TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
       if (tc.expected == "valid" || tc.expected == "acceptable") {
         ADD_FAILURE() << "Could not decrypt test with tcId:" << tc.id
                       << " iv_size:" << iv_size << " tag_size:" << tag_size
-                      << " key_size:" << key_size << " error:" << GetError();
+                      << " key_size:" << key_size
+                      << " error:" << result.status();
         errors++;
       }
     }

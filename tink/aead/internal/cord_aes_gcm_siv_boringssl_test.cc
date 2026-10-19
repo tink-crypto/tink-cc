@@ -20,8 +20,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -30,13 +28,11 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_test_helpers.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/aead.h"
 #endif
-#include "openssl/err.h"
 #include "openssl/opensslv.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_siv_key.h"
@@ -52,7 +48,6 @@
 #include "tink/restricted_data.h"
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -167,17 +162,6 @@ absl::Cord MakeFragmentedCord(absl::string_view text, int chunk_size) {
   }
   return absl::MakeFragmentedCord(
       absl::StrSplit(text, absl::ByLength(chunk_size)));
-}
-
-std::string GetError() {
-  auto err = ERR_peek_last_error();
-  if (err == 0) {
-    return "";
-  }
-  std::string lib(ERR_lib_error_string(err));
-  std::string func(ERR_func_error_string(err));
-  std::string reason(ERR_reason_error_string(err));
-  return absl::StrCat(lib, ":", func, ":", reason);
 }
 
 TEST_P(CordAesGcmSivBoringSslTestVectorTest, Decrypt) {
@@ -659,7 +643,7 @@ TEST_P(CordAesGcmSivBoringSslWycheproofTest, DecryptTestVectors) {
     EXPECT_THAT(tc.expected, Not(testing::AnyOf(Eq("valid"), Eq("acceptable"))))
         << "Could not decrypt test with tcId: " << tc.id
         << " iv_size: " << iv_size << " tag_size: " << tag_size
-        << " key_size: " << key_size << " error: " << GetError();
+        << " key_size: " << key_size << " error: " << result.status();
   }
 }
 

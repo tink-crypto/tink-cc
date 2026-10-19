@@ -1143,13 +1143,12 @@ tink_cc_test(
     absl::strings
     absl::span
     tink::internal::boringssl
+    tink::core::aead
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
     tink::config::tink_fips
     tink::internal::testing::wycheproof_util
     tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

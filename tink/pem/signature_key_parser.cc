@@ -28,19 +28,20 @@
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "openssl/base.h"
 #include "openssl/bio.h"
 #include "openssl/bn.h"
 #include "openssl/ec.h"
-#include "tink/internal/ssl_unique_ptr.h"
-#include "openssl/base.h"
 #include "openssl/ec_key.h"
 #include "openssl/evp.h"
+#include "openssl/mldsa.h"
 #include "openssl/pem.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
@@ -53,6 +54,7 @@
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/ml_dsa_pem.h"
 #include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
@@ -76,6 +78,7 @@ using ::crypto::tink::Ed25519Parameters;
 using ::crypto::tink::Ed25519PrivateKey;
 using ::crypto::tink::Ed25519PublicKey;
 using ::crypto::tink::MlDsaParameters;
+using ::crypto::tink::MlDsaPrivateKey;
 using ::crypto::tink::MlDsaPublicKey;
 using ::crypto::tink::PartialKeyAccessToken;
 using ::crypto::tink::RestrictedData;
@@ -90,6 +93,7 @@ using ::crypto::tink::SecretKeyAccessToken;
 using ::crypto::tink::internal::BignumToSecretData;
 using ::crypto::tink::internal::BignumToString;
 using ::crypto::tink::internal::CallWithCoreDumpProtection;
+using ::crypto::tink::internal::SecretBuffer;
 using ::crypto::tink::internal::SslUniquePtr;
 
 constexpr int kEd25519PublicKeySizeInBytes = 32;
@@ -400,6 +404,61 @@ absl::StatusOr<MlDsaPublicKey> ParseMlDsaPublicKey(
   return public_key;
 }
 
+absl::StatusOr<MlDsaPrivateKey> ParseMlDsaPrivateKey(
+    absl::string_view pem_private_key, const MlDsaParameters& parameters,
+    SecretKeyAccessToken secret_key_access,
+    PartialKeyAccessToken partial_key_access) {
+  if (parameters.GetVariant() != MlDsaParameters::Variant::kNoPrefix) {
+    return absl::InvalidArgumentError(
+        "PEM parsing is only supported for no-prefix variants.");
+  }
+
+  ABSL_ASSIGN_OR_RETURN(SslUniquePtr<EVP_PKEY> bssl_evp_pkey,
+                        PemToEvpPrivateKey(pem_private_key));
+
+  int pkey_id = EVP_PKEY_id(bssl_evp_pkey.get());
+  switch (pkey_id) {
+    case EVP_PKEY_ML_DSA_44:
+      if (parameters.GetInstance() != MlDsaParameters::Instance::kMlDsa44) {
+        return absl::InvalidArgumentError(
+            "PEM key is not for the expected ML-DSA instance");
+      }
+      break;
+    case EVP_PKEY_ML_DSA_65:
+      if (parameters.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
+        return absl::InvalidArgumentError(
+            "PEM key is not for the expected ML-DSA instance");
+      }
+      break;
+    case EVP_PKEY_ML_DSA_87:
+      if (parameters.GetInstance() != MlDsaParameters::Instance::kMlDsa87) {
+        return absl::InvalidArgumentError(
+            "PEM key is not for the expected ML-DSA instance");
+      }
+      break;
+    default:
+      return absl::InvalidArgumentError("Invalid ML-DSA private key");
+  }
+
+  SecretBuffer private_key_buffer(MLDSA_SEED_BYTES);
+  size_t out_len_priv = MLDSA_SEED_BYTES;
+  const bool get_private_key_success = CallWithCoreDumpProtection([&]() {
+    return EVP_PKEY_get_private_seed(bssl_evp_pkey.get(),
+                                     private_key_buffer.data(),
+                                     &out_len_priv) == 1;
+  });
+  if (!get_private_key_success) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Failed to get raw private key");
+  }
+
+  RestrictedData private_key_value(SecretData(std::move(private_key_buffer)),
+                                   secret_key_access);
+  return MlDsaPrivateKey::Create(parameters, private_key_value,
+                                 /*id_requirement=*/std::nullopt,
+                                 partial_key_access);
+}
+
 // ================== RSA ==================
 
 absl::StatusOr<BigInteger> ExtractAndValidateModulusFromBsslRsa(
@@ -642,6 +701,14 @@ absl::StatusOr<RsaSsaPkcs1PrivateKey> PemToRsaSsaPkcs1PrivateKey(
     PartialKeyAccessToken partial_key_access) {
   return ParseRsaSsaPkcs1PrivateKey(pem_private_key, parameters,
                                     secret_key_access, partial_key_access);
+}
+
+absl::StatusOr<MlDsaPrivateKey> PemToMlDsaPrivateKey(
+    absl::string_view pem_private_key, const MlDsaParameters& parameters,
+    SecretKeyAccessToken secret_key_access,
+    PartialKeyAccessToken partial_key_access) {
+  return ParseMlDsaPrivateKey(pem_private_key, parameters, secret_key_access,
+                              partial_key_access);
 }
 
 absl::StatusOr<crypto::tink::EcdsaPublicKey> PemToEcdsaPublicKey(

@@ -27,6 +27,7 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
@@ -80,6 +81,15 @@ absl::StatusOr<crypto::tink::RsaSsaPssPrivateKey> PemToRsaSsaPssPrivateKey(
 absl::StatusOr<crypto::tink::RsaSsaPkcs1PrivateKey> PemToRsaSsaPkcs1PrivateKey(
     absl::string_view pem_private_key,
     const crypto::tink::RsaSsaPkcs1Parameters& parameters,
+    crypto::tink::SecretKeyAccessToken secret_key_access,
+    crypto::tink::PartialKeyAccessToken partial_key_access);
+
+// Parses a PEM encoded ML-DSA private key into a Tink MlDsaPrivateKey.
+//
+// It supports only RFC 9881 Section 6 "seed-only" representation.
+absl::StatusOr<crypto::tink::MlDsaPrivateKey> PemToMlDsaPrivateKey(
+    absl::string_view pem_private_key,
+    const crypto::tink::MlDsaParameters& parameters,
     crypto::tink::SecretKeyAccessToken secret_key_access,
     crypto::tink::PartialKeyAccessToken partial_key_access);
 

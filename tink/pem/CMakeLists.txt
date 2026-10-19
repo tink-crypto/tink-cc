@@ -29,6 +29,7 @@ tink_cc_library(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
@@ -64,7 +65,9 @@ tink_cc_test(
     tink::core::public_key_verify
     tink::core::restricted_data
     tink::core::secret_data
+    tink::config::config_2026
     tink::config::global_registry
+    tink::config::key_gen_config_2026
     tink::internal::ssl_util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
@@ -73,6 +76,7 @@ tink_cc_test(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
@@ -81,4 +85,5 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::rsa_ssa_pss_public_key
     tink::signature::signature_config
+    tink::util::test_util
 )

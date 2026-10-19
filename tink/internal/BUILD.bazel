@@ -2158,30 +2158,6 @@ cc_test(
 )
 
 cc_library(
-    name = "call_with_core_dump_protection_oss",
-    hdrs = ["call_with_core_dump_protection_oss.h"],
-)
-
-cc_library(
-    name = "safe_stringops_oss",
-    hdrs = ["safe_stringops_oss.h"],
-    deps = [
-        ":call_with_core_dump_protection",
-        "@boringssl//:crypto",
-    ],
-)
-
-cc_library(
-    name = "sanitizing_allocator_oss",
-    hdrs = ["sanitizing_allocator_oss.h"],
-    deps = [
-        "@abseil-cpp//absl/base:config",
-        "@abseil-cpp//absl/base:core_headers",
-        "@boringssl//:crypto",
-    ],
-)
-
-cc_library(
     name = "primitive_set_base",
     srcs = ["primitive_set_base.cc"],
     hdrs = ["primitive_set_base.h"],

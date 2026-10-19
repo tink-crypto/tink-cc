@@ -1368,8 +1368,8 @@ tink_cc_library(
   SRCS
     safe_stringops.h
   DEPS
-    tink::internal::boringssl
     tink::internal::call_with_core_dump_protection
+    tink::internal::boringssl
 )
 
 tink_cc_test(
@@ -2140,31 +2140,6 @@ tink_cc_test(
     tink::internal::legacy_annotations
     gmock
     absl::flat_hash_map
-)
-
-tink_cc_library(
-  NAME call_with_core_dump_protection_oss
-  SRCS
-    call_with_core_dump_protection_oss.h
-)
-
-tink_cc_library(
-  NAME safe_stringops_oss
-  SRCS
-    safe_stringops_oss.h
-  DEPS
-    tink::internal::call_with_core_dump_protection
-    tink::internal::boringssl
-)
-
-tink_cc_library(
-  NAME sanitizing_allocator_oss
-  SRCS
-    sanitizing_allocator_oss.h
-  DEPS
-    absl::config
-    absl::core_headers
-    tink::internal::boringssl
 )
 
 tink_cc_library(

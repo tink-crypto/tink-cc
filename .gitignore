@@ -1,0 +1,9 @@
+*.orig
+*.rej
+*.swp
+*~
+.DS_Store
+/MODULE.bazel.lock
+/bazel-*
+/build-*/
+/build/

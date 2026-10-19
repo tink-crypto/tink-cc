@@ -38,6 +38,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 
 // Opens test file `filename` and returns a file descriptor to it.
 absl::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {
@@ -209,6 +210,44 @@ TEST_F(FileOutputStreamTest, BackupAndPosition) {
   std::string file_contents = internal::ReadTestFile(filename);
   EXPECT_EQ(stream_size, file_contents.size());
   EXPECT_EQ(stream_contents, file_contents);
+}
+
+TEST_F(FileOutputStreamTest, CloseClosesFdAfterWriteErrorInNext) {
+  std::string filename =
+      absl::StrCat(internal::GetTestFileNamePrefix(), "_readonly_next.bin");
+  ASSERT_THAT(internal::CreateTestFile(filename, ""), IsOk());
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
+  int fd = open(full_filename.c_str(), O_RDONLY);
+  ASSERT_GE(fd, 0);
+
+  {
+    util::FileOutputStream output_stream(fd, /*buffer_size=*/16);
+    void* buffer = nullptr;
+    ASSERT_THAT(output_stream.Next(&buffer), IsOk());
+    // Second Next() flushes the buffer to the read-only fd, which fails.
+    EXPECT_THAT(output_stream.Next(&buffer),
+                StatusIs(absl::StatusCode::kInternal));
+  }
+
+  EXPECT_EQ(fcntl(fd, F_GETFD), -1);
+  EXPECT_EQ(errno, EBADF);
+}
+
+TEST_F(FileOutputStreamTest, CloseClosesFdAfterFlushError) {
+  std::string filename =
+      absl::StrCat(internal::GetTestFileNamePrefix(), "_readonly_close.bin");
+  ASSERT_THAT(internal::CreateTestFile(filename, ""), IsOk());
+  std::string full_filename = absl::StrCat(testing::TempDir(), "/", filename);
+  int fd = open(full_filename.c_str(), O_RDONLY);
+  ASSERT_GE(fd, 0);
+
+  util::FileOutputStream output_stream(fd, /*buffer_size=*/16);
+  void* buffer = nullptr;
+  ASSERT_THAT(output_stream.Next(&buffer), IsOk());
+  EXPECT_THAT(output_stream.Close(), StatusIs(absl::StatusCode::kInternal));
+
+  EXPECT_EQ(fcntl(fd, F_GETFD), -1);
+  EXPECT_EQ(errno, EBADF);
 }
 
 }  // namespace

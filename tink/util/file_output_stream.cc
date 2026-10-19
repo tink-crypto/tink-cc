@@ -124,7 +124,13 @@ FileOutputStream::~FileOutputStream() {
 }
 
 absl::Status FileOutputStream::Close() {
-  if (!status_.ok()) return status_;
+  if (!status_.ok()) {
+    if (fd_ >= 0) {
+      close(fd_);
+      fd_ = -1;
+    }
+    return status_;
+  }
   if (count_in_buffer_ > 0) {
     // Try to write the remaining bytes.
     int total_written = 0;
@@ -134,19 +140,24 @@ absl::Status FileOutputStream::Close() {
       if (write_result < 0) {  // An I/O error occurred.
         status_ = ToStatusF(absl::StatusCode::kInternal,
                             "I/O error upon write: %d", errno);
-        return status_;
+        break;
       } else if (write_result == 0) {  // No progress, hence abort.
         status_ =
             ToStatusF(absl::StatusCode::kInternal,
                       "I/O error: failed to write %d bytes before closing.",
                       count_in_buffer_ - total_written);
-        return status_;
+        break;
       }
       // Managed to write some bytes, hence continue.
       total_written += write_result;
     }
   }
-  if (close(fd_) == -1) {
+  int close_result = close(fd_);
+  fd_ = -1;
+  if (!status_.ok()) {
+    return status_;
+  }
+  if (close_result == -1) {
     status_ = ToStatusF(absl::StatusCode::kInternal, "I/O error upon close: %d",
                         errno);
     return status_;

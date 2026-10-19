@@ -91,6 +91,7 @@ tink_cc_library(
     signature_key_templates.h
   DEPS
     absl::core_headers
+    absl::no_destructor
     absl::absl_check
     absl::memory
     absl::statusor

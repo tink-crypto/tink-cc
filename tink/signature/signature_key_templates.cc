@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
@@ -248,21 +249,26 @@ const KeyTemplate& SignatureKeyTemplates::RsaSsaPss4096Sha384Sha384F4() {
 }
 
 // static
-const ::google::crypto::tink::KeyTemplate& SignatureKeyTemplates::Ed25519() {
-  static KeyTemplate* key_template = new KeyTemplate();
-  key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, Ed25519PrivateKeyProto().GetTypeName()));
-  key_template->set_output_prefix_type(OutputPrefixType::TINK);
+const KeyTemplate& SignatureKeyTemplates::Ed25519() {
+  static absl::NoDestructor<KeyTemplate> key_template([]() {
+    KeyTemplate key_template;
+    key_template.set_type_url(absl::StrCat(
+        kTypeGoogleapisCom, Ed25519PrivateKeyProto().GetTypeName()));
+    key_template.set_output_prefix_type(OutputPrefixType::TINK);
+    return key_template;
+  }());
   return *key_template;
 }
 
 // static
-const ::google::crypto::tink::KeyTemplate&
-SignatureKeyTemplates::Ed25519WithRawOutput() {
-  static KeyTemplate* key_template = new KeyTemplate();
-  key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, Ed25519PrivateKeyProto().GetTypeName()));
-  key_template->set_output_prefix_type(OutputPrefixType::RAW);
+const KeyTemplate& SignatureKeyTemplates::Ed25519WithRawOutput() {
+  static absl::NoDestructor<KeyTemplate> key_template([]() {
+    KeyTemplate key_template;
+    key_template.set_type_url(absl::StrCat(
+        kTypeGoogleapisCom, Ed25519PrivateKeyProto().GetTypeName()));
+    key_template.set_output_prefix_type(OutputPrefixType::RAW);
+    return key_template;
+  }());
   return *key_template;
 }
 

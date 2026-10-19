@@ -486,8 +486,17 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
-add_library(tink::core::keyset_handle_builder ALIAS tink_internal_core_keyset_handle)
-add_library(tink::core::legacy_get_keyset_info ALIAS tink_internal_core_keyset_handle)
+tink_cc_library(
+  NAME keyset_handle_builder
+  DEPS
+    tink::core::keyset_handle
+)
+
+tink_cc_library(
+  NAME legacy_get_keyset_info
+  DEPS
+    tink::core::keyset_handle
+)
 
 tink_cc_library(
   NAME cleartext_keyset_handle
@@ -654,7 +663,12 @@ tink_cc_library(
     tink::util::validation
 )
 
-add_library(tink::core::cleartext_keyset_handle_testonly ALIAS tink_internal_core_cleartext_keyset_handle)
+tink_cc_library(
+  NAME cleartext_keyset_handle_testonly
+  DEPS
+    tink::core::cleartext_keyset_handle
+  TESTONLY
+)
 
 tink_cc_library(
   NAME parameters
@@ -710,7 +724,12 @@ tink_cc_library(
     tink::core::secret_key_access_token
 )
 
-add_library(tink::core::insecure_secret_key_access_testonly ALIAS tink_internal_core_insecure_secret_key_access)
+tink_cc_library(
+  NAME insecure_secret_key_access_testonly
+  DEPS
+    tink::core::insecure_secret_key_access
+  TESTONLY
+)
 
 tink_cc_library(
   NAME restricted_data

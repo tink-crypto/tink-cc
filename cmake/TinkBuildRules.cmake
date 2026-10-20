@@ -231,8 +231,12 @@ function(tink_cc_test)
     ${tink_cc_test_SRCS}
   )
 
+  if(NOT "benchmark::benchmark_main" IN_LIST tink_cc_test_DEPS
+      AND NOT "GTest::gtest_main" IN_LIST tink_cc_test_DEPS)
+    target_link_libraries(${_target_name} GTest::gtest_main)
+  endif()
+
   target_link_libraries(${_target_name}
-    gtest_main
     ${tink_cc_test_DEPS}
   )
 
@@ -241,9 +245,18 @@ function(tink_cc_test)
   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${TINK_CXX_STANDARD})
   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD_REQUIRED true)
 
+  set(_test_args "")
+  # Make benchmarks run faster by default. Can always override via e.g.
+  # `ctest -V -R 'benchmark'-- --benchmark_min_time=1s`.
+  if("benchmark::benchmark" IN_LIST tink_cc_test_DEPS)
+    list(APPEND _test_args "--benchmark_min_time=0.01s")
+  endif()
+
   # Note: This was preferred over using gtest_discover_tests because of [1].
   # [1] https://gitlab.kitware.com/cmake/cmake/-/issues/23039
-  add_test(NAME ${_target_name} COMMAND ${_target_name} WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  add_test(NAME ${_target_name}
+           COMMAND ${_target_name} ${_test_args}
+           WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endfunction(tink_cc_test)
 
 # Declare a C++ Proto library.

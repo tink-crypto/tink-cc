@@ -23,7 +23,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -35,7 +34,6 @@
 #include "tink/subtle/random.h"
 #include "tink/subtle/test_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -190,6 +188,27 @@ TEST(StreamingMacImplTest, ComputeCloseTwiceError) {
   EXPECT_EQ(absl::StatusCode::kFailedPrecondition, reclose_status.code());
 }
 
+TEST(StreamingMacImplTest, ComputeBackUpIgnoresNonPositiveCount) {
+  std::string expected_mac = "23:0:DummyMac:streaming mac:";
+  std::unique_ptr<OutputStreamWithResult<std::string>> output_stream =
+      GetComputeMacOutputStream();
+
+  void* buffer;
+  absl::StatusOr<int> next_result = output_stream->Next(&buffer);
+  ASSERT_THAT(next_result, IsOk());
+  output_stream->BackUp(*next_result);
+  ASSERT_EQ(output_stream->Position(), 0);
+
+  output_stream->BackUp(0);
+  EXPECT_EQ(output_stream->Position(), 0);
+  output_stream->BackUp(-10);
+  EXPECT_EQ(output_stream->Position(), 0);
+
+  absl::StatusOr<std::string> close_status = output_stream->CloseAndGetResult();
+  ASSERT_THAT(close_status, IsOk());
+  EXPECT_EQ(*close_status, expected_mac);
+}
+
 TEST(StreamingMacImplTest, VerifyEmptyMac) {
   std::string expected_mac = "23:0:DummyMac:streaming mac:";
   auto output_stream = GetVerifyMacOutputStream(expected_mac);
@@ -289,6 +308,25 @@ TEST(StreamingMacImplTest, VerifyCloseTwiceError) {
   auto reclose_status = output_stream->Close();
   EXPECT_THAT(reclose_status, Not(IsOk()));
   EXPECT_EQ(absl::StatusCode::kFailedPrecondition, reclose_status.code());
+}
+
+TEST(StreamingMacImplTest, VerifyBackUpIgnoresNonPositiveCount) {
+  std::string expected_mac = "23:0:DummyMac:streaming mac:";
+  std::unique_ptr<OutputStreamWithResult<absl::Status>> output_stream =
+      GetVerifyMacOutputStream(expected_mac);
+
+  void* buffer;
+  absl::StatusOr<int> next_result = output_stream->Next(&buffer);
+  ASSERT_THAT(next_result, IsOk());
+  output_stream->BackUp(*next_result);
+  ASSERT_EQ(output_stream->Position(), 0);
+
+  output_stream->BackUp(0);
+  EXPECT_EQ(output_stream->Position(), 0);
+  output_stream->BackUp(-10);
+  EXPECT_EQ(output_stream->Position(), 0);
+
+  EXPECT_THAT(output_stream->CloseAndGetResult(), IsOk());
 }
 
 }  // namespace

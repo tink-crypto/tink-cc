@@ -875,7 +875,6 @@ tink_cc_library(
     streaming_mac_impl.cc
     streaming_mac_impl.h
   DEPS
-    absl::memory
     absl::status
     absl::strings
     absl::string_view
@@ -1622,7 +1621,6 @@ tink_cc_test(
     tink::subtle::streaming_mac_impl
     tink::subtle::test_util
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1632,7 +1630,6 @@ tink_cc_test(
     tink::core::secret_data
     tink::mac::internal::stateful_mac
     tink::util::secret_data
-    tink::util::test_matchers
 )
 
 tink_cc_test(

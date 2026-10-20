@@ -23,17 +23,13 @@
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/crypto.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream_with_result.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -110,6 +106,7 @@ ComputeMacOutputStream::CloseStreamAndComputeResult() {
 }
 
 void ComputeMacOutputStream::BackUp(int count) {
+  if (count <= 0) return;
   count = std::min(count, buffer_position_);
   buffer_position_ -= count;
   position_ -= count;
@@ -194,6 +191,7 @@ absl::Status VerifyMacOutputStream::CloseStreamAndComputeResult() {
 }
 
 void VerifyMacOutputStream::BackUp(int count) {
+  if (count <= 0) return;
   count = std::min(count, buffer_position_);
   buffer_position_ -= count;
   position_ -= count;

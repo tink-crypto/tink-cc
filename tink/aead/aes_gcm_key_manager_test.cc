@@ -195,7 +195,7 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
 
   absl::StatusOr<std::unique_ptr<Aead>> boring_ssl_aead_or =
       subtle::AesGcmBoringSsl::New(
-          util::SecretDataFromStringView(key_or.value().key_value()));
+          SecretData(key_or.value().key_value()));
   ASSERT_THAT(boring_ssl_aead_or, IsOk());
 
   ASSERT_THAT(EncryptThenDecrypt(*aead_or.value(), *boring_ssl_aead_or.value(),
@@ -216,7 +216,7 @@ TEST(AesGcmKeyManagerTest, CreateCordAead) {
 
   absl::StatusOr<std::unique_ptr<CordAead>> boring_ssl_aead_or =
       CordAesGcmBoringSsl::New(
-          util::SecretDataFromStringView(key_or.value().key_value()));
+          SecretData(key_or.value().key_value()));
   ASSERT_THAT(boring_ssl_aead_or, IsOk());
 
   ASSERT_THAT(EncryptThenDecrypt(*aead_or.value(), *boring_ssl_aead_or.value(),

@@ -193,7 +193,7 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
 
   absl::StatusOr<std::unique_ptr<Aead>> boring_ssl_aead_or =
       subtle::AesEaxBoringSsl::New(
-          util::SecretDataFromStringView(key_or.value().key_value()),
+          SecretData(key_or.value().key_value()),
           key_or.value().params().iv_size());
   ASSERT_THAT(boring_ssl_aead_or, IsOk());
 

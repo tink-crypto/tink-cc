@@ -95,7 +95,7 @@ TEST_P(SslOneShotAeadLargeInputsTest, EncryptDecryptLargeInput) {
   TestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);

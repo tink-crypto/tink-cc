@@ -66,7 +66,7 @@ absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
     return parameters.status();
   }
   return XAesGcmKey::Create(*parameters,
-                            RestrictedData(util::SecretDataFromStringView(key),
+                            RestrictedData(SecretData(key),
                                            InsecureSecretKeyAccess::Get()),
                             std::nullopt, GetPartialKeyAccess());
 }

@@ -105,7 +105,7 @@ TEST_P(SslOneShotAeadTest, CiphertextPlaintextSize) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   EXPECT_EQ((*aead)->CiphertextSize(kMessage.size()),
@@ -148,7 +148,7 @@ TEST_P(SslOneShotAeadTest, EncryptDecrypt) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
@@ -221,7 +221,7 @@ TEST_P(SslOneShotAeadTest, TestModification) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   DoTestEncryptDecryptWithModifiedCiphertext(
@@ -239,7 +239,7 @@ TEST_P(SslOneShotAeadTest, TestBufferClearsIfDecryptionFails) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   const int64_t kCiphertextSize = kMessage.size() + test_param.tag_size;
@@ -306,7 +306,7 @@ TEST_P(SslOneShotAeadTest, EmptyAssociatedData) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
   DoTestWithEmptyAssociatedData(aead->get(),
                                 test::HexDecodeOrDie(test_param.iv_hex),
@@ -345,7 +345,7 @@ TEST_P(SslOneShotAeadTest, EmptyMessage) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
   DoTestEmptyMessageEncryptDecrypt(aead->get(), iv, test_param.tag_size);
@@ -358,7 +358,7 @@ TEST_P(SslOneShotAeadTest, EmptyMessageAndAssociatedData) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
   const absl::string_view default_associated_data;
@@ -375,7 +375,7 @@ TEST_P(SslOneShotAeadTest, BufferOverlapEncryptFails) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string ciphertext_buffer(kMessage.data(), kMessage.size());
@@ -396,7 +396,7 @@ TEST_P(SslOneShotAeadTest, BufferOverlapDecryptFails) {
   SslOneShotAeadTestParams test_param = GetParam();
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
-      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
+      SecretData(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
@@ -520,7 +520,7 @@ TEST(SslOneShotAeadTest, Xchacha20Poly1305TestFipsOnly) {
 
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CreateXchacha20Poly1305OneShotCrypter(
-          util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key)));
+          SecretData(test::HexDecodeOrDie(k256Key)));
   EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInternal));
 }
 
@@ -531,9 +531,9 @@ TEST(SslOneShotAeadTest, AesGcmTestFipsOnly) {
   }
 
   SecretData key_128 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(k128Key));
+      SecretData(test::HexDecodeOrDie(k128Key));
   SecretData key_256 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key));
+      SecretData(test::HexDecodeOrDie(k256Key));
 
   EXPECT_THAT(CreateAesGcmOneShotCrypter(key_128), IsOk());
   EXPECT_THAT(CreateAesGcmOneShotCrypter(key_256), IsOk());
@@ -546,9 +546,9 @@ TEST(SslOneShotAeadTest, AesGcmTestTestFipsFailWithoutBoringCrypto) {
   }
 
   SecretData key_128 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(k128Key));
+      SecretData(test::HexDecodeOrDie(k128Key));
   SecretData key_256 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key));
+      SecretData(test::HexDecodeOrDie(k256Key));
 
   EXPECT_THAT(CreateAesGcmOneShotCrypter(key_128).status(),
               StatusIs(absl::StatusCode::kInternal));
@@ -562,9 +562,9 @@ TEST(AesGcmSivBoringSslTest, AesGcmTestSivTestFipsOnly) {
   }
 
   SecretData key_128 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(k128Key));
+      SecretData(test::HexDecodeOrDie(k128Key));
   SecretData key_256 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key));
+      SecretData(test::HexDecodeOrDie(k256Key));
 
   EXPECT_THAT(CreateAesGcmSivOneShotCrypter(key_128).status(),
               StatusIs(absl::StatusCode::kInternal));
@@ -606,7 +606,7 @@ class SslOneShotAeadWycheproofTest
 TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
   SslOneShotAeadWycheproofTestParams params = GetParam();
   const WycheproofTestVector& test_vector = params.test_vector;
-  SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = SecretData(test_vector.key);
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());
@@ -641,7 +641,7 @@ TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
 TEST_P(SslOneShotAeadWycheproofTest, Decrypt) {
   SslOneShotAeadWycheproofTestParams params = GetParam();
   const WycheproofTestVector& test_vector = params.test_vector;
-  SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = SecretData(test_vector.key);
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());

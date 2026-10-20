@@ -67,7 +67,7 @@ class ZeroCopyXChacha20Poly1305BoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
     SecretData key =
-        util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
+        SecretData(test::HexDecodeOrDie(kKey256Hex));
     if (!IsBoringSsl()) {
       ASSERT_THAT(ZeroCopyXChacha20Poly1305BoringSsl::New(key).status(),
                   StatusIs(absl::StatusCode::kUnimplemented));
@@ -124,7 +124,7 @@ TEST_F(ZeroCopyXChacha20Poly1305BoringSslTest, SimpleDecrypt) {
   std::string tag = test::HexDecodeOrDie("c0875924c1c7987947deafd8780acf49");
   std::string associated_data =
       test::HexDecodeOrDie("50515253c0c1c2c3c4c5c6c7");
-  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = SecretData(test::HexDecodeOrDie(
       "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"));
 
   absl::StatusOr<std::unique_ptr<ZeroCopyAead>> aead =
@@ -163,7 +163,7 @@ TEST(ZeroCopyXChacha20Poly1305BoringSslStandaloneTest, FailsOnFipsOnlyMode) {
   }
 
   SecretData key256 =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
+      SecretData(test::HexDecodeOrDie(kKey256Hex));
 
   EXPECT_THAT(ZeroCopyXChacha20Poly1305BoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));
@@ -192,7 +192,7 @@ class ZeroCopyXChacha20Poly1305BoringSslWycheproofTest
 
 TEST_P(ZeroCopyXChacha20Poly1305BoringSslWycheproofTest, Decrypt) {
   WycheproofTestVector test_vector = GetParam();
-  SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = SecretData(test_vector.key);
   absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
       ZeroCopyXChacha20Poly1305BoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());

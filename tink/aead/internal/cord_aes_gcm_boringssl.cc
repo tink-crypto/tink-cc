@@ -118,7 +118,7 @@ absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContextFromPartial(
 // [1]https://github.com/openssl/openssl/blob/eb52450f5151e8e78743ab05de21a344823316f5/crypto/evp/evp_enc.c#L1427
 // [2]https://github.com/openssl/openssl/blob/cac250755efd0c40cc6127a0e4baceb8d226c7e3/providers/implementations/include/prov/ciphercommon_aead.h#L30
 absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContext(
-    const util::SecretData& key, absl::string_view iv, bool encryption) {
+    const SecretData& key, absl::string_view iv, bool encryption) {
   internal::SslUniquePtr<EVP_CIPHER_CTX> context(EVP_CIPHER_CTX_new());
   if (context == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,

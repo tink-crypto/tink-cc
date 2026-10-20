@@ -64,7 +64,7 @@ class ZeroCopyAesGcmSivBoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
     SecretData key =
-        util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
+        SecretData(test::HexDecodeOrDie(kKey256Hex));
     if (!IsBoringSsl()) {
       ASSERT_THAT(ZeroCopyAesGcmSivBoringSsl::New(key).status(),
                   StatusIs(absl::StatusCode::kUnimplemented));
@@ -155,9 +155,9 @@ TEST(ZeroCopyAesGcmSivBoringSslStandaloneTest, TestFipsOnly) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  SecretData key128 = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key128 =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  SecretData key256 = SecretData(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(ZeroCopyAesGcmSivBoringSsl::New(key128).status(),
@@ -189,7 +189,7 @@ class ZeroCopyAesGcmSivBoringSslWycheproofTest
 
 TEST_P(ZeroCopyAesGcmSivBoringSslWycheproofTest, Decrypt) {
   WycheproofTestVector test_vector = GetParam();
-  SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = SecretData(test_vector.key);
   absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
       ZeroCopyAesGcmSivBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());

@@ -58,7 +58,7 @@ using ::testing::Test;
 class CordAesGcmBoringSslTest : public Test {
  protected:
   void SetUp() override {
-    key_ = util::SecretDataFromStringView(test::HexDecodeOrDie(key_128));
+    key_ = SecretData(test::HexDecodeOrDie(key_128));
     absl::StatusOr<std::unique_ptr<CordAead>> res =
         CordAesGcmBoringSsl::New(key_);
     ASSERT_THAT(res, IsOk());
@@ -184,7 +184,7 @@ TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
       continue;
     }
     absl::StatusOr<std::unique_ptr<CordAead>> cipher =
-        CordAesGcmBoringSsl::New(util::SecretDataFromStringView(tc.key));
+        CordAesGcmBoringSsl::New(SecretData(tc.key));
     ASSERT_THAT(cipher, IsOk());
     // Convert the ciphertext to cord.
     absl::Cord ct_cord = absl::Cord(tc.nonce + tc.ct + tc.tag);

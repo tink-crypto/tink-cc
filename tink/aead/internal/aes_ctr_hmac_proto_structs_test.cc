@@ -53,7 +53,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrParamsTP) {
   params.set_iv_size(16);
 
   auto serialized_aes_ctr_params = params.SerializeAsSecretData();
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_aes_ctr_params),
+  EXPECT_THAT(serialized_aes_ctr_params.AsStringView(),
               Eq(proto_testing::FieldWithNumber(1).IsVarint(16)));
 }
 
@@ -86,7 +86,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrKeyFormatTP) {
                    proto_testing::FieldWithNumber(2).IsVarint(32));
 
   auto serialized_aes_ctr_key_format = key_format.SerializeAsSecretData();
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_aes_ctr_key_format),
+  EXPECT_THAT(serialized_aes_ctr_key_format.AsStringView(),
               Eq(expected_serialized_key_format));
 }
 
@@ -102,12 +102,11 @@ std::string GetSerializedAesCtrHmacAeadKeyFormat() {
   hmac_key_format.set_key_size(32);
   hmac_key_format.set_version(1);
 
-  return absl::StrCat(proto_testing::FieldWithNumber(1).IsSubMessage(
-                          {std::string(util::SecretDataAsStringView(
-                              aes_ctr_key_format.SerializeAsSecretData()))}),
-                      proto_testing::FieldWithNumber(2).IsSubMessage(
-                          {std::string(util::SecretDataAsStringView(
-                              hmac_key_format.SerializeAsSecretData()))}));
+  return absl::StrCat(
+      proto_testing::FieldWithNumber(1).IsSubMessage({std::string(
+          aes_ctr_key_format.SerializeAsSecretData().AsStringView())}),
+      proto_testing::FieldWithNumber(2).IsSubMessage({std::string(
+          hmac_key_format.SerializeAsSecretData().AsStringView())}));
 }
 
 TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyFormatTP) {
@@ -143,7 +142,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyFormatTP) {
       GetSerializedAesCtrHmacAeadKeyFormat();
 
   auto serialized_key_format = key_format.SerializeAsSecretData();
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_key_format),
+  EXPECT_THAT(serialized_key_format.AsStringView(),
               Eq(expected_serialized_key_format));
 }
 
@@ -153,7 +152,7 @@ std::string GetSerializedAesCtrKey() {
   return absl::StrCat(
       proto_testing::FieldWithNumber(1).IsVarint(1),  // version
       proto_testing::FieldWithNumber(2).IsSubMessage({std::string(
-          util::SecretDataAsStringView(params.SerializeAsSecretData()))}),
+          params.SerializeAsSecretData().AsStringView())}),
       proto_testing::FieldWithNumber(3).IsString(
           "0123456789012345"));  // key_value
 }
@@ -164,7 +163,7 @@ TEST(ProtoAesCtrMessagesTest, ParseAesCtrKeyTP) {
   ASSERT_THAT(key.ParseFromString(serialized_aes_ctr_key), IsTrue());
   EXPECT_THAT(key.version(), Eq(1));
   EXPECT_THAT(key.params().iv_size(), Eq(16));
-  EXPECT_THAT(util::SecretDataAsStringView(key.key_value()),
+  EXPECT_THAT(key.key_value().AsStringView(),
               Eq("0123456789012345"));
 }
 
@@ -181,7 +180,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrKeyTP) {
 
   auto serialized_aes_ctr_key = key.SerializeAsSecretData();
   const std::string expected_serialized_aes_ctr_key = GetSerializedAesCtrKey();
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_aes_ctr_key),
+  EXPECT_THAT(serialized_aes_ctr_key.AsStringView(),
               Eq(expected_serialized_aes_ctr_key));
 }
 
@@ -192,7 +191,7 @@ std::string GetSerializedHmacKey() {
   return absl::StrCat(
       proto_testing::FieldWithNumber(1).IsVarint(1),  // version
       proto_testing::FieldWithNumber(2).IsSubMessage({std::string(
-          util::SecretDataAsStringView(params.SerializeAsSecretData()))}),
+          params.SerializeAsSecretData().AsStringView())}),
       proto_testing::FieldWithNumber(3).IsString(
           "01234567890123456789012345678901"));  // key_value
 }
@@ -212,13 +211,13 @@ TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyTP) {
   EXPECT_THAT(key.version(), Eq(1));
   EXPECT_THAT(key.aes_ctr_key().version(), Eq(1));
   EXPECT_THAT(key.aes_ctr_key().params().iv_size(), Eq(16));
-  EXPECT_THAT(util::SecretDataAsStringView(key.aes_ctr_key().key_value()),
+  EXPECT_THAT(key.aes_ctr_key().key_value().AsStringView(),
               Eq("0123456789012345"));
   EXPECT_THAT(key.hmac_key().version(), Eq(1));
   EXPECT_THAT(key.hmac_key().params().hash(),
               Eq(google::crypto::tink::internal::HashTypeTP::kSha256));
   EXPECT_THAT(key.hmac_key().params().tag_size(), Eq(16));
-  EXPECT_THAT(util::SecretDataAsStringView(key.hmac_key().key_value()),
+  EXPECT_THAT(key.hmac_key().key_value().AsStringView(),
               Eq("01234567890123456789012345678901"));
 }
 
@@ -238,11 +237,11 @@ TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyTP) {
       google::crypto::tink::internal::HashTypeTP::kSha256);
   key.mutable_hmac_key()->mutable_params()->set_tag_size(16);
   key.mutable_hmac_key()->set_key_value(
-      util::SecretDataFromStringView("01234567890123456789012345678901"));
+      SecretData("01234567890123456789012345678901"));
 
   auto serialized_key = key.SerializeAsSecretData();
   const std::string expected_serialized_key = GetSerializedAesCtrHmacAeadKey();
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_key),
+  EXPECT_THAT(serialized_key.AsStringView(),
               Eq(expected_serialized_key));
 }
 

@@ -228,14 +228,14 @@ TEST(AesCtrHmacAeadKeyManagerTest, CreateAead) {
   ASSERT_THAT(aead_or, IsOk());
 
   auto direct_aes_ctr_or = subtle::AesCtrBoringSsl::New(
-      util::SecretDataFromStringView(key.aes_ctr_key().key_value()),
+      SecretData(key.aes_ctr_key().key_value()),
       key.aes_ctr_key().params().iv_size());
   ASSERT_THAT(direct_aes_ctr_or, IsOk());
 
   auto direct_hmac_or = subtle::HmacBoringSsl::New(
       util::Enums::ProtoToSubtle(key.hmac_key().params().hash()),
       key.hmac_key().params().tag_size(),
-      util::SecretDataFromStringView(key.hmac_key().key_value()));
+      SecretData(key.hmac_key().key_value()));
   ASSERT_THAT(direct_hmac_or, IsOk());
 
   auto direct_aead_or = subtle::EncryptThenAuthenticate::New(

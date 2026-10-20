@@ -50,7 +50,6 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::TestWithParam;
@@ -65,7 +64,7 @@ absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
     return parameters.status();
   }
   return XAesGcmKey::Create(*parameters,
-                            RestrictedData(SecretDataFromStringView(key),
+                            RestrictedData(SecretData(key),
                                            InsecureSecretKeyAccess::Get()),
                             std::nullopt, GetPartialKeyAccess());
 }

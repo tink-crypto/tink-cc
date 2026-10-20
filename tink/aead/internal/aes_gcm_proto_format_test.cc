@@ -57,7 +57,7 @@ TEST(AesGcmKeyFormatTPTest, Serialize) {
   const std::string expected_serialized_format =
       absl::StrCat(proto_testing::FieldWithNumber(2).IsVarint(32),
                    proto_testing::FieldWithNumber(3).IsVarint(1234));
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_format),
+  EXPECT_THAT(serialized_format.AsStringView(),
               Eq(expected_serialized_format));
 }
 

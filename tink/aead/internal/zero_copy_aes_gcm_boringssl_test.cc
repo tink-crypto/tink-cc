@@ -80,7 +80,7 @@ class ZeroCopyAesGcmBoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
     SecretData key =
-        util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128Hex));
+        SecretData(test::HexDecodeOrDie(kKey128Hex));
     absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
         ZeroCopyAesGcmBoringSsl::New(key);
     ASSERT_THAT(cipher, IsOk());
@@ -206,7 +206,7 @@ class ZeroCopyAesGcmBoringSslWycheproofTest
 
 TEST_P(ZeroCopyAesGcmBoringSslWycheproofTest, Decrypt) {
   WycheproofTestVector test_vector = GetParam();
-  SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = SecretData(test_vector.key);
   absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
       ZeroCopyAesGcmBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());

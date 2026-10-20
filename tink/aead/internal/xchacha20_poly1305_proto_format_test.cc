@@ -51,7 +51,7 @@ TEST(XChaCha20Poly1305KeyFormatTPTest, Serialize) {
   auto serialized_hmac_format = format.SerializeAsSecretData();
   const std::string expected_serialized_hmac_format =
       proto_testing::FieldWithNumber(1).IsVarint(1234);
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_format),
+  EXPECT_THAT(serialized_hmac_format.AsStringView(),
               Eq(expected_serialized_hmac_format));
 }
 }  // namespace

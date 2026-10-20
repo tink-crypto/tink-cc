@@ -191,7 +191,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadFailsWithOpenSsl) {
   EXPECT_THAT(XChaCha20Poly1305KeyManager().GetPrimitive<Aead>(*key).status(),
               Not(IsOk()));
   EXPECT_THAT(subtle::XChacha20Poly1305BoringSsl::New(
-                  util::SecretDataFromStringView(key->key_value()))
+                  SecretData(key->key_value()))
                   .status(),
               Not(IsOk()));
 }
@@ -210,7 +210,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
 
   absl::StatusOr<std::unique_ptr<Aead>> direct_aead =
       subtle::XChacha20Poly1305BoringSsl::New(
-          util::SecretDataFromStringView(key->key_value()));
+          SecretData(key->key_value()));
   ASSERT_THAT(direct_aead, IsOk());
   EXPECT_THAT(EncryptThenDecrypt(**aead, **direct_aead, "message", "aad"),
               IsOk());

@@ -384,8 +384,8 @@ TEST_P(ZeroCopyAesCtrHmacBoringSslEquivalenceTest,
   const AesCtrHmacEquivalenceTestParams& params = GetParam();
   std::string aes_key_str = subtle::Random::GetRandomBytes(params.aes_key_size);
   std::string hmac_key_str = subtle::Random::GetRandomBytes(32);
-  SecretData aes_key = util::SecretDataFromStringView(aes_key_str);
-  SecretData hmac_key = util::SecretDataFromStringView(hmac_key_str);
+  SecretData aes_key = SecretData(aes_key_str);
+  SecretData hmac_key = SecretData(hmac_key_str);
 
   absl::StatusOr<AesCtrHmacAeadKey> key =
       CreateTestKey(aes_key_str, params.iv_size, hmac_key_str, params.hash_type,

@@ -197,7 +197,7 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadFailsWithOpenSsl) {
   EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<Aead>(*key).status(),
               Not(IsOk()));
   EXPECT_THAT(subtle::AesGcmSivBoringSsl::New(
-                  util::SecretDataFromStringView(key->key_value()))
+                  SecretData(key->key_value()))
                   .status(),
               Not(IsOk()));
 }
@@ -218,7 +218,7 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
 
   absl::StatusOr<std::unique_ptr<Aead>> boring_ssl_aead =
       subtle::AesGcmSivBoringSsl::New(
-          util::SecretDataFromStringView(key->key_value()));
+          SecretData(key->key_value()));
   ASSERT_THAT(boring_ssl_aead, IsOk());
   EXPECT_THAT(EncryptThenDecrypt(**aead, **boring_ssl_aead, "message", "aad"),
               IsOk());

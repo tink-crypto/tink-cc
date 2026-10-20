@@ -46,7 +46,6 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::TestWithParam;
 
@@ -60,7 +59,7 @@ absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
     return params.status();
   }
   return XAesGcmKey::Create(*params,
-                            RestrictedData(SecretDataFromStringView(key),
+                            RestrictedData(SecretData(key),
                                            InsecureSecretKeyAccess::Get()),
                             std::nullopt, GetPartialKeyAccess());
 }
@@ -135,7 +134,7 @@ TEST_P(BaseXAesGcmTest, DeriveWithKnownTestVectors) {
   ASSERT_THAT(dervived_key, IsOk());
 
   EXPECT_THAT(
-      test::HexEncode(util::SecretDataAsStringView(*dervived_key)),
+      test::HexEncode(dervived_key->AsStringView()),
       Eq(test_case.derived_hex_key));
 }
 

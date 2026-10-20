@@ -212,6 +212,25 @@ TEST_F(OstreamOutputStreamTest, NextReturnsErrorWhenStreambufWriteFails) {
               StatusIs(absl::StatusCode::kInternal));
 }
 
+TEST_F(OstreamOutputStreamTest, NullOstreamFails) {
+  util::OstreamOutputStream output_stream(/*output=*/nullptr);
+  void* buffer = nullptr;
+  EXPECT_THAT(output_stream.Next(&buffer),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(output_stream.Close(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(OstreamOutputStreamTest, OstreamWithoutStreambufFails) {
+  util::OstreamOutputStream output_stream(
+      std::make_unique<std::ostream>(/*sb=*/nullptr));
+  void* buffer = nullptr;
+  EXPECT_THAT(output_stream.Next(&buffer),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(output_stream.Close(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

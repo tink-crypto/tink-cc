@@ -45,6 +45,12 @@ OstreamOutputStream::OstreamOutputStream(std::unique_ptr<std::ostream> output,
   position_ = 0;
   buffer_offset_ = 0;
   status_ = absl::OkStatus();
+  if (output_ == nullptr || output_->rdbuf() == nullptr) {
+    // All subsequent operations fail with this status, without dereferencing
+    // `output_`.
+    status_ = absl::InvalidArgumentError(
+        "OstreamOutputStream requires a non-null ostream with a stream buffer");
+  }
 }
 
 absl::StatusOr<int> OstreamOutputStream::Next(void** data) {

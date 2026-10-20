@@ -23,6 +23,7 @@
 
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_buffer.h"
@@ -36,7 +37,6 @@
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -56,20 +56,14 @@ class CordXAesGcmBoringSsl : public CordAead {
     // TODO(b/354285352): Consider using RAND_BYTES once for salt + IV.
     std::string salt = Random::GetRandomBytes(base_x_aes_gcm_.salt_size());
 
-    absl::StatusOr<SecretData> derived_key =
-        base_x_aes_gcm_.DerivePerMessageKey(salt);
-    if (!derived_key.ok()) {
-      return derived_key.status();
-    }
-    absl::StatusOr<std::unique_ptr<CordAead>> aead =
-        CordAesGcmBoringSsl::New(*derived_key);
-    if (!aead.ok()) {
-      return aead.status();
-    }
-    absl::StatusOr<absl::Cord> ciphertext =
-        (*aead)->Encrypt(plaintext, associated_data);
-    (*ciphertext).Prepend(std::move(salt));
-    return *ciphertext;
+    ABSL_ASSIGN_OR_RETURN(SecretData derived_key,
+                          base_x_aes_gcm_.DerivePerMessageKey(salt));
+    ABSL_ASSIGN_OR_RETURN(std::unique_ptr<CordAead> aead,
+                          CordAesGcmBoringSsl::New(derived_key));
+    ABSL_ASSIGN_OR_RETURN(absl::Cord ciphertext,
+                          aead->Encrypt(plaintext, associated_data));
+    ciphertext.Prepend(std::move(salt));
+    return ciphertext;
   }
 
   absl::StatusOr<absl::Cord> Decrypt(
@@ -85,15 +79,12 @@ class CordXAesGcmBoringSsl : public CordAead {
     CordReader(ciphertext).ReadN(base_x_aes_gcm_.salt_size(), salt);
     ciphertext.RemovePrefix(base_x_aes_gcm_.salt_size());
 
-    absl::StatusOr<SecretData> derived_key =
-        base_x_aes_gcm_.DerivePerMessageKey(
-            absl::string_view(salt, base_x_aes_gcm_.salt_size()));
-    if (!derived_key.ok()) {
-      return derived_key.status();
-    }
-    absl::StatusOr<std::unique_ptr<CordAead>> aead =
-        CordAesGcmBoringSsl::New(*derived_key);
-    return (*aead)->Decrypt(std::move(ciphertext), associated_data);
+    ABSL_ASSIGN_OR_RETURN(SecretData derived_key,
+                          base_x_aes_gcm_.DerivePerMessageKey(absl::string_view(
+                              salt, base_x_aes_gcm_.salt_size())));
+    ABSL_ASSIGN_OR_RETURN(std::unique_ptr<CordAead> aead,
+                          CordAesGcmBoringSsl::New(derived_key));
+    return aead->Decrypt(std::move(ciphertext), associated_data);
   }
 
  private:

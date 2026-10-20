@@ -395,6 +395,7 @@ tink_cc_library(
     tink::aead::internal::cord_utils
     absl::absl_check
     absl::status
+    absl::status_macros
     absl::statusor
     absl::cord
     absl::str_format

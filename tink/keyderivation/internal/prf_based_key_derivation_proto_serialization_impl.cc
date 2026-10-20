@@ -17,11 +17,14 @@
 #include "tink/keyderivation/internal/prf_based_key_derivation_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -35,6 +38,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -50,6 +54,7 @@
 #include "tink/secret_key_access_token.h"
 #include "proto/prf_based_deriver.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
@@ -345,16 +350,12 @@ absl::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
     return prf_key.status();
   }
 
-  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters((*prf_key)->GetParameters())
-          .SetDerivedKeyParameters(**derived_key_parameters)
-          .Build();
-  if (!derived_key_parameters.ok()) {
-    return derived_key_parameters.status();
-  }
-
-  return PrfBasedKeyDerivationKey::Create(*parameters, **prf_key,
+  ABSL_ASSIGN_OR_RETURN(PrfBasedKeyDerivationParameters parameters,
+                        PrfBasedKeyDerivationParameters::Builder()
+                            .SetPrfParameters((*prf_key)->GetParameters())
+                            .SetDerivedKeyParameters(**derived_key_parameters)
+                            .Build());
+  return PrfBasedKeyDerivationKey::Create(parameters, **prf_key,
                                           serialization.IdRequirement(),
                                           GetPartialKeyAccess());
 }

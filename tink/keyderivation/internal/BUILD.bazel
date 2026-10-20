@@ -336,6 +336,7 @@ cc_library(
     deps = [
         "//proto:prf_based_deriver_cc_proto",
         "//proto:tink_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:key",
         "//tink:parameters",
         "//tink:partial_key_access",
@@ -352,6 +353,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:serialization",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -362,6 +364,7 @@ cc_library(
         "//tink/util:status",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",

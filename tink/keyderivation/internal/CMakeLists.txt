@@ -332,6 +332,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::string_view
     absl::optional
@@ -351,6 +352,7 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
@@ -361,6 +363,7 @@ tink_cc_library(
     tink::util::status
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(

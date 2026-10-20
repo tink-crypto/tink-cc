@@ -21,8 +21,9 @@
 #include "gtest/gtest.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/testing/field_with_number.h"
-#include "tink/util/secret_data.h"
+#include "tink/secret_data.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
@@ -75,7 +76,7 @@ TEST(KeyTemplateTPTest, SerializeKeyTemplateTP) {
 
   auto serialized_hmac_key_template = key_template.SerializeAsSecretData();
   EXPECT_THAT(
-      util::SecretDataAsStringView(serialized_hmac_key_template),
+      serialized_hmac_key_template.AsStringView(),
       Eq(absl::StrCat(
           proto_testing::FieldWithNumber(1).IsString("type_url"),
           proto_testing::FieldWithNumber(2).IsString("value"),
@@ -94,8 +95,7 @@ TEST(KeyDataTPTest, ParseKeyDataTP) {
   google::crypto::tink::internal::KeyDataTP key_data;
   ASSERT_THAT(key_data.ParseFromString(serialized_hmac_key_data), IsTrue());
   EXPECT_THAT(key_data.type_url(), Eq("type_url"));
-  EXPECT_THAT(util::SecretDataAsStringView(key_data.value()),
-              Eq("key_material"));
+  EXPECT_THAT(key_data.value().AsStringView(), Eq("key_material"));
   EXPECT_THAT(key_data.key_material_type(),
               Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
                      kAsymmetricPrivate));
@@ -121,12 +121,12 @@ TEST(KeyDataTPTest, ParseKeyDataTPInvalidKeyMaterialType) {
 TEST(KeyDataTPTest, SerializeKeyDataTP) {
   google::crypto::tink::internal::KeyDataTP key_data;
   key_data.set_type_url("type_url");
-  key_data.set_value(util::SecretDataFromStringView("value"));
+  key_data.set_value(SecretData("value"));
   key_data.set_key_material_type(google::crypto::tink::internal::KeyDataTP::
                                      KeyMaterialTypeTP::kAsymmetricPrivate);
 
   auto serialized_hmac_key_data = key_data.SerializeAsSecretData();
-  EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_key_data),
+  EXPECT_THAT(serialized_hmac_key_data.AsStringView(),
               Eq(absl::StrCat(
                   proto_testing::FieldWithNumber(1).IsString("type_url"),
                   proto_testing::FieldWithNumber(2).IsString("value"),
@@ -146,8 +146,7 @@ TEST(KeyTPTest, ParseKeyData) {
   google::crypto::tink::internal::KeysetTP::KeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_key), IsTrue());
   EXPECT_THAT(key.key_data().type_url(), Eq("type_url"));
-  EXPECT_THAT(util::SecretDataAsStringView(key.key_data().value()),
-              Eq("value"));
+  EXPECT_THAT(key.key_data().value().AsStringView(), Eq("value"));
   EXPECT_THAT(key.key_data().key_material_type(),
               Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
                      kSymmetric));
@@ -184,7 +183,7 @@ TEST(KeyTPTest, ParseOutputPrefixType) {
 TEST(KeyTPTest, RoundTrip) {
   google::crypto::tink::internal::KeysetTP::KeyTP key;
   key.mutable_key_data()->set_type_url("type_url");
-  key.mutable_key_data()->set_value(util::SecretDataFromStringView("value"));
+  key.mutable_key_data()->set_value(SecretData("value"));
   key.mutable_key_data()->set_key_material_type(
       google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::kSymmetric);
   key.set_status(google::crypto::tink::internal::KeyStatusTypeTP::kEnabled);
@@ -194,12 +193,10 @@ TEST(KeyTPTest, RoundTrip) {
 
   auto serialized = key.SerializeAsSecretData();
   google::crypto::tink::internal::KeysetTP::KeyTP key2;
-  ASSERT_THAT(key2.ParseFromString(util::SecretDataAsStringView(serialized)),
-              IsTrue());
+  ASSERT_THAT(key2.ParseFromString(serialized.AsStringView()), IsTrue());
 
   EXPECT_THAT(key2.key_data().type_url(), Eq("type_url"));
-  EXPECT_THAT(util::SecretDataAsStringView(key2.key_data().value()),
-              Eq("value"));
+  EXPECT_THAT(key2.key_data().value().AsStringView(), Eq("value"));
   EXPECT_THAT(key2.key_data().key_material_type(),
               Eq(google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
                      kSymmetric));
@@ -243,8 +240,7 @@ TEST(KeysetTPTest, RoundTrip) {
 
   auto serialized = keyset.SerializeAsSecretData();
   google::crypto::tink::internal::KeysetTP keyset2;
-  ASSERT_THAT(keyset2.ParseFromString(util::SecretDataAsStringView(serialized)),
-              IsTrue());
+  ASSERT_THAT(keyset2.ParseFromString(serialized.AsStringView()), IsTrue());
 
   EXPECT_THAT(keyset2.primary_key_id(), Eq(12345));
   ASSERT_THAT(keyset2.key_size(), Eq(2));
@@ -254,6 +250,52 @@ TEST(KeysetTPTest, RoundTrip) {
   EXPECT_THAT(keyset2.key(1).key_id(), Eq(2));
   EXPECT_THAT(keyset2.key(1).status(),
               Eq(google::crypto::tink::internal::KeyStatusTypeTP::kDisabled));
+}
+
+TEST(EnumNameTest, OutputPrefixTypeEnumName) {
+  using ::google::crypto::tink::internal::OutputPrefixTypeTP;
+  EXPECT_THAT(OutputPrefixTypeEnumName(OutputPrefixTypeTP::kUnknownPrefix),
+              Eq("UNKNOWN_PREFIX"));
+  EXPECT_THAT(OutputPrefixTypeEnumName(OutputPrefixTypeTP::kTink), Eq("TINK"));
+  EXPECT_THAT(OutputPrefixTypeEnumName(OutputPrefixTypeTP::kLegacy),
+              Eq("LEGACY"));
+  EXPECT_THAT(OutputPrefixTypeEnumName(OutputPrefixTypeTP::kRaw), Eq("RAW"));
+  EXPECT_THAT(OutputPrefixTypeEnumName(OutputPrefixTypeTP::kCrunchy),
+              Eq("CRUNCHY"));
+  EXPECT_THAT(OutputPrefixTypeEnumName(OutputPrefixTypeTP::kWithIdRequirement),
+              Eq("WITH_ID_REQUIREMENT"));
+}
+
+TEST(EnumNameTest, OutputPrefixTypeEnumNameOutOfRange) {
+  using ::google::crypto::tink::internal::OutputPrefixTypeTP;
+  EXPECT_THAT(OutputPrefixTypeEnumName(static_cast<OutputPrefixTypeTP>(6)),
+              Eq("UNKNOWN_PREFIX"));
+  EXPECT_THAT(OutputPrefixTypeEnumName(static_cast<OutputPrefixTypeTP>(-1)),
+              Eq("UNKNOWN_PREFIX"));
+}
+
+TEST(EnumNameTest, KeyMaterialTypeEnumName) {
+  using KeyMaterialTypeTP =
+      ::google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP;
+  EXPECT_THAT(KeyMaterialTypeEnumName(KeyMaterialTypeTP::kUnknownKeymaterial),
+              Eq("UNKNOWN_KEYMATERIAL"));
+  EXPECT_THAT(KeyMaterialTypeEnumName(KeyMaterialTypeTP::kSymmetric),
+              Eq("SYMMETRIC"));
+  EXPECT_THAT(KeyMaterialTypeEnumName(KeyMaterialTypeTP::kAsymmetricPrivate),
+              Eq("ASYMMETRIC_PRIVATE"));
+  EXPECT_THAT(KeyMaterialTypeEnumName(KeyMaterialTypeTP::kAsymmetricPublic),
+              Eq("ASYMMETRIC_PUBLIC"));
+  EXPECT_THAT(KeyMaterialTypeEnumName(KeyMaterialTypeTP::kRemote),
+              Eq("REMOTE"));
+}
+
+TEST(EnumNameTest, KeyMaterialTypeEnumNameOutOfRange) {
+  using KeyMaterialTypeTP =
+      ::google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP;
+  EXPECT_THAT(KeyMaterialTypeEnumName(static_cast<KeyMaterialTypeTP>(5)),
+              Eq("UNKNOWN_KEYMATERIAL"));
+  EXPECT_THAT(KeyMaterialTypeEnumName(static_cast<KeyMaterialTypeTP>(-1)),
+              Eq("UNKNOWN_KEYMATERIAL"));
 }
 
 }  // namespace

@@ -1709,7 +1709,6 @@ tink_cc_library(
     tink_proto_structs.h
   DEPS
     absl::core_headers
-    absl::no_destructor
     tink::proto::tink_cc_tinkpb
 )
 
@@ -1721,9 +1720,10 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     gmock
     absl::strings
+    tink::core::secret_data
     tink::internal::testing::field_with_number
-    tink::util::secret_data
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(

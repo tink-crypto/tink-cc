@@ -15,11 +15,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/tink_proto_structs.h"
 
-#include <cstddef>
 #include <string_view>
-#include <vector>
 
-#include "absl/base/no_destructor.h"
 #include "proto/tink.tinkpb.h"
 
 namespace crypto {
@@ -27,26 +24,50 @@ namespace tink {
 namespace internal {
 
 std::string_view OutputPrefixTypeEnumName(
-    google::crypto::tink::internal::OutputPrefixTypeTP type) {
-  static const absl::NoDestructor<std::vector<std::string_view>>
-      kOutputPrefixTypeEnumNames{{
-          "UNKNOWN_PREFIX",
-          "TINK",
-          "LEGACY",
-          "RAW",
-          "CRUNCHY",
-          "WITH_ID_REQUIREMENT",
-      }};
-  return (*kOutputPrefixTypeEnumNames)[static_cast<size_t>(type)];
+    ::google::crypto::tink::internal::OutputPrefixTypeTP type) {
+  // Not named `OutputPrefixTypeTP`, to avoid the deprecated alias with that
+  // name in this namespace.
+  using PrefixType = ::google::crypto::tink::internal::OutputPrefixTypeTP;
+  switch (type) {
+    case PrefixType::kUnknownPrefix:
+      return "UNKNOWN_PREFIX";
+    case PrefixType::kTink:
+      return "TINK";
+    case PrefixType::kLegacy:
+      return "LEGACY";
+    case PrefixType::kRaw:
+      return "RAW";
+    case PrefixType::kCrunchy:
+      return "CRUNCHY";
+    case PrefixType::kWithIdRequirement:
+      return "WITH_ID_REQUIREMENT";
+  }
+  // Values outside of the enum range are treated as unknown, consistent with
+  // how the parser handles them.
+  return "UNKNOWN_PREFIX";
 }
 
 std::string_view KeyMaterialTypeEnumName(
-    google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP type) {
-  static const absl::NoDestructor<std::vector<std::string_view>>
-      kKeyMaterialTypeEnumNames{{"UNKNOWN_KEYMATERIAL", "SYMMETRIC",
-                                 "ASYMMETRIC_PRIVATE", "ASYMMETRIC_PUBLIC",
-                                 "REMOTE"}};
-  return (*kKeyMaterialTypeEnumNames)[static_cast<size_t>(type)];
+    ::google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP type) {
+  // Not named `KeyMaterialTypeTP`, to avoid the deprecated alias with that
+  // name in this namespace.
+  using MaterialType =
+      ::google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP;
+  switch (type) {
+    case MaterialType::kUnknownKeymaterial:
+      return "UNKNOWN_KEYMATERIAL";
+    case MaterialType::kSymmetric:
+      return "SYMMETRIC";
+    case MaterialType::kAsymmetricPrivate:
+      return "ASYMMETRIC_PRIVATE";
+    case MaterialType::kAsymmetricPublic:
+      return "ASYMMETRIC_PUBLIC";
+    case MaterialType::kRemote:
+      return "REMOTE";
+  }
+  // Values outside of the enum range are treated as unknown, consistent with
+  // how the parser handles them.
+  return "UNKNOWN_KEYMATERIAL";
 }
 
 }  // namespace internal

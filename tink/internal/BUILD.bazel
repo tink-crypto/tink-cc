@@ -1721,7 +1721,6 @@ cc_library(
     deps = [
         "//proto:tink_cc_tinkpb",
         "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/base:no_destructor",
     ],
 )
 
@@ -1731,8 +1730,9 @@ cc_test(
     deps = [
         ":tink_proto_structs",
         "//proto:tink_cc_proto",
+        "//proto:tink_cc_tinkpb",
+        "//tink:secret_data",
         "//tink/internal/testing:field_with_number",
-        "//tink/util:secret_data",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],

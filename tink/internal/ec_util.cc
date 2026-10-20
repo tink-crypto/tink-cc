@@ -56,8 +56,10 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::subtle::EcdsaSignatureEncoding;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
+using ::crypto::tink::subtle::HashType;
 
 // Encodes the given `point` to string, according to a `conversion_form`.
 absl::StatusOr<std::string> SslEcPointEncode(
@@ -693,6 +695,79 @@ absl::StatusOr<EllipticCurveType> ToSubtleEllipticCurveType(
       return absl::InvalidArgumentError(
           absl::StrCat("Unknown curve type: ", curve_type));
   }
+}
+
+absl::StatusOr<EcdsaParameters::CurveType> ToEcdsaCurveType(
+    EllipticCurveType curve_type) {
+  switch (curve_type) {
+    case EllipticCurveType::NIST_P256:
+      return EcdsaParameters::CurveType::kNistP256;
+    case EllipticCurveType::NIST_P384:
+      return EcdsaParameters::CurveType::kNistP384;
+    case EllipticCurveType::NIST_P521:
+      return EcdsaParameters::CurveType::kNistP521;
+    default:
+      return absl::InvalidArgumentError(
+          absl::StrCat("Unknown curve type: ", static_cast<int>(curve_type)));
+  }
+}
+
+absl::StatusOr<HashType> ToSubtleHashType(EcdsaParameters::HashType hash_type) {
+  switch (hash_type) {
+    case EcdsaParameters::HashType::kSha256:
+      return HashType::SHA256;
+    case EcdsaParameters::HashType::kSha384:
+      return HashType::SHA384;
+    case EcdsaParameters::HashType::kSha512:
+      return HashType::SHA512;
+    default:
+      return absl::InvalidArgumentError(
+          absl::StrCat("Unknown hash type: ", static_cast<int>(hash_type)));
+  }
+}
+
+absl::StatusOr<EcdsaParameters::HashType> ToEcdsaHashType(HashType hash_type) {
+  switch (hash_type) {
+    case HashType::SHA256:
+      return EcdsaParameters::HashType::kSha256;
+    case HashType::SHA384:
+      return EcdsaParameters::HashType::kSha384;
+    case HashType::SHA512:
+      return EcdsaParameters::HashType::kSha512;
+    default:
+      return absl::InvalidArgumentError(
+          absl::StrCat("Unknown hash type: ", static_cast<int>(hash_type)));
+  }
+}
+
+absl::StatusOr<EcdsaSignatureEncoding> ToSubtleSignatureEncoding(
+    EcdsaParameters::SignatureEncoding encoding) {
+  switch (encoding) {
+    case EcdsaParameters::SignatureEncoding::kDer:
+      return EcdsaSignatureEncoding::DER;
+    case EcdsaParameters::SignatureEncoding::kIeeeP1363:
+      return EcdsaSignatureEncoding::IEEE_P1363;
+    default:
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Unknown signature encoding: ", static_cast<int>(encoding)));
+  }
+}
+
+absl::StatusOr<EcdsaParameters::SignatureEncoding> ToSignatureEncoding(
+    EcdsaSignatureEncoding encoding) {
+  switch (encoding) {
+    case EcdsaSignatureEncoding::DER:
+      return EcdsaParameters::SignatureEncoding::kDer;
+    case EcdsaSignatureEncoding::IEEE_P1363:
+      return EcdsaParameters::SignatureEncoding::kIeeeP1363;
+    default:
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Unknown signature encoding: ", static_cast<int>(encoding)));
+  }
+}
+
+EcPoint GetEcPointFromEcKey(const EcKey& ec_key) {
+  return EcPoint(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
 }
 
 absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(EllipticCurveType curve,

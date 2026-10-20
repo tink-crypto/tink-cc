@@ -161,6 +161,34 @@ absl::StatusOr<crypto::tink::subtle::EllipticCurveType> CurveTypeFromEcGroup(
 absl::StatusOr<crypto::tink::subtle::EllipticCurveType>
 ToSubtleEllipticCurveType(EcdsaParameters::CurveType curve_type);
 
+// Returns the `EcdsaParameters::CurveType` corresponding to the given
+// `subtle::EllipticCurveType`.
+absl::StatusOr<EcdsaParameters::CurveType> ToEcdsaCurveType(
+    crypto::tink::subtle::EllipticCurveType curve_type);
+
+// Returns the `subtle::HashType` corresponding to the given
+// `EcdsaParameters::HashType`.
+absl::StatusOr<crypto::tink::subtle::HashType> ToSubtleHashType(
+    EcdsaParameters::HashType hash_type);
+
+// Returns the `EcdsaParameters::HashType` corresponding to the given
+// `subtle::HashType`.
+absl::StatusOr<EcdsaParameters::HashType> ToEcdsaHashType(
+    crypto::tink::subtle::HashType hash_type);
+
+// Returns the `subtle::EcdsaSignatureEncoding` corresponding to the given
+// `EcdsaParameters::SignatureEncoding`.
+absl::StatusOr<crypto::tink::subtle::EcdsaSignatureEncoding>
+ToSubtleSignatureEncoding(EcdsaParameters::SignatureEncoding encoding);
+
+// Returns the `EcdsaParameters::SignatureEncoding` corresponding to the given
+// `subtle::EcdsaSignatureEncoding`.
+absl::StatusOr<EcdsaParameters::SignatureEncoding> ToSignatureEncoding(
+    crypto::tink::subtle::EcdsaSignatureEncoding encoding);
+
+// Returns the public `EcPoint` constructed from `ec_key`.
+EcPoint GetEcPointFromEcKey(const EcKey& ec_key);
+
 // Returns OpenSSL/BoringSSL's EC_POINT constructed from the curve type,
 // big-endian representation of public key's x-coordinate and y-coordinate.
 absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(

@@ -492,6 +492,90 @@ TEST(EcUtilTest, ToSubtleEllipticCurveTypeUnknownFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST(EcUtilTest, ToEcdsaCurveTypeSuccess) {
+  EXPECT_THAT(ToEcdsaCurveType(EllipticCurveType::NIST_P256),
+              IsOkAndHolds(EcdsaParameters::CurveType::kNistP256));
+  EXPECT_THAT(ToEcdsaCurveType(EllipticCurveType::NIST_P384),
+              IsOkAndHolds(EcdsaParameters::CurveType::kNistP384));
+  EXPECT_THAT(ToEcdsaCurveType(EllipticCurveType::NIST_P521),
+              IsOkAndHolds(EcdsaParameters::CurveType::kNistP521));
+}
+
+TEST(EcUtilTest, ToEcdsaCurveTypeUnknownFails) {
+  EXPECT_THAT(ToEcdsaCurveType(EllipticCurveType::UNKNOWN_CURVE),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, ToSubtleHashTypeSuccess) {
+  EXPECT_THAT(ToSubtleHashType(EcdsaParameters::HashType::kSha256),
+              IsOkAndHolds(subtle::HashType::SHA256));
+  EXPECT_THAT(ToSubtleHashType(EcdsaParameters::HashType::kSha384),
+              IsOkAndHolds(subtle::HashType::SHA384));
+  EXPECT_THAT(ToSubtleHashType(EcdsaParameters::HashType::kSha512),
+              IsOkAndHolds(subtle::HashType::SHA512));
+}
+
+TEST(EcUtilTest, ToSubtleHashTypeUnknownFails) {
+  EXPECT_THAT(ToSubtleHashType(
+                  EcdsaParameters::HashType::
+                      kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, ToEcdsaHashTypeSuccess) {
+  EXPECT_THAT(ToEcdsaHashType(subtle::HashType::SHA256),
+              IsOkAndHolds(EcdsaParameters::HashType::kSha256));
+  EXPECT_THAT(ToEcdsaHashType(subtle::HashType::SHA384),
+              IsOkAndHolds(EcdsaParameters::HashType::kSha384));
+  EXPECT_THAT(ToEcdsaHashType(subtle::HashType::SHA512),
+              IsOkAndHolds(EcdsaParameters::HashType::kSha512));
+}
+
+TEST(EcUtilTest, ToEcdsaHashTypeUnknownFails) {
+  EXPECT_THAT(ToEcdsaHashType(subtle::HashType::UNKNOWN_HASH),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, ToSubtleSignatureEncodingSuccess) {
+  EXPECT_THAT(
+      ToSubtleSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer),
+      IsOkAndHolds(subtle::EcdsaSignatureEncoding::DER));
+  EXPECT_THAT(
+      ToSubtleSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363),
+      IsOkAndHolds(subtle::EcdsaSignatureEncoding::IEEE_P1363));
+}
+
+TEST(EcUtilTest, ToSubtleSignatureEncodingUnknownFails) {
+  EXPECT_THAT(
+      ToSubtleSignatureEncoding(
+          EcdsaParameters::SignatureEncoding::
+              kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, ToSignatureEncodingSuccess) {
+  EXPECT_THAT(ToSignatureEncoding(subtle::EcdsaSignatureEncoding::DER),
+              IsOkAndHolds(EcdsaParameters::SignatureEncoding::kDer));
+  EXPECT_THAT(ToSignatureEncoding(subtle::EcdsaSignatureEncoding::IEEE_P1363),
+              IsOkAndHolds(EcdsaParameters::SignatureEncoding::kIeeeP1363));
+}
+
+TEST(EcUtilTest, ToSignatureEncodingUnknownFails) {
+  EXPECT_THAT(
+      ToSignatureEncoding(subtle::EcdsaSignatureEncoding::UNKNOWN_ENCODING),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(EcUtilTest, GetEcPointFromEcKey) {
+  EcKey ec_key;
+  ec_key.curve = EllipticCurveType::NIST_P256;
+  ec_key.pub_x = "x_coordinate_bytes";
+  ec_key.pub_y = "y_coordinate_bytes";
+  EcPoint point = GetEcPointFromEcKey(ec_key);
+  EXPECT_THAT(point.GetX(), Eq(BigInteger("x_coordinate_bytes")));
+  EXPECT_THAT(point.GetY(), Eq(BigInteger("y_coordinate_bytes")));
+}
+
 TEST(EcUtilTest, EcGroupFromCurveTypeSuccess) {
   absl::StatusOr<SslUniquePtr<EC_GROUP>> p256_curve =
       EcGroupFromCurveType(EllipticCurveType::NIST_P256);

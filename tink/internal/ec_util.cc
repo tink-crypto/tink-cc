@@ -263,7 +263,7 @@ absl::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
                                     absl::Span<uint8_t> pub_key) {
   size_t len = priv_key.size();
   bool created = internal::CallWithCoreDumpProtection([&] {
-    return EVP_PKEY_get_raw_private_key(&evp_key, priv_key.data(), &len) != -1;
+    return EVP_PKEY_get_raw_private_key(&evp_key, priv_key.data(), &len) == 1;
   });
   if (!created) {
     return absl::Status(absl::StatusCode::kInternal,

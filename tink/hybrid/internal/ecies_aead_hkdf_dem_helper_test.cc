@@ -171,6 +171,21 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesCtrHmacKeySizeTooSmall) {
                        HasSubstr("HMAC key size is too small")));
 }
 
+TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesCtrHmacKeySizeTooLarge) {
+  google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
+  key_format.mutable_aes_ctr_key_format()->set_key_size(16);
+  key_format.mutable_hmac_key_format()->set_key_size(33);  // Too large (max 32)
+
+  google::crypto::tink::KeyTemplate dem_key_template;
+  dem_key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey");
+  dem_key_template.set_value(key_format.SerializeAsString());
+
+  EXPECT_THAT(EciesAeadHkdfDemHelper::New(dem_key_template).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("HMAC key size is too large")));
+}
+
 TEST(EciesAeadHkdfDemHelperTest, DemHelperWithAesSivInvalidKeySize) {
   google::crypto::tink::AesSivKeyFormat key_format;
   key_format.set_key_size(

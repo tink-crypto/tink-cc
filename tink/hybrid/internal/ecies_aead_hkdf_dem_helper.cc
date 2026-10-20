@@ -106,6 +106,10 @@ EciesAeadHkdfDemHelper::GetKeyParams(const KeyTemplate& key_template) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "HMAC key size is too small.");
     }
+    if (key_format.hmac_key_format().key_size() > 32) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "HMAC key size is too large.");
+    }
     uint32_t dem_key_size = key_format.aes_ctr_key_format().key_size() +
                             key_format.hmac_key_format().key_size();
     return {{AES_CTR_HMAC_AEAD_KEY, dem_key_size,

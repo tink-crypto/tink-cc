@@ -39,6 +39,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 
 // Creates a new test ostream which will write to the file 'filename'.
 std::unique_ptr<std::ostream> GetTestOstream(absl::string_view filename) {
@@ -199,6 +200,16 @@ TEST_F(OstreamOutputStreamTest, BackupAndPosition) {
   std::string ostream_contents = internal::ReadTestFile(filename);
   EXPECT_EQ(stream_size, ostream_contents.size());
   EXPECT_EQ(stream_contents, ostream_contents);
+}
+
+TEST_F(OstreamOutputStreamTest, NextReturnsErrorWhenStreambufWriteFails) {
+  auto unopened_output = std::make_unique<std::ofstream>();
+  util::OstreamOutputStream output_stream(std::move(unopened_output),
+                                          /*buffer_size=*/16);
+  void* buffer = nullptr;
+  ASSERT_THAT(output_stream.Next(&buffer), IsOk());
+  EXPECT_THAT(output_stream.Next(&buffer),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

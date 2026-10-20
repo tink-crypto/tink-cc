@@ -76,8 +76,7 @@ absl::StatusOr<int> OstreamOutputStream::Next(void** data) {
   // to be written is shifted in buffer_ and the remaining space is returned.
   int write_result = output_->rdbuf()->sputn(
       reinterpret_cast<char*>(buffer_.get()), buffer_size_);
-  if (write_result == 0) {  // No data written or an I/O error occurred.
-    if (output_->good()) return 0;
+  if (write_result <= 0) {  // No data written or an I/O error occurred.
     status_ = ToStatusF(absl::StatusCode::kInternal, "I/O error upon write: %s",
                         std::strerror(errno));
     return status_;

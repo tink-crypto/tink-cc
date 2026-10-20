@@ -24,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "tink/ec_point.h"
+#include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
@@ -35,7 +36,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 
 namespace crypto {
 namespace tink {
@@ -53,7 +53,7 @@ void EcdsaVerifyBenchmark(benchmark::State& state,
           EcdsaParameters::CurveType::kNistP256,
           EcdsaParameters::HashType::kSha256,
           EcdsaParameters::SignatureEncoding::kIeeeP1363, variant);
-  const auto* private_key = dynamic_cast<const EcdsaPrivateKey*>(
+  const EcdsaPrivateKey* private_key = dynamic_cast<const EcdsaPrivateKey*>(
       test_vector.signature_private_key.get());
   ABSL_CHECK(private_key != nullptr);
   absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> signer =
@@ -121,7 +121,7 @@ const EcdsaPrivateKey& GetPrivateKey(EcdsaParameters::CurveType curve) {
           curve, GetCurveConfig(curve).hash_type,
           EcdsaParameters::SignatureEncoding::kIeeeP1363,
           EcdsaParameters::Variant::kNoPrefix);
-  const auto* private_key = dynamic_cast<const EcdsaPrivateKey*>(
+  const EcdsaPrivateKey* private_key = dynamic_cast<const EcdsaPrivateKey*>(
       test_vector.signature_private_key.get());
   ABSL_CHECK(private_key != nullptr);
   return *private_key;
@@ -143,31 +143,6 @@ void EcdsaVerifierNewFromKeyBenchmark(benchmark::State& state,
   }
 }
 
-// Measures the cost of creating a verifier from a
-// `SubtleUtilBoringSSL::EcKey`, as done by the legacy key managers.
-void EcdsaVerifierNewFromEcKeyBenchmark(benchmark::State& state,
-                                        EcdsaParameters::CurveType curve) {
-  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-    state.SetLabel("Not supported in FIPS-only mode without BoringCrypto");
-    return;
-  }
-  const CurveConfig config = GetCurveConfig(curve);
-  const EcPoint& public_point =
-      GetPrivateKey(curve).GetPublicKey().GetPublicPoint(GetPartialKeyAccess());
-  SubtleUtilBoringSSL::EcKey ec_key;
-  ec_key.curve = config.subtle_curve;
-  ec_key.pub_x = std::string(public_point.GetX().GetValue());
-  ec_key.pub_y = std::string(public_point.GetY().GetValue());
-  ABSL_CHECK_OK(EcdsaVerifyBoringSsl::New(ec_key, config.subtle_hash_type,
-                                          EcdsaSignatureEncoding::IEEE_P1363));
-  for (auto s : state) {
-    absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> verifier =
-        EcdsaVerifyBoringSsl::New(ec_key, config.subtle_hash_type,
-                                  EcdsaSignatureEncoding::IEEE_P1363);
-    benchmark::DoNotOptimize(verifier);
-  }
-}
-
 void BM_EcdsaP256VerifierNewFromKey(benchmark::State& state) {
   EcdsaVerifierNewFromKeyBenchmark(state,
                                    EcdsaParameters::CurveType::kNistP256);
@@ -185,24 +160,6 @@ void BM_EcdsaP521VerifierNewFromKey(benchmark::State& state) {
                                    EcdsaParameters::CurveType::kNistP521);
 }
 BENCHMARK(BM_EcdsaP521VerifierNewFromKey);
-
-void BM_EcdsaP256VerifierNewFromEcKey(benchmark::State& state) {
-  EcdsaVerifierNewFromEcKeyBenchmark(state,
-                                     EcdsaParameters::CurveType::kNistP256);
-}
-BENCHMARK(BM_EcdsaP256VerifierNewFromEcKey);
-
-void BM_EcdsaP384VerifierNewFromEcKey(benchmark::State& state) {
-  EcdsaVerifierNewFromEcKeyBenchmark(state,
-                                     EcdsaParameters::CurveType::kNistP384);
-}
-BENCHMARK(BM_EcdsaP384VerifierNewFromEcKey);
-
-void BM_EcdsaP521VerifierNewFromEcKey(benchmark::State& state) {
-  EcdsaVerifierNewFromEcKeyBenchmark(state,
-                                     EcdsaParameters::CurveType::kNistP521);
-}
-BENCHMARK(BM_EcdsaP521VerifierNewFromEcKey);
 
 // Measures creating a verifier and verifying a single short message, i.e. the
 // cost paid by callers that create a new verifier for each signature.

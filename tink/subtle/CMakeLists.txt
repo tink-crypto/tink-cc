@@ -1258,7 +1258,6 @@ tink_cc_test(
     tink::core::public_key_verify
     tink::internal::ec_util
     tink::internal::fips_utils
-    tink::internal::testing::ec_test_vectors
     tink::internal::testing::wycheproof_util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
@@ -1701,7 +1700,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    tink::subtle::subtle_util_boringssl
     gmock
     absl::absl_check
     absl::absl_log
@@ -1709,8 +1707,11 @@ tink_cc_test(
     absl::statusor
     benchmark::benchmark_main
     tink::core::ec_point
+    tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_verify
+    tink::core::restricted_data
+    tink::internal::ec_util
     tink::internal::fips_utils
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key

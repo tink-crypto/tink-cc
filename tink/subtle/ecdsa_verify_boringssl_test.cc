@@ -33,7 +33,6 @@
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/internal/testing/wycheproof_util.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
@@ -63,95 +62,126 @@ using ::testing::NotNull;
 
 class EcdsaVerifyBoringSslTest : public ::testing::Test {};
 
-TEST_F(EcdsaVerifyBoringSslTest, BasicSigning) {
+using EcdsaVerifyBoringSslBasicSigningTest =
+    testing::TestWithParam<EcdsaParameters::SignatureEncoding>;
+
+TEST_P(EcdsaVerifyBoringSslBasicSigningTest, BasicSigning) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
-  subtle::EcdsaSignatureEncoding encodings[2] = {
-      EcdsaSignatureEncoding::DER, EcdsaSignatureEncoding::IEEE_P1363};
-  for (EcdsaSignatureEncoding encoding : encodings) {
-    const internal::EcKey& ec_key =
-        internal::GetEcKey(EllipticCurveType::NIST_P256);
+  const internal::SignatureTestVector& test_vector =
+      internal::GetEcdsaTestVector(
+          EcdsaParameters::CurveType::kNistP256,
+          EcdsaParameters::HashType::kSha256, GetParam(),
+          EcdsaParameters::Variant::kNoPrefix);
+  const EcdsaPrivateKey* private_key = dynamic_cast<const EcdsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
-    auto signer_result =
-        EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_THAT(signer_result, IsOk());
-    auto signer = std::move(signer_result.value());
+  absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> signer_result =
+      EcdsaSignBoringSsl::New(*private_key);
+  ASSERT_THAT(signer_result, IsOk());
+  std::unique_ptr<EcdsaSignBoringSsl> signer = std::move(signer_result.value());
 
-    auto verifier_result =
-        EcdsaVerifyBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_THAT(verifier_result, IsOk());
-    auto verifier = std::move(verifier_result.value());
+  absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> verifier_result =
+      EcdsaVerifyBoringSsl::New(private_key->GetPublicKey());
+  ASSERT_THAT(verifier_result, IsOk());
+  std::unique_ptr<EcdsaVerifyBoringSsl> verifier =
+      std::move(verifier_result.value());
 
-    std::string message = "some data to be signed";
-    auto sign_result = signer->Sign(message);
-    ASSERT_THAT(sign_result, IsOk());
-    std::string signature = sign_result.value();
-    EXPECT_NE(signature, message);
-    auto status = verifier->Verify(signature, message);
-    EXPECT_THAT(status, IsOk());
+  std::string message = "some data to be signed";
+  absl::StatusOr<std::string> sign_result = signer->Sign(message);
+  ASSERT_THAT(sign_result, IsOk());
+  std::string signature = sign_result.value();
+  EXPECT_NE(signature, message);
+  absl::Status status = verifier->Verify(signature, message);
+  EXPECT_THAT(status, IsOk());
 
-    status = verifier->Verify(signature + "some trailing data", message);
-    EXPECT_THAT(status, Not(IsOk()));
+  status = verifier->Verify(signature + "some trailing data", message);
+  EXPECT_THAT(status, Not(IsOk()));
 
-    status = verifier->Verify("some bad signature", message);
-    EXPECT_THAT(status, Not(IsOk()));
+  status = verifier->Verify("some bad signature", message);
+  EXPECT_THAT(status, Not(IsOk()));
 
-    status = verifier->Verify(signature, "some bad message");
-    EXPECT_THAT(status, Not(IsOk()));
-  }
+  status = verifier->Verify(signature, "some bad message");
+  EXPECT_THAT(status, Not(IsOk()));
 }
 
-TEST_F(EcdsaVerifyBoringSslTest, EncodingsMismatch) {
+INSTANTIATE_TEST_SUITE_P(
+    EcdsaVerifyBoringSslBasicSigningTest, EcdsaVerifyBoringSslBasicSigningTest,
+    testing::Values(EcdsaParameters::SignatureEncoding::kDer,
+                    EcdsaParameters::SignatureEncoding::kIeeeP1363));
+
+struct EncodingMismatchTestCase {
+  EcdsaParameters::SignatureEncoding signer_sig_encoding;
+  EcdsaParameters::SignatureEncoding verifier_sig_encoding;
+};
+
+using EcdsaVerifyBoringSslEncodingsMismatchTest =
+    testing::TestWithParam<EncodingMismatchTestCase>;
+
+TEST_P(EcdsaVerifyBoringSslEncodingsMismatchTest, EncodingsMismatch) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
-  subtle::EcdsaSignatureEncoding encodings[2] = {
-      EcdsaSignatureEncoding::DER, EcdsaSignatureEncoding::IEEE_P1363};
-  for (EcdsaSignatureEncoding encoding : encodings) {
-    const internal::EcKey& ec_key =
-        internal::GetEcKey(EllipticCurveType::NIST_P256);
+  const EncodingMismatchTestCase& param = GetParam();
 
-    auto signer_result =
-        EcdsaSignBoringSsl::New(ec_key, HashType::SHA256, encoding);
-    ASSERT_THAT(signer_result, IsOk());
-    auto signer = std::move(signer_result.value());
+  const internal::SignatureTestVector& signer_test_vector =
+      internal::GetEcdsaTestVector(
+          EcdsaParameters::CurveType::kNistP256,
+          EcdsaParameters::HashType::kSha256, param.signer_sig_encoding,
+          EcdsaParameters::Variant::kNoPrefix);
+  const EcdsaPrivateKey* signer_private_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          signer_test_vector.signature_private_key.get());
+  ASSERT_THAT(signer_private_key, NotNull());
 
-    auto verifier_result =
-        EcdsaVerifyBoringSsl::New(ec_key, HashType::SHA256,
-                                  encoding == EcdsaSignatureEncoding::DER
-                                      ? EcdsaSignatureEncoding::IEEE_P1363
-                                      : EcdsaSignatureEncoding::DER);
-    ASSERT_THAT(verifier_result, IsOk());
-    auto verifier = std::move(verifier_result.value());
+  const internal::SignatureTestVector& verifier_test_vector =
+      internal::GetEcdsaTestVector(
+          EcdsaParameters::CurveType::kNistP256,
+          EcdsaParameters::HashType::kSha256, param.verifier_sig_encoding,
+          EcdsaParameters::Variant::kNoPrefix);
+  const EcdsaPrivateKey* verifier_private_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          verifier_test_vector.signature_private_key.get());
+  ASSERT_THAT(verifier_private_key, NotNull());
 
-    std::string message = "some data to be signed";
-    auto sign_result = signer->Sign(message);
-    ASSERT_THAT(sign_result, IsOk());
-    std::string signature = sign_result.value();
-    EXPECT_NE(signature, message);
-    auto status = verifier->Verify(signature, message);
-    EXPECT_THAT(status, Not(IsOk()));
-  }
+  absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> signer_result =
+      EcdsaSignBoringSsl::New(*signer_private_key);
+  ASSERT_THAT(signer_result, IsOk());
+  std::unique_ptr<EcdsaSignBoringSsl> signer = std::move(signer_result.value());
+
+  absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> verifier_result =
+      EcdsaVerifyBoringSsl::New(verifier_private_key->GetPublicKey());
+  ASSERT_THAT(verifier_result, IsOk());
+  std::unique_ptr<EcdsaVerifyBoringSsl> verifier =
+      std::move(verifier_result.value());
+
+  std::string message = "some data to be signed";
+  absl::StatusOr<std::string> sign_result = signer->Sign(message);
+  ASSERT_THAT(sign_result, IsOk());
+  std::string signature = sign_result.value();
+  EXPECT_NE(signature, message);
+  absl::Status status = verifier->Verify(signature, message);
+  EXPECT_THAT(status, Not(IsOk()));
 }
 
-TEST_F(EcdsaVerifyBoringSslTest, NewErrors) {
-  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP()
-        << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
-  }
-  const internal::EcKey& ec_key =
-      internal::GetEcKey(EllipticCurveType::NIST_P256);
-  auto verifier_result = EcdsaVerifyBoringSsl::New(
-      ec_key, HashType::SHA1, EcdsaSignatureEncoding::IEEE_P1363);
-  EXPECT_THAT(verifier_result, Not(IsOk()));
-}
+INSTANTIATE_TEST_SUITE_P(
+    EcdsaVerifyBoringSslEncodingsMismatchTest,
+    EcdsaVerifyBoringSslEncodingsMismatchTest,
+    testing::Values(
+        EncodingMismatchTestCase{
+            EcdsaParameters::SignatureEncoding::kDer,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363},
+        EncodingMismatchTestCase{
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::SignatureEncoding::kDer}));
 
 static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
     const google::protobuf::Value& test_group,
-    subtle::EcdsaSignatureEncoding encoding) {
+    EcdsaParameters::SignatureEncoding encoding) {
   const auto& test_group_fields = test_group.struct_value().fields();
   const auto& key_fields =
       test_group_fields.at("publicKey").struct_value().fields();
@@ -161,63 +191,24 @@ static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
       GetEllipticCurveTypeFromValue(key_fields.at("curve"));
   HashType md = GetHashTypeFromValue(test_group_fields.at("sha"));
 
-  EcdsaParameters::CurveType curve_type;
-  switch (curve) {
-    case EllipticCurveType::NIST_P256:
-      curve_type = EcdsaParameters::CurveType::kNistP256;
-      break;
-    case EllipticCurveType::NIST_P384:
-      curve_type = EcdsaParameters::CurveType::kNistP384;
-      break;
-    case EllipticCurveType::NIST_P521:
-      curve_type = EcdsaParameters::CurveType::kNistP521;
-      break;
-    default:
-      return absl::InvalidArgumentError("Unsupported curve type");
-  }
+  ABSL_ASSIGN_OR_RETURN(EcdsaParameters::CurveType curve_type,
+                        internal::ToEcdsaCurveType(curve));
+  ABSL_ASSIGN_OR_RETURN(EcdsaParameters::HashType hash_type,
+                        internal::ToEcdsaHashType(md));
 
-  EcdsaParameters::HashType hash_type;
-  switch (md) {
-    case HashType::SHA256:
-      hash_type = EcdsaParameters::HashType::kSha256;
-      break;
-    case HashType::SHA384:
-      hash_type = EcdsaParameters::HashType::kSha384;
-      break;
-    case HashType::SHA512:
-      hash_type = EcdsaParameters::HashType::kSha512;
-      break;
-    default:
-      return absl::InvalidArgumentError("Unsupported hash type");
-  }
-
-  EcdsaParameters::SignatureEncoding sig_encoding;
-  switch (encoding) {
-    case subtle::EcdsaSignatureEncoding::DER:
-      sig_encoding = EcdsaParameters::SignatureEncoding::kDer;
-      break;
-    case subtle::EcdsaSignatureEncoding::IEEE_P1363:
-      sig_encoding = EcdsaParameters::SignatureEncoding::kIeeeP1363;
-      break;
-    default:
-      return absl::InvalidArgumentError("Unsupported signature encoding");
-  }
-
-  absl::StatusOr<EcdsaParameters> params =
+  ABSL_ASSIGN_OR_RETURN(
+      EcdsaParameters params,
       EcdsaParameters::Builder()
           .SetCurveType(curve_type)
           .SetHashType(hash_type)
-          .SetSignatureEncoding(sig_encoding)
+          .SetSignatureEncoding(encoding)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
-          .Build();
-  if (!params.ok()) {
-    return params.status();
-  }
+          .Build());
 
   ABSL_ASSIGN_OR_RETURN(
       EcdsaPublicKey public_key,
       EcdsaPublicKey::Create(
-          *params, EcPoint(BigInteger(pub_x), BigInteger(pub_y)),
+          params, EcPoint(BigInteger(pub_x), BigInteger(pub_y)),
           /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
 
   absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> result =
@@ -235,7 +226,7 @@ static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
 // by tink.
 bool TestSignatures(const std::string& filename,
                     int expected_skipped_test_groups,
-                    subtle::EcdsaSignatureEncoding encoding) {
+                    EcdsaParameters::SignatureEncoding encoding) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectorsV1(filename);
   ABSL_CHECK_OK(parsed_input.status());
@@ -246,21 +237,23 @@ bool TestSignatures(const std::string& filename,
   int skipped_test_groups = 0;
   for (const google::protobuf::Value& test_group :
        test_groups.list_value().values()) {
-    auto verifier_result = GetVerifier(test_group, encoding);
+    absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> verifier_result =
+        GetVerifier(test_group, encoding);
     if (!verifier_result.ok()) {
       ++skipped_test_groups;
       continue;
     }
-    auto verifier = std::move(verifier_result.value());
+    std::unique_ptr<EcdsaVerifyBoringSsl> verifier =
+        std::move(verifier_result.value());
     for (const google::protobuf::Value& test :
          test_group.struct_value().fields().at("tests").list_value().values()) {
-      auto test_fields = test.struct_value().fields();
+      const auto& test_fields = test.struct_value().fields();
       std::string expected = test_fields.at("result").string_value();
       std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
       std::string sig = GetBytesFromHexValue(test_fields.at("sig"));
       std::string id = absl::StrCat(test_fields.at("tcId").number_value(), " ",
                                     test_fields.at("comment").string_value());
-      auto status = verifier->Verify(sig, msg);
+      absl::Status status = verifier->Verify(sig, msg);
       if (expected == "valid") {
         if (status.ok()) {
           ++passed_tests;
@@ -303,7 +296,7 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP256) {
   }
   ASSERT_TRUE(TestSignatures("ecdsa_secp256r1_sha256_test.json",
                              /*expected_skipped_test_groups=*/0,
-                             subtle::EcdsaSignatureEncoding::DER));
+                             EcdsaParameters::SignatureEncoding::kDer));
 }
 
 TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP384) {
@@ -313,7 +306,7 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP384) {
   }
   ASSERT_TRUE(TestSignatures("ecdsa_secp384r1_sha512_test.json",
                              /*expected_skipped_test_groups=*/0,
-                             subtle::EcdsaSignatureEncoding::DER));
+                             EcdsaParameters::SignatureEncoding::kDer));
 }
 
 TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP521) {
@@ -323,7 +316,7 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP521) {
   }
   ASSERT_TRUE(TestSignatures("ecdsa_secp521r1_sha512_test.json",
                              /*expected_skipped_test_groups=*/0,
-                             subtle::EcdsaSignatureEncoding::DER));
+                             EcdsaParameters::SignatureEncoding::kDer));
 }
 
 TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP256WithIeeeP1363Encoding) {
@@ -333,7 +326,7 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP256WithIeeeP1363Encoding) {
   }
   ASSERT_TRUE(TestSignatures("ecdsa_secp256r1_sha256_p1363_test.json",
                              /*expected_skipped_test_groups=*/0,
-                             subtle::EcdsaSignatureEncoding::IEEE_P1363));
+                             EcdsaParameters::SignatureEncoding::kIeeeP1363));
 }
 
 TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP384WithIeeeP1363Encoding) {
@@ -343,7 +336,7 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP384WithIeeeP1363Encoding) {
   }
   ASSERT_TRUE(TestSignatures("ecdsa_secp384r1_sha512_p1363_test.json",
                              /*expected_skipped_test_groups=*/0,
-                             subtle::EcdsaSignatureEncoding::IEEE_P1363));
+                             EcdsaParameters::SignatureEncoding::kIeeeP1363));
 }
 
 TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP521WithIeeeP1363Encoding) {
@@ -353,7 +346,7 @@ TEST_F(EcdsaVerifyBoringSslTest, WycheproofCurveP521WithIeeeP1363Encoding) {
   }
   ASSERT_TRUE(TestSignatures("ecdsa_secp521r1_sha512_p1363_test.json",
                              /*expected_skipped_test_groups=*/0,
-                             subtle::EcdsaSignatureEncoding::IEEE_P1363));
+                             EcdsaParameters::SignatureEncoding::kIeeeP1363));
 }
 
 // FIPS-only mode test
@@ -363,26 +356,14 @@ TEST_F(EcdsaVerifyBoringSslTest, TestFipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  const internal::EcKey& ec_key_256 =
-      internal::GetEcKey(EllipticCurveType::NIST_P256);
-  EXPECT_THAT(EcdsaVerifyBoringSsl::New(ec_key_256, HashType::SHA256,
-                                        EcdsaSignatureEncoding::DER)
-                  .status(),
-              StatusIs(absl::StatusCode::kInternal));
-
-  const internal::EcKey& ec_key_384 =
-      internal::GetEcKey(EllipticCurveType::NIST_P384);
-  EXPECT_THAT(EcdsaVerifyBoringSsl::New(ec_key_384, HashType::SHA256,
-                                        EcdsaSignatureEncoding::DER)
-                  .status(),
-              StatusIs(absl::StatusCode::kInternal));
-
-  const internal::EcKey& ec_key_521 =
-      internal::GetEcKey(EllipticCurveType::NIST_P521);
-  EXPECT_THAT(EcdsaVerifyBoringSsl::New(ec_key_521, HashType::SHA256,
-                                        EcdsaSignatureEncoding::DER)
-                  .status(),
-              StatusIs(absl::StatusCode::kInternal));
+  for (const internal::SignatureTestVector& test_vector :
+       internal::CreateEcdsaTestVectors()) {
+    const EcdsaPrivateKey* private_key = dynamic_cast<const EcdsaPrivateKey*>(
+        test_vector.signature_private_key.get());
+    ASSERT_THAT(private_key, NotNull());
+    EXPECT_THAT(EcdsaVerifyBoringSsl::New(private_key->GetPublicKey()).status(),
+                StatusIs(absl::StatusCode::kInternal));
+  }
 }
 
 using EcdsaVerifyBoringSslTestVectorTest =

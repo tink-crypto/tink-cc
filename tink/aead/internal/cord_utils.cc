@@ -61,7 +61,7 @@ void CordWriter::Advance(int size) {
 }
 
 void CordWriter::Write(absl::string_view data) {
-  ABSL_CHECK_LE(data.size(), max_size_ + current_buffer_span_.size());
+  ABSL_CHECK_LE(data.size(), max_size_ - written_so_far_);
   while (!data.empty()) {
     absl::Span<char> buffer = NextWriteBuffer().subspan(0, data.size());
     std::memcpy(buffer.data(), data.data(), buffer.size());

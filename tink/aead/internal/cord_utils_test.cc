@@ -81,6 +81,33 @@ TEST(CordUtilsDeathTest, CordWriterWriteDiesIfWritingMoreThanMaxSize) {
   EXPECT_DEATH(writer.Write(std::string(kMaxSize + 1, 'a')), "");
 }
 
+TEST(CordUtilsDeathTest, CordWriterWriteDiesIfWritingMoreThanRemainingSize) {
+  constexpr int kMaxSize = 100;
+  CordWriter writer(kMaxSize);
+  writer.Write(std::string(kMaxSize - 10, 'a'));
+  // Writing 11 bytes exceeds the 10 remaining bytes.
+  EXPECT_DEATH(writer.Write(std::string(11, 'a')), "");
+}
+
+TEST(CordUtilsDeathTest,
+     CordWriterWriteDiesIfWritingAfterPartialAdvanceExceedsRemainingSize) {
+  constexpr int kMaxSize = 100;
+  CordWriter writer(kMaxSize);
+  // Leave a partially-consumed buffer, so current_buffer_span_ is non-empty.
+  ASSERT_THAT(writer.NextWriteBuffer(), SizeIs(kMaxSize));
+  writer.Advance(50);
+  EXPECT_DEATH(writer.Write(std::string(51, 'a')), "");
+}
+
+TEST(CordUtilsTest, CordWriterWriteExactlyRemainingSize) {
+  constexpr int kMaxSize = 100;
+  CordWriter writer(kMaxSize);
+  ASSERT_THAT(writer.NextWriteBuffer(), SizeIs(kMaxSize));
+  writer.Advance(50);
+  writer.Write(std::string(50, 'a'));
+  EXPECT_THAT(std::move(writer).data(), SizeIs(kMaxSize));
+}
+
 TEST(CordUtilsDeathTest, CordWriterWriteDiesIfAdvancingMoreThanCurrentBuffer) {
   constexpr int kMaxSize = 100;
   CordWriter writer(kMaxSize);

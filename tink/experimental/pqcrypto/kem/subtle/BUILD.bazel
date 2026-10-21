@@ -1,5 +1,0 @@
-# package containing subtle implementations of PQC primitives
-
-package(default_visibility = ["//:__subpackages__"])
-
-licenses(["notice"])

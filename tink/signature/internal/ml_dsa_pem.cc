@@ -16,6 +16,7 @@
 
 #include "tink/signature/internal/ml_dsa_pem.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -73,7 +74,10 @@ absl::StatusOr<std::string> ParseMldsaPublicKey(
         absl::StrCat("PEM key is not a ", expected_key_name, " public key"));
   }
 
-  const size_t kMaxKeySize = 2592;
+  // Fixed-size buffer as std::array: a stack array bound by a non-constexpr
+  // local is a variable-length array, which is not standard C++ (rejected by
+  // MSVC and -Wvla builds), so we use std::array like the Ed25519 PEM parser.
+  constexpr size_t kMaxKeySize = 2592;
   if (expected_key_size > kMaxKeySize) {
     return absl::Status(
         absl::StatusCode::kInternal,
@@ -81,9 +85,9 @@ absl::StatusOr<std::string> ParseMldsaPublicKey(
                      " exceeds maximum supported ", kMaxKeySize));
   }
 
-  uint8_t public_key[kMaxKeySize] = {0};
+  std::array<uint8_t, kMaxKeySize> public_key = {};
   size_t out_len_pub = expected_key_size;
-  if (EVP_PKEY_get_raw_public_key(evp_pub_key.get(), public_key,
+  if (EVP_PKEY_get_raw_public_key(evp_pub_key.get(), public_key.data(),
                                   &out_len_pub) != 1) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -95,7 +99,8 @@ absl::StatusOr<std::string> ParseMldsaPublicKey(
                                      expected_key_size, " got ", out_len_pub));
   }
 
-  return std::string(reinterpret_cast<char*>(public_key), expected_key_size);
+  return std::string(reinterpret_cast<char*>(public_key.data()),
+                     expected_key_size);
 }
 
 }  // namespace

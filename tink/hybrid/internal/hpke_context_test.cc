@@ -44,6 +44,8 @@ using ::crypto::tink::internal::DefaultHpkeTestParams;
 using ::crypto::tink::internal::HpkeTestParams;
 using ::crypto::tink::test::EqualsSecretData;
 using ::testing::Eq;
+using ::testing::HasSubstr;
+using ::testing::IsEmpty;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -311,6 +313,59 @@ TEST(SplitPayloadTest, InvalidKemFails) {
       SplitPayload(HpkeKem::kUnknownKem,
                    absl::StrCat(params.encapsulated_key, params.ciphertext));
   EXPECT_THAT(payload.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(SplitPayloadTest, PayloadShorterThanEncapsulatedKeyFails) {
+  for (HpkeKem kem :
+       {HpkeKem::kP256HkdfSha256, HpkeKem::kX25519HkdfSha256, HpkeKem::kXWing,
+        HpkeKem::kMlKem768, HpkeKem::kMlKem1024}) {
+    SCOPED_TRACE(absl::StrCat("kem = ", kem));
+    EXPECT_THAT(SplitPayload(kem, "short").status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("HPKE payload is too short")));
+    EXPECT_THAT(SplitPayload(kem, "").status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("HPKE payload is too short")));
+  }
+}
+
+TEST(SplitPayloadTest, PayloadWithOnlyEncapsulatedKeySucceeds) {
+  HpkeTestParams params = DefaultHpkeTestParams();
+  absl::StatusOr<HpkePayloadView> hpke_payload =
+      SplitPayload(HpkeKem::kX25519HkdfSha256, params.encapsulated_key);
+  ASSERT_THAT(hpke_payload, IsOk());
+  EXPECT_THAT(hpke_payload->encapsulated_key, Eq(params.encapsulated_key));
+  EXPECT_THAT(hpke_payload->ciphertext, IsEmpty());
+}
+
+TEST(SplitPayloadTest, SplitsAtEncapsulatedKeyLengthForEachKem) {
+  struct KemEncodingLength {
+    HpkeKem kem;
+    int nenc;  // Nenc from RFC 9180, the X-Wing draft and the HPKE PQ draft.
+  };
+  for (const KemEncodingLength& test_case : std::vector<KemEncodingLength>{
+           {HpkeKem::kP256HkdfSha256, 65},
+           {HpkeKem::kX25519HkdfSha256, 32},
+           {HpkeKem::kXWing, 1120},
+           {HpkeKem::kMlKem768, 1088},
+           {HpkeKem::kMlKem1024, 1568},
+       }) {
+    SCOPED_TRACE(absl::StrCat("kem = ", test_case.kem));
+    const std::string encapsulated_key(test_case.nenc, 'k');
+    const std::string payload = absl::StrCat(encapsulated_key, "ciphertext");
+
+    absl::StatusOr<HpkePayloadView> hpke_payload =
+        SplitPayload(test_case.kem, payload);
+    ASSERT_THAT(hpke_payload, IsOk());
+    EXPECT_THAT(hpke_payload->encapsulated_key, Eq(encapsulated_key));
+    EXPECT_THAT(hpke_payload->ciphertext, Eq("ciphertext"));
+
+    EXPECT_THAT(
+        SplitPayload(test_case.kem, payload.substr(0, test_case.nenc - 1))
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("HPKE payload is too short")));
+  }
 }
 
 }  // namespace

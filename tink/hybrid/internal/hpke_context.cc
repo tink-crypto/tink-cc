@@ -16,6 +16,7 @@
 
 #include "tink/hybrid/internal/hpke_context.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -49,27 +50,35 @@ std::string ConcatenatePayload(absl::string_view encapsulated_key,
 
 absl::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
                                              absl::string_view payload) {
+  size_t encoding_length;
   switch (kem) {
     case HpkeKem::kP256HkdfSha256:
-      return HpkePayloadView(payload.substr(0, kP256KemEncodingLengthInBytes),
-                             payload.substr(kP256KemEncodingLengthInBytes));
+      encoding_length = kP256KemEncodingLengthInBytes;
+      break;
     case HpkeKem::kX25519HkdfSha256:
-      return HpkePayloadView(payload.substr(0, kX25519KemEncodingLengthInBytes),
-                             payload.substr(kX25519KemEncodingLengthInBytes));
+      encoding_length = kX25519KemEncodingLengthInBytes;
+      break;
     case HpkeKem::kXWing:
-      return HpkePayloadView(payload.substr(0, kXWingKemEncodingLengthInBytes),
-                             payload.substr(kXWingKemEncodingLengthInBytes));
+      encoding_length = kXWingKemEncodingLengthInBytes;
+      break;
     case HpkeKem::kMlKem768:
-      return HpkePayloadView(payload.substr(0, kMlKem768EncodingLengthInBytes),
-                             payload.substr(kMlKem768EncodingLengthInBytes));
+      encoding_length = kMlKem768EncodingLengthInBytes;
+      break;
     case HpkeKem::kMlKem1024:
-      return HpkePayloadView(payload.substr(0, kMlKem1024EncodingLengthInBytes),
-                             payload.substr(kMlKem1024EncodingLengthInBytes));
+      encoding_length = kMlKem1024EncodingLengthInBytes;
+      break;
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to split HPKE payload for KEM type ", kem));
   }
+  if (payload.size() < encoding_length) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("HPKE payload is too short; expected at least ",
+                     encoding_length, " bytes, got ", payload.size()));
+  }
+  return HpkePayloadView(payload.substr(0, encoding_length),
+                         payload.substr(encoding_length));
 }
 
 absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(

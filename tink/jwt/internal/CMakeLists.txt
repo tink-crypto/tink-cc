@@ -1172,6 +1172,7 @@ tink_cc_library(
     jwt_ecdsa_proto_serialization_impl.h
   DEPS
     absl::status
+    absl::status_macros
     absl::statusor
     absl::string_view
     absl::optional
@@ -1196,12 +1197,12 @@ tink_cc_library(
     tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
-    tink::internal::tink_proto_structs
     tink::internal::util
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_public_key
     tink::util::secret_data
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(

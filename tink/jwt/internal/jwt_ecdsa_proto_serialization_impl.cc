@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -43,7 +44,6 @@
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
-#include "tink/internal/tink_proto_structs.h"
 #include "tink/internal/util.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
@@ -53,6 +53,7 @@
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
@@ -516,36 +517,25 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<JwtEcdsaPublicKeyTP> proto_public_key =
-      ToProtoPublicKey(key.GetPublicKey());
-  if (!proto_public_key.ok()) {
-    return proto_public_key.status();
-  }
-
-  absl::StatusOr<RestrictedData> restricted_input =
+  ABSL_ASSIGN_OR_RETURN(JwtEcdsaPublicKeyTP proto_public_key,
+                        ToProtoPublicKey(key.GetPublicKey()));
+  const RestrictedData& restricted_input =
       key.GetPrivateKey(GetPartialKeyAccess());
-  if (!restricted_input.ok()) {
-    return restricted_input.status();
-  }
-
-  absl::StatusOr<int> enc_length =
-      GetEncodingLength(key.GetPublicKey().GetParameters().GetAlgorithm());
-  if (!enc_length.ok()) {
-    return enc_length.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(
+      int enc_length,
+      GetEncodingLength(key.GetPublicKey().GetParameters().GetAlgorithm()));
+  ABSL_ASSIGN_OR_RETURN(
+      SecretData fixed_length_key,
+      GetSecretValueOfFixedLength(restricted_input, enc_length, *token));
 
   JwtEcdsaPrivateKeyTP proto_private_key;
   proto_private_key.set_version(0);
-  *proto_private_key.mutable_public_key() = *std::move(proto_public_key);
-  proto_private_key.set_key_value(
-      *GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token));
+  *proto_private_key.mutable_public_key() = std::move(proto_public_key);
+  proto_private_key.set_key_value(std::move(fixed_length_key));
 
-  absl::StatusOr<google::crypto::tink::internal::OutputPrefixTypeTP>
-      output_prefix_type = ToOutputPrefixType(
-          key.GetPublicKey().GetParameters().GetKidStrategy());
-  if (!output_prefix_type.ok()) {
-    return output_prefix_type.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(
+      google::crypto::tink::internal::OutputPrefixTypeTP output_prefix_type,
+      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy()));
 
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl,
@@ -553,7 +543,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
                      InsecureSecretKeyAccess::Get()),
       google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
           kAsymmetricPrivate,
-      *output_prefix_type, key.GetIdRequirement());
+      output_prefix_type, key.GetIdRequirement());
 }
 
 JwtEcdsaProtoParametersParserImpl& JwtEcdsaProtoParametersParser() {

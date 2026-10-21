@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/safe_stringops.h"
@@ -56,7 +57,10 @@ class ComputeMacOutputStream : public OutputStreamWithResult<std::string> {
   int64_t Position() const override { return position_; }
 
  private:
-  void WriteIntoMac();
+  // Writes the data in buffer_ into mac_, and clears buffer_. Returns the
+  // stream's error status if it is already in an error state; otherwise
+  // records the result of mac_->Update() in status_ and returns it.
+  absl::Status WriteIntoMac();
 
   absl::Status status_;
   const std::unique_ptr<internal::StatefulMac> mac_;
@@ -80,10 +84,7 @@ StreamingMacImpl::NewComputeMacOutputStream() const {
 }
 
 absl::StatusOr<int> ComputeMacOutputStream::NextBuffer(void** buffer) {
-  if (!status_.ok()) {
-    return status_;
-  }
-  WriteIntoMac();
+  ABSL_RETURN_IF_ERROR(WriteIntoMac());
   *buffer = &buffer_[0];
   position_ += kBufferSize;
   buffer_position_ = kBufferSize;
@@ -92,10 +93,7 @@ absl::StatusOr<int> ComputeMacOutputStream::NextBuffer(void** buffer) {
 
 absl::StatusOr<std::string>
 ComputeMacOutputStream::CloseStreamAndComputeResult() {
-  if (!status_.ok()) {
-    return status_;
-  }
-  WriteIntoMac();
+  ABSL_RETURN_IF_ERROR(WriteIntoMac());
   status_ =
       absl::Status(absl::StatusCode::kFailedPrecondition, "Stream Closed");
   absl::StatusOr<SecretData> result = mac_->FinalizeAsSecretData();
@@ -112,8 +110,8 @@ void ComputeMacOutputStream::BackUp(int count) {
   position_ -= count;
 }
 
-// Writes the data in buffer_ into mac_, and clears buffer_.
-void ComputeMacOutputStream::WriteIntoMac() {
+absl::Status ComputeMacOutputStream::WriteIntoMac() {
+  ABSL_RETURN_IF_ERROR(status_);
   // Remove the suffix of the buffer (all data after buffer_position_).
   status_ = mac_->Update(absl::string_view(buffer_.data(), buffer_position_));
 
@@ -121,6 +119,7 @@ void ComputeMacOutputStream::WriteIntoMac() {
   // was written to the buffer cannot be accessed later.
   // Write buffer_position_ number of 0's to the buffer, starting from idx 0.
   buffer_.replace(0, buffer_position_, buffer_position_, 0);
+  return status_;
 }
 
 class VerifyMacOutputStream : public OutputStreamWithResult<absl::Status> {
@@ -144,7 +143,10 @@ class VerifyMacOutputStream : public OutputStreamWithResult<absl::Status> {
   int64_t Position() const override { return position_; }
 
  private:
-  void WriteIntoMac();
+  // Writes the data in buffer_ into mac_, and clears buffer_. Returns the
+  // stream's error status if it is already in an error state; otherwise
+  // records the result of mac_->Update() in status_ and returns it.
+  absl::Status WriteIntoMac();
 
   // Stream status: Initialized as OK, and
   // changed to ERROR:FAILED_PRECONDITION when the stream is closed.
@@ -157,10 +159,7 @@ class VerifyMacOutputStream : public OutputStreamWithResult<absl::Status> {
 };
 
 absl::StatusOr<int> VerifyMacOutputStream::NextBuffer(void** buffer) {
-  if (!status_.ok()) {
-    return status_;
-  }
-  WriteIntoMac();
+  ABSL_RETURN_IF_ERROR(WriteIntoMac());
   *buffer = &buffer_[0];
   position_ += kBufferSize;
   buffer_position_ = kBufferSize;
@@ -168,10 +167,7 @@ absl::StatusOr<int> VerifyMacOutputStream::NextBuffer(void** buffer) {
 }
 
 absl::Status VerifyMacOutputStream::CloseStreamAndComputeResult() {
-  if (!status_.ok()) {
-    return status_;
-  }
-  WriteIntoMac();
+  ABSL_RETURN_IF_ERROR(WriteIntoMac());
   status_ =
       absl::Status(absl::StatusCode::kFailedPrecondition, "Stream Closed");
   absl::StatusOr<SecretData> mac_actual = mac_->FinalizeAsSecretData();
@@ -197,8 +193,8 @@ void VerifyMacOutputStream::BackUp(int count) {
   position_ -= count;
 }
 
-// Writes the data in buffer_ into mac_, and clears buffer_.
-void VerifyMacOutputStream::WriteIntoMac() {
+absl::Status VerifyMacOutputStream::WriteIntoMac() {
+  ABSL_RETURN_IF_ERROR(status_);
   // Remove the suffix of the buffer (all data after buffer_position_).
   status_ = mac_->Update(absl::string_view(buffer_.data(), buffer_position_));
 
@@ -206,6 +202,7 @@ void VerifyMacOutputStream::WriteIntoMac() {
   // was written to the buffer cannot be accessed later.
   // Write buffer_position_ number of 0's to the buffer, starting from idx 0.
   buffer_.replace(0, buffer_position_, buffer_position_, 0);
+  return status_;
 }
 
 absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>

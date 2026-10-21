@@ -887,6 +887,7 @@ cc_library(
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@boringssl//:crypto",

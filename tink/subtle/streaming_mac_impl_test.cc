@@ -84,6 +84,31 @@ class DummyStatefulMacFactory : public internal::StatefulMacFactory {
   }
 };
 
+// A StatefulMac whose Update() fails on any non-empty input.
+class FailingUpdateStatefulMac : public internal::StatefulMac {
+ public:
+  absl::Status Update(absl::string_view data) override {
+    if (data.empty()) return absl::OkStatus();
+    return absl::InternalError("Update failed");
+  }
+  absl::StatusOr<SecretData> FinalizeAsSecretData() override {
+    return SecretData("mac");
+  }
+};
+
+class FailingUpdateStatefulMacFactory : public internal::StatefulMacFactory {
+ public:
+  absl::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
+      const override {
+    return std::unique_ptr<internal::StatefulMac>(
+        std::make_unique<FailingUpdateStatefulMac>());
+  }
+};
+
+StreamingMacImpl GetStreamingMacWithFailingUpdate() {
+  return StreamingMacImpl(std::make_unique<FailingUpdateStatefulMacFactory>());
+}
+
 // A helper for creating an OutputStreamWithResult<std::string>,
 // used for test validation for mac computation.
 std::unique_ptr<OutputStreamWithResult<std::string>>
@@ -327,6 +352,62 @@ TEST(StreamingMacImplTest, VerifyBackUpIgnoresNonPositiveCount) {
   EXPECT_EQ(output_stream->Position(), 0);
 
   EXPECT_THAT(output_stream->CloseAndGetResult(), IsOk());
+}
+
+TEST(StreamingMacImplTest, ComputeCloseReturnsUpdateError) {
+  StreamingMacImpl streaming_mac = GetStreamingMacWithFailingUpdate();
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
+      output_stream = streaming_mac.NewComputeMacOutputStream();
+  ASSERT_THAT(output_stream, IsOk());
+  ASSERT_THAT(
+      test::WriteToStream(output_stream->get(), "data", /*close_stream=*/false),
+      IsOk());
+
+  EXPECT_THAT(
+      (*output_stream)->CloseAndGetResult(),
+      StatusIs(absl::StatusCode::kInternal, HasSubstr("Update failed")));
+}
+
+TEST(StreamingMacImplTest, ComputeNextReturnsUpdateError) {
+  StreamingMacImpl streaming_mac = GetStreamingMacWithFailingUpdate();
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
+      output_stream = streaming_mac.NewComputeMacOutputStream();
+  ASSERT_THAT(output_stream, IsOk());
+  void* buffer;
+  ASSERT_THAT((*output_stream)->Next(&buffer), IsOk());
+
+  // The second call to Next() writes the first buffer into the MAC.
+  EXPECT_THAT(
+      (*output_stream)->Next(&buffer),
+      StatusIs(absl::StatusCode::kInternal, HasSubstr("Update failed")));
+}
+
+TEST(StreamingMacImplTest, VerifyCloseReturnsUpdateError) {
+  StreamingMacImpl streaming_mac = GetStreamingMacWithFailingUpdate();
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>
+      output_stream = streaming_mac.NewVerifyMacOutputStream("mac");
+  ASSERT_THAT(output_stream, IsOk());
+  ASSERT_THAT(
+      test::WriteToStream(output_stream->get(), "data", /*close_stream=*/false),
+      IsOk());
+
+  EXPECT_THAT(
+      (*output_stream)->CloseAndGetResult(),
+      StatusIs(absl::StatusCode::kInternal, HasSubstr("Update failed")));
+}
+
+TEST(StreamingMacImplTest, VerifyNextReturnsUpdateError) {
+  StreamingMacImpl streaming_mac = GetStreamingMacWithFailingUpdate();
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>
+      output_stream = streaming_mac.NewVerifyMacOutputStream("mac");
+  ASSERT_THAT(output_stream, IsOk());
+  void* buffer;
+  ASSERT_THAT((*output_stream)->Next(&buffer), IsOk());
+
+  // The second call to Next() writes the first buffer into the MAC.
+  EXPECT_THAT(
+      (*output_stream)->Next(&buffer),
+      StatusIs(absl::StatusCode::kInternal, HasSubstr("Update failed")));
 }
 
 }  // namespace

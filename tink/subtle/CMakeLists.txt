@@ -875,6 +875,7 @@ tink_cc_library(
     streaming_mac_impl.h
   DEPS
     absl::status
+    absl::status_macros
     absl::strings
     absl::string_view
     tink::internal::boringssl

@@ -542,6 +542,10 @@ absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
     return EVP_PKEY_new_raw_private_key(SslEvpPkeyType::kX25519Key, nullptr,
                                         private_key.data(), private_key.size());
   }));
+  if (pkey == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "EVP_PKEY_new_raw_private_key failed");
+  }
   auto key = std::make_unique<X25519Key>();
   internal::SecretBuffer priv_key_buffer(X25519KeyPrivKeySize());
   absl::Status res = SslNewKeyPairFromEcKey(

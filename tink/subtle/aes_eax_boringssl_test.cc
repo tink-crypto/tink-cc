@@ -34,7 +34,7 @@
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/testing/wycheproof_util.h"
-#include "tink/util/secret_data.h"
+#include "tink/secret_data.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -48,14 +48,20 @@ using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::testing::Not;
+using ::testing::Test;
 
-TEST(AesEaxBoringSslTest, TestBasic) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
+class AesEaxBoringSslTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled()) {
+      GTEST_SKIP() << "Not supported in FIPS-only mode";
+    }
   }
+};
 
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+TEST_F(AesEaxBoringSslTest, TestBasic) {
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 12;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
   ASSERT_THAT(res, IsOk());
@@ -66,17 +72,13 @@ TEST(AesEaxBoringSslTest, TestBasic) {
   ASSERT_THAT(ct, IsOk());
   EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
   auto pt = cipher->Decrypt(ct.value(), associated_data);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
-TEST(AesEaxBoringSslTest, TestMessageSize) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+TEST_F(AesEaxBoringSslTest, TestMessageSize) {
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 12;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
   ASSERT_THAT(res, IsOk());
@@ -88,18 +90,14 @@ TEST(AesEaxBoringSslTest, TestMessageSize) {
     ASSERT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
     auto pt = cipher->Decrypt(ct.value(), associated_data);
-    EXPECT_THAT(pt, IsOk());
+    ASSERT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
 
-TEST(AesEaxBoringSslTest, TestAssociatedDataSize) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+TEST_F(AesEaxBoringSslTest, TestAssociatedDataSize) {
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 12;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
   ASSERT_THAT(res, IsOk());
@@ -111,18 +109,14 @@ TEST(AesEaxBoringSslTest, TestAssociatedDataSize) {
     ASSERT_THAT(ct, IsOk());
     EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
     auto pt = cipher->Decrypt(ct.value(), associated_data);
-    EXPECT_THAT(pt, IsOk());
+    ASSERT_THAT(pt, IsOk());
     EXPECT_EQ(pt.value(), message);
   }
 }
 
-TEST(AesEaxBoringSslTest, TestLongNonce) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+TEST_F(AesEaxBoringSslTest, TestLongNonce) {
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t nonce_size = 16;
   auto res = AesEaxBoringSsl::New(key, nonce_size);
   ASSERT_THAT(res, IsOk());
@@ -133,18 +127,14 @@ TEST(AesEaxBoringSslTest, TestLongNonce) {
   ASSERT_THAT(ct, IsOk());
   EXPECT_EQ(ct.value().size(), message.size() + nonce_size + 16);
   auto pt = cipher->Decrypt(ct.value(), associated_data);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(pt.value(), message);
 }
 
-TEST(AesEaxBoringSslTest, TestModification) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
+TEST_F(AesEaxBoringSslTest, TestModification) {
   size_t nonce_size = 12;
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   auto cipher = std::move(AesEaxBoringSsl::New(key, nonce_size).value());
   std::string message = "Some data to encrypt.";
   std::string associated_data = "Some data to authenticate.";
@@ -172,11 +162,7 @@ TEST(AesEaxBoringSslTest, TestModification) {
   }
 }
 
-TEST(AesEaxBoringSslTest, TestInvalidKeySizes) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
+TEST_F(AesEaxBoringSslTest, TestInvalidKeySizes) {
   size_t nonce_size = 12;
   for (int keysize = 0; keysize < 65; keysize++) {
     if (keysize == 16 || keysize == 32) {
@@ -188,14 +174,10 @@ TEST(AesEaxBoringSslTest, TestInvalidKeySizes) {
   }
 }
 
-TEST(AesEaxBoringSslTest, TestEmpty) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
+TEST_F(AesEaxBoringSslTest, TestEmpty) {
   size_t nonce_size = 12;
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("bedcfb5a011ebc84600fcb296c15af0d"));
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("bedcfb5a011ebc84600fcb296c15af0d"));
   std::string nonce(test::HexDecodeOrDie("438a547a94ea88dce46c6c85"));
   // Expected tag is an empty string with an empty tag is encrypted with
   // the nonce above;
@@ -211,40 +193,40 @@ TEST(AesEaxBoringSslTest, TestEmpty) {
   absl::string_view null_string_view;
 
   auto pt = cipher->Decrypt(ciphertext, empty_string);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   pt = cipher->Decrypt(ciphertext, empty_string_view);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   pt = cipher->Decrypt(ciphertext, null_string_view);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   // Test encryption.
   auto ct = cipher->Encrypt(empty_string, empty_string);
   ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   ct = cipher->Encrypt(empty_string_view, empty_string_view);
   ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   ct = cipher->Encrypt(empty_string_view, empty_string_view);
   ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 
   ct = cipher->Encrypt(null_string_view, null_string_view);
   ASSERT_THAT(ct, IsOk());
   pt = cipher->Decrypt(ct.value(), empty_string);
-  EXPECT_THAT(pt, IsOk());
+  ASSERT_THAT(pt, IsOk());
   EXPECT_EQ(0, pt.value().size());
 }
 
@@ -285,8 +267,7 @@ bool WycheproofTest(const google::protobuf::Struct& parsed_input,
          test_group.struct_value().fields().at("tests").list_value().values()) {
       const auto& test_fields = test.struct_value().fields();
       std::string comment = test_fields.at("comment").string_value();
-      SecretData key = util::SecretDataFromStringView(
-          GetBytesFromHexValue(test_fields.at("key")));
+      SecretData key = SecretData(GetBytesFromHexValue(test_fields.at("key")));
       std::string iv = GetBytesFromHexValue(test_fields.at("iv"));
       std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
       std::string ct = GetBytesFromHexValue(test_fields.at("ct"));
@@ -321,10 +302,7 @@ bool WycheproofTest(const google::protobuf::Struct& parsed_input,
   return errors == 0;
 }
 
-TEST(AesEaxBoringSslTest, TestVectors) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
+TEST_F(AesEaxBoringSslTest, TestVectors) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectorsV1("aes_eax_test.json");
   ASSERT_THAT(parsed_input, IsOk());
@@ -332,14 +310,14 @@ TEST(AesEaxBoringSslTest, TestVectors) {
                              /* expected_skipped_tests_groups = */ 26));
 }
 
-TEST(AesEaxBoringSslTest, TestFipsOnly) {
+TEST(AesEaxBoringSslFipsTest, TestFipsOnly) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  SecretData key128 = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key128 =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  SecretData key256 = SecretData(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(subtle::AesEaxBoringSsl::New(key128, 16).status(),
@@ -348,13 +326,9 @@ TEST(AesEaxBoringSslTest, TestFipsOnly) {
               StatusIs(absl::StatusCode::kInternal));
 }
 
-TEST(AesEaxBoringSslTest, TestZeroCopy) {
-  if (IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Not supported in FIPS-only mode";
-  }
-
-  SecretData key = util::SecretDataFromStringView(
-      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+TEST_F(AesEaxBoringSslTest, TestZeroCopy) {
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   constexpr size_t kNonceSize = 12;
   constexpr size_t kTagSize = 16;
   absl::StatusOr<std::unique_ptr<Aead>> cipher =

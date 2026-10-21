@@ -211,8 +211,8 @@ TEST(BnUtil, BignumToBinaryPadded) {
     const std::string bn_bytes = test::HexDecodeOrDie(s);
     std::vector<char> buffer;
     buffer.resize(bn_bytes.size());
-    absl::Status res = BignumToBinaryPadded(
-        absl::MakeSpan(buffer.data(), buffer.size()), expected_bn->get());
+    absl::Status res =
+        BignumToBinaryPadded(absl::MakeSpan(buffer), expected_bn->get());
     ASSERT_THAT(res, IsOk());
     auto buffer_data = absl::string_view(buffer.data(), buffer.size());
     EXPECT_EQ(absl::string_view(bn_bytes), buffer_data);
@@ -231,8 +231,8 @@ TEST(BnUtil, BufferToSmall) {
     {
       std::vector<char> buffer;
       buffer.resize(buffer_size);
-      absl::Status result = BignumToBinaryPadded(
-          absl::MakeSpan(buffer.data(), buffer.size()), expected_bn->get());
+      absl::Status result =
+          BignumToBinaryPadded(absl::MakeSpan(buffer), expected_bn->get());
       EXPECT_THAT(result, Not(IsOk()));
     }
     {

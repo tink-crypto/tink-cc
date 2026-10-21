@@ -98,11 +98,5 @@ absl::StatusOr<Keyset> CleartextKeysetHandle::GetKeysetOrError(
   return keyset_handle.get_keyset();
 }
 
-// static
-const Keyset& CleartextKeysetHandle::GetKeyset(
-    const KeysetHandle& keyset_handle) {
-  return keyset_handle.get_keyset();
-}
-
 }  // namespace tink
 }  // namespace crypto

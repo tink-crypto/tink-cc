@@ -104,28 +104,8 @@ TEST_F(CleartextKeysetHandleTest, testWrite) {
             absl::OkStatus());
 }
 
-TEST_F(CleartextKeysetHandleTest, GetKeysetHandleOrError) {
-  Keyset keyset;
-  Keyset::Key key;
-  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
-             KeyData::SYMMETRIC, &keyset);
-  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
-            KeyData::SYMMETRIC, &keyset);
-  keyset.set_primary_key_id(42);
-
-  absl::StatusOr<KeysetHandle> handle =
-      CleartextKeysetHandle::GetKeysetHandleOrError(
-          keyset, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(handle, IsOk());
-  std::string differences;
-  MessageDifferencer message_differencer;
-  message_differencer.ReportDifferencesToString(&differences);
-  EXPECT_TRUE(message_differencer.Compare(
-      CleartextKeysetHandle::GetKeyset(*handle), keyset))
-      << differences;
-}
-
-TEST_F(CleartextKeysetHandleTest, GetKeysetOrError) {
+TEST_F(CleartextKeysetHandleTest,
+       GetKeysetHandleOrErrorInvertsGetKeysetOrError) {
   Keyset keyset;
   Keyset::Key key;
   AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
@@ -145,26 +125,6 @@ TEST_F(CleartextKeysetHandleTest, GetKeysetOrError) {
   MessageDifferencer message_differencer;
   message_differencer.ReportDifferencesToString(&differences);
   EXPECT_TRUE(message_differencer.Compare(*got_keyset, keyset)) << differences;
-}
-
-TEST_F(CleartextKeysetHandleTest, GetKeyset) {
-  Keyset keyset;
-  Keyset::Key key;
-  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
-             KeyData::SYMMETRIC, &keyset);
-  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
-            KeyData::SYMMETRIC, &keyset);
-  keyset.set_primary_key_id(42);
-
-  absl::StatusOr<KeysetHandle> handle =
-      CleartextKeysetHandle::GetKeysetHandleOrError(
-          keyset, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(handle, IsOk());
-  Keyset got_keyset = CleartextKeysetHandle::GetKeyset(*handle);
-  std::string differences;
-  MessageDifferencer message_differencer;
-  message_differencer.ReportDifferencesToString(&differences);
-  EXPECT_TRUE(message_differencer.Compare(got_keyset, keyset)) << differences;
 }
 
 }  // namespace

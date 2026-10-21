@@ -58,13 +58,6 @@ class CleartextKeysetHandle {
   static absl::StatusOr<google::crypto::tink::Keyset> GetKeysetOrError(
       const KeysetHandle& handle, SecretKeyAccessToken token);
 
-  // Returns a Keyset-proto from the given 'keyset_handle'.
-  [[deprecated(
-      "Use GetKeysetOrError instead, as failure will be an option in the "
-      "future")]]
-  static const google::crypto::tink::Keyset& GetKeyset(
-      const KeysetHandle& keyset_handle);
-
  private:
   CleartextKeysetHandle() = default;
 };

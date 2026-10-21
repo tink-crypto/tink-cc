@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -49,6 +50,16 @@ UintType GetRandomUint() {
 
 absl::Status Random::GetRandomBytes(absl::Span<char> buffer) {
   auto buffer_ptr = reinterpret_cast<uint8_t*>(buffer.data());
+  // RAND_bytes takes an int length in OpenSSL builds. A larger size_t would
+  // be silently truncated, leaving the tail of the buffer without fresh
+  // randomness while still reporting success, so reject it up front.
+  if (buffer.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Requested ", buffer.size(),
+                     " random bytes, which exceeds the maximum of ",
+                     std::numeric_limits<int>::max()));
+  }
   if (RAND_bytes(buffer_ptr, buffer.size()) <= 0) {
     return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("RAND_bytes failed to generate ",

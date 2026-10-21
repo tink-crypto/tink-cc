@@ -16,33 +16,28 @@
 
 #include "tink/subtle/aes_eax_boringssl.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <memory>
 #include <utility>
 
-#include "absl/algorithm/container.h"
-#include "absl/base/config.h"
-#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "openssl/aes.h"
+#include "openssl/aead.h"
 #include "tink/aead.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/internal/aes_ctr128.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/secret_buffer.h"
+#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -50,90 +45,30 @@ namespace subtle {
 
 namespace {
 
-// Loads and stores 8 bytes. The endianness of the two routines
-// does not matter, as long as the two routines use the same order.
-uint64_t Load64(const uint8_t src[8]) {
-  uint64_t res;
-  std::memcpy(&res, src, 8);
-  return res;
-}
-
-void Store64(uint64_t val, uint8_t dst[8]) { std::memcpy(dst, &val, 8); }
-
-uint64_t ByteSwap(uint64_t val) {
-  val = ((val & 0xffffffff00000000) >> 32) | ((val & 0x00000000ffffffff) << 32);
-  val = ((val & 0xffff0000ffff0000) >> 16) | ((val & 0x0000ffff0000ffff) << 16);
-  val = ((val & 0xff00ff00ff00ff00) >> 8) | ((val & 0x00ff00ff00ff00ff) << 8);
-  return val;
-}
-
-uint64_t BigEndianLoad64(const uint8_t src[8]) {
-#if defined(ABSL_IS_LITTLE_ENDIAN)
-  return ByteSwap(Load64(src));
-#elif defined(ABSL_IS_BIG_ENDIAN)
-  return Load64(src);
-#else
-#error Unknown endianness
-#endif
-}
-
-void BigEndianStore64(uint64_t val, uint8_t dst[8]) {
-#if defined(ABSL_IS_LITTLE_ENDIAN)
-  return Store64(ByteSwap(val), dst);
-#elif defined(ABSL_IS_BIG_ENDIAN)
-  return Store64(val, dst);
-#else
-#error Unknown endianness
-#endif
-}
-
-absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitAesKey(
-    const SecretData& key) {
-  auto aeskey = util::MakeSecretUniquePtr<AES_KEY>();
-  int status = AES_set_encrypt_key(key.data(), key.size() * 8, aeskey.get());
-  // status != 0 happens if key_value is invalid.
-  if (status != 0) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid key value");
+absl::StatusOr<const EVP_AEAD*> GetAesEaxAeadForKeySize(
+    size_t key_size_in_bytes) {
+  switch (key_size_in_bytes) {
+    case 16:
+      return EVP_aead_aes_128_eax();
+    case 32:
+      return EVP_aead_aes_256_eax();
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid key size");
   }
-  return std::move(aeskey);
+}
+
+bool IsValidNonceSize(size_t nonce_size_in_bytes) {
+  return nonce_size_in_bytes == 12 || nonce_size_in_bytes == 16;
 }
 
 class AesEaxBoringSslImpl : public internal::ZeroCopyAead {
  public:
   static constexpr int kTagSize = 16;
-  static constexpr int kBlockSize = 16;
-  using Block = std::array<uint8_t, kBlockSize>;
 
-  AesEaxBoringSslImpl(util::SecretUniquePtr<AES_KEY> aeskey, size_t nonce_size)
-      : aeskey_(std::move(aeskey)),
-        nonce_size_(nonce_size),
-        b_(ComputeB()),
-        p_(ComputeP()) {}
-
-  static bool IsValidKeySize(size_t key_size_in_bytes) {
-    return key_size_in_bytes == 16 || key_size_in_bytes == 32;
-  }
-  static bool IsValidNonceSize(size_t nonce_size_in_bytes) {
-    return nonce_size_in_bytes == 12 || nonce_size_in_bytes == 16;
-  }
-
-  SecretData ComputeB() const;
-  SecretData ComputeP() const;
-
-  static void XorBlock(const uint8_t x[kBlockSize], Block* y);
-  static void MultiplyByX(const uint8_t in[kBlockSize],
-                          uint8_t out[kBlockSize]);
-  static bool EqualBlocks(const uint8_t x[kBlockSize],
-                          const uint8_t y[kBlockSize]);
-
-  void EncryptBlock(internal::SecretBuffer* /*absl_nonnull - not yet supported*/ block) const;
-  void EncryptBlock(Block* /*absl_nonnull - not yet supported*/ block) const;
-  Block Pad(absl::Span<const uint8_t> data) const;
-  Block Omac(absl::string_view blob, int tag) const;
-  Block Omac(absl::Span<const uint8_t> data, int tag) const;
-  absl::Status CtrCrypt(const Block& N, absl::string_view in,
-                        absl::Span<char> out) const;
+  AesEaxBoringSslImpl(internal::SslUniquePtr<EVP_AEAD_CTX> context,
+                      size_t nonce_size)
+      : context_(std::move(context)), nonce_size_(nonce_size) {}
 
   int64_t MaxEncryptionSize(int64_t plaintext_size) const override {
     return plaintext_size + nonce_size_ + kTagSize;
@@ -156,112 +91,9 @@ class AesEaxBoringSslImpl : public internal::ZeroCopyAead {
                                   absl::Span<char> buffer) const override;
 
  private:
-  const util::SecretUniquePtr<AES_KEY> aeskey_;
+  const internal::SslUniquePtr<EVP_AEAD_CTX> context_;
   const size_t nonce_size_;
-  const SecretData b_;
-  const SecretData p_;
 };
-
-void AesEaxBoringSslImpl::XorBlock(const uint8_t x[kBlockSize], Block* y) {
-  uint64_t r0 = Load64(x) ^ Load64(y->data());
-  uint64_t r1 = Load64(x + 8) ^ Load64(y->data() + 8);
-  Store64(r0, y->data());
-  Store64(r1, y->data() + 8);
-}
-
-void AesEaxBoringSslImpl::MultiplyByX(const uint8_t in[kBlockSize],
-                                      uint8_t out[kBlockSize]) {
-  uint64_t in_high = BigEndianLoad64(in);
-  uint64_t in_low = BigEndianLoad64(in + 8);
-  uint64_t out_high = (in_high << 1) ^ (in_low >> 63);
-  // If the most significant bit is set then the result has to
-  // be reduced by x^128 + x^7 + x^2 + x + 1.
-  // The representation of x^7 + x^2 + x + 1 is 0x87.
-  uint64_t out_low = (in_low << 1) ^ (0x87 & -(in_high >> 63));
-  BigEndianStore64(out_high, out);
-  BigEndianStore64(out_low, out + 8);
-}
-
-bool AesEaxBoringSslImpl::EqualBlocks(const uint8_t x[kBlockSize],
-                                      const uint8_t y[kBlockSize]) {
-  uint64_t res = Load64(x) ^ Load64(y);
-  res |= Load64(x + 8) ^ Load64(y + 8);
-  return res == 0;
-}
-
-SecretData AesEaxBoringSslImpl::ComputeB() const {
-  internal::SecretBuffer block(kBlockSize, 0);
-  EncryptBlock(&block);
-  MultiplyByX(block.data(), block.data());
-  return SecretData(std::move(block));
-}
-
-SecretData AesEaxBoringSslImpl::ComputeP() const {
-  internal::SecretBuffer rv(kBlockSize, 0);
-  MultiplyByX(b_.data(), rv.data());
-  return SecretData(std::move(rv));
-}
-
-AesEaxBoringSslImpl::Block AesEaxBoringSslImpl::Pad(
-    absl::Span<const uint8_t> data) const {
-  Block padded_block;
-  padded_block.fill(0);
-  absl::c_copy(data, padded_block.begin());
-  if (data.size() == kBlockSize) {
-    XorBlock(b_.data(), &padded_block);
-  } else {
-    padded_block[data.size()] = 0x80;
-    XorBlock(p_.data(), &padded_block);
-  }
-  return padded_block;
-}
-
-void AesEaxBoringSslImpl::EncryptBlock(
-    internal::SecretBuffer* /*absl_nonnull - not yet supported*/ block) const {
-  AES_encrypt(block->data(), block->data(), aeskey_.get());
-}
-
-void AesEaxBoringSslImpl::EncryptBlock(Block* /*absl_nonnull - not yet supported*/ block) const {
-  AES_encrypt(block->data(), block->data(), aeskey_.get());
-}
-
-AesEaxBoringSslImpl::Block AesEaxBoringSslImpl::Omac(absl::string_view blob,
-                                                     int tag) const {
-  return Omac(absl::MakeSpan(reinterpret_cast<const uint8_t*>(blob.data()),
-                             blob.size()),
-              tag);
-}
-
-AesEaxBoringSslImpl::Block AesEaxBoringSslImpl::Omac(
-    absl::Span<const uint8_t> data, int tag) const {
-  Block mac;
-  mac.fill(0);
-  mac[15] = tag;
-  if (data.empty()) {
-    XorBlock(b_.data(), &mac);
-    EncryptBlock(&mac);
-    return mac;
-  }
-  EncryptBlock(&mac);
-  size_t idx = 0;
-  while (data.size() - idx > kBlockSize) {
-    XorBlock(&data[idx], &mac);
-    EncryptBlock(&mac);
-    idx += kBlockSize;
-  }
-  const Block padded_block = Pad(absl::MakeSpan(data).subspan(idx));
-  XorBlock(padded_block.data(), &mac);
-  EncryptBlock(&mac);
-  return mac;
-}
-
-absl::Status AesEaxBoringSslImpl::CtrCrypt(const Block& N, absl::string_view in,
-                                           absl::Span<char> out) const {
-  // Make a copy of N, since BoringSsl changes ctr.
-  uint8_t ctr[kBlockSize];
-  absl::c_copy_n(N, kBlockSize, ctr);
-  return internal::AesCtr128Crypt(in, ctr, aeskey_.get(), out);
-}
 
 absl::StatusOr<int64_t> AesEaxBoringSslImpl::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data,
@@ -291,16 +123,20 @@ absl::StatusOr<int64_t> AesEaxBoringSslImpl::Encrypt(
         buffer.data(), ciphertext_size);
     absl::Span<char> nonce = buffer.subspan(0, nonce_size_);
     ABSL_RETURN_IF_ERROR(Random::GetRandomBytes(nonce));
-    const Block N = Omac(absl::string_view(nonce.data(), nonce.size()), 0);
-    const Block H = Omac(associated_data, 1);
-    absl::Span<char> raw_ciphertext =
-        buffer.subspan(nonce_size_, plaintext.size());
-    ABSL_RETURN_IF_ERROR(CtrCrypt(N, plaintext, raw_ciphertext));
-    Block mac = Omac(
-        absl::string_view(raw_ciphertext.data(), raw_ciphertext.size()), 2);
-    XorBlock(N.data(), &mac);
-    XorBlock(H.data(), &mac);
-    absl::c_copy_n(mac, kTagSize, &buffer[ciphertext_size - kTagSize]);
+    absl::Span<char> raw_ciphertext_and_tag =
+        buffer.subspan(nonce_size_, plaintext.size() + kTagSize);
+    size_t out_len = 0;
+    if (!EVP_AEAD_CTX_seal(
+            context_.get(),
+            reinterpret_cast<uint8_t*>(raw_ciphertext_and_tag.data()), &out_len,
+            raw_ciphertext_and_tag.size(),
+            reinterpret_cast<const uint8_t*>(nonce.data()), nonce.size(),
+            reinterpret_cast<const uint8_t*>(plaintext.data()),
+            plaintext.size(),
+            reinterpret_cast<const uint8_t*>(associated_data.data()),
+            associated_data.size())) {
+      return absl::Status(absl::StatusCode::kInternal, "Encryption failed");
+    }
     // Declassify the ciphertext: this is now safe to give to the adversary.
     // (Note: we currently do not propagate labels of the associated data).
     crypto::tink::internal::DfsanClearLabel(buffer.data(), ciphertext_size);
@@ -333,18 +169,8 @@ absl::StatusOr<int64_t> AesEaxBoringSslImpl::Decrypt(
                         "Ciphertext and output buffer must not overlap");
   }
   absl::string_view nonce = ciphertext.substr(0, nonce_size_);
-  absl::string_view encrypted = ciphertext.substr(nonce_size_, out_size);
-  absl::string_view tag = ciphertext.substr(ct_size - kTagSize, kTagSize);
+  absl::string_view raw_ciphertext_and_tag = ciphertext.substr(nonce_size_);
   return internal::CallWithCoreDumpProtection([&]() -> absl::StatusOr<int64_t> {
-    const Block N = Omac(nonce, 0);
-    const Block H = Omac(associated_data, 1);
-    Block mac = Omac(encrypted, 2);
-    XorBlock(N.data(), &mac);
-    XorBlock(H.data(), &mac);
-    const uint8_t* sig = reinterpret_cast<const uint8_t*>(tag.data());
-    if (!EqualBlocks(mac.data(), sig)) {
-      return absl::Status(absl::StatusCode::kInvalidArgument, "Tag mismatch");
-    }
     // The plaintext region is allowed to leak. In successful decryptions,
     // the adversary can already get the plaintext via core dumps (since
     // the API specifies that the plaintext is in a caller-provided buffer,
@@ -358,7 +184,23 @@ absl::StatusOr<int64_t> AesEaxBoringSslImpl::Decrypt(
     // we declare this to be sufficiently safe at the moment.
     crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
         buffer.data(), out_size);
-    ABSL_RETURN_IF_ERROR(CtrCrypt(N, encrypted, buffer.subspan(0, out_size)));
+    // If out_size == 0, buffer.data() may be null or point past the end of an
+    // empty buffer; pass a valid 1-byte dummy pointer when calling into
+    // BoringSSL.
+    uint8_t dummy = 0;
+    uint8_t* out_ptr =
+        out_size == 0 ? &dummy : reinterpret_cast<uint8_t*>(buffer.data());
+    size_t out_len = 0;
+    if (!EVP_AEAD_CTX_open(
+            context_.get(), out_ptr, &out_len, out_size,
+            reinterpret_cast<const uint8_t*>(nonce.data()), nonce.size(),
+            reinterpret_cast<const uint8_t*>(raw_ciphertext_and_tag.data()),
+            raw_ciphertext_and_tag.size(),
+            reinterpret_cast<const uint8_t*>(associated_data.data()),
+            associated_data.size())) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Authentication failed");
+    }
     // Declassify the plaintext: this is now safe to give to the adversary
     // (since the API specifies that the plaintext is in a caller-provided
     // buffer which can leak so the user is responsible for this).
@@ -373,19 +215,22 @@ absl::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
     const SecretData& key, size_t nonce_size_in_bytes) {
   ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesEaxBoringSsl>());
 
-  if (!AesEaxBoringSslImpl::IsValidKeySize(key.size())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument, "Invalid key size");
-  }
-  if (!AesEaxBoringSslImpl::IsValidNonceSize(nonce_size_in_bytes)) {
+  ABSL_ASSIGN_OR_RETURN(const EVP_AEAD* aead,
+                        GetAesEaxAeadForKeySize(key.size()));
+  if (!IsValidNonceSize(nonce_size_in_bytes)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid nonce size");
   }
   return internal::CallWithCoreDumpProtection(
       [&]() -> absl::StatusOr<std::unique_ptr<Aead>> {
-        ABSL_ASSIGN_OR_RETURN(util::SecretUniquePtr<AES_KEY> aeskey,
-                              InitAesKey(key));
+        internal::SslUniquePtr<EVP_AEAD_CTX> context(EVP_AEAD_CTX_new(
+            aead, key.data(), key.size(), AesEaxBoringSslImpl::kTagSize));
+        if (context == nullptr) {
+          return absl::Status(absl::StatusCode::kInternal,
+                              "EVP_AEAD_CTX_new failed");
+        }
         return std::make_unique<internal::AeadFromZeroCopy>(
-            std::make_unique<AesEaxBoringSslImpl>(std::move(aeskey),
+            std::make_unique<AesEaxBoringSslImpl>(std::move(context),
                                                   nonce_size_in_bytes));
       });
 }

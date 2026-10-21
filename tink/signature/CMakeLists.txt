@@ -2035,3 +2035,13 @@ tink_cc_test(
     absl::statusor
     benchmark::benchmark_main
 )
+
+tink_cc_library(
+  NAME chunked_prehash
+  SRCS
+    chunked_prehash.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::strings
+)

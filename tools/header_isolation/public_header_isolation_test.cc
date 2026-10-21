@@ -306,6 +306,7 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/signature/chunked_prehash.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/composite_ml_dsa_proto_serialization.h"

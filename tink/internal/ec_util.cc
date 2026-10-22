@@ -430,8 +430,14 @@ absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
   if (key.get() == nullptr) {
     return absl::Status(absl::StatusCode::kInternal, "EC_KEY_new failed");
   }
-  EC_KEY_set_group(key.get(), group->get());
-  EC_KEY_generate_key(key.get());
+  if (EC_KEY_set_group(key.get(), group->get()) != 1) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "EC_KEY_set_group failed");
+  }
+  if (EC_KEY_generate_key(key.get()) != 1) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "EC_KEY_generate_key failed");
+  }
   return EcKeyFromSslEcKey(curve_type, *key);
 }
 

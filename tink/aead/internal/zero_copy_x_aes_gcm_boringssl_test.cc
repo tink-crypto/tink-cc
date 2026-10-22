@@ -73,6 +73,22 @@ absl::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
   return CreateKey(Random::GetRandomBytes(kKeySize), salt_size);
 }
 
+TEST(XAesGcmBoringSslZeroCopyAead, RejectsNonEmptyOutputPrefix) {
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *parameters,
+      RestrictedData(SecretData(Random::GetRandomBytes(kKeySize)),
+                     InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(NewZeroCopyXAesGcmBoringSsl(*key),
+              StatusIs(absl::StatusCode::kInternal,
+                       HasSubstr("non-empty output prefix")));
+}
+
 TEST(XAesGcmBoringSslZeroCopyAead, EncryptDecrypt) {
   absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());

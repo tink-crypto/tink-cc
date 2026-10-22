@@ -140,6 +140,9 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
 
 absl::StatusOr<std::unique_ptr<ZeroCopyAead>> NewZeroCopyXAesGcmBoringSsl(
     const XAesGcmKey& key) {
+  if (!key.GetOutputPrefix().empty()) {
+    return absl::InternalError("non-empty output prefix not yet implemented");
+  }
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm = BaseXAesGcm::New(key);
   if (!base_x_aes_gcm.ok()) {
     return base_x_aes_gcm.status();

@@ -135,7 +135,7 @@ absl::Status KeysetManager::Delete(uint32_t key_id) {
   auto key_field = keyset_->mutable_key();
   for (auto key_iter = key_field->begin(); key_iter != key_field->end();
        key_iter++) {
-    auto key = *key_iter;
+    const auto& key = *key_iter;
     if (key.key_id() == key_id) {
       keyset_->mutable_key()->erase(key_iter);
       return absl::OkStatus();

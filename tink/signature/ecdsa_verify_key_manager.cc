@@ -17,44 +17,77 @@
 #include "tink/signature/ecdsa_verify_key_manager.h"
 
 #include <memory>
+#include <optional>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "tink/internal/ec_util.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/public_key_verify.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_public_key.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/util/enums.h"
 #include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
+#include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
+namespace {
 
-using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::EcdsaParams;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 
+absl::StatusOr<EcdsaPublicKey> ParseEcdsaPublicKeyWithNoPrefix(
+    const EcdsaPublicKeyProto& ecdsa_public_key) {
+  static const internal::SerializationRegistry* registry = []() {
+    internal::SerializationRegistry::Builder builder;
+    ABSL_CHECK_OK(
+        internal::RegisterEcdsaProtoSerializationWithRegistryBuilder(builder));
+    return new internal::SerializationRegistry(std::move(builder).Build());
+  }();
+  // KeyTypeManager primitives only receive the raw key proto (without
+  // OutputPrefixType or key ID) and must produce raw (kNoPrefix) primitives;
+  // the output prefix is handled by PublicKeyVerifyWrapper.
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          EcdsaVerifyKeyManager().get_key_type(),
+          RestrictedData(ecdsa_public_key.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
+  ABSL_RETURN_IF_ERROR(serialization.status());
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<Key> key,
+      registry->ParseKey(*serialization, InsecureSecretKeyAccess::Get()));
+  const auto* public_key = dynamic_cast<const EcdsaPublicKey*>(key.get());
+  if (public_key == nullptr) {
+    return absl::InternalError("Failed to cast to EcdsaPublicKey");
+  }
+  return *public_key;
+}
+
+}  // namespace
+
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 EcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const EcdsaPublicKeyProto& ecdsa_public_key) const {
-  internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(ecdsa_public_key.params().curve());
-  ec_key.pub_x = ecdsa_public_key.x();
-  ec_key.pub_y = ecdsa_public_key.y();
-  auto result = subtle::EcdsaVerifyBoringSsl::New(
-      ec_key, Enums::ProtoToSubtle(ecdsa_public_key.params().hash_type()),
-      Enums::ProtoToSubtle(ecdsa_public_key.params().encoding()));
-  if (!result.ok()) return result.status();
-  return {std::move(result.value())};
+  ABSL_ASSIGN_OR_RETURN(EcdsaPublicKey public_key,
+                        ParseEcdsaPublicKeyWithNoPrefix(ecdsa_public_key));
+  return subtle::EcdsaVerifyBoringSsl::New(public_key);
 }
 
 absl::Status EcdsaVerifyKeyManager::ValidateParams(
@@ -101,8 +134,7 @@ absl::Status EcdsaVerifyKeyManager::ValidateParams(
 
 absl::Status EcdsaVerifyKeyManager::ValidateKey(
     const EcdsaPublicKeyProto& key) const {
-  absl::Status status = ValidateVersion(key.version(), get_version());
-  if (!status.ok()) return status;
+  ABSL_RETURN_IF_ERROR(ValidateVersion(key.version(), get_version()));
   return ValidateParams(key.params());
 }
 

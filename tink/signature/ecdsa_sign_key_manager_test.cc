@@ -31,7 +31,6 @@
 #include "tink/configuration.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
@@ -49,8 +48,6 @@
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
-#include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/test_util.h"
 #include "proto/ecdsa.pb.h"
@@ -61,7 +58,6 @@ namespace tink {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
@@ -300,26 +296,22 @@ TEST(EcdsaSignKeyManagerTest, GetPublicKey) {
 
 TEST(EcdsaSignKeyManagerTest, Create) {
   EcdsaPrivateKeyProto private_key = CreateValidKey();
-  EcdsaPublicKeyProto public_key =
-      EcdsaSignKeyManager().GetPublicKey(private_key).value();
+  absl::StatusOr<EcdsaPublicKeyProto> public_key =
+      EcdsaSignKeyManager().GetPublicKey(private_key);
+  ASSERT_THAT(public_key, IsOk());
 
   auto signer_or =
       EcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer_or, IsOk());
 
-  internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(public_key.params().curve());
-  ec_key.pub_x = public_key.x();
-  ec_key.pub_y = public_key.y();
-  auto direct_verifier_or = subtle::EcdsaVerifyBoringSsl::New(
-      ec_key, Enums::ProtoToSubtle(public_key.params().hash_type()),
-      Enums::ProtoToSubtle(public_key.params().encoding()));
-  ASSERT_THAT(direct_verifier_or, IsOk());
+  auto verifier_or =
+      EcdsaVerifyKeyManager().GetPrimitive<PublicKeyVerify>(*public_key);
+  ASSERT_THAT(verifier_or, IsOk());
 
   std::string message = "Some message";
-  EXPECT_THAT(direct_verifier_or.value()->Verify(
-                  signer_or.value()->Sign(message).value(), message),
-              IsOk());
+  absl::StatusOr<std::string> signature = (*signer_or)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verifier_or)->Verify(*signature, message), IsOk());
 }
 
 TEST(EcdsaSignKeyManagerTest, CreateDifferentKey) {
@@ -339,19 +331,14 @@ TEST(EcdsaSignKeyManagerTest, CreateDifferentKey) {
       EcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer_or, IsOk());
 
-  internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(public_key.params().curve());
-  ec_key.pub_x = public_key.x();
-  ec_key.pub_y = public_key.y();
-  auto direct_verifier_or = subtle::EcdsaVerifyBoringSsl::New(
-      ec_key, Enums::ProtoToSubtle(public_key.params().hash_type()),
-      Enums::ProtoToSubtle(public_key.params().encoding()));
-  ASSERT_THAT(direct_verifier_or, IsOk());
+  auto verifier_or =
+      EcdsaVerifyKeyManager().GetPrimitive<PublicKeyVerify>(public_key);
+  ASSERT_THAT(verifier_or, IsOk());
 
   std::string message = "Some message";
-  EXPECT_THAT(direct_verifier_or.value()->Verify(
-                  signer_or.value()->Sign(message).value(), message),
-              Not(IsOk()));
+  absl::StatusOr<std::string> signature = (*signer_or)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verifier_or)->Verify(*signature, message), Not(IsOk()));
 }
 
 TEST(EcdsaSignKeyManagerTest, DeriveKeyFailsWithOpenSsl) {

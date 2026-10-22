@@ -114,19 +114,28 @@ tink_cc_library(
     ecdsa_sign_key_manager.cc
     ecdsa_sign_key_manager.h
   DEPS
+    tink::signature::ecdsa_private_key
     tink::signature::ecdsa_verify_key_manager
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::private_key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::public_key_sign
+    tink::core::restricted_data
     tink::config::tink_fips
     tink::internal::ec_key_from_seed
     tink::internal::ec_util
     tink::internal::fips_utils
+    tink::internal::proto_key_serialization
+    tink::internal::serialization_registry
+    tink::signature::internal::ecdsa_proto_serialization_impl
     tink::subtle::ecdsa_sign_boringssl
     tink::util::constants
     tink::util::enums
@@ -137,8 +146,10 @@ tink_cc_library(
     tink::util::status
     tink::util::statusor
     tink::util::validation
+    tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -147,25 +158,34 @@ tink_cc_library(
     ecdsa_verify_key_manager.cc
     ecdsa_verify_key_manager.h
   DEPS
+    tink::signature::ecdsa_public_key
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::public_key_verify
-    tink::internal::ec_util
+    tink::core::restricted_data
     tink::internal::fips_utils
+    tink::internal::proto_key_serialization
+    tink::internal::serialization_registry
+    tink::signature::internal::ecdsa_proto_serialization_impl
     tink::subtle::ecdsa_verify_boringssl
     tink::util::constants
-    tink::util::enums
     tink::util::errors
     tink::util::protobuf_helper
     tink::util::status
     tink::util::statusor
     tink::util::validation
+    tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -824,19 +844,18 @@ tink_cc_test(
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
+    tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     gmock
     absl::status
     absl::status_matchers
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
+    tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::internal::ec_util
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::subtle::ecdsa_sign_boringssl
-    tink::util::enums
-    tink::util::secret_data
+    tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -947,13 +966,10 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl
-    tink::internal::ec_util
     tink::internal::key_gen_configuration_impl
     tink::internal::ssl_util
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::subtle::ecdsa_verify_boringssl
-    tink::util::enums
     tink::util::istream_input_stream
     tink::util::test_util
     tink::proto::ecdsa_cc_proto

@@ -17,49 +17,90 @@
 #include "tink/signature/ecdsa_sign_key_manager.h"
 
 #include <memory>
-#include <string>
+#include <optional>
 #include <utility>
 
-#include "absl/memory/memory.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_key_from_seed.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/public_key_sign.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
 #include "tink/util/input_stream_util.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/validation.h"
+#include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
+namespace {
 
-using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 
+absl::StatusOr<EcdsaPrivateKey> ParseEcdsaPrivateKeyWithNoPrefix(
+    const EcdsaPrivateKeyProto& ecdsa_private_key) {
+  static const internal::SerializationRegistry* registry = []() {
+    internal::SerializationRegistry::Builder builder;
+    ABSL_CHECK_OK(
+        internal::RegisterEcdsaProtoSerializationWithRegistryBuilder(builder));
+    return new internal::SerializationRegistry(std::move(builder).Build());
+  }();
+  // KeyTypeManager primitives only receive the raw key proto (without
+  // OutputPrefixType or key ID) and must produce raw (kNoPrefix) primitives;
+  // the output prefix is handled by PublicKeySignWrapper.
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          EcdsaSignKeyManager().get_key_type(),
+          RestrictedData(ecdsa_private_key.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
+  ABSL_RETURN_IF_ERROR(serialization.status());
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<Key> key,
+      registry->ParseKey(*serialization, InsecureSecretKeyAccess::Get()));
+  const auto* private_key = dynamic_cast<const EcdsaPrivateKey*>(key.get());
+  if (private_key == nullptr) {
+    return absl::InternalError("Failed to cast to EcdsaPrivateKey");
+  }
+  return *private_key;
+}
+
+}  // namespace
+
 absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
     const EcdsaKeyFormat& ecdsa_key_format) const {
   // Generate new EC key.
-  auto ec_key_result = internal::NewEcKey(
-      util::Enums::ProtoToSubtle(ecdsa_key_format.params().curve()));
-  if (!ec_key_result.ok()) return ec_key_result.status();
-  auto ec_key = ec_key_result.value();
+  ABSL_ASSIGN_OR_RETURN(internal::EcKey ec_key,
+                        internal::NewEcKey(util::Enums::ProtoToSubtle(
+                            ecdsa_key_format.params().curve())));
 
   // Build EcdsaPrivateKeyProto.
   EcdsaPrivateKeyProto ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
   ecdsa_private_key.set_key_value(ec_key.priv.AsStringView());
-  auto ecdsa_public_key = ecdsa_private_key.mutable_public_key();
+  EcdsaPublicKeyProto* ecdsa_public_key =
+      ecdsa_private_key.mutable_public_key();
   ecdsa_public_key->set_version(get_version());
   ecdsa_public_key->set_x(ec_key.pub_x);
   ecdsa_public_key->set_y(ec_key.pub_y);
@@ -137,23 +178,14 @@ absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
 absl::StatusOr<std::unique_ptr<PublicKeySign>>
 EcdsaSignKeyManager::PublicKeySignFactory::Create(
     const EcdsaPrivateKeyProto& ecdsa_private_key) const {
-  const EcdsaPublicKeyProto& public_key = ecdsa_private_key.public_key();
-  internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(public_key.params().curve());
-  ec_key.pub_x = public_key.x();
-  ec_key.pub_y = public_key.y();
-  ec_key.priv = SecretData(ecdsa_private_key.key_value());
-  auto result = subtle::EcdsaSignBoringSsl::New(
-      ec_key, Enums::ProtoToSubtle(public_key.params().hash_type()),
-      Enums::ProtoToSubtle(public_key.params().encoding()));
-  if (!result.ok()) return result.status();
-  return {std::move(result.value())};
+  ABSL_ASSIGN_OR_RETURN(EcdsaPrivateKey private_key,
+                        ParseEcdsaPrivateKeyWithNoPrefix(ecdsa_private_key));
+  return subtle::EcdsaSignBoringSsl::New(private_key);
 }
 
 absl::Status EcdsaSignKeyManager::ValidateKey(
     const EcdsaPrivateKeyProto& key) const {
-  absl::Status status = ValidateVersion(key.version(), get_version());
-  if (!status.ok()) return status;
+  ABSL_RETURN_IF_ERROR(ValidateVersion(key.version(), get_version()));
   return EcdsaVerifyKeyManager().ValidateKey(key.public_key());
 }
 

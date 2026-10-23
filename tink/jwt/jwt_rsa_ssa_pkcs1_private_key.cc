@@ -16,48 +16,19 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
 
-#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "openssl/base.h"
-#include "openssl/rsa.h"
-#include "tink/big_integer.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 
 namespace crypto {
 namespace tink {
-namespace {
-
-absl::Status ValidateKeyPair(const BigInteger& public_exponent,
-                             const BigInteger& modulus, const RestrictedData& p,
-                             const RestrictedData& q, const RestrictedData& d,
-                             const RestrictedData& dp, const RestrictedData& dq,
-                             const RestrictedData& q_inv,
-                             PartialKeyAccessToken token) {
-  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
-      internal::RsaPrivateKeyToRsaFixedSizeInputs(internal::RsaPrivateKey{
-          /*n=*/std::string(modulus.GetValue()),
-          /*e=*/std::string(public_exponent.GetValue()),
-          /*d=*/d.Get(InsecureSecretKeyAccess::Get()),
-          /*p=*/p.Get(InsecureSecretKeyAccess::Get()),
-          /*q=*/q.Get(InsecureSecretKeyAccess::Get()),
-          /*dp=*/dp.Get(InsecureSecretKeyAccess::Get()),
-          /*dq=*/dq.Get(InsecureSecretKeyAccess::Get()),
-          /*crt=*/q_inv.Get(InsecureSecretKeyAccess::Get()),
-      });
-  return rsa.status();
-}
-
-}  // namespace
 
 JwtRsaSsaPkcs1PrivateKey::Builder&
 JwtRsaSsaPkcs1PrivateKey::Builder::SetPublicKey(
@@ -109,22 +80,30 @@ JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the public key");
   }
-
-  if (!p_.has_value() || !q_.has_value() || !d_.has_value() ||
-      !dp_.has_value() || !dq_.has_value() || !q_inv_.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Cannot build without setting all parameters");
+  RsaSsaPkcs1PrivateKey::Builder builder;
+  builder.SetPublicKey(public_key_->GetRsaSsaPkcs1PublicKey(token));
+  if (p_.has_value()) {
+    builder.SetPrimeP(*p_);
   }
-
-  absl::Status key_pair_validation =
-      ValidateKeyPair(public_key_->GetParameters().GetPublicExponent(),
-                      public_key_->GetModulus(token), *p_, *q_, *d_, *dp_, *dq_,
-                      *q_inv_, token);
-  if (!key_pair_validation.ok()) {
-    return key_pair_validation;
+  if (q_.has_value()) {
+    builder.SetPrimeQ(*q_);
   }
-  return JwtRsaSsaPkcs1PrivateKey(*public_key_, *p_, *q_, *dp_, *dq_, *d_,
-                                  *q_inv_);
+  if (d_.has_value()) {
+    builder.SetPrivateExponent(*d_);
+  }
+  if (dp_.has_value()) {
+    builder.SetPrimeExponentP(*dp_);
+  }
+  if (dq_.has_value()) {
+    builder.SetPrimeExponentQ(*dq_);
+  }
+  if (q_inv_.has_value()) {
+    builder.SetCrtCoefficient(*q_inv_);
+  }
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPkcs1PrivateKey rsa_ssa_pkcs1_private_key,
+                        builder.Build(token));
+  return JwtRsaSsaPkcs1PrivateKey(*public_key_,
+                                  std::move(rsa_ssa_pkcs1_private_key));
 }
 
 absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
@@ -134,38 +113,30 @@ JwtRsaSsaPkcs1PrivateKey::Builder::BuildAllowNonConstantTime(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the public key");
   }
-
-  if (!p_.has_value() || !q_.has_value() || !d_.has_value() ||
-      !dp_.has_value() || !dq_.has_value() || !q_inv_.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "BuildAllowNonConstantTime method requires that all "
-                        "RestrictedData fields are set.");
+  RsaSsaPkcs1PrivateKey::Builder builder;
+  builder.SetPublicKey(public_key_->GetRsaSsaPkcs1PublicKey(token));
+  if (p_.has_value()) {
+    builder.SetPrimeP(*p_);
   }
-
-  internal::RsaPrivateKey private_key;
-  private_key.n = public_key_->GetModulus(token).GetValue();
-  private_key.e = public_key_->GetParameters().GetPublicExponent().GetValue();
-  private_key.d = d_->Get(InsecureSecretKeyAccess::Get());
-  private_key.p = p_->Get(InsecureSecretKeyAccess::Get());
-  private_key.q = q_->Get(InsecureSecretKeyAccess::Get());
-  private_key.dp = dp_->Get(InsecureSecretKeyAccess::Get());
-  private_key.dq = dq_->Get(InsecureSecretKeyAccess::Get());
-  private_key.crt = q_inv_->Get(InsecureSecretKeyAccess::Get());
-
-  ABSL_RETURN_IF_ERROR(
-      internal::RsaPrivateKeyAdjustEncodingLengths(private_key));
-
-  p_ = RestrictedData(std::move(private_key.p), InsecureSecretKeyAccess::Get());
-  q_ = RestrictedData(std::move(private_key.q), InsecureSecretKeyAccess::Get());
-  dp_ =
-      RestrictedData(std::move(private_key.dp), InsecureSecretKeyAccess::Get());
-  dq_ =
-      RestrictedData(std::move(private_key.dq), InsecureSecretKeyAccess::Get());
-  d_ = RestrictedData(std::move(private_key.d), InsecureSecretKeyAccess::Get());
-  q_inv_ = RestrictedData(std::move(private_key.crt),
-                          InsecureSecretKeyAccess::Get());
-
-  return Build(token);
+  if (q_.has_value()) {
+    builder.SetPrimeQ(*q_);
+  }
+  if (d_.has_value()) {
+    builder.SetPrivateExponent(*d_);
+  }
+  if (dp_.has_value()) {
+    builder.SetPrimeExponentP(*dp_);
+  }
+  if (dq_.has_value()) {
+    builder.SetPrimeExponentQ(*dq_);
+  }
+  if (q_inv_.has_value()) {
+    builder.SetCrtCoefficient(*q_inv_);
+  }
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPkcs1PrivateKey rsa_ssa_pkcs1_private_key,
+                        builder.BuildAllowNonConstantTime(token));
+  return JwtRsaSsaPkcs1PrivateKey(*public_key_,
+                                  std::move(rsa_ssa_pkcs1_private_key));
 }
 
 bool JwtRsaSsaPkcs1PrivateKey::operator==(const Key& other) const {
@@ -175,9 +146,8 @@ bool JwtRsaSsaPkcs1PrivateKey::operator==(const Key& other) const {
     return false;
   }
 
-  return public_key_ == that->public_key_ && p_ == that->p_ && q_ == that->q_ &&
-         dp_ == that->dp_ && dq_ == that->dq_ && d_ == that->d_ &&
-         q_inv_ == that->q_inv_;
+  return public_key_ == that->public_key_ &&
+         rsa_ssa_pkcs1_private_key_ == that->rsa_ssa_pkcs1_private_key_;
 }
 
 }  // namespace tink

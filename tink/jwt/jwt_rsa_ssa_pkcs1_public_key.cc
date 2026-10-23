@@ -16,13 +16,15 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
 
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -30,9 +32,46 @@
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 
 namespace crypto {
 namespace tink {
+namespace {
+
+absl::StatusOr<RsaSsaPkcs1Parameters::HashType> ToRsaSsaPkcs1HashType(
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm) {
+  switch (algorithm) {
+    case JwtRsaSsaPkcs1Parameters::Algorithm::kRs256:
+      return RsaSsaPkcs1Parameters::HashType::kSha256;
+    case JwtRsaSsaPkcs1Parameters::Algorithm::kRs384:
+      return RsaSsaPkcs1Parameters::HashType::kSha384;
+    case JwtRsaSsaPkcs1Parameters::Algorithm::kRs512:
+      return RsaSsaPkcs1Parameters::HashType::kSha512;
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unknown algorithm.");
+  }
+}
+
+absl::StatusOr<RsaSsaPkcs1PublicKey> ToRsaSsaPkcs1PublicKey(
+    const JwtRsaSsaPkcs1Parameters& parameters, const BigInteger& modulus,
+    PartialKeyAccessToken token) {
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPkcs1Parameters::HashType hash_type,
+                        ToRsaSsaPkcs1HashType(parameters.GetAlgorithm()));
+  ABSL_ASSIGN_OR_RETURN(
+      RsaSsaPkcs1Parameters rsa_ssa_pkcs1_parameters,
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(parameters.GetModulusSizeInBits())
+          .SetPublicExponent(parameters.GetPublicExponent())
+          .SetHashType(hash_type)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build());
+  return RsaSsaPkcs1PublicKey::Create(rsa_ssa_pkcs1_parameters, modulus,
+                                      /*id_requirement=*/std::nullopt, token);
+}
+
+}  // namespace
 
 JwtRsaSsaPkcs1PublicKey::Builder&
 JwtRsaSsaPkcs1PublicKey::Builder::SetParameters(
@@ -119,20 +158,12 @@ absl::StatusOr<JwtRsaSsaPkcs1PublicKey> JwtRsaSsaPkcs1PublicKey::Builder::Build(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  // Check if the modulus length matches the modulus_size_in_bits parameter.
-  if (modulus_->SizeInBytes() * 8 != parameters_->GetModulusSizeInBits()) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrFormat("Invalid modulus length (expected %d, got %d)",
-                        parameters_->GetModulusSizeInBits(),
-                        modulus_->SizeInBytes() * 8));
-  }
-  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
-  if (!kid.ok()) {
-    return kid.status();
-  }
-  return JwtRsaSsaPkcs1PublicKey(*parameters_, *modulus_, id_requirement_,
-                                 std::move(*kid));
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPkcs1PublicKey rsa_ssa_pkcs1_public_key,
+                        ToRsaSsaPkcs1PublicKey(*parameters_, *modulus_, token));
+  ABSL_ASSIGN_OR_RETURN(std::optional<std::string> kid, ComputeKid());
+  return JwtRsaSsaPkcs1PublicKey(*parameters_,
+                                 std::move(rsa_ssa_pkcs1_public_key),
+                                 id_requirement_, std::move(kid));
 }
 
 bool JwtRsaSsaPkcs1PublicKey::operator==(const Key& other) const {
@@ -141,7 +172,8 @@ bool JwtRsaSsaPkcs1PublicKey::operator==(const Key& other) const {
   if (that == nullptr) {
     return false;
   }
-  return parameters_ == that->parameters_ && modulus_ == that->modulus_ &&
+  return parameters_ == that->parameters_ &&
+         rsa_ssa_pkcs1_public_key_ == that->rsa_ssa_pkcs1_public_key_ &&
          id_requirement_ == that->id_requirement_ && kid_ == that->kid_;
 }
 

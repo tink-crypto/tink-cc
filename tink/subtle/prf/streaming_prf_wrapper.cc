@@ -69,6 +69,11 @@ absl::StatusOr<std::unique_ptr<StreamingPrf>> StreamingPrfWrapper::Wrap(
                      entries.size(), " keys."));
   }
   auto* entry = entries[0];
+  if (streaming_prf_set->get_primary() != entry) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "StreamingPrfWrapper can only create StreamingPrf "
+                        "objects from keysets whose single key is primary.");
+  }
   if (entry->get_status() != google::crypto::tink::KeyStatusType::ENABLED) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

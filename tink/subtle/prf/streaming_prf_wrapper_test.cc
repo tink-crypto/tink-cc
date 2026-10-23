@@ -105,6 +105,27 @@ TEST(KeysetDeriverWrapperTest, WrapSingle) {
   EXPECT_THAT(prf_output.value(), Eq("10:single_keyinput_text"));
 }
 
+TEST(KeysetDeriverWrapperTest, WrapWithoutPrimaryFails) {
+  PrimitiveSet<StreamingPrf>::Builder prf_set_builder;
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_key_id(1234);
+  key_info.set_status(KeyStatusType::ENABLED);
+  key_info.set_output_prefix_type(OutputPrefixType::RAW);
+
+  prf_set_builder.AddPrimitive(
+      std::make_unique<DummyStreamingPrf>("single_key"), key_info);
+  absl::StatusOr<PrimitiveSet<StreamingPrf>> prf_set =
+      std::move(prf_set_builder).Build();
+  ASSERT_THAT(prf_set, IsOk());
+
+  EXPECT_THAT(StreamingPrfWrapper()
+                  .Wrap(std::make_unique<PrimitiveSet<StreamingPrf>>(
+                      *std::move(prf_set)))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("single key is primary")));
+}
+
 TEST(KeysetDeriverWrapperTest, WrapNonRaw) {
   PrimitiveSet<StreamingPrf>::Builder prf_set_builder;
   KeysetInfo::KeyInfo key_info;

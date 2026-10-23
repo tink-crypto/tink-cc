@@ -78,6 +78,11 @@ class JwtRsaSsaPkcs1PublicKey final : public JwtSignaturePublicKey {
     return rsa_ssa_pkcs1_public_key_.GetModulus(token);
   }
 
+  const RsaSsaPkcs1PublicKey& GetRsaSsaPkcs1PublicKey(
+      PartialKeyAccessToken token) const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return rsa_ssa_pkcs1_public_key_;
+  }
+
   const JwtRsaSsaPkcs1Parameters& GetParameters() const override {
     return parameters_;
   }
@@ -95,8 +100,6 @@ class JwtRsaSsaPkcs1PublicKey final : public JwtSignaturePublicKey {
   }
 
  private:
-  friend class JwtRsaSsaPkcs1PrivateKey;
-
   explicit JwtRsaSsaPkcs1PublicKey(
       const JwtRsaSsaPkcs1Parameters& parameters,
       RsaSsaPkcs1PublicKey rsa_ssa_pkcs1_public_key,
@@ -105,11 +108,6 @@ class JwtRsaSsaPkcs1PublicKey final : public JwtSignaturePublicKey {
         rsa_ssa_pkcs1_public_key_(std::move(rsa_ssa_pkcs1_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
-
-  const RsaSsaPkcs1PublicKey& GetRsaSsaPkcs1PublicKey(
-      PartialKeyAccessToken token) const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return rsa_ssa_pkcs1_public_key_;
-  }
 
   JwtRsaSsaPkcs1Parameters parameters_;
   RsaSsaPkcs1PublicKey rsa_ssa_pkcs1_public_key_;

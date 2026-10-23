@@ -21,6 +21,7 @@
 #include <optional>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
@@ -105,6 +106,11 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
   }
   const RestrictedData& GetCrtCoefficientData() const {
     return rsa_ssa_pkcs1_private_key_.GetCrtCoefficientData();
+  }
+
+  const RsaSsaPkcs1PrivateKey& GetRsaSsaPkcs1PrivateKey(
+      PartialKeyAccessToken token) const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return rsa_ssa_pkcs1_private_key_;
   }
 
   const JwtRsaSsaPkcs1PublicKey& GetPublicKey() const override {

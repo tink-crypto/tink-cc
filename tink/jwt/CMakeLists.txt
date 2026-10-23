@@ -900,7 +900,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
-    tink::util::test_util
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_public_key
 )
 
 tink_cc_test(
@@ -929,6 +930,7 @@ tink_cc_test(
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
+    tink::signature::rsa_ssa_pkcs1_private_key
     tink::util::test_util
 )
 

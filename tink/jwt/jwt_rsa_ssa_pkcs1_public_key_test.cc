@@ -33,7 +33,8 @@
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
-#include "tink/util/test_util.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -48,6 +49,7 @@ using ::testing::Values;
 
 struct TestCase {
   JwtRsaSsaPkcs1Parameters::Algorithm algorithm;
+  RsaSsaPkcs1Parameters::HashType expected_hash_type;
   JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy;
   std::optional<int> id_requirement;
   std::optional<std::string> custom_kid;
@@ -184,14 +186,17 @@ using JwtRsaSsaPkcs1PublicKeyTest = TestWithParam<TestCase>;
 INSTANTIATE_TEST_SUITE_P(
     JwtRsaSsaPkcs1PublicKeyTestSuite, JwtRsaSsaPkcs1PublicKeyTest,
     Values(TestCase{JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+                    RsaSsaPkcs1Parameters::HashType::kSha256,
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
                     /*id_requirement=*/0x1ac6a944,
                     /*custom_kid=*/std::nullopt, /*expected_kid=*/"GsapRA"},
            TestCase{JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
+                    RsaSsaPkcs1Parameters::HashType::kSha384,
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
                     /*id_requirement=*/std::nullopt,
                     /*custom_kid=*/"custom_kid", /*expected_kid=*/"custom_kid"},
            TestCase{JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
+                    RsaSsaPkcs1Parameters::HashType::kSha512,
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
                     /*id_requirement=*/std::nullopt,
                     /*custom_kid=*/std::nullopt,
@@ -228,6 +233,22 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, BuildWorks) {
   EXPECT_THAT(key->GetModulus(GetPartialKeyAccess()), Eq(modulus));
   EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
+
+  absl::StatusOr<RsaSsaPkcs1Parameters> expected_rsa_parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(GetF4())
+          .SetHashType(test_case.expected_hash_type)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(expected_rsa_parameters, IsOk());
+  absl::StatusOr<RsaSsaPkcs1PublicKey> expected_rsa_public_key =
+      RsaSsaPkcs1PublicKey::Create(*expected_rsa_parameters, modulus,
+                                   /*id_requirement=*/std::nullopt,
+                                   GetPartialKeyAccess());
+  ASSERT_THAT(expected_rsa_public_key, IsOk());
+  EXPECT_THAT(key->GetRsaSsaPkcs1PublicKey(GetPartialKeyAccess()),
+              Eq(*expected_rsa_public_key));
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, CustomKidPreservesStringViewBounds) {

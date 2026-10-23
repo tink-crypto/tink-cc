@@ -103,6 +103,31 @@ TEST(CompositeMlDsaUtilBoringSslTest, ComputeCompositeMlDsaMessagePrimeWorks) {
   EXPECT_THAT(message_prime, Eq(expected_message_prime));
 }
 
+TEST(CompositeMlDsaUtilBoringSslTest,
+     ComputeCompositeMlDsaMessagePrimeSha256Works) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+          CompositeMlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::string> label = GetCompositeMlDsaLabel(*parameters);
+  ASSERT_THAT(label, IsOk());
+
+  std::string message = HexDecodeOrDie("00010203040506070809");
+  std::string expected_message_prime = HexDecodeOrDie(
+      "436f6d706f73697465416c676f726974686d5369676e61747572657332303235"
+      "434f4d505349472d4d4c44534134342d45434453412d503235362d534841323536"
+      "00"
+      "1f825aa2f0020ef7cf91dfa30da4668d791c5d4824fc8e41354b89ec05795ab3");
+
+  std::string message_prime =
+      ComputeCompositeMlDsaMessagePrime(*label, message);
+
+  EXPECT_THAT(message_prime, Eq(expected_message_prime));
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

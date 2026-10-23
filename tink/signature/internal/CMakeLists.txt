@@ -849,13 +849,14 @@ tink_cc_library(
     composite_ml_dsa_util_boringssl.cc
     composite_ml_dsa_util_boringssl.h
   DEPS
+    absl::absl_check
     absl::status
     absl::statusor
     absl::strings
     absl::string_view
     tink::internal::boringssl
+    tink::internal::md_util
     tink::signature::composite_ml_dsa_parameters
-    tink::subtle::subtle_util
 )
 
 tink_cc_test(

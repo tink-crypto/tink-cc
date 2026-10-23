@@ -18,14 +18,15 @@
 
 #include <string>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/sha.h"
+#include "openssl/evp.h"
+#include "tink/internal/md_util.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
-#include "tink/subtle/subtle_util.h"
 
 namespace crypto {
 namespace tink {
@@ -92,21 +93,19 @@ std::string ComputeCompositeMlDsaMessagePrime(absl::string_view label,
                                               absl::string_view message) {
   // M' = Prefix || Label || len(ctx) || ctx || PH( M )
   const absl::string_view kPrefix = "CompositeAlgorithmSignatures2025";
-  std::string prehash;
+  const EVP_MD* md = nullptr;
   if (absl::EndsWith(label, "SHA256")) {
-    subtle::ResizeStringUninitialized(&prehash, SHA256_DIGEST_LENGTH);
-    SHA256(reinterpret_cast<const unsigned char*>(message.data()),
-           message.size(), reinterpret_cast<unsigned char*>(prehash.data()));
+    md = EVP_sha256();
   } else {
     // With the exception of `MLDSA44-ECDSA-P256-SHA256`, the other supported
     // classical algorithms use `SHA512` as the pre-hash.
-    subtle::ResizeStringUninitialized(&prehash, SHA512_DIGEST_LENGTH);
-    SHA512(reinterpret_cast<const unsigned char*>(message.data()),
-           message.size(), reinterpret_cast<unsigned char*>(prehash.data()));
+    md = EVP_sha512();
   }
+  absl::StatusOr<std::string> prehash = ComputeHash(message, *md);
+  ABSL_CHECK_OK(prehash);
   // Here len(ctx) is a single byte containing the length of the context.
   // Since we use an empty context, we set it to '\x00'.
-  return absl::StrCat(kPrefix, label, absl::string_view("\x00", 1), prehash);
+  return absl::StrCat(kPrefix, label, absl::string_view("\x00", 1), *prehash);
 }
 
 }  // namespace internal

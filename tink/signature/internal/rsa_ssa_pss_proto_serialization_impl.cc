@@ -369,7 +369,8 @@ absl::StatusOr<RsaSsaPssPublicKey> ParsePublicKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  int modulus_size_in_bits = proto_key.n().size() * 8;
+  BigInteger modulus(proto_key.n());
+  int modulus_size_in_bits = modulus.SizeInBytes() * 8;
   absl::StatusOr<RsaSsaPssParameters> parameters =
       ToParameters(serialization.GetOutputPrefixTypeTP(), proto_key.params(),
                    modulus_size_in_bits, BigInteger(proto_key.e()));
@@ -377,7 +378,7 @@ absl::StatusOr<RsaSsaPssPublicKey> ParsePublicKey(
     return parameters.status();
   }
 
-  return RsaSsaPssPublicKey::Create(*parameters, BigInteger(proto_key.n()),
+  return RsaSsaPssPublicKey::Create(*parameters, modulus,
                                     serialization.IdRequirement(),
                                     GetPartialKeyAccess());
 }
@@ -407,7 +408,8 @@ absl::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
         "Only version 0 public keys are accepted.");
   }
 
-  int modulus_size_in_bits = proto_key.public_key().n().size() * 8;
+  BigInteger modulus(proto_key.public_key().n());
+  int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
   absl::StatusOr<RsaSsaPssParameters> parameters = ToParameters(
       serialization.GetOutputPrefixTypeTP(), proto_key.public_key().params(),
@@ -417,8 +419,8 @@ absl::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
-      *parameters, BigInteger(proto_key.public_key().n()),
-      serialization.IdRequirement(), GetPartialKeyAccess());
+      *parameters, modulus, serialization.IdRequirement(),
+      GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }

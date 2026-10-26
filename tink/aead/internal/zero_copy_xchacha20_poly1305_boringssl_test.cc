@@ -18,7 +18,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
@@ -32,14 +31,16 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/config/tink_fips.h"
-#include "tink/internal/ssl_util.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -60,6 +61,7 @@ using ::absl_testing::StatusIs;
 using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -68,11 +70,6 @@ class ZeroCopyXChacha20Poly1305BoringSslTest : public testing::Test {
   void SetUp() override {
     SecretData key =
         SecretData(test::HexDecodeOrDie(kKey256Hex));
-    if (!IsBoringSsl()) {
-      ASSERT_THAT(ZeroCopyXChacha20Poly1305BoringSsl::New(key).status(),
-                  StatusIs(absl::StatusCode::kUnimplemented));
-      GTEST_SKIP() << "Unimplemented with OpenSSL";
-    }
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }
@@ -155,9 +152,6 @@ TEST_F(ZeroCopyXChacha20Poly1305BoringSslTest,
 }
 
 TEST(ZeroCopyXChacha20Poly1305BoringSslStandaloneTest, FailsOnFipsOnlyMode) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only ran in FIPS-only mode";
   }
@@ -167,14 +161,78 @@ TEST(ZeroCopyXChacha20Poly1305BoringSslStandaloneTest, FailsOnFipsOnlyMode) {
 
   EXPECT_THAT(ZeroCopyXChacha20Poly1305BoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));
+
+  const AeadTestVector& test_vector = GetXChaCha20Poly1305TestVector(
+      XChaCha20Poly1305Parameters::Variant::kTink);
+  const XChaCha20Poly1305Key& tink_key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  EXPECT_THAT(ZeroCopyXChacha20Poly1305BoringSsl::New(tink_key).status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST_F(ZeroCopyXChacha20Poly1305BoringSslTest, EncryptBufferTooSmall) {
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, cipher_->MaxEncryptionSize(kMessage.size()) - 1);
+  EXPECT_THAT(
+      cipher_->Encrypt(kMessage, kAssociatedData, absl::MakeSpan(ciphertext))
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(ZeroCopyXChacha20Poly1305BoringSslTest, DecryptBufferTooSmall) {
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, cipher_->MaxEncryptionSize(kMessage.size()));
+  ASSERT_THAT(
+      cipher_->Encrypt(kMessage, kAssociatedData, absl::MakeSpan(ciphertext)),
+      IsOk());
+
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(&plaintext, kMessage.size() - 1);
+  EXPECT_THAT(
+      cipher_->Decrypt(ciphertext, kAssociatedData, absl::MakeSpan(plaintext))
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(ZeroCopyXChacha20Poly1305BoringSslTest,
+       EncryptOverlappingPlaintextCiphertext) {
+  std::string buffer(1024, '\0');
+  absl::c_copy(kMessage, buffer.begin());
+  absl::string_view plaintext =
+      absl::string_view(buffer).substr(0, kMessage.size());
+  absl::Span<char> cipher_buff = absl::MakeSpan(buffer).subspan(1);
+  EXPECT_THAT(
+      cipher_->Encrypt(plaintext, kAssociatedData, cipher_buff).status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition));
+}
+
+TEST_F(ZeroCopyXChacha20Poly1305BoringSslTest,
+       DecryptOverlappingPlaintextCiphertext) {
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, cipher_->MaxEncryptionSize(kMessage.size()));
+  ASSERT_THAT(
+      cipher_->Encrypt(kMessage, kAssociatedData, absl::MakeSpan(ciphertext)),
+      IsOk());
+
+  std::string buffer(1024, '\0');
+  absl::Span<char> out_buffer =
+      absl::MakeSpan(buffer).subspan(0, kMessage.size());
+  int ciphertext_start = 1;
+  std::memcpy(&buffer[0] + ciphertext_start, ciphertext.data(),
+              ciphertext.size());
+  absl::string_view overlapping_ct =
+      absl::string_view(buffer).substr(ciphertext_start, ciphertext.size());
+  EXPECT_THAT(
+      cipher_->Decrypt(overlapping_ct, kAssociatedData, out_buffer).status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 class ZeroCopyXChacha20Poly1305BoringSslWycheproofTest
     : public TestWithParam<WycheproofTestVector> {
   void SetUp() override {
-    if (!IsBoringSsl()) {
-      GTEST_SKIP() << "Unimplemented with OpenSSL";
-    }
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }
@@ -221,6 +279,142 @@ INSTANTIATE_TEST_SUITE_P(ZeroCopyXChacha20Poly1305BoringSslWycheproofTests,
                          ZeroCopyXChacha20Poly1305BoringSslWycheproofTest,
                          ValuesIn(ReadWycheproofTestVectors(
                              /*file_name=*/"xchacha20_poly1305_test.json")));
+
+class ZeroCopyXChaCha20Poly1305BoringSslTestVectorTest
+    : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled()) {
+      GTEST_SKIP() << "Not supported in FIPS-only mode";
+    }
+  }
+};
+
+TEST_P(ZeroCopyXChaCha20Poly1305BoringSslTestVectorTest, Decrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size =
+      (*cipher)->Decrypt(test_vector.ciphertext, test_vector.associated_data,
+                         absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyXChaCha20Poly1305BoringSslTestVectorTest, EncryptDecrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, (*cipher)->MaxEncryptionSize(test_vector.plaintext.size()));
+  absl::StatusOr<int64_t> ciphertext_size =
+      (*cipher)->Encrypt(test_vector.plaintext, test_vector.associated_data,
+                         absl::MakeSpan(ciphertext));
+  ASSERT_THAT(ciphertext_size, IsOk());
+  ciphertext.resize(*ciphertext_size);
+  if (!key.GetOutputPrefix().empty()) {
+    EXPECT_THAT(ciphertext, StartsWith(key.GetOutputPrefix()));
+  }
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size = (*cipher)->Decrypt(
+      ciphertext, test_vector.associated_data, absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyXChaCha20Poly1305BoringSslTestVectorTest,
+       MaxEncryptionSizeEqualsCiphertextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxEncryptionSize(test_vector.plaintext.size()),
+            test_vector.ciphertext.size());
+}
+
+TEST_P(ZeroCopyXChaCha20Poly1305BoringSslTestVectorTest,
+       MaxDecryptionSizeEqualsPlaintextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()),
+            test_vector.plaintext.size());
+}
+
+INSTANTIATE_TEST_SUITE_P(ZeroCopyXChaCha20Poly1305BoringSslTestVectorTests,
+                         ZeroCopyXChaCha20Poly1305BoringSslTestVectorTest,
+                         ValuesIn(CreateXChaCha20Poly1305TestVectors()));
+
+TEST(ZeroCopyXChaCha20Poly1305BoringSslKeyTest, DecryptWithBadPrefixFails) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const AeadTestVector& test_vector = GetXChaCha20Poly1305TestVector(
+      XChaCha20Poly1305Parameters::Variant::kTink);
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  std::string bad_ciphertext = test_vector.ciphertext;
+  bad_ciphertext[0] ^= 0x01;  // Corrupt prefix
+
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(bad_ciphertext.size()));
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(bad_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(ZeroCopyXChaCha20Poly1305BoringSslKeyTest,
+     DecryptWithShortPrefixedCiphertextFails) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const AeadTestVector& test_vector = GetXChaCha20Poly1305TestVector(
+      XChaCha20Poly1305Parameters::Variant::kTink);
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  const size_t min_size =
+      key.GetOutputPrefix().size() + kNonceSizeInBytes + kTagSizeInBytes;
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(min_size), 0);
+  std::string short_ciphertext(min_size - 1, 'a');
+  std::string plaintext;
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(short_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
 
 }  // namespace
 }  // namespace internal

@@ -16,20 +16,28 @@
 
 #include "tink/aead/internal/zero_copy_xchacha20_poly1305_boringssl.h"
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 
@@ -58,21 +66,40 @@ ZeroCopyXChacha20Poly1305BoringSsl::New(SecretData key) {
   return std::move(aead_impl);
 }
 
+absl::StatusOr<std::unique_ptr<ZeroCopyAead>>
+ZeroCopyXChacha20Poly1305BoringSsl::New(const XChaCha20Poly1305Key& key) {
+  auto status =
+      internal::CheckFipsCompatibility<ZeroCopyXChacha20Poly1305BoringSsl>();
+  if (!status.ok()) {
+    return status;
+  }
+  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
+      internal::CreateXchacha20Poly1305OneShotCrypter(
+          key.GetKeyBytes(GetPartialKeyAccess())
+              .Get(InsecureSecretKeyAccess::Get()));
+  if (!aead.ok()) {
+    return aead.status();
+  }
+  return {absl::WrapUnique(new ZeroCopyXChacha20Poly1305BoringSsl(
+      *std::move(aead), key.GetOutputPrefix()))};
+}
+
 int64_t ZeroCopyXChacha20Poly1305BoringSsl::MaxEncryptionSize(
     int64_t plaintext_size) const {
   // No need to call `aead_->CiphertextSize()` here as the overhead is known.
-  return plaintext_size + kOverheadInBytes;
+  return output_prefix_.size() + plaintext_size + kOverheadInBytes;
 }
 
 absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data,
     absl::Span<char> buffer) const {
-  size_t bytes_needed = plaintext.size() + kOverheadInBytes;
-  if (buffer.size() < bytes_needed) {
+  const int64_t max_encryption_size = MaxEncryptionSize(plaintext.size());
+  ABSL_CHECK_GE(max_encryption_size, 0);
+  if (buffer.size() < static_cast<size_t>(max_encryption_size)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Encryption buffer too small; expected at least ",
-                     bytes_needed, " bytes, got ", buffer.size()));
+                     max_encryption_size, " bytes, got ", buffer.size()));
   }
 
   absl::string_view buffer_string(buffer.data(), buffer.size());
@@ -82,8 +109,15 @@ absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Encrypt(
         "Plaintext and ciphertext buffers overlap; this is disallowed");
   }
 
-  absl::Span<char> nonce_buffer = buffer.subspan(0, kNonceSizeInBytes);
-  absl::Span<char> encrypted_buffer = buffer.subspan(kNonceSizeInBytes);
+  if (!output_prefix_.empty()) {
+    std::copy(output_prefix_.begin(), output_prefix_.end(), buffer.begin());
+  }
+
+  absl::Span<char> buffer_after_prefix = buffer.subspan(output_prefix_.size());
+  absl::Span<char> nonce_buffer =
+      buffer_after_prefix.subspan(0, kNonceSizeInBytes);
+  absl::Span<char> encrypted_buffer =
+      buffer_after_prefix.subspan(kNonceSizeInBytes);
 
   absl::Status res = subtle::Random::GetRandomBytes(nonce_buffer);
   if (!res.ok()) {
@@ -96,26 +130,38 @@ absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Encrypt(
   if (!written_bytes.ok()) {
     return written_bytes.status();
   }
-  return kNonceSizeInBytes + *written_bytes;
+  return output_prefix_.size() + kNonceSizeInBytes + *written_bytes;
 }
 
 int64_t ZeroCopyXChacha20Poly1305BoringSsl::MaxDecryptionSize(
     int64_t ciphertext_size) const {
   // No need to call `aead_->PlaintextSize()` here as the overhead is known.
-  if (ciphertext_size < kOverheadInBytes) {
+  const int64_t size =
+      ciphertext_size - output_prefix_.size() - kOverheadInBytes;
+  if (size <= 0) {
     return 0;
   }
-  return ciphertext_size - kOverheadInBytes;
+  return size;
 }
 
 absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data,
     absl::Span<char> buffer) const {
-  if (ciphertext.size() < kOverheadInBytes) {
+  const size_t min_ciphertext_size = output_prefix_.size() + kOverheadInBytes;
+  if (ciphertext.size() < min_ciphertext_size) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Ciphertext too short; expected at least ",
-                     kOverheadInBytes, " got ", ciphertext.size()));
+                     min_ciphertext_size, " got ", ciphertext.size()));
+  }
+
+  const int64_t max_decryption_size = MaxDecryptionSize(ciphertext.size());
+  ABSL_CHECK_GE(max_decryption_size, 0);
+  if (buffer.size() < static_cast<size_t>(max_decryption_size)) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Decryption buffer too small; expected at least ",
+                     max_decryption_size, " bytes, got ", buffer.size()));
   }
 
   absl::string_view buffer_string(buffer.data(), buffer.size());
@@ -123,6 +169,14 @@ absl::StatusOr<int64_t> ZeroCopyXChacha20Poly1305BoringSsl::Decrypt(
     return absl::Status(
         absl::StatusCode::kFailedPrecondition,
         "Plaintext and ciphertext buffers overlap; this is disallowed");
+  }
+
+  if (!output_prefix_.empty()) {
+    if (!absl::StartsWith(ciphertext, output_prefix_)) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Prefix mismatch");
+    }
+    ciphertext.remove_prefix(output_prefix_.size());
   }
 
   absl::string_view nonce = ciphertext.substr(0, kNonceSizeInBytes);

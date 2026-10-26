@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/status/statusor.h"
@@ -26,6 +27,7 @@
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/secret_data.h"
 
@@ -40,6 +42,9 @@ class ZeroCopyXChacha20Poly1305BoringSsl : public ZeroCopyAead {
   // Currently supported nonce size is 24 bytes.
   // The tag size is fixed to 16 bytes.
   static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(SecretData key);
+
+  static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
+      const XChaCha20Poly1305Key& key);
 
   int64_t MaxEncryptionSize(int64_t plaintext_size) const override;
 
@@ -58,10 +63,12 @@ class ZeroCopyXChacha20Poly1305BoringSsl : public ZeroCopyAead {
 
  private:
   explicit ZeroCopyXChacha20Poly1305BoringSsl(
-      std::unique_ptr<SslOneShotAead> aead)
-      : aead_(std::move(aead)) {}
+      std::unique_ptr<SslOneShotAead> aead,
+      absl::string_view output_prefix = "")
+      : aead_(std::move(aead)), output_prefix_(output_prefix) {}
 
   const std::unique_ptr<SslOneShotAead> aead_;
+  const std::string output_prefix_;
 };
 
 }  // namespace internal

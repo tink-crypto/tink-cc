@@ -18,6 +18,7 @@
 #define TINK_JWT_JWT_ML_DSA_PRIVATE_KEY_H_
 
 #include <memory>
+#include <utility>
 
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
@@ -26,6 +27,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ml_dsa_private_key.h"
 
 namespace crypto {
 namespace tink {
@@ -34,20 +36,8 @@ namespace tink {
 class JwtMlDsaPrivateKey : public JwtSignaturePrivateKey {
  public:
   // Copyable and movable.
-  JwtMlDsaPrivateKey(const JwtMlDsaPrivateKey& other)
-      : public_key_(other.public_key_),
-        private_seed_bytes_(other.private_seed_bytes_) {}
-
-  JwtMlDsaPrivateKey& operator=(const JwtMlDsaPrivateKey& other) {
-    if (this == &other) {
-      return *this;
-    }
-
-    public_key_ = other.public_key_;
-    private_seed_bytes_ = other.private_seed_bytes_;
-    return *this;
-  }
-
+  JwtMlDsaPrivateKey(const JwtMlDsaPrivateKey& other) = default;
+  JwtMlDsaPrivateKey& operator=(const JwtMlDsaPrivateKey& other) = default;
   JwtMlDsaPrivateKey(JwtMlDsaPrivateKey&& other) = default;
   JwtMlDsaPrivateKey& operator=(JwtMlDsaPrivateKey&& other) = default;
 
@@ -56,7 +46,7 @@ class JwtMlDsaPrivateKey : public JwtSignaturePrivateKey {
       const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateSeedBytes(PartialKeyAccessToken token) const {
-    return private_seed_bytes_;
+    return ml_dsa_private_key_.GetPrivateSeedBytes(token);
   }
 
   const JwtMlDsaPublicKey& GetPublicKey() const override { return public_key_; }
@@ -73,11 +63,12 @@ class JwtMlDsaPrivateKey : public JwtSignaturePrivateKey {
 
  private:
   explicit JwtMlDsaPrivateKey(const JwtMlDsaPublicKey& public_key,
-                              const RestrictedData& private_seed_bytes)
-      : public_key_(public_key), private_seed_bytes_(private_seed_bytes) {}
+                              MlDsaPrivateKey ml_dsa_private_key)
+      : public_key_(public_key),
+        ml_dsa_private_key_(std::move(ml_dsa_private_key)) {}
 
   JwtMlDsaPublicKey public_key_;
-  RestrictedData private_seed_bytes_;
+  MlDsaPrivateKey ml_dsa_private_key_;
 };
 
 }  // namespace tink

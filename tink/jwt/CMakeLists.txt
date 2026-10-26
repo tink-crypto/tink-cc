@@ -1106,6 +1106,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_public_key
     absl::core_headers
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::string_view
@@ -1113,6 +1114,8 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::endian
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
 )
 
 tink_cc_test(
@@ -1142,19 +1145,15 @@ tink_cc_library(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_public_key
     tink::jwt::jwt_signature_private_key
-    absl::log
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
-    absl::optional
     tink::internal::boringssl
     tink::core::key
-    tink::core::partial_key_access
     tink::core::partial_key_access_token
     tink::core::restricted_data
-    tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-    tink::signature::ml_dsa_public_key
 )
 
 tink_cc_test(

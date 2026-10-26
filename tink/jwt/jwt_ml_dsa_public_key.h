@@ -30,6 +30,7 @@
 #include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/ml_dsa_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -73,7 +74,7 @@ class JwtMlDsaPublicKey final : public JwtSignaturePublicKey {
 
   absl::string_view GetPublicKeyBytes(PartialKeyAccessToken token) const
       ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return public_key_bytes_;
+    return ml_dsa_public_key_.GetPublicKeyBytes(token);
   }
 
   const JwtMlDsaParameters& GetParameters() const override {
@@ -93,17 +94,24 @@ class JwtMlDsaPublicKey final : public JwtSignaturePublicKey {
   }
 
  private:
+  friend class JwtMlDsaPrivateKey;
+
   JwtMlDsaPublicKey(const JwtMlDsaParameters& parameters,
-                    absl::string_view public_key_bytes,
+                    MlDsaPublicKey ml_dsa_public_key,
                     std::optional<int> id_requirement,
                     std::optional<std::string> kid)
       : parameters_(parameters),
-        public_key_bytes_(public_key_bytes),
+        ml_dsa_public_key_(std::move(ml_dsa_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
 
+  const MlDsaPublicKey& GetMlDsaPublicKey(PartialKeyAccessToken token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return ml_dsa_public_key_;
+  }
+
   JwtMlDsaParameters parameters_;
-  std::string public_key_bytes_;
+  MlDsaPublicKey ml_dsa_public_key_;
   std::optional<int> id_requirement_;
   std::optional<std::string> kid_;
 };

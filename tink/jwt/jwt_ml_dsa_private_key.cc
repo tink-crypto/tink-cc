@@ -16,73 +16,21 @@
 
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
 
-#include "absl/log/log.h"
+#include <utility>
+
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/types/optional.h"
 #include "openssl/mldsa.h"
-#include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/key.h"
-#include "tink/partial_key_access.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/ml_dsa_public_key.h"
 
 namespace crypto {
 namespace tink {
-namespace {
-
-absl::StatusOr<MlDsaParameters> ToMlDsaParametersWithNoPrefix(
-    const JwtMlDsaParameters& parameters) {
-  switch (parameters.GetAlgorithm()) {
-    case JwtMlDsaParameters::Algorithm::kMlDsa44:
-      return MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
-                                     MlDsaParameters::Variant::kNoPrefix);
-    case JwtMlDsaParameters::Algorithm::kMlDsa65:
-      return MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
-                                     MlDsaParameters::Variant::kNoPrefix);
-    case JwtMlDsaParameters::Algorithm::kMlDsa87:
-      return MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa87,
-                                     MlDsaParameters::Variant::kNoPrefix);
-    default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Unknown JWT ML-DSA algorithm");
-  }
-}
-
-absl::StatusOr<MlDsaPublicKey> ToMlDsaPublicKeyWithNoPrefix(
-    const JwtMlDsaPublicKey& public_key) {
-  absl::StatusOr<MlDsaParameters> ml_dsa_parameters =
-      ToMlDsaParametersWithNoPrefix(public_key.GetParameters());
-  if (!ml_dsa_parameters.ok()) {
-    return ml_dsa_parameters.status();
-  }
-  return MlDsaPublicKey::Create(
-      *ml_dsa_parameters, public_key.GetPublicKeyBytes(GetPartialKeyAccess()),
-      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-}
-
-// Returns true if the corresponding ML-DSA key pair is valid.
-absl::Status ValidateKeyPair(const JwtMlDsaPublicKey& jwt_ml_dsa_public_key,
-                             const RestrictedData& private_seed_bytes) {
-  absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key =
-      ToMlDsaPublicKeyWithNoPrefix(jwt_ml_dsa_public_key);
-  if (!ml_dsa_public_key.ok()) {
-    return ml_dsa_public_key.status();
-  }
-  absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
-      *ml_dsa_public_key, private_seed_bytes, GetPartialKeyAccess());
-  if (!ml_dsa_private_key.ok()) {
-    return ml_dsa_private_key.status();
-  }
-  return absl::OkStatus();
-}
-
-}  // namespace
 
 absl::StatusOr<JwtMlDsaPrivateKey> JwtMlDsaPrivateKey::Create(
     const JwtMlDsaPublicKey& public_key,
@@ -93,13 +41,12 @@ absl::StatusOr<JwtMlDsaPrivateKey> JwtMlDsaPrivateKey::Create(
                      " is different from expected length ", MLDSA_SEED_BYTES));
   }
 
-  absl::Status valid_key_pair_status =
-      ValidateKeyPair(public_key, private_seed_bytes);
-  if (!valid_key_pair_status.ok()) {
-    return valid_key_pair_status;
-  }
+  ABSL_ASSIGN_OR_RETURN(
+      MlDsaPrivateKey ml_dsa_private_key,
+      MlDsaPrivateKey::Create(public_key.GetMlDsaPublicKey(token),
+                              private_seed_bytes, token));
 
-  return JwtMlDsaPrivateKey(public_key, private_seed_bytes);
+  return JwtMlDsaPrivateKey(public_key, std::move(ml_dsa_private_key));
 }
 
 bool JwtMlDsaPrivateKey::operator==(const Key& other) const {
@@ -108,13 +55,8 @@ bool JwtMlDsaPrivateKey::operator==(const Key& other) const {
   if (that == nullptr) {
     return false;
   }
-  if (public_key_ != that->public_key_) {
-    return false;
-  }
-  if (private_seed_bytes_ != that->private_seed_bytes_) {
-    return false;
-  }
-  return true;
+  return public_key_ == that->public_key_ &&
+         ml_dsa_private_key_ == that->ml_dsa_private_key_;
 }
 
 }  // namespace tink

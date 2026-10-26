@@ -18,10 +18,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
@@ -31,6 +33,8 @@
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -39,6 +43,45 @@ namespace {
 static constexpr size_t kMlDsa44PublicKeyBytes = 1312;
 static constexpr size_t kMlDsa65PublicKeyBytes = 1952;
 static constexpr size_t kMlDsa87PublicKeyBytes = 2592;
+
+absl::StatusOr<MlDsaPublicKey> ToMlDsaPublicKey(
+    const JwtMlDsaParameters& parameters, absl::string_view public_key_bytes,
+    PartialKeyAccessToken token) {
+  MlDsaParameters::Instance instance;
+  size_t expected_key_size;
+  absl::string_view algorithm_name;
+  switch (parameters.GetAlgorithm()) {
+    case JwtMlDsaParameters::Algorithm::kMlDsa44:
+      instance = MlDsaParameters::Instance::kMlDsa44;
+      expected_key_size = kMlDsa44PublicKeyBytes;
+      algorithm_name = "ML-DSA-44";
+      break;
+    case JwtMlDsaParameters::Algorithm::kMlDsa65:
+      instance = MlDsaParameters::Instance::kMlDsa65;
+      expected_key_size = kMlDsa65PublicKeyBytes;
+      algorithm_name = "ML-DSA-65";
+      break;
+    case JwtMlDsaParameters::Algorithm::kMlDsa87:
+      instance = MlDsaParameters::Instance::kMlDsa87;
+      expected_key_size = kMlDsa87PublicKeyBytes;
+      algorithm_name = "ML-DSA-87";
+      break;
+    default:
+      return absl::InvalidArgumentError(
+          "Invalid JWT ML-DSA algorithm. Only ML-DSA-44, ML-DSA-65 and "
+          "ML-DSA-87 are currently supported.");
+  }
+  if (public_key_bytes.size() != expected_key_size) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Invalid JWT ML-DSA public key size. Only ", expected_key_size,
+        "-byte keys are currently supported for ", algorithm_name, "."));
+  }
+  ABSL_ASSIGN_OR_RETURN(
+      MlDsaParameters ml_dsa_parameters,
+      MlDsaParameters::Create(instance, MlDsaParameters::Variant::kNoPrefix));
+  return MlDsaPublicKey::Create(ml_dsa_parameters, public_key_bytes,
+                                /*id_requirement=*/std::nullopt, token);
+}
 
 }  // namespace
 
@@ -124,43 +167,12 @@ absl::StatusOr<JwtMlDsaPublicKey> JwtMlDsaPublicKey::Builder::Build(
         "requirement");
   }
 
-  switch (parameters_->GetAlgorithm()) {
-    case JwtMlDsaParameters::Algorithm::kMlDsa44: {
-      if (public_key_bytes_->size() != kMlDsa44PublicKeyBytes) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Invalid JWT ML-DSA public key size. Only ", kMlDsa44PublicKeyBytes,
-            "-byte keys are currently supported for ML-DSA-44."));
-      }
-      break;
-    }
-    case JwtMlDsaParameters::Algorithm::kMlDsa65: {
-      if (public_key_bytes_->size() != kMlDsa65PublicKeyBytes) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Invalid JWT ML-DSA public key size. Only ", kMlDsa65PublicKeyBytes,
-            "-byte keys are currently supported for ML-DSA-65."));
-      }
-      break;
-    }
-    case JwtMlDsaParameters::Algorithm::kMlDsa87: {
-      if (public_key_bytes_->size() != kMlDsa87PublicKeyBytes) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Invalid JWT ML-DSA public key size. Only ", kMlDsa87PublicKeyBytes,
-            "-byte keys are currently supported for ML-DSA-87."));
-      }
-      break;
-    }
-    default:
-      return absl::InvalidArgumentError(
-          "Invalid JWT ML-DSA algorithm. Only ML-DSA-44, ML-DSA-65 and "
-          "ML-DSA-87 are currently supported.");
-  }
-
-  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
-  if (!kid.ok()) {
-    return kid.status();
-  }
-  return JwtMlDsaPublicKey(*parameters_, *public_key_bytes_, id_requirement_,
-                           std::move(*kid));
+  ABSL_ASSIGN_OR_RETURN(
+      MlDsaPublicKey ml_dsa_public_key,
+      ToMlDsaPublicKey(*parameters_, *public_key_bytes_, token));
+  ABSL_ASSIGN_OR_RETURN(std::optional<std::string> kid, ComputeKid());
+  return JwtMlDsaPublicKey(*parameters_, std::move(ml_dsa_public_key),
+                           id_requirement_, std::move(kid));
 }
 
 bool JwtMlDsaPublicKey::operator==(const Key& other) const {
@@ -169,19 +181,9 @@ bool JwtMlDsaPublicKey::operator==(const Key& other) const {
   if (that == nullptr) {
     return false;
   }
-  if (parameters_ != that->parameters_) {
-    return false;
-  }
-  if (public_key_bytes_ != that->public_key_bytes_) {
-    return false;
-  }
-  if (id_requirement_ != that->id_requirement_) {
-    return false;
-  }
-  if (kid_ != that->kid_) {
-    return false;
-  }
-  return true;
+  return parameters_ == that->parameters_ &&
+         ml_dsa_public_key_ == that->ml_dsa_public_key_ &&
+         id_requirement_ == that->id_requirement_ && kid_ == that->kid_;
 }
 
 }  // namespace tink

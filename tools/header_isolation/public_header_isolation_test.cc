@@ -230,6 +230,7 @@
 #include "tink/keyderivation/key_derivation_parameters.h"
 #include "tink/keyderivation/key_gen_config_2026.h"
 #include "tink/keyderivation/keyset_deriver.h"
+#include "tink/keyderivation/keyset_deriver_wrapper.h"
 #include "tink/keyderivation/prf_based_key_derivation_key.h"
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
 #include "tink/keyderivation/prf_based_key_derivation_proto_serialization.h"

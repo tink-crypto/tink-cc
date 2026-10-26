@@ -923,6 +923,7 @@ tink_cc_test(
   SRCS
     ml_dsa_sign_key_manager_test.cc
   DEPS
+    tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_sign_key_manager
     tink::signature::internal::ml_dsa_verify_key_manager
     gmock
@@ -934,7 +935,6 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-    tink::signature::signature_config
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::proto::ml_dsa_cc_proto
@@ -945,13 +945,13 @@ tink_cc_test(
   SRCS
     ml_dsa_verify_key_manager_test.cc
   DEPS
+    tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_verify_key_manager
     gmock
     absl::status_matchers
     absl::string_view
     tink::core::key_manager
     tink::core::public_key_verify
-    tink::signature::signature_config
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_dsa_cc_proto

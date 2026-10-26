@@ -27,12 +27,12 @@
 #include "tink/key_manager.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
 #include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/signature_config.h"
 #include "proto/ml_dsa.pb.h"
 
 namespace crypto {
@@ -46,7 +46,7 @@ using ::testing::Eq;
 class MlDsaSignKeyManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_THAT(SignatureConfig::Register(), IsOk());
+    ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
     key_manager_ = MakeMlDsaSignKeyManager();
   }
 

@@ -28,9 +28,9 @@
 #include "tink/key_manager.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_key_manager.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
-#include "tink/signature/signature_config.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -56,7 +56,7 @@ using ::testing::NotNull;
 class LegacyKeyManagerImplTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_THAT(SignatureConfig::Register(), IsOk());
+    ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
     ml_dsa_sign_key_manager_ = MakeMlDsaSignKeyManager();
     ml_dsa_verify_key_manager_ = MakeMlDsaVerifyKeyManager();
   }

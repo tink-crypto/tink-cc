@@ -2088,7 +2088,7 @@ tink_cc_test(
     tink::core::key_manager
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::signature::signature_config
+    tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_sign_key_manager
     tink::signature::internal::ml_dsa_verify_key_manager
     tink::util::protobuf_helper

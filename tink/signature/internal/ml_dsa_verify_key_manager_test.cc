@@ -25,7 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/key_manager.h"
 #include "tink/public_key_verify.h"
-#include "tink/signature/signature_config.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/ml_dsa.pb.h"
@@ -42,7 +42,7 @@ using ::testing::Eq;
 class MlDsaVerifyKeyManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_THAT(SignatureConfig::Register(), IsOk());
+    ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
     key_manager_ = MakeMlDsaVerifyKeyManager();
   }
 

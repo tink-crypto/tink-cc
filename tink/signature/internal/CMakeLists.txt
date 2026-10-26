@@ -1580,7 +1580,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::strings
     tink::internal::boringssl
     tink::core::partial_key_access
     tink::internal::fips_utils
@@ -1588,7 +1587,7 @@ tink_cc_test(
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::signature::prehash
-    tink::util::test_util
+    tink::signature::internal::testing::ml_dsa_mu_test_vectors
 )
 
 tink_cc_library(

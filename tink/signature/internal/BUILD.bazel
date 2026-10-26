@@ -1764,3 +1764,45 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ml_dsa_chunked_prehash_boringssl",
+    srcs = ["ml_dsa_chunked_prehash_boringssl.cc"],
+    hdrs = ["ml_dsa_chunked_prehash_boringssl.h"],
+    deps = [
+        ":prehash_format",
+        "//tink:partial_key_access",
+        "//tink/internal:fips_utils",
+        "//tink/signature:chunked_prehash",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_public_key",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_chunked_prehash_boringssl_test",
+    srcs = ["ml_dsa_chunked_prehash_boringssl_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":ml_dsa_chunked_prehash_boringssl",
+        ":ml_dsa_key_creator",
+        "//tink:partial_key_access",
+        "//tink/internal:fips_utils",
+        "//tink/signature:chunked_prehash",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature:ml_dsa_public_key",
+        "//tink/signature/internal/testing:ml_dsa_mu_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)

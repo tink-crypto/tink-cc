@@ -1753,3 +1753,44 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME ml_dsa_chunked_prehash_boringssl
+  SRCS
+    ml_dsa_chunked_prehash_boringssl.cc
+    ml_dsa_chunked_prehash_boringssl.h
+  DEPS
+    tink::signature::internal::prehash_format
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::partial_key_access
+    tink::internal::fips_utils
+    tink::signature::chunked_prehash
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+)
+
+tink_cc_test(
+  NAME ml_dsa_chunked_prehash_boringssl_test
+  SRCS
+    ml_dsa_chunked_prehash_boringssl_test.cc
+  DEPS
+    tink::signature::internal::ml_dsa_chunked_prehash_boringssl
+    tink::signature::internal::ml_dsa_key_creator
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::partial_key_access
+    tink::internal::fips_utils
+    tink::signature::chunked_prehash
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::signature::internal::testing::ml_dsa_mu_test_vectors
+)

@@ -332,6 +332,7 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
+#include "tink/signature/predefined_signature_parameters.h"
 #include "tink/signature/prehash.h"
 #include "tink/signature/public_key_sign_factory.h"
 #include "tink/signature/public_key_sign_wrapper.h"

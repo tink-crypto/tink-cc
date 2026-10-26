@@ -2061,3 +2061,40 @@ tink_cc_library(
     absl::statusor
     absl::strings
 )
+
+tink_cc_library(
+  NAME predefined_signature_parameters
+  SRCS
+    predefined_signature_parameters.cc
+    predefined_signature_parameters.h
+  DEPS
+    tink::signature::ecdsa_parameters
+    tink::signature::ed25519_parameters
+    tink::signature::ml_dsa_parameters
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::slh_dsa_parameters
+    absl::no_destructor
+    absl::absl_check
+    absl::statusor
+    absl::string_view
+    tink::core::big_integer
+)
+
+tink_cc_test(
+  NAME predefined_signature_parameters_test
+  SRCS
+    predefined_signature_parameters_test.cc
+  DEPS
+    tink::signature::key_gen_config_2026
+    tink::signature::predefined_signature_parameters
+    tink::signature::signature_config
+    tink::signature::signature_key_templates
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::internal::boringssl
+    tink::core::keyset_handle
+    tink::core::parameters
+    tink::core::proto_parameters_format
+)

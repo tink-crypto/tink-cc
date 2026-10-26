@@ -2110,3 +2110,42 @@ cc_library(
         "@abseil-cpp//absl/strings",
     ],
 )
+
+cc_library(
+    name = "predefined_signature_parameters",
+    srcs = ["predefined_signature_parameters.cc"],
+    hdrs = ["predefined_signature_parameters.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ecdsa_parameters",
+        ":ed25519_parameters",
+        ":ml_dsa_parameters",
+        ":rsa_ssa_pkcs1_parameters",
+        ":rsa_ssa_pss_parameters",
+        ":slh_dsa_parameters",
+        "//tink:big_integer",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "predefined_signature_parameters_test",
+    size = "large",
+    srcs = ["predefined_signature_parameters_test.cc"],
+    deps = [
+        ":key_gen_config_2026",
+        ":predefined_signature_parameters",
+        ":signature_config",
+        ":signature_key_templates",
+        "//tink:keyset_handle",
+        "//tink:parameters",
+        "//tink:proto_parameters_format",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)

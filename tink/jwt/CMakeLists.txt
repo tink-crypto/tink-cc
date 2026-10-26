@@ -1124,6 +1124,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
 )
 
 tink_cc_library(
@@ -1135,6 +1137,7 @@ tink_cc_library(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_public_key
     tink::jwt::jwt_signature_private_key
+    absl::core_headers
     absl::status
     absl::status_macros
     absl::statusor
@@ -1168,6 +1171,7 @@ tink_cc_test(
     tink::core::restricted_data
     tink::internal::fips_utils
     tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
+    tink::signature::ml_dsa_private_key
 )
 
 tink_cc_library(

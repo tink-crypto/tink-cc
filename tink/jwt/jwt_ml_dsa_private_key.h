@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
@@ -47,6 +48,11 @@ class JwtMlDsaPrivateKey : public JwtSignaturePrivateKey {
 
   const RestrictedData& GetPrivateSeedBytes(PartialKeyAccessToken token) const {
     return ml_dsa_private_key_.GetPrivateSeedBytes(token);
+  }
+
+  const MlDsaPrivateKey& GetMlDsaPrivateKey(PartialKeyAccessToken token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return ml_dsa_private_key_;
   }
 
   const JwtMlDsaPublicKey& GetPublicKey() const override { return public_key_; }

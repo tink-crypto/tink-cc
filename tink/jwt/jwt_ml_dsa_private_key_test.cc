@@ -37,6 +37,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ml_dsa_private_key.h"
 
 namespace crypto {
 namespace tink {
@@ -126,6 +127,14 @@ TEST_P(JwtMlDsaPrivateKeyTest, CreateSucceeds) {
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
               Eq(private_seed));
+
+  absl::StatusOr<MlDsaPrivateKey> expected_ml_dsa_private_key =
+      MlDsaPrivateKey::Create(
+          public_key->GetMlDsaPublicKey(GetPartialKeyAccess()), private_seed,
+          GetPartialKeyAccess());
+  ASSERT_THAT(expected_ml_dsa_private_key, IsOk());
+  EXPECT_THAT(private_key->GetMlDsaPrivateKey(GetPartialKeyAccess()),
+              Eq(*expected_ml_dsa_private_key));
 }
 
 TEST(JwtMlDsaPrivateKeyTest, CreateInvalidPrivateSeedLengthFails) {
@@ -226,7 +235,7 @@ TEST_P(JwtMlDsaPrivateKeyTest, PrivateKeyEquals) {
   absl::StatusOr<JwtMlDsaPrivateKey> other_private_key =
       JwtMlDsaPrivateKey::Create(*public_key, private_seed,
                                  GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
+  ASSERT_THAT(other_private_key, IsOk());
 
   EXPECT_TRUE(*private_key == *other_private_key);
   EXPECT_TRUE(*other_private_key == *private_key);

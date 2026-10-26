@@ -31,6 +31,8 @@
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -46,6 +48,7 @@ using ::testing::Values;
 struct TestCase {
   JwtMlDsaParameters::KidStrategy kid_strategy;
   JwtMlDsaParameters::Algorithm algorithm;
+  MlDsaParameters::Instance expected_instance;
   std::optional<std::string> custom_kid;
   std::optional<int> id_requirement;
   std::optional<std::string> expected_kid;
@@ -59,12 +62,14 @@ INSTANTIATE_TEST_SUITE_P(
     Values(
         TestCase{JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
                  JwtMlDsaParameters::Algorithm::kMlDsa44,
+                 MlDsaParameters::Instance::kMlDsa44,
                  /*custom_kid=*/std::nullopt, /*id_requirement=*/123,
                  /*expected_kid=*/"AAAAew",
                  /*public_key_bytes=*/
                  jwt_internal::CreateJwtMlDsa44TestVector().public_key_bytes},
         TestCase{JwtMlDsaParameters::KidStrategy::kCustom,
                  JwtMlDsaParameters::Algorithm::kMlDsa65,
+                 MlDsaParameters::Instance::kMlDsa65,
                  /*custom_kid=*/"custom_kid",
                  /*id_requirement=*/std::nullopt,
                  /*expected_kid=*/"custom_kid",
@@ -72,6 +77,7 @@ INSTANTIATE_TEST_SUITE_P(
                  jwt_internal::CreateJwtMlDsa65TestVector().public_key_bytes},
         TestCase{JwtMlDsaParameters::KidStrategy::kIgnored,
                  JwtMlDsaParameters::Algorithm::kMlDsa87,
+                 MlDsaParameters::Instance::kMlDsa87,
                  /*custom_kid=*/std::nullopt,
                  /*id_requirement=*/std::nullopt,
                  /*expected_kid=*/std::nullopt,
@@ -102,6 +108,18 @@ TEST_P(JwtMlDsaPublicKeyTest, CreateSucceeds) {
               Eq(test_case.public_key_bytes));
   EXPECT_THAT(key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(key->GetKid(), Eq(test_case.expected_kid));
+
+  absl::StatusOr<MlDsaParameters> expected_ml_dsa_parameters =
+      MlDsaParameters::Create(test_case.expected_instance,
+                              MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(expected_ml_dsa_parameters, IsOk());
+  absl::StatusOr<MlDsaPublicKey> expected_ml_dsa_public_key =
+      MlDsaPublicKey::Create(
+          *expected_ml_dsa_parameters, test_case.public_key_bytes,
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(expected_ml_dsa_public_key, IsOk());
+  EXPECT_THAT(key->GetMlDsaPublicKey(GetPartialKeyAccess()),
+              Eq(*expected_ml_dsa_public_key));
 }
 
 TEST(JwtMlDsaPublicKeyTest, CustomKidPreservesStringViewBounds) {

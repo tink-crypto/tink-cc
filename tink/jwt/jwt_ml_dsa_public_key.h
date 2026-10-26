@@ -77,6 +77,11 @@ class JwtMlDsaPublicKey final : public JwtSignaturePublicKey {
     return ml_dsa_public_key_.GetPublicKeyBytes(token);
   }
 
+  const MlDsaPublicKey& GetMlDsaPublicKey(PartialKeyAccessToken token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return ml_dsa_public_key_;
+  }
+
   const JwtMlDsaParameters& GetParameters() const override {
     return parameters_;
   }
@@ -94,8 +99,6 @@ class JwtMlDsaPublicKey final : public JwtSignaturePublicKey {
   }
 
  private:
-  friend class JwtMlDsaPrivateKey;
-
   JwtMlDsaPublicKey(const JwtMlDsaParameters& parameters,
                     MlDsaPublicKey ml_dsa_public_key,
                     std::optional<int> id_requirement,
@@ -104,11 +107,6 @@ class JwtMlDsaPublicKey final : public JwtSignaturePublicKey {
         ml_dsa_public_key_(std::move(ml_dsa_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
-
-  const MlDsaPublicKey& GetMlDsaPublicKey(PartialKeyAccessToken token) const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return ml_dsa_public_key_;
-  }
 
   JwtMlDsaParameters parameters_;
   MlDsaPublicKey ml_dsa_public_key_;

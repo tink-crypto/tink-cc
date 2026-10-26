@@ -280,3 +280,17 @@ cc_library(
         "@abseil-cpp//absl/types:optional",
     ],
 )
+
+cc_library(
+    name = "ml_dsa_mu_test_vectors",
+    testonly = 1,
+    srcs = ["ml_dsa_mu_test_vectors.cc"],
+    hdrs = ["ml_dsa_mu_test_vectors.h"],
+    deps = [
+        "//tink/signature:ml_dsa_parameters",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)

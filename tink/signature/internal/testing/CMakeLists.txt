@@ -272,3 +272,17 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME ml_dsa_mu_test_vectors
+  SRCS
+    ml_dsa_mu_test_vectors.cc
+    ml_dsa_mu_test_vectors.h
+  DEPS
+    absl::no_destructor
+    absl::absl_check
+    absl::strings
+    absl::string_view
+    tink::signature::ml_dsa_parameters
+  TESTONLY
+)

@@ -17,13 +17,14 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -31,9 +32,51 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
+#include "tink/signature/rsa_ssa_pss_public_key.h"
 
 namespace crypto {
 namespace tink {
+namespace {
+
+absl::StatusOr<RsaSsaPssPublicKey> ToRsaSsaPssPublicKey(
+    const JwtRsaSsaPssParameters& parameters, const BigInteger& modulus,
+    PartialKeyAccessToken token) {
+  RsaSsaPssParameters::HashType hash_type;
+  int salt_length_in_bytes;
+  // See https://datatracker.ietf.org/doc/html/rfc7518#section-3.5.
+  switch (parameters.GetAlgorithm()) {
+    case JwtRsaSsaPssParameters::Algorithm::kPs256:
+      hash_type = RsaSsaPssParameters::HashType::kSha256;
+      salt_length_in_bytes = 32;
+      break;
+    case JwtRsaSsaPssParameters::Algorithm::kPs384:
+      hash_type = RsaSsaPssParameters::HashType::kSha384;
+      salt_length_in_bytes = 48;
+      break;
+    case JwtRsaSsaPssParameters::Algorithm::kPs512:
+      hash_type = RsaSsaPssParameters::HashType::kSha512;
+      salt_length_in_bytes = 64;
+      break;
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unknown algorithm.");
+  }
+  ABSL_ASSIGN_OR_RETURN(
+      RsaSsaPssParameters rsa_ssa_pss_parameters,
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(parameters.GetModulusSizeInBits())
+          .SetPublicExponent(parameters.GetPublicExponent())
+          .SetSigHashType(hash_type)
+          .SetMgf1HashType(hash_type)
+          .SetSaltLengthInBytes(salt_length_in_bytes)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build());
+  return RsaSsaPssPublicKey::Create(rsa_ssa_pss_parameters, modulus,
+                                    /*id_requirement=*/std::nullopt, token);
+}
+
+}  // namespace
 
 JwtRsaSsaPssPublicKey::Builder& JwtRsaSsaPssPublicKey::Builder::SetParameters(
     const JwtRsaSsaPssParameters& parameters) {
@@ -119,20 +162,11 @@ absl::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  // Check if the modulus length matches the modulus_size_in_bits parameter.
-  if (modulus_->SizeInBytes() * 8 != parameters_->GetModulusSizeInBits()) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrFormat("Invalid modulus length (expected %d, got %d)",
-                        parameters_->GetModulusSizeInBits(),
-                        modulus_->SizeInBytes() * 8));
-  }
-  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
-  if (!kid.ok()) {
-    return kid.status();
-  }
-  return JwtRsaSsaPssPublicKey(*parameters_, *modulus_, id_requirement_,
-                               std::move(*kid));
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPssPublicKey rsa_ssa_pss_public_key,
+                        ToRsaSsaPssPublicKey(*parameters_, *modulus_, token));
+  ABSL_ASSIGN_OR_RETURN(std::optional<std::string> kid, ComputeKid());
+  return JwtRsaSsaPssPublicKey(*parameters_, std::move(rsa_ssa_pss_public_key),
+                               id_requirement_, std::move(kid));
 }
 
 bool JwtRsaSsaPssPublicKey::operator==(const Key& other) const {
@@ -141,7 +175,8 @@ bool JwtRsaSsaPssPublicKey::operator==(const Key& other) const {
   if (that == nullptr) {
     return false;
   }
-  return parameters_ == that->parameters_ && modulus_ == that->modulus_ &&
+  return parameters_ == that->parameters_ &&
+         rsa_ssa_pss_public_key_ == that->rsa_ssa_pss_public_key_ &&
          id_requirement_ == that->id_requirement_ && kid_ == that->kid_;
 }
 

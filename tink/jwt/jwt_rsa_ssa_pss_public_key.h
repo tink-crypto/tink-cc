@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -30,6 +31,7 @@
 #include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/rsa_ssa_pss_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -73,7 +75,7 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
   JwtRsaSsaPssPublicKey& operator=(JwtRsaSsaPssPublicKey&& other) = default;
 
   const BigInteger& GetModulus(PartialKeyAccessToken token) const {
-    return modulus_;
+    return rsa_ssa_pss_public_key_.GetModulus(token);
   }
 
   const JwtRsaSsaPssParameters& GetParameters() const override {
@@ -93,17 +95,24 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
   }
 
  private:
+  friend class JwtRsaSsaPssPrivateKey;
+
   explicit JwtRsaSsaPssPublicKey(const JwtRsaSsaPssParameters& parameters,
-                                 const BigInteger& modulus,
+                                 RsaSsaPssPublicKey rsa_ssa_pss_public_key,
                                  std::optional<int> id_requirement,
                                  std::optional<std::string> kid)
       : parameters_(parameters),
-        modulus_(modulus),
+        rsa_ssa_pss_public_key_(std::move(rsa_ssa_pss_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
 
+  const RsaSsaPssPublicKey& GetRsaSsaPssPublicKey(
+      PartialKeyAccessToken token) const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return rsa_ssa_pss_public_key_;
+  }
+
   JwtRsaSsaPssParameters parameters_;
-  BigInteger modulus_;
+  RsaSsaPssPublicKey rsa_ssa_pss_public_key_;
   std::optional<int> id_requirement_;
   std::optional<std::string> kid_;
 };

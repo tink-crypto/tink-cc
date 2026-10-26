@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
@@ -29,6 +30,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/rsa_ssa_pss_private_key.h"
 
 namespace crypto {
 namespace tink {
@@ -86,31 +88,31 @@ class JwtRsaSsaPssPrivateKey final : public JwtSignaturePrivateKey {
   };
 
   const RestrictedData& GetPrimePData(PartialKeyAccessToken token) const {
-    return p_;
+    return rsa_ssa_pss_private_key_.GetPrimePData();
   }
 
   const RestrictedData& GetPrimeQData(PartialKeyAccessToken token) const {
-    return q_;
+    return rsa_ssa_pss_private_key_.GetPrimeQData();
   }
 
   const RestrictedData& GetPrivateExponentData(
       PartialKeyAccessToken token) const {
-    return d_;
+    return rsa_ssa_pss_private_key_.GetPrivateExponentData();
   }
 
   const RestrictedData& GetPrimeExponentPData(
       PartialKeyAccessToken token) const {
-    return dp_;
+    return rsa_ssa_pss_private_key_.GetPrimeExponentPData();
   }
 
   const RestrictedData& GetPrimeExponentQData(
       PartialKeyAccessToken token) const {
-    return dq_;
+    return rsa_ssa_pss_private_key_.GetPrimeExponentQData();
   }
 
   const RestrictedData& GetCrtCoefficientData(
       PartialKeyAccessToken token) const {
-    return q_inv_;
+    return rsa_ssa_pss_private_key_.GetCrtCoefficientData();
   }
 
   const JwtRsaSsaPssPublicKey& GetPublicKey() const override {
@@ -125,27 +127,12 @@ class JwtRsaSsaPssPrivateKey final : public JwtSignaturePrivateKey {
 
  private:
   explicit JwtRsaSsaPssPrivateKey(const JwtRsaSsaPssPublicKey& public_key,
-                                  const RestrictedData& p,
-                                  const RestrictedData& q,
-                                  const RestrictedData& dp,
-                                  const RestrictedData& dq,
-                                  const RestrictedData& d,
-                                  const RestrictedData& q_inv)
+                                  RsaSsaPssPrivateKey rsa_ssa_pss_private_key)
       : public_key_(public_key),
-        p_(p),
-        q_(q),
-        dp_(dp),
-        dq_(dq),
-        d_(d),
-        q_inv_(q_inv) {}
+        rsa_ssa_pss_private_key_(std::move(rsa_ssa_pss_private_key)) {}
 
   JwtRsaSsaPssPublicKey public_key_;
-  RestrictedData p_;
-  RestrictedData q_;
-  RestrictedData dp_;
-  RestrictedData dq_;
-  RestrictedData d_;
-  RestrictedData q_inv_;
+  RsaSsaPssPrivateKey rsa_ssa_pss_private_key_;
 };
 
 }  // namespace tink

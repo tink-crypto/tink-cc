@@ -163,7 +163,7 @@ class SecretData {
   // only be called within a CallWithCoreDumpProtection.
   absl::crc32c_t GetCrc32c() const {
     if (crc32c_data() == nullptr) {
-      return absl::crc32c_t(0);
+      return absl::crc32c_t(/*crc=*/0);
     }
     return absl::crc32c_t(
         crypto::tink::internal::LoadBigEndian32(crc32c_data()));

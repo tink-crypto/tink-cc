@@ -1521,13 +1521,17 @@ tink_cc_library(
   DEPS
     tink::aead::internal::ssl_aead
     tink::aead::internal::zero_copy_aead
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor
     absl::strings
     absl::string_view
     absl::span
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::secret_data
+    tink::aead::aes_gcm_siv_key
     tink::internal::fips_utils
     tink::internal::util
     tink::subtle::random
@@ -1544,6 +1548,7 @@ tink_cc_test(
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_siv_boringssl
     gmock
+    absl::algorithm_container
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1551,6 +1556,10 @@ tink_cc_test(
     absl::string_view
     absl::span
     tink::core::secret_data
+    tink::aead::aes_gcm_siv_key
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::config::tink_fips
     tink::internal::ssl_util
     tink::subtle::subtle_util

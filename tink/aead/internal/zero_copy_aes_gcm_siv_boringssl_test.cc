@@ -17,18 +17,25 @@
 #include "tink/aead/internal/zero_copy_aes_gcm_siv_boringssl.h"
 
 #include <cstdint>
+#include <cstring>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/aead/aes_gcm_siv_key.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/config/tink_fips.h"
@@ -57,6 +64,7 @@ using ::absl_testing::StatusIs;
 using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -65,11 +73,6 @@ class ZeroCopyAesGcmSivBoringSslTest : public testing::Test {
   void SetUp() override {
     SecretData key =
         SecretData(test::HexDecodeOrDie(kKey256Hex));
-    if (!IsBoringSsl()) {
-      ASSERT_THAT(ZeroCopyAesGcmSivBoringSsl::New(key).status(),
-                  StatusIs(absl::StatusCode::kUnimplemented));
-      GTEST_SKIP() << "Unimplemented with OpenSSL";
-    }
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }
@@ -148,9 +151,6 @@ TEST_F(ZeroCopyAesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
 }
 
 TEST(ZeroCopyAesGcmSivBoringSslStandaloneTest, TestFipsOnly) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
@@ -164,14 +164,51 @@ TEST(ZeroCopyAesGcmSivBoringSslStandaloneTest, TestFipsOnly) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(ZeroCopyAesGcmSivBoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));
+
+  const AeadTestVector& test_vector =
+      GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink);
+  const AesGcmSivKey& tink_key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  EXPECT_THAT(ZeroCopyAesGcmSivBoringSsl::New(tink_key).status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST_F(ZeroCopyAesGcmSivBoringSslTest, EncryptOverlappingPlaintextCiphertext) {
+  std::string buffer(1024, '\0');
+  absl::c_copy(kMessage, buffer.begin());
+  absl::string_view plaintext =
+      absl::string_view(buffer).substr(0, kMessage.size());
+  absl::Span<char> cipher_buff =
+      absl::MakeSpan(buffer).subspan(kMessage.size() - kNonceSizeInBytes);
+  EXPECT_THAT(
+      cipher_->Encrypt(plaintext, kAssociatedData, cipher_buff).status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition));
+}
+
+TEST_F(ZeroCopyAesGcmSivBoringSslTest, DecryptOverlappingPlaintextCiphertext) {
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, cipher_->MaxEncryptionSize(kMessage.size()));
+  ASSERT_THAT(
+      cipher_->Encrypt(kMessage, kAssociatedData, absl::MakeSpan(ciphertext)),
+      IsOk());
+
+  std::string buffer(1024, '\0');
+  absl::Span<char> out_buffer =
+      absl::MakeSpan(buffer).subspan(0, kMessage.size());
+  int ciphertext_start = kMessage.size() - kNonceSizeInBytes;
+  std::memcpy(&buffer[0] + ciphertext_start, ciphertext.data(),
+              ciphertext.size());
+  absl::string_view overlapping_ct =
+      absl::string_view(buffer).substr(ciphertext_start, ciphertext.size());
+  EXPECT_THAT(
+      cipher_->Decrypt(overlapping_ct, kAssociatedData, out_buffer).status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 class ZeroCopyAesGcmSivBoringSslWycheproofTest
     : public TestWithParam<WycheproofTestVector> {
   void SetUp() override {
-    if (!IsBoringSsl()) {
-      GTEST_SKIP() << "Unimplemented with OpenSSL";
-    }
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }
@@ -216,6 +253,142 @@ INSTANTIATE_TEST_SUITE_P(ZeroCopyAesGcmSivBoringSslWycheproofTests,
                          ZeroCopyAesGcmSivBoringSslWycheproofTest,
                          ValuesIn(ReadWycheproofTestVectors(
                              /*file_name=*/"aes_gcm_siv_test.json")));
+
+class ZeroCopyAesGcmSivBoringSslTestVectorTest
+    : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled()) {
+      GTEST_SKIP() << "Not supported in FIPS-only mode";
+    }
+  }
+};
+
+TEST_P(ZeroCopyAesGcmSivBoringSslTestVectorTest, Decrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size =
+      (*cipher)->Decrypt(test_vector.ciphertext, test_vector.associated_data,
+                         absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyAesGcmSivBoringSslTestVectorTest, EncryptDecrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, (*cipher)->MaxEncryptionSize(test_vector.plaintext.size()));
+  absl::StatusOr<int64_t> ciphertext_size =
+      (*cipher)->Encrypt(test_vector.plaintext, test_vector.associated_data,
+                         absl::MakeSpan(ciphertext));
+  ASSERT_THAT(ciphertext_size, IsOk());
+  ciphertext.resize(*ciphertext_size);
+  if (!key.GetOutputPrefix().empty()) {
+    EXPECT_THAT(ciphertext, StartsWith(key.GetOutputPrefix()));
+  }
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size = (*cipher)->Decrypt(
+      ciphertext, test_vector.associated_data, absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyAesGcmSivBoringSslTestVectorTest,
+       MaxEncryptionSizeEqualsCiphertextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxEncryptionSize(test_vector.plaintext.size()),
+            test_vector.ciphertext.size());
+}
+
+TEST_P(ZeroCopyAesGcmSivBoringSslTestVectorTest,
+       MaxDecryptionSizeEqualsPlaintextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()),
+            test_vector.plaintext.size());
+}
+
+INSTANTIATE_TEST_SUITE_P(ZeroCopyAesGcmSivBoringSslTestVectorTests,
+                         ZeroCopyAesGcmSivBoringSslTestVectorTest,
+                         ValuesIn(CreateAesGcmSivTestVectors()));
+
+TEST(ZeroCopyAesGcmSivBoringSslKeyTest, DecryptWithBadPrefixFails) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const AeadTestVector& test_vector =
+      GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink);
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  std::string bad_ciphertext = test_vector.ciphertext;
+  bad_ciphertext[0] ^= 0x01;  // Corrupt prefix
+
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(bad_ciphertext.size()));
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(bad_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(ZeroCopyAesGcmSivBoringSslKeyTest,
+     DecryptWithShortPrefixedCiphertextFails) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const AeadTestVector& test_vector =
+      GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink);
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      ZeroCopyAesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  const size_t min_size =
+      key.GetOutputPrefix().size() + kNonceSizeInBytes + kTagSizeInBytes;
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(min_size), 0);
+  std::string short_ciphertext(min_size - 1, 'a');
+  std::string plaintext;
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(short_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
 
 }  // namespace
 }  // namespace internal

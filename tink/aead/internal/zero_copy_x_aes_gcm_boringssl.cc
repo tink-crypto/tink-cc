@@ -16,15 +16,18 @@
 
 #include "tink/aead/internal/zero_copy_x_aes_gcm_boringssl.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -32,6 +35,7 @@
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
 #include "tink/aead/x_aes_gcm_key.h"
+#include "tink/internal/util.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 
@@ -44,11 +48,14 @@ using ::crypto::tink::subtle::Random;
 
 class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
  public:
-  explicit XAesGcmBoringSslZeroCopyAead(BaseXAesGcm base_x_aes_gcm)
-      : base_x_aes_gcm_(std::move(base_x_aes_gcm)) {}
+  explicit XAesGcmBoringSslZeroCopyAead(BaseXAesGcm base_x_aes_gcm,
+                                        absl::string_view output_prefix)
+      : base_x_aes_gcm_(std::move(base_x_aes_gcm)),
+        output_prefix_(output_prefix) {}
 
   int64_t MaxEncryptionSize(int64_t plaintext_size) const override {
-    return base_x_aes_gcm_.min_ct_size() + plaintext_size;
+    return output_prefix_.size() + base_x_aes_gcm_.min_ct_size() +
+           plaintext_size;
   }
 
   absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
@@ -62,14 +69,26 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
           absl::StrCat("Encryption buffer too small; expected at least ",
                        max_encryption_size, " bytes, got ", buffer.size()));
     }
-    absl::Status status =
-        Random::GetRandomBytes(buffer.subspan(0, base_x_aes_gcm_.salt_size()));
+    absl::string_view buffer_string(buffer.data(), buffer.size());
+    if (BuffersOverlap(plaintext, buffer_string)) {
+      return absl::Status(
+          absl::StatusCode::kFailedPrecondition,
+          "Plaintext and ciphertext buffers overlap; this is disallowed");
+    }
+    if (!output_prefix_.empty()) {
+      std::copy(output_prefix_.begin(), output_prefix_.end(), buffer.begin());
+    }
+    absl::Span<char> buffer_after_prefix =
+        buffer.subspan(output_prefix_.size());
+    absl::Span<char> salt =
+        buffer_after_prefix.subspan(0, base_x_aes_gcm_.salt_size());
+    absl::Status status = Random::GetRandomBytes(salt);
     if (!status.ok()) {
       return status;
     }
     absl::StatusOr<SecretData> derived_key =
         base_x_aes_gcm_.DerivePerMessageKey(
-            absl::string_view(buffer.data(), base_x_aes_gcm_.salt_size()));
+            absl::string_view(salt.data(), salt.size()));
     if (!derived_key.ok()) {
       return derived_key.status();
     }
@@ -78,18 +97,18 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
     if (!zero_copy_aead.ok()) {
       return zero_copy_aead.status();
     }
-    absl::StatusOr<int64_t> written_bytes =
-        (*zero_copy_aead)
-            ->Encrypt(plaintext, associated_data,
-                      buffer.subspan(base_x_aes_gcm_.salt_size()));
+    absl::StatusOr<int64_t> written_bytes = (*zero_copy_aead)
+        ->Encrypt(plaintext, associated_data,
+                  buffer_after_prefix.subspan(base_x_aes_gcm_.salt_size()));
     if (!written_bytes.ok()) {
       return written_bytes.status();
     }
-    return base_x_aes_gcm_.salt_size() + *written_bytes;
+    return output_prefix_.size() + base_x_aes_gcm_.salt_size() + *written_bytes;
   }
 
   int64_t MaxDecryptionSize(int64_t ciphertext_size) const override {
-    const int64_t size = ciphertext_size - base_x_aes_gcm_.min_ct_size();
+    const int64_t size =
+        ciphertext_size - output_prefix_.size() - base_x_aes_gcm_.min_ct_size();
     if (size <= 0) {
       return 0;
     }
@@ -99,22 +118,34 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
   absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
                                   absl::string_view associated_data,
                                   absl::Span<char> buffer) const override {
-    const int min_ct_size = base_x_aes_gcm_.min_ct_size();
-    ABSL_CHECK_GE(min_ct_size, 0);
-    if (ciphertext.size() < static_cast<size_t>(min_ct_size)) {
+    const size_t min_ct_size =
+        output_prefix_.size() + base_x_aes_gcm_.min_ct_size();
+    if (ciphertext.size() < min_ct_size) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Ciphertext too short; expected at least ",
                        min_ct_size, " bytes, got ", ciphertext.size()));
     }
-    const int max_decryption_size = MaxDecryptionSize(ciphertext.size());
+    const int64_t max_decryption_size = MaxDecryptionSize(ciphertext.size());
     ABSL_CHECK_GE(max_decryption_size, 0);
     if (buffer.size() < static_cast<size_t>(max_decryption_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Decryption buffer too small; expected at least ",
-                       MaxDecryptionSize(ciphertext.size()), " bytes, got ",
-                       buffer.size()));
+                       max_decryption_size, " bytes, got ", buffer.size()));
+    }
+    absl::string_view buffer_string(buffer.data(), buffer.size());
+    if (BuffersOverlap(ciphertext, buffer_string)) {
+      return absl::Status(
+          absl::StatusCode::kFailedPrecondition,
+          "Plaintext and ciphertext buffers overlap; this is disallowed");
+    }
+    if (!output_prefix_.empty()) {
+      if (!absl::StartsWith(ciphertext, output_prefix_)) {
+        return absl::Status(absl::StatusCode::kInvalidArgument,
+                            "Prefix mismatch");
+      }
+      ciphertext.remove_prefix(output_prefix_.size());
     }
     absl::StatusOr<SecretData> derived_key =
         base_x_aes_gcm_.DerivePerMessageKey(
@@ -134,21 +165,19 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
 
  private:
   BaseXAesGcm base_x_aes_gcm_;
+  const std::string output_prefix_;
 };
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<ZeroCopyAead>> NewZeroCopyXAesGcmBoringSsl(
     const XAesGcmKey& key) {
-  if (!key.GetOutputPrefix().empty()) {
-    return absl::InternalError("non-empty output prefix not yet implemented");
-  }
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm = BaseXAesGcm::New(key);
   if (!base_x_aes_gcm.ok()) {
     return base_x_aes_gcm.status();
   }
   return std::make_unique<XAesGcmBoringSslZeroCopyAead>(
-      *std::move(base_x_aes_gcm));
+      *std::move(base_x_aes_gcm), key.GetOutputPrefix());
 }
 
 }  // namespace internal

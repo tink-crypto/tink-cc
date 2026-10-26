@@ -500,6 +500,7 @@ tink_cc_library(
     absl::span
     tink::core::secret_data
     tink::aead::x_aes_gcm_key
+    tink::internal::util
     tink::subtle::random
     tink::util::statusor
 )
@@ -512,6 +513,7 @@ tink_cc_test(
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_x_aes_gcm_boringssl
     gmock
+    absl::algorithm_container
     absl::status
     absl::status_matchers
     absl::statusor
@@ -525,7 +527,10 @@ tink_cc_test(
     tink::core::secret_data
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::x_aes_gcm_test_vectors
     tink::subtle::random
+    tink::subtle::subtle_util
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

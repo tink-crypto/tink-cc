@@ -17,12 +17,14 @@
 #include "tink/aead/internal/zero_copy_x_aes_gcm_boringssl.h"
 
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -30,6 +32,8 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/aead/x_aes_gcm_parameters.h"
@@ -38,6 +42,7 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
+#include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -52,7 +57,9 @@ using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::StartsWith;
 using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 constexpr int kDefaultSaltSize = 12;
 constexpr int kKeySize = 32;
@@ -71,22 +78,6 @@ absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
 
 absl::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
   return CreateKey(Random::GetRandomBytes(kKeySize), salt_size);
-}
-
-TEST(XAesGcmBoringSslZeroCopyAead, RejectsNonEmptyOutputPrefix) {
-  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
-      XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
-  ASSERT_THAT(parameters, IsOk());
-  absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
-      *parameters,
-      RestrictedData(SecretData(Random::GetRandomBytes(kKeySize)),
-                     InsecureSecretKeyAccess::Get()),
-      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(NewZeroCopyXAesGcmBoringSsl(*key),
-              StatusIs(absl::StatusCode::kInternal,
-                       HasSubstr("non-empty output prefix")));
 }
 
 TEST(XAesGcmBoringSslZeroCopyAead, EncryptDecrypt) {
@@ -242,6 +233,171 @@ INSTANTIATE_TEST_SUITE_P(
     [](const testing::TestParamInfo<XAesGcmTestVectors::ParamType>& info) {
       return info.param.name;
     });
+
+using ZeroCopyXAesGcmBoringSslTestVectorTest = TestWithParam<AeadTestVector>;
+
+TEST_P(ZeroCopyXAesGcmBoringSslTestVectorTest, Decrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size =
+      (*cipher)->Decrypt(test_vector.ciphertext, test_vector.associated_data,
+                         absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyXAesGcmBoringSslTestVectorTest, EncryptDecrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+  std::string ciphertext;
+  subtle::ResizeStringUninitialized(
+      &ciphertext, (*cipher)->MaxEncryptionSize(test_vector.plaintext.size()));
+  absl::StatusOr<int64_t> ciphertext_size =
+      (*cipher)->Encrypt(test_vector.plaintext, test_vector.associated_data,
+                         absl::MakeSpan(ciphertext));
+  ASSERT_THAT(ciphertext_size, IsOk());
+  ciphertext.resize(*ciphertext_size);
+  if (!key.GetOutputPrefix().empty()) {
+    EXPECT_THAT(ciphertext, StartsWith(key.GetOutputPrefix()));
+  }
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(ciphertext.size()));
+  absl::StatusOr<int64_t> plaintext_size = (*cipher)->Decrypt(
+      ciphertext, test_vector.associated_data, absl::MakeSpan(plaintext));
+  ASSERT_THAT(plaintext_size, IsOk());
+  plaintext.resize(*plaintext_size);
+  EXPECT_EQ(plaintext, test_vector.plaintext);
+}
+
+TEST_P(ZeroCopyXAesGcmBoringSslTestVectorTest,
+       MaxEncryptionSizeEqualsCiphertextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxEncryptionSize(test_vector.plaintext.size()),
+            test_vector.ciphertext.size());
+}
+
+TEST_P(ZeroCopyXAesGcmBoringSslTestVectorTest,
+       MaxDecryptionSizeEqualsPlaintextSize) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(test_vector.ciphertext.size()),
+            test_vector.plaintext.size());
+}
+
+INSTANTIATE_TEST_SUITE_P(ZeroCopyXAesGcmBoringSslTestVectorTests,
+                         ZeroCopyXAesGcmBoringSslTestVectorTest,
+                         ValuesIn(CreateXAesGcmTestVectors()));
+
+TEST(XAesGcmBoringSslZeroCopyAead, DecryptWithBadPrefixFails) {
+  const AeadTestVector& test_vector =
+      GetXAesGcmTestVector(12, XAesGcmParameters::Variant::kTink);
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  std::string bad_ciphertext = test_vector.ciphertext;
+  bad_ciphertext[0] ^= 0x01;  // Corrupt prefix
+
+  std::string plaintext;
+  subtle::ResizeStringUninitialized(
+      &plaintext, (*cipher)->MaxDecryptionSize(bad_ciphertext.size()));
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(bad_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(XAesGcmBoringSslZeroCopyAead, DecryptWithShortPrefixedCiphertextFails) {
+  const AeadTestVector& test_vector =
+      GetXAesGcmTestVector(12, XAesGcmParameters::Variant::kTink);
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  const int64_t min_size = (*cipher)->MaxEncryptionSize(0);
+  EXPECT_EQ((*cipher)->MaxDecryptionSize(min_size), 0);
+  std::string short_ciphertext(min_size - 1, 'a');
+  std::string plaintext;
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(short_ciphertext, test_vector.associated_data,
+                            absl::MakeSpan(plaintext))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Ciphertext too short")));
+}
+
+TEST(XAesGcmBoringSslZeroCopyAead, EncryptOverlappingPlaintextCiphertextFails) {
+  const AeadTestVector& test_vector =
+      GetXAesGcmTestVector(12, XAesGcmParameters::Variant::kTink);
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  constexpr absl::string_view kMessage = "Some data to encrypt.";
+  std::string buffer(1024, '\0');
+  absl::c_copy(kMessage, buffer.begin());
+  absl::string_view plaintext =
+      absl::string_view(buffer).substr(0, kMessage.size());
+  // Overlap only with the output prefix / salt region.
+  absl::Span<char> cipher_buff =
+      absl::MakeSpan(buffer).subspan(kMessage.size() - 1);
+  EXPECT_THAT((*cipher)->Encrypt(plaintext, "aad", cipher_buff).status(),
+              StatusIs(absl::StatusCode::kFailedPrecondition));
+}
+
+TEST(XAesGcmBoringSslZeroCopyAead, DecryptOverlappingPlaintextCiphertextFails) {
+  const AeadTestVector& test_vector =
+      GetXAesGcmTestVector(12, XAesGcmParameters::Variant::kTink);
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+      NewZeroCopyXAesGcmBoringSsl(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  std::string buffer(1024, '\0');
+  absl::Span<char> out_buffer =
+      absl::MakeSpan(buffer).subspan(0, test_vector.plaintext.size());
+  // Overlap only the first byte of ciphertext (inside the output prefix).
+  const size_t ct_start = test_vector.plaintext.size() - 1;
+  std::memcpy(&buffer[0] + ct_start, test_vector.ciphertext.data(),
+              test_vector.ciphertext.size());
+  absl::string_view overlapping_ct =
+      absl::string_view(buffer).substr(ct_start, test_vector.ciphertext.size());
+  EXPECT_THAT(
+      (*cipher)
+          ->Decrypt(overlapping_ct, test_vector.associated_data, out_buffer)
+          .status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition));
+}
 
 }  // namespace
 }  // namespace internal

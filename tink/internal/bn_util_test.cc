@@ -250,16 +250,16 @@ TEST(BnUtil, BufferToSmall) {
 
 TEST(BnUtil, CompareBignumWithWord) {
   internal::SslUniquePtr<BIGNUM> bn(BN_new());
-  BN_set_word(bn.get(), /*value=*/0x0fffffffffffffffUL);
-  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/0x0fffffffffffffffL), 0);
-  std::vector<BN_ULONG> smaller_words = {
-      0x0000000000000000UL, 0x0000000000000001UL, 0x00ffffffffffffffUL};
+  BN_set_word(bn.get(), /*value=*/0x0fffffffUL);
+  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/0x0fffffffUL), 0);
+  std::vector<BN_ULONG> smaller_words = {0x00000000UL, 0x00000001UL,
+                                         0x00ffffffUL};
   for (const auto& word : smaller_words) {
     EXPECT_GT(CompareBignumWithWord(bn.get(), word), 0)
         << absl::StrCat("With value: 0x", absl::Hex(word));
   }
-  std::vector<BN_ULONG> larger_words = {0x1000000000000000UL,
-                                        0xffffffffffffffffUL};
+  std::vector<BN_ULONG> larger_words = {0x10000000UL,
+                                        std::numeric_limits<BN_ULONG>::max()};
   for (const auto& word : larger_words) {
     EXPECT_LT(CompareBignumWithWord(bn.get(), word), 0)
         << absl::StrCat("With value: 0x", absl::Hex(word));

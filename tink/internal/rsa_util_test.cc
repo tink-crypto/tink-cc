@@ -165,7 +165,7 @@ TEST(RsaUtilTest, FailsOnLargeE) {
   RsaPrivateKey private_key;
 
   internal::SslUniquePtr<BIGNUM> e(BN_new());
-  BN_set_word(e.get(), 1L << 33);
+  ASSERT_EQ(BN_set_bit(e.get(), 33), kSslSuccess);
   EXPECT_THAT(NewRsaKeyPair(/*modulus_size_in_bits=*/2048, e.get(),
                             &private_key, &public_key),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -603,8 +603,13 @@ absl::StatusOr<internal::SslUniquePtr<RSA>> NewRsaPublicKey(
     return n_bn.status();
   }
   internal::SslUniquePtr<BIGNUM> n = *std::move(n_bn);
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  BN_set_word(e.get(), exp);
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e_bn =
+      internal::StringToBignum(
+          test::HexDecodeOrDie(absl::StrCat(absl::Hex(exp, absl::kZeroPad16))));
+  if (!e_bn.ok()) {
+    return e_bn.status();
+  }
+  internal::SslUniquePtr<BIGNUM> e = *std::move(e_bn);
   if (RSA_set0_key(key.get(), n.get(), e.get(), /*d=*/nullptr) != 1) {
     return absl::Status(absl::StatusCode::kInternal, "RSA_set0_key failed");
   }

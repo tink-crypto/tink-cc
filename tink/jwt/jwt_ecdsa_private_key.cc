@@ -16,144 +16,38 @@
 
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 
-#include <memory>
 #include <utility>
 
-#include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "openssl/base.h"
-#include "openssl/ec_key.h"
-#include "tink/ec_point.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/internal/bn_util.h"
-#include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/ec_util.h"
-#include "tink/internal/err_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
-#include "tink/internal/util.h"
-#include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/secret_data.h"
-#include "tink/subtle/common_enums.h"
+#include "tink/signature/ecdsa_private_key.h"
 
 namespace crypto {
 namespace tink {
-namespace {
-
-absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
-    JwtEcdsaParameters::Algorithm algorithm) {
-  switch (algorithm) {
-    case JwtEcdsaParameters::Algorithm::kEs256:
-      return subtle::EllipticCurveType::NIST_P256;
-    case JwtEcdsaParameters::Algorithm::kEs384:
-      return subtle::EllipticCurveType::NIST_P384;
-    case JwtEcdsaParameters::Algorithm::kEs512:
-      return subtle::EllipticCurveType::NIST_P521;
-    default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          absl::StrCat("Unknown curve type: ", algorithm));
-  }
-}
-
-absl::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
-                             const RestrictedData& private_key_value,
-                             PartialKeyAccessToken token) {
-  internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
-
-  absl::StatusOr<subtle::EllipticCurveType> curve =
-      SubtleCurveType(public_key.GetParameters().GetAlgorithm());
-  if (!curve.ok()) {
-    return curve.status();
-  }
-  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
-      internal::EcGroupFromCurveType(*curve);
-  if (!group.ok()) {
-    return group.status();
-  }
-  EC_KEY_set_group(key.get(), group->get());
-
-  // Set EC_KEY public key.
-  const EcPoint& ec_point = public_key.GetPublicPoint(token);
-  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> public_point =
-      internal::GetEcPoint(*curve, ec_point.GetX().GetValue(),
-                           ec_point.GetY().GetValue());
-  if (!public_point.ok()) {
-    return public_point.status();
-  }
-  if (!EC_KEY_set_public_key(key.get(), public_point->get())) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
-      internal::StringToBignum(
-          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!priv_big_num.ok()) {
-    return priv_big_num.status();
-  }
-  if (int set_private_key_res = internal::CallWithCoreDumpProtection(
-          [&, &priv_big_num = *priv_big_num]() {
-            return EC_KEY_set_private_key(key.get(), priv_big_num.get());
-          });
-      !set_private_key_res) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
-  }
-
-  if (int validate_key_res = internal::CallWithCoreDumpProtection(
-          [&]() { return EC_KEY_check_key(key.get()); });
-      !validate_key_res) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Invalid EC key pair: ", internal::GetSslErrors()));
-  }
-  return absl::OkStatus();
-}
-
-}  // namespace
 
 absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
     const JwtEcdsaPublicKey& public_key,
     const RestrictedData& private_key_value, PartialKeyAccessToken token) {
-  int key_length = public_key.GetParameters().GetPrivateKeyLength();
-  if (private_key_value.size() != key_length) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Private key length ", private_key_value.size(),
-                     " is different from expected length ", key_length));
-  }
-
-  // Validate that the public and private key match.
-  absl::Status key_pair_validation =
-      ValidateKeyPair(public_key, private_key_value, token);
-  if (!key_pair_validation.ok()) {
-    return key_pair_validation;
-  }
-
-  return JwtEcdsaPrivateKey(public_key, private_key_value);
+  ABSL_ASSIGN_OR_RETURN(
+      EcdsaPrivateKey ecdsa_private_key,
+      EcdsaPrivateKey::Create(public_key.GetEcdsaPublicKey(token),
+                              private_key_value, token));
+  return JwtEcdsaPrivateKey(public_key, std::move(ecdsa_private_key));
 }
 
 absl::StatusOr<JwtEcdsaPrivateKey>
 JwtEcdsaPrivateKey::CreateAllowNonConstantTime(
     const JwtEcdsaPublicKey& public_key,
     const RestrictedData& private_key_value, PartialKeyAccessToken token) {
-  absl::StatusOr<SecretData> adjusted_private_key =
-      internal::ParseBigIntToFixedLength(
-          private_key_value.GetSecret(InsecureSecretKeyAccess::Get()),
-          public_key.GetParameters().GetPrivateKeyLength());
-  if (!adjusted_private_key.ok()) {
-    return adjusted_private_key.status();
-  }
-
-  return Create(public_key,
-                RestrictedData(std::move(*adjusted_private_key),
-                               InsecureSecretKeyAccess::Get()),
-                token);
+  ABSL_ASSIGN_OR_RETURN(
+      EcdsaPrivateKey ecdsa_private_key,
+      EcdsaPrivateKey::CreateAllowNonConstantTime(
+          public_key.GetEcdsaPublicKey(token), private_key_value, token));
+  return JwtEcdsaPrivateKey(public_key, std::move(ecdsa_private_key));
 }
 
 bool JwtEcdsaPrivateKey::operator==(const Key& other) const {
@@ -162,13 +56,8 @@ bool JwtEcdsaPrivateKey::operator==(const Key& other) const {
   if (that == nullptr) {
     return false;
   }
-  if (public_key_ != that->public_key_) {
-    return false;
-  }
-  if (private_key_value_ != that->private_key_value_) {
-    return false;
-  }
-  return true;
+  return public_key_ == that->public_key_ &&
+         ecdsa_private_key_ == that->ecdsa_private_key_;
 }
 
 }  // namespace tink

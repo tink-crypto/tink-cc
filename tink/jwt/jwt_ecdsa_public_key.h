@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -30,6 +31,7 @@
 #include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/ecdsa_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -73,7 +75,7 @@ class JwtEcdsaPublicKey final : public JwtSignaturePublicKey {
   JwtEcdsaPublicKey& operator=(JwtEcdsaPublicKey&& other) = default;
 
   const EcPoint& GetPublicPoint(PartialKeyAccessToken token) const {
-    return public_point_;
+    return ecdsa_public_key_.GetPublicPoint(token);
   }
 
   const JwtEcdsaParameters& GetParameters() const override {
@@ -93,17 +95,24 @@ class JwtEcdsaPublicKey final : public JwtSignaturePublicKey {
   }
 
  private:
-  JwtEcdsaPublicKey(const JwtEcdsaParameters& parameters,
-                    const EcPoint& public_point,
-                    std::optional<int> id_requirement,
-                    std::optional<std::string> kid)
+  friend class JwtEcdsaPrivateKey;
+
+  explicit JwtEcdsaPublicKey(const JwtEcdsaParameters& parameters,
+                             EcdsaPublicKey ecdsa_public_key,
+                             std::optional<int> id_requirement,
+                             std::optional<std::string> kid)
       : parameters_(parameters),
-        public_point_(public_point),
+        ecdsa_public_key_(std::move(ecdsa_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
 
+  const EcdsaPublicKey& GetEcdsaPublicKey(PartialKeyAccessToken token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return ecdsa_public_key_;
+  }
+
   JwtEcdsaParameters parameters_;
-  EcPoint public_point_;
+  EcdsaPublicKey ecdsa_public_key_;
   std::optional<int> id_requirement_;
   std::optional<std::string> kid_;
 };

@@ -18,6 +18,7 @@
 #define TINK_JWT_JWT_ECDSA_PRIVATE_KEY_H_
 
 #include <memory>
+#include <utility>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
@@ -28,6 +29,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_private_key.h"
 
 namespace crypto {
 namespace tink {
@@ -52,7 +54,7 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
       const RestrictedData& private_key_value, PartialKeyAccessToken token);
 
   const RestrictedData& GetPrivateKey(PartialKeyAccessToken token) const {
-    return private_key_value_;
+    return ecdsa_private_key_.GetPrivateKey(token);
   }
 
   const JwtEcdsaPublicKey& GetPublicKey() const override { return public_key_; }
@@ -65,11 +67,12 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
 
  private:
   explicit JwtEcdsaPrivateKey(const JwtEcdsaPublicKey& public_key,
-                              const RestrictedData& private_key_value)
-      : public_key_(public_key), private_key_value_(private_key_value) {}
+                              EcdsaPrivateKey ecdsa_private_key)
+      : public_key_(public_key),
+        ecdsa_private_key_(std::move(ecdsa_private_key)) {}
 
   JwtEcdsaPublicKey public_key_;
-  RestrictedData private_key_value_;
+  EcdsaPrivateKey ecdsa_private_key_;
 };
 
 }  // namespace tink

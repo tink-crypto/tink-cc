@@ -17,68 +17,61 @@
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "openssl/base.h"
-#include "openssl/ec_key.h"
 #include "tink/ec_point.h"
-#include "tink/internal/ec_util.h"
 #include "tink/internal/endian.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
-#include "tink/subtle/common_enums.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_public_key.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
-absl::Status ValidatePublicPoint(JwtEcdsaParameters::Algorithm algorithm,
-                                 const EcPoint& point) {
-  subtle::EllipticCurveType curve;
-  switch (algorithm) {
+absl::StatusOr<EcdsaPublicKey> ToEcdsaPublicKey(
+    const JwtEcdsaParameters& parameters, const EcPoint& public_point,
+    PartialKeyAccessToken token) {
+  EcdsaParameters::CurveType curve_type;
+  EcdsaParameters::HashType hash_type;
+  switch (parameters.GetAlgorithm()) {
     case JwtEcdsaParameters::Algorithm::kEs256:
-      curve = subtle::EllipticCurveType::NIST_P256;
+      curve_type = EcdsaParameters::CurveType::kNistP256;
+      hash_type = EcdsaParameters::HashType::kSha256;
       break;
     case JwtEcdsaParameters::Algorithm::kEs384:
-      curve = subtle::EllipticCurveType::NIST_P384;
+      curve_type = EcdsaParameters::CurveType::kNistP384;
+      hash_type = EcdsaParameters::HashType::kSha384;
       break;
     case JwtEcdsaParameters::Algorithm::kEs512:
-      curve = subtle::EllipticCurveType::NIST_P521;
+      curve_type = EcdsaParameters::CurveType::kNistP521;
+      hash_type = EcdsaParameters::HashType::kSha512;
       break;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          absl::StrCat("Unknown algorithm: ", algorithm));
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unknown algorithm: ", parameters.GetAlgorithm()));
   }
-  // Internally calls EC_POINT_set_affine_coordinates_GFp, which, in BoringSSL
-  // and OpenSSL versions > 1.1.0, already checks if the point is on the curve.
-  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
-      internal::GetEcPoint(curve, point.GetX().GetValue(),
-                           point.GetY().GetValue());
-  if (!ec_point.ok()) {
-    return ec_point.status();
-  }
-
-  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
-      internal::EcGroupFromCurveType(curve);
-  if (!group.ok()) {
-    return group.status();
-  }
-  if (EC_POINT_is_on_curve(group->get(), ec_point->get(), /*ctx=*/nullptr) !=
-      1) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        absl::StrCat("EC public point is not on curve ",
-                                     subtle::EnumToString(curve)));
-  }
-  return absl::OkStatus();
+  ABSL_ASSIGN_OR_RETURN(
+      EcdsaParameters ecdsa_parameters,
+      EcdsaParameters::Builder()
+          .SetCurveType(curve_type)
+          .SetHashType(hash_type)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build());
+  return EcdsaPublicKey::Create(ecdsa_parameters, public_point,
+                                /*id_requirement=*/std::nullopt, token);
 }
 
 }  // namespace
@@ -154,11 +147,8 @@ absl::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "JWT ECDSA public point must be specified.");
   }
-  absl::Status point_validation =
-      ValidatePublicPoint(parameters_->GetAlgorithm(), *public_point_);
-  if (!point_validation.ok()) {
-    return point_validation;
-  }
+  ABSL_ASSIGN_OR_RETURN(EcdsaPublicKey ecdsa_public_key,
+                        ToEcdsaPublicKey(*parameters_, *public_point_, token));
   if (parameters_->HasIdRequirement() && !id_requirement_.has_value()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -171,12 +161,9 @@ absl::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  absl::StatusOr<std::optional<std::string>> kid = ComputeKid();
-  if (!kid.ok()) {
-    return kid.status();
-  }
-  return JwtEcdsaPublicKey(*parameters_, *public_point_, id_requirement_,
-                           std::move(*kid));
+  ABSL_ASSIGN_OR_RETURN(std::optional<std::string> kid, ComputeKid());
+  return JwtEcdsaPublicKey(*parameters_, std::move(ecdsa_public_key),
+                           id_requirement_, std::move(kid));
 }
 
 bool JwtEcdsaPublicKey::operator==(const Key& other) const {
@@ -185,19 +172,9 @@ bool JwtEcdsaPublicKey::operator==(const Key& other) const {
   if (that == nullptr) {
     return false;
   }
-  if (parameters_ != that->parameters_) {
-    return false;
-  }
-  if (public_point_ != that->public_point_) {
-    return false;
-  }
-  if (id_requirement_ != that->id_requirement_) {
-    return false;
-  }
-  if (kid_ != that->kid_) {
-    return false;
-  }
-  return true;
+  return parameters_ == that->parameters_ &&
+         ecdsa_public_key_ == that->ecdsa_public_key_ &&
+         id_requirement_ == that->id_requirement_ && kid_ == that->kid_;
 }
 
 }  // namespace tink

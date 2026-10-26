@@ -274,7 +274,9 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_signature_public_key
+    absl::core_headers
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::string_view
@@ -283,10 +285,9 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
-    tink::internal::ec_util
     tink::internal::endian
-    tink::internal::ssl_unique_ptr
-    tink::subtle::common_enums
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_public_key
 )
 
 tink_cc_library(
@@ -295,29 +296,18 @@ tink_cc_library(
     jwt_ecdsa_private_key.cc
     jwt_ecdsa_private_key.h
   DEPS
-    tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_signature_private_key
     absl::core_headers
-    absl::status
+    absl::status_macros
     absl::statusor
-    absl::strings
     absl::synchronization
     absl::optional
     tink::internal::boringssl
-    tink::core::ec_point
-    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
-    tink::core::secret_data
-    tink::internal::bn_util
-    tink::internal::call_with_core_dump_protection
-    tink::internal::ec_util
-    tink::internal::err_util
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
-    tink::subtle::common_enums
+    tink::signature::ecdsa_private_key
 )
 
 tink_cc_library(

@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -33,6 +34,8 @@
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
 
@@ -48,6 +51,35 @@ using ::testing::Lt;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
+
+absl::StatusOr<EcdsaParameters> ExpectedEcdsaParameters(
+    JwtEcdsaParameters::Algorithm algorithm) {
+  EcdsaParameters::CurveType curve_type;
+  EcdsaParameters::HashType hash_type;
+  switch (algorithm) {
+    case JwtEcdsaParameters::Algorithm::kEs256:
+      curve_type = EcdsaParameters::CurveType::kNistP256;
+      hash_type = EcdsaParameters::HashType::kSha256;
+      break;
+    case JwtEcdsaParameters::Algorithm::kEs384:
+      curve_type = EcdsaParameters::CurveType::kNistP384;
+      hash_type = EcdsaParameters::HashType::kSha384;
+      break;
+    case JwtEcdsaParameters::Algorithm::kEs512:
+      curve_type = EcdsaParameters::CurveType::kNistP521;
+      hash_type = EcdsaParameters::HashType::kSha512;
+      break;
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported ECDSA algorithm");
+  }
+  return EcdsaParameters::Builder()
+      .SetCurveType(curve_type)
+      .SetHashType(hash_type)
+      .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+      .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+      .Build();
+}
 
 using JwtEcdsaPublicKeyTest = TestWithParam<jwt_internal::JwtEcdsaTestVector>;
 
@@ -78,6 +110,17 @@ TEST_P(JwtEcdsaPublicKeyTest, CreateSucceeds) {
               Eq(key.GetPublicPoint(GetPartialKeyAccess())));
   EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
   EXPECT_THAT(created_key->GetKid(), Eq(key.GetKid()));
+
+  absl::StatusOr<EcdsaParameters> expected_ecdsa_parameters =
+      ExpectedEcdsaParameters(key.GetParameters().GetAlgorithm());
+  ASSERT_THAT(expected_ecdsa_parameters, IsOk());
+  absl::StatusOr<EcdsaPublicKey> expected_ecdsa_public_key =
+      EcdsaPublicKey::Create(
+          *expected_ecdsa_parameters, key.GetPublicPoint(GetPartialKeyAccess()),
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(expected_ecdsa_public_key, IsOk());
+  EXPECT_THAT(created_key->GetEcdsaPublicKey(GetPartialKeyAccess()),
+              Eq(*expected_ecdsa_public_key));
 }
 
 TEST(JwtEcdsaPublicKeyTest, CustomKidPreservesStringViewBounds) {

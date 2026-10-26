@@ -791,6 +791,8 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::ec_util
     tink::jwt::internal::testing::jwt_ecdsa_test_vectors
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_public_key
     tink::subtle::common_enums
     tink::util::test_util
 )
@@ -814,6 +816,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::jwt::internal::testing::jwt_ecdsa_test_vectors
+    tink::signature::ecdsa_private_key
     tink::subtle::common_enums
     tink::util::test_util
 )

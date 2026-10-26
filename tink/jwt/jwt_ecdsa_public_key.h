@@ -78,6 +78,11 @@ class JwtEcdsaPublicKey final : public JwtSignaturePublicKey {
     return ecdsa_public_key_.GetPublicPoint(token);
   }
 
+  const EcdsaPublicKey& GetEcdsaPublicKey(PartialKeyAccessToken token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return ecdsa_public_key_;
+  }
+
   const JwtEcdsaParameters& GetParameters() const override {
     return parameters_;
   }
@@ -95,8 +100,6 @@ class JwtEcdsaPublicKey final : public JwtSignaturePublicKey {
   }
 
  private:
-  friend class JwtEcdsaPrivateKey;
-
   explicit JwtEcdsaPublicKey(const JwtEcdsaParameters& parameters,
                              EcdsaPublicKey ecdsa_public_key,
                              std::optional<int> id_requirement,
@@ -105,11 +108,6 @@ class JwtEcdsaPublicKey final : public JwtSignaturePublicKey {
         ecdsa_public_key_(std::move(ecdsa_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
-
-  const EcdsaPublicKey& GetEcdsaPublicKey(PartialKeyAccessToken token) const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return ecdsa_public_key_;
-  }
 
   JwtEcdsaParameters parameters_;
   EcdsaPublicKey ecdsa_public_key_;

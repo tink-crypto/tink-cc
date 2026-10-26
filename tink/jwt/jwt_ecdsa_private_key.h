@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
@@ -55,6 +56,11 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
 
   const RestrictedData& GetPrivateKey(PartialKeyAccessToken token) const {
     return ecdsa_private_key_.GetPrivateKey(token);
+  }
+
+  const EcdsaPrivateKey& GetEcdsaPrivateKey(PartialKeyAccessToken token) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return ecdsa_private_key_;
   }
 
   const JwtEcdsaPublicKey& GetPublicKey() const override { return public_key_; }

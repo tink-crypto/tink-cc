@@ -34,6 +34,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
 
@@ -88,6 +89,14 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreateSucceeds) {
               Eq(key.GetPrivateKey(GetPartialKeyAccess())));
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()).size(),
               Eq(public_key.GetParameters().GetPrivateKeyLength()));
+
+  absl::StatusOr<EcdsaPrivateKey> expected_ecdsa_private_key =
+      EcdsaPrivateKey::Create(
+          public_key.GetEcdsaPublicKey(GetPartialKeyAccess()),
+          key.GetPrivateKey(GetPartialKeyAccess()), GetPartialKeyAccess());
+  ASSERT_THAT(expected_ecdsa_private_key, IsOk());
+  EXPECT_THAT(private_key->GetEcdsaPrivateKey(GetPartialKeyAccess()),
+              Eq(*expected_ecdsa_private_key));
 }
 
 TEST_P(JwtEcdsaPrivateKeyTest, CreatePrivateKeyAllowNonConstantTimeWorks) {
@@ -109,6 +118,14 @@ TEST_P(JwtEcdsaPrivateKeyTest, CreatePrivateKeyAllowNonConstantTimeWorks) {
               Eq(key.GetPrivateKey(GetPartialKeyAccess())));
   EXPECT_THAT(private_key->GetPrivateKey(GetPartialKeyAccess()).size(),
               Eq(public_key.GetParameters().GetPrivateKeyLength()));
+
+  absl::StatusOr<EcdsaPrivateKey> expected_ecdsa_private_key =
+      EcdsaPrivateKey::Create(
+          public_key.GetEcdsaPublicKey(GetPartialKeyAccess()),
+          key.GetPrivateKey(GetPartialKeyAccess()), GetPartialKeyAccess());
+  ASSERT_THAT(expected_ecdsa_private_key, IsOk());
+  EXPECT_THAT(private_key->GetEcdsaPrivateKey(GetPartialKeyAccess()),
+              Eq(*expected_ecdsa_private_key));
 }
 
 TEST(JwtEcdsaPrivateKeyTest, CreatePrivateKeyWithOneTooManyBytes) {

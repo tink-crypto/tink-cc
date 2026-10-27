@@ -21,17 +21,19 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "tink/internal/ec_util.h"
-#include "tink/internal/testing/ec_test_vectors.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
-#include "tink/subtle/common_enums.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_public_key.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/util/enums.h"
-#include "tink/util/secret_data.h"
-#include "proto/ecdsa.pb.h"
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/tink.pb.h"
 
@@ -41,9 +43,6 @@ namespace jwt_internal {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::util::Enums;
-using ::google::crypto::tink::EllipticCurveType;
-using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtEcdsaKeyFormat;
 using ::google::crypto::tink::JwtEcdsaPrivateKey;
@@ -55,6 +54,39 @@ using ::testing::Not;
 using ::testing::SizeIs;
 
 namespace {
+
+const EcdsaPrivateKey& GetTestVectorPrivateKey(
+    EcdsaParameters::CurveType curve_type,
+    EcdsaParameters::HashType hash_type) {
+  const internal::SignatureTestVector& test_vector =
+      internal::GetEcdsaTestVector(
+          curve_type, hash_type, EcdsaParameters::SignatureEncoding::kIeeeP1363,
+          EcdsaParameters::Variant::kNoPrefix);
+  const auto* private_key = dynamic_cast<const EcdsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ABSL_CHECK_NE(private_key, nullptr);
+  return *private_key;
+}
+
+JwtEcdsaPrivateKey ToJwtEcdsaPrivateKey(const EcdsaPrivateKey& private_key,
+                                        JwtEcdsaAlgorithm algorithm) {
+  JwtEcdsaPrivateKey key;
+  key.set_version(0);
+  key.set_key_value(private_key.GetPrivateKey(GetPartialKeyAccess())
+                        .GetSecret(InsecureSecretKeyAccess::Get()));
+  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(algorithm);
+  public_key->set_x(std::string(private_key.GetPublicKey()
+                                    .GetPublicPoint(GetPartialKeyAccess())
+                                    .GetX()
+                                    .GetValue()));
+  public_key->set_y(std::string(private_key.GetPublicKey()
+                                    .GetPublicPoint(GetPartialKeyAccess())
+                                    .GetY()
+                                    .GetValue()));
+  return key;
+}
 
 TEST(RawJwtEcdsaSignKeyManagerTest, Basic) {
   EXPECT_THAT(RawJwtEcdsaSignKeyManager().get_version(), Eq(0));
@@ -116,31 +148,10 @@ TEST(RawJwtEcdsaSignKeyManagerTest, CreateKeyValid) {
 }
 
 JwtEcdsaPrivateKey CreateValidEs256Key() {
-  const internal::EcKey& ec_key =
-      internal::GetEcKey(subtle::EllipticCurveType::NIST_P256);
-  JwtEcdsaPrivateKey key;
-  key.set_version(0);
-  key.set_key_value(ec_key.priv.AsStringView());
-  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
-  public_key->set_version(0);
-  public_key->set_algorithm(JwtEcdsaAlgorithm::ES256);
-  public_key->set_x(ec_key.pub_x);
-  public_key->set_y(ec_key.pub_y);
-  return key;
-}
-
-JwtEcdsaPrivateKey CreateValidEs384Key() {
-  const internal::EcKey& ec_key =
-      internal::GetEcKey(subtle::EllipticCurveType::NIST_P384);
-  JwtEcdsaPrivateKey key;
-  key.set_version(0);
-  key.set_key_value(ec_key.priv.AsStringView());
-  JwtEcdsaPublicKey* public_key = key.mutable_public_key();
-  public_key->set_version(0);
-  public_key->set_algorithm(JwtEcdsaAlgorithm::ES384);
-  public_key->set_x(ec_key.pub_x);
-  public_key->set_y(ec_key.pub_y);
-  return key;
+  return ToJwtEcdsaPrivateKey(
+      GetTestVectorPrivateKey(EcdsaParameters::CurveType::kNistP256,
+                              EcdsaParameters::HashType::kSha256),
+      JwtEcdsaAlgorithm::ES256);
 }
 
 TEST(RawJwtEcdsaSignKeyManagerTest, ValidateKey) {
@@ -172,23 +183,19 @@ TEST(RawJwtEcdsaSignKeyManagerTest, GetPublicKey) {
 }
 
 TEST(RawJwtEcdsaSignKeyManagerTest, Create) {
-  JwtEcdsaPrivateKey private_key = CreateValidEs256Key();
-  absl::StatusOr<JwtEcdsaPublicKey> public_key =
-      RawJwtEcdsaSignKeyManager().GetPublicKey(private_key);
-  ASSERT_THAT(public_key, IsOk());
+  const EcdsaPrivateKey& ecdsa_private_key =
+      GetTestVectorPrivateKey(EcdsaParameters::CurveType::kNistP256,
+                              EcdsaParameters::HashType::kSha256);
+  JwtEcdsaPrivateKey private_key =
+      ToJwtEcdsaPrivateKey(ecdsa_private_key, JwtEcdsaAlgorithm::ES256);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RawJwtEcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer, IsOk());
 
-  internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P256);
-  ec_key.pub_x = public_key->x();
-  ec_key.pub_y = public_key->y();
   absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
-      direct_verifier = subtle::EcdsaVerifyBoringSsl::New(
-          ec_key, Enums::ProtoToSubtle(HashType::SHA256),
-          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+      direct_verifier =
+          subtle::EcdsaVerifyBoringSsl::New(ecdsa_private_key.GetPublicKey());
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";
@@ -199,23 +206,17 @@ TEST(RawJwtEcdsaSignKeyManagerTest, Create) {
 
 TEST(RawJwtEcdsaSignKeyManagerTest, CreateDifferentKey) {
   JwtEcdsaPrivateKey private_key = CreateValidEs256Key();
-  // Note: we create a different key in the next line.
-  absl::StatusOr<JwtEcdsaPublicKey> public_key =
-      RawJwtEcdsaSignKeyManager().GetPublicKey(CreateValidEs384Key());
-  ASSERT_THAT(public_key, IsOk());
+  const EcdsaPrivateKey& different_ecdsa_private_key =
+      GetTestVectorPrivateKey(EcdsaParameters::CurveType::kNistP384,
+                              EcdsaParameters::HashType::kSha384);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RawJwtEcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer, IsOk());
 
-  internal::EcKey ec_key;
-  ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P384);
-  ec_key.pub_x = public_key->x();
-  ec_key.pub_y = public_key->y();
   absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
       direct_verifier = subtle::EcdsaVerifyBoringSsl::New(
-          ec_key, Enums::ProtoToSubtle(HashType::SHA384),
-          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+          different_ecdsa_private_key.GetPublicKey());
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";

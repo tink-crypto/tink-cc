@@ -325,17 +325,19 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_sign
-    tink::internal::ec_util
-    tink::internal::testing::ec_test_vectors
-    tink::subtle::common_enums
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::ecdsa_verify_boringssl
-    tink::util::enums
-    tink::util::secret_data
-    tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -381,17 +383,19 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
     gmock
+    absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_verify
-    tink::internal::ec_util
-    tink::internal::testing::ec_test_vectors
-    tink::subtle::common_enums
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::ecdsa_sign_boringssl
-    tink::util::enums
-    tink::util::secret_data
-    tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -660,12 +664,13 @@ tink_cc_test(
     absl::strings
     absl::time
     benchmark::benchmark_main
-    tink::internal::ec_util
-    tink::internal::testing::ec_test_vectors
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::subtle::common_enums
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
 )

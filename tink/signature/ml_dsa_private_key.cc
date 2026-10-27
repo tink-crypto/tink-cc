@@ -26,14 +26,10 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
-#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
 #include "openssl/mem.h"
 #include "openssl/mldsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -50,10 +46,6 @@ namespace tink {
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
     return absl::InvalidArgumentError(
         absl::StrCat("Invalid ML-DSA private seed size. The seed must be ",
@@ -72,16 +64,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
           "Invalid ML-DSA instance. Only ML-DSA-44, ML-DSA-65 and "
           "ML-DSA-87 are currently supported.");
   }
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
     return absl::InvalidArgumentError(
         absl::StrCat("Invalid ML-DSA private seed size. The seed must be ",
@@ -103,16 +90,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
           "Invalid ML-DSA instance. Only ML-DSA-44, ML-DSA-65 and "
           "ML-DSA-87 are currently supported.");
   }
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   util::SecretUniquePtr<MLDSA44_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA44_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -179,16 +161,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
   }
 
   return MlDsaPrivateKey(public_key, private_seed_bytes);
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA65_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -255,16 +232,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
   }
 
   return MlDsaPrivateKey(public_key, private_seed_bytes);
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA87_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -331,16 +303,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
   }
 
   return MlDsaPrivateKey(public_key, private_seed_bytes);
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   util::SecretUniquePtr<MLDSA44_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA44_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -404,16 +371,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create44(
   }
 
   return MlDsaPrivateKey(*public_key, private_seed_bytes);
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA65_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -477,16 +439,11 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
   }
 
   return MlDsaPrivateKey(*public_key, private_seed_bytes);
-#endif
 }
 
 absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
     const MlDsaParameters& parameters, const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA87_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -550,7 +507,6 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
   }
 
   return MlDsaPrivateKey(*public_key, private_seed_bytes);
-#endif
 }
 
 bool MlDsaPrivateKey::operator==(const Key& other) const {

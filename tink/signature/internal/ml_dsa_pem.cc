@@ -24,21 +24,16 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "openssl/crypto.h"
-
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/bio.h"
+#include "openssl/crypto.h"
 #include "openssl/evp.h"
 #include "openssl/pem.h"
 #include "tink/internal/ssl_unique_ptr.h"
-#endif
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-#ifdef OPENSSL_IS_BORINGSSL
 namespace {
 
 // We explicitly set a failing passphrase callback function to make sure no
@@ -117,25 +112,6 @@ absl::StatusOr<std::string> ParseMldsa87PublicKey(
   return ParseMldsaPublicKey(pem_serialized_key, EVP_PKEY_ML_DSA_87, 2592,
                              "ML-DSA-87");
 }
-#else   // !OPENSSL_IS_BORINGSSL
-absl::StatusOr<std::string> ParseMldsa44PublicKey(
-    absl::string_view pem_serialized_key) {
-  return absl::UnimplementedError(
-      "ML-DSA PEM parsing is only supported in BoringSSL builds.");
-}
-
-absl::StatusOr<std::string> ParseMldsa65PublicKey(
-    absl::string_view pem_serialized_key) {
-  return absl::UnimplementedError(
-      "ML-DSA PEM parsing is only supported in BoringSSL builds.");
-}
-
-absl::StatusOr<std::string> ParseMldsa87PublicKey(
-    absl::string_view pem_serialized_key) {
-  return absl::UnimplementedError(
-      "ML-DSA PEM parsing is only supported in BoringSSL builds.");
-}
-#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace internal
 }  // namespace tink

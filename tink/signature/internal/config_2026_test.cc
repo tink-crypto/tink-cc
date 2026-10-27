@@ -39,11 +39,8 @@
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
-#include "tink/signature/ml_dsa_private_key.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
-#endif
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
@@ -52,6 +49,7 @@
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
 #include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/prehash.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
@@ -80,10 +78,8 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
 
   EXPECT_THAT((*store)->Get<PublicKeySign>(), IsOk());
   EXPECT_THAT((*store)->Get<PublicKeyVerify>(), IsOk());
-#ifdef OPENSSL_IS_BORINGSSL
   EXPECT_THAT((*store)->Get<Prehash>(), IsOk());
   EXPECT_THAT((*store)->Get<SignPrehash>(), IsOk());
-#endif
 }
 
 TEST(SignatureV0Test, KeyManagers) {
@@ -139,7 +135,6 @@ TEST(SignatureConfigV0Test, MlDsaPrehashPrimitiveCreatorWorks) {
           "3bd555")));
 }
 
-#ifdef OPENSSL_IS_BORINGSSL
 TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
@@ -255,7 +250,6 @@ TEST(SignatureConfigV0Test,
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
-#endif
 
 using DeterministicSignatureTests =
     testing::TestWithParam<internal::SignatureTestVector>;
@@ -410,7 +404,6 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(EcdsaTest, RandomizedSignaturesTest,
                          testing::ValuesIn(internal::CreateEcdsaTestVectors()));
 
-#ifdef OPENSSL_IS_BORINGSSL
 INSTANTIATE_TEST_SUITE_P(
     SlhDsaTest, RandomizedSignaturesTest,
     testing::ValuesIn(internal::CreateSlhDsaTestVectors()));
@@ -421,7 +414,6 @@ INSTANTIATE_TEST_SUITE_P(MlDsaTest, RandomizedSignaturesTest,
 INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaTest, RandomizedSignaturesTest,
     testing::ValuesIn(internal::CreateCompositeMlDsaTestVectors()));
-#endif
 
 }  // namespace
 }  // namespace internal

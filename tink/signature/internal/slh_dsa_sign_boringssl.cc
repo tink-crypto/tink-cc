@@ -25,14 +25,11 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/slhdsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
@@ -45,7 +42,6 @@ namespace internal {
 
 namespace {
 
-#if defined(OPENSSL_IS_BORINGSSL)
 using SignFunc = int (*)(uint8_t*, const uint8_t*, const uint8_t*, size_t,
                          const uint8_t*, size_t);
 
@@ -131,16 +127,11 @@ absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
 
   return signature;
 }
-#endif
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
     const SlhDsaPrivateKey& private_key) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
   auto status = internal::CheckFipsCompatibility<SlhDsaSignBoringSsl>();
   if (!status.ok()) {
     return status;
@@ -152,7 +143,6 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
   }
 
   return {std::make_unique<SlhDsaSignBoringSsl>(std::move(private_key))};
-#endif
 }
 
 }  // namespace internal

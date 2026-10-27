@@ -1638,7 +1638,6 @@ tink_cc_library(
     tink::core::restricted_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
-    tink::internal::fips_utils
     tink::util::secret_data
 )
 
@@ -1756,7 +1755,6 @@ tink_cc_library(
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
-    tink::internal::fips_utils
     tink::internal::secret_buffer
     tink::signature::internal::slh_dsa_parameter_set
     tink::util::secret_data

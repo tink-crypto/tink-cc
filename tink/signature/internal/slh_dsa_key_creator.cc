@@ -26,10 +26,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/slhdsa.h"
-#endif
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -44,10 +41,6 @@ namespace internal {
 
 absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
   absl::StatusOr<SlhDsaParameterSet> parameter_set =
       GetSlhDsaParameterSet(params);
   if (!parameter_set.ok()) {
@@ -98,7 +91,6 @@ absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
   }
 
   return std::make_unique<SlhDsaPrivateKey>(*private_key);
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

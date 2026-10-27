@@ -26,11 +26,8 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/slhdsa.h"
-#endif  // defined(OPENSSL_IS_BORINGSSL)
+#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
@@ -42,7 +39,6 @@ namespace internal {
 
 namespace {
 
-#if defined(OPENSSL_IS_BORINGSSL)
 // Public Key Verification using SLH-DSA-SHA2-128s implementation from
 // BoringSSL.
 namespace {
@@ -141,16 +137,11 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
  private:
   SlhDsaPublicKey public_key_;
 };
-#endif
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
     const SlhDsaPublicKey& public_key) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
   auto status = internal::CheckFipsCompatibility<SlhDsaVerifyBoringSsl>();
   if (!status.ok()) {
     return status;
@@ -159,7 +150,6 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
       GetSlhDsaParameterSet(public_key.GetParameters());
 
   return {std::make_unique<SlhDsaVerifyBoringSsl>(std::move(public_key))};
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

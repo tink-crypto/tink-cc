@@ -21,11 +21,13 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/composite_ml_dsa_private_key.h"
+#include "tink/signature/composite_ml_dsa_proto_serialization.h"
+#include "tink/signature/composite_ml_dsa_public_key.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_public_key.h"
@@ -36,29 +38,19 @@
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
-#include "tink/signature/internal/ml_dsa_verify_boringssl.h"
-#include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/ml_dsa_public_key.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "tink/signature/composite_ml_dsa_private_key.h"
-#include "tink/signature/composite_ml_dsa_proto_serialization.h"
-#include "tink/signature/composite_ml_dsa_public_key.h"
-#include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_sign_prehash_boringssl.h"
+#include "tink/signature/internal/ml_dsa_verify_boringssl.h"
 #include "tink/signature/internal/prehash_wrapper.h"
 #include "tink/signature/internal/sign_prehash_wrapper.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
+#include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/prehash.h"
-#include "tink/signature/sign_prehash.h"
-#include "tink/signature/slh_dsa_private_key.h"
-#include "tink/signature/slh_dsa_public_key.h"
-#include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
-#include "tink/signature/subtle/composite_ml_dsa_verify_boringssl.h"
-#endif
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
@@ -71,6 +63,11 @@
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
+#include "tink/signature/sign_prehash.h"
+#include "tink/signature/slh_dsa_private_key.h"
+#include "tink/signature/slh_dsa_public_key.h"
+#include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
+#include "tink/signature/subtle/composite_ml_dsa_verify_boringssl.h"
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/subtle/ed25519_sign_boringssl.h"
@@ -126,8 +123,6 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEd25519VerifyBoringSsl(
   return crypto::tink::subtle::Ed25519VerifyBoringSsl::New(key);
 }
 
-// Tink implements PQC signatures with BoringSSL, not OpenSSL.
-#ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewCompositeMlDsaSignBoringSsl(
     const CompositeMlDsaPrivateKey& key) {
   return crypto::tink::subtle::NewCompositeMlDsaSign(key);
@@ -137,7 +132,6 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 NewCompositeMlDsaVerifyBoringSsl(const CompositeMlDsaPublicKey& key) {
   return crypto::tink::subtle::NewCompositeMlDsaVerify(key);
 }
-#endif
 
 }  // namespace
 
@@ -152,7 +146,6 @@ absl::Status AddSignature2026(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-#ifdef OPENSSL_IS_BORINGSSL
   status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<PrehashWrapper>(), config);
   if (!status.ok()) {
@@ -163,7 +156,6 @@ absl::Status AddSignature2026(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-#endif
 
   // ECDSA
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
@@ -260,8 +252,6 @@ absl::Status AddSignature2026(Configuration& config) {
     return status;
   }
 
-#if defined(OPENSSL_IS_BORINGSSL) || \
-    (defined(OPENSSL_API_LEVEL) && OPENSSL_API_LEVEL >= 30500)
   // ML-DSA
   status = RegisterMlDsaProtoSerialization();
   if (!status.ok()) {
@@ -279,10 +269,7 @@ absl::Status AddSignature2026(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-#endif
 
-  // Tink implements PQC signatures with BoringSSL, not OpenSSL.
-#ifdef OPENSSL_IS_BORINGSSL
   // SLH DSA
   status = RegisterSlhDsaProtoSerialization();
   if (!status.ok()) {
@@ -329,7 +316,6 @@ absl::Status AddSignature2026(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-#endif
   return absl::OkStatus();
 }
 

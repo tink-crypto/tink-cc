@@ -23,34 +23,26 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
-#include "tink/internal/secret_buffer.h"
-#include "tink/secret_data.h"
-#include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/secret_data.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#if defined(OPENSSL_IS_BORINGSSL)
 #include "openssl/mem.h"
 #include "openssl/slhdsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/signature/slh_dsa_public_key.h"
-
-#if defined(OPENSSL_IS_BORINGSSL)
+#include "tink/secret_data.h"
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
-#endif
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_public_key.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 
 namespace {
 
-#if defined(OPENSSL_IS_BORINGSSL)
 absl::Status GetPublicFromPrivate(
     const internal::SlhDsaParameterSet& parameter_set,
     std::string& public_key_bytes, const SecretData& private_key_bytes) {
@@ -91,17 +83,12 @@ absl::Status GetKeyPairFromSeed(
       absl::StatusCode::kInvalidArgument,
       "SLH-DSA parameter combination is not supported by BoringSSL.");
 }
-#endif
 
 }  // namespace
 
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
   // Only 64-byte, 96-byte and 128-byte private keys are supported.
   if (private_key_bytes.size() != 64 && private_key_bytes.size() != 96 &&
       private_key_bytes.size() != 128) {
@@ -153,16 +140,11 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   }
 
   return SlhDsaPrivateKey(public_key, private_key_bytes);
-#endif
 }
 
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaParameters& parameters, const RestrictedData& private_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
   // Only 64-byte, 96-byte and 128-byte private keys are supported.
   if (private_key_bytes.size() != 64 && private_key_bytes.size() != 96 &&
       private_key_bytes.size() != 128) {
@@ -209,17 +191,12 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   }
 
   return SlhDsaPrivateKey(*public_key, private_key_bytes);
-#endif
 }
 
 absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::CreateFromSeed(
     const SlhDsaParameters& parameters,
     const RestrictedData& private_seed_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-#if !defined(OPENSSL_IS_BORINGSSL)
-  return absl::UnimplementedError(
-      "SLH-DSA is only supported in BoringSSL builds.");
-#else
   // Only 48-byte, 72-byte and 96-byte private keys are supported.
   if (private_seed_bytes.size() != 48 && private_seed_bytes.size() != 72 &&
       private_seed_bytes.size() != 96) {
@@ -271,7 +248,6 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::CreateFromSeed(
       *public_key,
       RestrictedData(SecretData(private_key_bytes),
                      InsecureSecretKeyAccess::Get()));
-#endif
 }
 
 bool SlhDsaPrivateKey::operator==(const Key& other) const {

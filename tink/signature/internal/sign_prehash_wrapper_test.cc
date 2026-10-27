@@ -30,13 +30,12 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"
-#include "tink/key_status.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "tink/configuration.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
@@ -46,8 +45,6 @@
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/prehash.h"
-#endif
-#include "tink/internal/primitive_set.h"
 #include "tink/signature/sign_prehash.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
@@ -244,7 +241,6 @@ TEST(SignPrehashWrapperTest, WrapWithWithIdRequirementPrimary) {
       IsOkAndHolds("edcba"));
 }
 
-#ifdef OPENSSL_IS_BORINGSSL
 
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -346,7 +342,6 @@ TEST_P(SignPrehashWrapperWycheproofTest,
   }
 }
 
-#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 }  // namespace internal

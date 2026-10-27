@@ -27,10 +27,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -48,7 +45,6 @@ namespace tink {
 namespace internal {
 namespace {
 
-#ifdef OPENSSL_IS_BORINGSSL
 
 class MlDsa44SignPrehashBoringSsl : public SignPrehash {
  public:
@@ -332,16 +328,11 @@ absl::StatusOr<std::string> MlDsa87SignPrehashBoringSsl::Sign(
   return signature;
 }
 
-#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<SignPrehash>> NewMlDsaSignPrehashBoringSsl(
     MlDsaPrivateKey private_key) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   switch (private_key.GetPublicKey().GetParameters().GetInstance()) {
     case MlDsaParameters::Instance::kMlDsa44:
       return MlDsa44SignPrehashBoringSsl::New(std::move(private_key));
@@ -353,7 +344,6 @@ absl::StatusOr<std::unique_ptr<SignPrehash>> NewMlDsaSignPrehashBoringSsl(
       return absl::InvalidArgumentError(
           "Only ML-DSA-44, ML-DSA-65 and ML-DSA-87 are supported");
   }
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace internal

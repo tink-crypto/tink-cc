@@ -26,15 +26,12 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_key_manager.h"
 #include "tink/signature/internal/ml_dsa_verify_key_manager.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_sign_key_manager.h"
 #include "tink/signature/internal/slh_dsa_verify_key_manager.h"
-#endif
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
@@ -102,8 +99,6 @@ absl::Status SignatureConfig::Register() {
   status = RegisterEd25519ProtoSerialization();
   if (!status.ok()) return status;
 
-  // Tink implements PQC signatures with BoringSSL, not OpenSSL.
-#ifdef OPENSSL_IS_BORINGSSL
   // ML-DSA
   status =
       Registry::RegisterKeyManager(internal::MakeMlDsaSignKeyManager(), true);
@@ -129,7 +124,6 @@ absl::Status SignatureConfig::Register() {
 
   status = RegisterSlhDsaProtoSerialization();
   if (!status.ok()) return status;
-#endif
 
   return absl::OkStatus();
 }

@@ -29,7 +29,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -1730,7 +1729,6 @@ constexpr absl::string_view kShake256fSigHex =
     "c9fcb2bf1c296448fb2bf2175a4317ba27d2847f839b78143050dfdb561978f854a40"
     "61795ab";
 
-#ifdef OPENSSL_IS_BORINGSSL
 absl::StatusOr<SlhDsaPrivateKey> CreatePrivateKey(
     SlhDsaParameters::HashType hash_type, int private_key_size_in_bytes,
     SlhDsaParameters::SignatureType signature_type,
@@ -1820,7 +1818,6 @@ const SignatureTestVector& CreateSlhDsaShake256fFastTinkTestVector() {
   }());
   return *test_vector;
 }
-#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
@@ -1829,15 +1826,11 @@ const SignatureTestVector& CreateSlhDsaShake256fFastTinkTestVector() {
 const std::vector<SignatureTestVector>& CreateSlhDsaTestVectors() {
   static const absl::NoDestructor<std::vector<SignatureTestVector>>
       test_vectors([] {
-#ifndef OPENSSL_IS_BORINGSSL
-        return std::vector<SignatureTestVector>{};
-#else
         return std::vector<SignatureTestVector>{
             CreateSlhDsaSha2128sSmallNoPrefixTestVector(),
             CreateSlhDsaSha2128sSmallTinkTestVector(),
             CreateSlhDsaShake256fFastNoPrefixTestVector(),
             CreateSlhDsaShake256fFastTinkTestVector()};
-#endif
       }());
   return *test_vectors;
 }
@@ -1848,10 +1841,6 @@ const SignatureTestVector& GetSlhDsaTestVector(
     SlhDsaParameters::HashType hash_type,
     SlhDsaParameters::SignatureType sig_type,
     SlhDsaParameters::Variant variant) {
-#ifndef OPENSSL_IS_BORINGSSL
-  ABSL_LOG(FATAL)
-      << "SLH-DSA test vectors are not available in non-BoringSSL builds.";
-#else
   static const absl::NoDestructor<absl::flat_hash_map<
       std::tuple<SlhDsaParameters::HashType, SlhDsaParameters::SignatureType,
                  SlhDsaParameters::Variant>,
@@ -1877,7 +1866,6 @@ const SignatureTestVector& GetSlhDsaTestVector(
   auto it = vectors->find(std::make_tuple(hash_type, sig_type, variant));
   ABSL_CHECK(it != vectors->end()) << "No SLH-DSA test vector found.";
   return *it->second;
-#endif
 }
 
 }  // namespace crypto::tink::internal

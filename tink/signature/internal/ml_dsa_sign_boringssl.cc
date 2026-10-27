@@ -26,10 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
-#endif
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
@@ -46,7 +43,6 @@ namespace tink {
 namespace internal {
 namespace {
 
-#ifdef OPENSSL_IS_BORINGSSL
 class MlDsa44SignBoringSsl : public PublicKeySign {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus
@@ -325,16 +321,11 @@ absl::StatusOr<std::string> MlDsa87SignBoringSsl::Sign(
 
   return signature;
 }
-#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignWithContextBoringSsl(
     MlDsaPrivateKey private_key, absl::string_view context) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   switch (private_key.GetPublicKey().GetParameters().GetInstance()) {
     case MlDsaParameters::Instance::kMlDsa44:
       return MlDsa44SignBoringSsl::New(std::move(private_key), context);
@@ -346,7 +337,6 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignWithContextBoringSsl(
       return absl::InvalidArgumentError(
           "Only ML-DSA-44, ML-DSA-65 and ML-DSA-87 are supported");
   }
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(

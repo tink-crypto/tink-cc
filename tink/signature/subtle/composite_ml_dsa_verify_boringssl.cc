@@ -25,11 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/mldsa.h"
-#endif
-
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
@@ -49,7 +45,6 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-#ifdef OPENSSL_IS_BORINGSSL
 namespace {
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetClassicalPublicKeyVerify(
@@ -209,16 +204,10 @@ absl::Status CompositeMlDsaVerify::Verify(absl::string_view signature,
 }
 
 }  // namespace
-#endif  // OPENSSL_IS_BORINGSSL
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewCompositeMlDsaVerify(
     const CompositeMlDsaPublicKey& public_key) {
-#ifndef OPENSSL_IS_BORINGSSL
-  return absl::UnimplementedError(
-      "ML-DSA is only supported in BoringSSL builds.");
-#else
   return CompositeMlDsaVerify::New(public_key);
-#endif  // OPENSSL_IS_BORINGSSL
 }
 
 }  // namespace subtle

@@ -98,6 +98,7 @@ class AeadSetWrapperTest : public TestWithParam<AeadType> {
         return std::make_unique<AeadFromZeroCopy>(
             std::make_unique<DummyZeroCopyAead>(name, kAad.size()));
     }
+    return nullptr;
   }
 
   static constexpr absl::string_view kAad = "some_aad";

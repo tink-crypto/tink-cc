@@ -44,6 +44,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -55,7 +56,6 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::NotNull;
-using ::testing::StrEq;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -304,6 +304,20 @@ TEST_P(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
               Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(GetPartialKeyAccess()),
               Eq(private_values.d));
+
+  absl::StatusOr<RsaSsaPssPrivateKey> expected_rsa_private_key =
+      RsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(public_key.GetRsaSsaPssPublicKey(GetPartialKeyAccess()))
+          .SetPrimeP(private_values.p)
+          .SetPrimeQ(private_values.q)
+          .SetPrimeExponentP(private_values.dp)
+          .SetPrimeExponentQ(private_values.dq)
+          .SetPrivateExponent(private_values.d)
+          .SetCrtCoefficient(private_values.q_inv)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_rsa_private_key, IsOk());
+  EXPECT_THAT(private_key->GetRsaSsaPssPrivateKey(GetPartialKeyAccess()),
+              Eq(*expected_rsa_private_key));
 }
 
 TEST_P(JwtRsaSsaPssPrivateKeyTest,
@@ -340,6 +354,20 @@ TEST_P(JwtRsaSsaPssPrivateKeyTest,
               Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(GetPartialKeyAccess()),
               Eq(private_values.d));
+
+  absl::StatusOr<RsaSsaPssPrivateKey> expected_rsa_private_key =
+      RsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(public_key.GetRsaSsaPssPublicKey(GetPartialKeyAccess()))
+          .SetPrimeP(private_values.p)
+          .SetPrimeQ(private_values.q)
+          .SetPrimeExponentP(private_values.dp)
+          .SetPrimeExponentQ(private_values.dq)
+          .SetPrivateExponent(private_values.d)
+          .SetCrtCoefficient(private_values.q_inv)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_rsa_private_key, IsOk());
+  EXPECT_THAT(private_key->GetRsaSsaPssPrivateKey(GetPartialKeyAccess()),
+              Eq(*expected_rsa_private_key));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest,
@@ -401,6 +429,20 @@ TEST(JwtRsaSsaPssPrivateKeyTest,
               Eq(private_values.q_inv));
   EXPECT_THAT(private_key->GetPrivateExponentData(GetPartialKeyAccess()),
               Eq(private_values.d));
+
+  absl::StatusOr<RsaSsaPssPrivateKey> expected_rsa_private_key =
+      RsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(public_key.GetRsaSsaPssPublicKey(GetPartialKeyAccess()))
+          .SetPrimeP(private_values.p)
+          .SetPrimeQ(private_values.q)
+          .SetPrimeExponentP(private_values.dp)
+          .SetPrimeExponentQ(private_values.dq)
+          .SetPrivateExponent(private_values.d)
+          .SetCrtCoefficient(private_values.q_inv)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_rsa_private_key, IsOk());
+  EXPECT_THAT(private_key->GetRsaSsaPssPrivateKey(GetPartialKeyAccess()),
+              Eq(*expected_rsa_private_key));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSslWorks) {

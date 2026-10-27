@@ -287,17 +287,26 @@ tink_cc_library(
     raw_jwt_ecdsa_sign_key_manager.cc
     raw_jwt_ecdsa_sign_key_manager.h
   DEPS
+    tink::jwt::internal::jwt_ecdsa_proto_serialization_impl
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::private_key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::core::restricted_data
     tink::internal::ec_util
     tink::internal::fips_utils
-    tink::subtle::common_enums
+    tink::internal::proto_key_serialization
+    tink::internal::serialization_registry
+    tink::jwt::jwt_ecdsa_private_key
     tink::subtle::ecdsa_sign_boringssl
     tink::util::constants
     tink::util::enums
@@ -306,6 +315,7 @@ tink_cc_library(
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -336,25 +346,31 @@ tink_cc_library(
     raw_jwt_ecdsa_verify_key_manager.cc
     raw_jwt_ecdsa_verify_key_manager.h
   DEPS
+    tink::jwt::internal::jwt_ecdsa_proto_serialization_impl
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
     tink::core::public_key_verify
-    tink::internal::ec_util
+    tink::core::restricted_data
     tink::internal::fips_utils
-    tink::subtle::common_enums
+    tink::internal::proto_key_serialization
+    tink::internal::serialization_registry
+    tink::jwt::jwt_ecdsa_public_key
     tink::subtle::ecdsa_verify_boringssl
     tink::util::constants
-    tink::util::enums
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(

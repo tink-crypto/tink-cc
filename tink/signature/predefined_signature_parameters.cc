@@ -134,6 +134,15 @@ const EcdsaParameters& EcdsaP256RawDer() {
   return *kParameters;
 }
 
+const EcdsaParameters& EcdsaP384Sha384() {
+  static const absl::NoDestructor<EcdsaParameters> kParameters(
+      CreateEcdsaParameters(EcdsaParameters::HashType::kSha384,
+                            EcdsaParameters::CurveType::kNistP384,
+                            EcdsaParameters::SignatureEncoding::kDer,
+                            EcdsaParameters::Variant::kTink));
+  return *kParameters;
+}
+
 const EcdsaParameters& EcdsaP384Sha512() {
   static const absl::NoDestructor<EcdsaParameters> kParameters(
       CreateEcdsaParameters(EcdsaParameters::HashType::kSha512,

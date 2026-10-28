@@ -75,6 +75,10 @@ INSTANTIATE_TEST_SUITE_P(
             +[]() -> const Parameters& { return EcdsaP256RawDer(); },
             &SignatureKeyTemplates::EcdsaP256RawDer},
         TemplateEquivalence{
+            "EcdsaP384Sha384",
+            +[]() -> const Parameters& { return EcdsaP384Sha384(); },
+            &SignatureKeyTemplates::EcdsaP384Sha384},
+        TemplateEquivalence{
             "EcdsaP384Sha512",
             +[]() -> const Parameters& { return EcdsaP384Sha512(); },
             &SignatureKeyTemplates::EcdsaP384Sha512},
@@ -142,6 +146,7 @@ void ExpectKeyGenerationWorks(const P& parameters) {
 TEST(PredefinedSignatureParametersTest, EcdsaKeyGen) {
   ExpectKeyGenerationWorks(EcdsaP256());
   ExpectKeyGenerationWorks(EcdsaP256RawDer());
+  ExpectKeyGenerationWorks(EcdsaP384Sha384());
   ExpectKeyGenerationWorks(EcdsaP384Sha512());
   ExpectKeyGenerationWorks(EcdsaP521());
   ExpectKeyGenerationWorks(EcdsaP256Ieee());

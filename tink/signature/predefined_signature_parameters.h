@@ -52,6 +52,15 @@ const crypto::tink::EcdsaParameters& EcdsaP256RawDer();
 
 // Returns parameters that generate new instances of `EcdsaPrivateKey` objects
 // with the following parameters:
+//   - Hash function: SHA384
+//   - Curve: NIST P-384
+//   - Signature encoding: DER
+//   - Variant: `crypto::tink::EcdsaParameters::Variant::kTink`
+// Equivalent to `crypto::tink::SignatureKeyTemplates::EcdsaP384Sha384()`.
+const crypto::tink::EcdsaParameters& EcdsaP384Sha384();
+
+// Returns parameters that generate new instances of `EcdsaPrivateKey` objects
+// with the following parameters:
 //   - Hash function: SHA512
 //   - Curve: NIST P-384
 //   - Signature encoding: DER

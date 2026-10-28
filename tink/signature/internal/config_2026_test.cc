@@ -26,6 +26,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -36,6 +37,7 @@
 #include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/chunked_prehash.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
@@ -65,6 +67,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Eq;
 using ::testing::Not;
@@ -80,6 +83,7 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
   EXPECT_THAT((*store)->Get<PublicKeyVerify>(), IsOk());
   EXPECT_THAT((*store)->Get<Prehash>(), IsOk());
   EXPECT_THAT((*store)->Get<SignPrehash>(), IsOk());
+  EXPECT_THAT((*store)->Get<ChunkedPrehash>(), IsOk());
 }
 
 TEST(SignatureV0Test, KeyManagers) {
@@ -165,6 +169,94 @@ TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
   absl::StatusOr<std::string> signature =
       (*sign_prehash)->Sign(absl::StrCat(prehash_prefix, mu));
   ASSERT_THAT(signature, IsOk());
+}
+
+TEST(SignatureConfigV0Test, MlDsaChunkedPrehashPrimitiveCreatorWorks) {
+  Configuration config;
+  ASSERT_THAT(AddSignature2026(config), IsOk());
+
+  const SignatureTestVector& test_vector = GetMlDsaTestVector(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+
+  absl::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.signature_private_key->GetPublicKey().Clone(),
+              KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedPrehash>> chunked_prehash =
+      handle->GetPrimitive<ChunkedPrehash>(config);
+  ASSERT_THAT(chunked_prehash, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedPrehashComputation>> computation =
+      (*chunked_prehash)->CreateComputation();
+  ASSERT_THAT(computation, IsOk());
+  EXPECT_THAT((*computation)->Update(test_vector.message.substr(0, 10)),
+              IsOk());
+  EXPECT_THAT((*computation)->Update(test_vector.message.substr(10)), IsOk());
+
+  // Same prehash as in MlDsaPrehashPrimitiveCreatorWorks.
+  EXPECT_THAT(
+      (*computation)->GetPrehash(),
+      IsOkAndHolds(HexDecodeOrDie(
+          "ff080f141a32162a55180e25b893fd1d2e554b1b330dcf73f2f663dd67fb549b86"
+          "ead695535216afe93d6a5d55e21ee24097ae33030a940835d895a1c5594d3238aa"
+          "3bd555")));
+}
+
+TEST(SignatureConfigV0Test, MlDsaChunkedPrehashSignVerifyWorks) {
+  Configuration config;
+  ASSERT_THAT(AddSignature2026(config), IsOk());
+
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
+                              MlDsaParameters::Variant::kNoPrefixWithPrehashId);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*parameters, /*id_requirement=*/0x02030405);
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<KeysetHandle> private_handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+              **private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(private_handle, IsOk());
+
+  absl::StatusOr<KeysetHandle> public_handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+              (*private_key)->GetPublicKey(), KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(public_handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedPrehash>> chunked_prehash =
+      public_handle->GetPrimitive<ChunkedPrehash>(config);
+  ASSERT_THAT(chunked_prehash, IsOk());
+  absl::StatusOr<std::unique_ptr<SignPrehash>> sign_prehash =
+      private_handle->GetPrimitive<SignPrehash>(config);
+  ASSERT_THAT(sign_prehash, IsOk());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+      public_handle->GetPrimitive<PublicKeyVerify>(config);
+  ASSERT_THAT(verify, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedPrehashComputation>> computation =
+      (*chunked_prehash)->CreateComputation();
+  ASSERT_THAT(computation, IsOk());
+  EXPECT_THAT((*computation)->Update("message "), IsOk());
+  EXPECT_THAT((*computation)->Update("in chunks"), IsOk());
+  absl::StatusOr<std::string> prehash = (*computation)->GetPrehash();
+  ASSERT_THAT(prehash, IsOk());
+
+  absl::StatusOr<std::string> signature = (*sign_prehash)->Sign(*prehash);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verify)->Verify(*signature, "message in chunks"), IsOk());
 }
 
 TEST(SignatureConfigV0Test,

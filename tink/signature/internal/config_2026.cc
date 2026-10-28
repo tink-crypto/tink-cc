@@ -25,6 +25,7 @@
 #include "tink/internal/configuration_impl.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/chunked_prehash.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/composite_ml_dsa_proto_serialization.h"
 #include "tink/signature/composite_ml_dsa_public_key.h"
@@ -38,6 +39,8 @@
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "tink/signature/internal/chunked_prehash_wrapper.h"
+#include "tink/signature/internal/ml_dsa_chunked_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
@@ -153,6 +156,11 @@ absl::Status AddSignature2026(Configuration& config) {
   }
   status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<SignPrehashWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveWrapper(
+      std::make_unique<ChunkedPrehashWrapper>(), config);
   if (!status.ok()) {
     return status;
   }
@@ -295,6 +303,12 @@ absl::Status AddSignature2026(Configuration& config) {
   }
   status = ConfigurationImpl::AddPrimitiveGetter<SignPrehash, MlDsaPrivateKey>(
       NewMlDsaSignPrehashBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status =
+      ConfigurationImpl::AddPrimitiveGetter<ChunkedPrehash, MlDsaPublicKey>(
+          NewMlDsaChunkedPrehashBoringSsl, config);
   if (!status.ok()) {
     return status;
   }

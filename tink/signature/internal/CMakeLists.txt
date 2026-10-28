@@ -1363,6 +1363,8 @@ tink_cc_library(
     config_2026.cc
     config_2026.h
   DEPS
+    tink::signature::internal::chunked_prehash_wrapper
+    tink::signature::internal::ml_dsa_chunked_prehash_boringssl
     tink::signature::internal::ml_dsa_prehash_boringssl
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_sign_boringssl
@@ -1381,6 +1383,7 @@ tink_cc_library(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl
+    tink::signature::chunked_prehash
     tink::signature::composite_ml_dsa_private_key
     tink::signature::composite_ml_dsa_proto_serialization
     tink::signature::composite_ml_dsa_public_key
@@ -1437,6 +1440,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
+    tink::internal::boringssl
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -1447,6 +1451,7 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::signature::chunked_prehash
     tink::signature::ecdsa_verify_key_manager
     tink::signature::ed25519_verify_key_manager
     tink::signature::ml_dsa_parameters

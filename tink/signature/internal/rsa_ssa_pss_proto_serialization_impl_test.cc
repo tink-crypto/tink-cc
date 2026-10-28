@@ -784,6 +784,38 @@ TEST_F(RsaSsaPssProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST_F(RsaSsaPssProtoSerializationTest, ParsePublicKeyWithAllZeroModulusFails) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  RsaSsaPssParams params;
+  params.set_sig_hash(HashType::SHA256);
+  params.set_mgf1_hash(HashType::SHA256);
+  params.set_salt_length(32);
+
+  KeyValues key_values = GetKeyValues(2048);
+
+  google::crypto::tink::RsaSsaPssPublicKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_n(std::string(256, '\0'));
+  key_proto.set_e(key_values.e);
+  *key_proto.mutable_params() = params;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key, KeyMaterialTypeTP::kAsymmetricPublic,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, /*token=*/std::nullopt);
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 TEST_P(RsaSsaPssProtoSerializationTest,
        SerializePublicKeySucceedsWithMutableRegistry) {
   MutableSerializationRegistry registry;
@@ -1523,6 +1555,19 @@ TEST_P(ParseTest, ParserCorrectly) {
   EXPECT_TRUE(**key == *test_key.key);
 }
 
+TEST_P(ParseTest, ParsesCorrectlyWithRegistryBuilder) {
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+              IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+  const KeyAndSerialization& test_key = GetParam();
+
+  absl::StatusOr<std::unique_ptr<Key>> key = registry.ParseKey(
+      test_key.proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  EXPECT_TRUE(**key == *test_key.key);
+}
+
 KeyAndSerialization PublicKeyAndSerializationTink() {
   KeyValues values = Get2048BitKeyValues();
   absl::StatusOr<RsaSsaPssParameters> parameters =
@@ -1548,6 +1593,35 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
       KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink, 101020);
 
   return KeyAndSerialization("PublicKeyTink",
+                             std::make_shared<RsaSsaPssPublicKey>(*public_key),
+                             serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationNonCanonical() {
+  KeyValues values = Get2048BitKeyValues();
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(11)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ABSL_CHECK_OK(parameters.status());
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, BigInteger(values.n), 101020, GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(HashType::SHA256),
+            FieldWithNumber(2).IsVarint(HashType::SHA256),
+            FieldWithNumber(3).IsVarint(11)}),
+       FieldWithNumber(3).IsString(std::string(1, '\0') + values.n),
+       FieldWithNumber(4).IsString(std::string(1, '\0') + values.e)},
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink, 101020);
+
+  return KeyAndSerialization("PublicKeyTinkNonCanonical",
                              std::make_shared<RsaSsaPssPublicKey>(*public_key),
                              serialization);
 }
@@ -1713,16 +1787,16 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
                 FieldWithNumber(1).IsVarint(HashType::SHA512),  // Not ordered
                 FieldWithNumber(3).IsVarint(0),  // Salt length explicit
             }),
-            FieldWithNumber(3).IsString(values.n),
-            FieldWithNumber(4).IsString(values.e)}),
+            FieldWithNumber(3).IsString(std::string(1, '\0') + values.n),
+            FieldWithNumber(4).IsString(std::string(1, '\0') + values.e)}),
        // We pad each number with some zeros to get non-canonical padding.
-       FieldWithNumber(4).IsString(
-           absl::StrCat("\x00\x00", values.p)),  // Not ordered
-       FieldWithNumber(5).IsString(absl::StrCat("\x00\x00\x00", values.q)),
-       FieldWithNumber(6).IsString(absl::StrCat("\x00\x00\x00", values.dp)),
-       FieldWithNumber(7).IsString(absl::StrCat("\x00\x00", values.dq)),
-       FieldWithNumber(3).IsString(absl::StrCat("\x00\x00\x00\x00", values.d)),
-       FieldWithNumber(8).IsString(absl::StrCat("\x00", values.q_inv))},
+       FieldWithNumber(4).IsString(std::string(2, '\0') +
+                                   values.p),  // Not ordered
+       FieldWithNumber(5).IsString(std::string(3, '\0') + values.q),
+       FieldWithNumber(6).IsString(std::string(3, '\0') + values.dp),
+       FieldWithNumber(7).IsString(std::string(2, '\0') + values.dq),
+       FieldWithNumber(3).IsString(std::string(4, '\0') + values.d),
+       FieldWithNumber(8).IsString(std::string(1, '\0') + values.q_inv)},
       KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink, 4455);
 
   return KeyAndSerialization(
@@ -1744,6 +1818,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParseTest, ParseTest,
     testing::Values(PublicKeyAndSerializationTink(),
                     PublicKeyAndSerializationRaw(),
+                    PublicKeyAndSerializationNonCanonical(),
                     PrivateKeyAndSerializationRaw(),
                     PrivateKeyAndSerializationTink(),
                     PrivateKeyAndSerializationNonCanonical()),

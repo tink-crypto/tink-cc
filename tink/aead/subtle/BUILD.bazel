@@ -1,1 +1,40 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//:__subpackages__"])
+
 licenses(["notice"])
+
+cc_library(
+    name = "create_aes_ctr_hmac_aead",
+    srcs = ["create_aes_ctr_hmac_aead.cc"],
+    hdrs = ["create_aes_ctr_hmac_aead.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:aead",
+        "//tink/aead:aes_ctr_hmac_aead_key",
+        "//tink/aead/internal:aead_from_zero_copy",
+        "//tink/aead/internal:zero_copy_aead",
+        "//tink/aead/internal:zero_copy_aes_ctr_hmac_boringssl",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_ctr_hmac_aead_test",
+    srcs = ["create_aes_ctr_hmac_aead_test.cc"],
+    deps = [
+        ":create_aes_ctr_hmac_aead",
+        "//tink:aead",
+        "//tink/aead:aes_ctr_hmac_aead_key",
+        "//tink/aead:aes_ctr_hmac_aead_parameters",
+        "//tink/aead/internal/testing:aead_test_vector",
+        "//tink/aead/internal/testing:aes_ctr_hmac_aead_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

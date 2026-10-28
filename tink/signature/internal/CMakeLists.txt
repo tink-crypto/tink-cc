@@ -1794,3 +1794,38 @@ tink_cc_test(
     tink::signature::ml_dsa_public_key
     tink::signature::internal::testing::ml_dsa_mu_test_vectors
 )
+
+tink_cc_library(
+  NAME chunked_prehash_wrapper
+  SRCS
+    chunked_prehash_wrapper.cc
+    chunked_prehash_wrapper.h
+  DEPS
+    tink::signature::internal::prehash_format
+    absl::status
+    absl::statusor
+    absl::strings
+    tink::core::crypto_format
+    tink::core::primitive_wrapper
+    tink::internal::primitive_set
+    tink::signature::chunked_prehash
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME chunked_prehash_wrapper_test
+  SRCS
+    chunked_prehash_wrapper_test.cc
+  DEPS
+    tink::signature::internal::chunked_prehash_wrapper
+    gmock
+    absl::algorithm_container
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    tink::internal::primitive_set
+    tink::signature::chunked_prehash
+    tink::util::test_util
+    tink::proto::tink_cc_proto
+)

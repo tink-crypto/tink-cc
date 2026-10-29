@@ -31,6 +31,7 @@ namespace internal {
 
 // Tag sizes.
 ABSL_CONST_INIT extern const int kXchacha20Poly1305TagSizeInBytes;
+ABSL_CONST_INIT extern const int kChacha20Poly1305TagSizeInBytes;
 ABSL_CONST_INIT extern const int kAesGcmTagSizeInBytes;
 ABSL_CONST_INIT extern const int kAesGcmSivTagSizeInBytes;
 
@@ -73,6 +74,8 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
     const SecretData &key);
 absl::StatusOr<std::unique_ptr<SslOneShotAead>>
 CreateXchacha20Poly1305OneShotCrypter(const SecretData &key);
+absl::StatusOr<std::unique_ptr<SslOneShotAead>>
+CreateChacha20Poly1305OneShotCrypter(const SecretData& key);
 
 }  // namespace internal
 }  // namespace tink

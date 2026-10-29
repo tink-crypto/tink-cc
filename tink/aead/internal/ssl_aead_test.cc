@@ -71,6 +71,7 @@ enum CipherType {
   kAesGcm,
   kAesGcmSiv,
   kXchacha20Poly1305,
+  kChacha20Poly1305,
 };
 
 struct SslOneShotAeadTestParams {
@@ -93,6 +94,9 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
     }
     case CipherType::kXchacha20Poly1305: {
       return CreateXchacha20Poly1305OneShotCrypter(key);
+    }
+    case CipherType::kChacha20Poly1305: {
+      return CreateChacha20Poly1305OneShotCrypter(key);
     }
     default:
       return absl::InvalidArgumentError("Unsupported cipher");
@@ -442,6 +446,11 @@ std::vector<SslOneShotAeadTestParams> GetSslOneShotAeadTestParams() {
                       /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
                       /*iv_hex=*/kXchacha20Poly1305IvHex,
                       /*key_hex=*/k256Key});
+    params.push_back({/*test_name=*/"Chacha20Poly1305",
+                      /*cipher=*/CipherType::kChacha20Poly1305,
+                      /*tag_size=*/kChacha20Poly1305TagSizeInBytes,
+                      /*iv_hex=*/kAesGcmIvHex,
+                      /*key_hex=*/k256Key});
   }
   return params;
 }
@@ -520,6 +529,40 @@ TEST(SslOneShotAeadTest, Xchacha20Poly1305TestFipsOnly) {
 
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CreateXchacha20Poly1305OneShotCrypter(
+          SecretData(test::HexDecodeOrDie(k256Key)));
+  EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(SslOneShotAeadTest, Chacha20Poly1305TestInvalidKeySizes) {
+  if (!IsBoringSsl()) {
+    GTEST_SKIP() << "Chacha20-Poly1305 not supported with OpenSSL";
+  }
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  for (int keysize = 0; keysize < 65; keysize++) {
+    SecretData key(keysize, 'x');
+    absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+        CreateChacha20Poly1305OneShotCrypter(key);
+    if (keysize == 32) {
+      EXPECT_THAT(aead, IsOk()) << "with key size " << keysize;
+    } else {
+      EXPECT_THAT(aead, Not(IsOk())) << "with key size " << keysize;
+    }
+  }
+}
+
+TEST(SslOneShotAeadTest, Chacha20Poly1305TestFipsOnly) {
+  if (!IsBoringSsl()) {
+    GTEST_SKIP() << "Chacha20-Poly1305 not supported with OpenSSL";
+  }
+  if (!IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only supported in FIPS-only mode";
+  }
+
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+      CreateChacha20Poly1305OneShotCrypter(
           SecretData(test::HexDecodeOrDie(k256Key)));
   EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInternal));
 }
@@ -690,6 +733,14 @@ std::vector<SslOneShotAeadWycheproofTestParams> GetWycheproofTestParams() {
       params.push_back({/*test_name=*/"Xchacha20Poly1305",
                         /*cipher_name=*/CipherType::kXchacha20Poly1305,
                         /*nonce_size=*/24,
+                        /*tag_size=*/16,
+                        /*key_sizes=*/{32}, test_vector});
+    }
+    for (const WycheproofTestVector& test_vector :
+         ReadWycheproofTestVectors("chacha20_poly1305_test.json")) {
+      params.push_back({/*test_name=*/"Chacha20Poly1305",
+                        /*cipher_name=*/CipherType::kChacha20Poly1305,
+                        /*nonce_size=*/12,
                         /*tag_size=*/16,
                         /*key_sizes=*/{32}, test_vector});
     }

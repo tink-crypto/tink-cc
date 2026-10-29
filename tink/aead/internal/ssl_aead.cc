@@ -48,6 +48,7 @@ namespace tink {
 namespace internal {
 
 ABSL_CONST_INIT const int kXchacha20Poly1305TagSizeInBytes = 16;
+ABSL_CONST_INIT const int kChacha20Poly1305TagSizeInBytes = 16;
 ABSL_CONST_INIT const int kAesGcmTagSizeInBytes = 16;
 ABSL_CONST_INIT const int kAesGcmSivTagSizeInBytes = 16;
 
@@ -586,6 +587,31 @@ CreateXchacha20Poly1305OneShotCrypter(const SecretData &key) {
 #else
   return absl::Status(absl::StatusCode::kUnimplemented,
                       "Xchacha20-Poly1305 is unimplemented for OpenSSL");
+#endif
+}
+
+absl::StatusOr<std::unique_ptr<SslOneShotAead>>
+CreateChacha20Poly1305OneShotCrypter(const SecretData& key) {
+#ifdef OPENSSL_IS_BORINGSSL
+  if (key.size() != 32) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Invalid key size; valid values are {32} bytes, got ", key.size()));
+  }
+
+  internal::SslUniquePtr<EVP_AEAD_CTX> context(
+      internal::CallWithCoreDumpProtection([&]() {
+        return EVP_AEAD_CTX_new(EVP_aead_chacha20_poly1305(), key.data(),
+                                key.size(), kChacha20Poly1305TagSizeInBytes);
+      }));
+  if (context == nullptr) {
+    return absl::InternalError(absl::StrCat(
+        "EVP_AEAD_CTX_new initialization Failed: ", internal::GetSslErrors()));
+  }
+  return std::make_unique<BoringSslOneShotAeadImpl>(
+      std::move(context), kChacha20Poly1305TagSizeInBytes);
+#else
+  return absl::UnimplementedError(
+      "Chacha20-Poly1305 is unimplemented for OpenSSL");
 #endif
 }
 

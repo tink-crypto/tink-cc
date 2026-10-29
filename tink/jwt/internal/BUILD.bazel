@@ -435,7 +435,6 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -508,7 +507,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -541,7 +539,6 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -613,7 +610,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1183,7 +1179,6 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -1264,7 +1259,6 @@ cc_library(
         "//tink/jwt:jwt_ml_dsa_proto_serialization",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -1278,7 +1272,6 @@ cc_test(
         "//tink/jwt:jwt_ml_dsa_parameters",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1352,7 +1345,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1467,7 +1459,6 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1834,7 +1825,6 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -1918,7 +1908,6 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -2002,7 +1991,6 @@ cc_library(
         "//tink/signature:public_key_sign_wrapper",
         "//tink/signature:public_key_verify_wrapper",
         "@abseil-cpp//absl/status",
-        "@boringssl//:crypto",
     ],
 )
 

@@ -251,7 +251,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    tink::internal::boringssl
     tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers

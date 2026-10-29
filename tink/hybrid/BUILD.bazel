@@ -482,7 +482,6 @@ cc_library(
         "//tink/hybrid/internal:ecies_proto_serialization_impl",
         "//tink/internal:mutable_serialization_registry",
         "@abseil-cpp//absl/status",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -530,7 +529,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -855,7 +853,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -921,7 +918,6 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -995,7 +991,6 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

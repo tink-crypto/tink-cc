@@ -204,7 +204,6 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    tink::internal::boringssl
     tink::core::registry
     tink::internal::fips_utils
     tink::internal::registry_impl

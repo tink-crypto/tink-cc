@@ -111,7 +111,6 @@ cc_library(
         "//tink/internal:ec_util",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -496,7 +495,6 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -890,7 +888,6 @@ cc_library(
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -1168,7 +1165,6 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1320,7 +1316,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1346,7 +1341,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1375,7 +1369,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1404,7 +1397,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1434,7 +1426,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -1461,7 +1452,6 @@ cc_test(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

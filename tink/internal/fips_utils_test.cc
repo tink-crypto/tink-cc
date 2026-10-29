@@ -19,7 +19,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "openssl/crypto.h"
 #include "tink/util/status.h"
 #include "tink/util/test_matchers.h"
 

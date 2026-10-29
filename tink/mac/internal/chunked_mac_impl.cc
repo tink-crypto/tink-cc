@@ -24,7 +24,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "openssl/crypto.h"
 #include "tink/chunked_mac.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/safe_stringops.h"

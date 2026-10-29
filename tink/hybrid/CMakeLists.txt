@@ -433,7 +433,6 @@ tink_cc_library(
     ecies_proto_serialization.h
   DEPS
     absl::status
-    tink::internal::boringssl
     tink::hybrid::internal::ecies_proto_serialization_impl
     tink::internal::mutable_serialization_registry
 )
@@ -457,7 +456,6 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    tink::internal::boringssl
     tink::core::crypto_format
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
@@ -781,7 +779,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
@@ -833,7 +830,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::key
@@ -890,7 +886,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access

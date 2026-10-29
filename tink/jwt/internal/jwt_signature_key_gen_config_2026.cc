@@ -18,7 +18,6 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
-#include "openssl/mldsa.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"

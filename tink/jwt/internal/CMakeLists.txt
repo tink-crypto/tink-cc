@@ -411,7 +411,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::private_key_type_manager
     tink::core::template_util
     tink::core::public_key_sign
@@ -491,7 +490,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    tink::internal::boringssl
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::rsa_util
@@ -515,7 +513,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::private_key_type_manager
     tink::core::template_util
     tink::core::public_key_sign
@@ -594,7 +591,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    tink::internal::boringssl
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::rsa_util
@@ -1087,7 +1083,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -1163,7 +1158,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -1424,7 +1418,6 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::optional
-    tink::internal::boringssl
     tink::core::configuration
     tink::core::ec_point
     tink::core::partial_key_access
@@ -1538,7 +1531,6 @@ tink_cc_library(
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
-    tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::jwt::jwt_ml_dsa_parameters
@@ -1554,7 +1546,6 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::core::keyset_handle
     tink::jwt::jwt_ml_dsa_parameters
@@ -1679,7 +1670,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::public_key_sign
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
@@ -1763,7 +1753,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::public_key_verify
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_public_key
@@ -1843,7 +1832,6 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_ml_dsa_sign_key_manager
     tink::jwt::internal::raw_jwt_ml_dsa_verify_key_manager
     absl::status
-    tink::internal::boringssl
     tink::core::registry
     tink::jwt::jwt_ml_dsa_proto_serialization
     tink::signature::public_key_sign_wrapper

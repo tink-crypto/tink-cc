@@ -282,7 +282,6 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:cord_test_helpers",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -349,7 +348,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )
@@ -499,7 +497,6 @@ cc_library(
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/strings:string_view",
-        "@boringssl//:crypto",
     ],
 )
 

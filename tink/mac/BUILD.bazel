@@ -194,7 +194,6 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
     ],
 )
 
@@ -373,7 +372,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

@@ -543,7 +543,6 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/types:optional",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

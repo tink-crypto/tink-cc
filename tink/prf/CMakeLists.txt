@@ -489,7 +489,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::optional
-    tink::internal::boringssl
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access

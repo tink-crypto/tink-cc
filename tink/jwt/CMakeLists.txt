@@ -281,7 +281,6 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
@@ -303,7 +302,6 @@ tink_cc_library(
     absl::statusor
     absl::synchronization
     absl::optional
-    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
@@ -333,7 +331,6 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
     tink::internal::rsa_util
@@ -376,7 +373,6 @@ tink_cc_library(
     absl::statusor
     absl::synchronization
     absl::optional
-    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
@@ -406,7 +402,6 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
     tink::internal::rsa_util
@@ -449,7 +444,6 @@ tink_cc_library(
     absl::statusor
     absl::synchronization
     absl::optional
-    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
@@ -601,7 +595,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::cleartext_keyset_handle
     tink::core::insecure_secret_key_access
     tink::core::keyset_handle
@@ -640,7 +633,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
@@ -677,7 +669,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::keyset_handle
@@ -944,7 +935,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1048,7 +1038,6 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1074,7 +1063,6 @@ tink_cc_library(
     tink::jwt::jwt_signature_parameters
     absl::status
     absl::statusor
-    tink::internal::boringssl
     tink::core::parameters
 )
 
@@ -1125,7 +1113,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
     tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
@@ -1169,7 +1156,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
     tink::core::partial_key_access

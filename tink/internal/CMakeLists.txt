@@ -300,7 +300,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::aead
     tink::core::key_manager_impl
     tink::core::key_type_manager
@@ -390,7 +389,6 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    tink::internal::boringssl
     tink::util::status
     tink::util::test_matchers
 )
@@ -1395,7 +1393,6 @@ tink_cc_library(
     absl::strings
     absl::str_format
     absl::string_view
-    tink::internal::boringssl
     tink::core::restricted_data
     tink::core::secret_data
     tink::core::secret_key_access_token

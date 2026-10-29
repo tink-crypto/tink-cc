@@ -33,8 +33,6 @@
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/util/test_util.h"
-#include "openssl/bn.h"
-#include "openssl/rsa.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"

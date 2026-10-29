@@ -137,7 +137,6 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -161,7 +160,6 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data

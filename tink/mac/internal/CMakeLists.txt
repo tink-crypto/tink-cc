@@ -13,7 +13,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::chunked_mac
     tink::core::secret_data
     tink::internal::dfsan_forwarders

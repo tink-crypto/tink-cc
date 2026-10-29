@@ -86,7 +86,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::public_key_sign
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
@@ -509,7 +508,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -593,7 +591,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
-    tink::internal::boringssl
     tink::core::big_integer
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -1095,7 +1092,6 @@ tink_cc_library(
     absl::memory
     absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::signature::ml_dsa_parameters
@@ -1177,7 +1173,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::partial_key_access
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_private_key
@@ -1378,7 +1373,6 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
-    tink::internal::boringssl
     tink::core::configuration
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -1440,7 +1434,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -1487,7 +1480,6 @@ tink_cc_library(
     tink::signature::internal::slh_dsa_proto_serialization
     absl::memory
     absl::status
-    tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::signature::composite_ml_dsa_parameters
@@ -1517,7 +1509,6 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    tink::internal::boringssl
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
@@ -1552,7 +1543,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    tink::internal::boringssl
     tink::util::test_util
 )
 
@@ -1635,7 +1625,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::public_key_verify
@@ -1739,7 +1728,6 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    tink::internal::boringssl
     tink::core::configuration
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status

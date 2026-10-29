@@ -24,7 +24,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "openssl/crypto.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {

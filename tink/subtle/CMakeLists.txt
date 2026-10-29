@@ -102,7 +102,6 @@ tink_cc_library(
     tink::subtle::common_enums
     absl::core_headers
     absl::statusor
-    tink::internal::boringssl
     tink::internal::ec_util
 )
 
@@ -485,7 +484,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
-    tink::internal::boringssl
     tink::internal::fips_utils
     tink::util::secret_data
     tink::util::statusor
@@ -878,7 +876,6 @@ tink_cc_library(
     absl::status_macros
     absl::strings
     absl::string_view
-    tink::internal::boringssl
     tink::core::output_stream_with_result
     tink::core::streaming_mac
     tink::internal::safe_stringops
@@ -1141,7 +1138,6 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::span
-    tink::internal::boringssl
     tink::core::aead
     tink::core::secret_data
     tink::aead::internal::aead_from_zero_copy
@@ -1279,7 +1275,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1308,7 +1303,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    tink::internal::boringssl
     tink::core::public_key_verify
     tink::config::tink_fips
     tink::internal::ec_util
@@ -1334,7 +1328,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
@@ -1361,7 +1354,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1391,7 +1383,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::strings
-    tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
@@ -1417,7 +1408,6 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::status_matchers
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign

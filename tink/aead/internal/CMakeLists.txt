@@ -1783,3 +1783,57 @@ tink_cc_test(
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
 )
+
+tink_cc_library(
+  NAME zero_copy_chacha20_poly1305_boringssl
+  SRCS
+    zero_copy_chacha20_poly1305_boringssl.cc
+    zero_copy_chacha20_poly1305_boringssl.h
+  DEPS
+    tink::aead::internal::ssl_aead
+    tink::aead::internal::zero_copy_aead
+    absl::absl_check
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::aead::chacha20_poly1305_key
+    tink::internal::fips_utils
+    tink::internal::util
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME zero_copy_chacha20_poly1305_boringssl_test
+  SRCS
+    zero_copy_chacha20_poly1305_boringssl_test.cc
+  DATA
+    wycheproof::testvectors_v1
+  DEPS
+    tink::aead::internal::wycheproof_aead
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_chacha20_poly1305_boringssl
+    gmock
+    absl::algorithm_container
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::chacha20_poly1305_test_vectors
+    tink::internal::fips_utils
+    tink::subtle::subtle_util
+    tink::util::test_util
+)

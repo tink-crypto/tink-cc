@@ -100,17 +100,15 @@ tink_cc_library(
     ml_kem_test_util.h
   DEPS
     absl::status
+    absl::statusor
     absl::optional
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::ml_kem_public_key
-    tink::internal::secret_buffer
-    tink::util::secret_data
-    tink::util::status
+    tink::internal::mlkem_util
     tink::util::statusor
   TESTONLY
 )

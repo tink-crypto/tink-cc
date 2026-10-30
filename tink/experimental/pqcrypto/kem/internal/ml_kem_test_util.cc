@@ -16,25 +16,18 @@
 
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "openssl/base.h"
-#include "openssl/bytestring.h"
-#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/secret_buffer.h"
+#include "tink/internal/mlkem_util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -48,23 +41,21 @@ absl::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
                         "Only ML-KEM 768 is supported");
   }
 
-  std::string public_key_bytes(MLKEM768_PUBLIC_KEY_BYTES, '\0');
-  internal::SecretBuffer private_seed_bytes(MLKEM_SEED_BYTES);
-  auto private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
-  MLKEM768_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                        private_seed_bytes.data(), private_key.get());
+  absl::StatusOr<MlKemKey> key = NewMlKemKey(MlKemKeySize::ML_KEM768);
+  if (!key.ok()) {
+    return key.status();
+  }
 
   absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
-      key_parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
+      key_parameters, key->public_key, id_requirement, GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
   return MlKemPrivateKey::Create(
       *public_key,
-      RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
-          InsecureSecretKeyAccess::Get()),
+      RestrictedData(std::move(key->private_key),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
 }
 

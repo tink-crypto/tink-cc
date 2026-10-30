@@ -1848,3 +1848,54 @@ tink_cc_test(
     tink::subtle::subtle_util
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME zero_copy_aes_eax_boringssl
+  SRCS
+    zero_copy_aes_eax_boringssl.cc
+    zero_copy_aes_eax_boringssl.h
+  DEPS
+    tink::aead::internal::zero_copy_aead
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::internal::boringssl
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::aead::aes_eax_key
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::subtle::random
+)
+
+tink_cc_test(
+  NAME zero_copy_aes_eax_boringssl_test
+  SRCS
+    zero_copy_aes_eax_boringssl_test.cc
+  DEPS
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_aes_eax_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    absl::span
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aes_eax_key
+    tink::aead::aes_eax_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_eax_test_vectors
+    tink::internal::fips_utils
+    tink::subtle::subtle_util
+    tink::util::test_util
+)

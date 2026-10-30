@@ -16,29 +16,24 @@
 
 #include "tink/signature/internal/testing/composite_ml_dsa_test_util.h"
 
-#include <cstdint>
 #include <memory>
 #include <optional>
-#include <string>
 #include <utility>
 
 #include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
 #include "absl/status/statusor.h"
-#include "openssl/mldsa.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/internal/secret_buffer.h"
 #include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_data.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
@@ -47,9 +42,7 @@
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto::tink::internal {
 namespace {
@@ -205,29 +198,14 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
     CompositeMlDsaParameters::MlDsaInstance instance, int key_index) {
   switch (instance) {
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44: {
-      std::string public_key_bytes;
-      public_key_bytes.resize(MLDSA44_PUBLIC_KEY_BYTES);
-      internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-      auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA44_private_key>();
-      ABSL_CHECK_EQ(1, MLDSA44_generate_key(
-                           reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-                           private_seed_bytes.data(), bssl_private_key.get()));
       absl::StatusOr<MlDsaParameters> parameters =
           MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
                                   MlDsaParameters::Variant::kNoPrefix);
       ABSL_CHECK_OK(parameters);
-      absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
-          *parameters, public_key_bytes, /*id_requirement=*/std::nullopt,
-          GetPartialKeyAccess());
-      ABSL_CHECK_OK(public_key);
-      absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-          *public_key,
-          RestrictedData(
-              SecretData(std::move(private_seed_bytes)),
-              InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
+      absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+          CreateMlDsaKey(*parameters, /*id_requirement=*/std::nullopt);
       ABSL_CHECK_OK(private_key);
-      return *private_key;
+      return **private_key;
     }
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65: {
       if (key_index == 0) {

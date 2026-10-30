@@ -174,6 +174,19 @@ TEST_F(AesEaxBoringSslTest, TestInvalidKeySizes) {
   }
 }
 
+TEST_F(AesEaxBoringSslTest, TestInvalidNonceSizes) {
+  SecretData key =
+      SecretData(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  for (size_t nonce_size = 0; nonce_size < 65; ++nonce_size) {
+    if (nonce_size == 12 || nonce_size == 16) {
+      continue;
+    }
+    EXPECT_THAT(AesEaxBoringSsl::New(key, nonce_size).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument))
+        << "for nonce_size = " << nonce_size;
+  }
+}
+
 TEST_F(AesEaxBoringSslTest, TestEmpty) {
   size_t nonce_size = 12;
   SecretData key =

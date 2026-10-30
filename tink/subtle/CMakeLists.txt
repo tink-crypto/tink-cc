@@ -532,7 +532,6 @@ tink_cc_library(
     aes_eax_boringssl.cc
     aes_eax_boringssl.h
   DEPS
-    tink::subtle::random
     absl::nullability
     absl::status
     absl::status_macros
@@ -541,14 +540,16 @@ tink_cc_library(
     absl::span
     tink::internal::boringssl
     tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
+    tink::aead::aes_eax_key
+    tink::aead::aes_eax_parameters
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
-    tink::internal::call_with_core_dump_protection
-    tink::internal::dfsan_forwarders
+    tink::aead::internal::zero_copy_aes_eax_boringssl
     tink::internal::fips_utils
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

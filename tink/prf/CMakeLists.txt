@@ -1,6 +1,7 @@
 tink_module(prf)
 
 add_subdirectory(internal)
+add_subdirectory(subtle)
 
 tink_cc_library(
   NAME hkdf_prf_key_manager

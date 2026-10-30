@@ -1,1 +1,44 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//:__subpackages__"])
+
 licenses(["notice"])
+
+cc_library(
+    name = "create_aes_cmac_prf",
+    srcs = ["create_aes_cmac_prf.cc"],
+    hdrs = ["create_aes_cmac_prf.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:fips_utils",
+        "//tink/mac/internal:stateful_cmac_boringssl",
+        "//tink/prf:aes_cmac_prf_key",
+        "//tink/prf:aes_cmac_prf_parameters",
+        "//tink/prf:prf_set",
+        "//tink/subtle/prf:prf_set_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_cmac_prf_test",
+    size = "small",
+    srcs = ["create_aes_cmac_prf_test.cc"],
+    deps = [
+        ":create_aes_cmac_prf",
+        "//tink/internal:fips_utils",
+        "//tink/prf:prf_set",
+        "//tink/prf/internal:aes_cmac_prf_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

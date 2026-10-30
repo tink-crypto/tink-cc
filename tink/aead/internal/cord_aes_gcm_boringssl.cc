@@ -26,9 +26,11 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_buffer.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
@@ -38,10 +40,14 @@
 #else
 #include "openssl/evp.h"
 #endif
+#include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/aead_util.h"
 #include "tink/aead/internal/cord_utils.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/partial_key_access.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 
 namespace crypto {
@@ -186,16 +192,10 @@ bool DoCryptAndConsume(absl::Cord& input, size_t bytes_to_crypt,
   return true;
 }
 
-}  // namespace
-
-absl::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
+absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> CreatePartialContext(
     const SecretData& key_value) {
-  absl::StatusOr<const EVP_CIPHER*> cipher =
-      internal::GetAesGcmCipherForKeySize(key_value.size());
-  if (!cipher.ok()) {
-    return cipher.status();
-  }
-
+  ABSL_ASSIGN_OR_RETURN(const EVP_CIPHER* cipher,
+                        internal::GetAesGcmCipherForKeySize(key_value.size()));
   internal::SslUniquePtr<EVP_CIPHER_CTX> partial_context(EVP_CIPHER_CTX_new());
   // Initialize a partial context for the cipher to allow OpenSSL/BoringSSL
   // making some precomputations on the key. Encrypt and Decrypt will try making
@@ -205,16 +205,45 @@ absl::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
   // NOTE: It doesn't matter at this point if we set the direction to encryption
   // or decryption, it will be overwritten later any time we call
   // EVP_CipherInit_ex.
-  if (EVP_CipherInit_ex(partial_context.get(), *cipher, /*engine=*/nullptr,
+  if (EVP_CipherInit_ex(partial_context.get(), cipher, /*engine=*/nullptr,
                         reinterpret_cast<const uint8_t*>(&key_value[0]),
                         /*iv=*/nullptr, /*enc=*/1) <= 0) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Context initialization failed");
   }
+  return partial_context;
+}
 
-  std::unique_ptr<CordAead> aead = absl::WrapUnique(
+}  // namespace
+
+absl::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
+    const SecretData& key_value) {
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EVP_CIPHER_CTX> partial_context,
+                        CreatePartialContext(key_value));
+  return absl::WrapUnique(
       new CordAesGcmBoringSsl(std::move(partial_context), key_value));
-  return std::move(aead);
+}
+
+absl::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
+    const AesGcmKey& key) {
+  if (key.GetParameters().IvSizeInBytes() != kIvSizeInBytes) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrFormat("Invalid IV size: expected %d bytes, got %d",
+                        kIvSizeInBytes, key.GetParameters().IvSizeInBytes()));
+  }
+  if (key.GetParameters().TagSizeInBytes() != kTagSizeInBytes) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrFormat("Invalid tag size: expected %d bytes, got %d",
+                        kTagSizeInBytes, key.GetParameters().TagSizeInBytes()));
+  }
+  const SecretData& key_value = key.GetKeyBytes(GetPartialKeyAccess())
+                                    .Get(InsecureSecretKeyAccess::Get());
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EVP_CIPHER_CTX> partial_context,
+                        CreatePartialContext(key_value));
+  return absl::WrapUnique(new CordAesGcmBoringSsl(
+      std::move(partial_context), key_value, key.GetOutputPrefix()));
 }
 
 absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
@@ -242,7 +271,9 @@ absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
     }
   }
 
-  CordWriter writer(kIvSizeInBytes + plaintext.size() + kTagSizeInBytes);
+  CordWriter writer(output_prefix_.size() + kIvSizeInBytes + plaintext.size() +
+                    kTagSizeInBytes);
+  writer.Write(output_prefix_);
   writer.Write(iv);
   if (!DoCryptAndConsume(plaintext, plaintext.size(), **context, writer)) {
     return absl::Status(absl::StatusCode::kInternal, "Encryption failed");
@@ -263,8 +294,16 @@ absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
 
 absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Decrypt(
     absl::Cord ciphertext, absl::Cord associated_data) const {
-  if (ciphertext.size() < kIvSizeInBytes + kTagSizeInBytes) {
+  if (ciphertext.size() <
+      output_prefix_.size() + kIvSizeInBytes + kTagSizeInBytes) {
     return absl::Status(absl::StatusCode::kInternal, "Ciphertext too short");
+  }
+  if (!output_prefix_.empty()) {
+    if (!ciphertext.StartsWith(output_prefix_)) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Prefix mismatch");
+    }
+    ciphertext.RemovePrefix(output_prefix_.size());
   }
 
   char iv[kIvSizeInBytes];

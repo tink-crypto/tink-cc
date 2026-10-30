@@ -18,12 +18,14 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
@@ -31,8 +33,15 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_gcm_key.h"
+#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/util/secret_data.h"
@@ -50,10 +59,14 @@ constexpr absl::string_view kLongMessage =
 constexpr absl::string_view kAssociatedData = "Some associated data.";
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::Test;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 class CordAesGcmBoringSslTest : public Test {
  protected:
@@ -212,6 +225,132 @@ TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
   }
   EXPECT_EQ(skipped, 183);
   EXPECT_EQ(errors, 0);
+}
+
+using CordAesGcmBoringSslTestVectorTest = TestWithParam<AeadTestVector>;
+
+TEST_P(CordAesGcmBoringSslTestVectorTest, Decrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> cipher =
+      CordAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  EXPECT_THAT((*cipher)->Decrypt(absl::Cord(test_vector.ciphertext),
+                                 absl::Cord(test_vector.associated_data)),
+              IsOkAndHolds(test_vector.plaintext));
+}
+
+TEST_P(CordAesGcmBoringSslTestVectorTest, EncryptDecrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> cipher =
+      CordAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+  absl::StatusOr<absl::Cord> ciphertext =
+      (*cipher)->Encrypt(absl::Cord(test_vector.plaintext),
+                         absl::Cord(test_vector.associated_data));
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_TRUE(ciphertext->StartsWith(key.GetOutputPrefix()));
+  EXPECT_THAT(
+      (*cipher)->Decrypt(*ciphertext, absl::Cord(test_vector.associated_data)),
+      IsOkAndHolds(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(CordAesGcmBoringSslTestVectorTests,
+                         CordAesGcmBoringSslTestVectorTest,
+                         ValuesIn(CreateAesGcmTestVectors()));
+
+TEST(CordAesGcmBoringSslKeyTest, InvalidIvSizeFails) {
+  absl::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesGcmKey> key =
+      AesGcmKey::Create(*parameters,
+                        RestrictedData(test::HexDecodeOrDie(key_128),
+                                       InsecureSecretKeyAccess::Get()),
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(CordAesGcmBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(CordAesGcmBoringSslKeyTest, InvalidTagSizeFails) {
+  absl::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesGcmKey> key =
+      AesGcmKey::Create(*parameters,
+                        RestrictedData(test::HexDecodeOrDie(key_128),
+                                       InsecureSecretKeyAccess::Get()),
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(CordAesGcmBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(CordAesGcmBoringSslKeyTest, InvalidKeySizeFails) {
+  absl::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(24)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+      *parameters,
+      RestrictedData(std::string(24, 'a'), InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(CordAesGcmBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(CordAesGcmBoringSslKeyTest, DecryptWithBadPrefixFails) {
+  const AeadTestVector& test_vector =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> cipher =
+      CordAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  std::string bad_ciphertext = test_vector.ciphertext;
+  bad_ciphertext[0] ^= 0x01;  // Corrupt prefix
+
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(absl::Cord(bad_ciphertext),
+                            absl::Cord(test_vector.associated_data))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(CordAesGcmBoringSslKeyTest, DecryptWithShortPrefixedCiphertextFails) {
+  const AeadTestVector& test_vector =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> cipher =
+      CordAesGcmBoringSsl::New(key);
+  ASSERT_THAT(cipher, IsOk());
+
+  const size_t min_size = key.GetOutputPrefix().size() +
+                          key.GetParameters().IvSizeInBytes() +
+                          key.GetParameters().TagSizeInBytes();
+  std::string short_ciphertext(min_size - 1, 'a');
+  EXPECT_THAT((*cipher)
+                  ->Decrypt(absl::Cord(short_ciphertext),
+                            absl::Cord(test_vector.associated_data))
+                  .status(),
+              Not(IsOk()));
 }
 
 }  // namespace

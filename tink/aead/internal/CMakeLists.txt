@@ -66,11 +66,17 @@ tink_cc_library(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::cord
+    absl::str_format
     absl::string_view
     absl::span
     tink::internal::boringssl
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::aead::aes_gcm_key
     tink::aead::cord_aead
     tink::internal::ssl_unique_ptr
     tink::subtle::random
@@ -249,13 +255,21 @@ tink_cc_test(
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::wycheproof_aead
     gmock
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::strings
     absl::cord
     tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
     tink::aead::cord_aead
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_test_vectors
     tink::subtle::aes_gcm_boringssl
     tink::util::secret_data
     tink::util::test_util

@@ -71,6 +71,7 @@
 #include "tink/aead/legacy_kms_envelope_aead_parameters.h"
 #include "tink/aead/legacy_kms_envelope_aead_proto_serialization.h"
 #include "tink/aead/subtle/create_aes_ctr_hmac_aead.h"
+#include "tink/aead/subtle/create_aes_gcm_cord_aead.h"
 #include "tink/aead/subtle/create_chacha20_poly1305_aead.h"
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"

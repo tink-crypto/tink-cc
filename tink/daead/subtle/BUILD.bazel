@@ -38,3 +38,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_aes_siv_deterministic_aead",
+    srcs = ["create_aes_siv_deterministic_aead.cc"],
+    hdrs = ["create_aes_siv_deterministic_aead.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:deterministic_aead",
+        "//tink/daead:aes_siv_key",
+        "//tink/daead/internal:aes_siv_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_siv_deterministic_aead_test",
+    srcs = ["create_aes_siv_deterministic_aead_test.cc"],
+    deps = [
+        ":create_aes_siv_deterministic_aead",
+        "//tink:deterministic_aead",
+        "//tink/daead:aes_siv_parameters",
+        "//tink/daead/internal:aes_siv_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

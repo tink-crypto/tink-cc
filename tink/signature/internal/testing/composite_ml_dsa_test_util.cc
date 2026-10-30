@@ -25,18 +25,10 @@
 #include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/absl_log.h"
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "openssl/bn.h"
 #include "openssl/mldsa.h"
-#include "openssl/rsa.h"
-#include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/rsa_util.h"
 #include "tink/internal/secret_buffer.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
@@ -56,36 +48,11 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
-#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
-#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
-#include "tink/signature/rsa_ssa_pss_parameters.h"
-#include "tink/signature/rsa_ssa_pss_private_key.h"
-#include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto::tink::internal {
 namespace {
-
-// Returns static F4 public exponent (65537).
-const BigInteger& GetF4() {
-  static const absl::NoDestructor<BigInteger> f4(std::string("\x1\0\x1", 3));
-  return *f4;
-}
-
-// Helper to generate a new RSA key pair with public exponent F4.
-absl::Status NewRsaKeyPairF4(int modulus_size_in_bits,
-                             internal::RsaPrivateKey* private_key,
-                             internal::RsaPublicKey* public_key) {
-  internal::SslUniquePtr<BIGNUM> e(BN_new());
-  if (BN_set_u64(e.get(), RSA_F4) != 1) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Could not set RSA exponent.");
-  }
-  return internal::NewRsaKeyPair(modulus_size_in_bits, e.get(), private_key,
-                                 public_key);
-}
 
 // Returns static Ed25519 private key from test vectors.
 std::unique_ptr<SignaturePrivateKey> GenerateEd25519PrivateKeyOrDie(
@@ -176,53 +143,9 @@ std::unique_ptr<SignaturePrivateKey> GenerateEcdsaPrivateKeyOrDie(
   }
 }
 
-// Returns static 3072-bit RSA SSA PSS private key from test vectors or creates
-// a random one.
+// Returns static 3072-bit RSA SSA PSS private key from test vectors.
 std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
-    bool force_random, int key_index = 0) {
-  static const absl::NoDestructor<RsaSsaPssParameters> parameters([]() {
-    absl::StatusOr<RsaSsaPssParameters> parameters =
-        RsaSsaPssParameters::Builder()
-            .SetModulusSizeInBits(3072)
-            .SetPublicExponent(GetF4())
-            .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
-            .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
-            .SetSaltLengthInBytes(32)
-            .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
-            .Build();
-    ABSL_CHECK_OK(parameters);
-    return *parameters;
-  }());
-
-  if (force_random) {
-    internal::RsaPrivateKey rsa_private_key;
-    internal::RsaPublicKey rsa_public_key;
-    absl::Status status =
-        NewRsaKeyPairF4(3072, &rsa_private_key, &rsa_public_key);
-    ABSL_CHECK_OK(status);
-    absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
-        *parameters, BigInteger(rsa_public_key.n),
-        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-    ABSL_CHECK_OK(public_key);
-    absl::StatusOr<RsaSsaPssPrivateKey> private_key =
-        RsaSsaPssPrivateKey::Builder()
-            .SetPublicKey(*public_key)
-            .SetPrimeP(RestrictedData(rsa_private_key.p,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeQ(RestrictedData(rsa_private_key.q,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrivateExponent(RestrictedData(rsa_private_key.d,
-                                               InsecureSecretKeyAccess::Get()))
-            .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
-                                              InsecureSecretKeyAccess::Get()))
-            .Build(GetPartialKeyAccess());
-    ABSL_CHECK_OK(private_key);
-    return std::make_unique<RsaSsaPssPrivateKey>(*private_key);
-  }
+    int key_index = 0) {
   if (key_index == 0) {
     return CloneKeyOrDie<SignaturePrivateKey>(
         *Create3072BitTestVector().signature_private_key);
@@ -234,53 +157,9 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss3072PrivateKeyOrDie(
   return nullptr;
 }
 
-// Returns static 4096-bit RSA SSA PSS private key from test vectors or creates
-// a random one.
+// Returns static 4096-bit RSA SSA PSS private key from test vectors.
 std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
-    bool force_random, int key_index = 0) {
-  static const absl::NoDestructor<RsaSsaPssParameters> parameters([]() {
-    absl::StatusOr<RsaSsaPssParameters> parameters =
-        RsaSsaPssParameters::Builder()
-            .SetModulusSizeInBits(4096)
-            .SetPublicExponent(GetF4())
-            .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
-            .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
-            .SetSaltLengthInBytes(48)
-            .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
-            .Build();
-    ABSL_CHECK_OK(parameters);
-    return *parameters;
-  }());
-
-  if (force_random) {
-    internal::RsaPrivateKey rsa_private_key;
-    internal::RsaPublicKey rsa_public_key;
-    absl::Status status =
-        NewRsaKeyPairF4(4096, &rsa_private_key, &rsa_public_key);
-    ABSL_CHECK_OK(status);
-    absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
-        *parameters, BigInteger(rsa_public_key.n),
-        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-    ABSL_CHECK_OK(public_key);
-    absl::StatusOr<RsaSsaPssPrivateKey> private_key =
-        RsaSsaPssPrivateKey::Builder()
-            .SetPublicKey(*public_key)
-            .SetPrimeP(RestrictedData(rsa_private_key.p,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeQ(RestrictedData(rsa_private_key.q,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrivateExponent(RestrictedData(rsa_private_key.d,
-                                               InsecureSecretKeyAccess::Get()))
-            .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
-                                              InsecureSecretKeyAccess::Get()))
-            .Build(GetPartialKeyAccess());
-    ABSL_CHECK_OK(private_key);
-    return std::make_unique<RsaSsaPssPrivateKey>(*private_key);
-  }
+    int key_index = 0) {
   if (key_index == 0) {
     return CloneKeyOrDie<SignaturePrivateKey>(
         *Create4096BitTestVector().signature_private_key);
@@ -292,51 +171,9 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsaPss4096PrivateKeyOrDie(
   return nullptr;
 }
 
-// Returns static 3072-bit RSA SSA PKCS1 private key from test vectors or
-// creates a random one.
+// Returns static 3072-bit RSA SSA PKCS1 private key from test vectors.
 std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
-    bool force_random, int key_index = 0) {
-  static const absl::NoDestructor<RsaSsaPkcs1Parameters> parameters([]() {
-    absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
-        RsaSsaPkcs1Parameters::Builder()
-            .SetModulusSizeInBits(3072)
-            .SetPublicExponent(GetF4())
-            .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
-            .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
-            .Build();
-    ABSL_CHECK_OK(parameters);
-    return *parameters;
-  }());
-
-  if (force_random) {
-    internal::RsaPrivateKey rsa_private_key;
-    internal::RsaPublicKey rsa_public_key;
-    absl::Status status =
-        NewRsaKeyPairF4(3072, &rsa_private_key, &rsa_public_key);
-    ABSL_CHECK_OK(status);
-    absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
-        RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(rsa_public_key.n),
-                                     /*id_requirement=*/std::nullopt,
-                                     GetPartialKeyAccess());
-    ABSL_CHECK_OK(public_key);
-    absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
-        RsaSsaPkcs1PrivateKey::Builder()
-            .SetPublicKey(*public_key)
-            .SetPrimeP(RestrictedData(rsa_private_key.p,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeQ(RestrictedData(rsa_private_key.q,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrivateExponent(RestrictedData(rsa_private_key.d,
-                                               InsecureSecretKeyAccess::Get()))
-            .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
-                                              InsecureSecretKeyAccess::Get()))
-            .Build(GetPartialKeyAccess());
-    return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
-  }
+    int key_index = 0) {
   if (key_index == 0) {
     return CloneKeyOrDie<SignaturePrivateKey>(
         *Create3072BitsTestVector().signature_private_key);
@@ -348,51 +185,9 @@ std::unique_ptr<SignaturePrivateKey> GenerateRsa3072Pkcs1PrivateKeyOrDie(
   return nullptr;
 }
 
-// Returns static 4096-bit RSA SSA PKCS1 private key from test vectors or
-// creates a random one.
+// Returns static 4096-bit RSA SSA PKCS1 private key from test vectors.
 std::unique_ptr<SignaturePrivateKey> GenerateRsa4096Pkcs1PrivateKeyOrDie(
-    bool force_random, int key_index = 0) {
-  static const absl::NoDestructor<RsaSsaPkcs1Parameters> parameters([]() {
-    absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
-        RsaSsaPkcs1Parameters::Builder()
-            .SetModulusSizeInBits(4096)
-            .SetPublicExponent(GetF4())
-            .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha384)
-            .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
-            .Build();
-    ABSL_CHECK_OK(parameters);
-    return *parameters;
-  }());
-
-  if (force_random) {
-    internal::RsaPrivateKey rsa_private_key;
-    internal::RsaPublicKey rsa_public_key;
-    absl::Status status =
-        NewRsaKeyPairF4(4096, &rsa_private_key, &rsa_public_key);
-    ABSL_CHECK_OK(status);
-    absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
-        RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(rsa_public_key.n),
-                                     /*id_requirement=*/std::nullopt,
-                                     GetPartialKeyAccess());
-    ABSL_CHECK_OK(public_key);
-    absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
-        RsaSsaPkcs1PrivateKey::Builder()
-            .SetPublicKey(*public_key)
-            .SetPrimeP(RestrictedData(rsa_private_key.p,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeQ(RestrictedData(rsa_private_key.q,
-                                      InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
-                                              InsecureSecretKeyAccess::Get()))
-            .SetPrivateExponent(RestrictedData(rsa_private_key.d,
-                                               InsecureSecretKeyAccess::Get()))
-            .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
-                                              InsecureSecretKeyAccess::Get()))
-            .Build(GetPartialKeyAccess());
-    return std::make_unique<RsaSsaPkcs1PrivateKey>(*private_key);
-  }
+    int key_index = 0) {
   if (key_index == 0) {
     return CloneKeyOrDie<SignaturePrivateKey>(
         *Create4096BitsTestVector().signature_private_key);
@@ -468,8 +263,7 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
 }
 
 std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool force_random,
-    int key_index) {
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, int key_index) {
   switch (algorithm) {
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519:
       return GenerateEd25519PrivateKeyOrDie(key_index);
@@ -483,26 +277,26 @@ std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
       return GenerateEcdsaPrivateKeyOrDie(EcdsaParameters::CurveType::kNistP521,
                                           key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss:
-      return GenerateRsaPss3072PrivateKeyOrDie(force_random, key_index);
+      return GenerateRsaPss3072PrivateKeyOrDie(key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss:
-      return GenerateRsaPss4096PrivateKeyOrDie(force_random, key_index);
+      return GenerateRsaPss4096PrivateKeyOrDie(key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1:
-      return GenerateRsa3072Pkcs1PrivateKeyOrDie(force_random, key_index);
+      return GenerateRsa3072Pkcs1PrivateKeyOrDie(key_index);
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1:
-      return GenerateRsa4096Pkcs1PrivateKeyOrDie(force_random, key_index);
+      return GenerateRsa4096Pkcs1PrivateKeyOrDie(key_index);
     default:
       ABSL_LOG(FATAL) << "Unsupported classical algorithm";
   }
 }
 
 CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-    const CompositeMlDsaParameters& parameters, bool force_random,
+    const CompositeMlDsaParameters& parameters,
     std::optional<int> id_requirement, int key_index) {
   MlDsaPrivateKey ml_dsa_private_key =
       GenerateMlDsaPrivateKeyForTestOrDie(parameters.GetMlDsaInstance());
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          parameters.GetClassicalAlgorithm(), force_random, key_index);
+          parameters.GetClassicalAlgorithm(), key_index);
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(parameters, ml_dsa_private_key,
                                        std::move(classical_private_key),

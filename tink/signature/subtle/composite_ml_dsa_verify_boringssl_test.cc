@@ -107,8 +107,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewCompositeMlDsaSign(composite_ml_dsa_private_key);
@@ -140,8 +139,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/0x02030400);
+          *parameters, /*id_requirement=*/0x02030400);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewCompositeMlDsaSign(composite_ml_dsa_private_key);
@@ -173,8 +171,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       NewCompositeMlDsaVerify(composite_ml_dsa_private_key.GetPublicKey());
@@ -201,8 +198,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithModifiedSignatureFails) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewCompositeMlDsaSign(composite_ml_dsa_private_key);
@@ -236,8 +232,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithModifiedOutputPrefixFails) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/0x02030400);
+          *parameters, /*id_requirement=*/0x02030400);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewCompositeMlDsaSign(composite_ml_dsa_private_key);
@@ -271,8 +266,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewCompositeMlDsaSign(composite_ml_dsa_private_key);
@@ -304,8 +298,7 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, FipsMode) {
 
   CompositeMlDsaPrivateKey composite_ml_dsa_private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   // Check that creating the verifier fails in FIPS mode.
   EXPECT_THAT(

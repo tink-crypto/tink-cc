@@ -806,7 +806,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -874,7 +874,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -941,8 +941,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(private_key.GetPublicKey(),
@@ -1015,7 +1014,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1068,7 +1067,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1133,7 +1132,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1197,7 +1196,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1246,7 +1245,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1314,7 +1313,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1381,8 +1380,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
@@ -1453,7 +1451,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1507,7 +1505,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(ToProtoInstance(test_case.ml_dsa_instance));
@@ -1559,8 +1557,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1615,8 +1612,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1671,8 +1667,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1729,8 +1724,7 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false,
-          /*id_requirement=*/std::nullopt);
+          *parameters, /*id_requirement=*/std::nullopt);
 
   CompositeMlDsaParams params;
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
@@ -1786,7 +1780,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
@@ -1838,7 +1832,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
@@ -1889,7 +1883,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(private_key,
@@ -1915,7 +1909,7 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 
   CompositeMlDsaPrivateKey private_key =
       GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-          *parameters, /*force_random=*/false, test_case.id_requirement);
+          *parameters, test_case.id_requirement);
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(

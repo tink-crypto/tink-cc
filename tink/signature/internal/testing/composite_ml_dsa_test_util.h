@@ -31,18 +31,13 @@ namespace crypto::tink::internal {
 MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
     CompositeMlDsaParameters::MlDsaInstance instance, int key_index = 0);
 
-// Generates a new classical private key for the given algorithm. If
-// force_random is true, the key is randomly generated. Otherwise, either a
-// fixed key or a random key will be returned.
+// Generates a new classical private key for the given algorithm.
 std::unique_ptr<SignaturePrivateKey> GenerateClassicalPrivateKeyForTestOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool force_random,
-    int key_index = 0);
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, int key_index = 0);
 
-// Generates a new composite ML-DSA private key with the given parameters. If
-// force_random is true, the key is randomly generated. Otherwise, either a
-// fixed key or a random key will be returned.
+// Generates a new composite ML-DSA private key with the given parameters.
 CompositeMlDsaPrivateKey GenerateCompositeMlDsaPrivateKeyForTestOrDie(
-    const CompositeMlDsaParameters& parameters, bool force_random,
+    const CompositeMlDsaParameters& parameters,
     std::optional<int> id_requirement, int key_index = 0);
 
 }  // namespace crypto::tink::internal

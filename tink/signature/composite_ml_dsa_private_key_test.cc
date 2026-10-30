@@ -142,8 +142,7 @@ TEST_P(CompositeMlDsaPrivateKeyTest, CreateSucceeds) {
       GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/false);
+      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePrivateKey>(
@@ -176,8 +175,7 @@ TEST_P(CompositeMlDsaPrivateKeyTest, KeyEquals) {
       GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/false);
+      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePrivateKey>(
@@ -219,8 +217,7 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentMlDsaPrivateKeyNotEqual) {
                                           /*key_index=*/1);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/false);
+      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePrivateKey>(
@@ -258,12 +255,10 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentClassicalPrivateKeyNotEqual) {
       GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key1 =
-      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/false);
+      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key2 =
       GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/false,
                                               /*key_index=*/1);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key1 =
@@ -297,8 +292,7 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
       GenerateMlDsaPrivateKeyForTestOrDie(test_case.ml_dsa_instance);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm,
-                                              /*force_random=*/false);
+      GenerateClassicalPrivateKeyForTestOrDie(test_case.classical_algorithm);
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePrivateKey>(
@@ -336,8 +330,7 @@ TEST(CompositeMlDsaPrivateKeyTest, Clone) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(
@@ -362,8 +355,7 @@ TEST(CompositeMlDsaPrivateKeyTest, CopyConstructor) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(
@@ -388,8 +380,7 @@ TEST(CompositeMlDsaPrivateKeyTest, CopyAssignment) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(
@@ -410,8 +401,7 @@ TEST(CompositeMlDsaPrivateKeyTest, CopyAssignment) {
 
   std::unique_ptr<SignaturePrivateKey> other_classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> copy =
       CompositeMlDsaPrivateKey::Create(
@@ -437,8 +427,7 @@ TEST(CompositeMlDsaPrivateKeyTest, MoveConstructor) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(
@@ -464,8 +453,7 @@ TEST(CompositeMlDsaPrivateKeyTest, MoveAssignment) {
 
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
       CompositeMlDsaPrivateKey::Create(
@@ -486,8 +474,7 @@ TEST(CompositeMlDsaPrivateKeyTest, MoveAssignment) {
 
   std::unique_ptr<SignaturePrivateKey> other_classical_private_key =
       GenerateClassicalPrivateKeyForTestOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-          /*force_random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521);
 
   absl::StatusOr<CompositeMlDsaPrivateKey> moved =
       CompositeMlDsaPrivateKey::Create(

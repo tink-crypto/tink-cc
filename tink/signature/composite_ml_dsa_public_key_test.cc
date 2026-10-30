@@ -141,10 +141,9 @@ MlDsaPublicKey GenerateMlDsaPublicKeyOrDie(
 }
 
 std::unique_ptr<SignaturePublicKey> GenerateClassicalPublicKeyOrDie(
-    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, bool random,
-    int key_index = 0) {
+    CompositeMlDsaParameters::ClassicalAlgorithm algorithm, int key_index = 0) {
   std::unique_ptr<SignaturePrivateKey> private_key =
-      GenerateClassicalPrivateKeyForTestOrDie(algorithm, random, key_index);
+      GenerateClassicalPrivateKeyForTestOrDie(algorithm, key_index);
   return crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
       private_key->GetPublicKey());
 }
@@ -161,8 +160,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, CreatePublicKeyWorks) {
   MlDsaPublicKey ml_dsa_public_key =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
 
   std::unique_ptr<SignaturePublicKey> expected_classical_public_key =
       crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
@@ -195,8 +193,7 @@ TEST_P(CompositeMlDsaPublicKeyTest,
   MlDsaPublicKey ml_dsa_public_key =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
 
   EXPECT_THAT(CompositeMlDsaPublicKey::Create(*parameters, ml_dsa_public_key,
                                               std::move(classical_public_key),
@@ -221,8 +218,7 @@ TEST_P(CompositeMlDsaPublicKeyTest,
   MlDsaPublicKey ml_dsa_public_key =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
 
   EXPECT_THAT(
       CompositeMlDsaPublicKey::Create(
@@ -246,8 +242,7 @@ TEST(CompositeMlDsaPublicKeyTest, CreateWithUnmatchedMlDsaFails) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa87);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384);
 
   EXPECT_THAT(
       CompositeMlDsaPublicKey::Create(
@@ -270,8 +265,7 @@ TEST(CompositeMlDsaPublicKeyTest, CreateWithUnmatchedClassicalFails) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256);
 
   EXPECT_THAT(
       CompositeMlDsaPublicKey::Create(
@@ -294,8 +288,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, PublicKeyEquals) {
   MlDsaPublicKey ml_dsa_public_key =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
   std::unique_ptr<SignaturePublicKey> classical_public_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
           *classical_public_key);
@@ -332,8 +325,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentMlDsaPublicKeyNotEqual) {
   MlDsaPublicKey ml_dsa_public_key2 =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance, /*key_index=*/1);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
   std::unique_ptr<SignaturePublicKey> classical_public_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
           *classical_public_key);
@@ -369,11 +361,10 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentClassicalPublicKeyNotEqual) {
   MlDsaPublicKey ml_dsa_public_key =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   std::unique_ptr<SignaturePublicKey> classical_public_key1 =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
   std::unique_ptr<SignaturePublicKey> classical_public_key2 =
       GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false, /*key_index=*/1);
+                                      /*key_index=*/1);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -405,8 +396,7 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
   MlDsaPublicKey ml_dsa_public_key =
       GenerateMlDsaPublicKeyOrDie(test_case.ml_dsa_instance);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
-      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm,
-                                      /*random=*/false);
+      GenerateClassicalPublicKeyOrDie(test_case.classical_algorithm);
   std::unique_ptr<SignaturePublicKey> classical_public_key_clone =
       crypto::tink::internal::CloneKeyOrDie<SignaturePublicKey>(
           *classical_public_key);
@@ -441,8 +431,7 @@ TEST(CompositeMlDsaPublicKeyTest, Clone) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -466,8 +455,7 @@ TEST(CompositeMlDsaPublicKeyTest, CopyConstructor) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -490,8 +478,7 @@ TEST(CompositeMlDsaPublicKeyTest, CopyAssignment) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -509,8 +496,7 @@ TEST(CompositeMlDsaPublicKeyTest, CopyAssignment) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa87);
   std::unique_ptr<SignaturePublicKey> other_classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521);
 
   absl::StatusOr<CompositeMlDsaPublicKey> copy =
       CompositeMlDsaPublicKey::Create(
@@ -537,8 +523,7 @@ TEST(CompositeMlDsaPublicKeyTest, MoveConstructor) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -563,8 +548,7 @@ TEST(CompositeMlDsaPublicKeyTest, MoveAssignment) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
   std::unique_ptr<SignaturePublicKey> classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 
   absl::StatusOr<CompositeMlDsaPublicKey> public_key =
       CompositeMlDsaPublicKey::Create(
@@ -582,8 +566,7 @@ TEST(CompositeMlDsaPublicKeyTest, MoveAssignment) {
       CompositeMlDsaParameters::MlDsaInstance::kMlDsa87);
   std::unique_ptr<SignaturePublicKey> other_classical_public_key =
       GenerateClassicalPublicKeyOrDie(
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-          /*random=*/false);
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521);
 
   absl::StatusOr<CompositeMlDsaPublicKey> moved =
       CompositeMlDsaPublicKey::Create(

@@ -185,18 +185,12 @@ tink_cc_library(
     absl::no_destructor
     absl::absl_check
     absl::absl_log
-    absl::status
     absl::statusor
-    absl::string_view
-    absl::optional
     tink::internal::boringssl
-    tink::core::big_integer
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::rsa_util
     tink::internal::secret_buffer
-    tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::internal::testing::ec_test_vectors
     tink::signature::composite_ml_dsa_parameters
@@ -208,12 +202,6 @@ tink_cc_library(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
-    tink::signature::rsa_ssa_pkcs1_parameters
-    tink::signature::rsa_ssa_pkcs1_private_key
-    tink::signature::rsa_ssa_pkcs1_public_key
-    tink::signature::rsa_ssa_pss_parameters
-    tink::signature::rsa_ssa_pss_private_key
-    tink::signature::rsa_ssa_pss_public_key
     tink::signature::signature_private_key
     tink::util::secret_data
   TESTONLY

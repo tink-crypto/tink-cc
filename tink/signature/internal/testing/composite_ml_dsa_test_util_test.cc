@@ -31,8 +31,7 @@ TEST(CompositeMlDsaTestUtilTest, GenerateMlDsaPrivateKeyForTestRuns) {
 
 TEST(CompositeMlDsaTestUtilTest, GenerateClassicalPrivateKeyForTestRuns) {
   (void)crypto::tink::internal::GenerateClassicalPrivateKeyForTestOrDie(
-      crypto::tink::CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-      /*force_random=*/false);
+      crypto::tink::CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
 }
 
 TEST(CompositeMlDsaTestUtilTest, GenerateCompositeMlDsaPrivateKeyForTestRuns) {
@@ -42,7 +41,7 @@ TEST(CompositeMlDsaTestUtilTest, GenerateCompositeMlDsaPrivateKeyForTestRuns) {
           crypto::tink::CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
           crypto::tink::CompositeMlDsaParameters::Variant::kNoPrefix)
           .value(),
-      /*force_random=*/false, /*id_requirement=*/std::nullopt);
+      /*id_requirement=*/std::nullopt);
 }
 
 }  // namespace

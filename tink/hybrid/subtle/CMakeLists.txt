@@ -55,3 +55,38 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
 )
+
+tink_cc_library(
+  NAME create_hpke_decrypt
+  SRCS
+    create_hpke_decrypt.cc
+    create_hpke_decrypt.h
+  DEPS
+    absl::statusor
+    tink::core::hybrid_decrypt
+    tink::hybrid::hpke_private_key
+    tink::hybrid::internal::hpke_decrypt
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_hpke_decrypt_test
+  SRCS
+    create_hpke_decrypt_test.cc
+  DEPS
+    tink::hybrid::subtle::create_hpke_decrypt
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::hybrid_decrypt
+    tink::core::partial_key_access
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::hybrid::internal::testing::hpke_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
+    tink::internal::testing::ec_test_vectors
+    tink::subtle::common_enums
+)

@@ -60,3 +60,38 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_hpke_decrypt",
+    srcs = ["create_hpke_decrypt.cc"],
+    hdrs = ["create_hpke_decrypt.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:hybrid_decrypt",
+        "//tink/hybrid:hpke_private_key",
+        "//tink/hybrid/internal:hpke_decrypt",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_hpke_decrypt_test",
+    srcs = ["create_hpke_decrypt_test.cc"],
+    deps = [
+        ":create_hpke_decrypt",
+        "//tink:hybrid_decrypt",
+        "//tink:partial_key_access",
+        "//tink/hybrid:hpke_parameters",
+        "//tink/hybrid:hpke_private_key",
+        "//tink/hybrid:hpke_public_key",
+        "//tink/hybrid/internal/testing:hpke_test_vectors",
+        "//tink/hybrid/internal/testing:hybrid_test_vectors",
+        "//tink/internal/testing:ec_test_vectors",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

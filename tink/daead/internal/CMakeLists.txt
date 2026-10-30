@@ -160,3 +160,59 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME aes_siv_boringssl
+  SRCS
+    aes_siv_boringssl.cc
+    aes_siv_boringssl.h
+  DEPS
+    absl::algorithm_container
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::internal::boringssl
+    tink::core::deterministic_aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::daead::aes_siv_key
+    tink::internal::aes_ctr128
+    tink::internal::aes_util
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
+    tink::internal::safe_stringops
+    tink::internal::secret_buffer
+    tink::subtle::subtle_util
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME aes_siv_boringssl_test
+  SRCS
+    aes_siv_boringssl_test.cc
+  DATA
+    wycheproof::testvectors_v1
+  DEPS
+    tink::daead::internal::aes_siv_boringssl
+    tink::daead::internal::aes_siv_test_vectors
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::deterministic_aead
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::internal::fips_utils
+    tink::internal::testing::wycheproof_util
+    tink::util::test_util
+)

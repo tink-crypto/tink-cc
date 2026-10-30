@@ -636,21 +636,20 @@ tink_cc_library(
     aes_siv_boringssl.cc
     aes_siv_boringssl.h
   DEPS
-    tink::subtle::subtle_util
-    absl::algorithm_container
     absl::status
     absl::status_macros
     absl::statusor
-    absl::strings
+    absl::string_view
     absl::span
-    tink::internal::boringssl
     tink::core::deterministic_aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::aes_ctr128
-    tink::internal::aes_util
-    tink::internal::dfsan_forwarders
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::daead::internal::aes_siv_boringssl
     tink::internal::fips_utils
-    tink::internal::secret_buffer
     tink::util::secret_data
 )
 

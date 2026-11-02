@@ -1,1 +1,40 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//:__subpackages__"])
+
 licenses(["notice"])
+
+cc_library(
+    name = "create_aes_ctr_hmac_streaming_aead",
+    srcs = ["create_aes_ctr_hmac_streaming_aead.cc"],
+    hdrs = ["create_aes_ctr_hmac_streaming_aead.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:streaming_aead",
+        "//tink/streamingaead:aes_ctr_hmac_streaming_key",
+        "//tink/streamingaead/internal:aes_ctr_hmac_streaming",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_ctr_hmac_streaming_aead_test",
+    size = "small",
+    srcs = ["create_aes_ctr_hmac_streaming_aead_test.cc"],
+    deps = [
+        ":create_aes_ctr_hmac_streaming_aead",
+        "//tink:input_stream",
+        "//tink:streaming_aead",
+        "//tink/streamingaead:aes_ctr_hmac_streaming_key",
+        "//tink/streamingaead/internal/testing:aes_ctr_hmac_streaming_test_vectors",
+        "//tink/streamingaead/internal/testing:streamingaead_test_vector",
+        "//tink/subtle:streaming_aead_test_util",
+        "//tink/util:input_stream_util",
+        "//tink/util:istream_input_stream",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

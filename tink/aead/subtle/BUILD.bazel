@@ -211,3 +211,36 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_aes_gcm_siv_aead",
+    srcs = ["create_aes_gcm_siv_aead.cc"],
+    hdrs = ["create_aes_gcm_siv_aead.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:aead",
+        "//tink/aead:aes_gcm_siv_key",
+        "//tink/aead/internal:aead_from_zero_copy",
+        "//tink/aead/internal:zero_copy_aead",
+        "//tink/aead/internal:zero_copy_aes_gcm_siv_boringssl",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_gcm_siv_aead_test",
+    srcs = ["create_aes_gcm_siv_aead_test.cc"],
+    deps = [
+        ":create_aes_gcm_siv_aead",
+        "//tink:aead",
+        "//tink/aead:aes_gcm_siv_key",
+        "//tink/aead:aes_gcm_siv_parameters",
+        "//tink/aead/internal/testing:aead_test_vector",
+        "//tink/aead/internal/testing:aes_gcm_siv_test_vectors",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

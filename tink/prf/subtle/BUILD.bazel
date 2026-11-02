@@ -42,3 +42,46 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_hkdf_prf",
+    srcs = ["create_hkdf_prf.cc"],
+    hdrs = ["create_hkdf_prf.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "//tink/prf:prf_set",
+        "//tink/subtle:common_enums",
+        "//tink/subtle/prf:hkdf_streaming_prf",
+        "//tink/subtle/prf:prf_set_util",
+        "//tink/subtle/prf:streaming_prf",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_hkdf_prf_test",
+    size = "small",
+    srcs = ["create_hkdf_prf_test.cc"],
+    deps = [
+        ":create_hkdf_prf",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:fips_utils",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "//tink/prf:prf_set",
+        "//tink/prf/internal:hkdf_prf_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

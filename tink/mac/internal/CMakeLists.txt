@@ -465,3 +465,52 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME hmac_boringssl
+  SRCS
+    hmac_boringssl.cc
+    hmac_boringssl.h
+  DEPS
+    absl::absl_check
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::insecure_secret_key_access
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
+    tink::internal::md_util
+    tink::internal::safe_stringops
+    tink::internal::secret_buffer
+    tink::internal::util
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
+    tink::subtle::common_enums
+)
+
+tink_cc_test(
+  NAME hmac_boringssl_test
+  SRCS
+    hmac_boringssl_test.cc
+  DEPS
+    tink::mac::internal::hmac_boringssl
+    tink::mac::internal::hmac_test_vectors
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::fips_utils
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
+)

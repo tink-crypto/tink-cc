@@ -116,7 +116,7 @@ TEST(AesSivBoringSslTest, testNullPtrStringView) {
   EXPECT_EQ(message, pt.value());
 }
 
-// Only 64 byte key sizes are supported.
+// Only 32 and 64 byte key sizes are supported.
 TEST(AesSivBoringSslTest, testEncryptDecryptKeySizes) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
@@ -131,7 +131,7 @@ TEST(AesSivBoringSslTest, testEncryptDecryptKeySizes) {
     SecretData key = util::SecretDataFromStringView(
         absl::string_view(keymaterial).substr(0, keysize));
     auto cipher = AesSivBoringSsl::New(key);
-    if (keysize == 64) {
+    if (keysize == 32 || keysize == 64) {
       EXPECT_THAT(cipher, IsOk());
     } else {
       EXPECT_THAT(cipher, Not(IsOk()))
@@ -230,8 +230,9 @@ void WycheproofTest(const google::protobuf::Struct& parsed_input,
        test_groups.list_value().values()) {
     const auto& test_group_fields = test_group.struct_value().fields();
     const size_t key_size = test_group_fields.at("keySize").number_value();
-    if (key_size / 8 != 64) {
-      // Currently the key size is restricted to two 256-bit AES keys.
+    if (key_size / 8 != 32 && key_size / 8 != 64) {
+      // Currently the key size is restricted to two 128-bit or 256-bit AES
+      // keys.
       skipped_test_groups++;
       continue;
     }
@@ -287,7 +288,7 @@ TEST(AesSivBoringSslTest, TestVectors) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectorsV1("aes_siv_cmac_test.json");
   ASSERT_THAT(parsed_input, IsOk());
-  WycheproofTest(*parsed_input, /*expected_skipped_tests_groups=*/2);
+  WycheproofTest(*parsed_input, /*expected_skipped_tests_groups=*/1);
 }
 
 TEST(AesSivBoringSslTest, TestFipsOnly) {
@@ -299,10 +300,15 @@ TEST(AesSivBoringSslTest, TestFipsOnly) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
+  SecretData key512 = SecretData(test::HexDecodeOrDie(
+      "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"
+      "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(subtle::AesSivBoringSsl::New(key128).status(),
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(subtle::AesSivBoringSsl::New(key256).status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(subtle::AesSivBoringSsl::New(key512).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

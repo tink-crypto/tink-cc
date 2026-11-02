@@ -40,7 +40,7 @@ namespace subtle {
 //
 // Tink may change the underlying implementation at any time. Returns an error
 // if the parameters of `key` are not supported by the implementation
-// (currently only 64-byte keys are supported).
+// (currently 32-byte and 64-byte keys are supported).
 absl::StatusOr<std::unique_ptr<DeterministicAead>>
 CreateAesSivDeterministicAead(const AesSivKey& key);
 

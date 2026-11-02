@@ -54,7 +54,7 @@ INSTANTIATE_TEST_SUITE_P(CreateAesSivDeterministicAeadTest,
 
 TEST_P(CreateAesSivDeterministicAeadTest, EncryptAndDecrypt) {
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     EXPECT_THAT(CreateAesSivDeterministicAead(test_vector.key),
                 StatusIs(absl::StatusCode::kInvalidArgument));
     return;
@@ -74,7 +74,7 @@ TEST_P(CreateAesSivDeterministicAeadTest, EncryptAndDecrypt) {
 
 TEST_P(CreateAesSivDeterministicAeadTest, DecryptFailsWithModifiedCiphertext) {
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     return;
   }
 
@@ -93,7 +93,7 @@ TEST_P(CreateAesSivDeterministicAeadTest, DecryptFailsWithModifiedCiphertext) {
 
 TEST_P(CreateAesSivDeterministicAeadTest, DecryptFailsWithWrongAssociatedData) {
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     return;
   }
 

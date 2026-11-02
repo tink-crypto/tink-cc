@@ -54,10 +54,10 @@ namespace subtle {
 // of a message m encrypted and authenticated with k different keys,
 // then it is possible  to find one of the MAC keys in time 2^b / k
 // where b is the size of the MAC key. A consequence of this attack
-// is that 128-bit MAC keys give unsufficient security.
-// Since 192-bit AES keys are not supported by tink for voodoo reasons
-// and RFC 5297 only supports same size encryption and MAC keys this
-// implies that keys must be 64 bytes (2*256 bits) long.
+// is that 128-bit MAC keys give insufficient security in a multi-user setting,
+// so 64-byte (2*256 bits) keys are recommended. However, 32-byte (2*128 bits)
+// keys are also supported for use cases where a 32-byte key is required (e.g.,
+// RFC 8915). 48-byte (2*192 bits) keys are not supported.
 class AesSivBoringSsl {
  public:
   static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(

@@ -65,7 +65,7 @@ TEST_P(AesSivBoringSslTestWithVectors, EncryptAndDecrypt) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     EXPECT_THAT(NewAesSivBoringSsl(test_vector.key),
                 StatusIs(absl::StatusCode::kInvalidArgument));
     return;
@@ -88,7 +88,7 @@ TEST_P(AesSivBoringSslTestWithVectors, DecryptFailsWithModifiedCiphertext) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     return;
   }
 
@@ -110,7 +110,7 @@ TEST_P(AesSivBoringSslTestWithVectors, DecryptFailsWithWrongAssociatedData) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     return;
   }
 
@@ -128,7 +128,7 @@ TEST_P(AesSivBoringSslTestWithVectors, DecryptFailsIfCiphertextTooShort) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   const AesSivTestVector& test_vector = GetParam();
-  if (test_vector.key.GetParameters().KeySizeInBytes() != 64) {
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
     return;
   }
 
@@ -225,10 +225,6 @@ TEST(AesSivBoringSslTest, WycheproofTestVectors) {
       ReadTestVectorsV1("aes_siv_cmac_test.json");
   ASSERT_THAT(parsed_input, IsOk());
 
-  absl::StatusOr<AesSivParameters> params =
-      AesSivParameters::Create(64, AesSivParameters::Variant::kNoPrefix);
-  ASSERT_THAT(params, IsOk());
-
   int skipped_test_groups = 0;
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
@@ -236,10 +232,14 @@ TEST(AesSivBoringSslTest, WycheproofTestVectors) {
        test_groups.list_value().values()) {
     const auto& test_group_fields = test_group.struct_value().fields();
     const size_t key_size = test_group_fields.at("keySize").number_value();
-    if (key_size / 8 != 64) {
+    const size_t key_size_in_bytes = key_size / 8;
+    if (key_size_in_bytes != 32 && key_size_in_bytes != 64) {
       skipped_test_groups++;
       continue;
     }
+    absl::StatusOr<AesSivParameters> params = AesSivParameters::Create(
+        key_size_in_bytes, AesSivParameters::Variant::kNoPrefix);
+    ASSERT_THAT(params, IsOk());
     for (const google::protobuf::Value& test :
          test_group.struct_value().fields().at("tests").list_value().values()) {
       auto test_fields = test.struct_value().fields();
@@ -285,16 +285,20 @@ TEST(AesSivBoringSslTest, WycheproofTestVectors) {
       }
     }
   }
-  EXPECT_EQ(skipped_test_groups, 2);
+  EXPECT_EQ(skipped_test_groups, 1);
 }
 
 TEST(AesSivBoringSslTest, FipsOnly) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
-  const AesSivTestVector& test_vector =
+  const AesSivTestVector& test_vector32 =
+      GetAesSivTestVector(32, AesSivParameters::Variant::kNoPrefix);
+  EXPECT_THAT(NewAesSivBoringSsl(test_vector32.key),
+              StatusIs(absl::StatusCode::kInternal));
+  const AesSivTestVector& test_vector64 =
       GetAesSivTestVector(64, AesSivParameters::Variant::kNoPrefix);
-  EXPECT_THAT(NewAesSivBoringSsl(test_vector.key),
+  EXPECT_THAT(NewAesSivBoringSsl(test_vector64.key),
               StatusIs(absl::StatusCode::kInternal));
 }
 

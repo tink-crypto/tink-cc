@@ -40,7 +40,7 @@ namespace subtle {
 absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
     const SecretData& key) {
   ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesSivBoringSsl>());
-  if (key.size() != 64) {
+  if (key.size() != 32 && key.size() != 64) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
   ABSL_ASSIGN_OR_RETURN(AesSivParameters parameters,

@@ -52,7 +52,6 @@ namespace internal {
 namespace {
 
 constexpr size_t kBlockSize = internal::AesBlockSize();
-constexpr size_t kKeySizeInBytes = 64;
 
 absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {
@@ -335,7 +334,8 @@ absl::StatusOr<std::unique_ptr<DeterministicAead>> NewAesSivBoringSsl(
     const AesSivKey& key) {
   ABSL_RETURN_IF_ERROR(CheckFipsCompatibility<AesSivBoringSslImpl>());
 
-  if (key.GetParameters().KeySizeInBytes() != kKeySizeInBytes) {
+  if (key.GetParameters().KeySizeInBytes() != 32 &&
+      key.GetParameters().KeySizeInBytes() != 64) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
   const SecretData& key_bytes = key.GetKeyBytes(GetPartialKeyAccess())

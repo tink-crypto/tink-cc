@@ -173,3 +173,36 @@ tink_cc_test(
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_test_vectors
 )
+
+tink_cc_library(
+  NAME create_xchacha20_poly1305_aead
+  SRCS
+    create_xchacha20_poly1305_aead.cc
+    create_xchacha20_poly1305_aead.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::core::aead
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::internal::aead_from_zero_copy
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_xchacha20_poly1305_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_xchacha20_poly1305_aead_test
+  SRCS
+    create_xchacha20_poly1305_aead_test.cc
+  DEPS
+    tink::aead::subtle::create_xchacha20_poly1305_aead
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::aead
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
+)

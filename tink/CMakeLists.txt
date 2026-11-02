@@ -528,6 +528,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    protobuf::libprotobuf
     tink::util::errors
     tink::util::protobuf_helper
     tink::util::status
@@ -623,6 +624,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    protobuf::libprotobuf
     tink::internal::call_with_core_dump_protection
     tink::util::constants
     tink::util::errors
@@ -656,6 +658,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::string_view
+    protobuf::libprotobuf
     tink::internal::call_with_core_dump_protection
     tink::util::secret_proto
     tink::util::status

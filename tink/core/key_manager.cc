@@ -19,6 +19,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/message_lite.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -32,12 +33,12 @@ class AlwaysFailingKeyFactory : public KeyFactory {
   explicit AlwaysFailingKeyFactory(const absl::Status& status)
       : status_(status) {}
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
-      const portable_proto::MessageLite& key_format) const override {
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
+      const google::protobuf::MessageLite& key_format) const override {
     return status_;
   }
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
       absl::string_view serialized_key_format) const override {
     return status_;
   }

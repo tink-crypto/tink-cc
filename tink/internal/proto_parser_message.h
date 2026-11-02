@@ -76,7 +76,7 @@ class Message {
   Message(Message&&) noexcept = default;
   Message& operator=(Message&&) noexcept = default;
 
-  // Methods taken from the proto2::Message interface.
+  // Methods taken from the google::protobuf::Message interface.
   // Clears all fields.
   virtual void Clear();
   bool ParseFromString(absl::string_view in);

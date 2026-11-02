@@ -24,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/message_lite.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/private_key_type_manager.h"
@@ -63,12 +64,12 @@ class PrivateKeyFactoryImpl : public PrivateKeyFactory {
         public_key_type_(public_key_manager->get_key_type()),
         public_key_material_type_(public_key_manager->key_material_type()) {}
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
-      const portable_proto::MessageLite& key_format) const override {
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
+      const google::protobuf::MessageLite& key_format) const override {
     return key_factory_impl_.NewKey(key_format);
   }
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
       absl::string_view serialized_key_format) const override {
     return key_factory_impl_.NewKey(serialized_key_format);
   }

@@ -250,6 +250,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/synchronization",
+        "@protobuf",
     ],
 )
 

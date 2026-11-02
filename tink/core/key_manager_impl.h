@@ -28,6 +28,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/message_lite.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
@@ -63,8 +64,8 @@ class KeyFactoryImpl<
                                          List<Primitives...>>* key_type_manager)
       : key_type_manager_(key_type_manager) {}
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
-      const portable_proto::MessageLite& key_format) const override {
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
+      const google::protobuf::MessageLite& key_format) const override {
     if (key_format.GetTypeName() != KeyFormatProto().GetTypeName()) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
@@ -79,11 +80,11 @@ class KeyFactoryImpl<
     absl::StatusOr<KeyProto> new_key_result = key_type_manager_->CreateKey(
         static_cast<const KeyFormatProto&>(key_format));
     if (!new_key_result.ok()) return new_key_result.status();
-    return absl::implicit_cast<std::unique_ptr<portable_proto::MessageLite>>(
+    return absl::implicit_cast<std::unique_ptr<google::protobuf::MessageLite>>(
         absl::make_unique<KeyProto>(std::move(new_key_result.value())));
   }
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
       absl::string_view serialized_key_format) const override {
     KeyFormatProto key_format;
     if (!key_format.ParseFromString(serialized_key_format)) {
@@ -96,7 +97,7 @@ class KeyFactoryImpl<
     if (!validation.ok()) {
       return validation;
     }
-    return NewKey(static_cast<const portable_proto::MessageLite&>(key_format));
+    return NewKey(static_cast<const google::protobuf::MessageLite&>(key_format));
   }
 
   absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>> NewKeyData(
@@ -130,14 +131,14 @@ class KeyFactoryImpl<KeyTypeManager<KeyProto, void, List<Primitives...>>>
   explicit KeyFactoryImpl(
       KeyTypeManager<KeyProto, void, List<Primitives...>>* key_type_manager) {}
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
-      const portable_proto::MessageLite& key_format) const override {
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
+      const google::protobuf::MessageLite& key_format) const override {
     return absl::Status(
         absl::StatusCode::kUnimplemented,
         "Creating new keys is not supported for this key manager.");
   }
 
-  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+  absl::StatusOr<std::unique_ptr<google::protobuf::MessageLite>> NewKey(
       absl::string_view serialized_key_format) const override {
     return absl::Status(
         absl::StatusCode::kUnimplemented,
@@ -204,7 +205,7 @@ class KeyManagerImpl<
   }
 
   absl::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
-      const portable_proto::MessageLite& key) const override {
+      const google::protobuf::MessageLite& key) const override {
     std::string key_type = absl::StrCat(kTypeGoogleapisCom, key.GetTypeName());
     if (!this->DoesSupport(key_type)) {
       return ToStatusF(absl::StatusCode::kInvalidArgument,

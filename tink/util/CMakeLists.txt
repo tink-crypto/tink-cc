@@ -175,6 +175,7 @@ tink_cc_library(
     absl::strings
     absl::cord
     absl::synchronization
+    protobuf::libprotobuf
     tink::core::aead
     tink::core::cleartext_keyset_handle
     tink::core::deterministic_aead

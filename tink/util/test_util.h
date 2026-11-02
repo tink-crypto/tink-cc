@@ -34,6 +34,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
+#include "google/protobuf/message_lite.h"
 #include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -89,7 +90,7 @@ void AddKeyData(const google::crypto::tink::KeyData& key_data, uint32_t key_id,
 // Adds the given 'key' with specified parameters and output_prefix_type=TINK
 // to the specified 'keyset'.
 void AddTinkKey(const std::string& key_type, uint32_t key_id,
-                const portable_proto::MessageLite& key,
+                const google::protobuf::MessageLite& key,
                 google::crypto::tink::KeyStatusType key_status,
                 google::crypto::tink::KeyData::KeyMaterialType material_type,
                 google::crypto::tink::Keyset* keyset);
@@ -97,7 +98,7 @@ void AddTinkKey(const std::string& key_type, uint32_t key_id,
 // Adds the given 'key' with specified parameters and output_prefix_type=LEGACY
 // to the specified 'keyset'.
 void AddLegacyKey(const std::string& key_type, uint32_t key_id,
-                  const portable_proto::MessageLite& key,
+                  const google::protobuf::MessageLite& key,
                   google::crypto::tink::KeyStatusType key_status,
                   google::crypto::tink::KeyData::KeyMaterialType material_type,
                   google::crypto::tink::Keyset* keyset);
@@ -105,7 +106,7 @@ void AddLegacyKey(const std::string& key_type, uint32_t key_id,
 // Adds the given 'key' with specified parameters and output_prefix_type=RAW
 // to the specified 'keyset'.
 void AddRawKey(const std::string& key_type, uint32_t key_id,
-               const portable_proto::MessageLite& key,
+               const google::protobuf::MessageLite& key,
                google::crypto::tink::KeyStatusType key_status,
                google::crypto::tink::KeyData::KeyMaterialType material_type,
                google::crypto::tink::Keyset* keyset);

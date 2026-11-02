@@ -300,3 +300,69 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ml_dsa_signer",
+    srcs = ["create_ml_dsa_signer.cc"],
+    hdrs = ["create_ml_dsa_signer.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:public_key_sign",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature/internal:ml_dsa_sign_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ml_dsa_signer_test",
+    srcs = ["create_ml_dsa_signer_test.cc"],
+    deps = [
+        ":create_ml_dsa_signer",
+        ":create_ml_dsa_verifier",
+        "//tink:public_key_sign",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature/internal/testing:ml_dsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "create_ml_dsa_verifier",
+    srcs = ["create_ml_dsa_verifier.cc"],
+    hdrs = ["create_ml_dsa_verifier.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:public_key_verify",
+        "//tink/signature:ml_dsa_public_key",
+        "//tink/signature/internal:ml_dsa_verify_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ml_dsa_verifier_test",
+    srcs = ["create_ml_dsa_verifier_test.cc"],
+    deps = [
+        ":create_ml_dsa_signer",
+        ":create_ml_dsa_verifier",
+        "//tink:public_key_sign",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature/internal/testing:ml_dsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

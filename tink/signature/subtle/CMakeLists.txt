@@ -295,3 +295,69 @@ tink_cc_test(
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
 )
+
+tink_cc_library(
+  NAME create_ml_dsa_signer
+  SRCS
+    create_ml_dsa_signer.cc
+    create_ml_dsa_signer.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_sign
+    tink::signature::ml_dsa_private_key
+    tink::signature::internal::ml_dsa_sign_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ml_dsa_signer_test
+  SRCS
+    create_ml_dsa_signer_test.cc
+  DEPS
+    tink::signature::subtle::create_ml_dsa_signer
+    tink::signature::subtle::create_ml_dsa_verifier
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_private_key
+    tink::signature::internal::testing::ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
+  NAME create_ml_dsa_verifier
+  SRCS
+    create_ml_dsa_verifier.cc
+    create_ml_dsa_verifier.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_verify
+    tink::signature::ml_dsa_public_key
+    tink::signature::internal::ml_dsa_verify_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ml_dsa_verifier_test
+  SRCS
+    create_ml_dsa_verifier_test.cc
+  DEPS
+    tink::signature::subtle::create_ml_dsa_signer
+    tink::signature::subtle::create_ml_dsa_verifier
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::internal::testing::ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

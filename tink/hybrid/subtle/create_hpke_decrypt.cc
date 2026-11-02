@@ -27,7 +27,7 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-absl::StatusOr<std::unique_ptr<HybridDecrypt>> CreateHpkeDecrypt(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> CreateHpkeHybridDecrypt(
     const HpkePrivateKey& key) {
   return internal::HpkeDecrypt::New(key);
 }

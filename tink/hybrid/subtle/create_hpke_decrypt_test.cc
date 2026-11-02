@@ -55,14 +55,14 @@ using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-using CreateHpkeDecryptTestVectorTest = TestWithParam<HybridTestVector>;
+using CreateHpkeHybridDecryptTestVectorTest = TestWithParam<HybridTestVector>;
 
-TEST_P(CreateHpkeDecryptTestVectorTest, DecryptTestVectors) {
+TEST_P(CreateHpkeHybridDecryptTestVectorTest, DecryptTestVectors) {
   const HybridTestVector& test_vector = GetParam();
   const HpkePrivateKey& key =
       dynamic_cast<const HpkePrivateKey&>(*test_vector.hybrid_private_key);
   absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
-      CreateHpkeDecrypt(key);
+      CreateHpkeHybridDecrypt(key);
   ASSERT_THAT(decrypter, IsOk());
 
   EXPECT_THAT(
@@ -70,11 +70,12 @@ TEST_P(CreateHpkeDecryptTestVectorTest, DecryptTestVectors) {
       IsOkAndHolds(test_vector.plaintext));
 }
 
-INSTANTIATE_TEST_SUITE_P(CreateHpkeDecryptTestVectorTests,
-                         CreateHpkeDecryptTestVectorTest,
+INSTANTIATE_TEST_SUITE_P(CreateHpkeHybridDecryptTestVectorTests,
+                         CreateHpkeHybridDecryptTestVectorTest,
                          ValuesIn(CreateHpkeTestVectors()));
 
-TEST(CreateHpkeDecryptTest, DecryptFailsWithModifiedCiphertextOrContextInfo) {
+TEST(CreateHpkeHybridDecryptTest,
+     DecryptFailsWithModifiedCiphertextOrContextInfo) {
   const HybridTestVector& test_vector = GetHpkeTestVector(
       HpkeParameters::KemId::kDhkemP256HkdfSha256,
       HpkeParameters::KdfId::kHkdfSha256, HpkeParameters::AeadId::kAesGcm128,
@@ -82,7 +83,7 @@ TEST(CreateHpkeDecryptTest, DecryptFailsWithModifiedCiphertextOrContextInfo) {
   const HpkePrivateKey& key =
       dynamic_cast<const HpkePrivateKey&>(*test_vector.hybrid_private_key);
   absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
-      CreateHpkeDecrypt(key);
+      CreateHpkeHybridDecrypt(key);
   ASSERT_THAT(decrypter, IsOk());
 
   for (size_t i = 0; i < test_vector.ciphertext.size(); ++i) {
@@ -109,23 +110,23 @@ TEST(CreateHpkeDecryptTest, DecryptFailsWithModifiedCiphertextOrContextInfo) {
   }
 }
 
-TEST(CreateHpkeDecryptTest, P384Fails) {
-  EXPECT_THAT(CreateHpkeDecrypt(*GetHpkeNistCurveTestCase(
-                                     subtle::EllipticCurveType::NIST_P384)
-                                     .private_key)
+TEST(CreateHpkeHybridDecryptTest, P384Fails) {
+  EXPECT_THAT(CreateHpkeHybridDecrypt(*GetHpkeNistCurveTestCase(
+                                           subtle::EllipticCurveType::NIST_P384)
+                                           .private_key)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(CreateHpkeDecryptTest, P521Fails) {
-  EXPECT_THAT(CreateHpkeDecrypt(*GetHpkeNistCurveTestCase(
-                                     subtle::EllipticCurveType::NIST_P521)
-                                     .private_key)
+TEST(CreateHpkeHybridDecryptTest, P521Fails) {
+  EXPECT_THAT(CreateHpkeHybridDecrypt(*GetHpkeNistCurveTestCase(
+                                           subtle::EllipticCurveType::NIST_P521)
+                                           .private_key)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(CreateHpkeDecryptTest, Sha384Fails) {
+TEST(CreateHpkeHybridDecryptTest, Sha384Fails) {
   absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
@@ -141,11 +142,11 @@ TEST(CreateHpkeDecryptTest, Sha384Fails) {
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
-  EXPECT_THAT(CreateHpkeDecrypt(*private_key).status(),
+  EXPECT_THAT(CreateHpkeHybridDecrypt(*private_key).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(CreateHpkeDecryptTest, Sha512Fails) {
+TEST(CreateHpkeHybridDecryptTest, Sha512Fails) {
   absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
@@ -161,7 +162,7 @@ TEST(CreateHpkeDecryptTest, Sha512Fails) {
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
-  EXPECT_THAT(CreateHpkeDecrypt(*private_key).status(),
+  EXPECT_THAT(CreateHpkeHybridDecrypt(*private_key).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

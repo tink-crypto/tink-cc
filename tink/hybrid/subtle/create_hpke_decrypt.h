@@ -35,7 +35,7 @@ namespace subtle {
 //
 // The returned `HybridDecrypt` behaves like a keyset containing only `key`: it
 // expects `key.GetOutputPrefix()` at the beginning of every ciphertext.
-absl::StatusOr<std::unique_ptr<HybridDecrypt>> CreateHpkeDecrypt(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> CreateHpkeHybridDecrypt(
     const HpkePrivateKey& key);
 
 }  // namespace subtle

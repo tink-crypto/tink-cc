@@ -2014,3 +2014,45 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "jwt_hmac",
+    srcs = ["jwt_hmac.cc"],
+    hdrs = ["jwt_hmac.h"],
+    deps = [
+        ":jwt_mac_impl",
+        "//tink:mac",
+        "//tink:partial_key_access",
+        "//tink/internal:internal_insecure_secret_key_access",
+        "//tink/jwt:jwt_hmac_key",
+        "//tink/jwt:jwt_hmac_parameters",
+        "//tink/jwt:jwt_mac",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "//tink/jwt:verified_jwt",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:hmac_boringssl",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "jwt_hmac_test",
+    srcs = ["jwt_hmac_test.cc"],
+    deps = [
+        ":jwt_hmac",
+        "//tink:partial_key_access",
+        "//tink/jwt:jwt_hmac_key",
+        "//tink/jwt:jwt_hmac_parameters",
+        "//tink/jwt:jwt_mac",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "//tink/jwt:verified_jwt",
+        "//tink/jwt/internal/testing:jwt_hmac_test_vectors",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

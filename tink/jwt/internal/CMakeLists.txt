@@ -1995,3 +1995,45 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_private_key
 )
+
+tink_cc_library(
+  NAME jwt_hmac
+  SRCS
+    jwt_hmac.cc
+    jwt_hmac.h
+  DEPS
+    tink::jwt::internal::jwt_mac_impl
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::internal::internal_insecure_secret_key_access
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+    tink::jwt::jwt_mac
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+    tink::subtle::common_enums
+    tink::subtle::hmac_boringssl
+)
+
+tink_cc_test(
+  NAME jwt_hmac_test
+  SRCS
+    jwt_hmac_test.cc
+  DEPS
+    tink::jwt::internal::jwt_hmac
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+    tink::jwt::jwt_mac
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+    tink::jwt::internal::testing::jwt_hmac_test_vectors
+)

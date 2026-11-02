@@ -366,3 +366,36 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_slh_dsa_verifier",
+    srcs = ["create_slh_dsa_verifier.cc"],
+    hdrs = ["create_slh_dsa_verifier.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:public_key_verify",
+        "//tink/signature:slh_dsa_public_key",
+        "//tink/signature/internal:slh_dsa_verify_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_slh_dsa_verifier_test",
+    srcs = ["create_slh_dsa_verifier_test.cc"],
+    deps = [
+        ":create_slh_dsa_verifier",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:slh_dsa_parameters",
+        "//tink/signature:slh_dsa_private_key",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "//tink/signature/internal/testing:slh_dsa_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

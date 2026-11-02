@@ -30,12 +30,14 @@ cc_library(
         "//tink:restricted_data",
         "//tink/jwt:jwt_hmac_key",
         "//tink/jwt:jwt_hmac_parameters",
+        "//tink/jwt:jwt_validator",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/time",
     ],
 )
 

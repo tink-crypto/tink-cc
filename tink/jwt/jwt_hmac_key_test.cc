@@ -75,7 +75,9 @@ TEST_P(JwtHmacKeyTest, CreateSucceeds) {
 }
 
 TEST(JwtHmacKeyTest, CustomKidPreservesStringViewBounds) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   std::string backing = "custom_kid|secret";
   absl::string_view custom_kid(backing.data(), /*len=*/10);
@@ -92,7 +94,9 @@ TEST(JwtHmacKeyTest, CustomKidPreservesStringViewBounds) {
 }
 
 TEST(JwtHmacKeyTest, CustomKidPreservesEmbeddedNull) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   std::string custom_kid("custom\0kid", 10);
   absl::StatusOr<JwtHmacKey> key =
@@ -108,9 +112,11 @@ TEST(JwtHmacKeyTest, CustomKidPreservesEmbeddedNull) {
 }
 
 TEST(JwtHmacKeyTest, CreateKeyWithMismatchedKeySizeFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
-  // Key material is 16 bytes (another key length, but invalid for this 32-byte
+  // Key material is 16 bytes (another key length, but invalid for this 64-byte
   // param).
   RestrictedData mismatched_secret =
       RestrictedData(std::string(16, 'a'), InsecureSecretKeyAccess::Get());
@@ -125,7 +131,9 @@ TEST(JwtHmacKeyTest, CreateKeyWithMismatchedKeySizeFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateKeyWithoutKeyBytesFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   JwtHmacKey::Builder builder = JwtHmacKey::Builder()
                                     .SetParameters(valid_key.GetParameters())
@@ -137,7 +145,9 @@ TEST(JwtHmacKeyTest, CreateKeyWithoutKeyBytesFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateKeyWithoutParametersFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -150,7 +160,9 @@ TEST(JwtHmacKeyTest, CreateKeyWithoutParametersFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateBase64EncodedKidWithoutIdRequirementFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -164,7 +176,9 @@ TEST(JwtHmacKeyTest, CreateBase64EncodedKidWithoutIdRequirementFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateBase64EncodedKidWithCustomKidFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -180,7 +194,9 @@ TEST(JwtHmacKeyTest, CreateBase64EncodedKidWithCustomKidFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateCustomKidWithIdRequirementFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -196,7 +212,9 @@ TEST(JwtHmacKeyTest, CreateCustomKidWithIdRequirementFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateCustomKidWithoutCustomKidFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -209,7 +227,9 @@ TEST(JwtHmacKeyTest, CreateCustomKidWithoutCustomKidFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateIgnoredKidWithIdRequirementFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(64).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs512)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -224,7 +244,9 @@ TEST(JwtHmacKeyTest, CreateIgnoredKidWithIdRequirementFails) {
 }
 
 TEST(JwtHmacKeyTest, CreateIgnoredKidWithCustomKidFails) {
-  const JwtHmacKey& valid_key = jwt_internal::GetJwtHmacTestVector(64).key;
+  const JwtHmacKey& valid_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs512)
+          .key;
 
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
@@ -250,8 +272,12 @@ TEST_P(JwtHmacKeyTest, KeyEquals) {
 }
 
 TEST(JwtHmacKeyTest, DifferentParametersNotEqual) {
-  const JwtHmacKey& key1 = jwt_internal::GetJwtHmacTestVector(32).key;
-  const JwtHmacKey& key2 = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& key1 =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
+  const JwtHmacKey& key2 =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   EXPECT_TRUE(key1 != key2);
   EXPECT_TRUE(key2 != key1);
@@ -260,7 +286,9 @@ TEST(JwtHmacKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(JwtHmacKeyTest, DifferentSecretDataNotEqual) {
-  const JwtHmacKey& key1 = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& key1 =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   std::string secret2_bytes(key1.GetKeyBytes(GetPartialKeyAccess())
                                 .GetSecret(InsecureSecretKeyAccess::Get()));
@@ -283,7 +311,9 @@ TEST(JwtHmacKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(JwtHmacKeyTest, DifferentIdRequirementNotEqual) {
-  const JwtHmacKey& key1 = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& key1 =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   absl::StatusOr<JwtHmacKey> key2 =
       JwtHmacKey::Builder()
@@ -300,7 +330,9 @@ TEST(JwtHmacKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(JwtHmacKeyTest, DifferentCustomKidNotEqual) {
-  const JwtHmacKey& key1 = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& key1 =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   absl::StatusOr<JwtHmacKey> key2 =
       JwtHmacKey::Builder()
@@ -317,7 +349,9 @@ TEST(JwtHmacKeyTest, DifferentCustomKidNotEqual) {
 }
 
 TEST(JwtHmacKeyTest, Clone) {
-  const JwtHmacKey& key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   // Clone the key.
   std::unique_ptr<Key> cloned_key = key.Clone();
@@ -326,7 +360,9 @@ TEST(JwtHmacKeyTest, Clone) {
 }
 
 TEST(JwtHmacKeyTest, CopyConstructor) {
-  const JwtHmacKey& key = jwt_internal::GetJwtHmacTestVector(32).key;
+  const JwtHmacKey& key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   JwtHmacKey copy(key);
 
@@ -334,8 +370,12 @@ TEST(JwtHmacKeyTest, CopyConstructor) {
 }
 
 TEST(JwtHmacKeyTest, CopyAssignment) {
-  const JwtHmacKey& key = jwt_internal::GetJwtHmacTestVector(32).key;
-  const JwtHmacKey& other_key = jwt_internal::GetJwtHmacTestVector(48).key;
+  const JwtHmacKey& key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
+  const JwtHmacKey& other_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   JwtHmacKey copy = other_key;
   copy = key;
@@ -344,20 +384,30 @@ TEST(JwtHmacKeyTest, CopyAssignment) {
 }
 
 TEST(JwtHmacKeyTest, MoveConstructor) {
-  JwtHmacKey key = jwt_internal::GetJwtHmacTestVector(32).key;
+  JwtHmacKey key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
 
   JwtHmacKey moved(std::move(key));
 
-  EXPECT_THAT(moved, Eq(jwt_internal::GetJwtHmacTestVector(32).key));
+  EXPECT_THAT(moved, Eq(jwt_internal::GetJwtHmacTestVector(
+                            JwtHmacParameters::Algorithm::kHs256)
+                            .key));
 }
 
 TEST(JwtHmacKeyTest, MoveAssignment) {
-  JwtHmacKey key = jwt_internal::GetJwtHmacTestVector(32).key;
-  JwtHmacKey other_key = jwt_internal::GetJwtHmacTestVector(48).key;
+  JwtHmacKey key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
+  JwtHmacKey other_key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs384)
+          .key;
 
   other_key = std::move(key);
 
-  EXPECT_THAT(other_key, Eq(jwt_internal::GetJwtHmacTestVector(32).key));
+  EXPECT_THAT(other_key, Eq(jwt_internal::GetJwtHmacTestVector(
+                                JwtHmacParameters::Algorithm::kHs256)
+                                .key));
 }
 
 }  // namespace

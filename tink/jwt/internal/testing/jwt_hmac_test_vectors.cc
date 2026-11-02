@@ -28,15 +28,25 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
+#include "absl/time/time.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_validator.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 
 namespace crypto::tink::jwt_internal {
 
 namespace {
+
+// 64-byte HMAC key from RFC 7515, Appendix A.1 ("Example JWS Using HMAC
+// SHA-256"): https://datatracker.ietf.org/doc/html/rfc7515#appendix-A.1.
+// Also used in third_party/tink/cc/jwt/internal/jwt_mac_config_2026_test.cc
+// and third_party/tink/go/jwt/jwt_full_mac_test.go (TestJWTFullMACTestVectors).
+constexpr absl::string_view kRfc7515KeyBase64 =
+    "AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-"
+    "1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow";
 
 // Helper to decode web safe base64 strings into raw bytes.
 std::string DecodeOrDie(absl::string_view base64_string) {
@@ -50,6 +60,9 @@ struct JwtHmacTestVectorParams {
   JwtHmacParameters::KidStrategy kid_strategy ABSL_REQUIRE_EXPLICIT_INIT;
   JwtHmacParameters::Algorithm algorithm ABSL_REQUIRE_EXPLICIT_INIT;
   std::string key;
+  std::string signed_jwt;
+  std::string expected_issuer;
+  std::optional<absl::Time> fixed_now = std::nullopt;
   std::optional<int> id_requirement = std::nullopt;
   std::optional<std::string> custom_kid = std::nullopt;
 };
@@ -71,43 +84,107 @@ JwtHmacTestVector MakeJwtHmacTestVector(const JwtHmacTestVectorParams& params) {
   }
   absl::StatusOr<JwtHmacKey> key = builder.Build(GetPartialKeyAccess());
   ABSL_CHECK_OK(key.status());
-  return JwtHmacTestVector{*std::move(key)};
+  JwtValidatorBuilder validator_builder =
+      JwtValidatorBuilder().ExpectIssuer(params.expected_issuer);
+  if (params.fixed_now.has_value()) {
+    validator_builder.SetFixedNow(*params.fixed_now);
+  } else {
+    validator_builder.AllowMissingExpiration();
+  }
+  absl::StatusOr<JwtValidator> validator = validator_builder.Build();
+  ABSL_CHECK_OK(validator.status());
+  return JwtHmacTestVector{*std::move(key), params.signed_jwt,
+                           *std::move(validator)};
 }
 
-using JwtHmacTestVectorMap = absl::flat_hash_map<int, JwtHmacTestVector>;
+using JwtHmacTestVectorMap =
+    absl::flat_hash_map<JwtHmacParameters::Algorithm, JwtHmacTestVector>;
 
 const JwtHmacTestVectorMap& CreateJwtHmacTestVectorsMap() {
-  static const absl::NoDestructor<JwtHmacTestVectorMap> test_vectors(
-      JwtHmacTestVectorMap{
-          {32, MakeJwtHmacTestVector(JwtHmacTestVectorParams{
-                   /*key_size_in_bytes=*/32,
-                   /*kid_strategy=*/
-                   JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
-                   /*algorithm=*/JwtHmacParameters::Algorithm::kHs256,
-                   /*key=*/
-                   DecodeOrDie("-ebuDNsVZ2iJtoZ-akfXTSCt4UO2cruLCsbWlBinggE"),
-                   /*id_requirement=*/123,
-                   /*custom_kid=*/std::nullopt,
-               })},
-          {48, MakeJwtHmacTestVector(JwtHmacTestVectorParams{
-                   /*key_size_in_bytes=*/48,
-                   /*kid_strategy=*/JwtHmacParameters::KidStrategy::kCustom,
-                   /*algorithm=*/JwtHmacParameters::Algorithm::kHs384,
-                   /*key=*/"012345678901234567890123456789012345678901234567",
-                   /*id_requirement=*/std::nullopt,
-                   /*custom_kid=*/"custom_kid",
-               })},
-          {64, MakeJwtHmacTestVector(JwtHmacTestVectorParams{
-                   /*key_size_in_bytes=*/64,
-                   /*kid_strategy=*/JwtHmacParameters::KidStrategy::kIgnored,
-                   /*algorithm=*/JwtHmacParameters::Algorithm::kHs512,
-                   /*key=*/
-                   "0123456789012345678901234567890123456789012345678901"
-                   "234567890123",
-                   /*id_requirement=*/std::nullopt,
-                   /*custom_kid=*/std::nullopt,
-               })},
-      });
+  static const absl::NoDestructor<JwtHmacTestVectorMap> test_vectors([] {
+    std::string key_bytes = DecodeOrDie(kRfc7515KeyBase64);
+    int key_size_in_bytes = key_bytes.size();
+    return JwtHmacTestVectorMap{
+        // Test vector from:
+        // - third_party/tink/cc/jwt/internal/jwt_mac_config_2026_test.cc
+        //   (GetJwtMacTestParams, HS256 with KidStrategy::kBase64EncodedKeyId)
+        // - third_party/tink/go/jwt/jwt_full_mac_test.go
+        //   (TestJWTFullMACTestVectors, "HS256_Base64EncodedKeyIDAsKID")
+        // Key: 64-byte key from RFC 7515, Appendix A.1.
+        // ID requirement: 0x01020304 (base64url-encoded big-endian key ID
+        // "AQIDBA").
+        {JwtHmacParameters::Algorithm::kHs256,
+         MakeJwtHmacTestVector(JwtHmacTestVectorParams{
+             /*key_size_in_bytes=*/key_size_in_bytes,
+             /*kid_strategy=*/
+             JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+             /*algorithm=*/JwtHmacParameters::Algorithm::kHs256,
+             /*key=*/key_bytes,
+             /*signed_jwt=*/
+             // Header: {"kid":"AQIDBA","alg":"HS256"}
+             "eyJraWQiOiJBUUlEQkEiLCJhbGciOiJIUzI1NiJ9."
+             // Payload: {"iss":"issuer"}
+             "eyJpc3MiOiJpc3N1ZXIifQ."
+             // HMAC-SHA256 tag:
+             "LyeYhbBBMFNjdGo_Qz3SXB7QvYbb-i0Onswr5R7zKvg",
+             /*expected_issuer=*/"issuer",
+             /*fixed_now=*/std::nullopt,
+             /*id_requirement=*/0x01020304,
+             /*custom_kid=*/std::nullopt,
+         })},
+        // Test vector from:
+        // - third_party/tink/go/jwt/jwt_full_mac_test.go
+        //   (TestJWTFullMACTestVectors, "HS384_CustomKID")
+        // Key: 64-byte key from RFC 7515, Appendix A.1.
+        // Custom KID: "custom-kid".
+        {JwtHmacParameters::Algorithm::kHs384,
+         MakeJwtHmacTestVector(JwtHmacTestVectorParams{
+             /*key_size_in_bytes=*/key_size_in_bytes,
+             /*kid_strategy=*/JwtHmacParameters::KidStrategy::kCustom,
+             /*algorithm=*/JwtHmacParameters::Algorithm::kHs384,
+             /*key=*/key_bytes,
+             /*signed_jwt=*/
+             // Header: {"kid":"custom-kid","alg":"HS384"}
+             "eyJraWQiOiJjdXN0b20ta2lkIiwiYWxnIjoiSFMzODQifQ."
+             // Payload: {"iss":"issuer"}
+             "eyJpc3MiOiJpc3N1ZXIifQ."
+             // HMAC-SHA384 tag:
+             "cd6Lfc4GKiM60UNT4uJtEKaus2BFOeSAS5sAsuddnFnM2xymi4R2ovKU9UVDdwNM",
+             /*expected_issuer=*/"issuer",
+             /*fixed_now=*/std::nullopt,
+             /*id_requirement=*/std::nullopt,
+             /*custom_kid=*/"custom-kid",
+         })},
+        // Test vector from:
+        // - third_party/tink/go/jwt/jwt_full_mac_test.go
+        //   (TestJWTFullMACTestVectors, "HS512_IgnoredKID")
+        // Key: 64-byte key from RFC 7515, Appendix A.1.
+        // Payload from RFC 7515, Appendix A.1.
+        {JwtHmacParameters::Algorithm::kHs512,
+         MakeJwtHmacTestVector(JwtHmacTestVectorParams{
+             /*key_size_in_bytes=*/key_size_in_bytes,
+             /*kid_strategy=*/JwtHmacParameters::KidStrategy::kIgnored,
+             /*algorithm=*/JwtHmacParameters::Algorithm::kHs512,
+             /*key=*/key_bytes,
+             /*signed_jwt=*/
+             // Header: {"alg":"HS512"}
+             "eyJhbGciOiJIUzUxMiJ9."
+             // Payload:
+             // {"iss":"joe",
+             //  "exp":1300819380,
+             //  "http://example.com/is_root":true}
+             "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt"
+             "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ."
+             // HMAC-SHA512 tag:
+             "CyfHecbVPqPzB3zBwYd3rgVBi2Dgg-eAeX7JT8B85QbKLwSXyll8WKGdehse606s"
+             "zf9G3i-jr24QGkEtMAGSpg",
+             /*expected_issuer=*/"joe",
+             /*fixed_now=*/absl::FromUnixSeconds(1300819380 - 3600),
+             /*id_requirement=*/std::nullopt,
+             /*custom_kid=*/std::nullopt,
+         })},
+    };
+  }());
   return *test_vectors;
 }
 
@@ -128,11 +205,12 @@ const std::vector<JwtHmacTestVector>& CreateJwtHmacTestVectors() {
   return *test_vectors;
 }
 
-const JwtHmacTestVector& GetJwtHmacTestVector(int key_size_in_bytes) {
+const JwtHmacTestVector& GetJwtHmacTestVector(
+    JwtHmacParameters::Algorithm algorithm) {
   const JwtHmacTestVectorMap& map = CreateJwtHmacTestVectorsMap();
-  auto it = map.find(key_size_in_bytes);
-  ABSL_CHECK(it != map.end())
-      << "No JWT HMAC test vector found for key size: " << key_size_in_bytes;
+  auto it = map.find(algorithm);
+  ABSL_CHECK(it != map.end()) << "No JWT HMAC test vector found for algorithm: "
+                              << static_cast<int>(algorithm);
   return it->second;
 }
 

@@ -1,1 +1,36 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//:__subpackages__"])
+
 licenses(["notice"])
+
+cc_library(
+    name = "create_hmac_mac",
+    srcs = ["create_hmac_mac.cc"],
+    hdrs = ["create_hmac_mac.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:mac",
+        "//tink/mac:hmac_key",
+        "//tink/mac/internal:hmac_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_hmac_mac_test",
+    size = "small",
+    srcs = ["create_hmac_mac_test.cc"],
+    deps = [
+        ":create_hmac_mac",
+        "//tink:mac",
+        "//tink/internal:fips_utils",
+        "//tink/mac/internal:hmac_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

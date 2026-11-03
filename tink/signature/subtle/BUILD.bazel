@@ -430,3 +430,68 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ml_dsa_prehash",
+    srcs = ["create_ml_dsa_prehash.cc"],
+    hdrs = ["create_ml_dsa_prehash.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/signature:ml_dsa_public_key",
+        "//tink/signature:prehash",
+        "//tink/signature/internal:ml_dsa_prehash_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ml_dsa_prehash_test",
+    srcs = ["create_ml_dsa_prehash_test.cc"],
+    deps = [
+        ":create_ml_dsa_prehash",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature:prehash",
+        "//tink/signature/internal/testing:ml_dsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@boringssl//:crypto",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "create_ml_dsa_sign_prehash",
+    srcs = ["create_ml_dsa_sign_prehash.cc"],
+    hdrs = ["create_ml_dsa_sign_prehash.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature:sign_prehash",
+        "//tink/signature/internal:ml_dsa_sign_prehash_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ml_dsa_sign_prehash_test",
+    srcs = ["create_ml_dsa_sign_prehash_test.cc"],
+    deps = [
+        ":create_ml_dsa_sign_prehash",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ml_dsa_parameters",
+        "//tink/signature:ml_dsa_private_key",
+        "//tink/signature:sign_prehash",
+        "//tink/signature/internal:ml_dsa_verify_boringssl",
+        "//tink/signature/internal/testing:ml_dsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

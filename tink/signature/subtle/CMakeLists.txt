@@ -425,3 +425,68 @@ tink_cc_test(
     tink::signature::internal::testing::signature_test_vector
     tink::signature::internal::testing::slh_dsa_test_vectors
 )
+
+tink_cc_library(
+  NAME create_ml_dsa_prehash
+  SRCS
+    create_ml_dsa_prehash.cc
+    create_ml_dsa_prehash.h
+  DEPS
+    absl::statusor
+    tink::signature::ml_dsa_public_key
+    tink::signature::prehash
+    tink::signature::internal::ml_dsa_prehash_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ml_dsa_prehash_test
+  SRCS
+    create_ml_dsa_prehash_test.cc
+  DEPS
+    tink::signature::subtle::create_ml_dsa_prehash
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::internal::boringssl
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::prehash
+    tink::signature::internal::testing::ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
+  NAME create_ml_dsa_sign_prehash
+  SRCS
+    create_ml_dsa_sign_prehash.cc
+    create_ml_dsa_sign_prehash.h
+  DEPS
+    absl::statusor
+    tink::signature::ml_dsa_private_key
+    tink::signature::sign_prehash
+    tink::signature::internal::ml_dsa_sign_prehash_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ml_dsa_sign_prehash_test
+  SRCS
+    create_ml_dsa_sign_prehash_test.cc
+  DEPS
+    tink::signature::subtle::create_ml_dsa_sign_prehash
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::sign_prehash
+    tink::signature::internal::ml_dsa_verify_boringssl
+    tink::signature::internal::testing::ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

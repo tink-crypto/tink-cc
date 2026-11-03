@@ -384,6 +384,8 @@
 #include "tink/signature/subtle/create_ecdsa_key.h"
 #include "tink/signature/subtle/create_ed25519_key.h"
 #include "tink/signature/subtle/create_ml_dsa_key.h"
+#include "tink/signature/subtle/create_ml_dsa_prehash.h"
+#include "tink/signature/subtle/create_ml_dsa_sign_prehash.h"
 #include "tink/signature/subtle/create_ml_dsa_signer.h"
 #include "tink/signature/subtle/create_ml_dsa_verifier.h"
 #include "tink/signature/subtle/create_rsa_ssa_pkcs1_key.h"

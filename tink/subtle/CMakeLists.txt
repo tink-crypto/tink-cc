@@ -214,19 +214,13 @@ tink_cc_library(
     hmac_boringssl.h
   DEPS
     tink::subtle::common_enums
-    absl::memory
-    absl::status
-    absl::status_macros
+    absl::statusor
     absl::strings
     tink::internal::boringssl
     tink::core::mac
-    tink::internal::call_with_core_dump_protection
-    tink::internal::dfsan_forwarders
+    tink::core::secret_data
     tink::internal::fips_utils
-    tink::internal::md_util
-    tink::internal::safe_stringops
-    tink::internal::util
-    tink::util::errors
+    tink::mac::internal::hmac_boringssl
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

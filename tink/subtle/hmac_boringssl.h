@@ -35,33 +35,16 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-class HmacBoringSsl : public Mac {
+class HmacBoringSsl {
  public:
   static absl::StatusOr<std::unique_ptr<Mac>> New(HashType hash_type,
                                                   uint32_t tag_size,
                                                   SecretData key);
 
-  // Computes and returns the HMAC for 'data'.
-  absl::StatusOr<std::string> ComputeMac(absl::string_view data) const override;
-
-  // Verifies if 'mac' is a correct HMAC for 'data'.
-  // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.
-  absl::Status VerifyMac(absl::string_view mac,
-                         absl::string_view data) const override;
-
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
- private:
-  // Minimum HMAC key size in bytes.
-  static constexpr size_t kMinKeySize = 16;
-
-  HmacBoringSsl(HashType hash_type, uint32_t tag_size, SecretData key)
-      : hash_type_(hash_type), tag_size_(tag_size), key_(std::move(key)) {}
-
-  const HashType hash_type_;
-  const uint32_t tag_size_;
-  const SecretData key_;
+  HmacBoringSsl() = delete;
 };
 
 }  // namespace subtle

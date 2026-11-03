@@ -17,17 +17,25 @@
 #ifndef TINK_MAC_INTERNAL_HMAC_BORINGSSL_H_
 #define TINK_MAC_INTERNAL_HMAC_BORINGSSL_H_
 
+#include <cstdint>
 #include <memory>
 
 #include "absl/status/statusor.h"
 #include "tink/mac.h"
 #include "tink/mac/hmac_key.h"
+#include "tink/secret_data.h"
+#include "tink/subtle/common_enums.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 absl::StatusOr<std::unique_ptr<Mac>> NewHmacBoringSsl(const HmacKey& key);
+
+// Overload used only by the legacy `subtle::HmacBoringSsl` class.
+// TODO(b/571437401): Remove this overload along with `subtle::HmacBoringSsl`.
+absl::StatusOr<std::unique_ptr<Mac>> NewHmacBoringSsl(
+    subtle::HashType hash_type, uint32_t tag_size, SecretData key);
 
 }  // namespace internal
 }  // namespace tink

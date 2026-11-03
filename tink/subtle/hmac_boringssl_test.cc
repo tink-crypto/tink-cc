@@ -46,8 +46,10 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
+using ::testing::Eq;
 using ::testing::Not;
 
 class HmacBoringSslTest : public ::testing::Test {
@@ -191,6 +193,112 @@ TEST_F(HmacBoringSslTest, TestFipsFailWithoutBoringCrypto) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(subtle::HmacBoringSsl::New(HashType::SHA512, 16, key128).status(),
               StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST_F(HmacBoringSslTest, TagSizeExceedingDigestSizeFails) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
+  }
+
+  SecretData key(16, 'x');
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA1, /*tag_size=*/20, key), IsOk());
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA1, /*tag_size=*/21, key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA224, /*tag_size=*/28, key),
+              IsOk());
+  EXPECT_THAT(
+      HmacBoringSsl::New(HashType::SHA224, /*tag_size=*/29, key).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA256, /*tag_size=*/32, key),
+              IsOk());
+  EXPECT_THAT(
+      HmacBoringSsl::New(HashType::SHA256, /*tag_size=*/33, key).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA384, /*tag_size=*/48, key),
+              IsOk());
+  EXPECT_THAT(
+      HmacBoringSsl::New(HashType::SHA384, /*tag_size=*/49, key).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA512, /*tag_size=*/64, key),
+              IsOk());
+  EXPECT_THAT(
+      HmacBoringSsl::New(HashType::SHA512, /*tag_size=*/65, key).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(HmacBoringSslTest, UnsupportedHashTypeFails) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
+  }
+
+  SecretData key(16, 'x');
+  EXPECT_THAT(
+      HmacBoringSsl::New(HashType::UNKNOWN_HASH, /*tag_size=*/16, key).status(),
+      StatusIs(absl::StatusCode::kUnimplemented));
+}
+
+TEST_F(HmacBoringSslTest, SupportedHashTypesComputeAndVerifyMac) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
+  }
+
+  // RFC 2202 / RFC 4231 Test Case 1: 20-byte 0x0b key, "Hi There" message.
+  SecretData key = SecretData(
+      test::HexDecodeOrDie("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"));
+  constexpr absl::string_view kMessage = "Hi There";
+
+  absl::StatusOr<std::unique_ptr<Mac>> sha1_mac =
+      HmacBoringSsl::New(HashType::SHA1, /*tag_size=*/20, key);
+  ASSERT_THAT(sha1_mac, IsOk());
+  std::string sha1_tag =
+      test::HexDecodeOrDie("b617318655057264e28bc0b6fb378c8ef146be00");
+  EXPECT_THAT((*sha1_mac)->ComputeMac(kMessage), IsOkAndHolds(Eq(sha1_tag)));
+  EXPECT_THAT((*sha1_mac)->VerifyMac(sha1_tag, kMessage), IsOk());
+
+  absl::StatusOr<std::unique_ptr<Mac>> sha224_mac =
+      HmacBoringSsl::New(HashType::SHA224, /*tag_size=*/28, key);
+  ASSERT_THAT(sha224_mac, IsOk());
+  std::string sha224_tag = test::HexDecodeOrDie(
+      "896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22");
+  EXPECT_THAT((*sha224_mac)->ComputeMac(kMessage),
+              IsOkAndHolds(Eq(sha224_tag)));
+  EXPECT_THAT((*sha224_mac)->VerifyMac(sha224_tag, kMessage), IsOk());
+
+  absl::StatusOr<std::unique_ptr<Mac>> sha256_mac =
+      HmacBoringSsl::New(HashType::SHA256, /*tag_size=*/32, key);
+  ASSERT_THAT(sha256_mac, IsOk());
+  std::string sha256_tag = test::HexDecodeOrDie(
+      "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7");
+  EXPECT_THAT((*sha256_mac)->ComputeMac(kMessage),
+              IsOkAndHolds(Eq(sha256_tag)));
+  EXPECT_THAT((*sha256_mac)->VerifyMac(sha256_tag, kMessage), IsOk());
+
+  absl::StatusOr<std::unique_ptr<Mac>> sha384_mac =
+      HmacBoringSsl::New(HashType::SHA384, /*tag_size=*/48, key);
+  ASSERT_THAT(sha384_mac, IsOk());
+  std::string sha384_tag = test::HexDecodeOrDie(
+      "afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59"
+      "cfaea9ea9076ede7f4af152e8b2fa9cb6");
+  EXPECT_THAT((*sha384_mac)->ComputeMac(kMessage),
+              IsOkAndHolds(Eq(sha384_tag)));
+  EXPECT_THAT((*sha384_mac)->VerifyMac(sha384_tag, kMessage), IsOk());
+
+  absl::StatusOr<std::unique_ptr<Mac>> sha512_mac =
+      HmacBoringSsl::New(HashType::SHA512, /*tag_size=*/64, key);
+  ASSERT_THAT(sha512_mac, IsOk());
+  std::string sha512_tag = test::HexDecodeOrDie(
+      "87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cde"
+      "daa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854");
+  EXPECT_THAT((*sha512_mac)->ComputeMac(kMessage),
+              IsOkAndHolds(Eq(sha512_tag)));
+  EXPECT_THAT((*sha512_mac)->VerifyMac(sha512_tag, kMessage), IsOk());
 }
 // TODO(bleichen): Stuff to test
 //  - Generate test vectors and share with Wycheproof.

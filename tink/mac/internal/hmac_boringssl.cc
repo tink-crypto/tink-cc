@@ -16,6 +16,7 @@
 
 #include "tink/mac/internal/hmac_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -50,6 +51,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
+
+constexpr size_t kMinKeySize = 16;
 
 absl::StatusOr<subtle::HashType> ToSubtleHashType(
     HmacParameters::HashType hash_type) {
@@ -196,6 +199,23 @@ absl::StatusOr<std::unique_ptr<Mac>> NewHmacBoringSsl(const HmacKey& key) {
   return std::make_unique<HmacBoringSslImpl>(
       md, static_cast<uint32_t>(tag_size), std::move(key_data),
       key.GetOutputPrefix());
+}
+
+absl::StatusOr<std::unique_ptr<Mac>> NewHmacBoringSsl(
+    subtle::HashType hash_type, uint32_t tag_size, SecretData key) {
+  ABSL_RETURN_IF_ERROR(CheckFipsCompatibility<HmacBoringSslImpl>());
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* md, EvpHashFromHashType(hash_type));
+  if (EVP_MD_size(md) < tag_size) {
+    // The key manager is responsible for security policies.
+    // The checks here just ensure the preconditions of the primitive.
+    // If this fails then something is wrong with the key manager.
+    return absl::InvalidArgumentError("invalid tag size");
+  }
+  if (key.size() < kMinKeySize) {
+    return absl::InvalidArgumentError("invalid key size");
+  }
+  return std::make_unique<HmacBoringSslImpl>(md, tag_size, std::move(key),
+                                             /*output_prefix=*/"");
 }
 
 }  // namespace internal

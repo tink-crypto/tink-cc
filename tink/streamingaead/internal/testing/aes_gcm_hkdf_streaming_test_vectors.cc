@@ -89,6 +89,103 @@ const StreamingAeadTestVector& CreateAes128GcmHkdfSha1StreamingTestVector() {
   return *test_vector;
 }
 
+// From Java AesGcmHkdfStreamingTestUtil.java, createTestVector1
+const StreamingAeadTestVector&
+CreateAes128GcmHkdfSha1EmptyPtStreamingTestVector() {
+  static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
+    absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+        AesGcmHkdfStreamingParameters::Builder()
+            .SetKeySizeInBytes(16)
+            .SetDerivedKeySizeInBytes(16)
+            .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha1)
+            .SetCiphertextSegmentSizeInBytes(64)
+            .Build();
+    ABSL_CHECK_OK(parameters);
+
+    RestrictedData initial_key_material =
+        RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+                       InsecureSecretKeyAccess::Get());
+    absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+        *parameters, initial_key_material, GetPartialKeyAccess());
+    ABSL_CHECK_OK(key);
+
+    std::string plaintext = "";
+    std::string associated_data = "";
+    std::string ciphertext = HexDecodeOrDie(
+        "18ec99b2c3884194023bd41bb9bff309205354c750fa0cb3c0d02609abf71f88eaeaa4"
+        "8d7deca27f");
+
+    return StreamingAeadTestVector(
+        std::make_shared<AesGcmHkdfStreamingKey>(*key), plaintext,
+        associated_data, ciphertext);
+  }());
+  return *test_vector;
+}
+
+// From Java AesGcmHkdfStreamingTestUtil.java, createTestVector2
+const StreamingAeadTestVector& CreateAes128GcmHkdfSha256StreamingTestVector() {
+  static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
+    absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+        AesGcmHkdfStreamingParameters::Builder()
+            .SetKeySizeInBytes(16)
+            .SetDerivedKeySizeInBytes(16)
+            .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+            .SetCiphertextSegmentSizeInBytes(64)
+            .Build();
+    ABSL_CHECK_OK(parameters);
+
+    RestrictedData initial_key_material =
+        RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+                       InsecureSecretKeyAccess::Get());
+    absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+        *parameters, initial_key_material, GetPartialKeyAccess());
+    ABSL_CHECK_OK(key);
+
+    std::string plaintext = "";
+    std::string associated_data = "";
+    std::string ciphertext = HexDecodeOrDie(
+        "18be78bce0cab6fd38a9041eea8ab0ffc4cf17e3c00b661d3927f5f79069f41a210fed"
+        "c40b25648c");
+
+    return StreamingAeadTestVector(
+        std::make_shared<AesGcmHkdfStreamingKey>(*key), plaintext,
+        associated_data, ciphertext);
+  }());
+  return *test_vector;
+}
+
+// From Java AesGcmHkdfStreamingTestUtil.java, createTestVector3
+const StreamingAeadTestVector& CreateAes128GcmHkdfSha512StreamingTestVector() {
+  static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
+    absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+        AesGcmHkdfStreamingParameters::Builder()
+            .SetKeySizeInBytes(16)
+            .SetDerivedKeySizeInBytes(16)
+            .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+            .SetCiphertextSegmentSizeInBytes(64)
+            .Build();
+    ABSL_CHECK_OK(parameters);
+
+    RestrictedData initial_key_material =
+        RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+                       InsecureSecretKeyAccess::Get());
+    absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+        *parameters, initial_key_material, GetPartialKeyAccess());
+    ABSL_CHECK_OK(key);
+
+    std::string plaintext = "";
+    std::string associated_data = "";
+    std::string ciphertext = HexDecodeOrDie(
+        "18fec8139ccb406e0f140d7e2bcc41e1b899bc1b121574cc31d1c78ed2ca1cdf324665"
+        "b8dce21095");
+
+    return StreamingAeadTestVector(
+        std::make_shared<AesGcmHkdfStreamingKey>(*key), plaintext,
+        associated_data, ciphertext);
+  }());
+  return *test_vector;
+}
+
 // From Java AesGcmHkdfStreamingTestUtil.java, createTestVector4
 const StreamingAeadTestVector& CreateAes256GcmHkdfSha1StreamingTestVector() {
   static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
@@ -122,6 +219,111 @@ const StreamingAeadTestVector& CreateAes256GcmHkdfSha1StreamingTestVector() {
   return *test_vector;
 }
 
+// From Java AesGcmHkdfStreamingTestUtil.java, createTestVector5
+const StreamingAeadTestVector&
+CreateAes256GcmHkdfSha1Derived32StreamingTestVector() {
+  static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
+    absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+        AesGcmHkdfStreamingParameters::Builder()
+            .SetKeySizeInBytes(32)
+            .SetDerivedKeySizeInBytes(32)
+            .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha1)
+            .SetCiphertextSegmentSizeInBytes(64)
+            .Build();
+    ABSL_CHECK_OK(parameters);
+
+    RestrictedData initial_key_material = RestrictedData(
+        HexDecodeOrDie(
+            "00112233445566778899aabbccddeeff6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+        InsecureSecretKeyAccess::Get());
+    absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+        *parameters, initial_key_material, GetPartialKeyAccess());
+    ABSL_CHECK_OK(key);
+
+    std::string plaintext = "";
+    std::string associated_data = "";
+    std::string ciphertext = HexDecodeOrDie(
+        "28fae780c70a82d1256c8303a1261ac6a98cf557b4e173967a62f3c149517ba5b2431"
+        "da93b3c6e90f508b34dc14bfda59bab05681c6ad3fa");
+
+    return StreamingAeadTestVector(
+        std::make_shared<AesGcmHkdfStreamingKey>(*key), plaintext,
+        associated_data, ciphertext);
+  }());
+  return *test_vector;
+}
+
+// From Java AesGcmHkdfStreamingTestUtil.java, createTestVector6
+const StreamingAeadTestVector&
+CreateAes256GcmHkdfSha1Segment128StreamingTestVector() {
+  static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
+    absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+        AesGcmHkdfStreamingParameters::Builder()
+            .SetKeySizeInBytes(32)
+            .SetDerivedKeySizeInBytes(32)
+            .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha1)
+            .SetCiphertextSegmentSizeInBytes(128)
+            .Build();
+    ABSL_CHECK_OK(parameters);
+
+    RestrictedData initial_key_material = RestrictedData(
+        HexDecodeOrDie(
+            "00112233445566778899aabbccddeeff6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+        InsecureSecretKeyAccess::Get());
+    absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+        *parameters, initial_key_material, GetPartialKeyAccess());
+    ABSL_CHECK_OK(key);
+
+    std::string plaintext = "";
+    std::string associated_data = "";
+    std::string ciphertext = HexDecodeOrDie(
+        "28fae780c70a82d1256c8303a1261ac6a98cf557b4e173967a62f3c149517ba5b2431"
+        "da93b3c6e90f508b34dc14bfda59bab05681c6ad3fa");
+
+    return StreamingAeadTestVector(
+        std::make_shared<AesGcmHkdfStreamingKey>(*key), plaintext,
+        associated_data, ciphertext);
+  }());
+  return *test_vector;
+}
+
+// From Java AesGcmHkdfStreamingTestUtil.java, createTestVector7
+const StreamingAeadTestVector&
+CreateAes256GcmHkdfSha1Segment120LongPtStreamingTestVector() {
+  static const absl::NoDestructor<StreamingAeadTestVector> test_vector([]() {
+    absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+        AesGcmHkdfStreamingParameters::Builder()
+            .SetKeySizeInBytes(32)
+            .SetDerivedKeySizeInBytes(32)
+            .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha1)
+            .SetCiphertextSegmentSizeInBytes(120)
+            .Build();
+    ABSL_CHECK_OK(parameters);
+
+    RestrictedData initial_key_material = RestrictedData(
+        HexDecodeOrDie(
+            "00112233445566778899aabbccddeeff6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+        InsecureSecretKeyAccess::Get());
+    absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+        *parameters, initial_key_material, GetPartialKeyAccess());
+    ABSL_CHECK_OK(key);
+
+    std::string plaintext =
+        "BLOCK 1.BLOCK 2.BLOCK 3.BLOCK 4.BLOCK 5.BLOCK 6.BLOCK 7.BLOCK 8.";
+    std::string associated_data = HexDecodeOrDie("00010203");
+    std::string ciphertext = HexDecodeOrDie(
+        "28782994617714a80fa085e15051a16854522330d6d0f26c049b2192f09cdd98b2eb90"
+        "c753bfff277a29e54fa4afb15d648c28477eb07f012535c767f5fdce24ffffae318480"
+        "c1d37357d6d3c511159318afa09ef38aa3f5456fd7817c5c02dd6e1a7fef174c8bd24"
+        "e38b5982ac105497c0101ac5581fe5b");
+
+    return StreamingAeadTestVector(
+        std::make_shared<AesGcmHkdfStreamingKey>(*key), plaintext,
+        associated_data, ciphertext);
+  }());
+  return *test_vector;
+}
+
 }  // namespace
 
 // Returns static test vectors for AES-GCM-HKDF Streaming AEAD.
@@ -131,7 +333,13 @@ CreateAesGcmHkdfStreamingTestVectors() {
       test_vectors([]() {
         return std::vector<StreamingAeadTestVector>{
             CreateAes128GcmHkdfSha1StreamingTestVector(),
-            CreateAes256GcmHkdfSha1StreamingTestVector()};
+            CreateAes128GcmHkdfSha1EmptyPtStreamingTestVector(),
+            CreateAes128GcmHkdfSha256StreamingTestVector(),
+            CreateAes128GcmHkdfSha512StreamingTestVector(),
+            CreateAes256GcmHkdfSha1StreamingTestVector(),
+            CreateAes256GcmHkdfSha1Derived32StreamingTestVector(),
+            CreateAes256GcmHkdfSha1Segment128StreamingTestVector(),
+            CreateAes256GcmHkdfSha1Segment120LongPtStreamingTestVector()};
       }());
   return *test_vectors;
 }

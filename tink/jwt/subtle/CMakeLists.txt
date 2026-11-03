@@ -139,3 +139,35 @@ tink_cc_test(
     tink::jwt::jwt_hmac_key
     tink::jwt::jwt_hmac_parameters
 )
+
+tink_cc_library(
+  NAME create_jwt_hmac
+  SRCS
+    create_jwt_hmac.cc
+    create_jwt_hmac.h
+  DEPS
+    absl::statusor
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_mac
+    tink::jwt::internal::jwt_hmac
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_jwt_hmac_test
+  SRCS
+    create_jwt_hmac_test.cc
+  DEPS
+    tink::jwt::subtle::create_jwt_hmac
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
+    tink::jwt::jwt_mac
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+    tink::jwt::internal::testing::jwt_hmac_test_vectors
+)

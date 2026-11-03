@@ -85,3 +85,43 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_hmac_prf",
+    srcs = ["create_hmac_prf.cc"],
+    hdrs = ["create_hmac_prf.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:fips_utils",
+        "//tink/mac/internal:stateful_hmac_boringssl",
+        "//tink/prf:hmac_prf_key",
+        "//tink/prf:hmac_prf_parameters",
+        "//tink/prf:prf_set",
+        "//tink/subtle:common_enums",
+        "//tink/subtle/prf:prf_set_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_hmac_prf_test",
+    size = "small",
+    srcs = ["create_hmac_prf_test.cc"],
+    deps = [
+        ":create_hmac_prf",
+        "//tink/internal:fips_utils",
+        "//tink/prf:hmac_prf_parameters",
+        "//tink/prf:prf_set",
+        "//tink/prf/internal:hmac_prf_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

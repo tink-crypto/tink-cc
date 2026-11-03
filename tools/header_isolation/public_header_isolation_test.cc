@@ -310,6 +310,7 @@
 #include "tink/prf/prf_set_wrapper.h"
 #include "tink/prf/subtle/create_aes_cmac_prf.h"
 #include "tink/prf/subtle/create_hkdf_prf.h"
+#include "tink/prf/subtle/create_hmac_prf.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/private_key.h"

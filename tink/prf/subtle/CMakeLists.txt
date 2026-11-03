@@ -78,3 +78,42 @@ tink_cc_test(
     tink::prf::prf_set
     tink::prf::internal::hkdf_prf_test_vectors
 )
+
+tink_cc_library(
+  NAME create_hmac_prf
+  SRCS
+    create_hmac_prf.cc
+    create_hmac_prf.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::fips_utils
+    tink::mac::internal::stateful_hmac_boringssl
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
+    tink::prf::prf_set
+    tink::subtle::common_enums
+    tink::subtle::prf::prf_set_util
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_hmac_prf_test
+  SRCS
+    create_hmac_prf_test.cc
+  DEPS
+    tink::prf::subtle::create_hmac_prf
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::internal::fips_utils
+    tink::prf::hmac_prf_parameters
+    tink::prf::prf_set
+    tink::prf::internal::hmac_prf_test_vectors
+)

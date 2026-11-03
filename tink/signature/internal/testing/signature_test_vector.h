@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_INTERNAL_TESTING_SIGNATURE_TEST_VECTOR_H_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -31,14 +32,17 @@ namespace internal {
 struct SignatureTestVector {
   SignatureTestVector(
       std::shared_ptr<SignaturePrivateKey> signature_private_key,
-      absl::string_view signature, absl::string_view message)
+      absl::string_view signature, absl::string_view message,
+      std::optional<std::string> prehash = std::nullopt)
       : signature_private_key(std::move(signature_private_key)),
         signature(signature),
-        message(message) {}
+        message(message),
+        prehash(std::move(prehash)) {}
 
   std::shared_ptr<SignaturePrivateKey> signature_private_key;
   std::string signature;
   std::string message;
+  std::optional<std::string> prehash;
 };
 
 }  // namespace internal

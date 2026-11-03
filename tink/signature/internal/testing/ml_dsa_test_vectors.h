@@ -25,11 +25,11 @@
 namespace crypto::tink::internal {
 
 // Returns static test vectors for ML-DSA (ML-DSA-44, ML-DSA-65, and ML-DSA-87)
-// from NIST FIPS 204.
+// from Wycheproof.
 const std::vector<SignatureTestVector>& CreateMlDsaTestVectors();
 
 // Returns static test vector for ML-DSA for the given instance and variant from
-// NIST FIPS 204.
+// Wycheproof.
 const SignatureTestVector& GetMlDsaTestVector(
     MlDsaParameters::Instance instance, MlDsaParameters::Variant variant);
 

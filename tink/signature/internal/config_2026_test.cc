@@ -18,14 +18,11 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/absl_check.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -55,9 +52,7 @@
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/sign_prehash.h"
-#include "tink/signature/signature_key_templates.h"
 #include "tink/signature/slh_dsa_parameters.h"
-#include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -67,7 +62,6 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
-using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Eq;
 using ::testing::Not;
 
@@ -130,31 +124,23 @@ TEST(SignatureConfigV0Test, MlDsaPrehashPrimitiveCreatorWorks) {
   absl::StatusOr<std::string> prehash_value =
       (*prehash)->Compute(test_vector.message);
   ASSERT_THAT(prehash_value, IsOk());
-  EXPECT_THAT(
-      *prehash_value,
-      Eq(HexDecodeOrDie(
-          "ff080f141a32162a55180e25b893fd1d2e554b1b330dcf73f2f663dd67fb549b86"
-          "ead695535216afe93d6a5d55e21ee24097ae33030a940835d895a1c5594d3238aa"
-          "3bd555")));
+  ASSERT_TRUE(test_vector.prehash.has_value());
+  EXPECT_THAT(*prehash_value, Eq(*test_vector.prehash));
 }
 
 TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
-  absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
-                              MlDsaParameters::Variant::kNoPrefixWithPrehashId);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-      CreateMlDsaKey(*parameters, /*id_requirement=*/0x02030405);
-  ASSERT_THAT(private_key, IsOk());
+  const SignatureTestVector& test_vector =
+      GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                         MlDsaParameters::Variant::kNoPrefixWithPrehashId);
+  ASSERT_TRUE(test_vector.prehash.has_value());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
-          .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-              **private_key, KeyStatus::kEnabled,
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
@@ -163,10 +149,8 @@ TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
       handle->GetPrimitive<SignPrehash>(config);
   ASSERT_THAT(sign_prehash, IsOk());
 
-  std::string mu = std::string(64, 'a');
-  std::string prehash_prefix = std::string("\xff\x02\x03\x04\x05", 5);
   absl::StatusOr<std::string> signature =
-      (*sign_prehash)->Sign(absl::StrCat(prehash_prefix, mu));
+      (*sign_prehash)->Sign(*test_vector.prehash);
   ASSERT_THAT(signature, IsOk());
 }
 
@@ -193,17 +177,12 @@ TEST(SignatureConfigV0Test, MlDsaChunkedPrehashPrimitiveCreatorWorks) {
   absl::StatusOr<std::unique_ptr<ChunkedPrehashComputation>> computation =
       (*chunked_prehash)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
-  EXPECT_THAT((*computation)->Update(test_vector.message.substr(0, 10)),
-              IsOk());
-  EXPECT_THAT((*computation)->Update(test_vector.message.substr(10)), IsOk());
+  EXPECT_THAT((*computation)->Update(test_vector.message.substr(0, 5)), IsOk());
+  EXPECT_THAT((*computation)->Update(test_vector.message.substr(5)), IsOk());
 
   // Same prehash as in MlDsaPrehashPrimitiveCreatorWorks.
-  EXPECT_THAT(
-      (*computation)->GetPrehash(),
-      IsOkAndHolds(HexDecodeOrDie(
-          "ff080f141a32162a55180e25b893fd1d2e554b1b330dcf73f2f663dd67fb549b86"
-          "ead695535216afe93d6a5d55e21ee24097ae33030a940835d895a1c5594d3238aa"
-          "3bd555")));
+  ASSERT_TRUE(test_vector.prehash.has_value());
+  EXPECT_THAT((*computation)->GetPrehash(), IsOkAndHolds(*test_vector.prehash));
 }
 
 TEST(SignatureConfigV0Test, MlDsaChunkedPrehashSignVerifyWorks) {

@@ -1430,10 +1430,8 @@ tink_cc_test(
     tink::signature::internal::key_gen_config_2026
     tink::signature::internal::ml_dsa_key_creator
     gmock
-    absl::absl_check
     absl::status_matchers
     absl::statusor
-    absl::strings
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -1453,7 +1451,6 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::sign_prehash
-    tink::signature::signature_key_templates
     tink::signature::slh_dsa_parameters
     tink::signature::internal::testing::composite_ml_dsa_test_vectors
     tink::signature::internal::testing::ecdsa_test_vectors
@@ -1463,7 +1460,6 @@ tink_cc_test(
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::signature::internal::testing::slh_dsa_test_vectors
-    tink::util::test_util
     tink::proto::tink_cc_proto
 )
 

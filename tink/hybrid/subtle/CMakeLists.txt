@@ -90,3 +90,35 @@ tink_cc_test(
     tink::internal::testing::ec_test_vectors
     tink::subtle::common_enums
 )
+
+tink_cc_library(
+  NAME create_hpke_encrypt
+  SRCS
+    create_hpke_encrypt.cc
+    create_hpke_encrypt.h
+  DEPS
+    absl::statusor
+    tink::core::hybrid_encrypt
+    tink::hybrid::hpke_public_key
+    tink::hybrid::internal::hpke_encrypt
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_hpke_encrypt_test
+  SRCS
+    create_hpke_encrypt_test.cc
+  DEPS
+    tink::hybrid::subtle::create_hpke_decrypt
+    tink::hybrid::subtle::create_hpke_encrypt
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::hybrid_decrypt
+    tink::core::hybrid_encrypt
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::hybrid::internal::testing::hpke_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
+)

@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/keyset_handle_access.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
 #include "tink/util/enums.h"
@@ -54,14 +55,14 @@ absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
     const KeysetHandle& keyset_handle) {
   auto manager = std::make_unique<KeysetManager>();
   absl::MutexLock lock(manager->keyset_mutex_);
-  *manager->keyset_ = keyset_handle.get_keyset();
+  *manager->keyset_ = internal::KeysetHandleAccess::GetKeyset(keyset_handle);
   return std::move(manager);
 }
 
 std::unique_ptr<KeysetHandle> KeysetManager::GetKeysetHandle() {
   absl::MutexLock lock(keyset_mutex_);
-  std::unique_ptr<KeysetHandle> handle(new KeysetHandle(keyset_));
-  return handle;
+  return std::make_unique<KeysetHandle>(
+      internal::KeysetHandleAccess::Create(keyset_));
 }
 
 absl::StatusOr<uint32_t> KeysetManager::Add(const KeyTemplate& key_template) {
@@ -77,8 +78,8 @@ absl::StatusOr<uint32_t> KeysetManager::Add(
     return status;
   }
   absl::MutexLock lock(keyset_mutex_);
-  return KeysetHandle::AddToKeyset(key_template, as_primary, config,
-                                   keyset_.get());
+  return internal::KeysetHandleAccess::AddToKeyset(key_template, as_primary,
+                                                   config, keyset_.get());
 }
 
 absl::StatusOr<uint32_t> KeysetManager::Rotate(

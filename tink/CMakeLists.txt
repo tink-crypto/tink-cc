@@ -513,6 +513,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::statusor
+    tink::internal::keyset_handle_access
     tink::util::errors
     tink::util::secret_proto
     tink::proto::tink_cc_proto
@@ -550,6 +551,7 @@ tink_cc_library(
     absl::statusor
     absl::synchronization
     tink::internal::key_gen_configuration_impl
+    tink::internal::keyset_handle_access
     tink::util::enums
     tink::util::errors
     tink::util::secret_proto
@@ -834,6 +836,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::internal::call_with_core_dump_protection
+    tink::internal::keyset_handle_access
     tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::secret_proto

@@ -2310,3 +2310,40 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "keyset_handle_access",
+    hdrs = ["keyset_handle_access.h"],
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink:annotations",
+        "//tink:key_gen_configuration",
+        "//tink:keyset_handle",
+        "//tink/util:secret_proto",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "keyset_handle_access_test",
+    size = "small",
+    srcs = ["keyset_handle_access_test.cc"],
+    deps = [
+        ":key_gen_configuration_impl",
+        ":keyset_handle_access",
+        ":legacy_annotations",
+        "//proto:tink_cc_proto",
+        "//tink:annotations",
+        "//tink:key_gen_configuration",
+        "//tink:keyset_handle",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/util:secret_proto",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

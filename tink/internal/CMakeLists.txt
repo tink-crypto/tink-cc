@@ -2293,3 +2293,39 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME keyset_handle_access
+  SRCS
+    keyset_handle_access.h
+  DEPS
+    absl::flat_hash_map
+    absl::statusor
+    tink::core::annotations
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::util::secret_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME keyset_handle_access_test
+  SRCS
+    keyset_handle_access_test.cc
+  DEPS
+    tink::internal::key_gen_configuration_impl
+    tink::internal::keyset_handle_access
+    tink::internal::legacy_annotations
+    gmock
+    absl::flat_hash_map
+    absl::absl_check
+    absl::status_matchers
+    absl::statusor
+    tink::core::annotations
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::aead::aead_key_templates
+    tink::aead::aes_gcm_key_manager
+    tink::util::secret_proto
+    tink::proto::tink_cc_proto
+)

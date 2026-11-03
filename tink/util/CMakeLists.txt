@@ -231,8 +231,8 @@ tink_cc_library(
     test_keyset_handle.h
   DEPS
     tink::util::secret_proto
-    absl::memory
     tink::core::keyset_handle
+    tink::internal::keyset_handle_access
     tink::proto::tink_cc_proto
   TESTONLY
 )

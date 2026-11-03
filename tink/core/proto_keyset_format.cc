@@ -37,6 +37,7 @@
 #include "tink/binary_keyset_writer.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/keyset_handle_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
@@ -62,7 +63,8 @@ absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     return absl::Status(absl::StatusCode::kInternal, "Failed to parse keyset");
   }
   absl::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
-      entries = KeysetHandle::GetEntriesFromKeyset(*keyset_proto);
+      entries =
+          internal::KeysetHandleAccess::GetEntriesFromKeyset(*keyset_proto);
   if (!entries.ok()) {
     return entries.status();
   }
@@ -72,12 +74,14 @@ absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
-  return KeysetHandle(std::move(keyset_proto), *std::move(entries));
+  return internal::KeysetHandleAccess::Create(std::move(keyset_proto),
+                                              *std::move(entries));
 }
 
 absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
     const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
-  const google::crypto::tink::Keyset& keyset = keyset_handle.get_keyset();
+  const google::crypto::tink::Keyset& keyset =
+      internal::KeysetHandleAccess::GetKeyset(keyset_handle);
   SecretBuffer result(keyset.ByteSizeLong());
   bool serialized = internal::CallWithCoreDumpProtection(
       [&]() { return keyset.SerializeToArray(result.data(), result.size()); });

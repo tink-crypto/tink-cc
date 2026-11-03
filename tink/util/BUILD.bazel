@@ -283,7 +283,7 @@ cc_library(
         ":secret_proto",
         "//proto:tink_cc_proto",
         "//tink:keyset_handle",
-        "@abseil-cpp//absl/memory",
+        "//tink/internal:keyset_handle_access",
     ],
 )
 

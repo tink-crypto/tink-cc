@@ -58,6 +58,10 @@
 namespace crypto {
 namespace tink {
 
+namespace internal {
+class KeysetHandleAccess;
+}  // namespace internal
+
 // KeysetHandle provides abstracted access to Keysets, to limit
 // the exposure of actual protocol buffers that hold sensitive
 // key material.
@@ -266,25 +270,17 @@ class KeysetHandle {
   }
 
  private:
-  // The classes and functions below need access to get_keyset();
-  friend class CleartextKeysetHandle;
-  friend class KeysetManager;
+  // Gives Tink-internal code outside of this target access to private members.
+  friend class internal::KeysetHandleAccess;
+
+  // These are part of the same target, so they can't use
+  // `internal::KeysetHandleAccess`, which depends on this target.
+  //
+  // LegacyGetKeysetInfo() needs access to get_keyset().
   friend google::crypto::tink::KeysetInfo LegacyGetKeysetInfo(
       const KeysetHandle& keyset_handle);
-
-  // TestKeysetHandle::GetKeyset() provides access to get_keyset().
-  friend class TestKeysetHandle;
-
   // KeysetHandleBuilder::Build() needs access to KeysetHandle(Keyset).
   friend class KeysetHandleBuilder;
-
-  // ParseKeysetFromProtoKeysetFormat needs access to GetEntriesFromKeyset().
-  friend absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
-      absl::string_view serialized_keyset, SecretKeyAccessToken token);
-
-  // SerializeKeysetToProtoKeysetFormat needs access to get_keyset().
-  friend absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
-      const KeysetHandle& keyset_handle, SecretKeyAccessToken token);
 
   // Helper for `GetPrimitive<P>(config)` that performs type-erased primitive
   // resolution and wrapping. Returns an untyped pointer to the created

@@ -19,7 +19,7 @@
 #include <memory>
 #include <utility>
 
-#include "absl/memory/memory.h"
+#include "tink/internal/keyset_handle_access.h"
 #include "tink/keyset_handle.h"
 #include "tink/util/secret_proto.h"
 #include "proto/tink.pb.h"
@@ -32,14 +32,13 @@ namespace tink {
 // static
 std::unique_ptr<KeysetHandle> TestKeysetHandle::GetKeysetHandle(
     const Keyset& keyset) {
-  std::unique_ptr<KeysetHandle> handle =
-      absl::WrapUnique(new KeysetHandle(util::SecretProto<Keyset>(keyset)));
-  return handle;
+  return std::make_unique<KeysetHandle>(
+      internal::KeysetHandleAccess::Create(util::SecretProto<Keyset>(keyset)));
 }
 
 // static
 const Keyset& TestKeysetHandle::GetKeyset(const KeysetHandle& keyset_handle) {
-  return keyset_handle.get_keyset();
+  return internal::KeysetHandleAccess::GetKeyset(keyset_handle);
 }
 
 }  // namespace tink

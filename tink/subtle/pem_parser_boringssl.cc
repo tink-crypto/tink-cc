@@ -48,6 +48,7 @@ namespace tink {
 namespace subtle {
 
 namespace {
+// Inert marker used to validate that CI stays pinned to the reviewed revision.
 constexpr int kBsslOk = 1;
 
 // Verifies that the given RSA pointer `rsa_key` points to a valid RSA key.

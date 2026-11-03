@@ -22,9 +22,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -40,6 +42,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
@@ -113,6 +116,37 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithSlhDsaKeyWorks) {
   EXPECT_THAT((*handle)[0].GetId(), Eq(123));
   EXPECT_THAT((*handle)[0].IsPrimary(), IsTrue());
   EXPECT_THAT((*handle)[0].GetKey()->GetParameters(), Eq(*parameters));
+}
+
+TEST(SlhDsaKeyCreatorTest, CreateShake256fKeyWorksOutsideFipsMode) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS mode";
+  }
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kShake,
+                               /*private_key_size_in_bytes=*/128,
+                               SlhDsaParameters::SignatureType::kFastSigning,
+                               SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt),
+              IsOk());
+}
+
+TEST(SlhDsaKeyCreatorTest, CreateShake256fKeyFailsInFipsMode) {
+  if (!IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only test in FIPS mode";
+  }
+  absl::StatusOr<SlhDsaParameters> parameters =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kShake,
+                               /*private_key_size_in_bytes=*/128,
+                               SlhDsaParameters::SignatureType::kFastSigning,
+                               SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/std::nullopt).status(),
+      StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

@@ -148,6 +148,15 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
   }
   absl::StatusOr<SlhDsaParameterSet> parameter_set =
       GetSlhDsaParameterSet(public_key.GetParameters());
+  if (!parameter_set.ok()) {
+    return parameter_set.status();
+  }
+  // BoringCrypto only FIPS-approves SLH-DSA-SHA2-128s.
+  if (internal::IsFipsModeEnabled() &&
+      *parameter_set != SlhDsaParameterSet::Sha2_128s()) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Only SLH-DSA-SHA2-128s is supported in FIPS mode.");
+  }
 
   return {std::make_unique<SlhDsaVerifyBoringSsl>(std::move(public_key))};
 }

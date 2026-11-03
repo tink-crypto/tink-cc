@@ -36,6 +36,8 @@
 #include "tink/restricted_data.h"
 #include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
@@ -275,6 +277,41 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
                        HasSubstr("Signature is not valid")));
 }
 
+TEST_F(SlhDsaVerifyBoringSslTest, FipsModeSha2128sSucceeds) {
+  if (!internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only test in FIPS mode";
+  }
+  const SignatureTestVector& test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kNoPrefix);
+  const SlhDsaPrivateKey* private_key = dynamic_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_NE(private_key, nullptr);
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
+              IsOk());
+}
+
+TEST_F(SlhDsaVerifyBoringSslTest, FipsModeShake256fFails) {
+  if (!internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only test in FIPS mode";
+  }
+  const SignatureTestVector& test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kShake,
+                          SlhDsaParameters::SignatureType::kFastSigning,
+                          SlhDsaParameters::Variant::kNoPrefix);
+  const SlhDsaPrivateKey* private_key = dynamic_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_NE(private_key, nullptr);
+
+  EXPECT_THAT(NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey()).status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
 struct TestVector {
   std::string test_name;
   SlhDsaParameters::HashType hash_type;
@@ -295,6 +332,10 @@ class SlhDsaVerifyBoringSslTestVectorTest
     if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
       GTEST_SKIP()
           << "kRequiresBoringCrypto is set but BoringCrypto is unavailable.";
+    }
+    if (internal::IsFipsModeEnabled() &&
+        GetParam().hash_type != SlhDsaParameters::HashType::kSha2) {
+      GTEST_SKIP() << "Only SLH-DSA-SHA2-128s is supported in FIPS mode.";
     }
   }
 };

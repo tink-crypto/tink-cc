@@ -252,6 +252,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_sign_boringssl
     gmock
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -260,6 +261,8 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
+    tink::signature::internal::testing::signature_test_vector
+    tink::signature::internal::testing::slh_dsa_test_vectors
 )
 
 tink_cc_library(
@@ -306,6 +309,8 @@ tink_cc_test(
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
+    tink::signature::internal::testing::signature_test_vector
+    tink::signature::internal::testing::slh_dsa_test_vectors
     tink::util::test_util
 )
 
@@ -1133,6 +1138,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::internal::fips_utils
     tink::internal::internal_insecure_secret_key_access
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
@@ -1147,12 +1153,14 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_proto_serialization
     gmock
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::optional
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key

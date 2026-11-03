@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
@@ -29,6 +30,8 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/internal/slh_dsa_key_creator.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
 
@@ -38,6 +41,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -123,6 +127,40 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   EXPECT_EQ((*second_signature).size(), SLHDSA_SHA2_128S_SIGNATURE_BYTES);
 
   EXPECT_NE(*first_signature, *second_signature);
+}
+
+TEST_F(SlhDsaSignBoringSslTest, FipsModeSha2128sSucceeds) {
+  if (!internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only test in FIPS mode";
+  }
+  const SignatureTestVector& test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kNoPrefix);
+  const SlhDsaPrivateKey* private_key = dynamic_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_NE(private_key, nullptr);
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      NewSlhDsaSignBoringSsl(*private_key);
+  ASSERT_THAT(signer, IsOk());
+  EXPECT_THAT((*signer)->Sign(test_vector.message), IsOk());
+}
+
+TEST_F(SlhDsaSignBoringSslTest, FipsModeShake256fFails) {
+  if (!internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only test in FIPS mode";
+  }
+  const SignatureTestVector& test_vector =
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kShake,
+                          SlhDsaParameters::SignatureType::kFastSigning,
+                          SlhDsaParameters::Variant::kNoPrefix);
+  const SlhDsaPrivateKey* private_key = dynamic_cast<const SlhDsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_NE(private_key, nullptr);
+
+  EXPECT_THAT(NewSlhDsaSignBoringSsl(*private_key).status(),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

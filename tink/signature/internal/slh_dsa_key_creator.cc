@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "openssl/slhdsa.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -45,6 +46,12 @@ absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
       GetSlhDsaParameterSet(params);
   if (!parameter_set.ok()) {
     return parameter_set.status();
+  }
+  // BoringCrypto only FIPS-approves SLH-DSA-SHA2-128s.
+  if (IsFipsModeEnabled() &&
+      *parameter_set != SlhDsaParameterSet::Sha2_128s()) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Only SLH-DSA-SHA2-128s is supported in FIPS mode.");
   }
 
   using GenerateKeyFunc = void (*)(uint8_t*, uint8_t*);

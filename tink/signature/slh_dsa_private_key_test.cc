@@ -153,6 +153,10 @@ TEST_P(SlhDsaPrivateKeyTest, CreateFromSeedGeneratesConsistentKeyPair) {
       internal::GetSlhDsaParameterSet(
           test_private_key->GetPublicKey().GetParameters());
   ASSERT_THAT(parameter_set, IsOk());
+  if (internal::IsFipsModeEnabled() &&
+      *parameter_set != internal::SlhDsaParameterSet::Sha2_128s()) {
+    GTEST_SKIP() << "Only SLH-DSA-SHA2-128s is supported in FIPS mode.";
+  }
 
   RestrictedData seed =
       RestrictedData(test_private_key->GetPrivateKeyBytes(GetPartialKeyAccess())

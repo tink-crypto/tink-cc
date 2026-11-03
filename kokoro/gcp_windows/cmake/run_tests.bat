@@ -11,6 +11,12 @@
 :: WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 :: See the License for the specific language governing permissions and
 :: limitations under the License.
+
+:: Unique hex string of length 20
+@ECHO ================================================================================
+@ECHO Tink Script ID: a2df9bf5c9dd6bad4494 (to quickly find the script from logs)
+@ECHO ================================================================================
+
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 SET CMAKE_BIN="C:\Program Files\CMake\bin\cmake.exe"

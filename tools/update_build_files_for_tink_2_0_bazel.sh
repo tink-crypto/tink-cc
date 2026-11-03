@@ -24,6 +24,11 @@
 #   - "@${TINK_CC_REPO_NAME}//:([a-z_]+)" => "@${TINK_CC_REPO_NAME}//tink:\1"
 #   - "@${TINK_CC_REPO_NAME}" => "@${TINK_CC_REPO_NAME}//tink:${TINK_CC_REPO_NAME}"
 
+# Unique hex string of length 20
+echo "================================================================================"
+echo "Tink Script ID: 7a92ff9c63d41f08d6ba (to quickly find the script from logs)"
+echo "================================================================================"
+
 set -euo pipefail
 
 WORKSPACE_DIR=

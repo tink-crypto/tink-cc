@@ -11,6 +11,12 @@
 :: WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 :: See the License for the specific language governing permissions and
 :: limitations under the License.
+
+:: Unique hex string of length 20
+@ECHO ================================================================================
+@ECHO Tink Script ID: fece440a457ddbbdb063 (to quickly find the script from logs)
+@ECHO ================================================================================
+
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 IF EXIST %KOKORO_ARTIFACTS_DIR%\git\tink_cc (

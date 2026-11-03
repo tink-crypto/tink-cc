@@ -21,6 +21,11 @@
 # Extra arguments are passed to CMake (e.g. ccache launchers).
 # Usage: do_run_test.sh [cmake args...]
 
+# Unique hex string of length 20
+echo "================================================================================"
+echo "Tink Script ID: 6aecb07fdf5b52688016 (to quickly find the script from logs)"
+echo "================================================================================"
+
 set -euo pipefail
 export CCACHE_DIR="$(pwd)/ccache"
 export CCACHE_READONLY=1

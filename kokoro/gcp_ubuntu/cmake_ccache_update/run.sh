@@ -26,6 +26,12 @@
 #   CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-cmake:latest" \
 #     sh ./kokoro/gcp_ubuntu/cmake_ccache_update/run.sh
 #
+
+# Unique hex string of length 20
+echo "================================================================================"
+echo "Tink Script ID: de76b8cacc90d083e9cc (to quickly find the script from logs)"
+echo "================================================================================"
+
 set -euo pipefail
 
 IS_KOKORO="true"

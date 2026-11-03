@@ -16,6 +16,11 @@
 
 # This script builds with CMake and runs tests within a given directory.
 
+# Unique hex string of length 20
+echo "================================================================================"
+echo "Tink Script ID: 6756e9faca893662ac4a (to quickly find the script from logs)"
+echo "================================================================================"
+
 set -eEo pipefail
 
 usage() {

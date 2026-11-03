@@ -1,0 +1,57 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef TINK_DAEAD_SUBTLE_DETERMINISTIC_AEADS_H_
+#define TINK_DAEAD_SUBTLE_DETERMINISTIC_AEADS_H_
+
+#include <string>
+
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
+#include "tink/deterministic_aead.h"
+
+namespace crypto {
+namespace tink {
+namespace subtle {
+
+// Interface for Deterministic Authenticated Encryption with Associated Data
+// accepting multiple associated data inputs.
+class DeterministicAeads : public ::crypto::tink::DeterministicAead {
+ public:
+  // Encrypts `plaintext` deterministically using a list of `associated_datas`.
+  // The ciphertext allows for checking authenticity and integrity of the
+  // associated datas, but does not guarantee their secrecy.
+  virtual absl::StatusOr<std::string>
+  EncryptDeterministicallyWithAssociatedDatas(
+      absl::string_view plaintext,
+      absl::Span<const absl::string_view> associated_datas) const = 0;
+
+  // Decrypts `ciphertext` deterministically using a list of `associated_datas`,
+  // and returns the resulting plaintext.
+  // The decryption verifies the authenticity and integrity of the associated
+  // datas, but there are no guarantees with respect to secrecy of that data.
+  virtual absl::StatusOr<std::string>
+  DecryptDeterministicallyWithAssociatedDatas(
+      absl::string_view ciphertext,
+      absl::Span<const absl::string_view> associated_datas) const = 0;
+};
+
+}  // namespace subtle
+}  // namespace tink
+}  // namespace crypto
+
+#endif  // TINK_DAEAD_SUBTLE_DETERMINISTIC_AEADS_H_

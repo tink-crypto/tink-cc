@@ -130,6 +130,7 @@
 #include "tink/daead/key_gen_config_v0.h"
 #include "tink/daead/subtle/aead_or_daead.h"
 #include "tink/daead/subtle/create_aes_siv_deterministic_aead.h"
+#include "tink/daead/subtle/deterministic_aeads.h"
 #include "tink/deterministic_aead.h"
 #include "tink/deterministic_aead_config.h"
 #include "tink/deterministic_aead_factory.h"

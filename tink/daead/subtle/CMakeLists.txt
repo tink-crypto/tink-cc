@@ -61,3 +61,15 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     tink::daead::internal::aes_siv_test_vectors
 )
+
+tink_cc_library(
+  NAME deterministic_aeads
+  SRCS
+    deterministic_aeads.h
+  DEPS
+    absl::statusor
+    absl::string_view
+    absl::span
+    tink::core::deterministic_aead
+  PUBLIC
+)

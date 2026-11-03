@@ -68,3 +68,15 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "deterministic_aeads",
+    hdrs = ["deterministic_aeads.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:deterministic_aead",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
+    ],
+)

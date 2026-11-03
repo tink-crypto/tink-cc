@@ -75,6 +75,7 @@
 #include "tink/aead/subtle/create_aes_gcm_aead.h"
 #include "tink/aead/subtle/create_aes_gcm_cord_aead.h"
 #include "tink/aead/subtle/create_aes_gcm_siv_aead.h"
+#include "tink/aead/subtle/create_aes_gcm_siv_cord_aead.h"
 #include "tink/aead/subtle/create_chacha20_poly1305_aead.h"
 #include "tink/aead/subtle/create_x_aes_gcm_aead.h"
 #include "tink/aead/subtle/create_xchacha20_poly1305_aead.h"

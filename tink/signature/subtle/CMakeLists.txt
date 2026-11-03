@@ -394,3 +394,34 @@ tink_cc_test(
     tink::signature::internal::testing::signature_test_vector
     tink::signature::internal::testing::slh_dsa_test_vectors
 )
+
+tink_cc_library(
+  NAME create_slh_dsa_signer
+  SRCS
+    create_slh_dsa_signer.cc
+    create_slh_dsa_signer.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_sign
+    tink::signature::slh_dsa_private_key
+    tink::signature::internal::slh_dsa_sign_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_slh_dsa_signer_test
+  SRCS
+    create_slh_dsa_signer_test.cc
+  DEPS
+    tink::signature::subtle::create_slh_dsa_signer
+    tink::signature::subtle::create_slh_dsa_verifier
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::slh_dsa_private_key
+    tink::signature::internal::testing::signature_test_vector
+    tink::signature::internal::testing::slh_dsa_test_vectors
+)

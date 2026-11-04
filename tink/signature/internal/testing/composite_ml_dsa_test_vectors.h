@@ -29,6 +29,12 @@ namespace internal {
 // Composite ML-DSA test vectors from
 // https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14#appendix-E.
 
+SignatureTestVector CreateMlDsa44Ed25519TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa44EcdsaP256TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
 SignatureTestVector CreateMlDsa65Ed2551TestVector(
     CompositeMlDsaParameters::Variant variant =
         CompositeMlDsaParameters::Variant::kNoPrefix);

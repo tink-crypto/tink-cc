@@ -103,6 +103,342 @@ SignatureTestVector CreateCompositeMlDsaTestVector(
 
 // Test vector from
 // https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14#appendix-E.
+constexpr absl::string_view kHexMlDsa44PubForEd25519 =
+    "165a6569022056e604034e2737d557c8c58ae170e14619da19a58ee85aa80ad883af9acbf3"
+    "da261054887fcd755f16db1e928127344ea81a8a7db3e0b2b31166305d1de467e4e8b8a4ae"
+    "dbb217630645e6ef20aa3df302e743e4cca2390854ecc35de2900e14989b81ba94b15c3ce1"
+    "11c8472c2c9ba503c176bfbe4ebe0d2a1d1c11a0e2f461650ddccbb033ffd5df43875379ee"
+    "b1ce08f2e2ffbb639aa3d8ac2cc5b291000db0642817f03603d16a3ccc97c167401f2a41f3"
+    "332b9b623ba8ca11bf9f7740b9521c0e61ee0d5cb6b3a6a1adb15f36674202d43ad0bc75cd"
+    "bde3f21d3fe138049841028cec3f0c512b3de7850564f605aaf42b875272465fbcedc162a1"
+    "018e8df9f7b6ddae858a4cab3c91c9e6b2c23c2af2dc890b86401ae4d37c3a97afbe9076f4"
+    "c1e25297e36965832208741c1ce03063ba0598122551fcfc469b3c3220148cf4f8173c05be"
+    "8a37c4932a9ac97d1c3d04456aa8ba24ac61834896003193b2c10af287d9c33e0def5d5ca3"
+    "b2d1352a9f71115bf904fdbf7680412fd566cc724f26cb1cba40083b2af6a0c272d7b01c42"
+    "99a556b33854644d995322ca7f60177d6af3131562206b14639ee2a268ba4c7a4d07971f41"
+    "76f49033d6fbcc5948306c35d47041b60fd1db651f2bec76ccda9265e4b764de9fca57ee9b"
+    "66009bb22b3739f871aafc83ae037d0e803191de3cae1eaa5e5de67f224a1440153460f231"
+    "afea991a40133539a3dc58c6dad5e0e270de69c82698830ae1632db254ddee4ce178fd9d69"
+    "c59f174370f1eb3900efd7f83fb74d86319d6279411f5c009f04dd19e3f87a9937685de347"
+    "f2498d1c743317af2c460a3770eb484e7cd0a59398610c33d51070fcfdb09ffe5603648112"
+    "86457870d34d6af2f033121ae22fc9859d984168236f1936dc90f4c7e2b8b7a961db883a73"
+    "b738ea2a0eff6e665f950ecdef2dde5fcc16499d20d1887d28326ac2c21cee66a80f6d0bc5"
+    "0442af6750649f2634e8ecafe3689c20cf040e2eb29f62d7a594d5b07045bf35a7e2ba316a"
+    "dac7ec06fa6d9e067fe7fed917058632d6bd1f05f8938b315063a6e76b41d2cd7a87930c26"
+    "0d8736d191a8efb244e1b0656a0285435d96ef86d27bb1f03f6f03c6dbd6296e7a22cea532"
+    "ea9956483c190316e08cf7857f522817bafedc34e8f7a03c36e9fd17c5031ceaf6f71be455"
+    "3d92c84c767bd3018e88ece8e054647c157378899011cd4e7e04141ae106e59310d4ca23cb"
+    "4a3492017de82a45a6bbd4bd2f19ab86c1e077628ea9b64bd7d12866bc7e790cac79a2e30e"
+    "e179ebd0dae95d77dcda9e8f8e823d364da7aa23c0d4808cf6366a2d43d2167c190a5369e4"
+    "d146255c154a6ce141d10ac51b0524c2e5124b5681aa8f478e4408626f8c69ec31a529feec"
+    "d63f3c647d4e80ec3fac86c532cc8a490b0a2a6236d81a37156da254bfd2a0f18e283ba931"
+    "026fa25922795a8ad038d4c6c7c32dffd5a64acce9f1f71488b0e83cfbbd2cf709f5084348"
+    "037d08bfc34f165823fbd3a547783c17d6bb1c02f9f609cebfab74db3fd6cc62812f4b4e29"
+    "e4b3c6787b6f5ff3d5c9fbfd24da806eb4559adb9301dd6b42188f3472b9247e5f7b079b97"
+    "134eb25b8d1f9889dad1fbd11ff72dc6cbea38874bd0dfa31cc73e75f76ab5a9545d596786"
+    "998af78f00e5fc07d27bcdbc5d861754d5e50d16dfac12e1b203a56c4ec1dff1f65e5e96cf"
+    "c32d4e051326362277c06f95402ee0b933239e1b3b9258ee5a5859d4c96c9c6ae85fbcb9d7"
+    "1da5efcaf79edc225e4a727e93818837b34c73eef2460c3642da6567a8e1bca0474e120fbe"
+    "469a3c24606017292bcbd9732a4fc8823b";
+constexpr absl::string_view kHexMlDsa44PrivSeedForEd25519 =
+    "01d8df59152d8a44e39a25e6775ef18a0044b20e58c2c4346ac37c27d152176c";
+constexpr absl::string_view kHexMlDsa44Ed25519Pub =
+    "cc1046b2a778878182640aa23a258f9110950218a6d0b31e3ab4915568bade5a";
+constexpr absl::string_view kHexMlDsa44Ed25519Priv =
+    "5bea6c2454617bfb48479eb8b13b711a98116b73f7ecac30faf1dd9b4fa17d68";
+constexpr absl::string_view kHexMlDsa44Ed25519Signature =
+    "8dfde5769ff0cdfeda1cd0165cf50b49aed6a2a55b15769cfb3910a4cb45473fdd41df1b6d"
+    "7aedb52f972a8ec5ff36f466e45f1ed78634da12567914bcf5348b6635ad5b606398fb0e51"
+    "ca192824f969dcc47fa7bac5d86f892396d0cf65ee00ff2bc6483e81a1aabfd3d62bfde744"
+    "efd812b356e43722cbed06b7dc18626445004f8777483862d9688fb6fe60922c111ab1ace0"
+    "f8919249fd8134cf5470e572dd63a5f8a9d250ede41597636d78934d7764a2f46bee799663"
+    "045e6cab7524e2e8f74150443ad4e0a28961180dab5e58a46a6608f4e2a090149e04772031"
+    "56742437b6ced7e399744e77f6e34336cf67a93a1e824c35004f887b0e961a9983e1ab7c13"
+    "2282e3a3ac1db09880bcd780d054a90116b8651d6fd2635c9c7a61c8abe12d5d65571248ca"
+    "29c8d3df36836b915710ae35ee084876c1c50dabc61c605f046a90c14d955d706ae419e83b"
+    "fe405ec4dffb8c15db4c17d1d1d5df5ff12c2cf5d1a16af88d6f487d33d6cda5a36628f39d"
+    "d2576fc31b7fe3f18554001f87ca3f3314617b274952e3818bf8fc422acc2e02357536cb7c"
+    "c417ed040551b4b05d0a29fcee016bd103649fa32e932e8b4fbe3e7be0ca16a144b29bd16f"
+    "93ad0c1e6b54bd4a30e000101208c03dd475ce926c9ca76665458aadfd8c001e69a303fb1b"
+    "de2acb094b0e51fddebf516ab23dd21195761688a0674453e7bb03e8b9523eb900840919c1"
+    "c5c5e1c2d6043e8234e5553c89b7a4c59a5080723f1a2e53a94173b84d3ab96378b380066c"
+    "f76b7636ba71f060722a00bb387606f9a628dd9f8abc800dc9f877efb728829f3eb56fd841"
+    "c85bff6da5f7afeadec716215880f802954499eb38e61a68bf4f1eb09e1bcd5bfd0502959a"
+    "e6168cd4894ef2caffbe27aa2b6c80d7c39ac66043da03ad7c926d74ab43e8772cb6599be5"
+    "74ec91e4c1f6dfccea97596ed502062f5f62bc70a7c0916d13d9894096d9fa1524fce2df75"
+    "1374db98ee9c2ea1d573f9db3543bb811bfeccab1aee7da31e7e27217c73361535085f1635"
+    "83efe0dbc390547a6bf7dfcf338e0637abd98e7d97b1660948046bd171c06e35a3e73c3931"
+    "545f28eb8807815ff277201472aee420a9947e2ea078e4405ed0a312d2d01039e4c465ff89"
+    "2ee6a2467d9ab6fb4dfca08ae1bddfe3cf97136ef4f346ec8497ac614503075908f3b2ca21"
+    "c853512ab817a15a79af75c334bedd01573df9859ab62e17165bbe3108c56949c53c0b2a49"
+    "6429208fc66d0d4825e73ed97e95fd399db582524af6cfd440e99fa0564b621b33041db54b"
+    "85f69e12843a016ff095b8f1243356858b9404d77a7d14a26067deb8783d8f9d9911b08f48"
+    "3111518c0d379246c17f8c5d25d06578dfb86f3f852561a0157dce744533856ab8051014bd"
+    "d582c535fa5cab93cc10283025ce440bf88ae4547611760940cef18f46b9387faab553bec4"
+    "d5653094fb01743deb489ef88c6fa80c87b9109750aca2d7828e74b147e6218bd15b01f156"
+    "7546d7d4d709301f22a4aa2a051392daa19e8c3e860cb4fbd17fefe739a93d9ba6f0b45e48"
+    "c6b012d5f4464d326632534adf1cccc3042cbabb7928168505d134158395d35034c4ca4de5"
+    "6a37605a6839e6e7458c571ddc032d96755007e891891ffa64b9de1f312c8da6496e09f4b4"
+    "1a0e0ff2fec0ee64f188a8a4f28e5bdcfd7f3337752f4295dbf250070007dba375e3e66906"
+    "59482550306720fdfbf1a9e06cd108ccb65cb8fb1fadf712194d248b8ccce1a769b71198e4"
+    "b5fb0e29e543a3dee053b7f415118e7601ad51fecc542edb459f2ebc01b618c89dab0b5145"
+    "2f7417b0fa7d7f8076b10caa8022f7c1b9b59725d6693eac13f70b0707070a421ad7c67543"
+    "5de403da7d15c70e2d3177372855541282d1c53590955bde6892b7cd2a3c5d938b4b85aa10"
+    "9a0cc1e3863803239f2e945008d397bc253073ae93054ae633c2ac04cbe3457442f30d3f4f"
+    "2ecbbe9f3242053a05ef9f552678a135f8f3fa93c897e14895c406e40241d57366c0ee93c7"
+    "a2dd048a2e90bc4b591ab5c04e920471b37515d4b6166c59fc9c3e2e7fbcb93be22aebe571"
+    "40574ed7b53125aeda9c3f5761ec9021a8c6cbe8c8620fdea470a28c44ccfacdec804b2553"
+    "a9063ebb773c5fa11c05229181ae5748372415c53f44360c169d30b3ac8fb5c997e14e5367"
+    "a70ee0ba02264cc9bd4d5845380f6424a4ff84fc6adc7ca9fd624360ffea6be3bb84bf33a1"
+    "be94043b828094e85370794d724d9766069e6505e93c325adf7497a920053a845fb3e86a81"
+    "6c5d4767007b55738042a8c18af9f0d896b66cecf81a41b78255c50a0a8984314be0dfb0f6"
+    "381ca5fa468b51b5930b2bf76a3582eed7803d2453ce2200ac2d9828990792d295b2c9d441"
+    "62ca0aa5a63645fd3b3b1a1b30c5b4ffb640e1154e7c9d8bf66fdb95ae60f37d4227d9981c"
+    "f9f6f9bfeef97cf65a132bd2de81f1a34a4d14d2c7191839dcee131829ba3ade6c227d8636"
+    "852dbaa9bd1914e8a851f8eb420aa81f376f05c269bc90da47721e2fdab2e4b1e05df5aefc"
+    "e8387fb3c08d7e9ede6a72500d577f1217053f55b2ea6d08d9c9c450731ba57978d3e2e198"
+    "036b78c45b7658b3d2515196c642d4ae4d18362654bec5eeff1cd64fccff002f0b1a278ce4"
+    "45d11ee7996a356f6717d5e229a617a17e05bd9204d5ad5eee7203dab9cf2013bf85d6a912"
+    "d68915a79ddddb9ae849898d60443107e98f0e447337879c4ff36f2a927a551728dec41fe7"
+    "839c8a16000e2f063bab10e59c142ada4ff18d889f359fba53ee17ecc544832e139d7c3c72"
+    "f699adb5c72c03c6e39386af3d438f03f67af91e5584bf564b5573aabf81f6ec3b3db66b16"
+    "c82860252629f7068bd866d0d10abc4367a92f0bcd3620c0436d93b242bd39c14b1d8ac233"
+    "cbc791eabef52a09a6dbd51e4ea234fdc27d083867c3d58e10d71dcf0f8662a830161ba8a2"
+    "1b6c172f97d211c92a9bc54957f8e0797019fc2e1c8c8aa2a85e810bb00bd590540a01e8bd"
+    "07a1cb14f8e0adb109ed4ab5d0af9a95f9f72d194cb040ec8bcef2091b300d3b052ac08623"
+    "484cc51626e958307d43da53d9d8328caad4d67b81f23ee6c4a814003fa27d30fac282c0ee"
+    "2be1956856820334a3e34da89fc7b376bd769871370e2b866dd40b5c9ff63cdbb02f6d9d9c"
+    "b7beaf606f3da1456d6fec70fbb1739f15da453549058ef2f8df5af31d6f122466bf202531"
+    "de0c17d2a351c38d2a2d87f907270fab6f07b58b0c8fbb0cf77d95ff820b0a17ab6a641d60"
+    "7a3c7fbb390c171d244d568e96afdcdffd0a454a607895a7aecbcdedf12d2f3c788fabaee1"
+    "f2f8fd04263750a2c8d6def200000000000000000000000000000000000000000000000000"
+    "00000000000000000000000c18232c38a7a66954e1fda808213a91b1982c12e9d4946866f0"
+    "c568425c14b04adca4a4d2879914e67260f46acffb70168ab02bb253a87388b626aaa46c83"
+    "c4d829940d";
+
+SignatureTestVector CreateMlDsa44Ed25519TestVector(
+    CompositeMlDsaParameters::Variant variant) {
+  absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa44, MlDsaParameters::Variant::kNoPrefix);
+  ABSL_CHECK_OK(ml_dsa_parameters);
+
+  absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
+      *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa44PubForEd25519),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ABSL_CHECK_OK(ml_dsa_public_key);
+
+  internal::SecretBuffer private_seed_bytes(
+      HexDecodeOrDie(kHexMlDsa44PrivSeedForEd25519));
+  absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
+      *ml_dsa_public_key,
+      RestrictedData(SecretData(std::move(private_seed_bytes)),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ABSL_CHECK_OK(ml_dsa_private_key);
+
+  absl::StatusOr<Ed25519Parameters> ed25519_parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ABSL_CHECK_OK(ed25519_parameters);
+  absl::StatusOr<Ed25519PublicKey> ed25519_public_key =
+      Ed25519PublicKey::Create(
+          *ed25519_parameters, HexDecodeOrDie(kHexMlDsa44Ed25519Pub),
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ABSL_CHECK_OK(ed25519_public_key);
+
+  internal::SecretBuffer ed25519_private_key_bytes(
+      HexDecodeOrDie(kHexMlDsa44Ed25519Priv));
+  absl::StatusOr<Ed25519PrivateKey> ed25519_private_key =
+      Ed25519PrivateKey::Create(
+          *ed25519_public_key,
+          RestrictedData(SecretData(std::move(ed25519_private_key_bytes)),
+                         InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess());
+  ABSL_CHECK_OK(ed25519_private_key);
+
+  std::unique_ptr<SignaturePrivateKey> classical_private_key =
+      std::make_unique<Ed25519PrivateKey>(*ed25519_private_key);
+
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa44Ed25519Signature);
+}
+
+// Test vector from
+// https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14#appendix-E.
+constexpr absl::string_view kHexMlDsa44PubForEcdsaP256 =
+    "d2d4b1c579468af6e97e40f3fef407cb6c1783f5e38a85f168a112383dd346c7048d4dc521"
+    "0217acf9e60b2c6290a7c17ae793f6da7401d33bbb784ffbd80af99ef51aec03e7d860510d"
+    "3e004bd5d646b2f3d6f6d74e2904fa1b06e92372aca7e1739e2e200e383a26cc19023da36e"
+    "3656699ed0d8e26a98252ccf033b6a94e8f0b12adf59eab01c0aaf08d69001fa67bc4fb91b"
+    "5674704e284150f98de1937c1681e93740ab75e42291123014e6ed8066c971b7a0bed2b39b"
+    "233250a0e40f0a5cf66c837e9fcc0cfcc4c8d9bb0595ecfc39603e5282ee4adb6423b2df8a"
+    "c1ac7b8117332941ea2ca2d47f0a62b8a90f7394b6cc0691c22e8ddec8cacca4337b1d1fbe"
+    "35f74964277c019e7a841442167ffbc508f3f19346eee8870842467fd19387c49acdedeb6a"
+    "8566cbe9a8fb4657589ac08f0cfe3247f5545e4b4ab610f443cebf187d7b9717b280ffa121"
+    "acef737476ef1ed3d176c1a71b02fe0dc83a39e3d892f74f9e6ec9f8fcc5e6a49fc361d127"
+    "64d126130ab66f22f12b2fbd9495348855a4ca743b060222ccc713edec1f36102244a091bf"
+    "a95f9fb01a85257e2340388937c1add7f396535d9ad2ea9be6074c8177967cac5c3573c358"
+    "6070b5811ef6278a79ca0821c25ec4959f867bb1e73359eb3c79bf9717bb7c0d6343704d00"
+    "387418d86209e77db9679c312c2366521e1e4c1b0b2d7141e27478e3d45847fff9a1a120e1"
+    "0f5130bdb501c140893de38c5b398636651c453f4c22246b81680d92d40fd5320dc93989b4"
+    "681f69ae7a971602ec128d6d78df80bfe7cf8219daa596703c51c061d43a308b6f287ed9c1"
+    "e82b86cb597623acffa4955a70eb60c08e59454e813211967a06d600a5c374c68c8383087a"
+    "0fcd2fee35e49b4d520f90a8085ca0eb39f9b46381751b305105448ff2c4670717fbdbf453"
+    "c064fddec84c0c6dfa1a6ad2b858a35dbc5c8b46170ab3eb1ee6b0cb7390938aa96ebca797"
+    "0aaaf0d65429df948d7b1a860fe3962c5e6addc8e2ff22f2f61d5782b9569687214886d207"
+    "e48253afe6fae8c41c902d8b7acf73b8e3d9b3b3d933772170680a54486a7c984bf61feda9"
+    "14937422d2fd20781b82fae766a8a628a7eee5f84b1d9bd5d6bcd0ffa1400a592a1b6ce493"
+    "fe50f8ed206eb76bfc4c187bc2468e4a8e34cea54796320c6e60ff677b5c805266ceb98444"
+    "93cea3c92fb4f3c190415037f9c7ddbef60694206633eb92508d3fa5564ac01b05506bbc31"
+    "6241fb70d9add2cd5ea6b9d3dd9a238b7cd36e737ef910326ec1be1f0ad2101fce3ab00d55"
+    "1f215e6098385b17f16789d43a78d1bd198aaa8fc3b6c03604fc26ea925cad3b3420944c55"
+    "6492b0936974c8e73580430cd09c576013061e2179f6caea6735d2cef17293e1e48bc27efd"
+    "d8d1be031891d1154526551679ddf9fcf322d56421fa28e8f86be6dabe781499f9de1dbb90"
+    "5cd1a6fd9bc13bbf2b4711366a1d9af36757723ecdafa3b6cc1ac69bad0e400f4a39dac500"
+    "33502d1281b92b3c2c5ec4a24f30b3ad83f4df028c78ce22999bb5789c726e1ee048619ae2"
+    "a1ffb517f9d901b90e733274d483bbc069d86da5f4ec9e8498dc6fae6b5e86df48df266946"
+    "1efd867e690aa5dfb27b807cd3c7c2e733e143ef8abee7cf75f6f85b640516ef6601e8c9af"
+    "d73e4df913014aaa9938b11b5de529eb0164e0e5c6fd3dc1f2ae83e9f697e14320078c7fb5"
+    "ee5f8adbf515811f0450b10de1515c8381d4c17de21738010559441e8bf5c55766b18be922"
+    "ee2d8f9030e1948c35f954a21a41e3d86e929b76afc9aa034a3bc4b805567dd27fc858abf4"
+    "a96b161066c2c7d6df762074341abe6cd3";
+constexpr absl::string_view kHexMlDsa44PrivSeedForEcdsaP256 =
+    "c73679c3fe307c7aa1ea2fbd47e401434005b2d35a5a2734cf641ea2a9cbdec5";
+constexpr absl::string_view kHexMlDsa44EcdsaP256PubX =
+    "caf258b19db3284bac11b0407ae7e23c3814981fafe126e67d1c983251820a58";
+constexpr absl::string_view kHexMlDsa44EcdsaP256PubY =
+    "174157a8edd5ad789d77f750bb1db055d257619c041f49a9d47ce43a22d48db4";
+constexpr absl::string_view kHexMlDsa44EcdsaP256Priv =
+    "b94e7609a7176abafbd4a34fabae42b091e44d9e46e67fca566c2a188a63c65f";
+constexpr absl::string_view kHexMlDsa44EcdsaP256Signature =
+    "2c534dc369f19e41517d27c823a364072029e066699b978029d37ff85d53b56803adea45c9"
+    "5272fd6b1572cb455c88b62ee1e5f0734bcce62af1732ba9a346529b6c7352f9dd025677a0"
+    "fb168de0726a51a6d511e616a574f3209398bfffea8d383dfd3964f6127c4ef62230c2fd26"
+    "52ec3575ede4b472553623449b4ef0f24991cc9d6c6a61566d359a0871ee10a477a7259f72"
+    "1c911eae4751cdb399c91887b7f3ecef43938264d11eec21c29189074f2a300ed8c930d037"
+    "2fb71d85e69ebbf888ee4a582c190af72379888919ef4110fcc4666b4ffbf0690ee65f8b75"
+    "4059b3d03b96f4d881464c98f039ffbf5061b56e2ed2de05ae70c4003d181445b68081939b"
+    "4de8ae330471db408f33a1210d7168b88badcf0a36f964556b5abd87629af35aefc81147b4"
+    "ffa4b2fad7dc129c429184a28f150674d84c79531c4f81568cd362c30b6f746aa16b0acfe9"
+    "7cbf4bf5f6adf011463680861409f9894dfc62375375d321df3ea40b71ce9123311bfa6149"
+    "124fbaef1ff09d4bdbe3c270c69f134a5ff0e5aea04774b912b3744a0d15736f649b5af508"
+    "3fa0b0de40789779f2cc49d1e30ab829d13974e7e5c23aa84a7e78bde394925b770f8ec31e"
+    "9e0116ad43f00dab37db2d3b4da3e11188ef88c000031772efe2cc70552f9849d552b3e731"
+    "465a6a5cb2db1942b7b8b114f0d268bc9963274fb9f8f00742f12658d9e18cbb992a14565d"
+    "bf4a084263585214f2129a41ce9a625ab174e4fbd6a8f9cdeaa34a2929290115d163f7ab51"
+    "1aa0b2f065ea89e89b37df6a53639a078a2e9eeff1fa4261ab3a1e48ea4b8c01f6bec5d8df"
+    "ad3fdbaf9d1b04cfae26fd32bbb2441ec8095781739568ded72c2ce1f6fd482a68a6e469db"
+    "3254213160f0f42865547860d9c33748b1de750c04c54ea32bd83f62f9acf1739bb8056c04"
+    "94c1e708995260769249e23793db5f5c535d9bb38d88ab66d383631d4bb4fd785bc19fdbb1"
+    "7cf3d5210713ebe7a5a2d898dbcf77b9d94bd41437c18c1a0178af4a8383ecebef1d489d6a"
+    "9de188475b0c62457ebe111b3b7ae772fe6d2973671fe7b94caf1da9867447910e05c0386a"
+    "3b034d20c6fb9db00a47dc6eac4f089b3e2e52d4d2ca4499171cc7b0f7b7dceaf19b470c1d"
+    "6751490baeb2bb787a28d94379b5d4e8ac9e0b690d61af55cd6d4fd08d23909ec5e197baa7"
+    "de4b30aabf6019a205e6be44c6206f2b075370a621118ffedbea01818b2841d81bf13b5403"
+    "5cabdc55660abdad881587a2b8f0c90b491dd10b5ce5f3671dd56594ac7dd490df3def46f4"
+    "a240dd643bad9e85375337d90f73bec72c6faf745ce66ad5f1f649b537054103ca88327737"
+    "b46a76cfbbe342366360ed5718c71f83dac2919d11917bc93d927342f6c11851b6a1efba3d"
+    "b9bfcf5bf57137c17fdce3afdadc8cae2efb13dc782e7d08624d32fb7b5fb0a07a7186493b"
+    "41afe60980420b2035b9646a0af01658d5c0c7074484d765b01f31c9ec57e20e0baf97f86c"
+    "b979e6e4f8ef7f581fcee18b3a4bbc8286f243be70dc11d7e45651b8d9b8f1794b0c91c98d"
+    "5c40375178b7de871234031a89747b5b234f2d054400f219061ab9e39361ad13f52b9ac23c"
+    "c2e073724e139219a341b59705d4901e4bcb34dfdf79be1258b313f25a2a7ceeca95b0af00"
+    "b9868603ea39285d5629b9b99453c8919c9349d833f283ee6ab4e4d2632c2a388d3409c1c4"
+    "2edac6f774231dc4cde7e80d0bb555c8b32f3eb179acf03ac8c2003893401218cdfa0ec6c4"
+    "07bd531f91c4ae9fa4d5009d2f0ed858dd7f07ad00d094595563080eb75081c9c8f1176a4d"
+    "8a7a76996bb235177029c2229f47052244109c09c8deb079fde5fb5cc76ebe99913b9163c8"
+    "92e16a3a4db809240ce25fa552e8e17d1e87052da76bb62151f1dfc59fb6e1827a597dd40a"
+    "19847157a0299f560ed945ca8f63cc3565997303c505b58aac6f14c09de9e943f55f2b5b11"
+    "28127e8bfdeb1862386b26a6fe8f513b6dfab610665f7863920380a1111553cb9d1609facf"
+    "819833051fa022328b08988521cb06c14b1c4bd30b13a321077139de826e71ae3571187f05"
+    "cbd89ba7b57ae7671447d0b2bb9492713b29e4852dd06e8d86a78b0a48c66e2070662b7e8f"
+    "1690a6c4a527b937b8a3d1801e7627341a7b17ba770eb3df21537ad37796da6dc175b48ab9"
+    "8c6ee195678caa10e24843e13cc2008c7479f05ff867843c9a008f844d0f06ac6f8a8b3636"
+    "df746369246484e4a3b7d75ba888f7f38d76a3c218b66bbc95d86791adec70ade91d32e3bf"
+    "71a76d4a46bd2bd3778b9989becafdf0b78ecdc6ff3a8fe5cc2940ee3c72c1221fc9845b82"
+    "968b82768f6183679f69968cfb765d2a5b3f1f16e426c1a456611fe3a5301da75457b3dda2"
+    "2f0b003d9221e8d7bbcfae43a91187a13ae60882ac9890da0bc2755f15067e5d5f00ad1c17"
+    "a20149a483b60c990717635d1dc3c49ad3d03ce60479ada86f253811c6c01501dc54b603d2"
+    "063efabe0c1971c045718b56bbbbfebfae978af7468690eb57ea73643d2e711afea96ef44e"
+    "8b22472b07b25c3ef6b753b1ee8c5d88b0dc99dbb01d33dfc1e898b904090cb5c4c878e6f5"
+    "1720c5cf5bc150065af2d11e7b17023165e2e185c3ae44c6d045a04dafd69505ad7c3dea74"
+    "f47257afa46b397de93197f6169cb82a7aba3507f6567f469e1459ede302d8733b5fc42337"
+    "226bc320aead6b32f71b0ba36f5a4f403ac19e2e4c172b0086107e36d1b747c16b17eec4e6"
+    "560487c2084cb7c0d7992817865a621b1181532ec4af690bdb048608fb737e38942d71b406"
+    "e5e660d63470b7f8f65db6b4b932e83bc2176a1d89112b3352e787715f2d53a3ef94311216"
+    "001d5f21770598982deeca5c66640045f81302630a0d6b62ebe77fbc1ab3fa11e854f526ba"
+    "32806b31755ec7570481c1cf36be1f67e0542631966f94aa4f9fd6020b5e6887f83af29e65"
+    "adee6b5fbb22c7e35a5219fcb83004ed113b2edd20345f3ab4a414db200aaa8519f6ccd2be"
+    "9fbae91c1a56d5a0823ca2b1d7d593a31f85c6946372b9cd65eb340d563000011d9aa4210f"
+    "dd41714b96897517d345d3621f697148714617ae8c278376f7e65acc3275614015982e4472"
+    "c1e37e3a4eeed0388af04f363cf0696ec4a870b51033f0527e2cf4b9c7943588c2931af4b5"
+    "9614b8df8c0196b4d52823d8e895afdc06ae20bfbe90f1c1c7e515d9d7370346384da8f639"
+    "4700f8dc7989c797abf26a7254eb760369313aca43e9115d52e3a6ac6f13f29ef27e6bf8dc"
+    "8a1fc124e10a282c333c5a797aaddff2f41c222c3b45464a6d6f8e919399b1c0f1f4ff1e25"
+    "3464789095a0acbbbee6f43c435c5d788892a2b0c6c8c9f2f3fa0000000000000000000000"
+    "00000000000000000000000c1e2b3a3044022060de1e100e0ae32775bc6715895a2904aa95"
+    "9a043c03340da1817f844e6505c1022034d567287afb29f16311919fa48a57c3c7558a4ec5"
+    "42104c69ec35afd79bbf58";
+
+SignatureTestVector CreateMlDsa44EcdsaP256TestVector(
+    CompositeMlDsaParameters::Variant variant) {
+  absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa44, MlDsaParameters::Variant::kNoPrefix);
+  ABSL_CHECK_OK(ml_dsa_parameters);
+
+  absl::StatusOr<MlDsaPublicKey> ml_dsa_public_key = MlDsaPublicKey::Create(
+      *ml_dsa_parameters, HexDecodeOrDie(kHexMlDsa44PubForEcdsaP256),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ABSL_CHECK_OK(ml_dsa_public_key);
+
+  internal::SecretBuffer private_seed_bytes(
+      HexDecodeOrDie(kHexMlDsa44PrivSeedForEcdsaP256));
+  absl::StatusOr<MlDsaPrivateKey> ml_dsa_private_key = MlDsaPrivateKey::Create(
+      *ml_dsa_public_key,
+      RestrictedData(SecretData(std::move(private_seed_bytes)),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ABSL_CHECK_OK(ml_dsa_private_key);
+
+  absl::StatusOr<EcdsaParameters> ecdsa_parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ABSL_CHECK_OK(ecdsa_parameters);
+
+  absl::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
+      *ecdsa_parameters,
+      EcPoint(BigInteger(HexDecodeOrDie(kHexMlDsa44EcdsaP256PubX)),
+              BigInteger(HexDecodeOrDie(kHexMlDsa44EcdsaP256PubY))),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ABSL_CHECK_OK(ecdsa_public_key);
+
+  internal::SecretBuffer ecdsa_private_key_bytes(
+      HexDecodeOrDie(kHexMlDsa44EcdsaP256Priv));
+  absl::StatusOr<EcdsaPrivateKey> ecdsa_private_key = EcdsaPrivateKey::Create(
+      *ecdsa_public_key,
+      RestrictedData(SecretData(std::move(ecdsa_private_key_bytes)),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ABSL_CHECK_OK(ecdsa_private_key);
+
+  std::unique_ptr<SignaturePrivateKey> classical_private_key =
+      std::make_unique<EcdsaPrivateKey>(*ecdsa_private_key);
+
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa44,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa44EcdsaP256Signature);
+}
+
+// Test vector from
+// https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14#appendix-E.
 constexpr absl::string_view kHexMlDsa65PubForEd25519 =
     "9491ea15c863e26fa3c4ba30e00446cff560af06b486922b3cc813381c7a0e8b8f99d3b43f"
     "cf2e9c258c0ed1b864591102482191d5f3b0d4cda97ccdc2cfcfca90f8c3cea5f8a38607f0"
@@ -3158,6 +3494,10 @@ SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector(
 
 std::vector<SignatureTestVector> CreateCompositeMlDsaTestVectors() {
   return {
+      CreateMlDsa44Ed25519TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa44EcdsaP256TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
       CreateMlDsa65Ed2551TestVector(
           CompositeMlDsaParameters::Variant::kNoPrefix),
       CreateMlDsa65EcdsaP256TestVector(
@@ -3180,6 +3520,9 @@ std::vector<SignatureTestVector> CreateCompositeMlDsaTestVectors() {
           CompositeMlDsaParameters::Variant::kNoPrefix),
       CreateMlDsa87EcdsaRsa4096PssTestVector(
           CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa44Ed25519TestVector(CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa44EcdsaP256TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
       CreateMlDsa65Ed2551TestVector(CompositeMlDsaParameters::Variant::kTink),
       CreateMlDsa65EcdsaP256TestVector(
           CompositeMlDsaParameters::Variant::kTink),

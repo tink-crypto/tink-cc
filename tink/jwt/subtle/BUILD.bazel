@@ -176,3 +176,34 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_jwt_ecdsa_public_key_sign",
+    srcs = ["create_jwt_ecdsa_public_key_sign.cc"],
+    hdrs = ["create_jwt_ecdsa_public_key_sign.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/jwt:jwt_ecdsa_private_key",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt/internal:jwt_ecdsa_sign",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_jwt_ecdsa_public_key_sign_test",
+    srcs = ["create_jwt_ecdsa_public_key_sign_test.cc"],
+    deps = [
+        ":create_jwt_ecdsa_public_key_sign",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt:jwt_public_key_verify",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "//tink/jwt:verified_jwt",
+        "//tink/jwt/internal:jwt_ecdsa_verify",
+        "//tink/jwt/internal/testing:jwt_ecdsa_test_vectors",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

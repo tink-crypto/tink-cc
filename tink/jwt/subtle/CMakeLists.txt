@@ -171,3 +171,34 @@ tink_cc_test(
     tink::jwt::verified_jwt
     tink::jwt::internal::testing::jwt_hmac_test_vectors
 )
+
+tink_cc_library(
+  NAME create_jwt_ecdsa_public_key_sign
+  SRCS
+    create_jwt_ecdsa_public_key_sign.cc
+    create_jwt_ecdsa_public_key_sign.h
+  DEPS
+    absl::statusor
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::internal::jwt_ecdsa_sign
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_jwt_ecdsa_public_key_sign_test
+  SRCS
+    create_jwt_ecdsa_public_key_sign_test.cc
+  DEPS
+    tink::jwt::subtle::create_jwt_ecdsa_public_key_sign
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+    tink::jwt::internal::jwt_ecdsa_verify
+    tink::jwt::internal::testing::jwt_ecdsa_test_vectors
+)

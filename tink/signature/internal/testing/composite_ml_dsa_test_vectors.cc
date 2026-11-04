@@ -17,13 +17,14 @@
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -65,6 +66,40 @@ const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
 constexpr absl::string_view kHexMessage =
     "54686520717569636b2062726f776e20666f78206a756d7073206f76657220746865206c61"
     "7a7920646f672e";
+
+namespace {
+
+SignatureTestVector CreateCompositeMlDsaTestVector(
+    CompositeMlDsaParameters::MlDsaInstance ml_dsa_instance,
+    CompositeMlDsaParameters::ClassicalAlgorithm classical_algorithm,
+    CompositeMlDsaParameters::Variant variant,
+    const MlDsaPrivateKey& ml_dsa_private_key,
+    std::unique_ptr<SignaturePrivateKey> classical_private_key,
+    absl::string_view hex_signature) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(ml_dsa_instance, classical_algorithm,
+                                       variant);
+  ABSL_CHECK_OK(parameters);
+
+  absl::optional<int> id_requirement = absl::nullopt;
+  if (variant != CompositeMlDsaParameters::Variant::kNoPrefix) {
+    id_requirement = 0x41424344;
+  }
+
+  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
+      CompositeMlDsaPrivateKey::Create(*parameters, ml_dsa_private_key,
+                                       std::move(classical_private_key),
+                                       id_requirement, GetPartialKeyAccess());
+  ABSL_CHECK_OK(composite_ml_dsa_private_key);
+
+  return SignatureTestVector(
+      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
+      absl::StrCat(composite_ml_dsa_private_key->GetOutputPrefix(),
+                   HexDecodeOrDie(hex_signature)),
+      HexDecodeOrDie(kHexMessage));
+}
+
+}  // namespace
 
 // Test vector from
 // https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14#appendix-E.
@@ -222,7 +257,8 @@ constexpr absl::string_view kHexMlDsa65Ed25519Signature =
     "087c90f4cad5ed5dce888de46fb37df48a861072de770367ce90a16eefc48cb5b580d7a19b"
     "46d21af94a05";
 
-SignatureTestVector CreateMlDsa65Ed2551TestVector() {
+SignatureTestVector CreateMlDsa65Ed2551TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -264,22 +300,11 @@ SignatureTestVector CreateMlDsa65Ed2551TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<Ed25519PrivateKey>(*ed25519_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65Ed25519Signature), HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65Ed25519Signature);
 }
 
 // Test vector from
@@ -440,7 +465,8 @@ constexpr absl::string_view kHexMlDsa65EcdsaP256Signature =
     "e9bf9c5593c607d0d6189e76e891d59402206e4e966dc46593bd60f5acb47239e7579ed20f"
     "d8e516e19ed4b97437f83aa120";
 
-SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
+SignatureTestVector CreateMlDsa65EcdsaP256TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -489,23 +515,11 @@ SignatureTestVector CreateMlDsa65EcdsaP256TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<EcdsaPrivateKey>(*ecdsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65EcdsaP256Signature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65EcdsaP256Signature);
 }
 
 // Test vector from
@@ -670,7 +684,8 @@ constexpr absl::string_view kHexMlDsa65EcdsaP384Signature =
     "604e737e2b9983e0cb6e287aad0924a479316d41ba66c6c2104af5f495775ce3146a42809a"
     "9b61732fc05ab1";
 
-SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
+SignatureTestVector CreateMlDsa65EcdsaP384TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -719,23 +734,11 @@ SignatureTestVector CreateMlDsa65EcdsaP384TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<EcdsaPrivateKey>(*ecdsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65EcdsaP384Signature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65EcdsaP384Signature);
 }
 
 // Test vector from
@@ -957,7 +960,8 @@ constexpr absl::string_view kHexMlDsa65Rsa3072PssSignature =
     "83d9b27ecdea7b71d865d57f84bf3844de2f7f8d8d46c5bb72f156497f2307e3590b8e35c4"
     "326c46e18a939b6d7c88dae4b040063258f00bf35bc99a946aace61651eb";
 
-SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector() {
+SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -1017,23 +1021,11 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<RsaSsaPssPrivateKey>(*rsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65Rsa3072PssSignature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65Rsa3072PssSignature);
 }
 
 // Test vector from
@@ -1270,7 +1262,8 @@ constexpr absl::string_view kHexMlDsa65Rsa4096PssSignature =
     "a16d53c2171f8811bc01839c036f30abbf022cd785e01e7b6fb7e1a040667db7b3d40684be"
     "f581ddd6b7895e8ec553";
 
-SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector() {
+SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -1330,23 +1323,11 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<RsaSsaPssPrivateKey>(*rsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65Rsa4096PssSignature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65Rsa4096PssSignature);
 }
 
 // Test vector from
@@ -1568,7 +1549,8 @@ constexpr absl::string_view kHexMlDsa65Rsa3072Pkcs1Signature =
     "a0db425434fdf09245314820164dfcb81d59f58dd7658f93f168c5ed511894a6ef4ec5dd6a"
     "35464d7a799c39ef819c4d36e98271e9320505587a25cedd333fe76c34a7";
 
-SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector() {
+SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -1626,23 +1608,11 @@ SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<RsaSsaPkcs1PrivateKey>(*rsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65Rsa3072Pkcs1Signature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65Rsa3072Pkcs1Signature);
 }
 
 // Test vector from
@@ -1879,7 +1849,8 @@ constexpr absl::string_view kHexMlDsa65Rsa4096Pkcs1Signature =
     "2d99e9984b3cceebc280f221621c8e9e828b14dfaf4d46b6a65ba6e83fbd0e9e9fd76eeac5"
     "f22143539b5e1279f244";
 
-SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector() {
+SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -1937,23 +1908,11 @@ SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<RsaSsaPkcs1PrivateKey>(*rsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa65Rsa4096Pkcs1Signature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa65Rsa4096Pkcs1Signature);
 }
 
 // Test vector from
@@ -2171,7 +2130,8 @@ constexpr absl::string_view kHexMlDsa87EcdsaP384Signature =
     "963140bb0669d97624d4f967466739da38023100c9c81b728a27b7341d9355d9c6b03d88b3"
     "95afc736488e9a73dc963b8ca882258de45ef74adbc44958676a5189a14f8e";
 
-SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
+SignatureTestVector CreateMlDsa87EcdsaP384TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -2220,23 +2180,11 @@ SignatureTestVector CreateMlDsa87EcdsaP384TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<EcdsaPrivateKey>(*ecdsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa87EcdsaP384Signature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa87EcdsaP384Signature);
 }
 
 // Test vector from
@@ -2455,7 +2403,8 @@ constexpr absl::string_view kHexMlDsa87EcdsaP521Signature =
     "0145d39d0e280ca4db32d616f26de22f2ee427876448d6177aeefee12ac19b354ad81c7d69"
     "82503d19cf1d581a46216e85d99146d4ae244c942329f5c5b02117349f";
 
-SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
+SignatureTestVector CreateMlDsa87EcdsaP521TestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -2504,23 +2453,11 @@ SignatureTestVector CreateMlDsa87EcdsaP521TestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<EcdsaPrivateKey>(*ecdsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa87EcdsaP521Signature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa87EcdsaP521Signature);
 }
 
 // Test vector from
@@ -2796,7 +2733,8 @@ constexpr absl::string_view kHexMlDsa87Rsa3072PssSignature =
     "8c0410673ffd00a6d5e224fabaa16278231ec476b6a687b18a0b68ed05773b867eeb6dee5f"
     "e370ea7d3d3ce15a7dc60dc4a65fa4b2";
 
-SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector() {
+SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -2856,23 +2794,11 @@ SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<RsaSsaPssPrivateKey>(*rsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa87Rsa3072PssSignature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa87Rsa3072PssSignature);
 }
 
 // Test vector from
@@ -3162,7 +3088,8 @@ constexpr absl::string_view kHexMlDsa87Rsa4096PssSignature =
     "38c08dfbc1cafa6c9407818678bf04d0afa3d7246ece71d9b2761df4f86ac0333a1665d3cf"
     "8ee059bb302ea829c48771326be4395b2e9529a234f3e21eb09e137192f13aa8e0";
 
-SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector() {
+SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector(
+    CompositeMlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> ml_dsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa87, MlDsaParameters::Variant::kNoPrefix);
   ABSL_CHECK_OK(ml_dsa_parameters);
@@ -3222,38 +3149,58 @@ SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector() {
   std::unique_ptr<SignaturePrivateKey> classical_private_key =
       std::make_unique<RsaSsaPssPrivateKey>(*rsa_private_key);
 
-  absl::StatusOr<CompositeMlDsaParameters> parameters =
-      CompositeMlDsaParameters::Create(
-          CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
-          CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss,
-          CompositeMlDsaParameters::Variant::kNoPrefix);
-  ABSL_CHECK_OK(ml_dsa_parameters);
-
-  absl::StatusOr<CompositeMlDsaPrivateKey> composite_ml_dsa_private_key =
-      CompositeMlDsaPrivateKey::Create(
-          *parameters, *ml_dsa_private_key, std::move(classical_private_key),
-          /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
-  ABSL_CHECK_OK(composite_ml_dsa_private_key);
-
-  return SignatureTestVector(
-      std::make_unique<CompositeMlDsaPrivateKey>(*composite_ml_dsa_private_key),
-      HexDecodeOrDie(kHexMlDsa87Rsa4096PssSignature),
-      HexDecodeOrDie(kHexMessage));
+  return CreateCompositeMlDsaTestVector(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa87,
+      CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss, variant,
+      *ml_dsa_private_key, std::move(classical_private_key),
+      kHexMlDsa87Rsa4096PssSignature);
 }
 
 std::vector<SignatureTestVector> CreateCompositeMlDsaTestVectors() {
   return {
-      CreateMlDsa65Ed2551TestVector(),
-      CreateMlDsa65EcdsaP256TestVector(),
-      CreateMlDsa65EcdsaP384TestVector(),
-      CreateMlDsa65EcdsaRsa3072PssTestVector(),
-      CreateMlDsa65EcdsaRsa4096PssTestVector(),
-      CreateMlDsa65EcdsaRsa3072Pkcs1TestVector(),
-      CreateMlDsa65EcdsaRsa4096Pkcs1TestVector(),
-      CreateMlDsa87EcdsaP384TestVector(),
-      CreateMlDsa87EcdsaP521TestVector(),
-      CreateMlDsa87EcdsaRsa3072PssTestVector(),
-      CreateMlDsa87EcdsaRsa4096PssTestVector(),
+      CreateMlDsa65Ed2551TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65EcdsaP256TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65EcdsaP384TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65EcdsaRsa3072PssTestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65EcdsaRsa4096PssTestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65EcdsaRsa3072Pkcs1TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65EcdsaRsa4096Pkcs1TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa87EcdsaP384TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa87EcdsaP521TestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa87EcdsaRsa3072PssTestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa87EcdsaRsa4096PssTestVector(
+          CompositeMlDsaParameters::Variant::kNoPrefix),
+      CreateMlDsa65Ed2551TestVector(CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa65EcdsaP256TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa65EcdsaP384TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa65EcdsaRsa3072PssTestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa65EcdsaRsa4096PssTestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa65EcdsaRsa3072Pkcs1TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa65EcdsaRsa4096Pkcs1TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa87EcdsaP384TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa87EcdsaP521TestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa87EcdsaRsa3072PssTestVector(
+          CompositeMlDsaParameters::Variant::kTink),
+      CreateMlDsa87EcdsaRsa4096PssTestVector(
+          CompositeMlDsaParameters::Variant::kTink),
   };
 }
 

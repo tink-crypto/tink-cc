@@ -19,6 +19,7 @@
 
 #include <vector>
 
+#include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 
 namespace crypto {
@@ -28,17 +29,39 @@ namespace internal {
 // Composite ML-DSA test vectors from
 // https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14#appendix-E.
 
-SignatureTestVector CreateMlDsa65Ed2551TestVector();
-SignatureTestVector CreateMlDsa65EcdsaP256TestVector();
-SignatureTestVector CreateMlDsa65EcdsaP384TestVector();
-SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector();
-SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector();
-SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector();
-SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector();
-SignatureTestVector CreateMlDsa87EcdsaP384TestVector();
-SignatureTestVector CreateMlDsa87EcdsaP521TestVector();
-SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector();
-SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector();
+SignatureTestVector CreateMlDsa65Ed2551TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa65EcdsaP256TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa65EcdsaP384TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa65EcdsaRsa3072PssTestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa65EcdsaRsa4096PssTestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa65EcdsaRsa3072Pkcs1TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa65EcdsaRsa4096Pkcs1TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa87EcdsaP384TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa87EcdsaP521TestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa87EcdsaRsa3072PssTestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
+SignatureTestVector CreateMlDsa87EcdsaRsa4096PssTestVector(
+    CompositeMlDsaParameters::Variant variant =
+        CompositeMlDsaParameters::Variant::kNoPrefix);
 
 // Returns a vector of all composite ML-DSA test vectors.
 std::vector<SignatureTestVector> CreateCompositeMlDsaTestVectors();

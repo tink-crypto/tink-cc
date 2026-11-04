@@ -221,8 +221,8 @@ tink_cc_library(
   DEPS
     tink::signature::internal::testing::signature_test_vector
     absl::absl_check
-    absl::memory
     absl::statusor
+    absl::strings
     absl::string_view
     absl::optional
     tink::core::big_integer

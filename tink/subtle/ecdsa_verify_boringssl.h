@@ -28,7 +28,6 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 
 namespace crypto {
 namespace tink {
@@ -39,12 +38,6 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
  public:
   static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
       const EcdsaPublicKey& public_key);
-
-  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
-      const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding) {
-    return New(ec_key, hash_type, encoding, "", "");
-  }
 
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
@@ -57,12 +50,6 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
 
  protected:
   EcdsaVerifyBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
-      const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
-      absl::string_view message_suffix);
 };
 
 }  // namespace subtle

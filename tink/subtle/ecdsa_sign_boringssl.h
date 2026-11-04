@@ -27,7 +27,6 @@
 #include "tink/public_key_sign.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -40,12 +39,6 @@ class EcdsaSignBoringSsl : public PublicKeySign {
   static absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> New(
       const EcdsaPrivateKey& private_key);
 
-  static absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> New(
-      const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding) {
-    return New(ec_key, hash_type, encoding, "", "");
-  }
-
   // Computes the signature for 'data'.
   absl::StatusOr<std::string> Sign(absl::string_view data) const override = 0;
 
@@ -56,12 +49,6 @@ class EcdsaSignBoringSsl : public PublicKeySign {
 
  protected:
   EcdsaSignBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> New(
-      const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
-      absl::string_view message_suffix);
 };
 
 }  // namespace subtle

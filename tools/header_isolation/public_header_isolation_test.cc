@@ -436,6 +436,8 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/decrypting_random_access_stream.h"
 #include "tink/subtle/ec_util.h"
+#include "tink/subtle/ecdsa_sign_boringssl.h"
+#include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/subtle/ecies_hkdf_recipient_kem_boringssl.h"
 #include "tink/subtle/ecies_hkdf_sender_kem_boringssl.h"
 #include "tink/subtle/ed25519_sign_boringssl.h"

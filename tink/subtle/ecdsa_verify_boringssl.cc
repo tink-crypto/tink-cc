@@ -47,7 +47,6 @@
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 
 namespace crypto {
 namespace tink {
@@ -206,28 +205,6 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
                                          EcdsaParameters::Variant::kLegacy
                                      ? std::string(1, 0)
                                      : "");
-}
-
-absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
-    const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-    EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
-    absl::string_view message_suffix) {
-  // Check curve.
-  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
-                        internal::EcGroupFromCurveType(ec_key.curve));
-  internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
-  EC_KEY_set_group(key.get(), group.get());
-
-  // Check key.
-  ABSL_ASSIGN_OR_RETURN(
-      internal::SslUniquePtr<EC_POINT> pub_key,
-      internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y));
-  if (!EC_KEY_set_public_key(key.get(), pub_key.get())) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
-  }
-  return NewEcdsaVerifyBoringSsl(std::move(key), hash_type, encoding,
-                                 output_prefix, message_suffix);
 }
 
 }  // namespace subtle

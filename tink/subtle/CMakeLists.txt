@@ -233,7 +233,6 @@ tink_cc_library(
     ecdsa_sign_boringssl.h
   DEPS
     tink::subtle::common_enums
-    tink::subtle::subtle_util_boringssl
     absl::status
     absl::status_macros
     absl::statusor
@@ -264,7 +263,6 @@ tink_cc_library(
     ecdsa_verify_boringssl.h
   DEPS
     tink::subtle::common_enums
-    tink::subtle::subtle_util_boringssl
     absl::status
     absl::status_macros
     absl::statusor

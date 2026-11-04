@@ -50,7 +50,6 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/internal/ecdsa_raw_sign_boringssl.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 
 namespace crypto {
 namespace tink {
@@ -145,25 +144,6 @@ absl::StatusOr<std::string> EcdsaSignBoringSslImpl::Sign(
 }
 
 }  // namespace
-
-absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
-    const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-    EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
-    absl::string_view message_suffix) {
-  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<EcdsaSignBoringSsl>());
-
-  // Check if the hash type is safe to use.
-  ABSL_RETURN_IF_ERROR(internal::IsHashTypeSafeForSignature(hash_type));
-  ABSL_ASSIGN_OR_RETURN(const EVP_MD* hash,
-                        internal::EvpHashFromHashType(hash_type));
-
-  ABSL_ASSIGN_OR_RETURN(
-      std::unique_ptr<internal::EcdsaRawSignBoringSsl> raw_sign,
-      internal::EcdsaRawSignBoringSsl::New(ec_key, encoding));
-
-  return std::make_unique<EcdsaSignBoringSslImpl>(
-      hash, std::move(raw_sign), output_prefix, message_suffix);
-}
 
 absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
     const EcdsaPrivateKey& key) {

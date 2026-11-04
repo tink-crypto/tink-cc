@@ -2096,3 +2096,45 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "jwt_ecdsa_verify",
+    srcs = ["jwt_ecdsa_verify.cc"],
+    hdrs = ["jwt_ecdsa_verify.h"],
+    deps = [
+        ":jwt_public_key_verify_impl",
+        "//tink:partial_key_access",
+        "//tink:public_key_verify",
+        "//tink/jwt:jwt_ecdsa_parameters",
+        "//tink/jwt:jwt_ecdsa_public_key",
+        "//tink/jwt:jwt_public_key_verify",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:verified_jwt",
+        "//tink/subtle:ecdsa_verify_boringssl",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "jwt_ecdsa_verify_test",
+    srcs = ["jwt_ecdsa_verify_test.cc"],
+    deps = [
+        ":jwt_ecdsa_sign",
+        ":jwt_ecdsa_verify",
+        "//tink:partial_key_access",
+        "//tink/jwt:jwt_ecdsa_public_key",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt:jwt_public_key_verify",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "//tink/jwt:verified_jwt",
+        "//tink/jwt/internal/testing:jwt_ecdsa_test_vectors",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

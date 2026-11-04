@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -103,6 +104,11 @@ absl::StatusOr<VerifiedJwt> JwtPublicKeyVerifyImpl::VerifyAndDecodeWithKid(
     return validate_result;
   }
   return VerifiedJwt(*std::move(raw_jwt));
+}
+
+absl::StatusOr<VerifiedJwt> JwtPublicKeyVerifyImpl::VerifyAndDecode(
+    absl::string_view compact, const JwtValidator& validator) const {
+  return VerifyAndDecodeWithKid(compact, validator, kid_);
 }
 
 std::unique_ptr<JwtPublicKeyVerifyImpl> JwtPublicKeyVerifyImpl::WithKid(

@@ -63,6 +63,9 @@ class JwtPublicKeyVerifyImpl : public JwtPublicKeyVerifyInternal {
       absl::string_view compact, const JwtValidator& validator,
       absl::optional<absl::string_view> kid) const override;
 
+  absl::StatusOr<VerifiedJwt> VerifyAndDecode(
+      absl::string_view compact, const JwtValidator& validator) const;
+
  private:
   explicit JwtPublicKeyVerifyImpl(
       std::unique_ptr<crypto::tink::PublicKeyVerify> verify,

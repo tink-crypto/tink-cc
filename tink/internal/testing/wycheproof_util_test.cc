@@ -128,6 +128,23 @@ TEST(WycheproofUtilTest, HasFlag) {
   EXPECT_FALSE(HasFlag(non_list, "FlagA"));
 }
 
+TEST(WycheproofUtilTest, HasAnyFlag) {
+  google::protobuf::Value flags;
+  flags.mutable_list_value()->add_values()->set_string_value("FlagA");
+  flags.mutable_list_value()->add_values()->set_string_value("FlagB");
+  EXPECT_TRUE(HasAnyFlag(flags, {"FlagA", "FlagB"}));
+  EXPECT_TRUE(HasAnyFlag(flags, {"FlagB", "FlagC"}));
+  EXPECT_FALSE(HasAnyFlag(flags, {"FlagC", "FlagD"}));
+
+  google::protobuf::Value empty_list;
+  empty_list.mutable_list_value();
+  EXPECT_FALSE(HasAnyFlag(empty_list, {"FlagA"}));
+
+  google::protobuf::Value non_list;
+  non_list.set_string_value("FlagA");
+  EXPECT_FALSE(HasAnyFlag(non_list, {"FlagA"}));
+}
+
 }  // namespace
 
 }  // namespace wycheproof_testing

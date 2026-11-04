@@ -20,6 +20,8 @@
 #include <string>
 
 #include "google/protobuf/struct.pb.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/statusor.h"
 
@@ -53,6 +55,9 @@ crypto::tink::subtle::EllipticCurveType GetEllipticCurveTypeFromValue(
 
 // Look for a `value` inside an array of flags `flags`.
 bool HasFlag(const google::protobuf::Value& flags, absl::string_view value);
+
+bool HasAnyFlag(const google::protobuf::Value& flags,
+                absl::Span<const absl::string_view> values);
 
 }  // namespace wycheproof_testing
 }  // namespace internal

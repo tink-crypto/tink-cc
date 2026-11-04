@@ -84,6 +84,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::string_view
+    absl::span
     tink::internal::test_file_util
     tink::subtle::common_enums
     tink::util::status

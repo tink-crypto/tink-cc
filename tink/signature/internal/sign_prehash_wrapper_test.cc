@@ -61,6 +61,7 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
+using ::testing::Not;
 
 TEST(SignPrehashWrapperTest, WrapNullPtr) {
   EXPECT_THAT(SignPrehashWrapper().Wrap(nullptr).status(),
@@ -286,48 +287,65 @@ TEST_P(SignPrehashWrapperWycheproofTest,
       parsed_input->fields().at("testGroups");
   for (const google::protobuf::Value& test_group :
        test_groups.list_value().values()) {
-    std::string private_seed_bytes = wycheproof_testing::GetBytesFromHexValue(
-        test_group.struct_value().fields().at("privateSeed"));
-    RestrictedData private_seed(private_seed_bytes,
-                               InsecureSecretKeyAccess::Get());
+    bool initialized = false;
     constexpr uint32_t kKeyId = 0x01020304;
-    absl::StatusOr<MlDsaPrivateKey> private_key =
-        MlDsaPrivateKey::Create(*key_parameters, private_seed,
-                                /*id_requirement=*/kKeyId,
-                                GetPartialKeyAccess());
-    ASSERT_THAT(private_key, IsOk());
-
-    absl::StatusOr<KeysetHandle> private_handle =
-        KeysetHandleBuilder()
-            .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-                *private_key, KeyStatus::kEnabled,
-                /*is_primary=*/true))
-            .Build();
-    ASSERT_THAT(private_handle, IsOk());
-
-    absl::StatusOr<KeysetHandle> public_handle =
-        KeysetHandleBuilder()
-            .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-                private_key->GetPublicKey(), KeyStatus::kEnabled,
-                /*is_primary=*/true))
-            .Build();
-    ASSERT_THAT(public_handle, IsOk());
-
-    absl::StatusOr<std::unique_ptr<Prehash>> prehasher =
-        public_handle->GetPrimitive<Prehash>(config);
-    ASSERT_THAT(prehasher, IsOk());
-
-    absl::StatusOr<std::unique_ptr<SignPrehash>> prehash_signer =
-        private_handle->GetPrimitive<SignPrehash>(config);
-    ASSERT_THAT(prehash_signer, IsOk());
-
-    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-        public_handle->GetPrimitive<PublicKeyVerify>(config);
-    ASSERT_THAT(verifier, IsOk());
+    absl::StatusOr<std::unique_ptr<Prehash>> prehasher;
+    absl::StatusOr<std::unique_ptr<SignPrehash>> prehash_signer;
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier;
 
     for (const google::protobuf::Value& test :
          test_group.struct_value().fields().at("tests").list_value().values()) {
       auto test_fields = test.struct_value().fields();
+
+      if (wycheproof_testing::HasAnyFlag(test_fields.at("flags"),
+                                         {"Internal", "Randomized"})) {
+        continue;
+      }
+
+      if (!initialized) {
+        std::string private_seed_bytes =
+            wycheproof_testing::GetBytesFromHexValue(
+                test_group.struct_value().fields().at("privateSeed"));
+        RestrictedData private_seed(private_seed_bytes,
+                                    InsecureSecretKeyAccess::Get());
+
+        absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+            *key_parameters, private_seed,
+            /*id_requirement=*/kKeyId, GetPartialKeyAccess());
+        if (wycheproof_testing::HasFlag(test_fields.at("flags"),
+                                        "IncorrectPrivateKeyLength")) {
+          ASSERT_THAT(private_key, Not(IsOk()));
+          continue;
+        }
+        ASSERT_THAT(private_key, IsOk());
+
+        absl::StatusOr<KeysetHandle> private_handle =
+            KeysetHandleBuilder()
+                .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                    *private_key, KeyStatus::kEnabled,
+                    /*is_primary=*/true))
+                .Build();
+        ASSERT_THAT(private_handle, IsOk());
+
+        absl::StatusOr<KeysetHandle> public_handle =
+            KeysetHandleBuilder()
+                .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                    private_key->GetPublicKey(), KeyStatus::kEnabled,
+                    /*is_primary=*/true))
+                .Build();
+        ASSERT_THAT(public_handle, IsOk());
+
+        prehasher = public_handle->GetPrimitive<Prehash>(config);
+        ASSERT_THAT(prehasher, IsOk());
+
+        prehash_signer = private_handle->GetPrimitive<SignPrehash>(config);
+        ASSERT_THAT(prehash_signer, IsOk());
+
+        verifier = public_handle->GetPrimitive<PublicKeyVerify>(config);
+        ASSERT_THAT(verifier, IsOk());
+        initialized = true;
+      }
+
       std::string msg =
           wycheproof_testing::GetBytesFromHexValue(test_fields.at("msg"));
 

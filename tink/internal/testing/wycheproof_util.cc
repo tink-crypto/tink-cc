@@ -16,6 +16,7 @@
 
 #include "tink/internal/testing/wycheproof_util.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <fstream>
 #include <iterator>
@@ -122,11 +123,17 @@ std::string GetIntegerFromHexValue(const google::protobuf::Value &val) {
 }
 
 bool HasFlag(const google::protobuf::Value& flags, absl::string_view value) {
+  return HasAnyFlag(flags, {value});
+}
+
+bool HasAnyFlag(const google::protobuf::Value& flags,
+                absl::Span<const absl::string_view> values) {
   if (!flags.has_list_value()) {
     return false;
   }
   for (const google::protobuf::Value& flag : flags.list_value().values()) {
-    if (flag.string_value() == value) {
+    if (std::find(values.begin(), values.end(),
+                  flag.string_value()) != values.end()) {
       return true;
     }
   }

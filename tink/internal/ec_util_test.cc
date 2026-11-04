@@ -69,6 +69,7 @@ using ::crypto::tink::EcdsaParameters;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::
     GetEllipticCurveTypeFromValue;
+using ::crypto::tink::internal::wycheproof_testing::HasFlag;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
@@ -881,19 +882,6 @@ struct EcdhWycheproofTestVector {
   std::string result;
   EcPointFormat format;
 };
-
-// Utility function to look for a `value` inside an array of flags `flags`.
-bool HasFlag(const google::protobuf::Value& flags, absl::string_view value) {
-  if (!flags.has_list_value()) {
-    return false;
-  }
-  for (const google::protobuf::Value& flag : flags.list_value().values()) {
-    if (flag.string_value() == value) {
-      return true;
-    }
-  }
-  return false;
-}
 
 // Reads Wycheproof's ECDH test vectors from the given file `file_name`.
 std::vector<EcdhWycheproofTestVector> ReadEcdhWycheproofTestVectors(

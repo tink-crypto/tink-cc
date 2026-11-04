@@ -51,6 +51,9 @@ crypto::tink::subtle::HashType GetHashTypeFromValue(
 crypto::tink::subtle::EllipticCurveType GetEllipticCurveTypeFromValue(
     const google::protobuf::Value &val);
 
+// Look for a `value` inside an array of flags `flags`.
+bool HasFlag(const google::protobuf::Value& flags, absl::string_view value);
+
 }  // namespace wycheproof_testing
 }  // namespace internal
 }  // namespace tink

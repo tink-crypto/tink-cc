@@ -111,6 +111,23 @@ TEST(WycheproofUtilTest, ReadTestVectorsV1_invalidFileFails) {
   ASSERT_THAT(parsed_input.status(), StatusIs(absl::StatusCode::kNotFound));
 }
 
+TEST(WycheproofUtilTest, HasFlag) {
+  google::protobuf::Value flags;
+  flags.mutable_list_value()->add_values()->set_string_value("FlagA");
+  flags.mutable_list_value()->add_values()->set_string_value("FlagB");
+  EXPECT_TRUE(HasFlag(flags, "FlagA"));
+  EXPECT_TRUE(HasFlag(flags, "FlagB"));
+  EXPECT_FALSE(HasFlag(flags, "FlagC"));
+
+  google::protobuf::Value empty_list;
+  empty_list.mutable_list_value();
+  EXPECT_FALSE(HasFlag(empty_list, "FlagA"));
+
+  google::protobuf::Value non_list;
+  non_list.set_string_value("FlagA");
+  EXPECT_FALSE(HasFlag(non_list, "FlagA"));
+}
+
 }  // namespace
 
 }  // namespace wycheproof_testing

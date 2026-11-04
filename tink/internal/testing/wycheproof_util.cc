@@ -121,6 +121,18 @@ std::string GetIntegerFromHexValue(const google::protobuf::Value &val) {
   return crypto::tink::test::HexDecode(hex).value();
 }
 
+bool HasFlag(const google::protobuf::Value& flags, absl::string_view value) {
+  if (!flags.has_list_value()) {
+    return false;
+  }
+  for (const google::protobuf::Value& flag : flags.list_value().values()) {
+    if (flag.string_value() == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace wycheproof_testing
 }  // namespace internal
 }  // namespace tink

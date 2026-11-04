@@ -756,9 +756,9 @@ TEST_P(EcUtilWycheproofTest, EcSignatureDerToIeeeRoundTrip) {
 INSTANTIATE_TEST_SUITE_P(
     EcUtilWycheproofTestInstantiation, EcUtilWycheproofTest,
     ValuesIn<WycheproofTest>({
-        {"P256", "ecdsa_secp256r1_webcrypto_test.json"},
-        {"P384", "ecdsa_secp384r1_webcrypto_test.json"},
-        {"P521", "ecdsa_secp521r1_webcrypto_test.json"},
+        {"P256", "ecdsa_secp256r1_sha256_p1363_test.json"},
+        {"P384", "ecdsa_secp384r1_sha384_p1363_test.json"},
+        {"P521", "ecdsa_secp521r1_sha512_p1363_test.json"},
     }),
     [](const TestParamInfo<EcUtilWycheproofTest::ParamType>& info) {
       return info.param.test_name;

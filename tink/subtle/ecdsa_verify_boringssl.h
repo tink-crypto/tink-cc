@@ -46,12 +46,6 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
     return New(ec_key, hash_type, encoding, "", "");
   }
 
-  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
-      internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding) {
-    return New(std::move(ec_key), hash_type, encoding, "", "");
-  }
-
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override = 0;
@@ -67,10 +61,6 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
  private:
   static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
       const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
-      absl::string_view message_suffix);
-  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
-      internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
       absl::string_view message_suffix);
 };

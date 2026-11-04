@@ -153,6 +153,21 @@ absl::Status EcdsaVerifyBoringSslImpl::Verify(absl::string_view signature,
                              data);
 }
 
+absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> NewEcdsaVerifyBoringSsl(
+    internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
+    EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
+    absl::string_view message_suffix) {
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<EcdsaVerifyBoringSsl>());
+
+  // Check if the hash type is safe to use.
+  ABSL_RETURN_IF_ERROR(internal::IsHashTypeSafeForSignature(hash_type));
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* hash,
+                        internal::EvpHashFromHashType(hash_type));
+  return std::make_unique<EcdsaVerifyBoringSslImpl>(
+      std::move(ec_key), hash, encoding, output_prefix, message_suffix);
+}
+
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
@@ -184,12 +199,13 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
 
-  return New(std::move(key), converted_hash_type, converted_signature_encoding,
-             public_key.GetOutputPrefix(),
-             public_key.GetParameters().GetVariant() ==
-                     EcdsaParameters::Variant::kLegacy
-                 ? std::string(1, 0)
-                 : "");
+  return NewEcdsaVerifyBoringSsl(std::move(key), converted_hash_type,
+                                 converted_signature_encoding,
+                                 public_key.GetOutputPrefix(),
+                                 public_key.GetParameters().GetVariant() ==
+                                         EcdsaParameters::Variant::kLegacy
+                                     ? std::string(1, 0)
+                                     : "");
 }
 
 absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
@@ -210,23 +226,8 @@ absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     return absl::InvalidArgumentError(
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
-  return New(std::move(key), hash_type, encoding, output_prefix,
-             message_suffix);
-}
-
-absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
-    internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
-    EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
-    absl::string_view message_suffix) {
-  ABSL_RETURN_IF_ERROR(
-      internal::CheckFipsCompatibility<EcdsaVerifyBoringSsl>());
-
-  // Check if the hash type is safe to use.
-  ABSL_RETURN_IF_ERROR(internal::IsHashTypeSafeForSignature(hash_type));
-  ABSL_ASSIGN_OR_RETURN(const EVP_MD* hash,
-                        internal::EvpHashFromHashType(hash_type));
-  return std::make_unique<EcdsaVerifyBoringSslImpl>(
-      std::move(ec_key), hash, encoding, output_prefix, message_suffix);
+  return NewEcdsaVerifyBoringSsl(std::move(key), hash_type, encoding,
+                                 output_prefix, message_suffix);
 }
 
 }  // namespace subtle

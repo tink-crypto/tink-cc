@@ -28,11 +28,12 @@
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/aes.h"
 #include "tink/daead/aes_siv_key.h"
-#include "tink/deterministic_aead.h"
+#include "tink/daead/subtle/deterministic_aeads.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/aes_ctr128.h"
 #include "tink/internal/aes_util.h"
@@ -52,6 +53,10 @@ namespace internal {
 namespace {
 
 constexpr size_t kBlockSize = internal::AesBlockSize();
+// RFC 5297 Section 7 limits the number of components passed to S2V to at most
+// 127. Since the plaintext is the final component, at most 126 associated data
+// components may be passed.
+constexpr size_t kMaxNumAssociatedDatas = 126;
 
 absl::Span<const uint8_t> AsUint8Span(absl::string_view s) {
   return absl::MakeSpan(reinterpret_cast<const uint8_t*>(s.data()), s.size());
@@ -70,7 +75,7 @@ absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
   return std::move(aes_key);
 }
 
-class AesSivBoringSslImpl : public DeterministicAead {
+class AesSivBoringSslImpl : public subtle::DeterministicAeads {
  public:
   AesSivBoringSslImpl(util::SecretUniquePtr<AES_KEY> k1,
                       util::SecretUniquePtr<AES_KEY> k2,
@@ -92,16 +97,31 @@ class AesSivBoringSslImpl : public DeterministicAead {
   static void MultiplyByX(uint8_t block[kBlockSize]);
   static void XorBlock(const uint8_t x[kBlockSize], const uint8_t y[kBlockSize],
                        uint8_t res[kBlockSize]);
-  void S2v(absl::string_view aad, absl::string_view msg, uint8_t* siv) const;
+  void S2v(absl::Span<const absl::string_view> associated_datas,
+           absl::string_view msg, uint8_t* siv) const;
   absl::Status AesCtrCrypt(absl::string_view in, const uint8_t siv[kBlockSize],
                            const AES_KEY* key, absl::Span<char> out) const;
 
   absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
-      absl::string_view associated_data) const override;
+      absl::string_view associated_data) const override {
+    return EncryptDeterministicallyWithAssociatedDatas(
+        plaintext, absl::MakeConstSpan(&associated_data, 1));
+  }
+
   absl::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
-      absl::string_view associated_data) const override;
+      absl::string_view associated_data) const override {
+    return DecryptDeterministicallyWithAssociatedDatas(
+        ciphertext, absl::MakeConstSpan(&associated_data, 1));
+  }
+
+  absl::StatusOr<std::string> EncryptDeterministicallyWithAssociatedDatas(
+      absl::string_view plaintext,
+      absl::Span<const absl::string_view> associated_datas) const override;
+  absl::StatusOr<std::string> DecryptDeterministicallyWithAssociatedDatas(
+      absl::string_view ciphertext,
+      absl::Span<const absl::string_view> associated_datas) const override;
 
   static constexpr FipsCompatibility kFipsStatus = FipsCompatibility::kNotFips;
 
@@ -206,17 +226,20 @@ void AesSivBoringSslImpl::CmacLong(absl::Span<const uint8_t> data,
   EncryptBlock(block, mac);
 }
 
-void AesSivBoringSslImpl::S2v(absl::string_view aad, absl::string_view msg,
-                              uint8_t* siv) const {
+void AesSivBoringSslImpl::S2v(
+    absl::Span<const absl::string_view> associated_datas, absl::string_view msg,
+    uint8_t* siv) const {
   // This stuff could be precomputed.
   uint8_t block[kBlockSize];
   absl::c_fill(block, 0);
   Cmac(block, block);
-  MultiplyByX(block);
 
   uint8_t aad_mac[kBlockSize];
-  Cmac(AsUint8Span(aad), aad_mac);
-  XorBlock(block, aad_mac, block);
+  for (absl::string_view aad : associated_datas) {
+    MultiplyByX(block);
+    Cmac(AsUint8Span(aad), aad_mac);
+    XorBlock(block, aad_mac, block);
+  }
 
   if (msg.size() >= kBlockSize) {
     CmacLong(AsUint8Span(msg), block, siv);
@@ -241,8 +264,16 @@ absl::Status AesSivBoringSslImpl::AesCtrCrypt(absl::string_view in,
   return internal::AesCtr128Crypt(in, iv, key, out);
 }
 
-absl::StatusOr<std::string> AesSivBoringSslImpl::EncryptDeterministically(
-    absl::string_view plaintext, absl::string_view associated_data) const {
+absl::StatusOr<std::string>
+AesSivBoringSslImpl::EncryptDeterministicallyWithAssociatedDatas(
+    absl::string_view plaintext,
+    absl::Span<const absl::string_view> associated_datas) const {
+  if (associated_datas.size() > kMaxNumAssociatedDatas) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("too many associated datas: ", associated_datas.size(),
+                     ", max allowed is ", kMaxNumAssociatedDatas));
+  }
   size_t ciphertext_size =
       output_prefix_.size() + plaintext.size() + kBlockSize;
   std::string ciphertext;
@@ -256,7 +287,7 @@ absl::StatusOr<std::string> AesSivBoringSslImpl::EncryptDeterministically(
                                                            ciphertext_size);
 
   CallWithCoreDumpProtection(
-      [&]() { S2v(associated_data, plaintext, siv_ptr); });
+      [&]() { S2v(associated_datas, plaintext, siv_ptr); });
   absl::Status res = CallWithCoreDumpProtection([&]() {
     return AesCtrCrypt(
         plaintext, siv_ptr, k2_.get(),
@@ -271,8 +302,16 @@ absl::StatusOr<std::string> AesSivBoringSslImpl::EncryptDeterministically(
   return ciphertext;
 }
 
-absl::StatusOr<std::string> AesSivBoringSslImpl::DecryptDeterministically(
-    absl::string_view ciphertext, absl::string_view associated_data) const {
+absl::StatusOr<std::string>
+AesSivBoringSslImpl::DecryptDeterministicallyWithAssociatedDatas(
+    absl::string_view ciphertext,
+    absl::Span<const absl::string_view> associated_datas) const {
+  if (associated_datas.size() > kMaxNumAssociatedDatas) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("too many associated datas: ", associated_datas.size(),
+                     ", max allowed is ", kMaxNumAssociatedDatas));
+  }
   if (ciphertext.size() < output_prefix_.size() + kBlockSize) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
@@ -307,7 +346,7 @@ absl::StatusOr<std::string> AesSivBoringSslImpl::DecryptDeterministically(
   // Note that we very much need to protect the calculation of the IV even when
   // the plaintext may be leaked.
   CallWithCoreDumpProtection(
-      [&]() { S2v(associated_data, plaintext, s2v.data()); });
+      [&]() { S2v(associated_datas, plaintext, s2v.data()); });
 
   if (!SafeCryptoMemEquals(siv, s2v.data(), kBlockSize)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -322,7 +361,7 @@ absl::StatusOr<std::string> AesSivBoringSslImpl::DecryptDeterministically(
 
 }  // namespace
 
-absl::StatusOr<std::unique_ptr<DeterministicAead>> NewAesSivBoringSsl(
+absl::StatusOr<std::unique_ptr<subtle::DeterministicAeads>> NewAesSivBoringSsl(
     const AesSivKey& key) {
   ABSL_RETURN_IF_ERROR(CheckFipsCompatibility<AesSivBoringSslImpl>());
 

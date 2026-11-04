@@ -175,11 +175,11 @@ tink_cc_library(
     absl::string_view
     absl::span
     tink::internal::boringssl
-    tink::core::deterministic_aead
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::secret_data
     tink::daead::aes_siv_key
+    tink::daead::subtle::deterministic_aeads
     tink::internal::aes_ctr128
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
@@ -206,12 +206,15 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::string_view
+    absl::optional
+    absl::span
     tink::core::deterministic_aead
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
+    tink::daead::subtle::deterministic_aeads
     tink::internal::fips_utils
     tink::internal::testing::wycheproof_util
     tink::util::test_util

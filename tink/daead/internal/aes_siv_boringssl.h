@@ -21,13 +21,13 @@
 
 #include "absl/status/statusor.h"
 #include "tink/daead/aes_siv_key.h"
-#include "tink/deterministic_aead.h"
+#include "tink/daead/subtle/deterministic_aeads.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::StatusOr<std::unique_ptr<DeterministicAead>> NewAesSivBoringSsl(
+absl::StatusOr<std::unique_ptr<subtle::DeterministicAeads>> NewAesSivBoringSsl(
     const AesSivKey& key);
 
 }  // namespace internal

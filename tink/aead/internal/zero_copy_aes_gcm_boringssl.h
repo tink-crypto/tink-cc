@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "absl/base/macros.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/aes_gcm_key.h"

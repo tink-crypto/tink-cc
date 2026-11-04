@@ -19,6 +19,7 @@
 #include <cstdint>
 
 #include "gmock/gmock.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/zero_copy_aead.h"

@@ -17,6 +17,7 @@
 #include "tink/aead/internal/chacha20_poly1305_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -43,6 +44,7 @@
 #include "tink/subtle/random.h"
 #include "tink/util/test_matchers.h"
 #include "proto/chacha20_poly1305.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

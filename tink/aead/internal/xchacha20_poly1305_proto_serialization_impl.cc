@@ -17,7 +17,9 @@
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <utility>
 
 #include "absl/base/attributes.h"
@@ -37,6 +39,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -45,6 +48,7 @@
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

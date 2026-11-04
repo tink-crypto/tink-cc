@@ -17,7 +17,9 @@
 #include "tink/aead/internal/legacy_kms_aead_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -37,11 +39,13 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

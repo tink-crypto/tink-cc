@@ -17,6 +17,7 @@
 #include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -47,6 +48,7 @@
 #include "proto/common.pb.h"
 #include "proto/hmac.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

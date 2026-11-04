@@ -39,6 +39,7 @@
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/config/tink_fips.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"

@@ -17,6 +17,7 @@
 #include "tink/aead/internal/legacy_kms_aead_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -41,6 +42,7 @@
 #include "tink/restricted_data.h"
 #include "tink/util/test_matchers.h"
 #include "proto/kms_aead.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

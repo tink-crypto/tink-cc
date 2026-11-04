@@ -14,6 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/aead/internal/wycheproof_aead.h"
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

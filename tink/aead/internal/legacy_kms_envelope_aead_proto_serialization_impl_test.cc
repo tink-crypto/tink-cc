@@ -17,6 +17,7 @@
 #include "tink/aead/internal/legacy_kms_envelope_aead_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -58,6 +59,7 @@
 #include "proto/hmac.pb.h"
 #include "proto/kms_envelope.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
 namespace crypto {

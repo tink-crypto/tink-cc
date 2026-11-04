@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/util/statusor.h"

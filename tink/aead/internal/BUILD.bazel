@@ -14,6 +14,7 @@ cc_library(
         "//tink/util:statusor",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@boringssl//:crypto",
     ],
@@ -28,6 +29,7 @@ cc_library(
         "//tink/internal/testing:wycheproof_util",
         "//tink/util:statusor",
         "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -92,6 +94,7 @@ cc_library(
     hdrs = ["zero_copy_aead.h"],
     deps = [
         "//tink/util:statusor",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
     ],
@@ -104,6 +107,7 @@ cc_library(
     deps = [
         ":zero_copy_aead",
         "//tink/util:statusor",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
         "@googletest//:gtest",
@@ -122,6 +126,7 @@ cc_library(
         "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
     ],
@@ -142,6 +147,7 @@ cc_library(
         "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
     ],
@@ -236,6 +242,7 @@ cc_library(
     srcs = ["legacy_kms_envelope_aead_proto_serialization_impl.cc"],
     hdrs = ["legacy_kms_envelope_aead_proto_serialization_impl.h"],
     deps = [
+        "//proto:tink_cc_tinkpb",
         "//tink:parameters",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -259,6 +266,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:serialization",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -306,6 +314,7 @@ cc_test(
     srcs = ["aead_util_test.cc"],
     deps = [
         ":aead_util",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@boringssl//:crypto",
@@ -647,6 +656,7 @@ cc_library(
     hdrs = ["xchacha20_poly1305_proto_serialization_impl.h"],
     deps = [
         ":xchacha20_poly1305_proto_format",
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -662,6 +672,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:proto_parser_secret_data_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -679,6 +690,7 @@ cc_test(
     srcs = ["xchacha20_poly1305_proto_serialization_impl_test.cc"],
     deps = [
         ":xchacha20_poly1305_proto_serialization_impl",
+        "//proto:tink_cc_tinkpb",
         "//proto:xchacha20_poly1305_cc_proto",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
@@ -709,6 +721,7 @@ cc_library(
     srcs = ["chacha20_poly1305_proto_serialization_impl.cc"],
     hdrs = ["chacha20_poly1305_proto_serialization_impl.h"],
     deps = [
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -724,6 +737,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:proto_parser_secret_data_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -741,6 +755,7 @@ cc_test(
     deps = [
         ":chacha20_poly1305_proto_serialization_impl",
         "//proto:chacha20_poly1305_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
         "//tink:parameters",
@@ -770,6 +785,7 @@ cc_library(
     srcs = ["x_aes_gcm_proto_serialization_impl.cc"],
     hdrs = ["x_aes_gcm_proto_serialization_impl.h"],
     deps = [
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -785,6 +801,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:proto_parser_secret_data_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -800,6 +817,7 @@ cc_test(
     srcs = ["x_aes_gcm_proto_serialization_impl_test.cc"],
     deps = [
         ":x_aes_gcm_proto_serialization_impl",
+        "//proto:tink_cc_tinkpb",
         "//proto:x_aes_gcm_cc_proto",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
@@ -830,6 +848,7 @@ cc_library(
     srcs = ["legacy_kms_aead_proto_serialization_impl.cc"],
     hdrs = ["legacy_kms_aead_proto_serialization_impl.h"],
     deps = [
+        "//proto:tink_cc_tinkpb",
         "//tink:restricted_data",
         "//tink:secret_data",
         "//tink:secret_key_access_token",
@@ -845,6 +864,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
         "@abseil-cpp//absl/status",
@@ -860,6 +880,7 @@ cc_test(
     deps = [
         ":legacy_kms_aead_proto_serialization_impl",
         "//proto:kms_aead_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
         "//tink:parameters",
@@ -888,6 +909,7 @@ cc_library(
     hdrs = ["aes_gcm_proto_serialization_impl.h"],
     deps = [
         ":aes_gcm_proto_format",
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -903,6 +925,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:proto_parser_secret_data_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -922,6 +945,7 @@ cc_test(
     deps = [
         ":aes_gcm_proto_serialization_impl",
         "//proto:aes_gcm_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
         "//tink:parameters",
@@ -950,6 +974,7 @@ cc_library(
     srcs = ["aes_gcm_siv_proto_serialization_impl.cc"],
     hdrs = ["aes_gcm_siv_proto_serialization_impl.h"],
     deps = [
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -965,6 +990,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:proto_parser_secret_data_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -984,6 +1010,7 @@ cc_test(
     deps = [
         ":aes_gcm_siv_proto_serialization_impl",
         "//proto:aes_gcm_siv_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
         "//tink:parameters",
@@ -1013,6 +1040,8 @@ cc_library(
     hdrs = ["aes_ctr_hmac_aead_proto_serialization_impl.h"],
     deps = [
         ":aes_ctr_hmac_proto_structs",
+        "//proto:common_cc_tinkpb",
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -1049,6 +1078,7 @@ cc_test(
         "//proto:common_cc_proto",
         "//proto:hmac_cc_proto",
         "//proto:tink_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
         "//tink:parameters",
@@ -1078,6 +1108,7 @@ cc_library(
     srcs = ["aes_eax_proto_serialization_impl.cc"],
     hdrs = ["aes_eax_proto_serialization_impl.h"],
     deps = [
+        "//proto:tink_cc_tinkpb",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -1093,6 +1124,7 @@ cc_library(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
         "//tink/internal:proto_parser_secret_data_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
@@ -1112,6 +1144,7 @@ cc_test(
     deps = [
         ":aes_eax_proto_serialization_impl",
         "//proto:aes_eax_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key",
         "//tink:parameters",
@@ -1163,6 +1196,7 @@ cc_test(
         "//proto:hmac_cc_proto",
         "//proto:kms_envelope_cc_proto",
         "//proto:tink_cc_proto",
+        "//proto:tink_cc_tinkpb",
         "//proto:xchacha20_poly1305_cc_proto",
         "//tink:insecure_secret_key_access",
         "//tink:key",
@@ -1199,6 +1233,7 @@ cc_library(
     deps = [
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
     ],
 )
 
@@ -1220,6 +1255,7 @@ cc_library(
     deps = [
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
     ],
 )
 
@@ -1238,9 +1274,12 @@ cc_library(
     name = "aes_ctr_hmac_proto_structs",
     hdrs = ["aes_ctr_hmac_proto_structs.h"],
     deps = [
+        "//proto:hmac_cc_tinkpb",
         "//tink:secret_data",
         "//tink/internal:proto_parser_fields",
         "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_options",
+        "//tink/internal:proto_parser_secret_data_field",
         "//tink/mac/internal:hmac_proto_structs",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/strings:string_view",
@@ -1252,6 +1291,8 @@ cc_test(
     srcs = ["aes_ctr_hmac_proto_structs_test.cc"],
     deps = [
         ":aes_ctr_hmac_proto_structs",
+        "//proto:common_cc_tinkpb",
+        "//proto:hmac_cc_tinkpb",
         "//tink/internal:common_proto_enums",
         "//tink/internal/testing:field_with_number",
         "//tink/mac/internal:hmac_proto_structs",
@@ -1397,6 +1438,7 @@ cc_library(
         ":zero_copy_aead",
         "//tink/util:test_util",
         "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:statusor",
@@ -1411,6 +1453,7 @@ cc_test(
     deps = [
         ":dummy_zero_copy_aead",
         "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",
     ],
@@ -1431,6 +1474,7 @@ cc_library(
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:dfsan_forwarders",
         "//tink/internal:fips_utils",
+        "//tink/internal:safe_stringops",
         "//tink/internal:ssl_unique_ptr",
         "//tink/internal:util",
         "//tink/subtle:random",
@@ -1570,6 +1614,7 @@ cc_test(
         "//tink/aead/internal/testing:aead_test_vector",
         "//tink/aead/internal/testing:aes_gcm_siv_test_vectors",
         "//tink/config:tink_fips",
+        "//tink/internal:fips_utils",
         "//tink/internal:ssl_util",
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",

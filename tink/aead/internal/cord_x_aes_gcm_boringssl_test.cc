@@ -17,6 +17,7 @@
 #include "tink/aead/internal/cord_x_aes_gcm_boringssl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 

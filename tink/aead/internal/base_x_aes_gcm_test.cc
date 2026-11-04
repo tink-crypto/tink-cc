@@ -16,6 +16,7 @@
 
 #include "tink/aead/internal/base_x_aes_gcm.h"
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>

@@ -18,10 +18,12 @@
 #define TINK_AEAD_INTERNAL_AES_GCM_PROTO_FORMAT_H_
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 
 namespace crypto {
 namespace tink {

@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/primitive_set.h"

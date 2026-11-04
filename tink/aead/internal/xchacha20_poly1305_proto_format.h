@@ -23,6 +23,7 @@
 
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 
 namespace crypto {
 namespace tink {

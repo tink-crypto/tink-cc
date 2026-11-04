@@ -18,14 +18,18 @@
 #define TINK_AEAD_INTERNAL_AES_CTR_HMAC_PROTO_STRUCTS_H_
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
+#include "proto/hmac.tinkpb.h"
 
 namespace crypto {
 namespace tink {

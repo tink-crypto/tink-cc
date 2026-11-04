@@ -25,6 +25,8 @@
 #include "tink/internal/testing/field_with_number.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/util/secret_data.h"
+#include "proto/common.tinkpb.h"
+#include "proto/hmac.tinkpb.h"
 
 namespace crypto {
 namespace tink {

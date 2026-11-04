@@ -16,6 +16,7 @@
 
 #include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
 
+#include <optional>
 #include <utility>
 
 #include "absl/base/attributes.h"
@@ -42,6 +43,8 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+#include "proto/common.tinkpb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

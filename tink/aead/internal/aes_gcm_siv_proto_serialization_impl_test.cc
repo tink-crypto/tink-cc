@@ -17,6 +17,7 @@
 #include "tink/aead/internal/aes_gcm_siv_proto_serialization_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -42,6 +43,7 @@
 #include "tink/subtle/random.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_gcm_siv.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {

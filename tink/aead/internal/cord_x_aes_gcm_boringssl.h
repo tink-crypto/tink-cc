@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/util/statusor.h"

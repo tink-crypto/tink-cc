@@ -10,6 +10,7 @@ tink_cc_library(
   DEPS
     absl::flat_hash_set
     absl::status
+    absl::statusor
     absl::string_view
     tink::internal::boringssl
     tink::util::errors
@@ -23,6 +24,7 @@ tink_cc_library(
     wycheproof_aead.h
   DEPS
     absl::absl_check
+    absl::statusor
     absl::strings
     tink::internal::testing::wycheproof_util
     tink::util::statusor
@@ -91,6 +93,7 @@ tink_cc_library(
   DEPS
     tink::aead::internal::zero_copy_aead
     gmock
+    absl::statusor
     absl::strings
     absl::span
     tink::util::statusor
@@ -106,6 +109,7 @@ tink_cc_library(
     tink::aead::internal::zero_copy_aead
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::span
     tink::core::aead
@@ -119,6 +123,7 @@ tink_cc_library(
   SRCS
     zero_copy_aead.h
   DEPS
+    absl::statusor
     absl::strings
     absl::span
     tink::util::statusor
@@ -133,6 +138,7 @@ tink_cc_library(
     tink::aead::internal::zero_copy_aead
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     tink::core::aead
@@ -203,9 +209,11 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -215,6 +223,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::aead_util
     gmock
+    absl::status
     absl::status_matchers
     absl::statusor
     tink::internal::boringssl
@@ -574,10 +583,12 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::secret_data
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -607,6 +618,7 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::test_matchers
+    tink::proto::tink_cc_tinkpb
     tink::proto::xchacha20_poly1305_cc_proto
 )
 
@@ -636,9 +648,11 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -669,6 +683,7 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::chacha20_poly1305_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -696,9 +711,11 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -728,6 +745,7 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::test_matchers
+    tink::proto::tink_cc_tinkpb
     tink::proto::x_aes_gcm_cc_proto
 )
 
@@ -756,8 +774,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -786,6 +806,7 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::util::test_matchers
     tink::proto::kms_aead_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -815,11 +836,13 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::secret_data
     tink::util::status
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -849,6 +872,7 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::aes_gcm_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -877,11 +901,13 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::secret_data
     tink::util::status
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -911,6 +937,7 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::aes_gcm_siv_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -943,6 +970,8 @@ tink_cc_library(
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::mac::internal::hmac_proto_structs
+    tink::proto::common_cc_tinkpb
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -977,6 +1006,7 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -1006,10 +1036,12 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::status
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -1040,6 +1072,7 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::aes_eax_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -1097,6 +1130,7 @@ tink_cc_test(
     tink::proto::hmac_cc_proto
     tink::proto::kms_envelope_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
     tink::proto::xchacha20_poly1305_cc_proto
 )
 
@@ -1107,6 +1141,7 @@ tink_cc_library(
   DEPS
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
 )
 
 tink_cc_test(
@@ -1128,6 +1163,7 @@ tink_cc_library(
   DEPS
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
 )
 
 tink_cc_test(
@@ -1150,8 +1186,11 @@ tink_cc_library(
     tink::core::secret_data
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_secret_data_field
     tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
+    tink::proto::hmac_cc_tinkpb
 )
 
 tink_cc_test(
@@ -1166,6 +1205,8 @@ tink_cc_test(
     tink::internal::testing::field_with_number
     tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
+    tink::proto::common_cc_tinkpb
+    tink::proto::hmac_cc_tinkpb
 )
 
 tink_cc_library(
@@ -1387,6 +1428,7 @@ tink_cc_library(
   DEPS
     tink::aead::internal::zero_copy_aead
     absl::algorithm_container
+    absl::absl_check
     absl::status
     absl::status_macros
     absl::statusor
@@ -1404,6 +1446,7 @@ tink_cc_test(
     tink::aead::internal::dummy_zero_copy_aead
     gmock
     absl::status_matchers
+    absl::statusor
     absl::span
 )
 
@@ -1432,6 +1475,7 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
+    tink::internal::safe_stringops
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::random
@@ -1572,6 +1616,7 @@ tink_cc_test(
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::config::tink_fips
+    tink::internal::fips_utils
     tink::internal::ssl_util
     tink::subtle::subtle_util
     tink::util::secret_data

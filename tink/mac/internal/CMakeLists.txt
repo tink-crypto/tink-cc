@@ -514,3 +514,53 @@ tink_cc_test(
     tink::mac::hmac_key
     tink::mac::hmac_parameters
 )
+
+tink_cc_library(
+  NAME aes_cmac_boringssl
+  SRCS
+    aes_cmac_boringssl.cc
+    aes_cmac_boringssl.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::insecure_secret_key_access
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::core::secret_data
+    tink::internal::aes_util
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
+    tink::internal::safe_stringops
+    tink::internal::secret_buffer
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+    tink::subtle::subtle_util
+    tink::util::errors
+)
+
+tink_cc_test(
+  NAME aes_cmac_boringssl_test
+  SRCS
+    aes_cmac_boringssl_test.cc
+  DEPS
+    tink::mac::internal::aes_cmac_boringssl
+    tink::mac::internal::aes_cmac_test_vectors
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::mac
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::fips_utils
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+)

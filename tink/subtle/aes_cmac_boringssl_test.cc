@@ -22,7 +22,6 @@
 #include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
@@ -44,7 +43,6 @@
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -246,7 +244,7 @@ TEST(AesCmacBoringSslTest, InvalidTagSizes) {
     SecretData key(32, 'x');
     absl::StatusOr<std::unique_ptr<Mac>> cmac =
         AesCmacBoringSsl::New(key, tagsize);
-    if (tagsize <= 16) {
+    if (tagsize >= 10 && tagsize <= 16) {
       EXPECT_THAT(cmac, IsOk());
     } else {
       EXPECT_THAT(cmac, Not(IsOk()));

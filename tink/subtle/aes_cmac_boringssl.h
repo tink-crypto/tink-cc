@@ -34,37 +34,23 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-class AesCmacBoringSsl : public Mac {
+class AesCmacBoringSsl {
  public:
+  // Creates a raw AES-CMAC `Mac` (without any output prefix).
+  // Supported key sizes are 16 and 32 bytes, and supported tag sizes are 10 to
+  // 16 bytes.
+  //
+  // Prefer `CreateAesCmacMac`, which takes an `AesCmacKey` and also supports
+  // key variants with output prefixes (`kTink`, `kCrunchy`, `kLegacy`).
   static absl::StatusOr<std::unique_ptr<Mac>> New(SecretData key,
                                                   uint32_t tag_size);
 
   static absl::StatusOr<std::unique_ptr<Mac>> New(const AesCmacKey& key);
 
-  // Computes and returns the CMAC for 'data'.
-  absl::StatusOr<std::string> ComputeMac(absl::string_view data) const override;
-
-  // Verifies if 'mac' is a correct CMAC for 'data'.
-  // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.
-  absl::Status VerifyMac(absl::string_view mac,
-                         absl::string_view data) const override;
-
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
- private:
-  AesCmacBoringSsl(SecretData key, uint32_t tag_size,
-                   absl::string_view output_prefix,
-                   absl::string_view message_suffix)
-      : key_(std::move(key)),
-        tag_size_(tag_size),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  const SecretData key_;
-  const uint32_t tag_size_;
-  std::string output_prefix_;
-  std::string message_suffix_;
+  AesCmacBoringSsl() = delete;
 };
 
 }  // namespace subtle

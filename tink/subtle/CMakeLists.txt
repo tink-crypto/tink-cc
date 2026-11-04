@@ -183,28 +183,19 @@ tink_cc_library(
     aes_cmac_boringssl.cc
     aes_cmac_boringssl.h
   DEPS
-    tink::subtle::subtle_util
-    absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
-    absl::strings
     absl::string_view
-    tink::internal::boringssl
     tink::core::insecure_secret_key_access
     tink::core::mac
     tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
-    tink::internal::aes_util
-    tink::internal::call_with_core_dump_protection
-    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
-    tink::internal::safe_stringops
-    tink::internal::secret_buffer
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
-    tink::util::errors
+    tink::mac::subtle::create_aes_cmac_mac
 )
 
 tink_cc_library(
@@ -981,7 +972,6 @@ tink_cc_test(
     tink::mac::aes_cmac_parameters
     tink::mac::internal::aes_cmac_test_vectors
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

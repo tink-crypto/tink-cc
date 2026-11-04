@@ -34,3 +34,37 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_aes_cmac_mac",
+    srcs = ["create_aes_cmac_mac.cc"],
+    hdrs = ["create_aes_cmac_mac.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:mac",
+        "//tink/mac:aes_cmac_key",
+        "//tink/mac/internal:aes_cmac_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_cmac_mac_test",
+    size = "small",
+    srcs = ["create_aes_cmac_mac_test.cc"],
+    deps = [
+        ":create_aes_cmac_mac",
+        "//tink:mac",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:fips_utils",
+        "//tink/mac:aes_cmac_key",
+        "//tink/mac:aes_cmac_parameters",
+        "//tink/mac/internal:aes_cmac_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

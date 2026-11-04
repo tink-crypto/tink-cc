@@ -2037,3 +2037,43 @@ tink_cc_test(
     tink::jwt::verified_jwt
     tink::jwt::internal::testing::jwt_hmac_test_vectors
 )
+
+tink_cc_library(
+  NAME jwt_ecdsa_sign
+  SRCS
+    jwt_ecdsa_sign.cc
+    jwt_ecdsa_sign.h
+  DEPS
+    tink::jwt::internal::jwt_public_key_sign_impl
+    absl::status
+    absl::statusor
+    absl::strings
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::raw_jwt
+    tink::subtle::ecdsa_sign_boringssl
+)
+
+tink_cc_test(
+  NAME jwt_ecdsa_sign_test
+  SRCS
+    jwt_ecdsa_sign_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ecdsa_sign
+    tink::jwt::internal::jwt_public_key_verify_impl
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+    tink::jwt::internal::testing::jwt_ecdsa_test_vectors
+    tink::subtle::ecdsa_verify_boringssl
+)

@@ -532,6 +532,103 @@ TEST(JwtSignatureImplTest, FailsWithInvalidTokens) {
               Not(IsOk()));
 }
 
+TEST(JwtSignatureImplTest, SignAndEncodeRaw) {
+  absl::Time now = absl::Now();
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .SetNotBefore(now - absl::Seconds(300))
+                                       .SetIssuedAt(now)
+                                       .SetExpiration(now + absl::Seconds(300))
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(GetP256PrivateKey());
+  ASSERT_THAT(sign, IsOk());
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::Raw(*std::move(sign), "ES256");
+
+  absl::StatusOr<std::string> compact = jwt_sign->SignAndEncode(*raw_jwt);
+  ASSERT_THAT(compact, IsOk());
+
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(GetP256PrivateKey().GetPublicKey());
+  ASSERT_THAT(verify, IsOk());
+  std::unique_ptr<JwtPublicKeyVerifyImpl> jwt_verify =
+      JwtPublicKeyVerifyImpl::Raw(*std::move(verify), "ES256");
+  absl::StatusOr<JwtValidator> validator =
+      JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+  ASSERT_THAT(validator, IsOk());
+  absl::StatusOr<VerifiedJwt> verified_jwt =
+      jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                         /*kid=*/std::nullopt);
+  ASSERT_THAT(verified_jwt, IsOk());
+  EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
+}
+
+TEST(JwtSignatureImplTest, SignAndEncodeWithKidAndCustomKid) {
+  absl::Time now = absl::Now();
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .SetNotBefore(now - absl::Seconds(300))
+                                       .SetIssuedAt(now)
+                                       .SetExpiration(now + absl::Seconds(300))
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  std::string kid = "01020304";
+  {
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+        subtle::EcdsaSignBoringSsl::New(GetP256PrivateKey());
+    ASSERT_THAT(sign, IsOk());
+    std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+        JwtPublicKeySignImpl::WithKid(*std::move(sign), "ES256", kid);
+
+    absl::StatusOr<std::string> compact = jwt_sign->SignAndEncode(*raw_jwt);
+    ASSERT_THAT(compact, IsOk());
+
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+        subtle::EcdsaVerifyBoringSsl::New(GetP256PrivateKey().GetPublicKey());
+    ASSERT_THAT(verify, IsOk());
+    std::unique_ptr<JwtPublicKeyVerifyImpl> jwt_verify =
+        JwtPublicKeyVerifyImpl::WithKid(*std::move(verify), "ES256", kid);
+    absl::StatusOr<JwtValidator> validator =
+        JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+    ASSERT_THAT(validator, IsOk());
+    absl::StatusOr<VerifiedJwt> verified_jwt =
+        jwt_verify->VerifyAndDecodeWithKid(*compact, *validator, kid);
+    ASSERT_THAT(verified_jwt, IsOk());
+    EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
+  }
+  {
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+        subtle::EcdsaSignBoringSsl::New(GetP256PrivateKey());
+    ASSERT_THAT(sign, IsOk());
+    std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+        JwtPublicKeySignImpl::RawWithCustomKid(*std::move(sign), "ES256", kid);
+
+    absl::StatusOr<std::string> compact = jwt_sign->SignAndEncode(*raw_jwt);
+    ASSERT_THAT(compact, IsOk());
+
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+        subtle::EcdsaVerifyBoringSsl::New(GetP256PrivateKey().GetPublicKey());
+    ASSERT_THAT(verify, IsOk());
+    std::unique_ptr<JwtPublicKeyVerifyImpl> jwt_verify =
+        JwtPublicKeyVerifyImpl::RawWithCustomKid(*std::move(verify), "ES256",
+                                                 kid);
+    absl::StatusOr<JwtValidator> validator =
+        JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+    ASSERT_THAT(validator, IsOk());
+    absl::StatusOr<VerifiedJwt> verified_jwt =
+        jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                           /*kid=*/std::nullopt);
+    ASSERT_THAT(verified_jwt, IsOk());
+    EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
+  }
+}
+
 void BM_SignAndEncodeWithKid(benchmark::State& state) {
   absl::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
       subtle::EcdsaSignBoringSsl::New(GetP256PrivateKey());

@@ -17,7 +17,6 @@
 #include "tink/jwt/internal/jwt_ecdsa_sign.h"
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 
@@ -55,18 +54,16 @@ absl::StatusOr<std::string> AlgorithmName(
 
 class JwtEcdsaSignImpl : public JwtPublicKeySign {
  public:
-  explicit JwtEcdsaSignImpl(std::unique_ptr<JwtPublicKeySignImpl> impl,
-                            std::optional<std::string> kid)
-      : impl_(std::move(impl)), kid_(std::move(kid)) {}
+  explicit JwtEcdsaSignImpl(std::unique_ptr<JwtPublicKeySignImpl> impl)
+      : impl_(std::move(impl)) {}
 
   absl::StatusOr<std::string> SignAndEncode(
       const RawJwt& token) const override {
-    return impl_->SignAndEncodeWithKid(token, kid_);
+    return impl_->SignAndEncode(token);
   }
 
  private:
   std::unique_ptr<JwtPublicKeySignImpl> impl_;
-  std::optional<std::string> kid_;
 };
 
 }  // namespace
@@ -91,18 +88,15 @@ absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> NewJwtEcdsaSign(
     case JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId:
       return std::make_unique<JwtEcdsaSignImpl>(
           JwtPublicKeySignImpl::WithKid(*std::move(raw_signer), *algorithm_name,
-                                        *key.GetPublicKey().GetKid()),
-          key.GetPublicKey().GetKid());
+                                        *key.GetPublicKey().GetKid()));
     case JwtEcdsaParameters::KidStrategy::kCustom:
       return std::make_unique<JwtEcdsaSignImpl>(
           JwtPublicKeySignImpl::RawWithCustomKid(*std::move(raw_signer),
                                                  *algorithm_name,
-                                                 *key.GetPublicKey().GetKid()),
-          std::nullopt);
+                                                 *key.GetPublicKey().GetKid()));
     case JwtEcdsaParameters::KidStrategy::kIgnored:
       return std::make_unique<JwtEcdsaSignImpl>(
-          JwtPublicKeySignImpl::Raw(*std::move(raw_signer), *algorithm_name),
-          std::nullopt);
+          JwtPublicKeySignImpl::Raw(*std::move(raw_signer), *algorithm_name));
     default:
       return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");

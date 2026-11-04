@@ -17,6 +17,7 @@
 #include "tink/jwt/internal/jwt_public_key_sign_impl.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -79,6 +80,11 @@ absl::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncodeWithKid(
   }
   std::string encoded_tag = EncodeSignature(*tag);
   return absl::StrCat(unsigned_token, ".", encoded_tag);
+}
+
+absl::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncode(
+    const RawJwt& token) const {
+  return SignAndEncodeWithKid(token, kid_);
 }
 
 std::unique_ptr<JwtPublicKeySignImpl> JwtPublicKeySignImpl::WithKid(

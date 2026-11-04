@@ -16,6 +16,7 @@
 
 #include "tink/aead/internal/cord_x_aes_gcm_boringssl.h"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -25,21 +26,14 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/aead/x_aes_gcm_parameters.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/partial_key_access.h"
-#include "tink/restricted_data.h"
-#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -47,122 +41,66 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::Random;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
 using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
-constexpr int kKeySize = 32;
 constexpr int kMinSaltSize = 8;
 constexpr int kMaxSaltSize = 12;
 constexpr int kIvSize = 12;
 constexpr int kCtOverhead = kIvSize + 16;
 
-absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
-  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
-      XAesGcmParameters::Variant::kNoPrefix, salt_size);
-  if (!parameters.ok()) {
-    return parameters.status();
+std::vector<AeadTestVector> GetNoPrefixTestVectors() {
+  std::vector<AeadTestVector> vectors;
+  for (int salt_size = kMinSaltSize; salt_size <= kMaxSaltSize; ++salt_size) {
+    vectors.push_back(
+        GetXAesGcmTestVector(salt_size, XAesGcmParameters::Variant::kNoPrefix));
   }
-  return XAesGcmKey::Create(*parameters,
-                            RestrictedData(SecretData(key),
-                                           InsecureSecretKeyAccess::Get()),
-                            std::nullopt, GetPartialKeyAccess());
+  return vectors;
 }
 
-absl::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
-  return CreateKey(Random::GetRandomBytes(kKeySize), salt_size);
-}
-
-struct XAesGcmTestVector {
-  std::string name;
-  std::string hex_key;
-  std::string nonce;
-  std::string aad;
-  std::string plaintext;
-  std::string hex_ciphertext;
-  int salt_size;
-};
-
-using XAesGcmTestVectors = TestWithParam<XAesGcmTestVector>;
-
-// Test vectors from
-// https://github.com/C2SP/C2SP/blob/main/XAES-256-GCM.md#test-vectors.
-std::vector<XAesGcmTestVector> GetTestVectors() {
-  return {
-      {
-          /*name=*/"test_vector_1",
-          /*hex_key=*/
-          "0101010101010101010101010101010101010101010101010101010101010101",
-          /*nonce=*/"ABCDEFGHIJKLMNOPQRSTUVWX",
-          /*aad=*/"",
-          /*plaintext=*/"XAES-256-GCM",
-          /*hex_ciphertext=*/
-          "ce546ef63c9cc60765923609b33a9a1974e96e52daf2fcf7075e2271",
-          /*salt_size=*/12,
-      },
-      {
-          /*name=*/"test_vector_2",
-          /*hex_key=*/
-          "0303030303030303030303030303030303030303030303030303030303030303",
-          /*nonce=*/"ABCDEFGHIJKLMNOPQRSTUVWX",
-          /*aad=*/"c2sp.org/XAES-256-GCM",
-          /*plaintext=*/"XAES-256-GCM",
-          /*hex_ciphertext=*/
-          "986ec1832593df5443a179437fd083bf3fdb41abd740a21f71eb769d",
-          /*salt_size=*/12,
-      },
-  };
-}
+using XAesGcmTestVectors = TestWithParam<AeadTestVector>;
 
 TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
-  const XAesGcmTestVector& test_case = GetParam();
-  absl::StatusOr<XAesGcmKey> key =
-      CreateKey(test::HexDecodeOrDie(test_case.hex_key), test_case.salt_size);
-  ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<CordAead>> aead =
-      NewCordXAesGcmBoringSsl(*key);
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
-  std::string ct = test::HexDecodeOrDie(test_case.hex_ciphertext);
-  absl::StatusOr<absl::Cord> recovered_plaintext = (*aead)->Decrypt(
-      absl::Cord(absl::StrCat(test_case.nonce, ct)), absl::Cord(test_case.aad));
-  ASSERT_THAT(recovered_plaintext, IsOk());
-  ASSERT_THAT(*recovered_plaintext, Eq(absl::Cord(test_case.plaintext)));
+  EXPECT_THAT((*aead)->Decrypt(absl::Cord(test_vector.ciphertext),
+                               absl::Cord(test_vector.associated_data)),
+              IsOkAndHolds(absl::Cord(test_vector.plaintext)));
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    XAesGcmTestVectors, XAesGcmTestVectors, testing::ValuesIn(GetTestVectors()),
-    [](const testing::TestParamInfo<XAesGcmTestVectors::ParamType>& info) {
-      return info.param.name;
-    });
-
-TEST(XAesGcmTest, EncryptDecrypt) {
-  absl::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
-  ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<CordAead>> aead =
-      NewCordXAesGcmBoringSsl(*key);
+TEST_P(XAesGcmTestVectors, EncryptDecrypt) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord pt(Random::GetRandomBytes(4096));
   absl::Cord aad("aad");
   absl::StatusOr<absl::Cord> ct = (*aead)->Encrypt(pt, aad);
   ASSERT_THAT(ct, IsOk());
-  absl::StatusOr<absl::Cord> recovered_plaintext = (*aead)->Decrypt(*ct, aad);
-  ASSERT_THAT(recovered_plaintext, IsOk());
-  ASSERT_THAT(*recovered_plaintext, Eq(pt));
+  EXPECT_THAT((*aead)->Decrypt(*ct, aad), IsOkAndHolds(pt));
 }
 
-TEST(XAesGcmTest, DecryptWithInvalidCiphertextSizeFails) {
-  absl::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
-  ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<CordAead>> aead =
-      NewCordXAesGcmBoringSsl(*key);
+TEST_P(XAesGcmTestVectors, DecryptWithInvalidCiphertextSizeFails) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
-  for (int size = 0; size < kCtOverhead + kMinSaltSize; size++) {
+  const size_t min_size = key.GetParameters().SaltSizeBytes() + kCtOverhead;
+  for (size_t size = 0; size < min_size; size++) {
     EXPECT_THAT(
         (*aead)
             ->Decrypt(absl::Cord(Random::GetRandomBytes(size)), absl::Cord(""))
@@ -172,27 +110,25 @@ TEST(XAesGcmTest, DecryptWithInvalidCiphertextSizeFails) {
   }
 }
 
-TEST(XAesGcmTest, DecryptWithInvalidAssociatedDataFails) {
-  absl::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
-  ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<CordAead>> aead =
-      NewCordXAesGcmBoringSsl(*key);
+TEST_P(XAesGcmTestVectors, DecryptWithInvalidAssociatedDataFails) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
-  absl::Cord pt(Random::GetRandomBytes(4096));
-  absl::Cord aad("aad");
-  absl::StatusOr<absl::Cord> ct = (*aead)->Encrypt(pt, aad);
-  ASSERT_THAT(ct, IsOk());
-
-  EXPECT_THAT((*aead)->Decrypt(*ct, absl::Cord("invalid aad")).status(),
+  EXPECT_THAT((*aead)
+                  ->Decrypt(absl::Cord(test_vector.ciphertext),
+                            absl::Cord("invalid aad"))
+                  .status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 
-TEST(XAesGcmTest, EncryptReturnsDifferentSaltAndIv) {
-  absl::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
-  ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<CordAead>> aead =
-      NewCordXAesGcmBoringSsl(*key);
+TEST_P(XAesGcmTestVectors, EncryptReturnsDifferentSaltAndIv) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord pt("hello world");
@@ -202,41 +138,42 @@ TEST(XAesGcmTest, EncryptReturnsDifferentSaltAndIv) {
   absl::StatusOr<absl::Cord> ct_2 = (*aead)->Encrypt(pt, aad);
   ASSERT_THAT(ct_2, IsOk());
 
-  absl::Cord salt_1 = ct_1->Subcord(0, kMinSaltSize);
-  absl::Cord salt_2 = ct_2->Subcord(0, kMinSaltSize);
+  const int salt_size = key.GetParameters().SaltSizeBytes();
+  absl::Cord salt_1 = ct_1->Subcord(0, salt_size);
+  absl::Cord salt_2 = ct_2->Subcord(0, salt_size);
   EXPECT_THAT(salt_1, Not(Eq(salt_2)));
 
-  absl::Cord iv_1 = ct_1->Subcord(kMinSaltSize, kIvSize);
-  absl::Cord iv_2 = ct_2->Subcord(kMinSaltSize, kIvSize);
+  absl::Cord iv_1 = ct_1->Subcord(salt_size, kIvSize);
+  absl::Cord iv_2 = ct_2->Subcord(salt_size, kIvSize);
   EXPECT_THAT(iv_1, Not(Eq(iv_2)));
 }
 
-TEST(XAesGcmTest, SaltModificationFailsDecryption) {
-  absl::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
-  ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<CordAead>> aead =
-      NewCordXAesGcmBoringSsl(*key);
+TEST_P(XAesGcmTestVectors, SaltModificationFailsDecryption) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
-  absl::Cord pt("hello world");
-  absl::Cord aad("aad");
-  absl::StatusOr<absl::Cord> ct = (*aead)->Encrypt(pt, aad);
-  ASSERT_THAT(ct, IsOk());
-
-  char s = ct->Subcord(0, 1).Flatten()[0];
-  s++;
-  ct->RemovePrefix(1);
-  ct->Prepend(absl::string_view(&s, 1));
-
-  EXPECT_THAT((*aead)->Decrypt(*ct, aad).status(),
+  std::string modified_ct = test_vector.ciphertext;
+  modified_ct[0] ^= 0x01;
+  EXPECT_THAT((*aead)
+                  ->Decrypt(absl::Cord(modified_ct),
+                            absl::Cord(test_vector.associated_data))
+                  .status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 
+INSTANTIATE_TEST_SUITE_P(XAesGcmTestVectors, XAesGcmTestVectors,
+                         ValuesIn(GetNoPrefixTestVectors()));
+
 TEST(XAesGcmTest, DifferentSaltSizeFailsDecryption) {
-  absl::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
-  ASSERT_THAT(key, IsOk());
+  const AeadTestVector& min_salt_vector =
+      GetXAesGcmTestVector(kMinSaltSize, XAesGcmParameters::Variant::kNoPrefix);
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*min_salt_vector.aead_key);
   absl::StatusOr<std::unique_ptr<CordAead>> encrypter =
-      NewCordXAesGcmBoringSsl(*key);
+      NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(encrypter, IsOk());
 
   absl::Cord pt("hello world");
@@ -244,16 +181,18 @@ TEST(XAesGcmTest, DifferentSaltSizeFailsDecryption) {
   absl::StatusOr<absl::Cord> ct = (*encrypter)->Encrypt(pt, aad);
   ASSERT_THAT(ct, IsOk());
 
-  absl::StatusOr<XAesGcmKey> other_key = CreateKey(kMaxSaltSize);
-  ASSERT_THAT(other_key, IsOk());
+  const AeadTestVector& max_salt_vector =
+      GetXAesGcmTestVector(kMaxSaltSize, XAesGcmParameters::Variant::kNoPrefix);
+  const XAesGcmKey& other_key =
+      dynamic_cast<const XAesGcmKey&>(*max_salt_vector.aead_key);
   absl::StatusOr<std::unique_ptr<CordAead>> decrypter =
-      NewCordXAesGcmBoringSsl(*other_key);
+      NewCordXAesGcmBoringSsl(other_key);
   ASSERT_THAT(decrypter, IsOk());
 
   EXPECT_THAT((*decrypter)->Decrypt(*ct, aad).status(),
               StatusIs(absl::StatusCode::kInternal));
 
-  decrypter = NewCordXAesGcmBoringSsl(*key);
+  decrypter = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(decrypter, IsOk());
   absl::StatusOr<absl::Cord> decrypted = (*decrypter)->Decrypt(*ct, aad);
   EXPECT_THAT(decrypted, IsOk());

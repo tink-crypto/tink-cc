@@ -438,21 +438,14 @@ tink_cc_test(
     gmock
     absl::status
     absl::status_matchers
-    absl::strings
+    absl::statusor
     absl::cord
-    absl::string_view
-    absl::optional
-    tink::core::insecure_secret_key_access
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_data
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::x_aes_gcm_test_vectors
     tink::subtle::random
-    tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_library(

@@ -84,16 +84,25 @@ TEST(WycheproofUtilTest, ReadTestVectorsV1) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectorsV1(/*filename=*/"ecdsa_secp256r1_sha256_test.json");
   ASSERT_THAT(parsed_input.status(), IsOk());
+
   const google::protobuf::Value& algorithm =
       parsed_input->fields().at("algorithm");
+  EXPECT_THAT(algorithm.string_value(), Eq("ECDSA"));
+
+  int num_tests = 0;
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
-  const google::protobuf::Value& tests =
-      test_groups.list_value().values(0).struct_value().fields().at("tests");
-
-  EXPECT_THAT(algorithm.string_value(), Eq("ECDSA"));
-  EXPECT_THAT(test_groups.list_value().values_size(), Eq(104));
-  EXPECT_THAT(tests.list_value().values_size(), Eq(4));
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    const auto& group_fields = test_group.struct_value().fields();
+    auto it = group_fields.find("tests");
+    if (it != group_fields.end()) {
+      num_tests += it->second.list_value().values_size();
+    }
+  }
+  const int expected_num_tests =
+      parsed_input->fields().at("numberOfTests").number_value();
+  EXPECT_THAT(num_tests, Eq(expected_num_tests));
 }
 
 TEST(WycheproofUtilTest, ReadTestVectorsV1_invalidFileFails) {

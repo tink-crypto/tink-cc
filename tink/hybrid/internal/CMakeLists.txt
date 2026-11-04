@@ -792,3 +792,49 @@ tink_cc_test(
     tink::proto::hpke_cc_tinkpb
     tink::proto::tink_cc_tinkpb
 )
+
+tink_cc_library(
+  NAME ecies_aead_hkdf_hybrid_decrypt
+  SRCS
+    ecies_aead_hkdf_hybrid_decrypt.cc
+    ecies_aead_hkdf_hybrid_decrypt.h
+  DEPS
+    tink::hybrid::internal::ecies_aead_hkdf_dem_helper
+    absl::absl_check
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::hybrid_decrypt
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::aead::aead_key_templates
+    tink::daead::deterministic_aead_key_templates
+    tink::daead::subtle::aead_or_daead
+    tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_private_key
+    tink::internal::ec_util
+    tink::subtle::common_enums
+    tink::subtle::ecies_hkdf_recipient_kem_boringssl
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME ecies_aead_hkdf_hybrid_decrypt_test
+  SRCS
+    ecies_aead_hkdf_hybrid_decrypt_test.cc
+  DEPS
+    tink::hybrid::internal::ecies_aead_hkdf_hybrid_decrypt
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    tink::core::hybrid_decrypt
+    tink::hybrid::ecies_private_key
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
+)

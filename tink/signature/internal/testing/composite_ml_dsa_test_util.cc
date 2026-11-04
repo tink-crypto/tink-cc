@@ -33,14 +33,12 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ed25519_parameters.h"
-#include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/signature_private_key.h"
 
@@ -198,14 +196,18 @@ MlDsaPrivateKey GenerateMlDsaPrivateKeyForTestOrDie(
     CompositeMlDsaParameters::MlDsaInstance instance, int key_index) {
   switch (instance) {
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa44: {
-      absl::StatusOr<MlDsaParameters> parameters =
-          MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
-                                  MlDsaParameters::Variant::kNoPrefix);
-      ABSL_CHECK_OK(parameters);
-      absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
-          CreateMlDsaKey(*parameters, /*id_requirement=*/std::nullopt);
-      ABSL_CHECK_OK(private_key);
-      return **private_key;
+      if (key_index == 0) {
+        static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+          return *static_cast<const CompositeMlDsaPrivateKey*>(
+              CreateMlDsa44Ed25519TestVector().signature_private_key.get());
+        }());
+        return key->GetMlDsaPrivateKey();
+      }
+      static const absl::NoDestructor<CompositeMlDsaPrivateKey> key([]() {
+        return *static_cast<const CompositeMlDsaPrivateKey*>(
+            CreateMlDsa44EcdsaP256TestVector().signature_private_key.get());
+      }());
+      return key->GetMlDsaPrivateKey();
     }
     case CompositeMlDsaParameters::MlDsaInstance::kMlDsa65: {
       if (key_index == 0) {

@@ -195,10 +195,8 @@ tink_cc_library(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
     tink::signature::ed25519_parameters
-    tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::signature_private_key
-    tink::signature::internal::ml_dsa_key_creator
   TESTONLY
 )
 

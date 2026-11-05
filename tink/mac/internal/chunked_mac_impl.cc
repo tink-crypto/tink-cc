@@ -152,17 +152,6 @@ absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
 absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
     const AesCmacKey& key) {
   ABSL_RETURN_IF_ERROR(ChecksFipsCompatibility(FipsCompatibility::kNotFips));
-  if (key.GetParameters().KeySizeInBytes() != 16 &&
-      key.GetParameters().KeySizeInBytes() != 32) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Invalid key size: expected 16 or 32, found ",
-                     key.GetParameters().KeySizeInBytes()));
-  }
-  if (key.GetParameters().CryptographicTagSizeInBytes() > 16) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Invalid tag size: expected at most 16, found ",
-                     key.GetParameters().CryptographicTagSizeInBytes()));
-  }
   auto stateful_mac_factory = std::make_unique<StatefulCmacBoringSslFactory>(
       key.GetParameters().CryptographicTagSizeInBytes(),
       key.GetKeyBytes(GetPartialKeyAccess())

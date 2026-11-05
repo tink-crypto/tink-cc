@@ -37,6 +37,7 @@
 
 namespace crypto {
 namespace tink {
+namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
@@ -46,8 +47,6 @@ using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
-
-namespace {
 
 TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, Basics) {
   EXPECT_THAT(RawJwtRsaSsaPkcs1VerifyKeyManager().get_version(), Eq(0));

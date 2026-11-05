@@ -7,8 +7,20 @@ tink_cc_library(
     jwt_rsa_ssa_test_vectors.h
   DEPS
     absl::no_destructor
+    absl::flat_hash_map
     absl::absl_check
+    absl::statusor
     absl::strings
+    tink::core::big_integer
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::jwt::jwt_rsa_ssa_pss_public_key
   TESTONLY
 )
 

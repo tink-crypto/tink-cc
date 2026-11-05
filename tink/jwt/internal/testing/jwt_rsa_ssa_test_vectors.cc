@@ -16,12 +16,27 @@
 
 #include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 
+#include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
+#include "tink/big_integer.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 
 namespace crypto {
 namespace tink {
@@ -204,6 +219,214 @@ const RsaSsaTestVector& GetRsa2048BitVector2() {
 const RsaSsaTestVector& GetRsa3072BitVector() {
   static const absl::NoDestructor<RsaSsaTestVector> vector(CreateVector3072());
   return *vector;
+}
+
+namespace {
+
+JwtRsaSsaPkcs1TestVector MakeJwtRsaSsaPkcs1TestVector(
+    const RsaSsaTestVector& rsa_vector, int modulus_size_in_bits,
+    JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy,
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm,
+    std::optional<int> id_requirement, std::optional<std::string> custom_kid) {
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> params =
+      JwtRsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(modulus_size_in_bits)
+          .SetPublicExponent(BigInteger(rsa_vector.e))
+          .SetKidStrategy(kid_strategy)
+          .SetAlgorithm(algorithm)
+          .Build();
+  ABSL_CHECK_OK(params.status());
+
+  JwtRsaSsaPkcs1PublicKey::Builder public_key_builder =
+      JwtRsaSsaPkcs1PublicKey::Builder().SetParameters(*params).SetModulus(
+          BigInteger(rsa_vector.n));
+  if (id_requirement.has_value()) {
+    public_key_builder.SetIdRequirement(*id_requirement);
+  }
+  if (custom_kid.has_value()) {
+    public_key_builder.SetCustomKid(*custom_kid);
+  }
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
+      public_key_builder.Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key.status());
+
+  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
+      JwtRsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(
+              RestrictedData(rsa_vector.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(rsa_vector.q, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(rsa_vector.d, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(rsa_vector.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(rsa_vector.dq, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(rsa_vector.q_inv, InsecureSecretKeyAccess::Get()))
+          .Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key.status());
+
+  return JwtRsaSsaPkcs1TestVector{*std::move(private_key)};
+}
+
+using JwtRsaSsaPkcs1TestVectorMap =
+    absl::flat_hash_map<JwtRsaSsaPkcs1Parameters::Algorithm,
+                        JwtRsaSsaPkcs1TestVector>;
+
+const JwtRsaSsaPkcs1TestVectorMap& CreateJwtRsaSsaPkcs1TestVectorsMap() {
+  static const absl::NoDestructor<JwtRsaSsaPkcs1TestVectorMap> test_vectors(
+      JwtRsaSsaPkcs1TestVectorMap{
+          {JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+           MakeJwtRsaSsaPkcs1TestVector(
+               GetRsa2048BitVector1(), /*modulus_size_in_bits=*/2048,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
+               JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+               /*id_requirement=*/123, /*custom_kid=*/std::nullopt)},
+          {JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
+           MakeJwtRsaSsaPkcs1TestVector(
+               GetRsa2048BitVector2(), /*modulus_size_in_bits=*/2048,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
+               JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
+               /*id_requirement=*/std::nullopt, /*custom_kid=*/"custom_kid")},
+          {JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
+           MakeJwtRsaSsaPkcs1TestVector(
+               GetRsa3072BitVector(), /*modulus_size_in_bits=*/3072,
+               JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
+               JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
+               /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt)},
+      });
+  return *test_vectors;
+}
+
+JwtRsaSsaPssTestVector MakeJwtRsaSsaPssTestVector(
+    const RsaSsaTestVector& rsa_vector, int modulus_size_in_bits,
+    JwtRsaSsaPssParameters::KidStrategy kid_strategy,
+    JwtRsaSsaPssParameters::Algorithm algorithm,
+    std::optional<int> id_requirement, std::optional<std::string> custom_kid) {
+  absl::StatusOr<JwtRsaSsaPssParameters> params =
+      JwtRsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(modulus_size_in_bits)
+          .SetPublicExponent(BigInteger(rsa_vector.e))
+          .SetKidStrategy(kid_strategy)
+          .SetAlgorithm(algorithm)
+          .Build();
+  ABSL_CHECK_OK(params.status());
+
+  JwtRsaSsaPssPublicKey::Builder public_key_builder =
+      JwtRsaSsaPssPublicKey::Builder().SetParameters(*params).SetModulus(
+          BigInteger(rsa_vector.n));
+  if (id_requirement.has_value()) {
+    public_key_builder.SetIdRequirement(*id_requirement);
+  }
+  if (custom_kid.has_value()) {
+    public_key_builder.SetCustomKid(*custom_kid);
+  }
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+      public_key_builder.Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key.status());
+
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+      JwtRsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(
+              RestrictedData(rsa_vector.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(rsa_vector.q, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(rsa_vector.d, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(rsa_vector.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(rsa_vector.dq, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(rsa_vector.q_inv, InsecureSecretKeyAccess::Get()))
+          .Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key.status());
+
+  return JwtRsaSsaPssTestVector{*std::move(private_key)};
+}
+
+using JwtRsaSsaPssTestVectorMap =
+    absl::flat_hash_map<JwtRsaSsaPssParameters::Algorithm,
+                        JwtRsaSsaPssTestVector>;
+
+const JwtRsaSsaPssTestVectorMap& CreateJwtRsaSsaPssTestVectorsMap() {
+  static const absl::NoDestructor<JwtRsaSsaPssTestVectorMap> test_vectors(
+      JwtRsaSsaPssTestVectorMap{
+          {JwtRsaSsaPssParameters::Algorithm::kPs256,
+           MakeJwtRsaSsaPssTestVector(
+               GetRsa2048BitVector1(), /*modulus_size_in_bits=*/2048,
+               JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId,
+               JwtRsaSsaPssParameters::Algorithm::kPs256,
+               /*id_requirement=*/123, /*custom_kid=*/std::nullopt)},
+          {JwtRsaSsaPssParameters::Algorithm::kPs384,
+           MakeJwtRsaSsaPssTestVector(
+               GetRsa2048BitVector2(), /*modulus_size_in_bits=*/2048,
+               JwtRsaSsaPssParameters::KidStrategy::kCustom,
+               JwtRsaSsaPssParameters::Algorithm::kPs384,
+               /*id_requirement=*/std::nullopt, /*custom_kid=*/"custom_kid")},
+          {JwtRsaSsaPssParameters::Algorithm::kPs512,
+           MakeJwtRsaSsaPssTestVector(
+               GetRsa3072BitVector(), /*modulus_size_in_bits=*/3072,
+               JwtRsaSsaPssParameters::KidStrategy::kIgnored,
+               JwtRsaSsaPssParameters::Algorithm::kPs512,
+               /*id_requirement=*/std::nullopt, /*custom_kid=*/std::nullopt)},
+      });
+  return *test_vectors;
+}
+
+}  // namespace
+
+const std::vector<JwtRsaSsaPkcs1TestVector>& CreateJwtRsaSsaPkcs1TestVectors() {
+  static const absl::NoDestructor<std::vector<JwtRsaSsaPkcs1TestVector>>
+      test_vectors([] {
+        const JwtRsaSsaPkcs1TestVectorMap& map =
+            CreateJwtRsaSsaPkcs1TestVectorsMap();
+        std::vector<JwtRsaSsaPkcs1TestVector> result;
+        result.reserve(map.size());
+        for (const auto& [unused_algorithm, test_vector] : map) {
+          result.push_back(test_vector);
+        }
+        return result;
+      }());
+  return *test_vectors;
+}
+
+const JwtRsaSsaPkcs1TestVector& GetJwtRsaSsaPkcs1TestVector(
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm) {
+  const JwtRsaSsaPkcs1TestVectorMap& map = CreateJwtRsaSsaPkcs1TestVectorsMap();
+  auto it = map.find(algorithm);
+  ABSL_CHECK(it != map.end())
+      << "No JWT RSA-SSA-PKCS1 test vector found for algorithm: "
+      << static_cast<int>(algorithm);
+  return it->second;
+}
+
+const std::vector<JwtRsaSsaPssTestVector>& CreateJwtRsaSsaPssTestVectors() {
+  static const absl::NoDestructor<std::vector<JwtRsaSsaPssTestVector>>
+      test_vectors([] {
+        const JwtRsaSsaPssTestVectorMap& map =
+            CreateJwtRsaSsaPssTestVectorsMap();
+        std::vector<JwtRsaSsaPssTestVector> result;
+        result.reserve(map.size());
+        for (const auto& [unused_algorithm, test_vector] : map) {
+          result.push_back(test_vector);
+        }
+        return result;
+      }());
+  return *test_vectors;
+}
+
+const JwtRsaSsaPssTestVector& GetJwtRsaSsaPssTestVector(
+    JwtRsaSsaPssParameters::Algorithm algorithm) {
+  const JwtRsaSsaPssTestVectorMap& map = CreateJwtRsaSsaPssTestVectorsMap();
+  auto it = map.find(algorithm);
+  ABSL_CHECK(it != map.end())
+      << "No JWT RSA-SSA-PSS test vector found for algorithm: "
+      << static_cast<int>(algorithm);
+  return it->second;
 }
 
 }  // namespace jwt_internal

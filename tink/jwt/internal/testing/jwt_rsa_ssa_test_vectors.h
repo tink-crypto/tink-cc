@@ -18,6 +18,12 @@
 #define TINK_JWT_INTERNAL_TESTING_JWT_RSA_SSA_TEST_VECTORS_H_
 
 #include <string>
+#include <vector>
+
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
 
 namespace crypto {
 namespace tink {
@@ -34,6 +40,14 @@ struct RsaSsaTestVector {
   std::string q_inv;
 };
 
+struct JwtRsaSsaPkcs1TestVector {
+  JwtRsaSsaPkcs1PrivateKey key;
+};
+
+struct JwtRsaSsaPssTestVector {
+  JwtRsaSsaPssPrivateKey key;
+};
+
 // Returns RSA key values from RFC 7517 Appendix C.1.
 const RsaSsaTestVector& GetRsa2048BitVector1();
 
@@ -42,6 +56,22 @@ const RsaSsaTestVector& GetRsa2048BitVector2();
 
 // Returns 3072-bit RSA key values (from Wycheproof rsa_pkcs1_3072_test.json).
 const RsaSsaTestVector& GetRsa3072BitVector();
+
+// Returns static test vectors for JWT RSA-SSA-PKCS1 covering RS256, RS384, and
+// RS512 with kBase64EncodedKeyId, kCustom, and kIgnored kid strategies.
+const std::vector<JwtRsaSsaPkcs1TestVector>& CreateJwtRsaSsaPkcs1TestVectors();
+
+// Returns static test vector for JWT RSA-SSA-PKCS1 for the given algorithm.
+const JwtRsaSsaPkcs1TestVector& GetJwtRsaSsaPkcs1TestVector(
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm);
+
+// Returns static test vectors for JWT RSA-SSA-PSS covering PS256, PS384, and
+// PS512 with kBase64EncodedKeyId, kCustom, and kIgnored kid strategies.
+const std::vector<JwtRsaSsaPssTestVector>& CreateJwtRsaSsaPssTestVectors();
+
+// Returns static test vector for JWT RSA-SSA-PSS for the given algorithm.
+const JwtRsaSsaPssTestVector& GetJwtRsaSsaPssTestVector(
+    JwtRsaSsaPssParameters::Algorithm algorithm);
 
 }  // namespace jwt_internal
 }  // namespace tink

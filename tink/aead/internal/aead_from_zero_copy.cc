@@ -18,14 +18,12 @@
 #include <cstdint>
 #include <string>
 
-#include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

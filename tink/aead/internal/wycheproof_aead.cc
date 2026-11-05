@@ -23,7 +23,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/testing/wycheproof_util.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

@@ -17,7 +17,6 @@
 #include "tink/aead/internal/kms_aead_key_gen_config_2026.h"
 #include <memory>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"

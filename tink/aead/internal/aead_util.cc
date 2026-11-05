@@ -24,7 +24,6 @@
 #include "openssl/evp.h"
 #include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/util/errors.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

@@ -41,7 +41,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "proto/aes_gcm_siv.pb.h"
 #include "proto/tink.tinkpb.h"
 

@@ -18,7 +18,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,13 +37,10 @@
 #include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/config/tink_fips.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {

@@ -36,7 +36,6 @@
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {

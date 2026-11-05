@@ -40,7 +40,6 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/kms_aead.pb.h"
 #include "proto/tink.tinkpb.h"
 

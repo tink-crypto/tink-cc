@@ -42,7 +42,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.tinkpb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 

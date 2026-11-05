@@ -31,9 +31,6 @@
 #include "tink/internal/util.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 // We test SslOneShotAead implementations against a very large input.

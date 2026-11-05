@@ -25,7 +25,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -37,7 +36,6 @@
 #include "tink/crypto_format.h"
 #include "tink/internal/primitive_set.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

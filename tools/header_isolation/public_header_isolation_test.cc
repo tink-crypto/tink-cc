@@ -279,6 +279,7 @@
 #include "tink/mac/mac_wrapper.h"
 #include "tink/mac/subtle/create_aes_cmac_chunked_mac.h"
 #include "tink/mac/subtle/create_aes_cmac_mac.h"
+#include "tink/mac/subtle/create_hmac_chunked_mac.h"
 #include "tink/mac/subtle/create_hmac_mac.h"
 #include "tink/mac_config.h"
 #include "tink/mac_factory.h"

@@ -97,3 +97,33 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_hmac_chunked_mac",
+    srcs = ["create_hmac_chunked_mac.cc"],
+    hdrs = ["create_hmac_chunked_mac.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:chunked_mac",
+        "//tink/mac:hmac_key",
+        "//tink/mac/internal:chunked_mac_impl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_hmac_chunked_mac_test",
+    size = "small",
+    srcs = ["create_hmac_chunked_mac_test.cc"],
+    deps = [
+        ":create_hmac_chunked_mac",
+        "//tink:chunked_mac",
+        "//tink/internal:fips_utils",
+        "//tink/mac:hmac_parameters",
+        "//tink/mac/internal:hmac_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

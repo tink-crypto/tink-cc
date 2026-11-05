@@ -305,3 +305,34 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::internal::ssl_util
 )
+
+tink_cc_library(
+  NAME create_x_aes_gcm_cord_aead
+  SRCS
+    create_x_aes_gcm_cord_aead.cc
+    create_x_aes_gcm_cord_aead.h
+  DEPS
+    absl::statusor
+    tink::aead::cord_aead
+    tink::aead::x_aes_gcm_key
+    tink::aead::internal::cord_x_aes_gcm_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_x_aes_gcm_cord_aead_test
+  SRCS
+    create_x_aes_gcm_cord_aead_test.cc
+  DEPS
+    tink::aead::subtle::create_x_aes_gcm_cord_aead
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::cord
+    absl::string_view
+    tink::aead::cord_aead
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::x_aes_gcm_test_vectors
+)

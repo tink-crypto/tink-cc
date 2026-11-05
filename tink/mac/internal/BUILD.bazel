@@ -24,6 +24,8 @@ cc_library(
         "//tink/internal:safe_stringops",
         "//tink/mac:aes_cmac_key",
         "//tink/mac:aes_cmac_parameters",
+        "//tink/mac:hmac_key",
+        "//tink/mac:hmac_parameters",
         "//tink/subtle:common_enums",
         "//tink/util:enums",
         "//tink/util:secret_data",
@@ -33,6 +35,7 @@ cc_library(
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -186,6 +189,7 @@ cc_test(
     deps = [
         ":aes_cmac_test_vectors",
         ":chunked_mac_impl",
+        ":hmac_test_vectors",
         ":stateful_mac",
         "//proto:aes_cmac_cc_proto",
         "//proto:common_cc_proto",
@@ -193,6 +197,7 @@ cc_test(
         "//tink:chunked_mac",
         "//tink:secret_data",
         "//tink/internal:fips_utils",
+        "//tink/mac:hmac_parameters",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",

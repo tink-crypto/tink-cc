@@ -29,7 +29,9 @@
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/mac/hmac_parameters.h"
 #include "tink/mac/internal/aes_cmac_test_vectors.h"
+#include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -188,6 +190,18 @@ TEST(ChunkedMacComputationImplTest, ComputeMacSucceeds) {
   EXPECT_THAT(mac_computation.ComputeMac(), IsOkAndHolds("tag"));
 }
 
+TEST(ChunkedMacComputationImplTest, ComputeMacWithPrefixAndSuffixSucceeds) {
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
+  absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, Update(absl::string_view("\0", 1)))
+      .WillOnce(Return(absl::OkStatus()));
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
+  ChunkedMacComputationImpl mac_computation(std::move(stateful_mac), "prefix_",
+                                            absl::string_view("\0", 1));
+
+  EXPECT_THAT(mac_computation.ComputeMac(), IsOkAndHolds("prefix_tag"));
+}
+
 TEST(ChunkedMacComputationImplTest, ComputeMacFails) {
   auto stateful_mac = std::make_unique<MockStatefulMac>();
   absl::Status error_status =
@@ -225,6 +239,28 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacSucceeds) {
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");
 
   EXPECT_THAT(mac_verification.VerifyMac(), IsOk());
+}
+
+TEST(ChunkedMacVerificationImplTest, VerifyMacWithPrefixAndSuffixSucceeds) {
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
+  absl::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, Update(absl::string_view("\0", 1)))
+      .WillOnce(Return(absl::OkStatus()));
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
+  ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac),
+                                              "prefix_tag", "prefix_",
+                                              absl::string_view("\0", 1));
+
+  EXPECT_THAT(mac_verification.VerifyMac(), IsOk());
+}
+
+TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithInvalidPrefix) {
+  auto stateful_mac = std::make_unique<MockStatefulMac>();
+  ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac),
+                                              "wrong_tag", "prefix_");
+
+  EXPECT_THAT(mac_verification.VerifyMac(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithInvalidSameLengthTag) {
@@ -354,6 +390,136 @@ TEST(NewChunkedCmacTest, FailInFipsMode) {
   EXPECT_THAT(NewChunkedCmac(param.key), Not(IsOk()));
 }
 
+using NewChunkedHmacTestVectorsTest = TestWithParam<HmacTestVector>;
+
+TEST_P(NewChunkedHmacTestVectorsTest, ComputeMac) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test is skipped if kOnlyUseFips is set, but BoringCrypto "
+                    "is not available.";
+  }
+  const HmacTestVector& param = GetParam();
+
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+      NewChunkedHmac(param.key);
+  ASSERT_THAT(chunked_mac, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+      (*chunked_mac)->CreateComputation();
+  ASSERT_THAT(computation, IsOk());
+  ASSERT_THAT((*computation)->Update(param.message), IsOk());
+  EXPECT_THAT((*computation)->ComputeMac(), IsOkAndHolds(Eq(param.tag)));
+}
+
+TEST_P(NewChunkedHmacTestVectorsTest, VerifyMac) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test is skipped if kOnlyUseFips is set, but BoringCrypto "
+                    "is not available.";
+  }
+  const HmacTestVector& param = GetParam();
+
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+      NewChunkedHmac(param.key);
+  ASSERT_THAT(chunked_mac, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+      (*chunked_mac)->CreateVerification(param.tag);
+  ASSERT_THAT(verification, IsOk());
+  ASSERT_THAT((*verification)->Update(param.message), IsOk());
+  EXPECT_THAT((*verification)->VerifyMac(), IsOk());
+}
+
+TEST_P(NewChunkedHmacTestVectorsTest, VerifyMacFailsWithModifiedTagByte) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test is skipped if kOnlyUseFips is set, but BoringCrypto "
+                    "is not available.";
+  }
+  const HmacTestVector& param = GetParam();
+
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+      NewChunkedHmac(param.key);
+  ASSERT_THAT(chunked_mac, IsOk());
+
+  // Modify a byte in the tag (covers prefix and raw tag bytes).
+  for (size_t i = 0; i < param.tag.size(); ++i) {
+    std::string modified_tag = param.tag;
+    modified_tag[i] ^= 1;
+    absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+        (*chunked_mac)->CreateVerification(modified_tag);
+    ASSERT_THAT(bad_verification, IsOk());
+    ASSERT_THAT((*bad_verification)->Update(param.message), IsOk());
+    EXPECT_THAT((*bad_verification)->VerifyMac(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
+TEST_P(NewChunkedHmacTestVectorsTest,
+       VerifyMacFailsWithTruncatedOrExtendedTag) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test is skipped if kOnlyUseFips is set, but BoringCrypto "
+                    "is not available.";
+  }
+  const HmacTestVector& param = GetParam();
+
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+      NewChunkedHmac(param.key);
+  ASSERT_THAT(chunked_mac, IsOk());
+
+  // Truncate or extend the tag.
+  for (size_t i = 0; i < param.tag.size(); ++i) {
+    absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+        (*chunked_mac)
+            ->CreateVerification(absl::string_view(param.tag).substr(0, i));
+    ASSERT_THAT(bad_verification, IsOk());
+    ASSERT_THAT((*bad_verification)->Update(param.message), IsOk());
+    EXPECT_THAT((*bad_verification)->VerifyMac(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+  std::string extended_tag = param.tag + "x";
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+      (*chunked_mac)->CreateVerification(extended_tag);
+  ASSERT_THAT(bad_verification, IsOk());
+  ASSERT_THAT((*bad_verification)->Update(param.message), IsOk());
+  EXPECT_THAT((*bad_verification)->VerifyMac(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_P(NewChunkedHmacTestVectorsTest, VerifyMacFailsWithModifiedMessage) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test is skipped if kOnlyUseFips is set, but BoringCrypto "
+                    "is not available.";
+  }
+  const HmacTestVector& param = GetParam();
+
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+      NewChunkedHmac(param.key);
+  ASSERT_THAT(chunked_mac, IsOk());
+
+  std::string modified_message = param.message + "x";
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+      (*chunked_mac)->CreateVerification(param.tag);
+  ASSERT_THAT(bad_verification, IsOk());
+  ASSERT_THAT((*bad_verification)->Update(modified_message), IsOk());
+  EXPECT_THAT((*bad_verification)->VerifyMac(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+INSTANTIATE_TEST_SUITE_P(NewChunkedHmacTestVectorsTest,
+                         NewChunkedHmacTestVectorsTest,
+                         ValuesIn(CreateHmacTestVectors()));
+
+TEST(NewChunkedHmacTest, FipsMode) {
+  if (!IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test only run in FIPS-only mode";
+  }
+  const HmacTestVector& test_vector = GetHmacTestVector(
+      /*key_size_in_bytes=*/16, HmacParameters::HashType::kSha256,
+      HmacParameters::Variant::kTink);
+  if (IsFipsEnabledInSsl()) {
+    EXPECT_THAT(NewChunkedHmac(test_vector.key), IsOk());
+  } else {
+    EXPECT_THAT(NewChunkedHmac(test_vector.key), Not(IsOk()));
+  }
+}
 }  // namespace
 }  // namespace internal
 }  // namespace tink

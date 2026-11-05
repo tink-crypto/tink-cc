@@ -13,6 +13,7 @@ tink_cc_library(
     absl::status_macros
     absl::statusor
     absl::strings
+    absl::string_view
     tink::core::chunked_mac
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
@@ -22,6 +23,8 @@ tink_cc_library(
     tink::internal::safe_stringops
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
     tink::subtle::common_enums
     tink::util::enums
     tink::util::secret_data
@@ -149,6 +152,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::aes_cmac_test_vectors
     tink::mac::internal::chunked_mac_impl
+    tink::mac::internal::hmac_test_vectors
     tink::mac::internal::stateful_mac
     gmock
     absl::status
@@ -158,6 +162,7 @@ tink_cc_test(
     tink::core::chunked_mac
     tink::core::secret_data
     tink::internal::fips_utils
+    tink::mac::hmac_parameters
     tink::util::secret_data
     tink::proto::aes_cmac_cc_proto
     tink::proto::common_cc_proto

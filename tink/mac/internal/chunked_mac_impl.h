@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
 #include "tink/mac/aes_cmac_key.h"
+#include "tink/mac/hmac_key.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -110,6 +111,9 @@ absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
 // Create new Chunked HMAC instance from `key`.
 absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
     const google::crypto::tink::HmacKey& key);
+
+// Create new Chunked HMAC instance from `key`.
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(const HmacKey& key);
 
 }  // namespace internal
 }  // namespace tink

@@ -33,6 +33,8 @@
 #include "tink/internal/safe_stringops.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
+#include "tink/mac/hmac_key.h"
+#include "tink/mac/hmac_parameters.h"
 #include "tink/mac/internal/stateful_cmac_boringssl.h"
 #include "tink/mac/internal/stateful_hmac_boringssl.h"
 #include "tink/mac/internal/stateful_mac.h"
@@ -47,6 +49,28 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace {
+
+absl::StatusOr<subtle::HashType> ToSubtleHashType(
+    HmacParameters::HashType hash_type) {
+  switch (hash_type) {
+    case HmacParameters::HashType::kSha1:
+      return subtle::HashType::SHA1;
+    case HmacParameters::HashType::kSha224:
+      return subtle::HashType::SHA224;
+    case HmacParameters::HashType::kSha256:
+      return subtle::HashType::SHA256;
+    case HmacParameters::HashType::kSha384:
+      return subtle::HashType::SHA384;
+    case HmacParameters::HashType::kSha512:
+      return subtle::HashType::SHA512;
+    default:
+      return absl::InvalidArgumentError(
+          absl::StrCat("Unsupported hash type: ", hash_type));
+  }
+}
+
+}  // namespace
 
 using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
@@ -177,6 +201,24 @@ absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
           hash_type, key.params().tag_size(), secret_key_data);
   return std::unique_ptr<ChunkedMac>(
       new ChunkedMacImpl(std::move(stateful_mac_factory)));
+}
+
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(const HmacKey& key) {
+  ABSL_RETURN_IF_ERROR(
+      ChecksFipsCompatibility(FipsCompatibility::kRequiresBoringCrypto));
+  ABSL_ASSIGN_OR_RETURN(subtle::HashType hash_type,
+                        ToSubtleHashType(key.GetParameters().GetHashType()));
+  auto stateful_mac_factory =
+      std::make_unique<internal::StatefulHmacBoringSslFactory>(
+          hash_type, key.GetParameters().CryptographicTagSizeInBytes(),
+          key.GetKeyBytes(GetPartialKeyAccess())
+              .Get(InsecureSecretKeyAccess::Get()));
+  absl::string_view message_suffix =
+      key.GetParameters().GetVariant() == HmacParameters::Variant::kLegacy
+          ? absl::string_view("\0", 1)
+          : "";
+  return std::make_unique<ChunkedMacImpl>(
+      std::move(stateful_mac_factory), key.GetOutputPrefix(), message_suffix);
 }
 
 }  // namespace internal

@@ -68,3 +68,32 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_aes_cmac_chunked_mac",
+    srcs = ["create_aes_cmac_chunked_mac.cc"],
+    hdrs = ["create_aes_cmac_chunked_mac.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:chunked_mac",
+        "//tink/mac:aes_cmac_key",
+        "//tink/mac/internal:chunked_mac_impl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_cmac_chunked_mac_test",
+    size = "small",
+    srcs = ["create_aes_cmac_chunked_mac_test.cc"],
+    deps = [
+        ":create_aes_cmac_chunked_mac",
+        "//tink:chunked_mac",
+        "//tink/internal:fips_utils",
+        "//tink/mac/internal:aes_cmac_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

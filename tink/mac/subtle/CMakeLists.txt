@@ -61,3 +61,31 @@ tink_cc_test(
     tink::mac::aes_cmac_parameters
     tink::mac::internal::aes_cmac_test_vectors
 )
+
+tink_cc_library(
+  NAME create_aes_cmac_chunked_mac
+  SRCS
+    create_aes_cmac_chunked_mac.cc
+    create_aes_cmac_chunked_mac.h
+  DEPS
+    absl::statusor
+    tink::core::chunked_mac
+    tink::mac::aes_cmac_key
+    tink::mac::internal::chunked_mac_impl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_aes_cmac_chunked_mac_test
+  SRCS
+    create_aes_cmac_chunked_mac_test.cc
+  DEPS
+    tink::mac::subtle::create_aes_cmac_chunked_mac
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::chunked_mac
+    tink::internal::fips_utils
+    tink::mac::internal::aes_cmac_test_vectors
+)

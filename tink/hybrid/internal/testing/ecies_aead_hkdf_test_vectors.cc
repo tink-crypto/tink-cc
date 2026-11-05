@@ -501,16 +501,179 @@ HybridTestVector CreateTestVector14() {
           "6667ba0360d2fe35b5d2adae56d5cccd93c407f8a37926fe0da688"));
 }
 
+HybridTestVector CreateSha1TestVector() {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha1)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ABSL_CHECK_OK(params);
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, P256Point(),
+                                         /*id_requirement=*/std::nullopt,
+                                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key);
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
+                                          GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key);
+  return HybridTestVector(
+      std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
+      HexDecodeOrDie("02"),
+      HexDecodeOrDie(
+          "04da34b4d21cb7feacd62d4fa01683e4e5c4c7489ea2120ac3cbd1d630c683c4cd81"
+          "bb858355d457844e88de8a3f587aed66a7be1dc39315f7da81102afcb8345d5085f7"
+          "7f73732c5edb89af922dabeee802c5fdbb5dadfa7a729c52a2d0"));
+}
+
+HybridTestVector CreateSha224TestVector() {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha224)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ABSL_CHECK_OK(params);
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, P256Point(),
+                                         /*id_requirement=*/std::nullopt,
+                                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key);
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
+                                          GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key);
+  return HybridTestVector(
+      std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
+      HexDecodeOrDie("02"),
+      HexDecodeOrDie(
+          "045d97e897d36bdfbaadba61afae016116f369c93129ab60a4da565890f581203a58"
+          "2b6bc538fdecea77d90b813872b8b906de4b68f9931f1576948477975ad2c406c2c9"
+          "14b46f1a93a9f2a9e57451dc21715c650d629adbdf8f428d224d"));
+}
+
+HybridTestVector CreateLegacyUncompressedPointFormatTestVector() {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(
+              EciesParameters::PointFormat::kLegacyUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ABSL_CHECK_OK(params);
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, P256Point(),
+                                         /*id_requirement=*/std::nullopt,
+                                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key);
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
+                                          GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key);
+  return HybridTestVector(
+      std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
+      HexDecodeOrDie("02"),
+      HexDecodeOrDie(
+          "a38043b97c04e469252d868b350bcc1b4594732fc9365e2b1d8cf6d647d51664d306"
+          "bf41cd09a80dc074813b0ddc47c57690efb6ad4ce6b8d7e95518d94ffafb3bde8d18"
+          "f158bc0f20283ff90006420240f330202f66df3c3d9e086fac"));
+}
+
+HybridTestVector CreateXChaCha20Poly1305DemTestVector() {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kXChaCha20Poly1305Raw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ABSL_CHECK_OK(params);
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, P256Point(),
+                                         /*id_requirement=*/std::nullopt,
+                                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key);
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
+                                          GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key);
+  return HybridTestVector(
+      std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
+      HexDecodeOrDie("02"),
+      HexDecodeOrDie(
+          "04bda9e796403322aeb45123bb083976dd13d8836f33313e7fbe668b54a1c369f9fc"
+          "982160c0c2d3ac60d8fe1f57ae14858c392558dfe406e52a6ace0340cf48194091d3"
+          "2c13a4a2ac250a431633b4ea65c99de71249bd3430c4cf8ef463850967959a21eac3"
+          "f97cfea0"));
+}
+
+HybridTestVector CreateNonEmptySaltTestVector() {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetSalt(HexDecodeOrDie("0b0b0b0b"))
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ABSL_CHECK_OK(params);
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForNistCurve(*params, P256Point(),
+                                         /*id_requirement=*/std::nullopt,
+                                         GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key);
+  absl::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
+                                          GetPartialKeyAccess());
+  ABSL_CHECK_OK(private_key);
+  return HybridTestVector(
+      std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
+      HexDecodeOrDie("02"),
+      HexDecodeOrDie(
+          "04bd0bef22b96c9f1ce303c9566315e6035c39a13321181a6e231ecff164d4e78737"
+          "517a1b511ebc2517ce73881e25b1a6abf3aafa3e9eaac2fc959638c0276a9092dfe1"
+          "a7bb147f3fed059372d42cd14780ad962a596f9be78c56d4c571"));
+}
+
 }  // namespace
 
 const std::vector<HybridTestVector>& CreateEciesTestVectors() {
   static const absl::NoDestructor<std::vector<HybridTestVector>> vectors([]() {
     return std::vector<HybridTestVector>{
-        CreateTestVector0(),  CreateTestVector1(),  CreateTestVector2(),
-        CreateTestVector3(),  CreateTestVector4(),  CreateTestVector5(),
-        CreateTestVector6(),  CreateTestVector7(),  CreateTestVector8(),
-        CreateTestVector9(),  CreateTestVector10(), CreateTestVector11(),
-        CreateTestVector12(), CreateTestVector13(), CreateTestVector14()};
+        CreateTestVector0(),
+        CreateTestVector1(),
+        CreateTestVector2(),
+        CreateTestVector3(),
+        CreateTestVector4(),
+        CreateTestVector5(),
+        CreateTestVector6(),
+        CreateTestVector7(),
+        CreateTestVector8(),
+        CreateTestVector9(),
+        CreateTestVector10(),
+        CreateTestVector11(),
+        CreateTestVector12(),
+        CreateTestVector13(),
+        CreateTestVector14(),
+        CreateSha1TestVector(),
+        CreateSha224TestVector(),
+        CreateLegacyUncompressedPointFormatTestVector(),
+        CreateXChaCha20Poly1305DemTestVector(),
+        CreateNonEmptySaltTestVector()};
   }());
   return *vectors;
 }

@@ -226,6 +226,7 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/subtle/create_jwt_ecdsa_key.h"
 #include "tink/jwt/subtle/create_jwt_ecdsa_public_key_sign.h"
+#include "tink/jwt/subtle/create_jwt_ecdsa_public_key_verify.h"
 #include "tink/jwt/subtle/create_jwt_hmac.h"
 #include "tink/jwt/subtle/create_jwt_hmac_key.h"
 #include "tink/jwt/subtle/create_jwt_ml_dsa_key.h"

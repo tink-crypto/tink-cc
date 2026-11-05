@@ -2138,3 +2138,43 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "jwt_rsa_ssa_pkcs1_sign",
+    srcs = ["jwt_rsa_ssa_pkcs1_sign.cc"],
+    hdrs = ["jwt_rsa_ssa_pkcs1_sign.h"],
+    deps = [
+        ":jwt_public_key_sign_impl",
+        "//tink:partial_key_access",
+        "//tink:public_key_sign",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt:jwt_rsa_ssa_pkcs1_parameters",
+        "//tink/jwt:jwt_rsa_ssa_pkcs1_private_key",
+        "//tink/jwt:raw_jwt",
+        "//tink/subtle:rsa_ssa_pkcs1_sign_boringssl",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "jwt_rsa_ssa_pkcs1_sign_test",
+    srcs = ["jwt_rsa_ssa_pkcs1_sign_test.cc"],
+    deps = [
+        ":jwt_public_key_verify_impl",
+        ":jwt_rsa_ssa_pkcs1_sign",
+        "//tink:partial_key_access",
+        "//tink:public_key_verify",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt:jwt_rsa_ssa_pkcs1_parameters",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "//tink/jwt:verified_jwt",
+        "//tink/jwt/internal/testing:jwt_rsa_ssa_test_vectors",
+        "//tink/subtle:rsa_ssa_pkcs1_verify_boringssl",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

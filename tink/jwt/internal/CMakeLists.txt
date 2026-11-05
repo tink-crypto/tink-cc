@@ -2119,3 +2119,43 @@ tink_cc_test(
     tink::jwt::internal::testing::jwt_ecdsa_test_vectors
     tink::subtle::common_enums
 )
+
+tink_cc_library(
+  NAME jwt_rsa_ssa_pkcs1_sign
+  SRCS
+    jwt_rsa_ssa_pkcs1_sign.cc
+    jwt_rsa_ssa_pkcs1_sign.h
+  DEPS
+    tink::jwt::internal::jwt_public_key_sign_impl
+    absl::status
+    absl::statusor
+    absl::strings
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::raw_jwt
+    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
+)
+
+tink_cc_test(
+  NAME jwt_rsa_ssa_pkcs1_sign_test
+  SRCS
+    jwt_rsa_ssa_pkcs1_sign_test.cc
+  DEPS
+    tink::jwt::internal::jwt_public_key_verify_impl
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
+    tink::subtle::rsa_ssa_pkcs1_verify_boringssl
+)

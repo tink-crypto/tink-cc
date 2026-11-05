@@ -21,7 +21,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
@@ -48,8 +47,10 @@ using ::crypto::tink::subtle::Random;
 
 class CordXAesGcmBoringSsl : public CordAead {
  public:
-  explicit CordXAesGcmBoringSsl(BaseXAesGcm base_x_aes_gcm)
-      : base_x_aes_gcm_(std::move(base_x_aes_gcm)) {}
+  explicit CordXAesGcmBoringSsl(BaseXAesGcm base_x_aes_gcm,
+                                absl::string_view output_prefix)
+      : base_x_aes_gcm_(std::move(base_x_aes_gcm)),
+        output_prefix_(output_prefix) {}
 
   absl::StatusOr<absl::Cord> Encrypt(
       absl::Cord plaintext, absl::Cord associated_data) const override {
@@ -63,17 +64,23 @@ class CordXAesGcmBoringSsl : public CordAead {
     ABSL_ASSIGN_OR_RETURN(absl::Cord ciphertext,
                           aead->Encrypt(plaintext, associated_data));
     ciphertext.Prepend(std::move(salt));
+    ciphertext.Prepend(output_prefix_);
     return ciphertext;
   }
 
   absl::StatusOr<absl::Cord> Decrypt(
       absl::Cord ciphertext, absl::Cord associated_data) const override {
-    const int min_ct_size = base_x_aes_gcm_.min_ct_size();
-    ABSL_CHECK_GE(min_ct_size, 0);
-    if (ciphertext.size() < static_cast<size_t>(min_ct_size)) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("ciphertext too short, expected at least %d bytes",
-                          base_x_aes_gcm_.min_ct_size()));
+    const size_t min_ct_size =
+        output_prefix_.size() + base_x_aes_gcm_.min_ct_size();
+    if (ciphertext.size() < min_ct_size) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "ciphertext too short, expected at least %d bytes", min_ct_size));
+    }
+    if (!output_prefix_.empty()) {
+      if (!ciphertext.StartsWith(output_prefix_)) {
+        return absl::InvalidArgumentError("Prefix mismatch");
+      }
+      ciphertext.RemovePrefix(output_prefix_.size());
     }
     char salt[BaseXAesGcm::kMaxSaltSize];
     CordReader(ciphertext).ReadN(base_x_aes_gcm_.salt_size(), salt);
@@ -89,6 +96,7 @@ class CordXAesGcmBoringSsl : public CordAead {
 
  private:
   BaseXAesGcm base_x_aes_gcm_;
+  const std::string output_prefix_;
 };
 
 }  // namespace
@@ -99,7 +107,8 @@ absl::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
   if (!base_x_aes_gcm.ok()) {
     return base_x_aes_gcm.status();
   }
-  return std::make_unique<CordXAesGcmBoringSsl>(*std::move(base_x_aes_gcm));
+  return std::make_unique<CordXAesGcmBoringSsl>(*std::move(base_x_aes_gcm),
+                                                key.GetOutputPrefix());
 }
 
 }  // namespace internal

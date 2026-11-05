@@ -20,7 +20,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -55,15 +54,6 @@ constexpr int kMaxSaltSize = 12;
 constexpr int kIvSize = 12;
 constexpr int kCtOverhead = kIvSize + 16;
 
-std::vector<AeadTestVector> GetNoPrefixTestVectors() {
-  std::vector<AeadTestVector> vectors;
-  for (int salt_size = kMinSaltSize; salt_size <= kMaxSaltSize; ++salt_size) {
-    vectors.push_back(
-        GetXAesGcmTestVector(salt_size, XAesGcmParameters::Variant::kNoPrefix));
-  }
-  return vectors;
-}
-
 using XAesGcmTestVectors = TestWithParam<AeadTestVector>;
 
 TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
@@ -89,7 +79,23 @@ TEST_P(XAesGcmTestVectors, EncryptDecrypt) {
   absl::Cord aad("aad");
   absl::StatusOr<absl::Cord> ct = (*aead)->Encrypt(pt, aad);
   ASSERT_THAT(ct, IsOk());
+  EXPECT_TRUE(ct->StartsWith(key.GetOutputPrefix()));
   EXPECT_THAT((*aead)->Decrypt(*ct, aad), IsOkAndHolds(pt));
+}
+
+TEST_P(XAesGcmTestVectors, EncryptDecryptEmptyPlaintext) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
+  ASSERT_THAT(aead, IsOk());
+
+  absl::Cord empty_pt("");
+  absl::Cord aad("aad");
+  absl::StatusOr<absl::Cord> ct = (*aead)->Encrypt(empty_pt, aad);
+  ASSERT_THAT(ct, IsOk());
+  EXPECT_TRUE(ct->StartsWith(key.GetOutputPrefix()));
+  EXPECT_THAT((*aead)->Decrypt(*ct, aad), IsOkAndHolds(empty_pt));
 }
 
 TEST_P(XAesGcmTestVectors, DecryptWithInvalidCiphertextSizeFails) {
@@ -99,7 +105,8 @@ TEST_P(XAesGcmTestVectors, DecryptWithInvalidCiphertextSizeFails) {
   absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
   ASSERT_THAT(aead, IsOk());
 
-  const size_t min_size = key.GetParameters().SaltSizeBytes() + kCtOverhead;
+  const size_t min_size = key.GetOutputPrefix().size() +
+                          key.GetParameters().SaltSizeBytes() + kCtOverhead;
   for (size_t size = 0; size < min_size; size++) {
     EXPECT_THAT(
         (*aead)
@@ -138,13 +145,14 @@ TEST_P(XAesGcmTestVectors, EncryptReturnsDifferentSaltAndIv) {
   absl::StatusOr<absl::Cord> ct_2 = (*aead)->Encrypt(pt, aad);
   ASSERT_THAT(ct_2, IsOk());
 
+  const size_t prefix_size = key.GetOutputPrefix().size();
   const int salt_size = key.GetParameters().SaltSizeBytes();
-  absl::Cord salt_1 = ct_1->Subcord(0, salt_size);
-  absl::Cord salt_2 = ct_2->Subcord(0, salt_size);
+  absl::Cord salt_1 = ct_1->Subcord(prefix_size, salt_size);
+  absl::Cord salt_2 = ct_2->Subcord(prefix_size, salt_size);
   EXPECT_THAT(salt_1, Not(Eq(salt_2)));
 
-  absl::Cord iv_1 = ct_1->Subcord(salt_size, kIvSize);
-  absl::Cord iv_2 = ct_2->Subcord(salt_size, kIvSize);
+  absl::Cord iv_1 = ct_1->Subcord(prefix_size + salt_size, kIvSize);
+  absl::Cord iv_2 = ct_2->Subcord(prefix_size + salt_size, kIvSize);
   EXPECT_THAT(iv_1, Not(Eq(iv_2)));
 }
 
@@ -156,7 +164,7 @@ TEST_P(XAesGcmTestVectors, SaltModificationFailsDecryption) {
   ASSERT_THAT(aead, IsOk());
 
   std::string modified_ct = test_vector.ciphertext;
-  modified_ct[0] ^= 0x01;
+  modified_ct[key.GetOutputPrefix().size()] ^= 0x01;
   EXPECT_THAT((*aead)
                   ->Decrypt(absl::Cord(modified_ct),
                             absl::Cord(test_vector.associated_data))
@@ -164,8 +172,27 @@ TEST_P(XAesGcmTestVectors, SaltModificationFailsDecryption) {
               StatusIs(absl::StatusCode::kInternal));
 }
 
+TEST_P(XAesGcmTestVectors, PrefixModificationFailsDecryption) {
+  const AeadTestVector& test_vector = GetParam();
+  const XAesGcmKey& key =
+      dynamic_cast<const XAesGcmKey&>(*test_vector.aead_key);
+  if (key.GetOutputPrefix().empty()) {
+    return;
+  }
+  absl::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(key);
+  ASSERT_THAT(aead, IsOk());
+
+  std::string modified_ct = test_vector.ciphertext;
+  modified_ct[0] ^= 0x01;
+  EXPECT_THAT((*aead)
+                  ->Decrypt(absl::Cord(modified_ct),
+                            absl::Cord(test_vector.associated_data))
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 INSTANTIATE_TEST_SUITE_P(XAesGcmTestVectors, XAesGcmTestVectors,
-                         ValuesIn(GetNoPrefixTestVectors()));
+                         ValuesIn(CreateXAesGcmTestVectors()));
 
 TEST(XAesGcmTest, DifferentSaltSizeFailsDecryption) {
   const AeadTestVector& min_salt_vector =

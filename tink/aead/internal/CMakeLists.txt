@@ -414,7 +414,6 @@ tink_cc_library(
     tink::aead::internal::base_x_aes_gcm
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::cord_utils
-    absl::absl_check
     absl::status
     absl::status_macros
     absl::statusor

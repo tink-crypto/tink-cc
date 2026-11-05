@@ -9,14 +9,19 @@ tink_cc_library(
     tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_hmac_boringssl
     tink::mac::internal::stateful_mac
-    absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::chunked_mac
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::secret_data
     tink::internal::dfsan_forwarders
+    tink::internal::fips_utils
     tink::internal::safe_stringops
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
     tink::subtle::common_enums
     tink::util::enums
     tink::util::secret_data
@@ -142,18 +147,18 @@ tink_cc_test(
   SRCS
     chunked_mac_impl_test.cc
   DEPS
+    tink::mac::internal::aes_cmac_test_vectors
     tink::mac::internal::chunked_mac_impl
     tink::mac::internal::stateful_mac
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
     absl::string_view
     tink::core::chunked_mac
     tink::core::secret_data
+    tink::internal::fips_utils
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto

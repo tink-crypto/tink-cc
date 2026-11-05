@@ -23,6 +23,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
+#include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -35,8 +36,12 @@ namespace internal {
 
 class ChunkedMacComputationImpl : public ChunkedMacComputation {
  public:
-  explicit ChunkedMacComputationImpl(std::unique_ptr<StatefulMac> stateful_mac)
-      : stateful_mac_(std::move(stateful_mac)) {}
+  explicit ChunkedMacComputationImpl(std::unique_ptr<StatefulMac> stateful_mac,
+                                     absl::string_view output_prefix = "",
+                                     absl::string_view message_suffix = "")
+      : stateful_mac_(std::move(stateful_mac)),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
 
   absl::Status Update(absl::string_view data) override;
 
@@ -44,14 +49,21 @@ class ChunkedMacComputationImpl : public ChunkedMacComputation {
 
  private:
   const std::unique_ptr<StatefulMac> stateful_mac_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
   absl::Status status_ = absl::OkStatus();
 };
 
 class ChunkedMacVerificationImpl : public ChunkedMacVerification {
  public:
   explicit ChunkedMacVerificationImpl(std::unique_ptr<StatefulMac> stateful_mac,
-                                      absl::string_view tag)
-      : stateful_mac_(std::move(stateful_mac)), tag_(tag) {}
+                                      absl::string_view tag,
+                                      absl::string_view output_prefix = "",
+                                      absl::string_view message_suffix = "")
+      : stateful_mac_(std::move(stateful_mac)),
+        tag_(tag),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
 
   absl::Status Update(absl::string_view data) override;
 
@@ -60,14 +72,20 @@ class ChunkedMacVerificationImpl : public ChunkedMacVerification {
  private:
   const std::unique_ptr<StatefulMac> stateful_mac_;
   const std::string tag_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
   absl::Status status_ = absl::OkStatus();
 };
 
 class ChunkedMacImpl : public ChunkedMac {
  public:
   explicit ChunkedMacImpl(
-      std::unique_ptr<StatefulMacFactory> stateful_mac_factory)
-      : stateful_mac_factory_(std::move(stateful_mac_factory)) {}
+      std::unique_ptr<StatefulMacFactory> stateful_mac_factory,
+      absl::string_view output_prefix = "",
+      absl::string_view message_suffix = "")
+      : stateful_mac_factory_(std::move(stateful_mac_factory)),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
 
   absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> CreateComputation()
       const override;
@@ -77,11 +95,17 @@ class ChunkedMacImpl : public ChunkedMac {
 
  private:
   std::unique_ptr<StatefulMacFactory> stateful_mac_factory_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
 };
 
 // Create new Chunked CMAC instance from `key`.
 absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
     const google::crypto::tink::AesCmacKey& key);
+
+// Create new Chunked CMAC instance from `key`.
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
+    const AesCmacKey& key);
 
 // Create new Chunked HMAC instance from `key`.
 absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(

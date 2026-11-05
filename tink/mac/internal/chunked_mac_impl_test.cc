@@ -16,22 +16,23 @@
 
 #include "tink/mac/internal/chunked_mac_impl.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
+#include "tink/internal/fips_utils.h"
+#include "tink/mac/internal/aes_cmac_test_vectors.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/aes_cmac.pb.h"
 #include "proto/common.pb.h"
 #include "proto/hmac.pb.h"
@@ -52,7 +53,12 @@ using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacParams;
 using ::testing::_;
 using ::testing::ByMove;
+using ::testing::Eq;
+using ::testing::Not;
 using ::testing::Return;
+using ::testing::TestParamInfo;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 class MockStatefulMac : public StatefulMac {
  public:
@@ -266,6 +272,86 @@ TEST(ChunkedMacVerificationImplTest, OperationsFailAfterVerifyMac) {
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT(mac_verification.VerifyMac(),
               StatusIs(absl::StatusCode::kFailedPrecondition));
+}
+
+using NewChunkedCmacTestVectorsTest = TestWithParam<TinkAesCmacTestVector>;
+
+TEST_P(NewChunkedCmacTestVectorsTest, ComputeAndVerifyMac) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const TinkAesCmacTestVector& param = GetParam();
+
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+      NewChunkedCmac(param.key);
+  ASSERT_THAT(chunked_mac, IsOk());
+
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+      (*chunked_mac)->CreateComputation();
+  ASSERT_THAT(computation, IsOk());
+  ASSERT_THAT((*computation)->Update(param.message), IsOk());
+  EXPECT_THAT((*computation)->ComputeMac(), IsOkAndHolds(Eq(param.tag)));
+
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+      (*chunked_mac)->CreateVerification(param.tag);
+  ASSERT_THAT(verification, IsOk());
+  ASSERT_THAT((*verification)->Update(param.message), IsOk());
+  EXPECT_THAT((*verification)->VerifyMac(), IsOk());
+
+  // Modify a byte in the tag (covers prefix and raw tag bytes).
+  for (size_t i = 0; i < param.tag.size(); ++i) {
+    std::string modified_tag = param.tag;
+    modified_tag[i] ^= 1;
+    absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+        (*chunked_mac)->CreateVerification(modified_tag);
+    ASSERT_THAT(bad_verification, IsOk());
+    ASSERT_THAT((*bad_verification)->Update(param.message), IsOk());
+    EXPECT_THAT((*bad_verification)->VerifyMac(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+  // Truncate or extend the tag.
+  for (size_t i = 0; i < param.tag.size(); ++i) {
+    absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+        (*chunked_mac)
+            ->CreateVerification(absl::string_view(param.tag).substr(0, i));
+    ASSERT_THAT(bad_verification, IsOk());
+    ASSERT_THAT((*bad_verification)->Update(param.message), IsOk());
+    EXPECT_THAT((*bad_verification)->VerifyMac(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+  {
+    std::string extended_tag = param.tag + "x";
+    absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+        (*chunked_mac)->CreateVerification(extended_tag);
+    ASSERT_THAT(bad_verification, IsOk());
+    ASSERT_THAT((*bad_verification)->Update(param.message), IsOk());
+    EXPECT_THAT((*bad_verification)->VerifyMac(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+  {
+    std::string modified_message = param.message + "x";
+    absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> bad_verification =
+        (*chunked_mac)->CreateVerification(param.tag);
+    ASSERT_THAT(bad_verification, IsOk());
+    ASSERT_THAT((*bad_verification)->Update(modified_message), IsOk());
+    EXPECT_THAT((*bad_verification)->VerifyMac(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(NewChunkedCmacTestVectorsTest,
+                         NewChunkedCmacTestVectorsTest,
+                         ValuesIn(AesCmacTestVectors()),
+                         [](const TestParamInfo<TinkAesCmacTestVector>& info) {
+                           return info.param.test_name;
+                         });
+
+TEST(NewChunkedCmacTest, FailInFipsMode) {
+  if (!IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Only test in FIPS-only mode";
+  }
+  const TinkAesCmacTestVector& param = AesCmacTestVectors()[0];
+  EXPECT_THAT(NewChunkedCmac(param.key), Not(IsOk()));
 }
 
 }  // namespace

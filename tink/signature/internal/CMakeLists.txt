@@ -1826,3 +1826,46 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME composite_ml_dsa_sign_boringssl
+  SRCS
+    composite_ml_dsa_sign_boringssl.cc
+    composite_ml_dsa_sign_boringssl.h
+  DEPS
+    tink::signature::internal::composite_ml_dsa_util_boringssl
+    tink::signature::internal::ml_dsa_sign_boringssl
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_private_key
+    tink::signature::ecdsa_private_key
+    tink::signature::ed25519_private_key
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pss_private_key
+    tink::subtle::ecdsa_sign_boringssl
+    tink::subtle::ed25519_sign_boringssl
+    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
+    tink::subtle::rsa_ssa_pss_sign_boringssl
+)
+
+tink_cc_test(
+  NAME composite_ml_dsa_sign_boringssl_test
+  SRCS
+    composite_ml_dsa_sign_boringssl_test.cc
+  DEPS
+    tink::signature::internal::composite_ml_dsa_sign_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::composite_ml_dsa_private_key
+    tink::signature::internal::testing::composite_ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

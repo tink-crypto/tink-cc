@@ -1839,3 +1839,46 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "composite_ml_dsa_sign_boringssl",
+    srcs = ["composite_ml_dsa_sign_boringssl.cc"],
+    hdrs = ["composite_ml_dsa_sign_boringssl.h"],
+    deps = [
+        ":composite_ml_dsa_util_boringssl",
+        ":ml_dsa_sign_boringssl",
+        "//tink:public_key_sign",
+        "//tink/internal:fips_utils",
+        "//tink/signature:composite_ml_dsa_parameters",
+        "//tink/signature:composite_ml_dsa_private_key",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature:ed25519_private_key",
+        "//tink/signature:rsa_ssa_pkcs1_private_key",
+        "//tink/signature:rsa_ssa_pss_private_key",
+        "//tink/subtle:ecdsa_sign_boringssl",
+        "//tink/subtle:ed25519_sign_boringssl",
+        "//tink/subtle:rsa_ssa_pkcs1_sign_boringssl",
+        "//tink/subtle:rsa_ssa_pss_sign_boringssl",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "composite_ml_dsa_sign_boringssl_test",
+    srcs = ["composite_ml_dsa_sign_boringssl_test.cc"],
+    deps = [
+        ":composite_ml_dsa_sign_boringssl",
+        "//tink:public_key_sign",
+        "//tink/internal:fips_utils",
+        "//tink/signature:composite_ml_dsa_private_key",
+        "//tink/signature/internal/testing:composite_ml_dsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -874,3 +874,49 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ecies_aead_hkdf_hybrid_encrypt",
+    srcs = ["ecies_aead_hkdf_hybrid_encrypt.cc"],
+    hdrs = ["ecies_aead_hkdf_hybrid_encrypt.h"],
+    deps = [
+        ":ecies_aead_hkdf_dem_helper",
+        "//proto:tink_cc_proto",
+        "//tink:ec_point",
+        "//tink:hybrid_encrypt",
+        "//tink:partial_key_access",
+        "//tink/aead:aead_key_templates",
+        "//tink/daead:deterministic_aead_key_templates",
+        "//tink/daead/subtle:aead_or_daead",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_public_key",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:ecies_hkdf_sender_kem_boringssl",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "ecies_aead_hkdf_hybrid_encrypt_test",
+    srcs = ["ecies_aead_hkdf_hybrid_encrypt_test.cc"],
+    deps = [
+        ":ecies_aead_hkdf_hybrid_decrypt",
+        ":ecies_aead_hkdf_hybrid_encrypt",
+        "//tink:hybrid_decrypt",
+        "//tink:hybrid_encrypt",
+        "//tink:partial_key_access",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "//tink/hybrid:ecies_public_key",
+        "//tink/hybrid/internal/testing:ecies_aead_hkdf_test_vectors",
+        "//tink/hybrid/internal/testing:hybrid_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

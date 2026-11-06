@@ -490,3 +490,34 @@ tink_cc_test(
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_library(
+  NAME create_composite_ml_dsa_verifier
+  SRCS
+    create_composite_ml_dsa_verifier.cc
+    create_composite_ml_dsa_verifier.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_verify
+    tink::signature::composite_ml_dsa_public_key
+    tink::signature::internal::composite_ml_dsa_verify_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_composite_ml_dsa_verifier_test
+  SRCS
+    create_composite_ml_dsa_verifier_test.cc
+  DEPS
+    tink::signature::subtle::create_composite_ml_dsa_verifier
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::composite_ml_dsa_parameters
+    tink::signature::composite_ml_dsa_private_key
+    tink::signature::internal::testing::composite_ml_dsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

@@ -38,9 +38,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// This class provides a global, mutable serialization registry by wrapping an
-// instance of an immutable `SerializationRegistry`.  This registry will enable
-// the Tink 2.0 C++ Keyset API in the near term.
+// This class provides a global, thread-safe serialization registry by wrapping
+// a thread-compatible `SerializationRegistry`.
 class MutableSerializationRegistry {
  public:
   // Returns the global serialization registry.

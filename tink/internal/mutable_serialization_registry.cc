@@ -17,7 +17,6 @@
 #include "tink/internal/mutable_serialization_registry.h"
 
 #include <memory>
-#include <utility>
 
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
@@ -46,41 +45,25 @@ MutableSerializationRegistry& MutableSerializationRegistry::GlobalInstance() {
 absl::Status MutableSerializationRegistry::RegisterParametersParser(
     ParametersParser* parser) {
   absl::WriterMutexLock lock(registry_mutex_);
-  SerializationRegistry::Builder builder(registry_);
-  absl::Status status = builder.RegisterParametersParser(parser);
-  if (!status.ok()) return status;
-  registry_ = std::move(builder).Build();
-  return absl::OkStatus();
+  return registry_.RegisterParametersParser(parser);
 }
 
 absl::Status MutableSerializationRegistry::RegisterParametersSerializer(
     ParametersSerializer* serializer) {
   absl::WriterMutexLock lock(registry_mutex_);
-  SerializationRegistry::Builder builder(registry_);
-  absl::Status status = builder.RegisterParametersSerializer(serializer);
-  if (!status.ok()) return status;
-  registry_ = std::move(builder).Build();
-  return absl::OkStatus();
+  return registry_.RegisterParametersSerializer(serializer);
 }
 
 absl::Status MutableSerializationRegistry::RegisterKeyParser(
     KeyParser* parser) {
   absl::WriterMutexLock lock(registry_mutex_);
-  SerializationRegistry::Builder builder(registry_);
-  absl::Status status = builder.RegisterKeyParser(parser);
-  if (!status.ok()) return status;
-  registry_ = std::move(builder).Build();
-  return absl::OkStatus();
+  return registry_.RegisterKeyParser(parser);
 }
 
 absl::Status MutableSerializationRegistry::RegisterKeySerializer(
     KeySerializer* serializer) {
   absl::WriterMutexLock lock(registry_mutex_);
-  SerializationRegistry::Builder builder(registry_);
-  absl::Status status = builder.RegisterKeySerializer(serializer);
-  if (!status.ok()) return status;
-  registry_ = std::move(builder).Build();
-  return absl::OkStatus();
+  return registry_.RegisterKeySerializer(serializer);
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>>

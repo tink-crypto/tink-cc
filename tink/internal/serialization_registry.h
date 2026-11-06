@@ -45,58 +45,15 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+// Registry of parameters and key parsers and serializers.
+//
+// `SerializationRegistry` is thread-compatible.
 class SerializationRegistry {
  public:
-  class Builder {
-   public:
-    // Neither movable nor copyable.
-    Builder(const Builder& other) = delete;
-    Builder& operator=(const Builder& other) = delete;
+  class Builder;
 
-    // Creates initially empty serialization registry builder.
-    Builder() = default;
-    // Creates serialization registry builder by initially copying entries from
-    // `registry`.
-    explicit Builder(const SerializationRegistry& registry);
-
-    // Registers parameters `parser`. Returns an error if a different parameters
-    // parser has already been registered.
-    absl::Status RegisterParametersParser(ParametersParser* parser);
-
-    // Registers parameters `serializer`. Returns an error if a different
-    // parameters serializer has already been registered.
-    absl::Status RegisterParametersSerializer(ParametersSerializer* serializer);
-
-    // Registers key `parser`. Returns an error if a different key parser has
-    // already been registered.
-    absl::Status RegisterKeyParser(KeyParser* parser);
-
-    // Registers key `serializer`. Returns an error if a different key
-    // serializer has already been registered.
-    absl::Status RegisterKeySerializer(KeySerializer* serializer);
-
-    // Creates serialization registry from this builder.
-    SerializationRegistry Build() &&;
-
-   private:
-    Builder(
-        const absl::flat_hash_map<ParserIndex, ParametersParser*>&
-            parameters_parsers,
-        const absl::flat_hash_map<SerializerIndex, ParametersSerializer*>&
-            parameters_serializers,
-        absl::flat_hash_map<ParserIndex, KeyParser*> key_parsers,
-        absl::flat_hash_map<SerializerIndex, KeySerializer*> key_serializers)
-        : parameters_parsers_(parameters_parsers),
-          parameters_serializers_(parameters_serializers),
-          key_parsers_(std::move(key_parsers)),
-          key_serializers_(std::move(key_serializers)) {}
-
-    absl::flat_hash_map<ParserIndex, ParametersParser*> parameters_parsers_;
-    absl::flat_hash_map<SerializerIndex, ParametersSerializer*>
-        parameters_serializers_;
-    absl::flat_hash_map<ParserIndex, KeyParser*> key_parsers_;
-    absl::flat_hash_map<SerializerIndex, KeySerializer*> key_serializers_;
-  };
+  // Creates empty serialization registry.
+  SerializationRegistry() = default;
 
   // Movable and copyable.
   SerializationRegistry(SerializationRegistry&& other) = default;
@@ -105,8 +62,22 @@ class SerializationRegistry {
   SerializationRegistry& operator=(const SerializationRegistry& other) =
       default;
 
-  // Creates empty serialization registry.
-  SerializationRegistry() = default;
+  // Registers parameters `parser`. Returns an error if a different parameters
+  // parser with the same parser index has already been registered.
+  absl::Status RegisterParametersParser(ParametersParser* parser);
+
+  // Registers parameters `serializer`. Returns an error if a different
+  // parameters serializer with the same serializer index has already been
+  // registered.
+  absl::Status RegisterParametersSerializer(ParametersSerializer* serializer);
+
+  // Registers key `parser`. Returns an error if a different key parser with the
+  // same parser index has already been registered.
+  absl::Status RegisterKeyParser(KeyParser* parser);
+
+  // Registers key `serializer`. Returns an error if a different key serializer
+  // with the same serializer index has already been registered.
+  absl::Status RegisterKeySerializer(KeySerializer* serializer);
 
   // Parses `serialization` into a `Parameters` instance.
   absl::StatusOr<std::unique_ptr<Parameters>> ParseParameters(
@@ -131,7 +102,7 @@ class SerializationRegistry {
               typeid(parameters).name()));
     }
 
-    return parameters_serializers_.at(index)->SerializeParameters(parameters);
+    return it->second->SerializeParameters(parameters);
   }
 
   // Parses `serialization` into a `Key` instance.
@@ -144,7 +115,7 @@ class SerializationRegistry {
   absl::StatusOr<std::unique_ptr<Key>> ParseKeyWithLegacyFallback(
       const Serialization& serialization, SecretKeyAccessToken token) const;
 
-  // Serializes `parameters` into a `Serialization` instance.
+  // Serializes `key` into a `Serialization` instance.
   template <typename SerializationT>
   absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
       const Key& key, absl::optional<SecretKeyAccessToken> token) const {
@@ -157,28 +128,52 @@ class SerializationRegistry {
                           typeid(key).name()));
     }
 
-    return key_serializers_.at(index)->SerializeKey(key, token);
+    return it->second->SerializeKey(key, token);
   }
 
  private:
-  SerializationRegistry(
-      absl::flat_hash_map<ParserIndex, ParametersParser*>
-          parameters_parsers,
-      absl::flat_hash_map<SerializerIndex, ParametersSerializer*>
-          parameters_serializers,
-      absl::flat_hash_map<ParserIndex, KeyParser*> key_parsers,
-      absl::flat_hash_map<SerializerIndex, KeySerializer*>
-          key_serializers)
-      : parameters_parsers_(std::move(parameters_parsers)),
-        parameters_serializers_(std::move(parameters_serializers)),
-        key_parsers_(std::move(key_parsers)),
-        key_serializers_(std::move(key_serializers)) {}
-
   absl::flat_hash_map<ParserIndex, ParametersParser*> parameters_parsers_;
   absl::flat_hash_map<SerializerIndex, ParametersSerializer*>
       parameters_serializers_;
   absl::flat_hash_map<ParserIndex, KeyParser*> key_parsers_;
   absl::flat_hash_map<SerializerIndex, KeySerializer*> key_serializers_;
+};
+
+class SerializationRegistry::Builder {
+ public:
+  // Neither movable nor copyable.
+  Builder(const Builder& other) = delete;
+  Builder& operator=(const Builder& other) = delete;
+
+  // Creates initially empty serialization registry builder.
+  Builder() = default;
+  // Creates serialization registry builder by initially copying entries from
+  // `registry`.
+  explicit Builder(const SerializationRegistry& registry);
+  // Creates serialization registry builder by moving entries from `registry`.
+  explicit Builder(SerializationRegistry&& registry);
+
+  // Registers parameters `parser`. Returns an error if a different parameters
+  // parser has already been registered.
+  absl::Status RegisterParametersParser(ParametersParser* parser);
+
+  // Registers parameters `serializer`. Returns an error if a different
+  // parameters serializer has already been registered.
+  absl::Status RegisterParametersSerializer(ParametersSerializer* serializer);
+
+  // Registers key `parser`. Returns an error if a different key parser has
+  // already been registered.
+  absl::Status RegisterKeyParser(KeyParser* parser);
+
+  // Registers key `serializer`. Returns an error if a different key
+  // serializer has already been registered.
+  absl::Status RegisterKeySerializer(KeySerializer* serializer);
+
+  // Creates serialization registry from this builder.
+  SerializationRegistry Build() &&;
+
+ private:
+  SerializationRegistry registry_;
 };
 
 }  // namespace internal

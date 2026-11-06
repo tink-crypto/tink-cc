@@ -46,71 +46,46 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-SerializationRegistry::Builder::Builder(const SerializationRegistry& registry)
-    : Builder(registry.parameters_parsers_, registry.parameters_serializers_,
-              registry.key_parsers_, registry.key_serializers_) {}
-
-absl::Status SerializationRegistry::Builder::RegisterParametersParser(
+absl::Status SerializationRegistry::RegisterParametersParser(
     ParametersParser* parser) {
-  ParserIndex index = parser->Index();
-  auto it = parameters_parsers_.find(index);
-  if (it != parameters_parsers_.end()) {
-    if (parameters_parsers_[index] != parser) {
-      return absl::Status(absl::StatusCode::kAlreadyExists,
-                          "Attempted to update existing parameters parser.");
-    }
+  auto [it, inserted] =
+      parameters_parsers_.try_emplace(parser->Index(), parser);
+  if (!inserted && it->second != parser) {
+    return absl::Status(absl::StatusCode::kAlreadyExists,
+                        "Attempted to update existing parameters parser.");
   }
-  parameters_parsers_.insert({parser->Index(), parser});
   return absl::OkStatus();
 }
 
-absl::Status SerializationRegistry::Builder::RegisterParametersSerializer(
+absl::Status SerializationRegistry::RegisterParametersSerializer(
     ParametersSerializer* serializer) {
-  SerializerIndex index = serializer->Index();
-  auto it = parameters_serializers_.find(index);
-  if (it != parameters_serializers_.end()) {
-    if (parameters_serializers_[index] != serializer) {
-      return absl::Status(
-          absl::StatusCode::kAlreadyExists,
-          "Attempted to update existing parameters serializer.");
-    }
+  auto [it, inserted] =
+      parameters_serializers_.try_emplace(serializer->Index(), serializer);
+  if (!inserted && it->second != serializer) {
+    return absl::Status(absl::StatusCode::kAlreadyExists,
+                        "Attempted to update existing parameters serializer.");
   }
-  parameters_serializers_.insert({serializer->Index(), serializer});
   return absl::OkStatus();
 }
 
-absl::Status SerializationRegistry::Builder::RegisterKeyParser(
-    KeyParser* parser) {
-  ParserIndex index = parser->Index();
-  auto it = key_parsers_.find(index);
-  if (it != key_parsers_.end()) {
-    if (key_parsers_[index] != parser) {
-      return absl::Status(absl::StatusCode::kAlreadyExists,
-                          "Attempted to update existing key parser.");
-    }
+absl::Status SerializationRegistry::RegisterKeyParser(KeyParser* parser) {
+  auto [it, inserted] = key_parsers_.try_emplace(parser->Index(), parser);
+  if (!inserted && it->second != parser) {
+    return absl::Status(absl::StatusCode::kAlreadyExists,
+                        "Attempted to update existing key parser.");
   }
-  key_parsers_.insert({parser->Index(), parser});
   return absl::OkStatus();
 }
 
-absl::Status SerializationRegistry::Builder::RegisterKeySerializer(
+absl::Status SerializationRegistry::RegisterKeySerializer(
     KeySerializer* serializer) {
-  SerializerIndex index = serializer->Index();
-  auto it = key_serializers_.find(index);
-  if (it != key_serializers_.end()) {
-    if (key_serializers_[index] != serializer) {
-      return absl::Status(absl::StatusCode::kAlreadyExists,
-                          "Attempted to update existing key serializer.");
-    }
+  auto [it, inserted] =
+      key_serializers_.try_emplace(serializer->Index(), serializer);
+  if (!inserted && it->second != serializer) {
+    return absl::Status(absl::StatusCode::kAlreadyExists,
+                        "Attempted to update existing key serializer.");
   }
-  key_serializers_.insert({serializer->Index(), serializer});
   return absl::OkStatus();
-}
-
-SerializationRegistry SerializationRegistry::Builder::Build() && {
-  return SerializationRegistry(
-      std::move(parameters_parsers_), std::move(parameters_serializers_),
-      std::move(key_parsers_), std::move(key_serializers_));
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>>
@@ -125,7 +100,7 @@ SerializationRegistry::ParseParameters(
                         typeid(serialization).name()));
   }
 
-  return parameters_parsers_.at(index)->ParseParameters(serialization);
+  return it->second->ParseParameters(serialization);
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>>
@@ -161,7 +136,7 @@ absl::StatusOr<std::unique_ptr<Key>> SerializationRegistry::ParseKey(
                         typeid(serialization).name()));
   }
 
-  return key_parsers_.at(index)->ParseKey(serialization, token);
+  return it->second->ParseKey(serialization, token);
 }
 
 absl::StatusOr<std::unique_ptr<Key>>
@@ -187,6 +162,36 @@ SerializationRegistry::ParseKeyWithLegacyFallback(
     return key.status();
   }
   return key;
+}
+
+SerializationRegistry::Builder::Builder(const SerializationRegistry& registry)
+    : registry_(registry) {}
+
+SerializationRegistry::Builder::Builder(SerializationRegistry&& registry)
+    : registry_(std::move(registry)) {}
+
+absl::Status SerializationRegistry::Builder::RegisterParametersParser(
+    ParametersParser* parser) {
+  return registry_.RegisterParametersParser(parser);
+}
+
+absl::Status SerializationRegistry::Builder::RegisterParametersSerializer(
+    ParametersSerializer* serializer) {
+  return registry_.RegisterParametersSerializer(serializer);
+}
+
+absl::Status SerializationRegistry::Builder::RegisterKeyParser(
+    KeyParser* parser) {
+  return registry_.RegisterKeyParser(parser);
+}
+
+absl::Status SerializationRegistry::Builder::RegisterKeySerializer(
+    KeySerializer* serializer) {
+  return registry_.RegisterKeySerializer(serializer);
+}
+
+SerializationRegistry SerializationRegistry::Builder::Build() && {
+  return std::move(registry_);
 }
 
 }  // namespace internal

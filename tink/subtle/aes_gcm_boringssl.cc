@@ -21,6 +21,7 @@
 
 #include "absl/memory/memory.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
@@ -32,6 +33,22 @@
 namespace crypto {
 namespace tink {
 namespace subtle {
+
+absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
+    const AesGcmKey& key) {
+  absl::Status status = internal::CheckFipsCompatibility<AesGcmBoringSsl>();
+  if (!status.ok()) {
+    return status;
+  }
+
+  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
+      internal::ZeroCopyAesGcmBoringSsl::New(key);
+  if (!zero_copy_aead.ok()) {
+    return zero_copy_aead.status();
+  }
+  return {
+      std::make_unique<internal::AeadFromZeroCopy>(*std::move(zero_copy_aead))};
+}
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const SecretData& key) {

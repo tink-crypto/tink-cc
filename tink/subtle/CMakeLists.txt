@@ -395,6 +395,7 @@ tink_cc_library(
     absl::memory
     absl::strings
     tink::core::aead
+    tink::aead::aes_gcm_key
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_boringssl
@@ -1012,7 +1013,13 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::aead
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
     tink::aead::internal::wycheproof_aead
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_test_vectors
     tink::internal::fips_utils
     tink::util::secret_data
     tink::util::statusor

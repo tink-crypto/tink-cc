@@ -18,11 +18,11 @@
 #define TINK_SUBTLE_AES_GCM_BORINGSSL_H_
 
 #include <memory>
-#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_gcm_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
@@ -33,12 +33,15 @@ namespace subtle {
 
 class AesGcmBoringSsl {
  public:
-  ABSL_DEPRECATED("Use AesGcmBoringSsl::New(const util::SecretData&) instead.")
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const AesGcmKey& key);
+
+  ABSL_DEPRECATED("Use AesGcmBoringSsl::New(const AesGcmKey&) instead.")
   static absl::StatusOr<std::unique_ptr<Aead>> New(
       absl::string_view key_value) {
     return AesGcmBoringSsl::New(util::SecretDataFromStringView(key_value));
   }
 
+  [[deprecated("Use AesGcmBoringSsl::New(const AesGcmKey&) instead")]]
   static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =

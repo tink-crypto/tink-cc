@@ -1802,6 +1802,86 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
       std::make_shared<RsaSsaPssPrivateKey>(*private_key), serialization);
 }
 
+// Padded big ints.
+KeyAndSerialization PublicKeyAndSerializationNonCanonical() {
+  KeyValues values = Get2048BitKeyValues();
+  std::string zero(1, '\0');
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(11)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ABSL_CHECK_OK(parameters.status());
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, BigInteger(values.n), 101020, GetPartialKeyAccess());
+  ABSL_CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(HashType::SHA256),
+            FieldWithNumber(2).IsVarint(HashType::SHA256),
+            FieldWithNumber(3).IsVarint(11)}),
+       FieldWithNumber(3).IsString(absl::StrCat(zero, values.n)),
+       FieldWithNumber(4).IsString(absl::StrCat(zero, values.e))},
+      KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink, 101020);
+
+  return KeyAndSerialization("PublicKeyTinkNonCanonical",
+                             std::make_shared<RsaSsaPssPublicKey>(*public_key),
+                             serialization);
+}
+
+// Padded big ints.
+KeyAndSerialization PrivateKeyAndSerializationNonCanonical2() {
+  KeyValues values = Get2048BitKeyValues();
+  SecretKeyAccessToken token = InsecureSecretKeyAccess::Get();
+  std::string zero(1, '\0');
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .SetSaltLengthInBytes(0)
+          .Build();
+  ABSL_CHECK_OK(parameters.status());
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, BigInteger(values.n), 4455, GetPartialKeyAccess());
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
+      RsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedData(values.p, token))
+          .SetPrimeQ(RestrictedData(values.q, token))
+          .SetPrimeExponentP(RestrictedData(values.dp, token))
+          .SetPrimeExponentQ(RestrictedData(values.dq, token))
+          .SetPrivateExponent(RestrictedData(values.d, token))
+          .SetCrtCoefficient(RestrictedData(values.q_inv, token))
+          .Build(GetPartialKeyAccess());
+
+  ABSL_CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPssPrivateKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(2).IsSubMessage(
+                {FieldWithNumber(1).IsVarint(HashType::SHA512),
+                 FieldWithNumber(2).IsVarint(HashType::SHA512)}),
+            FieldWithNumber(3).IsString(absl::StrCat(zero, values.n)),
+            FieldWithNumber(4).IsString(absl::StrCat(zero, values.e))}),
+       FieldWithNumber(3).IsString(absl::StrCat(zero, values.d)),
+       FieldWithNumber(4).IsString(absl::StrCat(zero, values.p)),
+       FieldWithNumber(5).IsString(absl::StrCat(zero, values.q)),
+       FieldWithNumber(6).IsString(absl::StrCat(zero, values.dp)),
+       FieldWithNumber(7).IsString(absl::StrCat(zero, values.dq)),
+       FieldWithNumber(8).IsString(absl::StrCat(zero, values.q_inv))},
+      KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink, 4455);
+
+  return KeyAndSerialization(
+      "PrivateKeyTinkNonCanonical2",
+      std::make_shared<RsaSsaPssPrivateKey>(*private_key), serialization);
+}
+
 INSTANTIATE_TEST_SUITE_P(
     SerializationTest, SerializationTest,
     testing::Values(PublicKeyAndSerializationTink(),
@@ -1819,7 +1899,9 @@ INSTANTIATE_TEST_SUITE_P(
                     PublicKeyAndSerializationNonCanonical(),
                     PrivateKeyAndSerializationRaw(),
                     PrivateKeyAndSerializationTink(),
-                    PrivateKeyAndSerializationNonCanonical()),
+                    PrivateKeyAndSerializationNonCanonical(),
+                    PublicKeyAndSerializationNonCanonical(),
+                    PrivateKeyAndSerializationNonCanonical2()),
     [](testing::TestParamInfo<class KeyAndSerialization> info) {
       return info.param.test_name;
     });

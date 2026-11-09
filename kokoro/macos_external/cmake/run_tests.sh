@@ -33,6 +33,16 @@ echo "retry-all-errors" > "${HOMEBREW_CURLRC}"
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  readonly TINK_SRC_DIR="$(pwd)"
+  cleanup() {
+    rm -rf "${TINK_SRC_DIR}/ccache" \
+      "${TINK_SRC_DIR}/out" \
+      "${TINK_SRC_DIR}/out_examples"
+  }
+  # Kokoro rsyncs all created/modified files under KOKORO_ARTIFACTS_DIR back
+  # off the VM when the job ends; delete build and cache directories on exit so
+  # multi-GB build outputs are not transferred back.
+  trap cleanup EXIT
 fi
 
 # Install cmake if not available

@@ -21,13 +21,18 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/jwt/internal/jwt_public_key_verify_impl.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/internal/raw_jwt_ml_dsa_verifier.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
+#include "tink/jwt/jwt_public_key_verify.h"
+#include "tink/jwt/jwt_validator.h"
+#include "tink/jwt/verified_jwt.h"
 #include "tink/public_key_verify.h"
 
 namespace crypto {
@@ -52,10 +57,22 @@ absl::StatusOr<std::string> AlgorithmName(
   }
 }
 
-}  // namespace
+class JwtMlDsaVerify final : public JwtPublicKeyVerify {
+ public:
+  explicit JwtMlDsaVerify(std::unique_ptr<JwtPublicKeyVerifyImpl> impl)
+      : impl_(std::move(impl)) {}
 
-absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
-NewJwtMlDsaVerifyInternal(const JwtMlDsaPublicKey& jwt_ml_dsa_public_key) {
+  absl::StatusOr<VerifiedJwt> VerifyAndDecode(
+      absl::string_view compact, const JwtValidator& validator) const override {
+    return impl_->VerifyAndDecode(compact, validator);
+  }
+
+ private:
+  std::unique_ptr<JwtPublicKeyVerifyImpl> impl_;
+};
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyImpl>> NewJwtMlDsaVerifyImpl(
+    const JwtMlDsaPublicKey& jwt_ml_dsa_public_key) {
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> ml_dsa_verify_boringssl =
       NewRawJwtMlDsaVerify(jwt_ml_dsa_public_key);
   if (!ml_dsa_verify_boringssl.ok()) {
@@ -89,6 +106,20 @@ NewJwtMlDsaVerifyInternal(const JwtMlDsaPublicKey& jwt_ml_dsa_public_key) {
       return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
+}
+
+}  // namespace
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
+NewJwtMlDsaVerifyInternal(const JwtMlDsaPublicKey& jwt_ml_dsa_public_key) {
+  return NewJwtMlDsaVerifyImpl(jwt_ml_dsa_public_key);
+}
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> NewJwtMlDsaVerify(
+    const JwtMlDsaPublicKey& jwt_ml_dsa_public_key) {
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<JwtPublicKeyVerifyImpl> impl,
+                        NewJwtMlDsaVerifyImpl(jwt_ml_dsa_public_key));
+  return std::make_unique<JwtMlDsaVerify>(std::move(impl));
 }
 
 }  // namespace jwt_internal

@@ -31,10 +31,9 @@ absl::Status RegisterAesGcmHkdfStreamingProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-GCM-HKDF Streaming
-// parameters and keys into specified immutable serialization registry
-// `builder`.
-absl::Status RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// parameters and keys into specified serialization `registry`.
+absl::Status RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

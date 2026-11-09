@@ -368,26 +368,26 @@ absl::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(&HkdfPrfProtoKeySerializer());
 }
 
-absl::Status RegisterHkdfPrfProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterHkdfPrfProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(&HkdfPrfProtoParametersParser());
+      registry.RegisterParametersParser(&HkdfPrfProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status =
-      builder.RegisterParametersSerializer(&HkdfPrfProtoParametersSerializer());
+  status = registry.RegisterParametersSerializer(
+      &HkdfPrfProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(&HkdfPrfProtoKeyParser());
+  status = registry.RegisterKeyParser(&HkdfPrfProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(&HkdfPrfProtoKeySerializer());
+  return registry.RegisterKeySerializer(&HkdfPrfProtoKeySerializer());
 }
 
 }  // namespace internal

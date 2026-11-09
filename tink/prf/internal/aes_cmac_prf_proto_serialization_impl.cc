@@ -243,26 +243,26 @@ absl::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
 }
 
-absl::Status RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterAesCmacPrfProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(AesCmacPrfProtoParametersParser());
+      registry.RegisterParametersParser(AesCmacPrfProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterParametersSerializer(
+  status = registry.RegisterParametersSerializer(
       AesCmacPrfProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(AesCmacPrfProtoKeyParser());
+  status = registry.RegisterKeyParser(AesCmacPrfProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
 }
 
 }  // namespace internal

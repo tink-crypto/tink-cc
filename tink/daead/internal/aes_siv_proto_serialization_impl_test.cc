@@ -82,13 +82,11 @@ TEST_F(AesSivProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(AesSivProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(AesSivProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -133,12 +131,10 @@ TEST_P(AesSivProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(siv_params->KeySizeInBytes(), Eq(test_case.key_size));
 }
 
-TEST_P(AesSivProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(AesSivProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistry(registry), IsOk());
 
   AesSivKeyFormat key_format_proto;
   key_format_proto.set_version(0);
@@ -250,12 +246,10 @@ TEST_P(AesSivProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.key_size(), Eq(test_case.key_size));
 }
 
-TEST_P(AesSivProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(AesSivProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
@@ -319,12 +313,10 @@ TEST_P(AesSivProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(AesSivProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(AesSivProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistry(registry), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
   google::crypto::tink::AesSivKey key_proto;
@@ -496,12 +488,10 @@ TEST_P(AesSivProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.key_value().size(), Eq(test_case.key_size));
 }
 
-TEST_P(AesSivProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
+TEST_P(AesSivProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesSivProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);

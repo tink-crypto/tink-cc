@@ -31,9 +31,9 @@ absl::Status RegisterAesSivProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-SIV parameters and keys into
-// specified immutable serialization registry `builder`.
-absl::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// specified serialization `registry`.
+absl::Status RegisterAesSivProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

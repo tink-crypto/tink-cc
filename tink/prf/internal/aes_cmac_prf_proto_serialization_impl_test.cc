@@ -77,13 +77,12 @@ TEST_F(AesCmacPrfProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(AesCmacPrfProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(AesCmacPrfProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistry(registry),
               IsOk());
-  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder),
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistry(registry),
               IsOk());
 }
 
@@ -117,12 +116,11 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(parameters->KeySizeInBytes(), Eq(key_size));
 }
 
-TEST_P(AesCmacPrfProtoSerializationTest, ParseParametersWithImmutableRegistry) {
+TEST_P(AesCmacPrfProtoSerializationTest, ParseParametersWithRegistry) {
   int key_size = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   AesCmacPrfKeyFormat key_format_proto;
   key_format_proto.set_version(0);
@@ -252,13 +250,11 @@ TEST_P(AesCmacPrfProtoSerializationTest,
   EXPECT_THAT(key_format.key_size(), Eq(key_size));
 }
 
-TEST_P(AesCmacPrfProtoSerializationTest,
-       SerializeParametersWithImmutableRegistry) {
+TEST_P(AesCmacPrfProtoSerializationTest, SerializeParametersWithRegistry) {
   int key_size = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(key_size);
@@ -319,12 +315,11 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(AesCmacPrfProtoSerializationTest, ParseKeyWithImmutableRegistry) {
+TEST_P(AesCmacPrfProtoSerializationTest, ParseKeyWithRegistry) {
   int key_size = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   std::string raw_key_bytes = Random::GetRandomBytes(key_size);
   google::crypto::tink::AesCmacPrfKey key_proto;
@@ -493,12 +488,11 @@ TEST_P(AesCmacPrfProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.key_value(), Eq(raw_key_bytes));
 }
 
-TEST_P(AesCmacPrfProtoSerializationTest, SerializeKeyWithImmutableRegistry) {
+TEST_P(AesCmacPrfProtoSerializationTest, SerializeKeyWithRegistry) {
   int key_size = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   std::string raw_key_bytes = Random::GetRandomBytes(key_size);
   absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(

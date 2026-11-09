@@ -264,26 +264,26 @@ absl::Status RegisterAesSivProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesSivProtoKeySerializer());
 }
 
-absl::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterAesSivProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(AesSivProtoParametersParser());
+      registry.RegisterParametersParser(AesSivProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      builder.RegisterParametersSerializer(AesSivProtoParametersSerializer());
+      registry.RegisterParametersSerializer(AesSivProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(AesSivProtoKeyParser());
+  status = registry.RegisterKeyParser(AesSivProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(AesSivProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesSivProtoKeySerializer());
 }
 
 }  // namespace internal

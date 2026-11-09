@@ -89,14 +89,14 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
 }
 
 TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+       RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry),
       IsOk());
   ASSERT_THAT(
-      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry),
       IsOk());
 }
 
@@ -120,14 +120,12 @@ INSTANTIATE_TEST_SUITE_P(
                  /*proto_hash_type=*/HashType::SHA512,
                  /*segment_size=*/4 * 1024 * 1024}));
 
-TEST_P(AesGcmHkdfStreamingProtoSerializationTest,
-       ParseParametersWithRegistryBuilder) {
+TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   AesGcmHkdfStreamingParams proto_params;
   proto_params.set_ciphertext_segment_size(test_case.segment_size);
@@ -359,13 +357,12 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeParameters) {
 }
 
 TEST_P(AesGcmHkdfStreamingProtoSerializationTest,
-       SerializeParametersWithRegistryBuilder) {
+       SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
@@ -451,13 +448,12 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
 
-TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   AesGcmHkdfStreamingParams proto_params;
   proto_params.set_ciphertext_segment_size(test_case.segment_size);
@@ -695,14 +691,12 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest,
               Eq(test_case.proto_hash_type));
 }
 
-TEST_P(AesGcmHkdfStreamingProtoSerializationTest,
-       SerializeKeyWithRegistryBuilder) {
+TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()

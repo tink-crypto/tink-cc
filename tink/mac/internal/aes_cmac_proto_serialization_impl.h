@@ -31,9 +31,9 @@ absl::Status RegisterAesCmacProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-CMAC parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterAesCmacProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterAesCmacProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

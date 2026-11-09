@@ -107,14 +107,11 @@ TEST_F(HkdfPrfProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(HkdfPrfProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(HkdfPrfProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistry(registry), IsOk());
 }
 
 TEST_P(HkdfPrfProtoSerializationTest, ParseParametersWithMutableRegistry) {
@@ -153,11 +150,9 @@ TEST_P(HkdfPrfProtoSerializationTest, ParseParametersWithMutableRegistry) {
   ASSERT_THAT(**parsed_parameters, Eq(*expected_parameters));
 }
 
-TEST_P(HkdfPrfProtoSerializationTest, ParseParametersWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HkdfPrfProtoSerializationTest, ParseParametersWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
 
@@ -322,11 +317,9 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   }
 }
 
-TEST_P(HkdfPrfProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HkdfPrfProtoSerializationTest, SerializeParametersWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
@@ -404,11 +397,9 @@ TEST_P(HkdfPrfProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(HkdfPrfProtoSerializationTest, ParseKeyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HkdfPrfProtoSerializationTest, ParseKeyWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
 
@@ -602,11 +593,9 @@ TEST_P(HkdfPrfProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   }
 }
 
-TEST_P(HkdfPrfProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HkdfPrfProtoSerializationTest, SerializeKeyWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHkdfPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
 

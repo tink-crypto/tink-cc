@@ -94,14 +94,14 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
 }
 
 TEST_F(AesCtrHmacStreamingProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+       RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry),
       IsOk());
   ASSERT_THAT(
-      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry),
       IsOk());
 }
 
@@ -138,14 +138,12 @@ INSTANTIATE_TEST_SUITE_P(
             /*proto_hmac_hash_type=*/HashType::SHA512,
             /*tag_size=*/64, /*segment_size=*/4 * 1024 * 1024}));
 
-TEST_P(AesCtrHmacStreamingProtoSerializationTest,
-       ParseParametersWithRegistryBuilder) {
+TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   HmacParams proto_hmac_params;
   proto_hmac_params.set_tag_size(test_case.tag_size);
@@ -435,13 +433,12 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeParameters) {
 }
 
 TEST_P(AesCtrHmacStreamingProtoSerializationTest,
-       SerializeParametersWithRegistryBuilder) {
+       SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
@@ -541,13 +538,12 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
 
-TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   HmacParams proto_hmac_params;
   proto_hmac_params.set_tag_size(test_case.tag_size);
@@ -803,14 +799,12 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest,
               Eq(test_case.tag_size));
 }
 
-TEST_P(AesCtrHmacStreamingProtoSerializationTest,
-       SerializeKeyWithRegistryBuilder) {
+TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()

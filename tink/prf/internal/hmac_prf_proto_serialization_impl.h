@@ -31,9 +31,9 @@ absl::Status RegisterHmacPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for HMAC-PRF parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterHmacPrfProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterHmacPrfProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

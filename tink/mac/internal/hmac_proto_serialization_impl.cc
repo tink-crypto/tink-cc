@@ -295,26 +295,26 @@ absl::Status RegisterHmacProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(HmacProtoKeySerializer());
 }
 
-absl::Status RegisterHmacProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterHmacProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(HmacProtoParametersParser());
+      registry.RegisterParametersParser(HmacProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      builder.RegisterParametersSerializer(HmacProtoParametersSerializer());
+      registry.RegisterParametersSerializer(HmacProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(HmacProtoKeyParser());
+  status = registry.RegisterKeyParser(HmacProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(HmacProtoKeySerializer());
+  return registry.RegisterKeySerializer(HmacProtoKeySerializer());
 }
 
 }  // namespace internal

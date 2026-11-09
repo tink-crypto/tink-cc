@@ -98,14 +98,11 @@ TEST_F(HmacPrfProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(HmacPrfProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(HmacPrfProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistry(registry), IsOk());
 }
 
 TEST_P(HmacPrfProtoSerializationTest, ParseParametersWithMutableRegistry) {
@@ -137,11 +134,9 @@ TEST_P(HmacPrfProtoSerializationTest, ParseParametersWithMutableRegistry) {
   ASSERT_THAT(**parsed_parameters, Eq(*expected_parameters));
 }
 
-TEST_P(HmacPrfProtoSerializationTest, ParseParametersWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HmacPrfProtoSerializationTest, ParseParametersWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
 
@@ -295,11 +290,9 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.params().hash(), Eq(test_case.proto_hash_type));
 }
 
-TEST_P(HmacPrfProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HmacPrfProtoSerializationTest, SerializeParametersWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
   absl::StatusOr<HmacPrfParameters> parameters =
@@ -367,11 +360,9 @@ TEST_P(HmacPrfProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(HmacPrfProtoSerializationTest, ParseKeyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HmacPrfProtoSerializationTest, ParseKeyWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
 
@@ -556,11 +547,9 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.params().hash(), Eq(test_case.proto_hash_type));
 }
 
-TEST_P(HmacPrfProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+TEST_P(HmacPrfProtoSerializationTest, SerializeKeyWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHmacPrfProtoSerializationWithRegistry(registry), IsOk());
 
   TestCase test_case = GetParam();
 

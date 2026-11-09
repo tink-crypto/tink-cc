@@ -31,9 +31,9 @@ absl::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for HKDF-PRF parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterHkdfPrfProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterHkdfPrfProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

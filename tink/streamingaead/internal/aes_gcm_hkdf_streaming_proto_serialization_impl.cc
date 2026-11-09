@@ -377,26 +377,27 @@ absl::Status RegisterAesGcmHkdfStreamingProtoSerializationWithMutableRegistry(
       AesGcmHkdfStreamingProtoKeySerializer());
 }
 
-absl::Status RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  absl::Status status = builder.RegisterParametersParser(
+absl::Status RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  absl::Status status = registry.RegisterParametersParser(
       AesGcmHkdfStreamingProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterParametersSerializer(
+  status = registry.RegisterParametersSerializer(
       AesGcmHkdfStreamingProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(AesGcmHkdfStreamingProtoKeyParser());
+  status = registry.RegisterKeyParser(AesGcmHkdfStreamingProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(AesGcmHkdfStreamingProtoKeySerializer());
+  return registry.RegisterKeySerializer(
+      AesGcmHkdfStreamingProtoKeySerializer());
 }
 
 }  // namespace internal

@@ -16,8 +16,6 @@
 
 #include "tink/internal/global_serialization_registry.h"
 
-#include <utility>
-
 #include "absl/log/absl_check.h"
 #include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
 #include "tink/aead/internal/aes_eax_proto_serialization_impl.h"
@@ -47,40 +45,24 @@ namespace internal {
 
 const SerializationRegistry& GlobalSerializationRegistry() {
   static const SerializationRegistry* instance = [] {
-    SerializationRegistry initial_registry;
+    auto* registry = new SerializationRegistry();
 
     // AEAD
     ABSL_CHECK_OK(
-        RegisterAesCtrHmacAeadProtoSerializationWithRegistry(initial_registry));
+        RegisterAesCtrHmacAeadProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterAesEaxProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterAesGcmProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterAesGcmSivProtoSerializationWithRegistry(*registry));
     ABSL_CHECK_OK(
-        RegisterAesEaxProtoSerializationWithRegistry(initial_registry));
+        RegisterChaCha20Poly1305ProtoSerializationWithRegistry(*registry));
     ABSL_CHECK_OK(
-        RegisterAesGcmProtoSerializationWithRegistry(initial_registry));
+        RegisterLegacyKmsAeadProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterXAesGcmProtoSerializationWithRegistry(*registry));
     ABSL_CHECK_OK(
-        RegisterAesGcmSivProtoSerializationWithRegistry(initial_registry));
-    ABSL_CHECK_OK(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(
-        initial_registry));
-    ABSL_CHECK_OK(
-        RegisterLegacyKmsAeadProtoSerializationWithRegistry(initial_registry));
-    ABSL_CHECK_OK(
-        RegisterXAesGcmProtoSerializationWithRegistry(initial_registry));
-    ABSL_CHECK_OK(RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(
-        initial_registry));
-
-    // Signature
-    ABSL_CHECK_OK(
-        RegisterEcdsaProtoSerializationWithRegistry(initial_registry));
-    ABSL_CHECK_OK(
-        RegisterEd25519ProtoSerializationWithRegistry(initial_registry));
-    ABSL_CHECK_OK(
-        RegisterMlDsaProtoSerializationWithRegistry(initial_registry));
-    ABSL_CHECK_OK(
-        RegisterSlhDsaProtoSerializationWithRegistry(initial_registry));
-
-    SerializationRegistry::Builder builder(std::move(initial_registry));
+        RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(*registry));
 
     // Deterministic AEAD
-    ABSL_CHECK_OK(RegisterAesSivProtoSerializationWithRegistryBuilder(builder));
+    ABSL_CHECK_OK(RegisterAesSivProtoSerializationWithRegistry(*registry));
 
     // Hybrid
 
@@ -89,28 +71,26 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     // Key derivation
 
     // MAC
-    ABSL_CHECK_OK(
-        RegisterAesCmacProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(RegisterHmacProtoSerializationWithRegistryBuilder(builder));
+    ABSL_CHECK_OK(RegisterAesCmacProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterHmacProtoSerializationWithRegistry(*registry));
 
     // PRF
-    ABSL_CHECK_OK(
-        RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(
-        RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(
-        RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder));
+    ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterHkdfPrfProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterHmacPrfProtoSerializationWithRegistry(*registry));
+
+    // Signature
+    ABSL_CHECK_OK(RegisterEcdsaProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterEd25519ProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterMlDsaProtoSerializationWithRegistry(*registry));
+    ABSL_CHECK_OK(RegisterSlhDsaProtoSerializationWithRegistry(*registry));
 
     // Streaming AEAD
     ABSL_CHECK_OK(
-        RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(
-            builder));
+        RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(*registry));
     ABSL_CHECK_OK(
-        RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(
-            builder));
+        RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(*registry));
 
-    static SerializationRegistry* registry =
-        new SerializationRegistry(std::move(builder).Build());
     return registry;
   }();
   return *instance;

@@ -427,26 +427,27 @@ absl::Status RegisterAesCtrHmacStreamingProtoSerializationWithMutableRegistry(
       AesCtrHmacStreamingProtoKeySerializer());
 }
 
-absl::Status RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  absl::Status status = builder.RegisterParametersParser(
+absl::Status RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  absl::Status status = registry.RegisterParametersParser(
       AesCtrHmacStreamingProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterParametersSerializer(
+  status = registry.RegisterParametersSerializer(
       AesCtrHmacStreamingProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(AesCtrHmacStreamingProtoKeyParser());
+  status = registry.RegisterKeyParser(AesCtrHmacStreamingProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(AesCtrHmacStreamingProtoKeySerializer());
+  return registry.RegisterKeySerializer(
+      AesCtrHmacStreamingProtoKeySerializer());
 }
 
 }  // namespace internal

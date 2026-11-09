@@ -31,10 +31,9 @@ absl::Status RegisterAesCtrHmacStreamingProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-CTR-HMAC Streaming
-// parameters and keys into specified immutable serialization registry
-// `builder`.
-absl::Status RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// parameters and keys into specified serialization `registry`.
+absl::Status RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

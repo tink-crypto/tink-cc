@@ -29,13 +29,14 @@
 #include "absl/log/absl_check.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "tink/aead/aead_key_templates.h"
-#include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/annotations.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/legacy_annotations.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
+#include "tink/signature/ecdsa_sign_key_manager.h"
+#include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/signature_key_templates.h"
 #include "tink/util/secret_proto.h"
 #include "proto/tink.pb.h"
 
@@ -51,17 +52,22 @@ using ::testing::Pair;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
-// Returns a keyset with a single primary AES-GCM key, and sets `key_id` to its
+// Returns a keyset with a single primary ECDSA key, and sets `key_id` to its
 // ID.
+//
+// Uses ECDSA instead of AES-GCM because this test is in `tink.sandblaze`, which
+// compiles Tink against OpenSSL, and the `AesGcmKeyManager` only supports
+// BoringSSL.
 Keyset CreateKeyset(uint32_t& key_id) {
   KeyGenConfiguration key_gen_config;
-  ABSL_CHECK_OK(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-      std::make_unique<AesGcmKeyManager>(), key_gen_config));
+  ABSL_CHECK_OK(internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+      std::make_unique<EcdsaSignKeyManager>(),
+      std::make_unique<EcdsaVerifyKeyManager>(), key_gen_config));
 
   Keyset keyset;
   absl::StatusOr<uint32_t> id = KeysetHandleAccess::AddToKeyset(
-      AeadKeyTemplates::Aes128Gcm(), /*as_primary=*/true,
-      key_gen_config, &keyset);
+      SignatureKeyTemplates::EcdsaP256(), /*as_primary=*/true, key_gen_config,
+      &keyset);
   ABSL_CHECK_OK(id);
   key_id = *id;
   return keyset;

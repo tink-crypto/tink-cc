@@ -2324,8 +2324,9 @@ tink_cc_test(
     tink::core::annotations
     tink::core::key_gen_configuration
     tink::core::keyset_handle
-    tink::aead::aead_key_templates
-    tink::aead::aes_gcm_key_manager
+    tink::signature::ecdsa_sign_key_manager
+    tink::signature::ecdsa_verify_key_manager
+    tink::signature::signature_key_templates
     tink::util::secret_proto
     tink::proto::tink_cc_proto
 )

@@ -31,9 +31,9 @@ absl::Status RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for ChaCha20-Poly1305 parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterChaCha20Poly1305ProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

@@ -953,7 +953,6 @@ tink_cc_test(
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto
-    tink::proto::tink_cc_proto
     tink::proto::tink_cc_tinkpb
 )
 

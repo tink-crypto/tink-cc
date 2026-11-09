@@ -300,20 +300,20 @@ absl::Status RegisterAesGcmProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesGcmProtoKeySerializer());
 }
 
-absl::Status RegisterAesGcmProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterAesGcmProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(AesGcmProtoParametersParser());
+      registry.RegisterParametersParser(AesGcmProtoParametersParser());
   if (!status.ok()) return status;
 
   status =
-      builder.RegisterParametersSerializer(AesGcmProtoParametersSerializer());
+      registry.RegisterParametersSerializer(AesGcmProtoParametersSerializer());
   if (!status.ok()) return status;
 
-  status = builder.RegisterKeyParser(AesGcmProtoKeyParser());
+  status = registry.RegisterKeyParser(AesGcmProtoKeyParser());
   if (!status.ok()) return status;
 
-  return builder.RegisterKeySerializer(AesGcmProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesGcmProtoKeySerializer());
 }
 
 }  // namespace internal

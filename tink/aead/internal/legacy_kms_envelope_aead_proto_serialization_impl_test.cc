@@ -245,16 +245,14 @@ TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
 }
 
 TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+       RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(registry),
       IsOk());
   ASSERT_THAT(
-      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(registry),
       IsOk());
 }
 
@@ -341,14 +339,12 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
 }
 
 TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
-       ParseParametersWithImmutableRegistry) {
+       ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   KmsEnvelopeAeadKeyFormat key_format_proto;
   key_format_proto.set_kek_uri(kKekUri);
@@ -525,14 +521,12 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
 }
 
 TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
-       SerializeParametersWithImmutableRegistry) {
+       SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
@@ -606,15 +600,12 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
-       ParseKeyWithImmutableRegistry) {
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   KmsEnvelopeAeadKeyFormat key_format_proto;
   key_format_proto.set_kek_uri(kKekUri);
@@ -751,15 +742,12 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
               Eq(test_case.dek_template.type_url()));
 }
 
-TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
-       SerializeKeyWithImmutableRegistry) {
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,

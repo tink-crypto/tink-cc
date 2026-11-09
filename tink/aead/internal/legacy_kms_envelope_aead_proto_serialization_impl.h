@@ -31,10 +31,9 @@ absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for legacy KMS Envelope AEAD
-// parameters and keys into specified immutable serialization registry
-// `builder`.
-absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// parameters and keys into specified serialization `registry`.
+absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

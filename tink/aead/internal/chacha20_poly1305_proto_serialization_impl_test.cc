@@ -86,15 +86,13 @@ TEST_F(ChaCha20Poly1305ProtoSerializationTest,
 }
 
 TEST_F(ChaCha20Poly1305ProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+       RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  ASSERT_THAT(
-      RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry),
+              IsOk());
+  ASSERT_THAT(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry),
+              IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -136,14 +134,11 @@ TEST_P(ChaCha20Poly1305ProtoSerializationTest,
   EXPECT_THAT(Chacha20_poly1305_params->GetVariant(), Eq(test_case.variant));
 }
 
-TEST_P(ChaCha20Poly1305ProtoSerializationTest,
-       ParseParametersWithImmutableRegistry) {
+TEST_P(ChaCha20Poly1305ProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
@@ -230,13 +225,11 @@ TEST_P(ChaCha20Poly1305ProtoSerializationTest,
 }
 
 TEST_P(ChaCha20Poly1305ProtoSerializationTest,
-       SerializeParametersWithImmutableRegistry) {
+       SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(test_case.variant);
@@ -303,13 +296,11 @@ TEST_P(ChaCha20Poly1305ProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(ChaCha20Poly1305ProtoSerializationTest, ParseKeyWithImmutableRegistry) {
+TEST_P(ChaCha20Poly1305ProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry),
+              IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(32);
   google::crypto::tink::ChaCha20Poly1305Key key_proto;
@@ -492,14 +483,11 @@ TEST_P(ChaCha20Poly1305ProtoSerializationTest,
   EXPECT_THAT(proto_key.key_value().size(), Eq(32));
 }
 
-TEST_P(ChaCha20Poly1305ProtoSerializationTest,
-       SerializeKeyWithImmutableRegistry) {
+TEST_P(ChaCha20Poly1305ProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(test_case.variant);

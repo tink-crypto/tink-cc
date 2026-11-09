@@ -19,7 +19,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -46,7 +45,6 @@
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/common.pb.h"
 #include "proto/hmac.pb.h"
-#include "proto/tink.pb.h"
 #include "proto/tink.tinkpb.h"
 
 namespace crypto {
@@ -177,15 +175,13 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
 }
 
 TEST_F(AesCtrHmacAeadProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+       RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
 }
 
 TEST_P(AesCtrHmacAeadProtoSerializationTest,
@@ -226,14 +222,11 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest,
   EXPECT_THAT(**parsed_parameters, Eq(*expected_parameters));
 }
 
-TEST_P(AesCtrHmacAeadProtoSerializationTest,
-       ParseParametersWithRegistryBuilder) {
+TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
 
   AesCtrHmacAeadKeyFormat aes_ctr_hmac_aead_key_format =
       BuildAesCtrHmacAeadKeyFormat(
@@ -407,14 +400,11 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest,
               Eq(test_case.proto_hash_type));
 }
 
-TEST_P(AesCtrHmacAeadProtoSerializationTest,
-       SerializeParametersWithRegistryBuilder) {
+TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
@@ -461,13 +451,11 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest,
 }
 
 TEST_P(AesCtrHmacAeadProtoSerializationTest,
-       SerializeThenParseParametersWithRegistryBuilder) {
+       SerializeThenParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
@@ -549,13 +537,11 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
 
   std::string aes_key_bytes = Random::GetRandomBytes(test_case.aes_key_size);
   std::string hmac_key_bytes = Random::GetRandomBytes(test_case.hmac_key_size);
@@ -845,13 +831,11 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeKeyWithMutableRegistry) {
               Eq(test_case.proto_hash_type));
 }
 
-TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
+TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry),
+              IsOk());
 
   std::string aes_key_bytes = Random::GetRandomBytes(test_case.aes_key_size);
   std::string hmac_key_bytes = Random::GetRandomBytes(test_case.hmac_key_size);

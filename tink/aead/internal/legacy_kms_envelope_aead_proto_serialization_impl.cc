@@ -398,26 +398,26 @@ absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
       LegacyKmsEnvelopeAeadProtoKeySerializer());
 }
 
-absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  absl::Status status = builder.RegisterParametersParser(
+absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  absl::Status status = registry.RegisterParametersParser(
       LegacyKmsEnvelopeAeadProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterParametersSerializer(
+  status = registry.RegisterParametersSerializer(
       LegacyKmsEnvelopeAeadProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(LegacyKmsEnvelopeAeadProtoKeyParser());
+  status = registry.RegisterKeyParser(LegacyKmsEnvelopeAeadProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(
+  return registry.RegisterKeySerializer(
       LegacyKmsEnvelopeAeadProtoKeySerializer());
 }
 

@@ -32,9 +32,9 @@ absl::Status RegisterAesGcmSivProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-GCM-SIV parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterAesGcmSivProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterAesGcmSivProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

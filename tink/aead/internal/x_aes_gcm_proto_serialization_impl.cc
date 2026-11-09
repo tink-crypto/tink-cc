@@ -311,23 +311,23 @@ absl::Status RegisterXAesGcmProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(XAesGcmProtoKeySerializer());
 }
 
-absl::Status RegisterXAesGcmProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterXAesGcmProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(XAesGcmProtoParametersParser());
+      registry.RegisterParametersParser(XAesGcmProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
   status =
-      builder.RegisterParametersSerializer(XAesGcmProtoParametersSerializer());
+      registry.RegisterParametersSerializer(XAesGcmProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
-  status = builder.RegisterKeyParser(XAesGcmProtoKeyParser());
+  status = registry.RegisterKeyParser(XAesGcmProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
-  return builder.RegisterKeySerializer(XAesGcmProtoKeySerializer());
+  return registry.RegisterKeySerializer(XAesGcmProtoKeySerializer());
 }
 
 }  // namespace internal

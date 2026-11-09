@@ -47,24 +47,27 @@ namespace internal {
 
 const SerializationRegistry& GlobalSerializationRegistry() {
   static const SerializationRegistry* instance = [] {
-    SerializationRegistry::Builder builder;
+    SerializationRegistry initial_registry;
 
     // AEAD
     ABSL_CHECK_OK(
-        RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(RegisterAesGcmProtoSerializationWithRegistryBuilder(builder));
+        RegisterAesCtrHmacAeadProtoSerializationWithRegistry(initial_registry));
     ABSL_CHECK_OK(
-        RegisterAesGcmSivProtoSerializationWithRegistryBuilder(builder));
+        RegisterAesEaxProtoSerializationWithRegistry(initial_registry));
     ABSL_CHECK_OK(
-        RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(builder));
+        RegisterAesGcmProtoSerializationWithRegistry(initial_registry));
     ABSL_CHECK_OK(
-        RegisterLegacyKmsAeadProtoSerializationWithRegistryBuilder(builder));
+        RegisterAesGcmSivProtoSerializationWithRegistry(initial_registry));
+    ABSL_CHECK_OK(RegisterChaCha20Poly1305ProtoSerializationWithRegistry(
+        initial_registry));
     ABSL_CHECK_OK(
-        RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder));
+        RegisterLegacyKmsAeadProtoSerializationWithRegistry(initial_registry));
     ABSL_CHECK_OK(
-        RegisterXChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
-            builder));
+        RegisterXAesGcmProtoSerializationWithRegistry(initial_registry));
+    ABSL_CHECK_OK(RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(
+        initial_registry));
+
+    SerializationRegistry::Builder builder(std::move(initial_registry));
 
     // Deterministic AEAD
     ABSL_CHECK_OK(RegisterAesSivProtoSerializationWithRegistryBuilder(builder));

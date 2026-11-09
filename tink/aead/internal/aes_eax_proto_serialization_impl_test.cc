@@ -84,13 +84,11 @@ TEST_F(AesEaxProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(AesEaxProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(AesEaxProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -141,12 +139,10 @@ TEST_P(AesEaxProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(**parsed_parameters, Eq(*expected_parameters));
 }
 
-TEST_P(AesEaxProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(AesEaxProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistry(registry), IsOk());
 
   AesEaxKeyFormat key_format_proto;
   key_format_proto.set_key_size(test_case.key_size);
@@ -251,12 +247,10 @@ TEST_P(AesEaxProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.params().iv_size(), Eq(test_case.iv_size));
 }
 
-TEST_P(AesEaxProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(AesEaxProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistry(registry), IsOk());
 
   // Tink currently restricts AES-EAX tag size to 16 bytes.
   absl::StatusOr<AesEaxParameters> parameters =
@@ -357,12 +351,10 @@ TEST_P(AesEaxProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(AesEaxProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(AesEaxProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistry(registry), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
   google::crypto::tink::AesEaxKey key_proto;
@@ -553,12 +545,10 @@ TEST_P(AesEaxProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.params().iv_size(), Eq(test_case.iv_size));
 }
 
-TEST_P(AesEaxProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
+TEST_P(AesEaxProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterAesEaxProtoSerializationWithRegistry(registry), IsOk());
 
   // Tink currently restricts AES-EAX tag size to 16 bytes.
   absl::StatusOr<AesEaxParameters> parameters =

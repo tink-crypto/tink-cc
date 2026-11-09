@@ -287,26 +287,26 @@ absl::Status RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(ChaCha20Poly1305ProtoKeySerializer());
 }
 
-absl::Status RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  absl::Status status =
-      builder.RegisterParametersParser(ChaCha20Poly1305ProtoParametersParser());
+absl::Status RegisterChaCha20Poly1305ProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  absl::Status status = registry.RegisterParametersParser(
+      ChaCha20Poly1305ProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterParametersSerializer(
+  status = registry.RegisterParametersSerializer(
       ChaCha20Poly1305ProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(ChaCha20Poly1305ProtoKeyParser());
+  status = registry.RegisterKeyParser(ChaCha20Poly1305ProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(ChaCha20Poly1305ProtoKeySerializer());
+  return registry.RegisterKeySerializer(ChaCha20Poly1305ProtoKeySerializer());
 }
 
 }  // namespace internal

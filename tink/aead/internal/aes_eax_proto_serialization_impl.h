@@ -32,9 +32,9 @@ absl::Status RegisterAesEaxProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-EAX parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterAesEaxProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterAesEaxProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

@@ -88,14 +88,11 @@ TEST_F(XAesGcmProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(XAesGcmProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(XAesGcmProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -140,12 +137,10 @@ TEST_P(XAesGcmProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(gcm_params->SaltSizeBytes(), Eq(test_case.salt_size));
 }
 
-TEST_P(XAesGcmProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(XAesGcmProtoSerializationTest, ParseParametersWithRegistry) {
   XAesGcmTestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
@@ -249,12 +244,10 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.params().salt_size(), Eq(test_case.salt_size));
 }
 
-TEST_P(XAesGcmProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(XAesGcmProtoSerializationTest, SerializeParametersWithRegistry) {
   const XAesGcmTestCase& test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<XAesGcmParameters> parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);
@@ -319,12 +312,10 @@ TEST_P(XAesGcmProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(XAesGcmProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(XAesGcmProtoSerializationTest, ParseKeyWithRegistry) {
   const XAesGcmTestCase& test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistry(registry), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(kKeySize);
   google::crypto::tink::XAesGcmKey key_proto;
@@ -526,12 +517,10 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.key_value().size(), Eq(kKeySize));
 }
 
-TEST_P(XAesGcmProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
+TEST_P(XAesGcmProtoSerializationTest, SerializeKeyWithRegistry) {
   XAesGcmTestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterXAesGcmProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<XAesGcmParameters> parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);

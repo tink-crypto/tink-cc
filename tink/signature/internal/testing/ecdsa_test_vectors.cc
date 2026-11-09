@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -109,6 +110,7 @@ struct EcdsaTestVectorParams {
   std::optional<int> id_requirement;
   absl::string_view signature_hex;
   absl::string_view message_hex;
+  std::optional<absl::string_view> prehash_hex = std::nullopt;
 };
 
 SignatureTestVector MakeEcdsaTestVector(const EcdsaTestVectorParams& params) {
@@ -127,9 +129,14 @@ SignatureTestVector MakeEcdsaTestVector(const EcdsaTestVectorParams& params) {
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, params.private_key_value, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key.status());
+  std::optional<std::string> prehash = std::nullopt;
+  if (params.prehash_hex.has_value()) {
+    prehash = HexDecodeOrDie(*params.prehash_hex);
+  }
   return SignatureTestVector(
       std::make_unique<EcdsaPrivateKey>(*std::move(private_key)),
-      HexDecodeOrDie(params.signature_hex), HexDecodeOrDie(params.message_hex));
+      HexDecodeOrDie(params.signature_hex), HexDecodeOrDie(params.message_hex),
+      std::move(prehash));
 }
 
 using EcdsaTestVectorMap = absl::flat_hash_map<
@@ -159,6 +166,9 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f704271d5189e7a5cf"
                "03",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85"
+               "5",
            })},
           {{EcdsaParameters::CurveType::kNistP256,
             EcdsaParameters::HashType::kSha256,
@@ -179,6 +189,9 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "1f4b3c63a2022100d404a3015cb229f7cb036c2b5f77cc546065eed4b75837"
                "cec2883d1e35d5eb9f",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85"
+               "5",
            })},
           {{EcdsaParameters::CurveType::kNistP256,
             EcdsaParameters::HashType::kSha256,
@@ -198,6 +211,32 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "8ce2855262bb5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f70427"
                "1d5189e7a5cf03",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "ff99887766e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959"
+               "91b7852b855",
+           })},
+          {{EcdsaParameters::CurveType::kNistP256,
+            EcdsaParameters::HashType::kSha256,
+            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+            EcdsaParameters::Variant::kNoPrefixWithPrehashId},
+           MakeEcdsaTestVector(EcdsaTestVectorParams{
+               /*curve_type=*/EcdsaParameters::CurveType::kNistP256,
+               /*hash_type=*/EcdsaParameters::HashType::kSha256,
+               /*signature_encoding=*/
+               EcdsaParameters::SignatureEncoding::kIeeeP1363,
+               /*variant=*/EcdsaParameters::Variant::kNoPrefixWithPrehashId,
+               /*public_point=*/P256Point(),
+               /*private_key_value=*/P256SecretValue(),
+               /*id_requirement=*/0x99887766,
+               /*signature_hex=*/
+               "70cbee11e536e9c83d2a2abc6be049117fdab0c420db8191e36f8ce2855262b"
+               "b"
+               "5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f704271d5189e7a5cf"
+               "03",
+               /*message_hex=*/"",
+               /*prehash_hex=*/
+               "ff99887766e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959"
+               "91b7852b855",
            })},
           {{EcdsaParameters::CurveType::kNistP256,
             EcdsaParameters::HashType::kSha256,
@@ -217,6 +256,9 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "8ce2855262bb5d0b69eefc4dea7b086aa62186e9a7c8600e7b0f1252f70427"
                "1d5189e7a5cf03",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "ff99887766e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959"
+               "91b7852b855",
            })},
           {{EcdsaParameters::CurveType::kNistP256,
             EcdsaParameters::HashType::kSha256,
@@ -236,6 +278,7 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "44c64aff843a4e09ebfb9b6c40a6540dd0d835693ca08da8c1d8e434770511"
                "459088243b0bbb",
                /*message_hex=*/"",
+               /*prehash_hex=*/std::nullopt,
            })},
           {{EcdsaParameters::CurveType::kNistP384,
             EcdsaParameters::HashType::kSha384,
@@ -256,6 +299,9 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "7f58bf7d9b892ac75f43ab048360b34ee81653f85ec2f10e6e4f0f0e0cafbe"
                "91f883",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1d"
+               "a274edebfe76f65fbd51ad2f14898b95b",
            })},
           {{EcdsaParameters::CurveType::kNistP384,
             EcdsaParameters::HashType::kSha512,
@@ -276,6 +322,10 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "3f9c4494f45f7a4450422640f57b0ad467950f78ddb56641676cb91d392410"
                "ed606d",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9c"
+               "e47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da"
+               "3e",
            })},
           {{EcdsaParameters::CurveType::kNistP521,
             EcdsaParameters::HashType::kSha512,
@@ -297,6 +347,10 @@ const EcdsaTestVectorMap& CreateEcdsaTestVectorsMap() {
                "f6e175c2fb0944f6a9e3262fb9b99910e7fbd6ef4aca887b901ec78678d3ec"
                "48529c7f06e8c815",
                /*message_hex=*/"",
+               /*prehash_hex=*/
+               "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9c"
+               "e47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da"
+               "3e",
            })},
       });
   return *test_vectors;

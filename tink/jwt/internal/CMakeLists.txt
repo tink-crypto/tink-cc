@@ -1668,11 +1668,14 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::raw_jwt_ml_dsa_signer
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::public_key_sign
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::raw_jwt
 )
 
 tink_cc_library(
@@ -1727,7 +1730,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
-    absl::optional
     tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::public_key_sign
@@ -1736,8 +1738,10 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
+    tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
     tink::util::test_util
 )
 

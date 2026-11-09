@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
+#include "tink/jwt/jwt_public_key_sign.h"
 
 namespace crypto {
 namespace tink {
@@ -29,6 +30,9 @@ namespace jwt_internal {
 
 absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
 NewJwtMlDsaSignInternal(const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key);
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> NewJwtMlDsaSign(
+    const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key);
 
 }  // namespace jwt_internal
 }  // namespace tink

@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/jwt/internal/jwt_public_key_sign_impl.h"
@@ -28,7 +29,10 @@
 #include "tink/jwt/internal/raw_jwt_ml_dsa_signer.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
+#include "tink/jwt/jwt_public_key_sign.h"
+#include "tink/jwt/raw_jwt.h"
 #include "tink/public_key_sign.h"
+
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
@@ -51,10 +55,22 @@ absl::StatusOr<std::string> AlgorithmName(
   }
 }
 
-}  // namespace
+class JwtMlDsaSign final : public JwtPublicKeySign {
+ public:
+  explicit JwtMlDsaSign(std::unique_ptr<JwtPublicKeySignImpl> impl)
+      : impl_(std::move(impl)) {}
 
-absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
-NewJwtMlDsaSignInternal(const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
+  absl::StatusOr<std::string> SignAndEncode(
+      const RawJwt& token) const override {
+    return impl_->SignAndEncode(token);
+  }
+
+ private:
+  std::unique_ptr<JwtPublicKeySignImpl> impl_;
+};
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeySignImpl>> NewJwtMlDsaSignImpl(
+    const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
   absl::StatusOr<std::unique_ptr<PublicKeySign>> raw_signer =
       NewRawJwtMlDsaSign(jwt_ml_dsa_private_key);
   if (!raw_signer.ok()) {
@@ -88,6 +104,20 @@ NewJwtMlDsaSignInternal(const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
       return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
+}
+
+}  // namespace
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
+NewJwtMlDsaSignInternal(const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
+  return NewJwtMlDsaSignImpl(jwt_ml_dsa_private_key);
+}
+
+absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> NewJwtMlDsaSign(
+    const JwtMlDsaPrivateKey& jwt_ml_dsa_private_key) {
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<JwtPublicKeySignImpl> impl,
+                        NewJwtMlDsaSignImpl(jwt_ml_dsa_private_key));
+  return std::make_unique<JwtMlDsaSign>(std::move(impl));
 }
 
 }  // namespace jwt_internal

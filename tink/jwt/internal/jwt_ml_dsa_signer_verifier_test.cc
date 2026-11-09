@@ -23,19 +23,20 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/jwt/internal/jwt_ml_dsa_signer.h"
 #include "tink/jwt/internal/jwt_ml_dsa_verifier.h"
-#include "tink/jwt/internal/raw_jwt_ml_dsa_signer.h"
-#include "tink/jwt/internal/raw_jwt_ml_dsa_verifier.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_signer.h"
+#include "tink/jwt/internal/raw_jwt_ml_dsa_verifier.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
+#include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
+#include "tink/jwt/verified_jwt.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
@@ -48,6 +49,7 @@ namespace jwt_internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -232,8 +234,8 @@ const absl::string_view kMlDsa87PrivateSeedBytes =
 struct TestCase {
   JwtMlDsaParameters::KidStrategy kid_strategy;
   JwtMlDsaParameters::Algorithm algorithm;
-  absl::optional<std::string> custom_kid;
-  absl::optional<int> id_requirement;
+  std::optional<std::string> custom_kid;
+  std::optional<int> id_requirement;
   std::string public_key_bytes;
   std::string private_key_bytes;
 };
@@ -348,7 +350,7 @@ TEST_P(JwtMlDsaSignerVerifierTest, CreateSucceeds) {
                                                .Build();
   ASSERT_THAT(validator, IsOk());
 
-  absl::optional<std::string> kid = std::nullopt;
+  std::optional<std::string> kid = std::nullopt;
   if (parameters->GetKidStrategy() ==
       JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId) {
     kid = public_key->GetKid();
@@ -358,6 +360,66 @@ TEST_P(JwtMlDsaSignerVerifierTest, CreateSucceeds) {
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*verifier)->VerifyAndDecodeWithKid(*compact, *validator, kid),
               IsOk());
+}
+
+TEST_P(JwtMlDsaSignerVerifierTest, NewJwtMlDsaSignSucceeds) {
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(test_case.kid_strategy, test_case.algorithm);
+  ASSERT_THAT(parameters, IsOk());
+
+  JwtMlDsaPublicKey::Builder builder =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicKeyBytes(test_case.public_key_bytes);
+  if (test_case.id_requirement.has_value()) {
+    builder.SetIdRequirement(*test_case.id_requirement);
+  }
+  if (test_case.custom_kid.has_value()) {
+    builder.SetCustomKid(*test_case.custom_kid);
+  }
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_seed = RestrictedData(test_case.private_key_bytes,
+                                               InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> private_key = JwtMlDsaPrivateKey::Create(
+      *public_key, private_seed, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> signer =
+      NewJwtMlDsaSign(*private_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> verifier =
+      NewJwtMlDsaVerifyInternal(*public_key);
+  ASSERT_THAT(verifier, IsOk());
+
+  absl::StatusOr<RawJwt> raw_jwt =
+      RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectIssuer("issuer")
+                                               .AllowMissingExpiration()
+                                               .Build();
+  ASSERT_THAT(validator, IsOk());
+
+  absl::StatusOr<std::string> compact = (*signer)->SignAndEncode(*raw_jwt);
+  ASSERT_THAT(compact, IsOk());
+
+  std::optional<std::string> kid = std::nullopt;
+  if (parameters->GetKidStrategy() ==
+      JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId) {
+    kid = public_key->GetKid();
+  }
+  absl::StatusOr<VerifiedJwt> verified_jwt =
+      (*verifier)->VerifyAndDecodeWithKid(*compact, *validator, kid);
+  ASSERT_THAT(verified_jwt, IsOk());
+  EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 }
 
 }  // namespace

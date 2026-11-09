@@ -434,6 +434,58 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeParameters) {
   EXPECT_THAT(format.params().hmac_params().tag_size(), Eq(test_case.tag_size));
 }
 
+TEST_P(AesCtrHmacStreamingProtoSerializationTest,
+       SerializeParametersWithRegistryBuilder) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistryBuilder(builder),
+      IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(test_case.key_size)
+          .SetDerivedKeySizeInBytes(test_case.derived_key_size)
+          .SetHkdfHashType(test_case.hkdf_hash_type)
+          .SetHmacHashType(test_case.hmac_hash_type)
+          .SetHmacTagSizeInBytes(test_case.tag_size)
+          .SetCiphertextSegmentSizeInBytes(test_case.segment_size)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixTypeTP::kRaw));
+
+  AesCtrHmacStreamingKeyFormat format;
+  ASSERT_THAT(format.ParseFromString(key_template.value()), IsTrue());
+  EXPECT_THAT(format.version(), Eq(0));
+  EXPECT_THAT(format.key_size(), Eq(test_case.key_size));
+
+  ASSERT_THAT(format.has_params(), IsTrue());
+  EXPECT_THAT(format.params().derived_key_size(),
+              Eq(test_case.derived_key_size));
+  EXPECT_THAT(format.params().ciphertext_segment_size(),
+              Eq(test_case.segment_size));
+  EXPECT_THAT(format.params().hkdf_hash_type(),
+              Eq(test_case.proto_hkdf_hash_type));
+
+  EXPECT_THAT(format.params().has_hmac_params(), IsTrue());
+  EXPECT_THAT(format.params().hmac_params().hash(),
+              Eq(test_case.proto_hmac_hash_type));
+  EXPECT_THAT(format.params().hmac_params().tag_size(), Eq(test_case.tag_size));
+}
+
 TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKeyWithMutableRegistry) {
   TestCase test_case = GetParam();
   MutableSerializationRegistry registry;

@@ -112,6 +112,19 @@ EOF
 if [[ "${IS_KOKORO}" == "true" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  readonly TINK_SRC_DIR="$(pwd)"
+  cleanup() {
+    # Files created inside the Docker container are owned by root.
+    sudo rm -rf "${TINK_SRC_DIR}/ccache" \
+      "${TINK_SRC_DIR}/ccache.tgz" \
+      "${TINK_SRC_DIR}/config_cache" \
+      "${TINK_SRC_DIR}/out" \
+      "${TINK_SRC_DIR}/out_examples"
+  }
+  # Kokoro rsyncs all created/modified files under KOKORO_ARTIFACTS_DIR back
+  # off the VM when the job ends; delete build and cache outputs on exit (after
+  # GCS upload completes) so multi-GB build outputs are not transferred back.
+  trap cleanup EXIT
   source kokoro/testutils/cc_test_container_images.sh
 
   # 1. Update ccache for standard CMake image.

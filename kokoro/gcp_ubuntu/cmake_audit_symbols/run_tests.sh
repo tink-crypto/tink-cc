@@ -40,6 +40,15 @@ RUN_COMMAND_ARGS=()
 if [[ "${IS_KOKORO}" == "true" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  readonly TINK_SRC_DIR="$(pwd)"
+  cleanup() {
+    # Files created inside the Docker container are owned by root.
+    sudo rm -rf "${TINK_SRC_DIR}/ccache" "${TINK_SRC_DIR}/out"
+  }
+  # Kokoro rsyncs all created/modified files under KOKORO_ARTIFACTS_DIR back
+  # off the VM when the job ends; delete build and cache directories on exit so
+  # multi-GB build outputs are not transferred back.
+  trap cleanup EXIT
   source kokoro/testutils/cc_test_container_images.sh
   CONTAINER_IMAGE="${TINK_CC_CMAKE_IMAGE}"
   RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )

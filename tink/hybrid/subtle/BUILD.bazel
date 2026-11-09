@@ -157,3 +157,38 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ecies_encrypt",
+    srcs = ["create_ecies_encrypt.cc"],
+    hdrs = ["create_ecies_encrypt.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:hybrid_encrypt",
+        "//tink/hybrid:ecies_public_key",
+        "//tink/hybrid/internal:ecies_aead_hkdf_hybrid_encrypt",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ecies_encrypt_test",
+    srcs = ["create_ecies_encrypt_test.cc"],
+    deps = [
+        ":create_ecies_decrypt",
+        ":create_ecies_encrypt",
+        ":create_ecies_key",
+        "//tink:hybrid_decrypt",
+        "//tink:hybrid_encrypt",
+        "//tink:partial_key_access",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "//tink/hybrid:ecies_public_key",
+        "//tink/hybrid/internal/testing:ecies_aead_hkdf_test_vectors",
+        "//tink/hybrid/internal/testing:hybrid_test_vectors",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -42,7 +42,6 @@
 #include "tink/config/global_registry.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
@@ -50,8 +49,8 @@
 #include "tink/restricted_data.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
+#include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/aes_gcm_siv.pb.h"
 #include "proto/tink.pb.h"
 
@@ -184,28 +183,7 @@ TEST(AesGcmSivKeyManagerTest, Create32ByteKey) {
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
 }
 
-TEST(AesGcmSivKeyManagerTest, CreateAeadFailsWithOpenSsl) {
-  if (internal::IsBoringSsl()) {
-    GTEST_SKIP() << "OpenSSL-only test, skipping because Tink uses BoringSSL";
-  }
-  AesGcmSivKeyFormat format;
-  format.set_key_size(32);
-  absl::StatusOr<AesGcmSivKeyProto> key =
-      AesGcmSivKeyManager().CreateKey(format);
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<Aead>(*key).status(),
-              Not(IsOk()));
-  EXPECT_THAT(subtle::AesGcmSivBoringSsl::New(
-                  SecretData(key->key_value()))
-                  .status(),
-              Not(IsOk()));
-}
-
-TEST(AesGcmSivKeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "AES-GCM-SIV is not supported when OpenSSL is used";
-  }
+TEST(AesGcmSivKeyManagerTest, CreateAeadSucceeds) {
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
   absl::StatusOr<AesGcmSivKeyProto> key =
@@ -224,20 +202,6 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
               IsOk());
 }
 
-TEST(AesGcmSivKeyManagerTest, CreateCordAeadFailsWithOpenSsl) {
-  if (internal::IsBoringSsl()) {
-    GTEST_SKIP() << "OpenSSL-only test, skipping because Tink uses BoringSSL";
-  }
-  AesGcmSivKeyFormat format;
-  format.set_key_size(32);
-  absl::StatusOr<AesGcmSivKeyProto> key =
-      AesGcmSivKeyManager().CreateKey(format);
-  ASSERT_THAT(key, IsOk());
-
-  EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<CordAead>(*key).status(),
-              StatusIs(absl::StatusCode::kUnimplemented));
-}
-
 TEST(AesGcmSivKeyManagerTest, CreateCordAeadFailsWithInvalidKeySize) {
   for (int invalid_size : {0, 1, 15, 17, 24, 31, 33}) {
     AesGcmSivKeyProto key;
@@ -249,9 +213,6 @@ TEST(AesGcmSivKeyManagerTest, CreateCordAeadFailsWithInvalidKeySize) {
 }
 
 TEST(AesGcmSivKeyManagerTest, CreateCordAeadSucceedsWithBoringSsl) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "AES-GCM-SIV is not supported when OpenSSL is used";
-  }
   for (int key_size : {16, 32}) {
     AesGcmSivKeyFormat format;
     format.set_key_size(key_size);
@@ -287,9 +248,6 @@ using AesGcmSivKeyManagerTestVectorTest =
     testing::TestWithParam<internal::AeadTestVector>;
 
 TEST_P(AesGcmSivKeyManagerTestVectorTest, DecryptAead) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "AES-GCM-SIV is not supported when OpenSSL is used";
-  }
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   const internal::AeadTestVector& test_vector = GetParam();
   absl::StatusOr<KeysetHandle> handle =
@@ -311,9 +269,6 @@ TEST_P(AesGcmSivKeyManagerTestVectorTest, DecryptAead) {
 }
 
 TEST_P(AesGcmSivKeyManagerTestVectorTest, DecryptCordAead) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "AES-GCM-SIV is not supported when OpenSSL is used";
-  }
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   ASSERT_THAT(
       Registry::RegisterPrimitiveWrapper(std::make_unique<CordAeadWrapper>()),

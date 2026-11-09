@@ -39,7 +39,6 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
 #include "proto/tink.pb.h"
@@ -52,7 +51,6 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::google::crypto::tink::KeyTemplate;
-using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -91,19 +89,14 @@ TEST(Aead2026Test, KeyManagers) {
 }
 
 using Aead2026KeyTypesTest = TestWithParam<KeyTemplate>;
-using Aead2026BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
 using CordAead2026KeyTypesTest = TestWithParam<KeyTemplate>;
 using CordAead2026BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
 
-// For key type support when using BoringSSL or OpenSSL, see
-// https://developers.google.com/tink/supported-key-types#aead.
 INSTANTIATE_TEST_SUITE_P(Aead2026KeyTypesTestSuite, Aead2026KeyTypesTest,
                          Values(AeadKeyTemplates::Aes128CtrHmacSha256(),
                                 AeadKeyTemplates::Aes128Eax(),
-                                AeadKeyTemplates::Aes128Gcm()));
-INSTANTIATE_TEST_SUITE_P(Aead2026BoringSslKeyTypesTestSuite,
-                         Aead2026BoringSslKeyTypesTest,
-                         Values(AeadKeyTemplates::Aes128GcmSiv(),
+                                AeadKeyTemplates::Aes128Gcm(),
+                                AeadKeyTemplates::Aes128GcmSiv(),
                                 AeadKeyTemplates::XChaCha20Poly1305()));
 INSTANTIATE_TEST_SUITE_P(CordAead2026KeyTypesTestSuite,
                          CordAead2026KeyTypesTest,
@@ -124,32 +117,6 @@ TEST_P(Aead2026KeyTypesTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Aead>> aead =
-      (*handle)->GetPrimitive<Aead>(config);
-  ASSERT_THAT(aead, IsOk());
-
-  std::string plaintext = "plaintext";
-  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
-  ASSERT_THAT(ciphertext, IsOk());
-  EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
-}
-
-TEST_P(Aead2026BoringSslKeyTypesTest, GetPrimitive) {
-  KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
-  Configuration config;
-  ASSERT_THAT(AddAead2026(config), IsOk());
-
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(GetParam(), key_gen_config);
-  ASSERT_THAT(handle, IsOk());
-
-  // Fails if using OpenSSL.
-  if (!IsBoringSsl()) {
-    EXPECT_THAT((*handle)->GetPrimitive<Aead>(config), Not(IsOk()));
-    return;
-  }
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(config);
@@ -191,12 +158,6 @@ TEST_P(CordAead2026BoringSslKeyTypesTest, GetPrimitive) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
-
-  // Fails if using OpenSSL.
-  if (!IsBoringSsl()) {
-    EXPECT_THAT((*handle)->GetPrimitive<CordAead>(config), Not(IsOk()));
-    return;
-  }
 
   absl::StatusOr<std::unique_ptr<CordAead>> aead =
       (*handle)->GetPrimitive<CordAead>(config);

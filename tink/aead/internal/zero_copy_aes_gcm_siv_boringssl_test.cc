@@ -68,8 +68,7 @@ using ::testing::ValuesIn;
 class ZeroCopyAesGcmSivBoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
-    SecretData key =
-        SecretData(test::HexDecodeOrDie(kKey256Hex));
+    SecretData key = SecretData(test::HexDecodeOrDie(kKey256Hex));
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }

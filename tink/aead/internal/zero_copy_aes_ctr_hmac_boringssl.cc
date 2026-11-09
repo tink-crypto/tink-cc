@@ -33,9 +33,12 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "openssl/cipher.h"
 #include "openssl/crypto.h"
+#include "openssl/digest.h"
 #include "openssl/evp.h"
 #include "openssl/hmac.h"
+#include "openssl/mem.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/internal/zero_copy_aead.h"
@@ -226,15 +229,7 @@ absl::StatusOr<int64_t> ZeroCopyAesCtrHmacBoringSsl::Encrypt(
   absl::Status status =
       internal::CallWithCoreDumpProtection([&]() -> absl::Status {
         if (!plaintext.empty()) {
-#ifdef OPENSSL_IS_BORINGSSL
           bssl::ScopedEVP_CIPHER_CTX aes_ctx;
-#else
-          internal::SslUniquePtr<EVP_CIPHER_CTX> aes_ctx(EVP_CIPHER_CTX_new());
-          if (aes_ctx == nullptr) {
-            return absl::Status(absl::StatusCode::kInternal,
-                                "Failed to allocate EVP_CIPHER_CTX");
-          }
-#endif
           if (EVP_CIPHER_CTX_copy(aes_ctx.get(), base_aes_ctx_.get()) != 1) {
             return absl::Status(absl::StatusCode::kInternal,
                                 "EVP_CIPHER_CTX_copy failed");
@@ -256,23 +251,11 @@ absl::StatusOr<int64_t> ZeroCopyAesCtrHmacBoringSsl::Encrypt(
           }
         }
 
-#ifdef OPENSSL_IS_BORINGSSL
         bssl::ScopedHMAC_CTX hmac_ctx;
         if (HMAC_CTX_copy_ex(hmac_ctx.get(), base_hmac_ctx_.get()) != 1) {
           return absl::Status(absl::StatusCode::kInternal,
                               "HMAC_CTX_copy_ex failed");
         }
-#else
-        internal::SslUniquePtr<HMAC_CTX> hmac_ctx(HMAC_CTX_new());
-        if (hmac_ctx == nullptr) {
-          return absl::Status(absl::StatusCode::kInternal,
-                              "Failed to allocate HMAC_CTX");
-        }
-        if (HMAC_CTX_copy(hmac_ctx.get(), base_hmac_ctx_.get()) != 1) {
-          return absl::Status(absl::StatusCode::kInternal,
-                              "HMAC_CTX_copy failed");
-        }
-#endif
         if (HMAC_Update(
                 hmac_ctx.get(),
                 reinterpret_cast<const uint8_t*>(associated_data.data()),
@@ -367,23 +350,11 @@ absl::StatusOr<int64_t> ZeroCopyAesCtrHmacBoringSsl::Decrypt(
   absl::Status decrypt_status =
       internal::CallWithCoreDumpProtection([&]() -> absl::Status {
         uint8_t tag_buf[EVP_MAX_MD_SIZE];
-#ifdef OPENSSL_IS_BORINGSSL
         bssl::ScopedHMAC_CTX hmac_ctx;
         if (HMAC_CTX_copy_ex(hmac_ctx.get(), base_hmac_ctx_.get()) != 1) {
           return absl::Status(absl::StatusCode::kInternal,
                               "HMAC_CTX_copy_ex failed");
         }
-#else
-        internal::SslUniquePtr<HMAC_CTX> hmac_ctx(HMAC_CTX_new());
-        if (hmac_ctx == nullptr) {
-          return absl::Status(absl::StatusCode::kInternal,
-                              "Failed to allocate HMAC_CTX");
-        }
-        if (HMAC_CTX_copy(hmac_ctx.get(), base_hmac_ctx_.get()) != 1) {
-          return absl::Status(absl::StatusCode::kInternal,
-                              "HMAC_CTX_copy failed");
-        }
-#endif
         if (HMAC_Update(
                 hmac_ctx.get(),
                 reinterpret_cast<const uint8_t*>(associated_data.data()),
@@ -411,15 +382,7 @@ absl::StatusOr<int64_t> ZeroCopyAesCtrHmacBoringSsl::Decrypt(
         }
 
         if (!raw_ciphertext.empty()) {
-#ifdef OPENSSL_IS_BORINGSSL
           bssl::ScopedEVP_CIPHER_CTX aes_ctx;
-#else
-          internal::SslUniquePtr<EVP_CIPHER_CTX> aes_ctx(EVP_CIPHER_CTX_new());
-          if (aes_ctx == nullptr) {
-            return absl::Status(absl::StatusCode::kInternal,
-                                "Failed to allocate EVP_CIPHER_CTX");
-          }
-#endif
           if (EVP_CIPHER_CTX_copy(aes_ctx.get(), base_aes_ctx_.get()) != 1) {
             return absl::Status(absl::StatusCode::kInternal,
                                 "EVP_CIPHER_CTX_copy failed");

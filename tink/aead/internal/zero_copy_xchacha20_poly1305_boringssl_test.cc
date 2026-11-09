@@ -17,14 +17,12 @@
 #include "tink/aead/internal/zero_copy_xchacha20_poly1305_boringssl.h"
 
 #include <cstdint>
-#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -68,8 +66,7 @@ using ::testing::ValuesIn;
 class ZeroCopyXChacha20Poly1305BoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
-    SecretData key =
-        SecretData(test::HexDecodeOrDie(kKey256Hex));
+    SecretData key = SecretData(test::HexDecodeOrDie(kKey256Hex));
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }

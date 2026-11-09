@@ -1068,11 +1068,10 @@ tink_cc_test(
     tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::config::global_registry
     tink::internal::fips_utils
-    tink::internal::ssl_util
     tink::subtle::aead_test_util
     tink::subtle::aes_gcm_siv_boringssl
+    tink::subtle::random
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::aes_gcm_siv_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -1115,7 +1114,6 @@ tink_cc_test(
     tink::aead::aead_config
     tink::aead::xchacha20_poly1305_key_manager
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     tink::internal::boringssl
@@ -1125,12 +1123,10 @@ tink_cc_test(
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::xchacha20_poly1305_test_vectors
     tink::config::global_registry
-    tink::internal::ssl_util
     tink::subtle::aead_test_util
     tink::subtle::xchacha20_poly1305_boringssl
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
@@ -1166,7 +1162,6 @@ tink_cc_test(
     tink::aead::aead_key_templates
     tink::aead::kms_envelope_aead
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1176,10 +1171,8 @@ tink_cc_test(
     tink::core::registry
     tink::config::global_registry
     tink::internal::endian
-    tink::internal::ssl_util
     tink::mac::mac_key_templates
     tink::util::fake_kms_client
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto
@@ -1862,7 +1855,6 @@ tink_cc_test(
     tink::core::aead
     tink::core::keyset_handle
     tink::config::global_registry
-    tink::internal::ssl_util
 )
 
 tink_cc_library(
@@ -1911,7 +1903,6 @@ tink_cc_test(
     absl::statusor
     tink::core::aead
     tink::core::keyset_handle
-    tink::internal::ssl_util
     tink::proto::tink_cc_proto
 )
 

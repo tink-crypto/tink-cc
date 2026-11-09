@@ -1256,7 +1256,6 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
-    tink::internal::ssl_util
     tink::proto::tink_cc_proto
 )
 
@@ -1485,7 +1484,6 @@ tink_cc_test(
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_xchacha20_poly1305_boringssl
     gmock
-    absl::algorithm_container
     absl::status
     absl::status_matchers
     absl::statusor

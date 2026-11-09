@@ -22,23 +22,19 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
 #include "tink/config/global_registry.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
@@ -181,25 +177,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateKeyValid) {
               IsOk());
 }
 
-TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadFailsWithOpenSsl) {
-  if (internal::IsBoringSsl()) {
-    GTEST_SKIP() << "OpenSSL-only test, skipping because Tink uses BoringSSL";
-  }
-  absl::StatusOr<XChaCha20Poly1305KeyProto> key =
-      XChaCha20Poly1305KeyManager().CreateKey(XChaCha20Poly1305KeyFormat());
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(XChaCha20Poly1305KeyManager().GetPrimitive<Aead>(*key).status(),
-              Not(IsOk()));
-  EXPECT_THAT(subtle::XChacha20Poly1305BoringSsl::New(
-                  SecretData(key->key_value()))
-                  .status(),
-              Not(IsOk()));
-}
-
-TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
-  }
+TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadSucceeds) {
   absl::StatusOr<XChaCha20Poly1305KeyProto> key =
       XChaCha20Poly1305KeyManager().CreateKey(XChaCha20Poly1305KeyFormat());
   ASSERT_THAT(key, IsOk());
@@ -216,7 +194,6 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
               IsOk());
 }
 
-#ifdef OPENSSL_IS_BORINGSSL
 using XChaCha20Poly1305KeyManagerTestVectorTest =
     testing::TestWithParam<internal::AeadTestVector>;
 
@@ -245,7 +222,6 @@ INSTANTIATE_TEST_SUITE_P(
     XChaCha20Poly1305KeyManagerTestVectorTestSuite,
     XChaCha20Poly1305KeyManagerTestVectorTest,
     testing::ValuesIn(internal::CreateXChaCha20Poly1305TestVectors()));
-#endif
 
 }  // namespace
 }  // namespace tink

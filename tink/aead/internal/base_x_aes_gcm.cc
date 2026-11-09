@@ -26,9 +26,9 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "openssl/cipher.h"
 #include "openssl/cmac.h"
 #include "openssl/evp.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
@@ -114,15 +114,9 @@ absl::StatusOr<SecretData> DerivePerMessageKeyImpl(const CMAC_CTX& cmac_ctx,
   if (!status.ok()) {
     return status;
   }
-#ifdef OPENSSL_IS_BORINGSSL
   if (CMAC_Reset((*local_cmac_ctx).get()) != 1) {
     return absl::InternalError("failed CMAC_Reset");
   }
-#else
-  if (CMAC_CTX_copy((*local_cmac_ctx).get(), &cmac_ctx) != 1) {
-    return absl::InternalError("failed CMAC_CTX_copy");
-  }
-#endif
   status = SingleShotCmac(**local_cmac_ctx, derivation_block_2, kAesBlockSize,
                           derived_key.data() + kAesBlockSize);
   if (!status.ok()) {

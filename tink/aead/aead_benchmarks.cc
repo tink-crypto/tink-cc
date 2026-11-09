@@ -18,8 +18,6 @@
 #include <string>
 
 #include "benchmark/benchmark.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -27,7 +25,6 @@
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/config/global_registry.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/keyset_handle.h"
 
 namespace crypto {
@@ -79,16 +76,10 @@ void BM_Aes256GcmEncrypt(benchmark::State& state) {
 }
 
 void BM_Aes256GcmSivEncrypt(benchmark::State& state) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   Encrypt(state, AeadKeyTemplates::Aes256GcmSiv());
 }
 
 void BM_XChaCha20Poly1305Encrypt(benchmark::State& state) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   Encrypt(state, AeadKeyTemplates::XChaCha20Poly1305());
 }
 
@@ -140,16 +131,10 @@ void BM_Aes256GcmDecrypt(benchmark::State& state) {
 }
 
 void BM_Aes256GcmSivDecrypt(benchmark::State& state) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   Decrypt(state, AeadKeyTemplates::Aes256GcmSiv());
 }
 
 void BM_XChaCha20Poly1305Decrypt(benchmark::State& state) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   Decrypt(state, AeadKeyTemplates::XChaCha20Poly1305());
 }
 

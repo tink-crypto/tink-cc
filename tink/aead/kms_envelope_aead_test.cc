@@ -26,7 +26,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -36,12 +35,10 @@
 #include "tink/aead/aead_key_templates.h"
 #include "tink/config/global_registry.h"
 #include "tink/internal/endian.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac/mac_key_templates.h"
 #include "tink/registry.h"
 #include "tink/util/fake_kms_client.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
@@ -273,18 +270,13 @@ TEST_P(KmsEnvelopeAeadDekTemplatesTest, EncryptDecrypt) {
 }
 
 std::vector<KeyTemplate> GetTestTemplates() {
-  std::vector<KeyTemplate> templates = {
-    AeadKeyTemplates::Aes128Gcm(),
-    AeadKeyTemplates::Aes256Gcm(),
-    AeadKeyTemplates::Aes128CtrHmacSha256(),
-    AeadKeyTemplates::Aes128Eax(),
-    AeadKeyTemplates::Aes128GcmNoPrefix()
-  };
-  if (internal::IsBoringSsl()) {
-    templates.push_back(AeadKeyTemplates::XChaCha20Poly1305());
-    templates.push_back(AeadKeyTemplates::Aes256GcmSiv());
-  }
-  return templates;
+  return {AeadKeyTemplates::Aes128Gcm(),
+          AeadKeyTemplates::Aes256Gcm(),
+          AeadKeyTemplates::Aes128CtrHmacSha256(),
+          AeadKeyTemplates::Aes128Eax(),
+          AeadKeyTemplates::Aes128GcmNoPrefix(),
+          AeadKeyTemplates::XChaCha20Poly1305(),
+          AeadKeyTemplates::Aes256GcmSiv()};
 }
 
 INSTANTIATE_TEST_SUITE_P(

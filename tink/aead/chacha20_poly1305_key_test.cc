@@ -30,10 +30,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/aead.h"
-#endif
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/chacha20_poly1305_test_vectors.h"
@@ -77,7 +74,6 @@ TEST_P(ChaCha20Poly1305KeyTest, CreateSucceeds) {
   EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
 }
 
-#ifdef OPENSSL_IS_BORINGSSL
 TEST_P(ChaCha20Poly1305KeyTest, Decrypt) {
   const internal::AeadTestVector& test_vector = GetParam();
   const ChaCha20Poly1305Key& key =
@@ -113,7 +109,6 @@ TEST_P(ChaCha20Poly1305KeyTest, Decrypt) {
   decrypted.resize(out_len);
   EXPECT_THAT(decrypted, Eq(test_vector.plaintext));
 }
-#endif
 
 TEST(ChaCha20Poly1305KeyTest, CreateKeyWithInvalidVariantFails) {
   RestrictedData secret = dynamic_cast<const ChaCha20Poly1305Key&>(

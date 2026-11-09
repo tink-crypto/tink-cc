@@ -236,6 +236,8 @@
 #include "tink/jwt/subtle/create_jwt_rsa_ssa_pkcs1_public_key_sign.h"
 #include "tink/jwt/subtle/create_jwt_rsa_ssa_pkcs1_public_key_verify.h"
 #include "tink/jwt/subtle/create_jwt_rsa_ssa_pss_key.h"
+#include "tink/jwt/subtle/create_jwt_rsa_ssa_pss_public_key_sign.h"
+#include "tink/jwt/subtle/create_jwt_rsa_ssa_pss_public_key_verify.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/kem/kem_encapsulate.h"

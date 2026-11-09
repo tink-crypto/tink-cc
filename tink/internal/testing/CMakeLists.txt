@@ -140,3 +140,40 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME test_only_key
+  SRCS
+    test_only_key.cc
+    test_only_key.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_parameters_serialization
+    tink::proto::test_proto_cc_proto
+    tink::proto::tink_cc_tinkpb
+  TESTONLY
+)
+
+tink_cc_test(
+  NAME test_only_key_test
+  SRCS
+    test_only_key_test.cc
+  DEPS
+    tink::internal::testing::test_only_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::proto::test_proto_cc_proto
+    tink::proto::tink_cc_proto
+)

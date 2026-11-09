@@ -145,3 +145,40 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "test_only_key",
+    testonly = 1,
+    srcs = ["test_only_key.cc"],
+    hdrs = ["test_only_key.h"],
+    deps = [
+        "//proto:test_proto_cc_proto",
+        "//proto:tink_cc_tinkpb",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "test_only_key_test",
+    srcs = ["test_only_key_test.cc"],
+    deps = [
+        ":test_only_key",
+        "//proto:test_proto_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

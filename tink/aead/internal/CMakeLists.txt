@@ -1351,7 +1351,6 @@ tink_cc_test(
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::internal::fips_utils
-    tink::internal::ssl_util
     tink::subtle::aes_gcm_siv_boringssl
     tink::subtle::random
     tink::util::test_util

@@ -33,13 +33,8 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/cipher.h"
-#else
-#include "openssl/evp.h"
-#endif
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/aead_util.h"
@@ -84,7 +79,6 @@ absl::Status SetIvAndDirection(EVP_CIPHER_CTX* context, absl::string_view iv,
   return absl::OkStatus();
 }
 
-#if defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER < 0x30000000L
 // Returns a new EVP_CIPHER_CTX for encryption (`encryption` == true) or
 // decryption (`encryption` == false). It tries to skip part of the
 // initialization copying `partial_context`.
@@ -97,12 +91,11 @@ absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContextFromPartial(
   }
   // Try making a copy of `partial_context` to skip some pre-computations.
   //
-  // NOTE: With BoringSSL and OpenSSL 1.1.1 EVP_CIPHER_CTX_copy makes a copy
-  // of the `cipher_data` field of `context` as well, which contains the key
-  // material and IV (see [1] and [2]).
+  // NOTE: With BoringSSL EVP_CIPHER_CTX_copy makes a copy of the `cipher_data`
+  // field of `context` as well, which contains the key material and IV (see
+  // [1]).
   //
   // [1]https://github.com/google/boringssl/blob/4c8bcf0da2951cacd8ed8eaa7fd2df4b22fca23b/crypto/fipsmodule/cipher/cipher.c#L116
-  // [2]https://github.com/openssl/openssl/blob/830bf8e1e4749ad65c51b6a1d0d769ae689404ba/crypto/evp/evp_enc.c#L703
   if (EVP_CIPHER_CTX_copy(context.get(), partial_context) <= 0) {
     return absl::Status(absl::StatusCode::kInternal,
                         "EVP_CIPHER_CTX_copy failed");
@@ -114,41 +107,6 @@ absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContextFromPartial(
   }
   return std::move(context);
 }
-#else
-// Returns a new EVP_CIPHER_CTX for encryption (`encryption` == true) or
-// decryption (`encryption` == false) with given `key` and `iv`.
-//
-// NOTE: Copying the context fails with OpenSSL 3.0, which doesn't provide a
-// `dupctx` function for aead ciphers (see [1], [2]).
-//
-// [1]https://github.com/openssl/openssl/blob/eb52450f5151e8e78743ab05de21a344823316f5/crypto/evp/evp_enc.c#L1427
-// [2]https://github.com/openssl/openssl/blob/cac250755efd0c40cc6127a0e4baceb8d226c7e3/providers/implementations/include/prov/ciphercommon_aead.h#L30
-absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContext(
-    const SecretData& key, absl::string_view iv, bool encryption) {
-  internal::SslUniquePtr<EVP_CIPHER_CTX> context(EVP_CIPHER_CTX_new());
-  if (context == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EVP_CIPHER_CTX_new failed");
-  }
-  absl::StatusOr<const EVP_CIPHER*> cipher =
-      internal::GetAesGcmCipherForKeySize(key.size());
-  if (!cipher.ok()) {
-    return cipher.status();
-  }
-  if (EVP_CipherInit_ex(context.get(), *cipher, /*impl=*/nullptr,
-                        reinterpret_cast<const uint8_t*>(key.data()),
-                        /*iv=*/nullptr, /*enc=*/1) <= 0) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Context initialization failed");
-  }
-  absl::Status res =
-      SetIvAndDirection(context.get(), iv, /*encryption=*/encryption);
-  if (!res.ok()) {
-    return res;
-  }
-  return std::move(context);
-}
-#endif
 
 // Encrypts/decrypts and removes `bytes_to_crypt` bytes from `input` using
 // `context` and writes the result to `writer`. Returns true if the operation
@@ -250,13 +208,8 @@ absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
     absl::Cord plaintext, absl::Cord associated_data) const {
   std::string iv = subtle::Random::GetRandomBytes(kIvSizeInBytes);
 
-#if defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER < 0x30000000L
   absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContextFromPartial(partial_context_.get(), iv, /*encryption=*/true);
-#else
-  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
-      NewContext(key_, iv, /*encryption=*/true);
-#endif
   if (!context.ok()) {
     return context.status();
   }
@@ -310,14 +263,9 @@ absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Decrypt(
   CordReader(ciphertext).ReadN(kIvSizeInBytes, iv);
   ciphertext.RemovePrefix(kIvSizeInBytes);
   absl::string_view iv_view(iv, kIvSizeInBytes);
-#if defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER < 0x30000000L
   absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContextFromPartial(partial_context_.get(), iv_view,
                             /*encryption=*/false);
-#else
-  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
-      NewContext(key_, iv_view, /*encryption=*/false);
-#endif
   if (!context.ok()) {
     return context.status();
   }

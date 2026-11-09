@@ -30,10 +30,8 @@
 #include "absl/strings/cord_test_helpers.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/aead.h"
-#endif
-#include "openssl/opensslv.h"
+#include "openssl/err.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_siv_key.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
@@ -43,7 +41,6 @@
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
@@ -76,9 +73,7 @@ using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 using Variant = AesGcmSivParameters::Variant;
 
-bool IsAesGcmSivSupported() {
-  return internal::IsBoringSsl() && !internal::IsFipsModeEnabled();
-}
+bool IsAesGcmSivSupported() { return !internal::IsFipsModeEnabled(); }
 
 // TOOD(b/556356282): remove once CRYPTO_IOVEC_MAX is no longer used in OSS.
 bool SupportsArbitraryIOVecs() {
@@ -92,8 +87,7 @@ class CordAesGcmSivBoringSslTest : public ::testing::Test {
  protected:
   void SetUp() override {
     if (!IsAesGcmSivSupported()) {
-      GTEST_SKIP() << "AES-GCM-SIV is not supported in OpenSSL or FIPS-only "
-                      "mode";
+      GTEST_SKIP() << "AES-GCM-SIV is not supported in FIPS-only mode";
     }
   }
 };
@@ -103,8 +97,7 @@ class CordAesGcmSivBoringSslTestVectorTest
  protected:
   void SetUp() override {
     if (!IsAesGcmSivSupported()) {
-      GTEST_SKIP() << "AES-GCM-SIV is not supported in OpenSSL or FIPS-only "
-                      "mode";
+      GTEST_SKIP() << "AES-GCM-SIV is not supported in FIPS-only mode";
     }
   }
 };
@@ -114,8 +107,7 @@ class CordAesGcmSivBoringSslWycheproofTest
  protected:
   void SetUp() override {
     if (!IsAesGcmSivSupported()) {
-      GTEST_SKIP() << "AES-GCM-SIV is not supported in OpenSSL or FIPS-only "
-                      "mode";
+      GTEST_SKIP() << "AES-GCM-SIV is not supported in FIPS-only mode";
     }
   }
 };
@@ -571,9 +563,6 @@ TEST(CordAesGcmSivBoringSslNegativeTest, InvalidKeySizesFail) {
 }
 
 TEST(CordAesGcmSivBoringSslNegativeTest, FipsModeDisabled) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (!internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
@@ -589,24 +578,6 @@ TEST(CordAesGcmSivBoringSslNegativeTest, FipsModeDisabled) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(NewCordAesGcmSivBoringSsl(*key256).status(),
               StatusIs(absl::StatusCode::kInternal));
-}
-
-TEST(CordAesGcmSivBoringSslNegativeTest, DisabledInOpenSsl) {
-#ifdef OPENSSL_IS_BORINGSSL
-  GTEST_SKIP() << "Supported in BoringSSL";
-#else
-  absl::StatusOr<AesGcmSivKey> key128 =
-      CreateKey(test::HexDecodeOrDie(kKey128Hex));
-  ASSERT_THAT(key128, IsOk());
-  absl::StatusOr<AesGcmSivKey> key256 =
-      CreateKey(test::HexDecodeOrDie(kKey256Hex));
-  ASSERT_THAT(key256, IsOk());
-
-  EXPECT_THAT(NewCordAesGcmSivBoringSsl(*key128).status(),
-              StatusIs(absl::StatusCode::kUnimplemented));
-  EXPECT_THAT(NewCordAesGcmSivBoringSsl(*key256).status(),
-              StatusIs(absl::StatusCode::kUnimplemented));
-#endif
 }
 
 TEST_P(CordAesGcmSivBoringSslWycheproofTest, DecryptTestVectors) {

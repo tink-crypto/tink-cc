@@ -48,6 +48,7 @@
 #include "tink/internal/ec_util.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/key.h"
@@ -55,6 +56,7 @@
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_parameters.h"
+#include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/hkdf_prf_key.h"
@@ -69,6 +71,14 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
+#include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/ml_dsa_public_key.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_private_key.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
@@ -269,6 +279,44 @@ std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
   return std::make_unique<const Ed25519PublicKey>(private_key->GetPublicKey());
 }
 
+std::unique_ptr<const MlDsaPrivateKey> CreateMlDsaPrivateKey() {
+  const MlDsaPrivateKey* private_key = dynamic_cast<const MlDsaPrivateKey*>(
+      GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                         MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr);
+  return std::make_unique<const MlDsaPrivateKey>(*private_key);
+}
+
+std::unique_ptr<const MlDsaPublicKey> CreateMlDsaPublicKey() {
+  const MlDsaPrivateKey* private_key = dynamic_cast<const MlDsaPrivateKey*>(
+      GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                         MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr);
+  return std::make_unique<const MlDsaPublicKey>(private_key->GetPublicKey());
+}
+
+std::unique_ptr<const SlhDsaPrivateKey> CreateSlhDsaPrivateKey() {
+  const SlhDsaPrivateKey* private_key = dynamic_cast<const SlhDsaPrivateKey*>(
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr);
+  return std::make_unique<const SlhDsaPrivateKey>(*private_key);
+}
+
+std::unique_ptr<const SlhDsaPublicKey> CreateSlhDsaPublicKey() {
+  const SlhDsaPrivateKey* private_key = dynamic_cast<const SlhDsaPrivateKey*>(
+      GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  ABSL_CHECK(private_key != nullptr);
+  return std::make_unique<const SlhDsaPublicKey>(private_key->GetPublicKey());
+}
+
 std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
@@ -400,6 +448,10 @@ INSTANTIATE_TEST_SUITE_P(
            KeyTestVector{CreateHkdfPrfKey()}, KeyTestVector{CreateHmacKey()},
            KeyTestVector{CreateHmacPrfKey()},
            KeyTestVector{CreateLegacyKmsAeadKey()},
+           KeyTestVector{CreateMlDsaPrivateKey()},
+           KeyTestVector{CreateMlDsaPublicKey()},
+           KeyTestVector{CreateSlhDsaPrivateKey()},
+           KeyTestVector{CreateSlhDsaPublicKey()},
            KeyTestVector{CreateXAesGcmKey()},
            KeyTestVector{CreateXChaCha20Poly1305Key()},
            KeyTestVector{CreateAesCtrHmacStreamingKey()},
@@ -419,6 +471,18 @@ TEST_P(GlobalSerializationRegistryTest, SerializeAndParse) {
   ASSERT_THAT(parsed_key, IsOk());
 
   EXPECT_TRUE(**parsed_key == *test_case.key);
+
+  absl::StatusOr<std::unique_ptr<Serialization>> parameters_serialization =
+      GlobalSerializationRegistry()
+          .SerializeParameters<ProtoParametersSerialization>(
+              test_case.key->GetParameters());
+  ASSERT_THAT(parameters_serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+      GlobalSerializationRegistry().ParseParameters(**parameters_serialization);
+  ASSERT_THAT(parsed_parameters, IsOk());
+
+  EXPECT_TRUE(**parsed_parameters == test_case.key->GetParameters());
 }
 
 }  // namespace

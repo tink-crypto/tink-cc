@@ -31,9 +31,9 @@ absl::Status RegisterMlDsaProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for ML-DSA parameters and keys into
-// specified immutable serialization registry `builder`.
-absl::Status RegisterMlDsaProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// specified serialization `registry`.
+absl::Status RegisterMlDsaProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

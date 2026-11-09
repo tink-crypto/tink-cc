@@ -161,12 +161,10 @@ TEST_F(MlDsaProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(MlDsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+TEST_F(MlDsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 }
 
 TEST_P(MlDsaProtoSerializationTest, ParseParametersWorksWithMutableRegistry) {
@@ -198,12 +196,10 @@ TEST_P(MlDsaProtoSerializationTest, ParseParametersWorksWithMutableRegistry) {
   EXPECT_THAT(ml_dsa_parameters->GetInstance(), Eq(test_case.instance));
 }
 
-TEST_P(MlDsaProtoSerializationTest, ParseParametersWorksWithRegistryBuilder) {
+TEST_P(MlDsaProtoSerializationTest, ParseParametersWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   MlDsaKeyFormat key_format_proto;
   MlDsaParams& params = *key_format_proto.mutable_params();
@@ -419,13 +415,10 @@ TEST_P(MlDsaProtoSerializationTest,
               Eq(ToProtoInstance(test_case.instance)));
 }
 
-TEST_P(MlDsaProtoSerializationTest,
-       SerializeParametersWorksWithRegistryBuilder) {
+TEST_P(MlDsaProtoSerializationTest, SerializeParametersWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(test_case.instance, test_case.variant);
@@ -527,12 +520,10 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithRegistryBuilder) {
+TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   // Generate valid public key bytes.
   MlDsaPrivateKey private_key = GenerateMlDsaPrivateKey(
@@ -691,13 +682,10 @@ TEST_P(MlDsaProtoSerializationTest,
               Eq(ToProtoInstance(test_case.instance)));
 }
 
-TEST_P(MlDsaProtoSerializationTest,
-       SerializePublicKeyWorksWithRegistryBuilder) {
+TEST_P(MlDsaProtoSerializationTest, SerializePublicKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   // Generate valid public key bytes.
   MlDsaPrivateKey private_key = GenerateMlDsaPrivateKey(
@@ -846,12 +834,10 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorksWithMutableRegistry) {
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
 }
 
-TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorksWithRegistryBuilder) {
+TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   // Generate valid private key bytes.
   MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
@@ -1090,12 +1076,10 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
               Eq(ToProtoInstance(test_case.instance)));
 }
 
-TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   // Generate valid private key bytes.
   MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(

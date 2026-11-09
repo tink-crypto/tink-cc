@@ -425,36 +425,36 @@ absl::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
 }
 
-absl::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterEd25519ProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(Ed25519ProtoParametersParser());
+      registry.RegisterParametersParser(Ed25519ProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      builder.RegisterParametersSerializer(Ed25519ProtoParametersSerializer());
+      registry.RegisterParametersSerializer(Ed25519ProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(Ed25519ProtoPublicKeyParser());
+  status = registry.RegisterKeyParser(Ed25519ProtoPublicKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeySerializer(Ed25519ProtoPublicKeySerializer());
+  status = registry.RegisterKeySerializer(Ed25519ProtoPublicKeySerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(Ed25519ProtoPrivateKeyParser());
+  status = registry.RegisterKeyParser(Ed25519ProtoPrivateKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

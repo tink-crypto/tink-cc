@@ -31,9 +31,9 @@ absl::Status RegisterRsaSsaPkcs1ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for RSA-SSA-PKCS1 parameters and keys
-// into specified immutable serialization registry `builder`.
-absl::Status RegisterRsaSsaPkcs1ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// into specified serialization `registry`.
+absl::Status RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

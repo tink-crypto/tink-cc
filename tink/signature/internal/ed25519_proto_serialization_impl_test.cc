@@ -85,14 +85,11 @@ TEST_F(Ed25519ProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(Ed25519ProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(Ed25519ProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 }
 INSTANTIATE_TEST_SUITE_P(
     Ed25519ProtoSerializationTestSuite, Ed25519ProtoSerializationTest,
@@ -136,12 +133,10 @@ TEST_P(Ed25519ProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(ed25519_params->GetVariant(), Eq(test_case.variant));
 }
 
-TEST_P(Ed25519ProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(Ed25519ProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 
   Ed25519KeyFormat key_format_proto;
   key_format_proto.set_version(0);
@@ -248,12 +243,10 @@ TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.version(), Eq(0));
 }
 
-TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(test_case.variant);
@@ -318,12 +311,10 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(Ed25519ProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(Ed25519ProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(32);
   google::crypto::tink::Ed25519PublicKey key_proto;
@@ -445,12 +436,10 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.key_value(), Eq(raw_key_bytes));
 }
 
-TEST_P(Ed25519ProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(Ed25519ProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(test_case.variant);
@@ -542,12 +531,10 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_private_key));
 }
 
-TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<std::unique_ptr<Ed25519Key>> key_pair = NewEd25519Key();
   ASSERT_THAT(key_pair, IsOk());
@@ -805,12 +792,10 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.public_key().key_value(), Eq((*key_pair)->public_key));
 }
 
-TEST_P(Ed25519ProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(Ed25519ProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEd25519ProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(test_case.variant);

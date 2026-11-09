@@ -520,39 +520,39 @@ absl::Status RegisterMlDsaProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(&MlDsaProtoPrivateKeySerializer());
 }
 
-absl::Status RegisterMlDsaProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterMlDsaProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   if (absl::Status status =
-          builder.RegisterParametersParser(&MlDsaProtoParametersParser());
+          registry.RegisterParametersParser(&MlDsaProtoParametersParser());
       !status.ok()) {
     return status;
   }
 
-  if (absl::Status status = builder.RegisterParametersSerializer(
+  if (absl::Status status = registry.RegisterParametersSerializer(
           &MlDsaProtoParametersSerializer());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeyParser(&MlDsaProtoPublicKeyParser());
+          registry.RegisterKeyParser(&MlDsaProtoPublicKeyParser());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeySerializer(&MlDsaProtoPublicKeySerializer());
+          registry.RegisterKeySerializer(&MlDsaProtoPublicKeySerializer());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeyParser(&MlDsaProtoPrivateKeyParser());
+          registry.RegisterKeyParser(&MlDsaProtoPrivateKeyParser());
       !status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(&MlDsaProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(&MlDsaProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

@@ -109,12 +109,11 @@ TEST_F(RsaSsaPssProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(RsaSsaPssProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+TEST_F(RsaSsaPssProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
 }
 
@@ -189,13 +188,11 @@ TEST_P(RsaSsaPssProtoSerializationTest,
               Eq(BigInteger(kF4Str)));
 }
 
-TEST_P(RsaSsaPssProtoSerializationTest,
-       ParseParametersSucceedsWithRegistryBuilder) {
+TEST_P(RsaSsaPssProtoSerializationTest, ParseParametersSucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   RsaSsaPssKeyFormat key_format_proto;
   key_format_proto.set_modulus_size_in_bits(test_case.modulus_size_in_bits);
@@ -492,12 +489,11 @@ TEST_P(RsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(RsaSsaPssProtoSerializationTest,
-       SerializeParametersSucceedsWithRegistryBuilder) {
+       SerializeParametersSucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
@@ -674,13 +670,11 @@ TEST_P(RsaSsaPssProtoSerializationTest,
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(RsaSsaPssProtoSerializationTest,
-       ParsePublicKeySucceedsWithRegistryBuilder) {
+TEST_P(RsaSsaPssProtoSerializationTest, ParsePublicKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   RsaSsaPssParams params;
   params.set_sig_hash(test_case.proto_hash_type);
@@ -874,12 +868,11 @@ TEST_P(RsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(RsaSsaPssProtoSerializationTest,
-       SerializePublicKeySucceedsWithRegistryBuilder) {
+       SerializePublicKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
@@ -1016,13 +1009,11 @@ TEST_P(RsaSsaPssProtoSerializationTest,
   EXPECT_THAT(**key, Eq(*expected_private_key));
 }
 
-TEST_P(RsaSsaPssProtoSerializationTest,
-       ParsePrivateKeySucceedsWithRegistryBuilder) {
+TEST_P(RsaSsaPssProtoSerializationTest, ParsePrivateKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   RsaSsaPssParams params;
   params.set_sig_hash(test_case.proto_hash_type);
@@ -1374,12 +1365,11 @@ TEST_P(RsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(RsaSsaPssProtoSerializationTest,
-       SerializePrivateKeySucceedsWithRegistryBuilder) {
+       SerializePrivateKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   KeyValues key_values = GetKeyValues(test_case.modulus_size_in_bits);
 
@@ -1553,11 +1543,10 @@ TEST_P(ParseTest, ParserCorrectly) {
   EXPECT_TRUE(**key == *test_key.key);
 }
 
-TEST_P(ParseTest, ParsesCorrectlyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
+TEST_P(ParseTest, ParsesCorrectlyWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerializationWithRegistry(registry),
               IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
   const KeyAndSerialization& test_key = GetParam();
 
   absl::StatusOr<std::unique_ptr<Key>> key = registry.ParseKey(

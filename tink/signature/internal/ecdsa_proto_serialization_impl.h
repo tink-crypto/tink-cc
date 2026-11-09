@@ -31,9 +31,9 @@ absl::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for ECDSA parameters and keys into
-// specified immutable serialization registry `builder`.
-absl::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// specified serialization `registry`.
+absl::Status RegisterEcdsaProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

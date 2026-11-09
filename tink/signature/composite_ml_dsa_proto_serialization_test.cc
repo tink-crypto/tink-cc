@@ -290,24 +290,19 @@ KeyData::KeyMaterialType ToProtoKeyMaterialType(
 }
 
 absl::StatusOr<KeyData> SerializeKey(const Key& key) {
-  SerializationRegistry::Builder builder;
-  absl::Status status =
-      RegisterMlDsaProtoSerializationWithRegistryBuilder(builder);
+  SerializationRegistry registry;
+  absl::Status status = RegisterMlDsaProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterRsaSsaPkcs1ProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterRsaSsaPssProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterEcdsaProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterEcdsaProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterEd25519ProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterEd25519ProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  absl::StatusOr<SerializationRegistry> registry = std::move(builder).Build();
-  if (!registry.ok()) {
-    return registry.status();
-  }
   absl::StatusOr<std::unique_ptr<Serialization>> key_serialization =
-      registry->SerializeKey<ProtoKeySerialization>(
+      registry.SerializeKey<ProtoKeySerialization>(
           key, InsecureSecretKeyAccess::Get());
   if (!key_serialization.ok()) {
     return key_serialization.status();

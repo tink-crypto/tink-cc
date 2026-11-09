@@ -67,6 +67,16 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     ABSL_CHECK_OK(RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(
         initial_registry));
 
+    // Signature
+    ABSL_CHECK_OK(
+        RegisterEcdsaProtoSerializationWithRegistry(initial_registry));
+    ABSL_CHECK_OK(
+        RegisterEd25519ProtoSerializationWithRegistry(initial_registry));
+    ABSL_CHECK_OK(
+        RegisterMlDsaProtoSerializationWithRegistry(initial_registry));
+    ABSL_CHECK_OK(
+        RegisterSlhDsaProtoSerializationWithRegistry(initial_registry));
+
     SerializationRegistry::Builder builder(std::move(initial_registry));
 
     // Deterministic AEAD
@@ -90,13 +100,6 @@ const SerializationRegistry& GlobalSerializationRegistry() {
         RegisterHkdfPrfProtoSerializationWithRegistryBuilder(builder));
     ABSL_CHECK_OK(
         RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder));
-
-    // Signature
-    ABSL_CHECK_OK(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(
-        RegisterEd25519ProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(RegisterMlDsaProtoSerializationWithRegistryBuilder(builder));
-    ABSL_CHECK_OK(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder));
 
     // Streaming AEAD
     ABSL_CHECK_OK(

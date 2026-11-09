@@ -31,9 +31,9 @@ absl::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for Ed25519 parameters and keys into
-// specified immutable serialization registry `builder`.
-absl::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// specified serialization `registry`.
+absl::Status RegisterEd25519ProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

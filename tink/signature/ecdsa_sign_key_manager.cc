@@ -58,10 +58,10 @@ using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 absl::StatusOr<EcdsaPrivateKey> ParseEcdsaPrivateKeyWithNoPrefix(
     const EcdsaPrivateKeyProto& ecdsa_private_key) {
   static const internal::SerializationRegistry* registry = []() {
-    internal::SerializationRegistry::Builder builder;
+    auto* registry = new internal::SerializationRegistry();
     ABSL_CHECK_OK(
-        internal::RegisterEcdsaProtoSerializationWithRegistryBuilder(builder));
-    return new internal::SerializationRegistry(std::move(builder).Build());
+        internal::RegisterEcdsaProtoSerializationWithRegistry(*registry));
+    return registry;
   }();
   // KeyTypeManager primitives only receive the raw key proto (without
   // OutputPrefixType or key ID) and must produce raw (kNoPrefix) primitives;

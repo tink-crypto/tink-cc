@@ -31,9 +31,9 @@ absl::Status RegisterRsaSsaPssProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for RSA-SSA-PSS parameters and keys
-// into specified immutable serialization registry `builder`.
-absl::Status RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// into specified serialization `registry`.
+absl::Status RegisterRsaSsaPssProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

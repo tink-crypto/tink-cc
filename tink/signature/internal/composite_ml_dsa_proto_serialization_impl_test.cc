@@ -285,24 +285,19 @@ KeyData::KeyMaterialType ToProtoKeyMaterialType(
 }
 
 absl::StatusOr<KeyData> SerializeKey(const Key& key) {
-  SerializationRegistry::Builder builder;
-  absl::Status status =
-      RegisterMlDsaProtoSerializationWithRegistryBuilder(builder);
+  SerializationRegistry registry;
+  absl::Status status = RegisterMlDsaProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterRsaSsaPkcs1ProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterRsaSsaPssProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterRsaSsaPssProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterEcdsaProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterEcdsaProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  status = RegisterEd25519ProtoSerializationWithRegistryBuilder(builder);
+  status = RegisterEd25519ProtoSerializationWithRegistry(registry);
   if (!status.ok()) return status;
-  absl::StatusOr<SerializationRegistry> registry = std::move(builder).Build();
-  if (!registry.ok()) {
-    return registry.status();
-  }
   absl::StatusOr<std::unique_ptr<Serialization>> key_serialization =
-      registry->SerializeKey<ProtoKeySerialization>(
+      registry.SerializeKey<ProtoKeySerialization>(
           key, InsecureSecretKeyAccess::Get());
   if (!key_serialization.ok()) {
     return key_serialization.status();
@@ -335,14 +330,12 @@ TEST_F(CompositeMlDsaProtoSerializationTest,
 }
 
 TEST_F(CompositeMlDsaProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
+       RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 }
 
 TEST_P(CompositeMlDsaProtoSerializationTest,
@@ -381,14 +374,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   EXPECT_EQ(composite_parameters->GetVariant(), test_case.variant);
 }
 
-TEST_P(CompositeMlDsaProtoSerializationTest,
-       ParseParametersWorksWithRegistryBuilder) {
+TEST_P(CompositeMlDsaProtoSerializationTest, ParseParametersWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 
   CompositeMlDsaKeyFormat key_format_proto;
   CompositeMlDsaParams& params = *key_format_proto.mutable_params();
@@ -722,13 +712,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 }
 
 TEST_P(CompositeMlDsaProtoSerializationTest,
-       SerializeParametersWorksWithRegistryBuilder) {
+       SerializeParametersWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(test_case.ml_dsa_instance,
@@ -857,14 +845,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(CompositeMlDsaProtoSerializationTest,
-       ParsePublicKeyWorksWithRegistryBuilder) {
+TEST_P(CompositeMlDsaProtoSerializationTest, ParsePublicKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(test_case.ml_dsa_instance,
@@ -1116,13 +1101,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 }
 
 TEST_P(CompositeMlDsaProtoSerializationTest,
-       SerializePublicKeyWorksWithRegistryBuilder) {
+       SerializePublicKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(test_case.ml_dsa_instance,
@@ -1296,14 +1279,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(CompositeMlDsaProtoSerializationTest,
-       ParsePrivateKeyWorksWithRegistryBuilder) {
+TEST_P(CompositeMlDsaProtoSerializationTest, ParsePrivateKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(test_case.ml_dsa_instance,
@@ -1816,13 +1796,11 @@ TEST_P(CompositeMlDsaProtoSerializationTest,
 }
 
 TEST_P(CompositeMlDsaProtoSerializationTest,
-       SerializePrivateKeyWorksWithRegistryBuilder) {
+       SerializePrivateKeyWorksWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterCompositeMlDsaProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterCompositeMlDsaProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(test_case.ml_dsa_instance,

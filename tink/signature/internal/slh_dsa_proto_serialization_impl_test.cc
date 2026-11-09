@@ -88,12 +88,10 @@ TEST_F(SlhDsaProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(SlhDsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+TEST_F(SlhDsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -143,12 +141,10 @@ TEST_P(SlhDsaProtoSerializationTest, ParseParametersWithMutableRegistry) {
               Eq(SlhDsaParameters::HashType::kSha2));
 }
 
-TEST_P(SlhDsaProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(SlhDsaProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 
   SlhDsaKeyFormat key_format_proto;
   SlhDsaParams& params = *key_format_proto.mutable_params();
@@ -415,12 +411,10 @@ TEST_P(SlhDsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.params().key_size(), Eq(64));
 }
 
-TEST_P(SlhDsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(SlhDsaProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
@@ -501,12 +495,10 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 
   SlhDsaParams params;
   params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
@@ -658,12 +650,10 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
               Eq(SlhDsaSignatureType::SMALL_SIGNATURE));
 }
 
-TEST_P(SlhDsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(SlhDsaProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
@@ -778,12 +768,10 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
 }
 
-TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 
   std::string public_key_bytes;
   public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
@@ -1034,12 +1022,10 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
               Eq(SlhDsaSignatureType::SMALL_SIGNATURE));
 }
 
-TEST_P(SlhDsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(SlhDsaProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterSlhDsaProtoSerializationWithRegistry(registry), IsOk());
 
   std::string public_key_bytes;
   public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);

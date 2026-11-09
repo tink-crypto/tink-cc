@@ -104,13 +104,11 @@ TEST_F(EcdsaProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(EcdsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(EcdsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -195,12 +193,10 @@ TEST_P(EcdsaProtoSerializationTest, ParseParametersWithMutableRegistry) {
               Eq(test_case.signature_encoding));
 }
 
-TEST_P(EcdsaProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(EcdsaProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   EcdsaKeyFormat key_format_proto;
   EcdsaParams& params = *key_format_proto.mutable_params();
@@ -453,12 +449,10 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.params().encoding(), Eq(test_case.encoding));
 }
 
-TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
@@ -544,12 +538,10 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   EcdsaParams params;
   params.set_curve(test_case.curve);
@@ -707,12 +699,10 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.params().encoding(), Eq(test_case.encoding));
 }
 
-TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
@@ -828,12 +818,10 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
 }
 
-TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   EcdsaParams params;
   params.set_curve(test_case.curve);
@@ -1222,12 +1210,10 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.public_key().y(), Eq('\0' + ec_key.pub_y));
 }
 
-TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()

@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
+#include "tink/signature/internal/composite_ml_dsa_sign_boringssl.h"
 
 namespace crypto {
 namespace tink {
@@ -29,8 +30,10 @@ namespace subtle {
 
 // Creates a new PublicKeySign primitive using the existing ML-DSA and classical
 // PublicKeySign primitives.
-absl::StatusOr<std::unique_ptr<PublicKeySign>> NewCompositeMlDsaSign(
-    const CompositeMlDsaPrivateKey& private_key);
+inline absl::StatusOr<std::unique_ptr<PublicKeySign>> NewCompositeMlDsaSign(
+    const CompositeMlDsaPrivateKey& private_key) {
+  return internal::NewCompositeMlDsaSign(private_key);
+}
 
 }  // namespace subtle
 }  // namespace tink

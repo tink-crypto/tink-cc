@@ -7,27 +7,12 @@ licenses(["notice"])
 
 cc_library(
     name = "composite_ml_dsa_sign_boringssl",
-    srcs = ["composite_ml_dsa_sign_boringssl.cc"],
     hdrs = ["composite_ml_dsa_sign_boringssl.h"],
     deps = [
         "//tink:public_key_sign",
-        "//tink/internal:fips_utils",
-        "//tink/signature:composite_ml_dsa_parameters",
         "//tink/signature:composite_ml_dsa_private_key",
-        "//tink/signature:ecdsa_private_key",
-        "//tink/signature:ed25519_private_key",
-        "//tink/signature:rsa_ssa_pkcs1_private_key",
-        "//tink/signature:rsa_ssa_pss_private_key",
-        "//tink/signature/internal:composite_ml_dsa_util_boringssl",
-        "//tink/signature/internal:ml_dsa_sign_boringssl",
-        "//tink/subtle:ecdsa_sign_boringssl",
-        "//tink/subtle:ed25519_sign_boringssl",
-        "//tink/subtle:rsa_ssa_pkcs1_sign_boringssl",
-        "//tink/subtle:rsa_ssa_pss_sign_boringssl",
-        "@abseil-cpp//absl/status",
+        "//tink/signature/internal:composite_ml_dsa_sign_boringssl",
         "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -53,28 +38,12 @@ cc_test(
 
 cc_library(
     name = "composite_ml_dsa_verify_boringssl",
-    srcs = ["composite_ml_dsa_verify_boringssl.cc"],
     hdrs = ["composite_ml_dsa_verify_boringssl.h"],
     deps = [
         "//tink:public_key_verify",
-        "//tink/internal:fips_utils",
-        "//tink/signature:composite_ml_dsa_parameters",
         "//tink/signature:composite_ml_dsa_public_key",
-        "//tink/signature:ecdsa_public_key",
-        "//tink/signature:ed25519_public_key",
-        "//tink/signature:rsa_ssa_pkcs1_public_key",
-        "//tink/signature:rsa_ssa_pss_public_key",
-        "//tink/signature/internal:composite_ml_dsa_util_boringssl",
-        "//tink/signature/internal:ml_dsa_verify_boringssl",
-        "//tink/subtle:ecdsa_verify_boringssl",
-        "//tink/subtle:ed25519_verify_boringssl",
-        "//tink/subtle:rsa_ssa_pkcs1_verify_boringssl",
-        "//tink/subtle:rsa_ssa_pss_verify_boringssl",
-        "@abseil-cpp//absl/status",
+        "//tink/signature/internal:composite_ml_dsa_verify_boringssl",
         "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
-        "@boringssl//:crypto",
     ],
 )
 

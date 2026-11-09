@@ -169,6 +169,7 @@
 #include "tink/hybrid/hybrid_public_key.h"
 #include "tink/hybrid/key_gen_config_2026.h"
 #include "tink/hybrid/key_gen_config_v0.h"
+#include "tink/hybrid/subtle/create_ecies_decrypt.h"
 #include "tink/hybrid/subtle/create_ecies_key.h"
 #include "tink/hybrid/subtle/create_hpke_decrypt.h"
 #include "tink/hybrid/subtle/create_hpke_encrypt.h"

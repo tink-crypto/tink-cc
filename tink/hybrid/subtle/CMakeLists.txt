@@ -122,3 +122,33 @@ tink_cc_test(
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
 )
+
+tink_cc_library(
+  NAME create_ecies_decrypt
+  SRCS
+    create_ecies_decrypt.cc
+    create_ecies_decrypt.h
+  DEPS
+    absl::statusor
+    tink::core::hybrid_decrypt
+    tink::hybrid::ecies_private_key
+    tink::hybrid::internal::ecies_aead_hkdf_hybrid_decrypt
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ecies_decrypt_test
+  SRCS
+    create_ecies_decrypt_test.cc
+  DEPS
+    tink::hybrid::subtle::create_ecies_decrypt
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    tink::core::hybrid_decrypt
+    tink::hybrid::ecies_private_key
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
+)

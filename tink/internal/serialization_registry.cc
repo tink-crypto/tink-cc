@@ -164,36 +164,6 @@ SerializationRegistry::ParseKeyWithLegacyFallback(
   return key;
 }
 
-SerializationRegistry::Builder::Builder(const SerializationRegistry& registry)
-    : registry_(registry) {}
-
-SerializationRegistry::Builder::Builder(SerializationRegistry&& registry)
-    : registry_(std::move(registry)) {}
-
-absl::Status SerializationRegistry::Builder::RegisterParametersParser(
-    ParametersParser* parser) {
-  return registry_.RegisterParametersParser(parser);
-}
-
-absl::Status SerializationRegistry::Builder::RegisterParametersSerializer(
-    ParametersSerializer* serializer) {
-  return registry_.RegisterParametersSerializer(serializer);
-}
-
-absl::Status SerializationRegistry::Builder::RegisterKeyParser(
-    KeyParser* parser) {
-  return registry_.RegisterKeyParser(parser);
-}
-
-absl::Status SerializationRegistry::Builder::RegisterKeySerializer(
-    KeySerializer* serializer) {
-  return registry_.RegisterKeySerializer(serializer);
-}
-
-SerializationRegistry SerializationRegistry::Builder::Build() && {
-  return std::move(registry_);
-}
-
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

@@ -50,8 +50,6 @@ namespace internal {
 // `SerializationRegistry` is thread-compatible.
 class SerializationRegistry {
  public:
-  class Builder;
-
   // Creates empty serialization registry.
   SerializationRegistry() = default;
 
@@ -137,43 +135,6 @@ class SerializationRegistry {
       parameters_serializers_;
   absl::flat_hash_map<ParserIndex, KeyParser*> key_parsers_;
   absl::flat_hash_map<SerializerIndex, KeySerializer*> key_serializers_;
-};
-
-class SerializationRegistry::Builder {
- public:
-  // Neither movable nor copyable.
-  Builder(const Builder& other) = delete;
-  Builder& operator=(const Builder& other) = delete;
-
-  // Creates initially empty serialization registry builder.
-  Builder() = default;
-  // Creates serialization registry builder by initially copying entries from
-  // `registry`.
-  explicit Builder(const SerializationRegistry& registry);
-  // Creates serialization registry builder by moving entries from `registry`.
-  explicit Builder(SerializationRegistry&& registry);
-
-  // Registers parameters `parser`. Returns an error if a different parameters
-  // parser has already been registered.
-  absl::Status RegisterParametersParser(ParametersParser* parser);
-
-  // Registers parameters `serializer`. Returns an error if a different
-  // parameters serializer has already been registered.
-  absl::Status RegisterParametersSerializer(ParametersSerializer* serializer);
-
-  // Registers key `parser`. Returns an error if a different key parser has
-  // already been registered.
-  absl::Status RegisterKeyParser(KeyParser* parser);
-
-  // Registers key `serializer`. Returns an error if a different key
-  // serializer has already been registered.
-  absl::Status RegisterKeySerializer(KeySerializer* serializer);
-
-  // Creates serialization registry from this builder.
-  SerializationRegistry Build() &&;
-
- private:
-  SerializationRegistry registry_;
 };
 
 }  // namespace internal

@@ -1,0 +1,89 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef TINK_INTERNAL_RTTI_H_
+#define TINK_INTERNAL_RTTI_H_
+
+// Compile-time type identification utilities for Tink C++.
+//
+// This header provides a portable type identifier (`TypeIndex` and
+// `GetTypeIndex<T>()`) together with class-annotation macros:
+//
+//   * Default mode (`TINK_USE_CUSTOM_RTTI` undefined):
+//     Backed directly by standard C++ RTTI (`std::type_index` and `typeid`).
+//     All `TINK_RTTI_*` class macros expand to nothing and add zero overhead.
+//   * Custom RTTI mode (`TINK_USE_CUSTOM_RTTI` defined):
+//     Backed by explicit 64-bit integer type IDs defined by the `TINK_RTTI_*`
+//     macros, allowing Tink to compile and run with `-fno-rtti`.
+//
+// Usage example:
+//
+//   // 1. Non-templated classes:
+//   class Parameters {
+//    public:
+//     virtual ~Parameters() = default;
+//
+//    private:
+//     TINK_RTTI_SET_TYPE_ID(1);
+//   };
+//
+//   class AeadParameters : public Parameters {
+//    private:
+//     TINK_RTTI_SET_TYPE_ID(2);
+//   };
+//
+//   class AesGcmParameters : public AeadParameters {
+//    private:
+//     TINK_RTTI_SET_TYPE_ID(3);
+//   };
+//
+//   // 2. Class template (combines its own 16-bit ID with 1..3 parameter IDs):
+//   template <typename InputPrimitive, typename OutputPrimitive>
+//   class PrimitiveWrapper {
+//    public:
+//     virtual ~PrimitiveWrapper() = default;
+//
+//    private:
+//     TINK_RTTI_COMPUTE_TYPE_ID(20, InputPrimitive, OutputPrimitive);
+//   };
+//
+//   // 3. Querying static type indices:
+//   internal::TypeIndex static_idx =
+//       internal::GetTypeIndex<AesGcmParameters>();
+//
+// Key requirements and limitations:
+//   * Every class or struct queried via `GetTypeIndex<T>()` must declare a
+//     type-ID macro (`TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`).
+//     Subclasses do not inherit a base class's type ID; if a subclass omits the
+//     macro, `GetTypeIndex<Subclass>()` fails to compile in
+//     `TINK_USE_CUSTOM_RTTI` mode.
+//   * Template arguments passed to `TINK_RTTI_COMPUTE_TYPE_ID` must declare
+//     `TINK_RTTI_SET_TYPE_ID`.
+//   * Global uniqueness of 16-bit type IDs in `[1, 65535]` is not enforced by
+//     the compiler and must be maintained externally (e.g., via CI checks). IDs
+//     in `[1, 32767]` are reserved for Tink's built-in types, while IDs in
+//     `[32768, 65535]` are available for external user-defined subclasses so
+//     future Tink releases do not collide with user-assigned IDs.
+
+// IWYU pragma: begin_exports
+#if defined(TINK_USE_CUSTOM_RTTI)
+#include "tink/internal/rtti_manual.h"
+#else
+#include "tink/internal/rtti_native.h"
+#endif
+// IWYU pragma: end_exports
+
+#endif  // TINK_INTERNAL_RTTI_H_

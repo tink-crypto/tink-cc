@@ -2358,3 +2358,22 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "rtti",
+    hdrs = [
+        "rtti.h",
+        "rtti_manual.h",
+        "rtti_native.h",
+    ],
+)
+
+cc_test(
+    name = "rtti_test",
+    srcs = ["rtti_test.cc"],
+    deps = [
+        ":rtti",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@googletest//:gtest_main",
+    ],
+)

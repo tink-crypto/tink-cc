@@ -2340,3 +2340,21 @@ tink_cc_test(
     tink::util::secret_proto
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME rtti
+  SRCS
+    rtti.h
+    rtti_manual.h
+    rtti_native.h
+)
+
+tink_cc_test(
+  NAME rtti_test
+  SRCS
+    rtti_test.cc
+  DEPS
+    tink::internal::rtti
+    gmock
+    absl::flat_hash_map
+)

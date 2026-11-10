@@ -255,7 +255,6 @@ cc_test(
         "//tink/internal:global_serialization_registry",
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:serialization",
-        "//tink/internal:ssl_util",
         "//tink/mac:hmac_key",
         "//tink/mac:hmac_key_manager",
         "//tink/mac:hmac_parameters",

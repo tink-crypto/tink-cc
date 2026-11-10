@@ -51,7 +51,6 @@
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
@@ -572,7 +571,7 @@ std::vector<std::shared_ptr<Key>> SignatureEd25519TestVector() {
 
 std::vector<std::shared_ptr<Key>> SignatureMlDsaTestVector() {
   std::vector<std::shared_ptr<Key>> vectors;
-  if (internal::IsBoringSsl() && !internal::IsFipsModeEnabled()) {
+  if (!internal::IsFipsModeEnabled()) {
     vectors.push_back(CreateMlDsaPrivateKey(MlDsaParameters::Instance::kMlDsa44,
                                             MlDsaParameters::Variant::kTink,
                                             kOkmFromRfc.substr(0, 64),
@@ -591,7 +590,7 @@ std::vector<std::shared_ptr<Key>> SignatureMlDsaTestVector() {
 
 std::vector<std::shared_ptr<Key>> SignatureSlhDsaTestVector() {
   std::vector<std::shared_ptr<Key>> vectors;
-  if (internal::IsBoringSsl() && !internal::IsFipsModeEnabled()) {
+  if (!internal::IsFipsModeEnabled()) {
     // SLHDSA_SHA2_128S
     vectors.push_back(
         CreateSlhDsaPrivateKey(SlhDsaParameters::HashType::kSha2,
@@ -673,14 +672,9 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   vectors.push_back(PrfTestVector());
   vectors.push_back(SignatureEd25519TestVector());
   vectors.push_back(StreamingAeadTestVector());
-
-  // Deriving EC keys with secret seed is not implemented in OpenSSL.
-  if (internal::IsBoringSsl()) {
-    vectors.push_back(SignatureEcdsaTestVector());
-    vectors.push_back(SignatureMlDsaTestVector());
-    vectors.push_back(SignatureSlhDsaTestVector());
-  }
-
+  vectors.push_back(SignatureEcdsaTestVector());
+  vectors.push_back(SignatureMlDsaTestVector());
+  vectors.push_back(SignatureSlhDsaTestVector());
   return vectors;
 }
 

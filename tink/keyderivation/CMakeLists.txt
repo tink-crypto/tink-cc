@@ -273,7 +273,6 @@ tink_cc_test(
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::mutable_serialization_registry
-    tink::internal::ssl_util
     tink::keyderivation::internal::prf_based_deriver_key_manager
     tink::mac::hmac_key
     tink::mac::hmac_parameters

@@ -49,7 +49,6 @@
 #include "tink/internal/global_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
@@ -249,11 +248,6 @@ INSTANTIATE_TEST_SUITE_P(
     }));
 
 TEST_P(KeyDeriversBoringSslTest, DeriveKey) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "NewEcKey with seed used by Signature key derivation is "
-                    "not supported by OpenSSL";
-  }
-
   std::shared_ptr<Parameters> params = GetParam();
   absl::StatusOr<std::shared_ptr<Key>> key =
       DeriveKey(*params, Randomness().get());
@@ -709,11 +703,6 @@ TEST_F(KeyDeriversRfcVectorTest, HmacPrf_GlobalRegistry) {
 }
 
 TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "NewEcKey with seed used by Signature key derivation is "
-                    "not supported by OpenSSL";
-  }
-
   absl::StatusOr<EcdsaParameters> params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)

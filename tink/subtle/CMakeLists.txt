@@ -648,6 +648,7 @@ tink_cc_library(
     absl::statusor
     tink::core::aead
     tink::core::secret_data
+    tink::aead::aes_gcm_siv_key
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_siv_boringssl
@@ -1424,7 +1425,11 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::aead
+    tink::aead::aes_gcm_siv_key
+    tink::aead::aes_gcm_siv_parameters
     tink::aead::internal::wycheproof_aead
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::config::tink_fips
     tink::internal::ssl_util
     tink::util::secret_data

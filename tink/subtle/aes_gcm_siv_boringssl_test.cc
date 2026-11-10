@@ -16,6 +16,7 @@
 
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,6 +28,10 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_gcm_siv_key.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/ssl_util.h"
@@ -50,11 +55,16 @@ constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::AeadTestVector;
+using ::crypto::tink::internal::CreateAesGcmSivTestVectors;
+using ::crypto::tink::internal::GetAesGcmSivTestVector;
 using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
+using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -122,6 +132,97 @@ TEST(AesGcmSivBoringSslTest, TestFipsOnly) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(AesGcmSivBoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));
+
+  const AeadTestVector& test_vector128 =
+      GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink);
+  const AeadTestVector& test_vector256 =
+      GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink);
+  EXPECT_THAT(AesGcmSivBoringSsl::New(
+                  dynamic_cast<const AesGcmSivKey&>(*test_vector128.aead_key))
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(AesGcmSivBoringSsl::New(
+                  dynamic_cast<const AesGcmSivKey&>(*test_vector256.aead_key))
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+class AesGcmSivBoringSslTestVectorTest : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled()) {
+      GTEST_SKIP() << "Not supported in FIPS-only mode";
+    }
+  }
+};
+
+TEST_P(AesGcmSivBoringSslTestVectorTest, DecryptTestVectors) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  EXPECT_THAT(
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data),
+      IsOkAndHolds(test_vector.plaintext));
+}
+
+TEST_P(AesGcmSivBoringSslTestVectorTest, EncryptDecryptTestVectors) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> ciphertext =
+      (*aead)->Encrypt(test_vector.plaintext, test_vector.associated_data);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT(*ciphertext, StartsWith(key.GetOutputPrefix()));
+
+  EXPECT_THAT((*aead)->Decrypt(*ciphertext, test_vector.associated_data),
+              IsOkAndHolds(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(AesGcmSivBoringSslTestVectorTests,
+                         AesGcmSivBoringSslTestVectorTest,
+                         ValuesIn(CreateAesGcmSivTestVectors()));
+
+TEST(AesGcmSivBoringSslTest,
+     DecryptWithKeyFailsWithModifiedCiphertextOrAssociatedData) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const AeadTestVector& test_vector =
+      GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink);
+  const AesGcmSivKey& key =
+      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  for (size_t i = 0; i < test_vector.ciphertext.size(); ++i) {
+    std::string modified_ciphertext = test_vector.ciphertext;
+    modified_ciphertext[i] ^= 0x01;
+    EXPECT_THAT((*aead)
+                    ->Decrypt(modified_ciphertext, test_vector.associated_data)
+                    .status(),
+                Not(IsOk()));
+  }
+
+  EXPECT_THAT((*aead)
+                   ->Decrypt(test_vector.ciphertext, "modified associated data")
+                   .status(),
+              Not(IsOk()));
+
+  for (size_t len = 0; len < test_vector.ciphertext.size(); ++len) {
+    EXPECT_THAT(
+        (*aead)
+            ->Decrypt(absl::string_view(test_vector.ciphertext).substr(0, len),
+                      test_vector.associated_data)
+            .status(),
+        Not(IsOk()));
+  }
 }
 
 class AesGcmSivBoringSslWycheproofTest

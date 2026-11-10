@@ -21,6 +21,7 @@
 
 #include "absl/status/statusor.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_gcm_siv_key.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/fips_utils.h"
@@ -51,6 +52,9 @@ namespace subtle {
 class AesGcmSivBoringSsl
     : public internal::AeadFromZeroCopy /* implements `Aead` */ {
  public:
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const AesGcmSivKey& key);
+
+  [[deprecated("Use AesGcmSivBoringSsl::New(const AesGcmSivKey&) instead")]]
   static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =

@@ -1443,10 +1443,7 @@ tink_cc_test(
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_siv_test_vectors
     tink::config::tink_fips
-    tink::internal::ssl_util
     tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1502,11 +1499,7 @@ tink_cc_test(
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::xchacha20_poly1305_test_vectors
     tink::config::tink_fips
-    tink::internal::ssl_util
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 
@@ -1649,7 +1642,6 @@ tink_cc_test(
     tink::internal::err_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
-    tink::internal::ssl_util
     tink::internal::testing::ec_test_vectors
     tink::util::secret_data
     tink::util::test_matchers

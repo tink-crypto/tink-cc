@@ -19,7 +19,6 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -34,11 +33,8 @@
 #include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/config/tink_fips.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -75,29 +71,21 @@ TEST(AesGcmSivBoringSslTest, EncryptDecrypt) {
 
   SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
-  if (!internal::IsBoringSsl()) {
-    EXPECT_THAT(AesGcmSivBoringSsl::New(key).status(),
-                StatusIs(absl::StatusCode::kUnimplemented));
-  } else {
-    absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
-    ASSERT_THAT(aead, IsOk());
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
 
-    absl::StatusOr<std::string> ciphertext =
-        (*aead)->Encrypt(kMessage, kAssociatedData);
-    ASSERT_THAT(ciphertext, IsOk());
-    EXPECT_THAT(*ciphertext,
-                SizeIs(kMessage.size() + kIvSizeInBytes + kTagSizeInBytes));
-    absl::StatusOr<std::string> plaintext =
-        (*aead)->Decrypt(*ciphertext, kAssociatedData);
-    ASSERT_THAT(plaintext, IsOk());
-    EXPECT_EQ(*plaintext, kMessage);
-  }
+  absl::StatusOr<std::string> ciphertext =
+      (*aead)->Encrypt(kMessage, kAssociatedData);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT(*ciphertext,
+              SizeIs(kMessage.size() + kIvSizeInBytes + kTagSizeInBytes));
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(*ciphertext, kAssociatedData);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_EQ(*plaintext, kMessage);
 }
 
 TEST(AesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
@@ -116,9 +104,6 @@ TEST(AesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
 }
 
 TEST(AesGcmSivBoringSslTest, TestFipsOnly) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
@@ -228,9 +213,6 @@ TEST(AesGcmSivBoringSslTest,
 class AesGcmSivBoringSslWycheproofTest
     : public TestWithParam<internal::WycheproofTestVector> {
   void SetUp() override {
-    if (!internal::IsBoringSsl()) {
-      GTEST_SKIP() << "Unimplemented with OpenSSL";
-    }
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }

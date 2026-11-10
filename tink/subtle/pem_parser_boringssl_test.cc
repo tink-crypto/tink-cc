@@ -30,13 +30,12 @@
 #include "openssl/bio.h"
 #include "openssl/bn.h"
 #include "openssl/evp.h"
-#include "openssl/pem.h"
+#include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util_boringssl.h"
@@ -642,15 +641,8 @@ FGpD54dNo+Ut2s6JIE+LoaX/FSvifw==
 
   // PEM parsing fails in BoringSSL when the curve is unsupported, and Tink
   // doesn't distinguish between an error caused by a malformed PEM and an
-  // unsupported group by BoringSSL. With OpenSSL parsing succeeds, but this
-  // curve is unsupported by Tink. As a consequence, this fails with two
-  // different errors.
-  if (internal::IsBoringSsl()) {
-    EXPECT_THAT(ecdsa_key.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument));
-  } else {
-    EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kUnimplemented));
-  }
+  // unsupported group by BoringSSL.
+  EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(PemParserEcTest, ParseEncryptedEcPrivateKey_Invalid) {

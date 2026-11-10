@@ -33,12 +33,8 @@
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/config/tink_fips.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -75,24 +71,19 @@ TEST(XChacha20Poly1305BoringSslTest, EncryptDecrypt) {
 
   SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
-  if (!internal::IsBoringSsl()) {
-    EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key).status(),
-                StatusIs(absl::StatusCode::kUnimplemented));
-  } else {
-    absl::StatusOr<std::unique_ptr<Aead>> aead =
-        XChacha20Poly1305BoringSsl::New(key);
-    ASSERT_THAT(aead, IsOk());
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      XChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
 
-    absl::StatusOr<std::string> ciphertext =
-        (*aead)->Encrypt(kMessage, kAssociatedData);
-    ASSERT_THAT(ciphertext, IsOk());
-    EXPECT_THAT(*ciphertext,
-                SizeIs(kMessage.size() + kNonceSizeInBytes + kTagSizeInBytes));
-    absl::StatusOr<std::string> plaintext =
-        (*aead)->Decrypt(*ciphertext, kAssociatedData);
-    ASSERT_THAT(plaintext, IsOk());
-    EXPECT_EQ(*plaintext, kMessage);
-  }
+  absl::StatusOr<std::string> ciphertext =
+      (*aead)->Encrypt(kMessage, kAssociatedData);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT(*ciphertext,
+              SizeIs(kMessage.size() + kNonceSizeInBytes + kTagSizeInBytes));
+  absl::StatusOr<std::string> plaintext =
+      (*aead)->Decrypt(*ciphertext, kAssociatedData);
+  ASSERT_THAT(plaintext, IsOk());
+  EXPECT_EQ(*plaintext, kMessage);
 }
 
 // Test decryption with a known ciphertext, message, associated_data and key
@@ -100,9 +91,6 @@ TEST(XChacha20Poly1305BoringSslTest, EncryptDecrypt) {
 // from the test vector tcId 1 of the Wycheproof tests:
 // https://github.com/google/wycheproof/blob/master/testvectors/xchacha20_poly1305_test.json#L21
 TEST(XChacha20Poly1305BoringSslTest, SimpleDecrypt) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
@@ -136,9 +124,6 @@ TEST(XChacha20Poly1305BoringSslTest, SimpleDecrypt) {
 }
 
 TEST(XChacha20Poly1305BoringSslTest, DecryptFailsIfCiphertextTooSmall) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
@@ -158,9 +143,6 @@ TEST(XChacha20Poly1305BoringSslTest, DecryptFailsIfCiphertextTooSmall) {
 }
 
 TEST(XChacha20Poly1305BoringSslTest, FailisOnFipsOnlyMode) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "Unimplemented with OpenSSL";
-  }
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only ran in in FIPS-only mode";
   }
@@ -265,9 +247,6 @@ TEST(XChacha20Poly1305BoringSslTest,
 class XChacha20Poly1305BoringSslWycheproofTest
     : public TestWithParam<internal::WycheproofTestVector> {
   void SetUp() override {
-    if (!internal::IsBoringSsl()) {
-      GTEST_SKIP() << "Unimplemented with OpenSSL";
-    }
     if (IsFipsModeEnabled()) {
       GTEST_SKIP() << "Not supported in FIPS-only mode";
     }

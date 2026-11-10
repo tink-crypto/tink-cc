@@ -15,16 +15,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/aead/internal/ssl_aead.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/cleanup/cleanup.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -42,6 +39,13 @@
 #include "tink/internal/util.h"
 #include "tink/secret_data.h"
 
+#ifndef OPENSSL_IS_BORINGSSL
+#include <algorithm>
+#include <limits>
+
+#include "absl/cleanup/cleanup.h"
+#endif
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -52,6 +56,8 @@ ABSL_CONST_INIT const int kAesGcmTagSizeInBytes = 16;
 ABSL_CONST_INIT const int kAesGcmSivTagSizeInBytes = 16;
 
 namespace {
+
+#ifndef OPENSSL_IS_BORINGSSL
 
 // Encrypts/Decrypts `data` and writes the result into `out`. The direction
 // (encrypt/decrypt) is given by `context`. `out` is assumed to be large enough
@@ -324,7 +330,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
   const size_t tag_size_;
 };
 
-#ifdef OPENSSL_IS_BORINGSSL
+#else  // OPENSSL_IS_BORINGSSL
 
 // Implementation of the one-shot AEAD cypter. This is purposely internal to
 // an anonymous namespace to disallow direct use of this class other than
@@ -498,7 +504,7 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
   const size_t tag_size_;
 };
 
-#endif
+#endif  // OPENSSL_IS_BORINGSSL
 
 }  // namespace
 

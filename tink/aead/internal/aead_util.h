@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
+#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/util/statusor.h"
 
 namespace crypto {

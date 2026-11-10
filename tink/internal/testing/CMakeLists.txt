@@ -149,12 +149,26 @@ tink_cc_library(
   DEPS
     absl::status
     absl::statusor
+    absl::strings
     absl::string_view
+    absl::optional
+    tink::core::aead
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
+    tink::internal::output_prefix_util
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::test_util
     tink::proto::test_proto_cc_proto
     tink::proto::tink_cc_tinkpb
   TESTONLY
@@ -170,8 +184,22 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
+    absl::optional
+    tink::core::aead
+    tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aead_wrapper
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::proto::test_proto_cc_proto

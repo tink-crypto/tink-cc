@@ -32,7 +32,6 @@
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_util.h"
 
 namespace crypto {
 namespace tink {
@@ -48,17 +47,12 @@ using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-bool IsAesGcmSivSupported() {
-  return internal::IsBoringSsl() && !internal::IsFipsModeEnabled();
-}
-
 class CreateAesGcmSivCordAeadTestVectorTest
     : public TestWithParam<AeadTestVector> {
  protected:
   void SetUp() override {
-    if (!IsAesGcmSivSupported()) {
-      GTEST_SKIP() << "AES-GCM-SIV is not supported in OpenSSL or FIPS-only "
-                      "mode";
+    if (internal::IsFipsModeEnabled()) {
+      GTEST_SKIP() << "AES-GCM-SIV is not supported in FIPS-only mode";
     }
   }
 };
@@ -99,8 +93,8 @@ INSTANTIATE_TEST_SUITE_P(CreateAesGcmSivCordAeadTestVectorTests,
 
 TEST(CreateAesGcmSivCordAeadTest,
      DecryptFailsWithModifiedCiphertextOrAssociatedData) {
-  if (!IsAesGcmSivSupported()) {
-    GTEST_SKIP() << "AES-GCM-SIV is not supported in OpenSSL or FIPS-only mode";
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "AES-GCM-SIV is not supported in FIPS-only mode";
   }
   const AeadTestVector& test_vector =
       GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink);

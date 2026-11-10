@@ -37,7 +37,6 @@
 #include "tink/config/key_gen_config_2026.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
@@ -100,7 +99,6 @@ using ::crypto::tink::RsaSsaPssPrivateKey;
 using ::crypto::tink::RsaSsaPssPublicKey;
 using ::crypto::tink::SecretData;
 using ::crypto::tink::SignatureConfig;
-using ::crypto::tink::internal::IsBoringSsl;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Eq;
 
@@ -1156,9 +1154,6 @@ MlDsaPublicKey CreateMlDsaPublicKeyFromTestVector(
 }
 
 TEST_P(PemParserMlDsaPublicKeyTestVectorsTest, PemToSignaturePublicKey) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL.";
-  }
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   MlDsaPublicKeyTestParams params = GetParam();
   MlDsaPublicKey public_key = CreateMlDsaPublicKeyFromTestVector(params);
@@ -1185,9 +1180,6 @@ TEST(PemParserMlDsaPublicKeyTest,
 
 TEST(PemParserMlDsaPublicKeyTest,
      PemToSignaturePublicKeyMlDsaFailsForPrivateKeyPem) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL.";
-  }
   TINK_ASSERT_OK_AND_ASSIGN(
       MlDsaParameters, params,
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
@@ -1205,9 +1197,6 @@ TEST(PemParserMlDsaPublicKeyTest,
 
 TEST(PemParserMlDsaPublicKeyTest,
      PemToSignaturePublicKeyMlDsaFailsForInvalidPem) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL.";
-  }
   TINK_ASSERT_OK_AND_ASSIGN(
       MlDsaParameters, params,
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
@@ -1223,9 +1212,6 @@ TEST(PemParserMlDsaPublicKeyTest,
 
 TEST(PemParserMlDsaPublicKeyTest,
      PemToSignaturePublicKeyMlDsaFailsForNonMlDsaKey) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL.";
-  }
   TINK_ASSERT_OK_AND_ASSIGN(
       MlDsaParameters, params,
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65,
@@ -1239,9 +1225,6 @@ TEST(PemParserMlDsaPublicKeyTest,
 
 TEST(PemParserMlDsaPublicKeyTest,
      PemToSignaturePublicKeyMlDsaFailsForMismatchedInstance) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL.";
-  }
   TINK_ASSERT_OK_AND_ASSIGN(
       MlDsaParameters, mldsa44_params,
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa44,
@@ -1321,33 +1304,22 @@ using MlDsaPrivateKeyTestVectorsTest =
 
 TEST_P(MlDsaPrivateKeyTestVectorsTest, PemToSignaturePrivateKey) {
   MlDsaPrivateKeyTestParams params = GetParam();
-  if (IsBoringSsl()) {
-    TINK_ASSERT_OK_AND_ASSIGN(
-        MlDsaPrivateKey, expected_private_key,
-        MlDsaPrivateKey::Create(
-            params.parameters,
-            RestrictedData(HexDecodeOrDie(params.expected_seed_bytes_hex),
-                           InsecureSecretKeyAccess::Get()),
-            /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
-    TINK_ASSERT_OK_AND_ASSIGN(
-        MlDsaPrivateKey, private_key,
-        PemToMlDsaPrivateKey(params.private_key_pem, params.parameters,
-                             InsecureSecretKeyAccess::Get(),
-                             GetPartialKeyAccess()));
-    EXPECT_EQ(private_key, expected_private_key);
-  } else {
-    EXPECT_THAT(PemToMlDsaPrivateKey(params.private_key_pem, params.parameters,
-                                     InsecureSecretKeyAccess::Get(),
-                                     GetPartialKeyAccess())
-                    .status(),
-                StatusIs(absl::StatusCode::kUnimplemented));
-  }
+  TINK_ASSERT_OK_AND_ASSIGN(
+      MlDsaPrivateKey, expected_private_key,
+      MlDsaPrivateKey::Create(
+          params.parameters,
+          RestrictedData(HexDecodeOrDie(params.expected_seed_bytes_hex),
+                         InsecureSecretKeyAccess::Get()),
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
+  TINK_ASSERT_OK_AND_ASSIGN(
+      MlDsaPrivateKey, private_key,
+      PemToMlDsaPrivateKey(params.private_key_pem, params.parameters,
+                           InsecureSecretKeyAccess::Get(),
+                           GetPartialKeyAccess()));
+  EXPECT_EQ(private_key, expected_private_key);
 }
 
 TEST_P(MlDsaPrivateKeyTestVectorsTest, SignAndVerify) {
-  if (!IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL.";
-  }
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   MlDsaPrivateKeyTestParams params = GetParam();
 

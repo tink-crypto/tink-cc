@@ -2128,7 +2128,6 @@ cc_test(
         "//tink:proto_parameters_format",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

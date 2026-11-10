@@ -2075,7 +2075,6 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
-    tink::internal::boringssl
     tink::core::keyset_handle
     tink::core::parameters
     tink::core::proto_parameters_format

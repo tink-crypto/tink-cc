@@ -68,7 +68,6 @@ tink_cc_test(
     tink::config::config_2026
     tink::config::global_registry
     tink::config::key_gen_config_2026
-    tink::internal::ssl_util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key

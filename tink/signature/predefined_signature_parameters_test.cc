@@ -23,7 +23,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
 #include "tink/proto_parameters_format.h"
@@ -170,22 +169,15 @@ TEST(PredefinedSignatureParametersTest, RsaSsaPss3072Sha256Sha256F4KeyGen) {
   ExpectKeyGenerationWorks(RsaSsaPss4096Sha512Sha512F4());
 }
 
-// ML-DSA is only supported with BoringSSL or OpenSSL >= 3.5.
-#if defined(OPENSSL_IS_BORINGSSL) || \
-    (defined(OPENSSL_API_LEVEL) && OPENSSL_API_LEVEL >= 30500)
 TEST(PredefinedSignatureParametersTest, MlDsa44KeyGen) {
   ExpectKeyGenerationWorks(MlDsa44());
   ExpectKeyGenerationWorks(MlDsa44NoPrefix());
 }
-#endif
 
-// SLH-DSA is only supported with BoringSSL.
-#ifdef OPENSSL_IS_BORINGSSL
 TEST(PredefinedSignatureParametersTest, SlhDsaSha2_128sKeyGen) {
   ExpectKeyGenerationWorks(SlhDsaSha2_128s());
   ExpectKeyGenerationWorks(SlhDsaSha2_128sNoPrefix());
 }
-#endif
 
 }  // namespace
 }  // namespace tink_parameters

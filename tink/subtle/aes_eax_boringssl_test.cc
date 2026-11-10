@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -30,10 +31,16 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_eax_key.h"
+#include "tink/aead/aes_eax_parameters.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_eax_test_vectors.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/util/test_util.h"
 
@@ -45,10 +52,17 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::AeadTestVector;
+using ::crypto::tink::internal::CreateAesEaxTestVectors;
+using ::crypto::tink::internal::GetAesEaxTestVector;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
+using ::testing::HasSubstr;
 using ::testing::Not;
+using ::testing::StartsWith;
 using ::testing::Test;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 class AesEaxBoringSslTest : public testing::Test {
  protected:
@@ -337,6 +351,130 @@ TEST(AesEaxBoringSslFipsTest, TestFipsOnly) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(subtle::AesEaxBoringSsl::New(key256, 16).status(),
               StatusIs(absl::StatusCode::kInternal));
+
+  const AeadTestVector& test_vector128 =
+      GetAesEaxTestVector(16, AesEaxParameters::Variant::kTink);
+  const AeadTestVector& test_vector256 =
+      GetAesEaxTestVector(32, AesEaxParameters::Variant::kTink);
+  EXPECT_THAT(subtle::AesEaxBoringSsl::New(
+                  dynamic_cast<const AesEaxKey&>(*test_vector128.aead_key))
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(subtle::AesEaxBoringSsl::New(
+                  dynamic_cast<const AesEaxKey&>(*test_vector256.aead_key))
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+class AesEaxBoringSslTestVectorTest : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled()) {
+      GTEST_SKIP() << "Not supported in FIPS-only mode";
+    }
+  }
+};
+
+TEST_P(AesEaxBoringSslTestVectorTest, DecryptTestVectors) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesEaxBoringSsl::New(key);
+  if (key.GetParameters().GetKeySizeInBytes() == 24) {
+    EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                        HasSubstr("Invalid key size")));
+    return;
+  }
+  ASSERT_THAT(aead, IsOk());
+
+  EXPECT_THAT(
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data),
+      IsOkAndHolds(test_vector.plaintext));
+}
+
+TEST_P(AesEaxBoringSslTestVectorTest, EncryptDecryptTestVectors) {
+  const AeadTestVector& test_vector = GetParam();
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesEaxBoringSsl::New(key);
+  if (key.GetParameters().GetKeySizeInBytes() == 24) {
+    EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                        HasSubstr("Invalid key size")));
+    return;
+  }
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> ciphertext =
+      (*aead)->Encrypt(test_vector.plaintext, test_vector.associated_data);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT(*ciphertext, StartsWith(key.GetOutputPrefix()));
+
+  EXPECT_THAT((*aead)->Decrypt(*ciphertext, test_vector.associated_data),
+              IsOkAndHolds(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(AesEaxBoringSslTestVectorTests,
+                         AesEaxBoringSslTestVectorTest,
+                         ValuesIn(CreateAesEaxTestVectors()));
+
+TEST_F(AesEaxBoringSslTest, Rejects24ByteAesKey) {
+  absl::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(24)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesEaxKey> key =
+      AesEaxKey::Create(*parameters, RestrictedData(24),
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(AesEaxBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid key size")));
+}
+
+TEST_F(AesEaxBoringSslTest,
+       DecryptWithKeyFailsWithModifiedCiphertextOrAssociatedData) {
+  const AeadTestVector& test_vector =
+      GetAesEaxTestVector(16, AesEaxParameters::Variant::kTink);
+  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesEaxBoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  const size_t prefix_size = key.GetOutputPrefix().size();
+  const size_t min_ciphertext_size =
+      prefix_size + key.GetParameters().GetIvSizeInBytes() +
+      key.GetParameters().GetTagSizeInBytes();
+
+  for (size_t i = 0; i < test_vector.ciphertext.size(); ++i) {
+    std::string modified_ciphertext = test_vector.ciphertext;
+    modified_ciphertext[i] ^= 0x01;
+    EXPECT_THAT((*aead)
+                    ->Decrypt(modified_ciphertext, test_vector.associated_data)
+                    .status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr(i < prefix_size ? "Prefix mismatch"
+                                                   : "Authentication failed")));
+  }
+
+  EXPECT_THAT((*aead)
+                  ->Decrypt(test_vector.ciphertext, "modified associated data")
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Authentication failed")));
+
+  for (size_t len = 0; len < test_vector.ciphertext.size(); ++len) {
+    EXPECT_THAT(
+        (*aead)
+            ->Decrypt(absl::string_view(test_vector.ciphertext).substr(0, len),
+                      test_vector.associated_data)
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr(len < min_ciphertext_size
+                               ? "Ciphertext too short"
+                               : "Authentication failed")));
+  }
 }
 
 TEST_F(AesEaxBoringSslTest, TestZeroCopy) {

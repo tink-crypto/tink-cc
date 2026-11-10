@@ -1129,9 +1129,15 @@ tink_cc_test(
     absl::strings
     absl::span
     tink::core::aead
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
+    tink::aead::aes_eax_key
+    tink::aead::aes_eax_parameters
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_eax_test_vectors
     tink::config::tink_fips
     tink::internal::testing::wycheproof_util
     tink::util::test_util

@@ -41,6 +41,15 @@ namespace tink {
 namespace subtle {
 
 absl::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
+    const AesEaxKey& key) {
+  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesEaxBoringSsl>());
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<internal::ZeroCopyAead> zero_copy_aead,
+                        internal::AesEaxZeroCopyAead(key));
+  return std::make_unique<internal::AeadFromZeroCopy>(
+      std::move(zero_copy_aead));
+}
+
+absl::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
     const SecretData& key, size_t nonce_size_in_bytes) {
   ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesEaxBoringSsl>());
   if (key.size() != 16 && key.size() != 32) {
@@ -61,10 +70,7 @@ absl::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
       AesEaxKey::Create(
           parameters, RestrictedData(key, InsecureSecretKeyAccess::Get()),
           /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
-  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<internal::ZeroCopyAead> zero_copy_aead,
-                        internal::AesEaxZeroCopyAead(aes_eax_key));
-  return std::make_unique<internal::AeadFromZeroCopy>(
-      std::move(zero_copy_aead));
+  return New(aes_eax_key);
 }
 
 }  // namespace subtle

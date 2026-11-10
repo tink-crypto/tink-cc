@@ -28,6 +28,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead.h"
+#include "tink/aead/aes_eax_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -43,9 +44,13 @@ class AesEaxBoringSsl {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
   // Constructs a new Aead cipher for Aes-EAX.
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const AesEaxKey& key);
+
+  // Constructs a new Aead cipher for Aes-EAX.
   // Currently supported key sizes are 128 and 256 bits.
   // Currently supported nonce sizes are 12 and 16 bytes.
   // The tag size is fixed to 16 bytes.
+  [[deprecated("Use AesEaxBoringSsl::New(const AesEaxKey&) instead")]]
   static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key,
                                                    size_t nonce_size_in_bytes);
 

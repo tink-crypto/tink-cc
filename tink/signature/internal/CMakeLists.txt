@@ -1915,3 +1915,43 @@ tink_cc_test(
     tink::signature::internal::testing::composite_ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_library(
+  NAME ecdsa_prehash_boringssl
+  SRCS
+    ecdsa_prehash_boringssl.cc
+    ecdsa_prehash_boringssl.h
+  DEPS
+    tink::signature::internal::prehash_format
+    absl::memory
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::internal::boringssl
+    tink::internal::fips_utils
+    tink::internal::md_util
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_public_key
+    tink::signature::prehash
+    tink::subtle::common_enums
+)
+
+tink_cc_test(
+  NAME ecdsa_prehash_boringssl_test
+  SRCS
+    ecdsa_prehash_boringssl_test.cc
+  DEPS
+    tink::signature::internal::ecdsa_prehash_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::internal::fips_utils
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::prehash
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

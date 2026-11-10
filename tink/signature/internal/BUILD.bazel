@@ -1928,3 +1928,43 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ecdsa_prehash_boringssl",
+    srcs = ["ecdsa_prehash_boringssl.cc"],
+    hdrs = ["ecdsa_prehash_boringssl.h"],
+    deps = [
+        ":prehash_format",
+        "//tink/internal:fips_utils",
+        "//tink/internal:md_util",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_public_key",
+        "//tink/signature:prehash",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "ecdsa_prehash_boringssl_test",
+    srcs = ["ecdsa_prehash_boringssl_test.cc"],
+    deps = [
+        ":ecdsa_prehash_boringssl",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ecdsa_parameters",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature:prehash",
+        "//tink/signature/internal/testing:ecdsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

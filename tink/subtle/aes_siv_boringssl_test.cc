@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -30,8 +31,13 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
+#include "tink/daead/aes_siv_key.h"
+#include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/internal/aes_siv_test_vectors.h"
 #include "tink/deterministic_aead.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
@@ -43,9 +49,15 @@ namespace subtle {
 namespace {
 
 using ::testing::Not;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::AesSivTestVector;
+using ::crypto::tink::internal::CreateAesSivTestVectors;
+using ::crypto::tink::internal::GetAesSivTestVector;
 using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 
@@ -310,6 +322,98 @@ TEST(AesSivBoringSslTest, TestFipsOnly) {
               StatusIs(absl::StatusCode::kInternal));
   EXPECT_THAT(subtle::AesSivBoringSsl::New(key512).status(),
               StatusIs(absl::StatusCode::kInternal));
+
+  const AesSivTestVector& test_vector32 =
+      GetAesSivTestVector(32, AesSivParameters::Variant::kTink);
+  const AesSivTestVector& test_vector64 =
+      GetAesSivTestVector(64, AesSivParameters::Variant::kTink);
+  EXPECT_THAT(subtle::AesSivBoringSsl::New(test_vector32.key).status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(subtle::AesSivBoringSsl::New(test_vector64.key).status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+using AesSivBoringSslTestVectorTest = TestWithParam<AesSivTestVector>;
+
+TEST_P(AesSivBoringSslTestVectorTest, EncryptAndDecrypt) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const AesSivTestVector& test_vector = GetParam();
+  if (test_vector.key.GetParameters().KeySizeInBytes() == 48) {
+    EXPECT_THAT(AesSivBoringSsl::New(test_vector.key).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+    return;
+  }
+
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+      AesSivBoringSsl::New(test_vector.key);
+  ASSERT_THAT(daead, IsOk());
+
+  EXPECT_THAT((*daead)->EncryptDeterministically(test_vector.plaintext,
+                                                 test_vector.aad),
+              IsOkAndHolds(test_vector.ciphertext));
+  EXPECT_THAT((*daead)->DecryptDeterministically(test_vector.ciphertext,
+                                                 test_vector.aad),
+              IsOkAndHolds(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(AesSivBoringSslTestVectorTests,
+                         AesSivBoringSslTestVectorTest,
+                         ValuesIn(CreateAesSivTestVectors()));
+
+TEST(AesSivBoringSslTest, Rejects48ByteAesKey) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  absl::StatusOr<AesSivParameters> parameters =
+      AesSivParameters::Create(48, AesSivParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<AesSivKey> key =
+      AesSivKey::Create(*parameters, RestrictedData(48),
+                        /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(AesSivBoringSsl::New(*key).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(AesSivBoringSslTest,
+     DecryptWithKeyFailsWithModifiedCiphertextOrAssociatedData) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const AesSivTestVector& test_vector =
+      GetAesSivTestVector(64, AesSivParameters::Variant::kTink);
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+      AesSivBoringSsl::New(test_vector.key);
+  ASSERT_THAT(daead, IsOk());
+
+  for (size_t i = 0; i < test_vector.ciphertext.size(); ++i) {
+    std::string modified_ciphertext = test_vector.ciphertext;
+    modified_ciphertext[i] ^= 0x01;
+    EXPECT_THAT((*daead)
+                    ->DecryptDeterministically(modified_ciphertext,
+                                               test_vector.aad)
+                    .status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+
+  EXPECT_THAT((*daead)
+                  ->DecryptDeterministically(test_vector.ciphertext,
+                                             "modified associated data")
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  for (size_t len = 0; len < test_vector.ciphertext.size(); ++len) {
+    EXPECT_THAT(
+        (*daead)
+            ->DecryptDeterministically(
+                absl::string_view(test_vector.ciphertext).substr(0, len),
+                test_vector.aad)
+            .status(),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+  }
 }
 
 }  // namespace

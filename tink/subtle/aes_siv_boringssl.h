@@ -27,6 +27,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/daead/aes_siv_key.h"
 #include "tink/deterministic_aead.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/secret_data.h"
@@ -60,6 +61,10 @@ namespace subtle {
 // RFC 8915). 48-byte (2*192 bits) keys are not supported.
 class AesSivBoringSsl {
  public:
+  static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(
+      const AesSivKey& key);
+
+  [[deprecated("Use AesSivBoringSsl::New(const AesSivKey&) instead")]]
   static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(
       const SecretData& key);
 

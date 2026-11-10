@@ -1198,8 +1198,13 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     tink::core::deterministic_aead
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
     tink::config::tink_fips
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::daead::internal::aes_siv_test_vectors
     tink::internal::testing::wycheproof_util
     tink::util::secret_data
     tink::util::test_util

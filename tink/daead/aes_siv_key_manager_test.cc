@@ -36,6 +36,7 @@
 
 namespace crypto {
 namespace tink {
+namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
@@ -46,8 +47,6 @@ using ::testing::HasSubstr;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::SizeIs;
-
-namespace {
 
 TEST(AesSivKeyManagerTest, Basics) {
   EXPECT_THAT(AesSivKeyManager().get_version(), Eq(0));

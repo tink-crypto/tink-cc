@@ -38,6 +38,13 @@ namespace subtle {
 
 // static
 absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
+    const AesSivKey& key) {
+  ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesSivBoringSsl>());
+  return internal::NewAesSivBoringSsl(key);
+}
+
+// static
+absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
     const SecretData& key) {
   ABSL_RETURN_IF_ERROR(internal::CheckFipsCompatibility<AesSivBoringSsl>());
   if (key.size() != 32 && key.size() != 64) {
@@ -51,7 +58,7 @@ absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
       AesSivKey::Create(
           parameters, RestrictedData(key, InsecureSecretKeyAccess::Get()),
           /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
-  return internal::NewAesSivBoringSsl(aes_siv_key);
+  return New(aes_siv_key);
 }
 
 }  // namespace subtle

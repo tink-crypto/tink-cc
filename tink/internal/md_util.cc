@@ -27,7 +27,7 @@
 #include "absl/types/span.h"
 #include "openssl/evp.h"
 #include "tink/internal/err_util.h"
-#include "tink/internal/ssl_unique_ptr.h"  // IWYU pragma: keep
+#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
@@ -96,15 +96,10 @@ absl::StatusOr<std::string> ComputeHash(
   const size_t digest_size = EVP_MD_size(&hasher);
   subtle::ResizeStringUninitialized(&digest, digest_size);
 
-#if defined(OPENSSL_IS_BORINGSSL)
-  bssl::ScopedEVP_MD_CTX md_ctx;
-  EVP_MD_CTX_init(md_ctx.get());
-#else
-  internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
+  internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_new());
   if (!md_ctx) {
     return absl::InternalError("Could not create EVP_MD_CTX.");
   }
-#endif
   if (1 != EVP_DigestInit_ex(md_ctx.get(), &hasher, /*impl=*/nullptr)) {
     return absl::InternalError(absl::StrCat(
         "Openssl internal error initializing digest: ",

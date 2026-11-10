@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "benchmark/benchmark.h"
-#include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
 #include "tink/aead.h"
@@ -26,7 +25,6 @@
 #include "tink/config/config_2026.h"
 #include "tink/config/global_registry.h"
 #include "tink/configuration.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_manager.h"
 #include "tink/public_key_sign.h"
@@ -223,9 +221,6 @@ std::unique_ptr<KeysetHandle> GenerateMlDsa65KeysetHandleOrDie() {
 }
 
 void MlDsa65Sign(benchmark::State& state, const Configuration& config) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL";
-  }
   std::unique_ptr<KeysetHandle> handle = GenerateMlDsa65KeysetHandleOrDie();
   BenchmarkGetPrimitive<PublicKeySign>(state, *handle, config);
 }
@@ -239,9 +234,6 @@ void BM_MlDsa65SignConfig(benchmark::State& state) {
 }
 
 void MlDsa65Verify(benchmark::State& state, const Configuration& config) {
-  if (!internal::IsBoringSsl()) {
-    GTEST_SKIP() << "ML-DSA is only supported with BoringSSL";
-  }
   std::unique_ptr<KeysetHandle> private_handle =
       GenerateMlDsa65KeysetHandleOrDie();
   std::unique_ptr<KeysetHandle> public_handle =

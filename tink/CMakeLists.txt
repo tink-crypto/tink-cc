@@ -1340,7 +1340,6 @@ tink_cc_test(
     tink::aead::aead_key_templates
     tink::config::config_2026
     tink::config::global_registry
-    tink::internal::ssl_util
     tink::signature::ml_dsa_parameters
     tink::signature::signature_config
     tink::signature::signature_key_templates

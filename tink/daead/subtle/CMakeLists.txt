@@ -73,3 +73,38 @@ tink_cc_library(
     tink::core::deterministic_aead
   PUBLIC
 )
+
+tink_cc_library(
+  NAME create_aes_siv_deterministic_aeads
+  SRCS
+    create_aes_siv_deterministic_aeads.cc
+    create_aes_siv_deterministic_aeads.h
+  DEPS
+    tink::daead::subtle::deterministic_aeads
+    absl::statusor
+    tink::daead::aes_siv_key
+    tink::daead::internal::aes_siv_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_aes_siv_deterministic_aeads_test
+  SRCS
+    create_aes_siv_deterministic_aeads_test.cc
+  DEPS
+    tink::daead::subtle::create_aes_siv_deterministic_aeads
+    tink::daead::subtle::deterministic_aeads
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::daead::internal::aes_siv_test_vectors
+    tink::util::test_util
+)

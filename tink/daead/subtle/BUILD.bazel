@@ -80,3 +80,38 @@ cc_library(
         "@abseil-cpp//absl/types:span",
     ],
 )
+
+cc_library(
+    name = "create_aes_siv_deterministic_aeads",
+    srcs = ["create_aes_siv_deterministic_aeads.cc"],
+    hdrs = ["create_aes_siv_deterministic_aeads.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deterministic_aeads",
+        "//tink/daead:aes_siv_key",
+        "//tink/daead/internal:aes_siv_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_aes_siv_deterministic_aeads_test",
+    srcs = ["create_aes_siv_deterministic_aeads_test.cc"],
+    deps = [
+        ":create_aes_siv_deterministic_aeads",
+        ":deterministic_aeads",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/daead:aes_siv_key",
+        "//tink/daead:aes_siv_parameters",
+        "//tink/daead/internal:aes_siv_test_vectors",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

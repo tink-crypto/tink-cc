@@ -31,9 +31,9 @@ absl::Status RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for JWT RSA-SSA-PKCS1 parameters and
-// keys into specified immutable serialization registry `builder`.
-absl::Status RegisterJwtRsaSsaPkcs1ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// keys into specified serialization `registry`.
+absl::Status RegisterJwtRsaSsaPkcs1ProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

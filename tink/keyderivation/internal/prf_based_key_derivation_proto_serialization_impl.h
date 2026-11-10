@@ -31,10 +31,9 @@ absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for PRF-based key derivation
-// parameters and keys into specified immutable serialization registry
-// `builder`.
-absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// parameters and keys into specified serialization `registry`.
+absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

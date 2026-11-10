@@ -498,9 +498,9 @@ absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
     return public_key.status();
   }
 
-  absl::StatusOr<SecretData> private_key_value = ParseBigIntToFixedLength(
-      proto_private_key.key_value().AsStringView(),
-      parameters->GetPrivateKeyLength());
+  absl::StatusOr<SecretData> private_key_value =
+      ParseBigIntToFixedLength(proto_private_key.key_value().AsStringView(),
+                               parameters->GetPrivateKeyLength());
   if (!private_key_value.ok()) {
     return private_key_value.status();
   }
@@ -619,39 +619,39 @@ absl::Status RegisterJwtEcdsaProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
 }
 
-absl::Status RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterJwtEcdsaProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   if (absl::Status status =
-          builder.RegisterParametersParser(&JwtEcdsaProtoParametersParser());
+          registry.RegisterParametersParser(&JwtEcdsaProtoParametersParser());
       !status.ok()) {
     return status;
   }
 
-  if (absl::Status status = builder.RegisterParametersSerializer(
+  if (absl::Status status = registry.RegisterParametersSerializer(
           &JwtEcdsaProtoParametersSerializer());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeyParser(&JwtEcdsaProtoPublicKeyParser());
+          registry.RegisterKeyParser(&JwtEcdsaProtoPublicKeyParser());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
+          registry.RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeyParser(&JwtEcdsaProtoPrivateKeyParser());
+          registry.RegisterKeyParser(&JwtEcdsaProtoPrivateKeyParser());
       !status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

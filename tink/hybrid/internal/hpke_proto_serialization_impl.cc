@@ -88,7 +88,7 @@ absl::StatusOr<HpkeParameters> ParseParameters(
   }
 
   return HpkeParametersFromProto(key_template.output_prefix_type(),
-                      proto_key_format.params());
+                                 proto_key_format.params());
 }
 
 absl::StatusOr<HpkePublicKey> ParsePublicKey(
@@ -320,36 +320,36 @@ absl::Status RegisterHpkeProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(HpkeProtoPrivateKeySerializer());
 }
 
-absl::Status RegisterHpkeProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterHpkeProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(HpkeProtoParametersParser());
+      registry.RegisterParametersParser(HpkeProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      builder.RegisterParametersSerializer(HpkeProtoParametersSerializer());
+      registry.RegisterParametersSerializer(HpkeProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(HpkeProtoPublicKeyParser());
+  status = registry.RegisterKeyParser(HpkeProtoPublicKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeySerializer(HpkeProtoPublicKeySerializer());
+  status = registry.RegisterKeySerializer(HpkeProtoPublicKeySerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(HpkeProtoPrivateKeyParser());
+  status = registry.RegisterKeyParser(HpkeProtoPrivateKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(HpkeProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(HpkeProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

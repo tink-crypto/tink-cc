@@ -269,13 +269,10 @@ TEST_F(JwtMlDsaProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(JwtMlDsaProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  EXPECT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  EXPECT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+TEST_F(JwtMlDsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  EXPECT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
+  EXPECT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -337,12 +334,10 @@ TEST_P(JwtMlDsaProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(**parsed, Eq(*expected));
 }
 
-TEST_P(JwtMlDsaProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(JwtMlDsaProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   JwtMlDsaKeyFormat format;
   format.set_version(0);
@@ -492,12 +487,10 @@ TEST_P(JwtMlDsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(format.algorithm(), Eq(test_case.proto_algorithm));
 }
 
-TEST_P(JwtMlDsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(JwtMlDsaProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
       test_case.expected_parameters_strategy, test_case.algorithm);
@@ -590,12 +583,10 @@ TEST_P(JwtMlDsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
 
-TEST_P(JwtMlDsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(JwtMlDsaProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   google::crypto::tink::JwtMlDsaPublicKey key_proto;
   key_proto.set_version(0);
@@ -841,12 +832,10 @@ TEST_P(JwtMlDsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   }
 }
 
-TEST_P(JwtMlDsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(JwtMlDsaProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtMlDsaParameters> parameters =
       JwtMlDsaParameters::Create(test_case.strategy, test_case.algorithm);
@@ -962,12 +951,10 @@ TEST_P(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
 }
 
-TEST_P(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(JwtMlDsaProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   google::crypto::tink::JwtMlDsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -1280,12 +1267,10 @@ TEST_P(JwtMlDsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   }
 }
 
-TEST_P(JwtMlDsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(JwtMlDsaProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtMlDsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtMlDsaParameters> parameters =
       JwtMlDsaParameters::Create(test_case.strategy, test_case.algorithm);

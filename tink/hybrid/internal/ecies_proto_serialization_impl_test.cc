@@ -127,13 +127,11 @@ TEST_F(EciesProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(EciesProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
+TEST_F(EciesProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 }
 
 EciesHkdfKemParams CreateKemParams(EllipticCurveType curve_type,
@@ -333,13 +331,10 @@ TEST_P(EciesProtoSerializationTest,
   EXPECT_THAT(ecies_parameters->GetSalt(), Eq(test_case.salt));
 }
 
-TEST_P(EciesProtoSerializationTest,
-       ParseParametersSucceedsWithRegistryBuilder) {
+TEST_P(EciesProtoSerializationTest, ParseParametersSucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() = test_case.kem_params;
@@ -1004,12 +999,10 @@ TEST_P(EciesProtoSerializationTest, SerializeParametersWithMutableRegistry) {
               Eq(test_case.ec_point_format));
 }
 
-TEST_P(EciesProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(EciesProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 
   EciesParameters::Builder parameters_builder =
       EciesParameters::Builder()
@@ -1179,12 +1172,10 @@ TEST_P(EciesProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(EciesProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(EciesProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() = test_case.kem_params;
@@ -1393,12 +1384,10 @@ TEST_P(EciesProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
               Eq(test_case.dem_params.aead_dem().value()));
 }
 
-TEST_P(EciesProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(EciesProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 
   EciesParameters::Builder parameters_builder =
       EciesParameters::Builder()
@@ -1569,12 +1558,10 @@ TEST_P(EciesProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_private_key));
 }
 
-TEST_P(EciesProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(EciesProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 
   EciesAeadHkdfParams params;
   *params.mutable_kem_params() = test_case.kem_params;
@@ -2109,12 +2096,10 @@ TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
               Eq(test_case.ec_point_format));
 }
 
-TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(EciesProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterEciesProtoSerializationWithRegistry(registry), IsOk());
 
   EciesParameters::Builder parameters_builder =
       EciesParameters::Builder()

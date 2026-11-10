@@ -1033,36 +1033,36 @@ absl::Status RegisterEciesProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(EciesProtoPrivateKeySerializer());
 }
 
-absl::Status RegisterEciesProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterEciesProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   absl::Status status =
-      builder.RegisterParametersParser(EciesProtoParametersParser());
+      registry.RegisterParametersParser(EciesProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      builder.RegisterParametersSerializer(EciesProtoParametersSerializer());
+      registry.RegisterParametersSerializer(EciesProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(EciesProtoPublicKeyParser());
+  status = registry.RegisterKeyParser(EciesProtoPublicKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeySerializer(EciesProtoPublicKeySerializer());
+  status = registry.RegisterKeySerializer(EciesProtoPublicKeySerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(EciesProtoPrivateKeyParser());
+  status = registry.RegisterKeyParser(EciesProtoPrivateKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(EciesProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(EciesProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

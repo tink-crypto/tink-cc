@@ -104,15 +104,12 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
       IsOk());
 }
 
-TEST_F(JwtRsaSsaPssProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
+TEST_F(JwtRsaSsaPssProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -183,13 +180,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest,
-       ParseParametersSucceedsWithRegistryBuilder) {
+       ParseParametersSucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 
   JwtRsaSsaPssKeyFormat key_format_proto;
   key_format_proto.set_version(0);
@@ -372,13 +367,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest,
-       SerializeParametersSucceedsWithRegistryBuilder) {
+       SerializeParametersSucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 
   absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
@@ -524,14 +517,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(JwtRsaSsaPssProtoSerializationTest,
-       ParsePublicKeySucceedsWithRegistryBuilder) {
+TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePublicKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 
   KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
 
@@ -806,12 +796,10 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest,
-       SerializePublicKeySucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+       SerializePublicKeySucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 
   TestCase test_case = GetParam();
   KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
@@ -1029,13 +1017,11 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest,
-       ParsePrivateKeySucceedsWithRegistryBuilder) {
+       ParsePrivateKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 
   KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
 
@@ -1449,13 +1435,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest,
-       SerializePrivateKeySucceedsWithRegistryBuilder) {
+       SerializePrivateKeySucceedsWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(
-      RegisterJwtRsaSsaPssProtoSerializationWithRegistryBuilder(builder),
-      IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerializationWithRegistry(registry),
+              IsOk());
 
   KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
 

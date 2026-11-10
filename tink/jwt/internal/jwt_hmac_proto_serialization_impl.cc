@@ -418,26 +418,26 @@ absl::Status RegisterJwtHmacProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(JwtHmacProtoKeySerializer());
 }
 
-absl::Status RegisterJwtHmacProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
+absl::Status RegisterJwtHmacProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
   if (absl::Status status =
-          builder.RegisterParametersParser(JwtHmacProtoParametersParser());
+          registry.RegisterParametersParser(JwtHmacProtoParametersParser());
       !status.ok()) {
     return status;
   }
 
-  if (absl::Status status = builder.RegisterParametersSerializer(
+  if (absl::Status status = registry.RegisterParametersSerializer(
           JwtHmacProtoParametersSerializer());
       !status.ok()) {
     return status;
   }
 
-  if (absl::Status status = builder.RegisterKeyParser(JwtHmacProtoKeyParser());
+  if (absl::Status status = registry.RegisterKeyParser(JwtHmacProtoKeyParser());
       !status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(JwtHmacProtoKeySerializer());
+  return registry.RegisterKeySerializer(JwtHmacProtoKeySerializer());
 }
 
 }  // namespace internal

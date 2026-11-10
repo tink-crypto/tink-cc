@@ -88,13 +88,10 @@ TEST_F(JwtHmacProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(JwtHmacProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  EXPECT_THAT(RegisterJwtHmacProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  EXPECT_THAT(RegisterJwtHmacProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+TEST_F(JwtHmacProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  EXPECT_THAT(RegisterJwtHmacProtoSerializationWithRegistry(registry), IsOk());
+  EXPECT_THAT(RegisterJwtHmacProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -153,12 +150,10 @@ TEST_P(JwtHmacProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(**parsed, Eq(*expected));
 }
 
-TEST_P(JwtHmacProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(JwtHmacProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistry(registry), IsOk());
 
   JwtHmacKeyFormat format;
   format.set_version(0);
@@ -309,12 +304,10 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(format.algorithm(), Eq(test_case.proto_algorithm));
 }
 
-TEST_P(JwtHmacProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(JwtHmacProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
       test_case.key_size, test_case.expected_parameters_strategy,
@@ -414,12 +407,10 @@ TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
 
-TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithRegistryBuilder) {
+TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistry(registry), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
   google::crypto::tink::JwtHmacKey key_proto;
@@ -702,12 +693,10 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   }
 }
 
-TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
+TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtHmacProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
       test_case.key_size, test_case.strategy, test_case.algorithm);

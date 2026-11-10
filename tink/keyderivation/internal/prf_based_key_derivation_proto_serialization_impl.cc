@@ -444,26 +444,26 @@ absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
       PrfBasedKeyDerivationProtoKeySerializer());
 }
 
-absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  absl::Status status = builder.RegisterParametersParser(
+absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  absl::Status status = registry.RegisterParametersParser(
       PrfBasedKeyDerivationProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterParametersSerializer(
+  status = registry.RegisterParametersSerializer(
       PrfBasedKeyDerivationProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(PrfBasedKeyDerivationProtoKeyParser());
+  status = registry.RegisterKeyParser(PrfBasedKeyDerivationProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(
+  return registry.RegisterKeySerializer(
       PrfBasedKeyDerivationProtoKeySerializer());
 }
 

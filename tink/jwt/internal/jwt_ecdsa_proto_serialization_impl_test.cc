@@ -99,13 +99,10 @@ TEST_F(JwtEcdsaProtoSerializationTest,
               IsOk());
 }
 
-TEST_F(JwtEcdsaProtoSerializationTest,
-       RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  EXPECT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  EXPECT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+TEST_F(JwtEcdsaProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  EXPECT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
+  EXPECT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -164,12 +161,10 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(**parsed, Eq(*expected));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(JwtEcdsaProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   JwtEcdsaKeyFormat format;
   format.set_version(0);
@@ -319,12 +314,10 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(format.algorithm(), Eq(test_case.proto_algorithm));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(JwtEcdsaProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
       test_case.expected_parameters_strategy, test_case.algorithm);
@@ -421,12 +414,10 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   const EcKey& ec_key = GetEcKey(test_case.curve);
 
@@ -690,12 +681,10 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   }
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtEcdsaParameters> parameters =
       JwtEcdsaParameters::Create(test_case.strategy, test_case.algorithm);
@@ -812,21 +801,18 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   ASSERT_THAT(expected_public_key, IsOk());
 
   absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
-      JwtEcdsaPrivateKey::Create(
-          *expected_public_key,
-          RestrictedData(ec_key.priv.AsStringView(),
-                         InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
+      JwtEcdsaPrivateKey::Create(*expected_public_key,
+                                 RestrictedData(ec_key.priv.AsStringView(),
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   const EcKey& ec_key = GetEcKey(test_case.curve);
 
@@ -881,11 +867,10 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   ASSERT_THAT(expected_public_key, IsOk());
 
   absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
-      JwtEcdsaPrivateKey::Create(
-          *expected_public_key,
-          RestrictedData(ec_key.priv.AsStringView(),
-                         InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
+      JwtEcdsaPrivateKey::Create(*expected_public_key,
+                                 RestrictedData(ec_key.priv.AsStringView(),
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
   ASSERT_THAT(expected_private_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
 }
@@ -1204,11 +1189,11 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(ec_key.priv.AsStringView(),
-                     InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key =
+      JwtEcdsaPrivateKey::Create(*public_key,
+                                 RestrictedData(ec_key.priv.AsStringView(),
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -1234,9 +1219,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
                       InsecureSecretKeyAccess::Get())),
               IsTrue());
   EXPECT_THAT(proto_key.version(), Eq(0));
-  EXPECT_THAT(proto_key.key_value(),
-              Eq(absl::StrCat(std::string("\x00", 1),
-                              ec_key.priv.AsStringView())));
+  EXPECT_THAT(
+      proto_key.key_value(),
+      Eq(absl::StrCat(std::string("\x00", 1), ec_key.priv.AsStringView())));
   EXPECT_THAT(proto_key.public_key().x(),
               Eq(absl::StrCat(std::string("\x00", 1), ec_key.pub_x)));
   EXPECT_THAT(proto_key.public_key().y(),
@@ -1252,12 +1237,10 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   }
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<JwtEcdsaParameters> parameters =
       JwtEcdsaParameters::Create(test_case.strategy, test_case.algorithm);
@@ -1280,11 +1263,11 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
       public_key_builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(ec_key.priv.AsStringView(),
-                     InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key =
+      JwtEcdsaPrivateKey::Create(*public_key,
+                                 RestrictedData(ec_key.priv.AsStringView(),
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -1310,9 +1293,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
                       InsecureSecretKeyAccess::Get())),
               IsTrue());
   EXPECT_THAT(proto_key.version(), Eq(0));
-  EXPECT_THAT(proto_key.key_value(),
-              Eq(absl::StrCat(std::string("\x00", 1),
-                              ec_key.priv.AsStringView())));
+  EXPECT_THAT(
+      proto_key.key_value(),
+      Eq(absl::StrCat(std::string("\x00", 1), ec_key.priv.AsStringView())));
   EXPECT_THAT(proto_key.public_key().x(),
               Eq(absl::StrCat(std::string("\x00", 1), ec_key.pub_x)));
   EXPECT_THAT(proto_key.public_key().y(),
@@ -1349,11 +1332,11 @@ TEST_F(JwtEcdsaProtoSerializationTest,
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(ec_key.priv.AsStringView(),
-                     InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key =
+      JwtEcdsaPrivateKey::Create(*public_key,
+                                 RestrictedData(ec_key.priv.AsStringView(),
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =

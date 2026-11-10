@@ -29,11 +29,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/serialization_registry.h"
-#include "tink/internal/testing/field_with_number.h"
-#include "tink/secret_data.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_util.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_public_key.h"
@@ -43,13 +38,18 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/testing/equals_proto_key_serialization.h"
+#include "tink/internal/testing/field_with_number.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/util/secret_data.h"
+#include "tink/util/test_util.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -105,12 +105,10 @@ TEST_F(HpkeProtoSerializationTest, RegisterTwiceSucceedsWithMutableRegistry) {
               IsOk());
 }
 
-TEST_F(HpkeProtoSerializationTest, RegisterTwiceSucceedsWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
+TEST_F(HpkeProtoSerializationTest, RegisterTwiceSucceedsWithRegistry) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -188,12 +186,10 @@ TEST_P(HpkeProtoSerializationTest, ParseParametersWithMutableRegistry) {
   EXPECT_THAT(hpke_parameters->GetAeadId(), Eq(test_case.aead_id));
 }
 
-TEST_P(HpkeProtoSerializationTest, ParseParametersWithRegistryBuilder) {
+TEST_P(HpkeProtoSerializationTest, ParseParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 
   HpkeParams params;
   params.set_kem(test_case.kem);
@@ -412,12 +408,10 @@ TEST_P(HpkeProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_format.params().aead(), Eq(test_case.aead));
 }
 
-TEST_P(HpkeProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+TEST_P(HpkeProtoSerializationTest, SerializeParametersWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
                                                   .SetVariant(test_case.variant)
@@ -527,12 +521,10 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
+TEST_P(HpkeProtoSerializationTest, ParsePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 
   HpkeParams params;
   params.set_kem(test_case.kem);
@@ -688,12 +680,10 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.params().aead(), Eq(test_case.aead));
 }
 
-TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
+TEST_P(HpkeProtoSerializationTest, SerializePublicKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
                                                   .SetVariant(test_case.variant)
@@ -803,12 +793,10 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_private_key));
 }
 
-TEST_P(HpkeProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
+TEST_P(HpkeProtoSerializationTest, ParsePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 
   HpkeParams params;
   params.set_kem(test_case.kem);
@@ -1109,12 +1097,10 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   EXPECT_THAT(proto_key.public_key().public_key(), Eq(key_pair->public_key));
 }
 
-TEST_P(HpkeProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+TEST_P(HpkeProtoSerializationTest, SerializePrivateKeyWithRegistry) {
   TestCase test_case = GetParam();
-  SerializationRegistry::Builder builder;
-  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistryBuilder(builder),
-              IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterHpkeProtoSerializationWithRegistry(registry), IsOk());
 
   absl::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
                                                   .SetVariant(test_case.variant)

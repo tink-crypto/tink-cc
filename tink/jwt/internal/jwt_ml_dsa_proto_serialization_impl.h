@@ -31,9 +31,9 @@ absl::Status RegisterJwtMlDsaProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for JWT ML-DSA parameters and keys
-// into specified immutable serialization registry `builder`.
-absl::Status RegisterJwtMlDsaProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// into specified serialization `registry`.
+absl::Status RegisterJwtMlDsaProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

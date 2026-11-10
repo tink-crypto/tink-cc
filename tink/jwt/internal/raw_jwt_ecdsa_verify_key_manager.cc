@@ -52,11 +52,10 @@ using JwtEcdsaPublicKeyProto = ::google::crypto::tink::JwtEcdsaPublicKey;
 absl::StatusOr<JwtEcdsaPublicKey> ParseJwtEcdsaPublicKey(
     const JwtEcdsaPublicKeyProto& jwt_ecdsa_public_key) {
   static const internal::SerializationRegistry* registry = []() {
-    internal::SerializationRegistry::Builder builder;
+    auto* registry = new internal::SerializationRegistry();
     ABSL_CHECK_OK(
-        internal::RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(
-            builder));
-    return new internal::SerializationRegistry(std::move(builder).Build());
+        internal::RegisterJwtEcdsaProtoSerializationWithRegistry(*registry));
+    return registry;
   }();
   ABSL_ASSIGN_OR_RETURN(
       internal::ProtoKeySerialization serialization,

@@ -31,9 +31,9 @@ absl::Status RegisterJwtHmacProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for JWT HMAC parameters and keys
-// into specified immutable serialization registry `builder`.
-absl::Status RegisterJwtHmacProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// into specified serialization `registry`.
+absl::Status RegisterJwtHmacProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

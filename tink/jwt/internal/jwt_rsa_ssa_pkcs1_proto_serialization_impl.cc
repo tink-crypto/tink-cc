@@ -449,28 +449,28 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
             InsecureSecretKeyAccess::Get());
       });
 
-  absl::StatusOr<SecretData> dp_data = ParseBigIntToFixedLength(
-      private_key.dp().AsStringView(), p_data.size());
+  absl::StatusOr<SecretData> dp_data =
+      ParseBigIntToFixedLength(private_key.dp().AsStringView(), p_data.size());
   if (!dp_data.ok()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Failed to parse dp: expected length ", p_data.size(), ", got ",
-        private_key.dp().AsStringView().size()));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse dp: expected length ", p_data.size(),
+                     ", got ", private_key.dp().AsStringView().size()));
   }
 
-  absl::StatusOr<SecretData> dq_data = ParseBigIntToFixedLength(
-      private_key.dq().AsStringView(), q_data.size());
+  absl::StatusOr<SecretData> dq_data =
+      ParseBigIntToFixedLength(private_key.dq().AsStringView(), q_data.size());
   if (!dq_data.ok()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Failed to parse dq: expected length ", q_data.size(), ", got ",
-        private_key.dq().AsStringView().size()));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse dq: expected length ", q_data.size(),
+                     ", got ", private_key.dq().AsStringView().size()));
   }
 
-  absl::StatusOr<SecretData> crt_data = ParseBigIntToFixedLength(
-      private_key.crt().AsStringView(), p_data.size());
+  absl::StatusOr<SecretData> crt_data =
+      ParseBigIntToFixedLength(private_key.crt().AsStringView(), p_data.size());
   if (!crt_data.ok()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Failed to parse crt: expected length ", p_data.size(), ", got ",
-        private_key.crt().AsStringView().size()));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Failed to parse crt: expected length ", p_data.size(),
+                     ", got ", private_key.crt().AsStringView().size()));
   }
 
   absl::StatusOr<SecretData> d_data = ParseBigIntToFixedLength(
@@ -699,39 +699,39 @@ absl::Status RegisterJwtRsaSsaPkcs1ProtoSerializationWithMutableRegistry(
       &JwtRsaSsaPkcs1ProtoPrivateKeySerializer());
 }
 
-absl::Status RegisterJwtRsaSsaPkcs1ProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  if (absl::Status status = builder.RegisterParametersParser(
+absl::Status RegisterJwtRsaSsaPkcs1ProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  if (absl::Status status = registry.RegisterParametersParser(
           &JwtRsaSsaPkcs1ProtoParametersParser());
       !status.ok()) {
     return status;
   }
 
-  if (absl::Status status = builder.RegisterParametersSerializer(
+  if (absl::Status status = registry.RegisterParametersSerializer(
           &JwtRsaSsaPkcs1ProtoParametersSerializer());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeyParser(&JwtRsaSsaPkcs1ProtoPublicKeyParser());
+          registry.RegisterKeyParser(&JwtRsaSsaPkcs1ProtoPublicKeyParser());
       !status.ok()) {
     return status;
   }
 
-  if (absl::Status status = builder.RegisterKeySerializer(
+  if (absl::Status status = registry.RegisterKeySerializer(
           &JwtRsaSsaPkcs1ProtoPublicKeySerializer());
       !status.ok()) {
     return status;
   }
 
   if (absl::Status status =
-          builder.RegisterKeyParser(&JwtRsaSsaPkcs1ProtoPrivateKeyParser());
+          registry.RegisterKeyParser(&JwtRsaSsaPkcs1ProtoPrivateKeyParser());
       !status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(
+  return registry.RegisterKeySerializer(
       &JwtRsaSsaPkcs1ProtoPrivateKeySerializer());
 }
 

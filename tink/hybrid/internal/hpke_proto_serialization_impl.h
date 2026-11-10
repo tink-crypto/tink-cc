@@ -31,9 +31,9 @@ absl::Status RegisterHpkeProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for HPKE parameters and keys into
-// specified immutable serialization registry `builder`.
-absl::Status RegisterHpkeProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// specified serialization `registry`.
+absl::Status RegisterHpkeProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

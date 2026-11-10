@@ -31,9 +31,9 @@ absl::Status RegisterJwtEcdsaProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for JWT ECDSA parameters and keys
-// into specified immutable serialization registry `builder`.
-absl::Status RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// into specified serialization `registry`.
+absl::Status RegisterJwtEcdsaProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

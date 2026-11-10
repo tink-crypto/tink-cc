@@ -147,16 +147,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
-     RegisterTwiceSucceedsWithRegistryBuilder) {
+     RegisterTwiceSucceedsWithRegistry) {
   // TODO: b/378091229 - Consider disallowing duplicate registrations.
-  SerializationRegistry::Builder builder;
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
       IsOk());
   ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
       IsOk());
 }
 
@@ -200,14 +198,11 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
               Eq(GetXChaCha20Poly1305Parameters()));
 }
 
-TEST(PrfBasedKeyDerivationProtoSerializationTest,
-     ParseParametersWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
+TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseParametersWithRegistry) {
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
 
@@ -394,13 +389,11 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
-     SerializeParametersWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
+     SerializeParametersWithRegistry) {
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
@@ -480,13 +473,11 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithMutableRegistry) {
   EXPECT_THAT(**key, Eq(*expected_key));
 }
 
-TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
+TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithRegistry) {
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
 
@@ -746,14 +737,11 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
               Eq(kDerivedKeyTypeUrl));
 }
 
-TEST(PrfBasedKeyDerivationProtoSerializationTest,
-     SerializeKeyWithRegistryBuilder) {
-  SerializationRegistry::Builder builder;
+TEST(PrfBasedKeyDerivationProtoSerializationTest, SerializeKeyWithRegistry) {
+  SerializationRegistry registry;
   ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
-          builder),
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
       IsOk());
-  SerializationRegistry registry = std::move(builder).Build();
 
   absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()

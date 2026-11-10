@@ -31,9 +31,9 @@ absl::Status RegisterEciesProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for ECIES parameters and keys into
-// specified immutable serialization registry `builder`.
-absl::Status RegisterEciesProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder);
+// specified serialization `registry`.
+absl::Status RegisterEciesProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 }  // namespace internal
 }  // namespace tink

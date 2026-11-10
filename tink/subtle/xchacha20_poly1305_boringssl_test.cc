@@ -16,9 +16,9 @@
 
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -27,7 +27,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
 #include "tink/aead/internal/wycheproof_aead.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/subtle/subtle_util.h"
@@ -51,11 +55,16 @@ constexpr absl::string_view kMessage = "Some data to encrypt.";
 constexpr absl::string_view kAssociatedData = "Some data to authenticate.";
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::AeadTestVector;
+using ::crypto::tink::internal::CreateXChaCha20Poly1305TestVectors;
+using ::crypto::tink::internal::GetXChaCha20Poly1305TestVector;
 using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
+using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -161,6 +170,96 @@ TEST(XChacha20Poly1305BoringSslTest, FailisOnFipsOnlyMode) {
 
   EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));
+
+  const AeadTestVector& test_vector = GetXChaCha20Poly1305TestVector(
+      XChaCha20Poly1305Parameters::Variant::kTink);
+  EXPECT_THAT(
+      XChacha20Poly1305BoringSsl::New(
+          dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key))
+          .status(),
+      StatusIs(absl::StatusCode::kInternal));
+}
+
+class XChacha20Poly1305BoringSslTestVectorTest
+    : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled()) {
+      GTEST_SKIP() << "Not supported in FIPS-only mode";
+    }
+  }
+};
+
+TEST_P(XChacha20Poly1305BoringSslTestVectorTest, DecryptTestVectors) {
+  const AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      XChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  EXPECT_THAT(
+      (*aead)->Decrypt(test_vector.ciphertext, test_vector.associated_data),
+      IsOkAndHolds(test_vector.plaintext));
+}
+
+TEST_P(XChacha20Poly1305BoringSslTestVectorTest, EncryptDecryptTestVectors) {
+  const AeadTestVector& test_vector = GetParam();
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      XChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  absl::StatusOr<std::string> ciphertext =
+      (*aead)->Encrypt(test_vector.plaintext, test_vector.associated_data);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT(*ciphertext, StartsWith(key.GetOutputPrefix()));
+
+  EXPECT_THAT((*aead)->Decrypt(*ciphertext, test_vector.associated_data),
+              IsOkAndHolds(test_vector.plaintext));
+}
+
+INSTANTIATE_TEST_SUITE_P(XChacha20Poly1305BoringSslTestVectorTests,
+                         XChacha20Poly1305BoringSslTestVectorTest,
+                         ValuesIn(CreateXChaCha20Poly1305TestVectors()));
+
+TEST(XChacha20Poly1305BoringSslTest,
+     DecryptWithKeyFailsWithModifiedCiphertextOrAssociatedData) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const AeadTestVector& test_vector = GetXChaCha20Poly1305TestVector(
+      XChaCha20Poly1305Parameters::Variant::kTink);
+  const XChaCha20Poly1305Key& key =
+      dynamic_cast<const XChaCha20Poly1305Key&>(*test_vector.aead_key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
+      XChacha20Poly1305BoringSsl::New(key);
+  ASSERT_THAT(aead, IsOk());
+
+  for (size_t i = 0; i < test_vector.ciphertext.size(); ++i) {
+    std::string modified_ciphertext = test_vector.ciphertext;
+    modified_ciphertext[i] ^= 0x01;
+    EXPECT_THAT((*aead)
+                    ->Decrypt(modified_ciphertext, test_vector.associated_data)
+                    .status(),
+                Not(IsOk()));
+  }
+
+  EXPECT_THAT((*aead)
+                  ->Decrypt(test_vector.ciphertext, "modified associated data")
+                  .status(),
+              Not(IsOk()));
+
+  for (size_t len = 0; len < test_vector.ciphertext.size(); ++len) {
+    EXPECT_THAT(
+        (*aead)
+            ->Decrypt(absl::string_view(test_vector.ciphertext).substr(0, len),
+                      test_vector.associated_data)
+            .status(),
+        Not(IsOk()));
+  }
 }
 
 class XChacha20Poly1305BoringSslWycheproofTest

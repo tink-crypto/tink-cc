@@ -25,12 +25,27 @@
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/internal/zero_copy_xchacha20_poly1305_boringssl.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
+
+absl::StatusOr<std::unique_ptr<Aead>> XChacha20Poly1305BoringSsl::New(
+    const XChaCha20Poly1305Key& key) {
+  auto status = internal::CheckFipsCompatibility<XChacha20Poly1305BoringSsl>();
+  if (!status.ok()) {
+    return status;
+  }
+  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> aead =
+      internal::ZeroCopyXChacha20Poly1305BoringSsl::New(key);
+  if (!aead.ok()) {
+    return aead.status();
+  }
+  return {absl::WrapUnique(new XChacha20Poly1305BoringSsl(*std::move(aead)))};
+}
 
 absl::StatusOr<std::unique_ptr<Aead>> XChacha20Poly1305BoringSsl::New(
     SecretData key) {

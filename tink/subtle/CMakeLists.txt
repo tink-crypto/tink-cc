@@ -608,6 +608,7 @@ tink_cc_library(
     absl::statusor
     tink::core::aead
     tink::core::secret_data
+    tink::aead::xchacha20_poly1305_key
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_xchacha20_poly1305_boringssl
@@ -1490,7 +1491,11 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     tink::core::aead
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
     tink::aead::internal::wycheproof_aead
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
     tink::config::tink_fips
     tink::internal::ssl_util
     tink::util::secret_data

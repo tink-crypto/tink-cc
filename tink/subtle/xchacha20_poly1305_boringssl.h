@@ -23,6 +23,7 @@
 #include "tink/aead.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -35,9 +36,16 @@ class XChacha20Poly1305BoringSsl
     : public internal::AeadFromZeroCopy /* implements `Aead` */ {
  public:
   // Constructs a new Aead cipher for XChacha20-Poly1305.
+  static absl::StatusOr<std::unique_ptr<Aead>> New(
+      const XChaCha20Poly1305Key& key);
+
+  // Constructs a new Aead cipher for XChacha20-Poly1305.
   // Currently supported key size is 256 bits.
   // Currently supported nonce size is 24 bytes.
   // The tag size is fixed to 16 bytes.
+  [[deprecated(
+      "Use XChacha20Poly1305BoringSsl::New(const XChaCha20Poly1305Key&) "
+      "instead")]]
   static absl::StatusOr<std::unique_ptr<Aead>> New(SecretData key);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =

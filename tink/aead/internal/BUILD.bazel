@@ -409,7 +409,6 @@ cc_test(
     srcs = ["ssl_aead_large_inputs_test.cc"],
     deps = [
         ":ssl_aead",
-        "//tink/internal:ssl_util",
         "//tink/internal:util",
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",

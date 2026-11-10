@@ -333,7 +333,6 @@ tink_cc_test(
     absl::status_matchers
     absl::strings
     absl::span
-    tink::internal::ssl_util
     tink::internal::util
     tink::subtle::subtle_util
     tink::util::secret_data

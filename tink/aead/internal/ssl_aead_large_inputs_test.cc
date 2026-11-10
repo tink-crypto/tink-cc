@@ -27,7 +27,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
@@ -119,31 +118,27 @@ TEST_P(SslOneShotAeadLargeInputsTest, EncryptDecryptLargeInput) {
 }
 
 std::vector<TestParams> GetTestParams() {
-  std::vector<TestParams> params = {
-      {/*test_name=*/"AesGcm256", /*cipher=*/"aes_gcm",
-       /*tag_size=*/kAesGcmTagSizeInBytes,
-       /*iv_hex=*/kAesGcmIvHex,
-       /*key_hex=*/k256Key},
-      {/*test_name=*/"AesGcm128", /*cipher=*/"aes_gcm",
-       /*tag_size=*/kAesGcmTagSizeInBytes,
-       /*iv_hex=*/kAesGcmIvHex,
-       /*key_hex=*/k128Key}};
-  if (IsBoringSsl()) {
-    params.push_back({/*test_name=*/"AesGcmSiv256", /*cipher=*/"aes_gcm_siv",
-                      /*tag_size=*/kAesGcmTagSizeInBytes,
-                      /*iv_hex=*/kAesGcmIvHex,
-                      /*key_hex=*/k256Key});
-    params.push_back({/*test_name=*/"AesGcmSiv128", /*cipher=*/"aes_gcm_siv",
-                      /*tag_size=*/kAesGcmTagSizeInBytes,
-                      /*iv_hex=*/kAesGcmIvHex,
-                      /*key_hex=*/k128Key});
-    params.push_back({/*test_name=*/"Xchacha20Poly1305",
-                      /*cipher=*/"xchacha20_poly1305",
-                      /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
-                      /*iv_hex=*/kXchacha20Poly1305IvHex,
-                      /*key_hex=*/k256Key});
-  }
-  return params;
+  return {{/*test_name=*/"AesGcm256", /*cipher=*/"aes_gcm",
+           /*tag_size=*/kAesGcmTagSizeInBytes,
+           /*iv_hex=*/kAesGcmIvHex,
+           /*key_hex=*/k256Key},
+          {/*test_name=*/"AesGcm128", /*cipher=*/"aes_gcm",
+           /*tag_size=*/kAesGcmTagSizeInBytes,
+           /*iv_hex=*/kAesGcmIvHex,
+           /*key_hex=*/k128Key},
+          {/*test_name=*/"AesGcmSiv256", /*cipher=*/"aes_gcm_siv",
+           /*tag_size=*/kAesGcmTagSizeInBytes,
+           /*iv_hex=*/kAesGcmIvHex,
+           /*key_hex=*/k256Key},
+          {/*test_name=*/"AesGcmSiv128", /*cipher=*/"aes_gcm_siv",
+           /*tag_size=*/kAesGcmTagSizeInBytes,
+           /*iv_hex=*/kAesGcmIvHex,
+           /*key_hex=*/k128Key},
+          {/*test_name=*/"Xchacha20Poly1305",
+           /*cipher=*/"xchacha20_poly1305",
+           /*tag_size=*/kXchacha20Poly1305TagSizeInBytes,
+           /*iv_hex=*/kXchacha20Poly1305IvHex,
+           /*key_hex=*/k256Key}};
 }
 
 INSTANTIATE_TEST_SUITE_P(

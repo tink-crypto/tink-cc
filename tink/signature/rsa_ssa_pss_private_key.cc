@@ -23,7 +23,6 @@
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/internal/rsa_util.h"
 #include "tink/restricted_data.h"
 #include "openssl/rsa.h"

@@ -366,3 +366,71 @@ tink_cc_test(
     tink::jwt::verified_jwt
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
 )
+
+tink_cc_library(
+  NAME create_jwt_ml_dsa_public_key_sign
+  SRCS
+    create_jwt_ml_dsa_public_key_sign.cc
+    create_jwt_ml_dsa_public_key_sign.h
+  DEPS
+    absl::statusor
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::internal::jwt_ml_dsa_signer
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_jwt_ml_dsa_public_key_sign_test
+  SRCS
+    create_jwt_ml_dsa_public_key_sign_test.cc
+  DEPS
+    tink::jwt::subtle::create_jwt_ml_dsa_key
+    tink::jwt::subtle::create_jwt_ml_dsa_public_key_sign
+    tink::jwt::subtle::create_jwt_ml_dsa_public_key_verify
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::partial_key_access
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+)
+
+tink_cc_library(
+  NAME create_jwt_ml_dsa_public_key_verify
+  SRCS
+    create_jwt_ml_dsa_public_key_verify.cc
+    create_jwt_ml_dsa_public_key_verify.h
+  DEPS
+    absl::statusor
+    tink::jwt::jwt_ml_dsa_public_key
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::internal::jwt_ml_dsa_verifier
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_jwt_ml_dsa_public_key_verify_test
+  SRCS
+    create_jwt_ml_dsa_public_key_verify_test.cc
+  DEPS
+    tink::jwt::subtle::create_jwt_ml_dsa_key
+    tink::jwt::subtle::create_jwt_ml_dsa_public_key_sign
+    tink::jwt::subtle::create_jwt_ml_dsa_public_key_verify
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::jwt::verified_jwt
+)

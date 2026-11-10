@@ -29,23 +29,19 @@ IF EXIST %KOKORO_ARTIFACTS_DIR%\git\tink_cc (
 IF "%TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET%"=="" (
   SET CACHE_FLAGS=
 ) ELSE (
-  SET CACHE_FLAGS=--remote_cache=https://storage.googleapis.com/%TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET%/bazel/windows --google_credentials=%TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY%
+  SET CACHE_FLAGS=--remote_cache=https://storage.googleapis.com/%TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET%/bazel/windows --google_credentials=%TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY% --remote_download_minimal
 )
 
 CD !WORKSPACE_DIR!
 if %errorlevel% neq 0 EXIT /B 1
 
-ECHO Build started at %TIME%
+ECHO Build and test started at %TIME%
 @REM See https://github.com/protocolbuffers/protobuf/issues/12947 and
 @REM  https://bazel.build/configure/windows#long-path-issues for why
 @REM --output_base=C:\O is needed.
-bazel --output_base=C:\O build %CACHE_FLAGS% --define=protobuf_allow_msvc=true -- ...
+@REM --nobuild_tests_only ensures all non-test targets in '...' are built too.
+bazel --output_base=C:\O test --nobuild_tests_only %CACHE_FLAGS% --strategy=TestRunner=standalone --test_output=errors --define=protobuf_allow_msvc=true -- ...
 IF %errorlevel% neq 0 EXIT /B 1
-ECHO Build completed at %TIME%
-
-ECHO Test started at %TIME%
-bazel --output_base=C:\O test %CACHE_FLAGS% --strategy=TestRunner=standalone --test_output=errors --define=protobuf_allow_msvc=true -- ...
-IF %errorlevel% neq 0 EXIT /B 1
-ECHO Test completed at %TIME%
+ECHO Build and test completed at %TIME%
 
 EXIT /B 0

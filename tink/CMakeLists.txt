@@ -980,15 +980,11 @@ tink_cc_test(
   DEPS
     tink::core::aead
     tink::core::annotations
-    tink::core::key_type_manager
-    tink::core::template_util
-    tink::core::input_stream
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
-    tink::core::mac
     tink::core::partial_key_access
     tink::core::primitive_wrapper
     tink::core::registry
@@ -1001,15 +997,8 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    tink::aead::aes_gcm_parameters
-    tink::aead::aes_gcm_siv_key
-    tink::aead::aes_gcm_siv_key_manager
-    tink::aead::aes_gcm_siv_parameters
-    tink::aead::xchacha20_poly1305_key
-    tink::aead::xchacha20_poly1305_key_manager
-    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::aead_wrapper
     tink::config::global_registry
-    tink::config::tink_config
     tink::internal::key_gen_configuration_impl
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters
@@ -1017,14 +1006,12 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
-    tink::mac::aes_cmac_key
-    tink::mac::aes_cmac_parameters
-    tink::mac::mac_key_templates
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::subtle::random
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::aes_cmac_cc_proto
-    tink::proto::aes_gcm_cc_proto
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )
 

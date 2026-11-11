@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "tink/keyset_manager.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -22,12 +23,12 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "tink/aead/aead_config.h"
-#include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/internal/testing/test_only_key.h"
+#include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/keyset_handle.h"
+#include "tink/registry.h"
 #include "tink/util/test_keyset_handle.h"
 #include "tink/util/test_matchers.h"
-#include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -35,7 +36,9 @@ namespace tink {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::google::crypto::tink::AesGcmKeyFormat;
+using ::crypto::tink::internal::kTestOnlyKeyTypeUrl;
+using ::crypto::tink::internal::TestOnlyKeyTemplate;
+using ::crypto::tink::internal::TestOnlyKeyTypeManager;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
@@ -44,19 +47,15 @@ using ::google::crypto::tink::OutputPrefixType;
 class KeysetManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    auto status = AeadConfig::Register();
+    auto status = Registry::RegisterKeyTypeManager(
+        std::make_unique<TestOnlyKeyTypeManager>(), /*new_key_allowed=*/true);
     ASSERT_THAT(status, IsOk());
   }
   void TearDown() override {}
 };
 
 TEST_F(KeysetManagerTest, testBasicOperations) {
-  AesGcmKeyFormat key_format;
-  key_format.set_key_size(16);
-  KeyTemplate key_template;
-  key_template.set_type_url(AesGcmKeyManager().get_key_type());
-  key_template.set_output_prefix_type(OutputPrefixType::TINK);
-  key_template.set_value(key_format.SerializeAsString());
+  KeyTemplate key_template = TestOnlyKeyTemplate(OutputPrefixType::TINK);
 
   // Create a keyset manager with a single key.
   auto new_result = KeysetManager::New(key_template);
@@ -72,8 +71,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
   EXPECT_EQ(key_id_0, keyset.primary_key_id());
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(0).status());
   EXPECT_EQ(OutputPrefixType::TINK, keyset.key(0).output_prefix_type());
-  EXPECT_EQ(AesGcmKeyManager().get_key_type(),
-            keyset.key(0).key_data().type_url());
+  EXPECT_EQ(kTestOnlyKeyTypeUrl, keyset.key(0).key_data().type_url());
   EXPECT_EQ(KeyData::SYMMETRIC, keyset.key(0).key_data().key_material_type());
 
   // Add another key.
@@ -89,8 +87,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
                keyset.key(1).key_data().value());
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(1).status());
   EXPECT_EQ(OutputPrefixType::RAW, keyset.key(1).output_prefix_type());
-  EXPECT_EQ(AesGcmKeyManager().get_key_type(),
-            keyset.key(1).key_data().type_url());
+  EXPECT_EQ(kTestOnlyKeyTypeUrl, keyset.key(1).key_data().type_url());
   EXPECT_EQ(KeyData::SYMMETRIC, keyset.key(1).key_data().key_material_type());
 
   // And another one, via rotation.
@@ -108,8 +105,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
                keyset.key(2).key_data().value());
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(2).status());
   EXPECT_EQ(OutputPrefixType::LEGACY, keyset.key(2).output_prefix_type());
-  EXPECT_EQ(AesGcmKeyManager().get_key_type(),
-            keyset.key(2).key_data().type_url());
+  EXPECT_EQ(kTestOnlyKeyTypeUrl, keyset.key(2).key_data().type_url());
   EXPECT_EQ(KeyData::SYMMETRIC, keyset.key(2).key_data().key_material_type());
 
   // Change the primary.

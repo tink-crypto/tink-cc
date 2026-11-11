@@ -1049,14 +1049,14 @@ tink_cc_test(
   DEPS
     tink::core::keyset_handle
     tink::core::keyset_manager
+    tink::core::registry
     gmock
     absl::status
     absl::status_matchers
-    tink::aead::aead_config
-    tink::aead::aes_gcm_key_manager
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::util::test_keyset_handle
     tink::util::test_matchers
-    tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto
 )
 

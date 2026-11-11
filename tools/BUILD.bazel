@@ -25,3 +25,26 @@ sh_test(
         "//conditions:default": [],
     }),
 )
+
+sh_binary(
+    name = "check_rtti_type_ids",
+    srcs = ["check_rtti_type_ids.sh"],
+)
+
+sh_test(
+    name = "check_rtti_type_ids_test",
+    size = "small",
+    srcs = ["check_rtti_type_ids_test.sh"],
+    args = [
+        "$(rlocationpath :check_rtti_type_ids.sh)",
+        "$(rlocationpath //kokoro/testutils:test_utils)",
+    ],
+    data = [
+        ":check_rtti_type_ids.sh",
+        "//kokoro/testutils:test_utils",
+    ],
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)

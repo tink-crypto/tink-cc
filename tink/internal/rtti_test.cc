@@ -35,6 +35,10 @@ using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::Not;
 
+// Alias macros so check_rtti_type_ids.sh ignores unit-test fake classes.
+#define TEST_RTTI_SET_TYPE_ID TINK_RTTI_SET_TYPE_ID
+#define TEST_RTTI_COMPUTE_TYPE_ID TINK_RTTI_COMPUTE_TYPE_ID
+
 constexpr uint64_t kFakeParametersTypeId = 1;
 constexpr uint64_t kFakeAeadParametersTypeId = 2;
 constexpr uint64_t kFakeAesGcmParametersTypeId = 3;
@@ -59,17 +63,17 @@ class FakeParameters {
   virtual ~FakeParameters() = default;
 
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeParametersTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeParametersTypeId);
 };
 
 class FakeAeadParameters : public FakeParameters {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeAeadParametersTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeAeadParametersTypeId);
 };
 
 class FakeAesGcmParameters : public FakeAeadParameters {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeAesGcmParametersTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeAesGcmParametersTypeId);
 };
 
 class FakeKey {
@@ -77,42 +81,42 @@ class FakeKey {
   virtual ~FakeKey() = default;
 
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeKeyTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeKeyTypeId);
 };
 
 class FakePrivateKey : public FakeKey {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakePrivateKeyTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakePrivateKeyTypeId);
 };
 
 class FakeSignaturePublicKey : public FakeKey {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeSignaturePublicKeyTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeSignaturePublicKeyTypeId);
 };
 
 class FakeSignaturePrivateKey : public FakePrivateKey {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeSignaturePrivateKeyTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeSignaturePrivateKeyTypeId);
 };
 
 class FakeEcdsaPublicKey : public FakeSignaturePublicKey {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeEcdsaPublicKeyTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeEcdsaPublicKeyTypeId);
 };
 
 class FakeEcdsaPrivateKey : public FakeSignaturePrivateKey {
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeEcdsaPrivateKeyTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeEcdsaPrivateKeyTypeId);
 };
 
 struct TagA {
-  TINK_RTTI_SET_TYPE_ID(kTagATypeId);
+  TEST_RTTI_SET_TYPE_ID(kTagATypeId);
 };
 struct TagB {
-  TINK_RTTI_SET_TYPE_ID(kTagBTypeId);
+  TEST_RTTI_SET_TYPE_ID(kTagBTypeId);
 };
 struct TagC {
-  TINK_RTTI_SET_TYPE_ID(kTagCTypeId);
+  TEST_RTTI_SET_TYPE_ID(kTagCTypeId);
 };
 
 class FakeKeyManagerBase {
@@ -120,13 +124,13 @@ class FakeKeyManagerBase {
   virtual ~FakeKeyManagerBase() = default;
 
  private:
-  TINK_RTTI_SET_TYPE_ID(kFakeKeyManagerBaseTypeId);
+  TEST_RTTI_SET_TYPE_ID(kFakeKeyManagerBaseTypeId);
 };
 
 template <typename P>
 class FakeKeyManager : public FakeKeyManagerBase {
  private:
-  TINK_RTTI_COMPUTE_TYPE_ID(kFakeKeyManagerTypeId, P);
+  TEST_RTTI_COMPUTE_TYPE_ID(kFakeKeyManagerTypeId, P);
 };
 
 template <typename InputPrimitive, typename OutputPrimitive>
@@ -135,18 +139,18 @@ class FakePrimitiveWrapper {
   virtual ~FakePrimitiveWrapper() = default;
 
  private:
-  TINK_RTTI_COMPUTE_TYPE_ID(kFakePrimitiveWrapperTypeId, InputPrimitive,
+  TEST_RTTI_COMPUTE_TYPE_ID(kFakePrimitiveWrapperTypeId, InputPrimitive,
                             OutputPrimitive);
 };
 
 class ConcreteWrapperAB : public FakePrimitiveWrapper<TagA, TagB> {
  private:
-  TINK_RTTI_SET_TYPE_ID(kConcreteWrapperABTypeId);
+  TEST_RTTI_SET_TYPE_ID(kConcreteWrapperABTypeId);
 };
 
 class OtherConcreteWrapperAB : public FakePrimitiveWrapper<TagA, TagB> {
  private:
-  TINK_RTTI_SET_TYPE_ID(kOtherConcreteWrapperABTypeId);
+  TEST_RTTI_SET_TYPE_ID(kOtherConcreteWrapperABTypeId);
 };
 
 template <typename P, typename Q, typename R>
@@ -155,7 +159,7 @@ class FakeTripleTemplate {
   virtual ~FakeTripleTemplate() = default;
 
  private:
-  TINK_RTTI_COMPUTE_TYPE_ID(kFakeTripleTemplateTypeId, P, Q, R);
+  TEST_RTTI_COMPUTE_TYPE_ID(kFakeTripleTemplateTypeId, P, Q, R);
 };
 
 TEST(RttiTest, GetTypeIndexStatic) {

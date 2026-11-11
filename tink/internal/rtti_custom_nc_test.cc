@@ -30,17 +30,21 @@ namespace {
 // Valid baseline types used across negative test cases
 // -----------------------------------------------------------------------------
 
+// Alias macros so check_rtti_type_ids.sh ignores negative-compilation test IDs.
+#define TEST_RTTI_SET_TYPE_ID TINK_RTTI_SET_TYPE_ID
+#define TEST_RTTI_COMPUTE_TYPE_ID TINK_RTTI_COMPUTE_TYPE_ID
+
 struct Tag1 {
-  TINK_RTTI_SET_TYPE_ID(1);
+  TEST_RTTI_SET_TYPE_ID(1);
 };
 struct Tag2 {
-  TINK_RTTI_SET_TYPE_ID(2);
+  TEST_RTTI_SET_TYPE_ID(2);
 };
 struct Tag3 {
-  TINK_RTTI_SET_TYPE_ID(3);
+  TEST_RTTI_SET_TYPE_ID(3);
 };
 struct Tag4 {
-  TINK_RTTI_SET_TYPE_ID(4);
+  TEST_RTTI_SET_TYPE_ID(4);
 };
 
 class ValidBase {
@@ -48,7 +52,7 @@ class ValidBase {
   virtual ~ValidBase() = default;
 
  private:
-  TINK_RTTI_SET_TYPE_ID(10);
+  TEST_RTTI_SET_TYPE_ID(10);
 };
 
 template <typename T>
@@ -57,7 +61,7 @@ class ValidTemplate {
   virtual ~ValidTemplate() = default;
 
  private:
-  TINK_RTTI_COMPUTE_TYPE_ID(15, T);
+  TEST_RTTI_COMPUTE_TYPE_ID(15, T);
 };
 
 // -----------------------------------------------------------------------------
@@ -67,21 +71,21 @@ class ValidTemplate {
 namespace test_zero_type_id {
 struct ZeroId {
   // expected-error@rtti_manual.h:* {{16-bit type ID must be in [1, 65535]}}
-  TINK_RTTI_SET_TYPE_ID(0);
+  TEST_RTTI_SET_TYPE_ID(0);
 };
 }  // namespace test_zero_type_id
 
 namespace test_negative_type_id {
 struct NegativeId {
   // expected-error@rtti_manual.h:* {{16-bit type ID must be in [1, 65535]}}
-  TINK_RTTI_SET_TYPE_ID(-7);
+  TEST_RTTI_SET_TYPE_ID(-7);
 };
 }  // namespace test_negative_type_id
 
 namespace test_overflow_16bit_type_id {
 struct TooLargeId {
   // expected-error@rtti_manual.h:* {{16-bit type ID must be in [1, 65535]}}
-  TINK_RTTI_SET_TYPE_ID(65536);
+  TEST_RTTI_SET_TYPE_ID(65536);
 };
 }  // namespace test_overflow_16bit_type_id
 
@@ -94,7 +98,7 @@ struct UnannotatedParam {};
 template <typename T>
 struct BadTemplate {
   // expected-error-re@rtti_manual.h:* {{Template parameter{{.*}}SET_TYPE_ID}}
-  TINK_RTTI_COMPUTE_TYPE_ID(110, T);
+  TEST_RTTI_COMPUTE_TYPE_ID(110, T);
 };
 [[maybe_unused]] BadTemplate<UnannotatedParam> instance;
 }  // namespace test_compute_type_id_unannotated_param
@@ -103,7 +107,7 @@ namespace test_compute_type_id_nested_computed_param {
 template <typename T>
 struct OuterTemplate {
   // expected-error@rtti_manual.h:* {{must have a 16-bit type ID}}
-  TINK_RTTI_COMPUTE_TYPE_ID(111, T);
+  TEST_RTTI_COMPUTE_TYPE_ID(111, T);
 };
 [[maybe_unused]] OuterTemplate<ValidTemplate<Tag1>> instance;
 }  // namespace test_compute_type_id_nested_computed_param
@@ -112,7 +116,7 @@ namespace test_compute_type_id_too_many_params {
 template <typename A, typename B, typename C, typename D>
 struct FourParamTemplate {
   // expected-error@rtti_manual.h:* {{supports 1 to 3 template parameters}}
-  TINK_RTTI_COMPUTE_TYPE_ID(112, A, B, C, D);
+  TEST_RTTI_COMPUTE_TYPE_ID(112, A, B, C, D);
 };
 [[maybe_unused]] FourParamTemplate<Tag1, Tag2, Tag3, Tag4> instance;
 }  // namespace test_compute_type_id_too_many_params
@@ -141,7 +145,7 @@ struct UnannotatedStruct {};
 
 class ValidDerived : public ValidBase {
  private:
-  TINK_RTTI_SET_TYPE_ID(11);
+  TEST_RTTI_SET_TYPE_ID(11);
 };
 
 [[maybe_unused]] void TestCompilerRttiIsDisabled(const ValidBase* base_ptr) {

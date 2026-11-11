@@ -81,11 +81,15 @@ if [[ -n "${BAZEL_REMOTE_CACHE_NAME:-}" ]]; then
 fi
 readonly CACHE_FLAGS
 
+echo "---------- CHECKING RTTI TYPE IDS"
+./tools/check_rtti_type_ids.sh tink
+
 # More targets will be added as -fno-rtti support expands, eventually replacing
 # this list with '...'.
 readonly TARGETS=(
   "//tink/internal:rtti"
   "//tink/internal:rtti_test"
+  "//tools:check_rtti_type_ids_test"
 )
 
 # --nobuild_tests_only ensures non-test targets in TARGETS are built too.

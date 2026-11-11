@@ -22,12 +22,9 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "openssl/aes.h"
-#include "openssl/evp.h"
-
-#ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/cipher.h"
+#include "openssl/evp.h"
 #include "openssl/nid.h"
-#endif
 
 namespace crypto {
 namespace tink {

@@ -24,6 +24,7 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -32,30 +33,27 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "openssl/base.h"
+#include "openssl/bn.h"
+#include "openssl/ec.h"
+#include "openssl/ec_key.h"
+#include "openssl/ecdsa.h"
+#include "openssl/evp.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/testing/ec_test_vectors.h"
-#include "tink/secret_data.h"
-#include "tink/util/test_util.h"
-#ifdef OPENSSL_IS_BORINGSSL
-#include "openssl/base.h"
-#include "openssl/ec_key.h"
-#endif
-#include "absl/log/absl_check.h"
-#include "openssl/bn.h"
-#include "openssl/ec.h"
-#include "openssl/ecdsa.h"
-#include "openssl/evp.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -696,7 +694,7 @@ TEST_P(EcUtilWycheproofTest, EcSignatureIeeeToDer) {
       SslUniquePtr<ECDSA_SIG> ecdsa_sig(d2i_ECDSA_SIG(
           /*out=*/nullptr, &der_sig_data_ptr, der_encoded->size()));
       ASSERT_THAT(ecdsa_sig, Not(IsNull()));
-      // Owned by OpenSSL/BoringSSL.
+      // Owned by BoringSSL.
       const BIGNUM* r;
       const BIGNUM* s;
       ECDSA_SIG_get0(ecdsa_sig.get(), &r, &s);

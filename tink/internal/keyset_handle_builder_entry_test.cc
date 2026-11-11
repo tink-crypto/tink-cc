@@ -27,31 +27,29 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
-#include "tink/aead/xchacha20_poly1305_key.h"
-#include "tink/aead/xchacha20_poly1305_key_manager.h"
-#include "tink/aead/xchacha20_poly1305_parameters.h"
-#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/config/global_registry.h"
-#include "tink/config/tink_config.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/legacy_proto_parameters.h"
+#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/testing/test_only_key.h"
+#include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
-#include "tink/mac/aes_cmac_key.h"
-#include "tink/mac/aes_cmac_parameters.h"
-#include "tink/mac/mac_key_templates.h"
+#include "tink/parameters.h"
 #include "tink/partial_key_access.h"
+#include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/test_matchers.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -67,6 +65,7 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::TestOnlyKeyFormat;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
@@ -74,23 +73,43 @@ using ::testing::Test;
 
 absl::StatusOr<LegacyProtoParameters> CreateLegacyProtoParameters() {
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(MacKeyTemplates::AesCmac());
+      ProtoParametersSerialization::Create(TestOnlyKeyTemplate());
   if (!serialization.ok()) return serialization.status();
 
   return LegacyProtoParameters(*serialization);
 }
 
-// Creates an XChaCha20Poly1305Key from the given parameters.
-absl::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
-CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
-                           absl::optional<int> id_requirement) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      params.GetVariant(), secret, id_requirement, GetPartialKeyAccess());
-  if (!key.ok()) {
-    return key.status();
+// Valid parameters, which are serialized to a key format that the
+// `TestOnlyKeyTypeManager` rejects (with a key size of 0).
+class ProhibitedTestOnlyParameters : public Parameters {
+ public:
+  bool HasIdRequirement() const override { return true; }
+
+  bool operator==(const Parameters& other) const override {
+    return dynamic_cast<const ProhibitedTestOnlyParameters*>(&other) != nullptr;
   }
-  return std::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
+
+  std::unique_ptr<Parameters> Clone() const override {
+    return std::make_unique<ProhibitedTestOnlyParameters>(*this);
+  }
+};
+
+absl::StatusOr<ProtoParametersSerialization> SerializeProhibitedParameters(
+    ProhibitedTestOnlyParameters parameters) {
+  TestOnlyKeyFormat key_format;
+  key_format.set_key_size(0);
+  return ProtoParametersSerialization::Create(kTestOnlyKeyTypeUrl,
+                                              OutputPrefixTypeTP::kTink,
+                                              key_format.SerializeAsString());
+}
+
+absl::Status RegisterProhibitedParametersSerializer() {
+  static auto* serializer =
+      new ParametersSerializerImpl<ProhibitedTestOnlyParameters,
+                                   ProtoParametersSerialization>(
+          kTestOnlyKeyTypeUrl, SerializeProhibitedParameters);
+  return MutableSerializationRegistry::GlobalInstance()
+      .RegisterParametersSerializer(serializer);
 }
 
 TEST(KeysetHandleBuilderEntryTest, Status) {
@@ -149,7 +168,13 @@ TEST(KeysetHandleBuilderEntryTest, Primary) {
 
 class CreateKeysetKeyTestGlobalRegistry : public Test {
  protected:
-  void SetUp() override { ASSERT_THAT(TinkConfig::Register(), IsOk()); }
+  void SetUp() override {
+    ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                    std::make_unique<TestOnlyKeyTypeManager>(),
+                    /*new_key_allowed=*/true),
+                IsOk());
+    ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  }
 };
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromParameters) {
@@ -194,28 +219,27 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
 
 TEST(CreateKeysetKeyCustomConfigTest,
      CreateKeysetKeyFromParametersCustomConfig) {
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
 
-  absl::StatusOr<XChaCha20Poly1305Parameters> params =
-      XChaCha20Poly1305Parameters::Create(
-          XChaCha20Poly1305Parameters::Variant::kTink);
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
   ParametersEntry entry =
-      ParametersEntry(std::make_unique<XChaCha20Poly1305Parameters>(*params));
+      ParametersEntry(std::make_unique<TestOnlyParameters>(*params));
   entry.SetStatus(KeyStatus::kEnabled);
   entry.SetFixedId(123);
 
   KeyGenConfiguration key_creator_config;
-  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
-                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
-                                               key_creator_config),
-              IsOk());
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+          CreateTestOnlyKey, key_creator_config),
+      IsOk());
 
   KeyGenConfiguration key_manager_config;
   ASSERT_THAT(
       internal::KeyGenConfigurationImpl::AddKeyTypeManager(
-          std::make_unique<XChaCha20Poly1305KeyManager>(), key_manager_config),
+          std::make_unique<TestOnlyKeyTypeManager>(), key_manager_config),
       IsOk());
 
   absl::StatusOr<util::SecretProto<Keyset::Key>> key_from_creator_fn =
@@ -226,9 +250,8 @@ TEST(CreateKeysetKeyCustomConfigTest,
   EXPECT_THAT((*key_from_creator_fn)->key_id(), Eq(123));
   EXPECT_THAT((*key_from_creator_fn)->output_prefix_type(),
               Eq(OutputPrefixType::TINK));
-  EXPECT_THAT(
-      (*key_from_creator_fn)->key_data().type_url(),
-      Eq("type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key"));
+  EXPECT_THAT((*key_from_creator_fn)->key_data().type_url(),
+              Eq(kTestOnlyKeyTypeUrl));
 
   // The keyset key created from the key manager should be the same as the one
   // created from the key creator.
@@ -324,16 +347,14 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
 }
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetFromNonLegacyParameters) {
-  absl::StatusOr<AesCmacParameters> aes_cmac_parameters =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/10,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(aes_cmac_parameters, IsOk());
+  absl::StatusOr<TestOnlyParameters> parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
-              *aes_cmac_parameters, KeyStatus::kEnabled, /*is_primary=*/true,
+              *parameters, KeyStatus::kEnabled, /*is_primary=*/true,
               /*id=*/123))
           .Build();
   ASSERT_THAT(handle, IsOk());
@@ -341,35 +362,29 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetFromNonLegacyParameters) {
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry,
        CreateKeysetWithAllowedParametersProhibitedByKeyManager) {
-  absl::StatusOr<AesCmacParameters> aes_cmac_parameters =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
-                                /*cryptographic_tag_size_in_bytes=*/10,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(aes_cmac_parameters, IsOk());
+  ASSERT_THAT(RegisterProhibitedParametersSerializer(), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
-              *aes_cmac_parameters, KeyStatus::kEnabled, /*is_primary=*/true,
-              /*id=*/123))
+              ProhibitedTestOnlyParameters(), KeyStatus::kEnabled,
+              /*is_primary=*/true, /*id=*/123))
           .Build();
   ASSERT_THAT(handle.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetFromNonLegacyKey) {
-  absl::StatusOr<AesCmacParameters> aes_cmac_parameters =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/10,
-                                AesCmacParameters::Variant::kTink);
-  ASSERT_THAT(aes_cmac_parameters, IsOk());
-  absl::StatusOr<AesCmacKey> aes_cmac_key = AesCmacKey::Create(
-      *aes_cmac_parameters, RestrictedData(32), 123, GetPartialKeyAccess());
-  ASSERT_THAT(aes_cmac_key.status(), IsOk());
+  absl::StatusOr<TestOnlyParameters> parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<TestOnlySymmetricKey> key = TestOnlySymmetricKey::Create(
+      *parameters, RestrictedData(32), 123, GetPartialKeyAccess());
+  ASSERT_THAT(key.status(), IsOk());
 
   absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
-              *aes_cmac_key, KeyStatus::kEnabled, /*is_primary=*/true))
+              *key, KeyStatus::kEnabled, /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
 }

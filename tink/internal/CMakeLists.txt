@@ -923,6 +923,8 @@ tink_cc_test(
     tink::internal::keyset_handle_builder_entry
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
@@ -931,26 +933,22 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
+    tink::core::parameters
     tink::core::partial_key_access
+    tink::core::registry
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::aead::xchacha20_poly1305_key
-    tink::aead::xchacha20_poly1305_key_manager
-    tink::aead::xchacha20_poly1305_parameters
-    tink::aead::xchacha20_poly1305_proto_serialization
     tink::config::global_registry
-    tink::config::tink_config
-    tink::mac::aes_cmac_key
-    tink::mac::aes_cmac_parameters
-    tink::mac::mac_key_templates
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::util::secret_proto
     tink::util::test_matchers
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )
 

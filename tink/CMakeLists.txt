@@ -1220,29 +1220,30 @@ tink_cc_test(
   SRCS
     core/proto_keyset_format_test.cc
   DEPS
-    tink::core::aead
     tink::core::binary_keyset_reader
     tink::core::binary_keyset_writer
     tink::core::insecure_secret_key_access_testonly
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
     tink::core::keyset_reader
-    tink::core::mac
+    tink::core::partial_key_access
     tink::core::proto_keyset_format
+    tink::core::restricted_data
     tink::core::secret_data
     gmock
     absl::memory
     absl::status_matchers
     absl::statusor
-    tink::aead::aes_gcm_parameters
-    tink::config::global_registry
-    tink::config::tink_config
-    tink::mac::aes_cmac_parameters
-    tink::signature::ed25519_parameters
+    absl::string_view
+    tink::internal::key_gen_configuration_impl
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
+    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

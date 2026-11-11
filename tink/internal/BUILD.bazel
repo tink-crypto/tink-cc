@@ -1277,6 +1277,7 @@ cc_test(
     deps = [
         ":keyset_wrapper",
         ":keyset_wrapper_store",
+        ":primitive_set",
         ":registry_impl",
         "//proto:aes_gcm_cc_proto",
         "//proto:tink_cc_proto",
@@ -1286,7 +1287,6 @@ cc_test(
         "//tink:key",
         "//tink:mac",
         "//tink:primitive_wrapper",
-        "//tink/mac:mac_wrapper",
         "//tink/subtle:random",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",

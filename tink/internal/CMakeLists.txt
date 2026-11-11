@@ -1268,6 +1268,7 @@ tink_cc_test(
   DEPS
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
+    tink::internal::primitive_set
     tink::internal::registry_impl
     gmock
     absl::status
@@ -1279,7 +1280,6 @@ tink_cc_test(
     tink::core::key
     tink::core::mac
     tink::core::primitive_wrapper
-    tink::mac::mac_wrapper
     tink::subtle::random
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto

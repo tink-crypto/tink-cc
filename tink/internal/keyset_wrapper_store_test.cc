@@ -32,10 +32,10 @@
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/internal/keyset_wrapper.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/key.h"
 #include "tink/mac.h"
-#include "tink/mac/mac_wrapper.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/subtle/random.h"
 #include "tink/util/test_util.h"
@@ -137,6 +137,15 @@ class FakePrimitiveWrapper2
   }
 };
 
+// Wrapper for a primitive other than `FakePrimitive`.
+class FakeMacWrapper : public PrimitiveWrapper<Mac, Mac> {
+ public:
+  absl::StatusOr<std::unique_ptr<Mac>> Wrap(
+      std::unique_ptr<PrimitiveSet<Mac>> primitive_set) const override {
+    return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented.");
+  }
+};
+
 std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
 FakePrimitiveGetterFromKey() {
   return [](const Key& key) {
@@ -233,10 +242,10 @@ TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
         return absl::Status(absl::StatusCode::kUnimplemented,
                             "Not implemented.");
       };
-  EXPECT_THAT(
-      (store.Add<Mac, Mac>(std::make_unique<MacWrapper>(), primitive_getter_mac,
-                           primitive_getter_mac_from_key)),
-      IsOk());
+  EXPECT_THAT((store.Add<Mac, Mac>(std::make_unique<FakeMacWrapper>(),
+                                   primitive_getter_mac,
+                                   primitive_getter_mac_from_key)),
+              IsOk());
 }
 
 TEST(KeysetWrapperStoreTest, AddSameWrapperTwiceSucceeds) {

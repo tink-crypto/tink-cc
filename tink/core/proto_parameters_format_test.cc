@@ -25,12 +25,11 @@
 #include "absl/status/status_matchers.h"
 #include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/mac/aes_cmac_parameters.h"
-#include "tink/mac/aes_cmac_proto_serialization.h"
+#include "tink/internal/testing/test_only_key.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "proto/aes_cmac.pb.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -39,9 +38,12 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::google::crypto::tink::AesCmacKeyFormat;
+using ::crypto::tink::internal::kTestOnlyKeySizeInBytes;
+using ::crypto::tink::internal::kTestOnlyKeyTypeUrl;
+using ::crypto::tink::internal::TestOnlyParameters;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::TestOnlyKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -50,15 +52,13 @@ using ::testing::Not;
 class ProtoParametersFormatTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_THAT(RegisterAesCmacProtoSerialization(), IsOk());
+    ASSERT_THAT(internal::RegisterTestOnlyProtoSerialization(), IsOk());
   }
 };
 
-TEST_F(ProtoParametersFormatTest, SerializeAesCmacParameters) {
-  absl::StatusOr<AesCmacParameters> parameters =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
+TEST_F(ProtoParametersFormatTest, SerializeTestOnlyParameters) {
+  absl::StatusOr<TestOnlyParameters> parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::string> serialized_parameters =
@@ -70,14 +70,12 @@ TEST_F(ProtoParametersFormatTest, SerializeAesCmacParameters) {
 
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(google::crypto::tink::OutputPrefixType::TINK));
-  EXPECT_THAT(key_template.type_url(),
-              Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
+  EXPECT_THAT(key_template.type_url(), Eq(kTestOnlyKeyTypeUrl));
 
-  AesCmacKeyFormat key_format;
+  TestOnlyKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
-  EXPECT_THAT(key_format.key_size(), Eq(32));
-  EXPECT_THAT(key_format.params().tag_size(), Eq(16));
+  EXPECT_THAT(key_format.key_size(), Eq(kTestOnlyKeySizeInBytes));
 }
 
 TEST_F(ProtoParametersFormatTest, SerializeLegacyProtoParameters) {
@@ -105,25 +103,21 @@ TEST_F(ProtoParametersFormatTest, SerializeLegacyProtoParameters) {
   EXPECT_THAT(serialized_key_template.value(), Eq(key_template.value()));
 }
 
-TEST_F(ProtoParametersFormatTest, ParseAesCmacKeyFormat) {
-  AesCmacKeyFormat key_format;
-  key_format.set_key_size(32);
-  key_format.mutable_params()->set_tag_size(16);
+TEST_F(ProtoParametersFormatTest, ParseTestOnlyKeyFormat) {
+  TestOnlyKeyFormat key_format;
+  key_format.set_key_size(kTestOnlyKeySizeInBytes);
 
   KeyTemplate key_template;
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
-  key_template.set_type_url(
-      "type.googleapis.com/google.crypto.tink.AesCmacKey");
+  key_template.set_type_url(kTestOnlyKeyTypeUrl);
   key_template.set_value(key_format.SerializeAsString());
 
   absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(parsed_parameters, IsOk());
 
-  absl::StatusOr<AesCmacParameters> expected_parameters =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
+  absl::StatusOr<TestOnlyParameters> expected_parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
   ASSERT_THAT(expected_parameters, IsOk());
 
   EXPECT_THAT(**parsed_parameters, Eq(*expected_parameters));
@@ -153,16 +147,11 @@ TEST_F(ProtoParametersFormatTest, ParseInvalidKeyTemplateFails) {
                        HasSubstr("Failed to parse KeyTemplateTP from string")));
 }
 
-TEST_F(ProtoParametersFormatTest, ParseInvalidAesCmacKeyFormatFails) {
-  AesCmacKeyFormat key_format;
-  key_format.set_key_size(37);  // Invalid key size.
-  key_format.mutable_params()->set_tag_size(16);
-
+TEST_F(ProtoParametersFormatTest, ParseInvalidTestOnlyKeyFormatFails) {
   KeyTemplate key_template;
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
-  key_template.set_type_url(
-      "type.googleapis.com/google.crypto.tink.AesCmacKey");
-  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_type_url(kTestOnlyKeyTypeUrl);
+  key_template.set_value("\x80");  // Invalid key format.
 
   absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
@@ -170,10 +159,8 @@ TEST_F(ProtoParametersFormatTest, ParseInvalidAesCmacKeyFormatFails) {
 }
 
 TEST_F(ProtoParametersFormatTest, SerializeAndParse) {
-  absl::StatusOr<AesCmacParameters> parameters =
-      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/16,
-                                AesCmacParameters::Variant::kTink);
+  absl::StatusOr<TestOnlyParameters> parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::string> serialized_parameters =

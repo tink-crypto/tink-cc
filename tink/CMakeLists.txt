@@ -1279,11 +1279,10 @@ tink_cc_test(
     absl::status_matchers
     tink::internal::legacy_proto_parameters
     tink::internal::proto_parameters_serialization
-    tink::mac::aes_cmac_parameters
-    tink::mac::aes_cmac_proto_serialization
+    tink::internal::testing::test_only_key
     tink::util::statusor
     tink::util::test_matchers
-    tink::proto::aes_cmac_cc_proto
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )
 

@@ -26,6 +26,8 @@
 #include "tink/chunked_mac.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac.h"
+#include "tink/mac/aes_cmac_parameters.h"
+#include "tink/mac/hmac_parameters.h"
 #include "tink/mac/key_gen_config_2026.h"
 #include "tink/mac/mac_key_templates.h"
 #include "proto/tink.pb.h"
@@ -86,6 +88,46 @@ TEST_P(Config2026Test, GetPrimitiveChunkedMac) {
   ASSERT_THAT((*verify)->Update(data1), IsOk());
   ASSERT_THAT((*verify)->Update(data2), IsOk());
   EXPECT_THAT((*verify)->VerifyMac(), IsOk());
+}
+
+TEST(Config2026FromParametersTest, AesCmacGetPrimitive) {
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*params, KeyGenConfigMac2026());
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
+      (*handle)->GetPrimitive<Mac>(ConfigMac2026());
+  ASSERT_THAT(mac, IsOk());
+
+  std::string data = "data";
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
+  ASSERT_THAT(tag, IsOk());
+  EXPECT_THAT((*mac)->VerifyMac(*tag, data), IsOk());
+}
+
+TEST(Config2026FromParametersTest, HmacGetPrimitive) {
+  absl::StatusOr<HmacParameters> params = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*params, KeyGenConfigMac2026());
+  ASSERT_THAT(handle, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
+      (*handle)->GetPrimitive<Mac>(ConfigMac2026());
+  ASSERT_THAT(mac, IsOk());
+
+  std::string data = "data";
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
+  ASSERT_THAT(tag, IsOk());
+  EXPECT_THAT((*mac)->VerifyMac(*tag, data), IsOk());
 }
 
 }  // namespace

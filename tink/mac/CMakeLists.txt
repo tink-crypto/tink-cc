@@ -557,7 +557,9 @@ tink_cc_test(
   SRCS
     config_2026_test.cc
   DEPS
+    tink::mac::aes_cmac_parameters
     tink::mac::config_2026
+    tink::mac::hmac_parameters
     tink::mac::key_gen_config_2026
     tink::mac::mac_key_templates
     gmock

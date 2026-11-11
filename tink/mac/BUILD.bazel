@@ -590,7 +590,9 @@ cc_test(
     size = "small",
     srcs = ["config_2026_test.cc"],
     deps = [
+        ":aes_cmac_parameters",
         ":config_2026",
+        ":hmac_parameters",
         ":key_gen_config_2026",
         ":mac_key_templates",
         "//proto:tink_cc_proto",

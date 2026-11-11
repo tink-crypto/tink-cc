@@ -434,7 +434,9 @@ tink_cc_test(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     tink::mac::aes_cmac_key_manager
+    tink::mac::aes_cmac_parameters
     tink::mac::hmac_key_manager
+    tink::mac::hmac_parameters
     tink::mac::mac_key_templates
     tink::proto::tink_cc_proto
 )
@@ -445,12 +447,14 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
-    absl::memory
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::mac::aes_cmac_key_manager
+    tink::mac::aes_cmac_proto_serialization
     tink::mac::hmac_key_manager
+    tink::mac::hmac_proto_serialization
 )
 
 tink_cc_library(

@@ -26,16 +26,14 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "tink/aead/aead_key_templates.h"
-#include "tink/aead/aes_gcm_key.h"
-#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/private_key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/testing/test_only_key.h"
+#include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_manager.h"
@@ -44,7 +42,6 @@
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/registry.h"
-#include "tink/restricted_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -127,17 +124,6 @@ class FakeKeyTypeManager
       "type.googleapis.com/google.crypto.tink.AesGcmKey";
 };
 
-absl::StatusOr<std::unique_ptr<crypto::tink::AesGcmKey>> CreateAesGcmKey(
-    const AesGcmParameters& params, absl::optional<int> id_requirement) {
-  RestrictedData secret = RestrictedData(params.KeySizeInBytes());
-  absl::StatusOr<crypto::tink::AesGcmKey> key = crypto::tink::AesGcmKey::Create(
-      params, secret, id_requirement, GetPartialKeyAccess());
-  if (!key.ok()) {
-    return key.status();
-  }
-  return std::make_unique<crypto::tink::AesGcmKey>(*key);
-}
-
 TEST(KeyGenConfigurationImplTest, AddKeyTypeManager) {
   KeyGenConfiguration config;
   EXPECT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
@@ -155,8 +141,8 @@ TEST(KeyGenConfigurationImplTest, AddLegacyKeyManager) {
 
 TEST(KeyGenConfigurationImplTest, AddKeyCreator) {
   KeyGenConfiguration config;
-  EXPECT_THAT(KeyGenConfigurationImpl::AddKeyCreator<AesGcmParameters>(
-                  CreateAesGcmKey, config),
+  EXPECT_THAT(KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+                  CreateTestOnlyKey, config),
               IsOk());
 }
 
@@ -210,48 +196,39 @@ TEST(KeyGenConfigurationImplTest, GetLegacyKeyManager) {
 
 TEST(KeyGenConfigurationImplTest, CreateKey) {
   KeyGenConfiguration config;
-  ASSERT_THAT(KeyGenConfigurationImpl::AddKeyCreator<AesGcmParameters>(
-                  CreateAesGcmKey, config),
+  ASSERT_THAT(KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+                  CreateTestOnlyKey, config),
               IsOk());
 
-  absl::StatusOr<AesGcmParameters> aes_gcm_params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesGcmParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(aes_gcm_params, IsOk());
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> generic_key =
-      KeyGenConfigurationImpl::CreateKey(*aes_gcm_params,
+      KeyGenConfigurationImpl::CreateKey(*params,
                                          /*id_requirement=*/0x02030400, config);
   ASSERT_THAT(generic_key, IsOk());
-  const crypto::tink::AesGcmKey* aes_gcm_key =
-      dynamic_cast<const crypto::tink::AesGcmKey*>(generic_key->get());
+  const TestOnlySymmetricKey* key =
+      dynamic_cast<const TestOnlySymmetricKey*>(generic_key->get());
 
-  ASSERT_THAT(aes_gcm_key, NotNull());
-  EXPECT_THAT(aes_gcm_key->GetIdRequirement(), Eq(0x02030400));
-  EXPECT_THAT(aes_gcm_key->GetOutputPrefix(),
+  ASSERT_THAT(key, NotNull());
+  EXPECT_THAT(key->GetIdRequirement(), Eq(0x02030400));
+  EXPECT_THAT(key->GetOutputPrefix(),
               Eq(std::string("\x01\x02\x03\x04\x00", 5)));
-  EXPECT_THAT(aes_gcm_key->GetParameters(), Eq(*aes_gcm_params));
-  EXPECT_THAT(aes_gcm_key->GetKeyBytes(GetPartialKeyAccess()).size(), Eq(32));
+  EXPECT_THAT(key->GetParameters(), Eq(*params));
+  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()).size(),
+              Eq(kTestOnlyKeySizeInBytes));
 }
 
 TEST(KeyGenConfigurationImplTest, CreateKeyWithMissingKeyCreatorFails) {
   KeyGenConfiguration config;
 
-  absl::StatusOr<AesGcmParameters> aes_gcm_params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesGcmParameters::Variant::kTink)
-          .Build();
-  ASSERT_THAT(aes_gcm_params, IsOk());
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
 
   EXPECT_THAT(
-      KeyGenConfigurationImpl::CreateKey(*aes_gcm_params,
+      KeyGenConfigurationImpl::CreateKey(*params,
                                          /*id_requirement=*/0x02030400, config)
           .status(),
       StatusIs(absl::StatusCode::kUnimplemented));
@@ -418,23 +395,21 @@ TEST(KeyGenConfigurationImplTest, GlobalRegistryMode) {
   EXPECT_THAT(KeyGenConfigurationImpl::AddLegacyKeyManager(
                   MakeKeyManager<FakePrimitive>(&manager), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
-  EXPECT_THAT(KeyGenConfigurationImpl::AddKeyCreator<AesGcmParameters>(
-                  CreateAesGcmKey, config),
+  EXPECT_THAT(KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+                  CreateTestOnlyKey, config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT(KeyGenConfigurationImpl::GetKeyTypeInfoStore(config).status(),
               StatusIs(absl::StatusCode::kFailedPrecondition));
 
-  EXPECT_THAT(
-      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256Gcm(), config).status(),
-      StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), config).status(),
+              StatusIs(absl::StatusCode::kNotFound));
 
-  ASSERT_THAT(
-      Registry::RegisterKeyTypeManager(std::make_unique<FakeKeyTypeManager>(),
-                                       /*new_key_allowed=*/true),
-      IsOk());
-  EXPECT_THAT(
-      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256Gcm(), config).status(),
-      IsOk());
+  ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                  std::make_unique<TestOnlyKeyTypeManager>(),
+                  /*new_key_allowed=*/true),
+              IsOk());
+  EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), config).status(),
+              IsOk());
 }
 
 TEST(KeyGenConfigurationImplTest, GlobalRegistryModeWithNonEmptyConfigFails) {

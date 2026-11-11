@@ -1313,7 +1313,6 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::string_view
-    absl::optional
     tink::core::key_manager_impl
     tink::core::key_type_manager
     tink::core::private_key_type_manager
@@ -1327,10 +1326,8 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
-    tink::core::restricted_data
-    tink::aead::aead_key_templates
-    tink::aead::aes_gcm_key
-    tink::aead::aes_gcm_parameters
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

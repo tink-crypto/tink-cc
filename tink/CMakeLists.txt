@@ -940,36 +940,26 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    tink::aead::aead_config
-    tink::aead::aead_key_templates
     tink::aead::aead_wrapper
-    tink::aead::aes_gcm_key_manager
-    tink::aead::aes_gcm_parameters
-    tink::aead::xchacha20_poly1305_key
-    tink::aead::xchacha20_poly1305_parameters
-    tink::aead::internal::key_gen_config_2026
-    tink::config::fips_140_2
     tink::config::global_registry
-    tink::config::key_gen_fips_140_2
-    tink::config::tink_config
     tink::internal::configuration_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
     tink::internal::legacy_annotations
+    tink::internal::legacy_proto_key
+    tink::internal::legacy_proto_parameters
     tink::internal::mutable_serialization_registry
     tink::internal::primitive_set
-    tink::internal::ssl_util
+    tink::internal::proto_parameters_serialization
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::signature::ecdsa_proto_serialization
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::ecdsa_verify_key_manager
     tink::signature::internal::testing::ecdsa_test_utils
-    tink::subtle::random
-    tink::subtle::xchacha20_poly1305_boringssl
     tink::util::test_keyset_handle
     tink::util::test_util
-    tink::proto::aes_gcm_cc_proto
-    tink::proto::aes_gcm_siv_cc_proto
+    tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )
 

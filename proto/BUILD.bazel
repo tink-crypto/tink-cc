@@ -259,6 +259,13 @@ proto_library(
 )
 
 proto_library(
+    name = "test_only_key_proto",
+    testonly = True,
+    srcs = ["test_only_key.proto"],
+    visibility = ["//visibility:public"],
+)
+
+proto_library(
     name = "jwt_ml_dsa_proto",
     srcs = ["jwt_ml_dsa.proto"],
     visibility = ["//visibility:public"],
@@ -443,6 +450,12 @@ cc_proto_library(
     name = "test_proto_cc_proto",
     testonly = True,
     deps = ["//proto:test_proto_proto"],
+)
+
+cc_proto_library(
+    name = "test_only_key_cc_proto",
+    testonly = True,
+    deps = ["//proto:test_only_key_proto"],
 )
 
 cc_proto_library(

@@ -42,7 +42,7 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/test_util.h"
-#include "proto/test_proto.pb.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.tinkpb.h"
 
 namespace crypto {
@@ -50,8 +50,8 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::google::crypto::tink::TestProto;
-using ::google::crypto::tink::TestProtoWithoutCtype;
+using ::google::crypto::tink::TestOnlyKey;
+using ::google::crypto::tink::TestOnlyKeyFormat;
 using ::google::crypto::tink::internal::KeyDataTP;
 using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 
@@ -113,12 +113,11 @@ absl::StatusOr<TestOnlyParameters> ParseParameters(
   if (serialization.GetKeyTemplate().type_url() != kTestOnlyKeyTypeUrl) {
     return absl::InvalidArgumentError("Wrong type URL");
   }
-  TestProto key_format;
+  TestOnlyKeyFormat key_format;
   if (!key_format.ParseFromString(serialization.GetKeyTemplate().value())) {
     return absl::InvalidArgumentError("Failed to parse the key format");
   }
-  if (key_format.num() != kTestOnlyKeySizeInBytes ||
-      !key_format.str().empty()) {
+  if (key_format.key_size() != kTestOnlyKeySizeInBytes) {
     return absl::InvalidArgumentError("Invalid key format");
   }
   absl::StatusOr<TestOnlyParameters::Variant> variant =
@@ -136,8 +135,8 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  TestProto key_format;
-  key_format.set_num(kTestOnlyKeySizeInBytes);
+  TestOnlyKeyFormat key_format;
+  key_format.set_key_size(kTestOnlyKeySizeInBytes);
   return ProtoParametersSerialization::Create(
       kTestOnlyKeyTypeUrl, *output_prefix_type, key_format.SerializeAsString());
 }
@@ -151,10 +150,13 @@ absl::StatusOr<TestOnlySymmetricKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  TestProtoWithoutCtype key;
+  TestOnlyKey key;
   if (!key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse the key");
+  }
+  if (key.version() != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted");
   }
   absl::StatusOr<TestOnlyParameters::Variant> variant =
       ToVariant(serialization.GetOutputPrefixTypeTP());
@@ -167,7 +169,7 @@ absl::StatusOr<TestOnlySymmetricKey> ParseKey(
     return parameters.status();
   }
   return TestOnlySymmetricKey::Create(
-      *parameters, RestrictedData(key.str(), *token),
+      *parameters, RestrictedData(key.key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -182,8 +184,10 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  TestProtoWithoutCtype proto_key;
-  proto_key.set_str(key.GetKeyBytes(GetPartialKeyAccess()).GetSecret(*token));
+  TestOnlyKey proto_key;
+  proto_key.set_version(0);
+  proto_key.set_key_value(
+      key.GetKeyBytes(GetPartialKeyAccess()).GetSecret(*token));
   std::string serialized_key = proto_key.SerializeAsString();
   return ProtoKeySerialization::Create(
       kTestOnlyKeyTypeUrl,

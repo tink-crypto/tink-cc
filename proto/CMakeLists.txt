@@ -213,6 +213,11 @@ tink_cc_proto(
 )
 
 tink_cc_proto(
+  NAME test_only_key_cc_proto
+  SRCS test_only_key.proto
+)
+
+tink_cc_proto(
   NAME jwt_ml_dsa_cc_proto
   SRCS jwt_ml_dsa.proto
 )

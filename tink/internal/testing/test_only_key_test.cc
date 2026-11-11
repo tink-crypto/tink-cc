@@ -43,8 +43,9 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
-#include "proto/test_proto.pb.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
@@ -56,7 +57,10 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
-using ::google::crypto::tink::TestProto;
+using ::google::crypto::tink::TestOnlyKey;
+using ::google::crypto::tink::TestOnlyKeyFormat;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::Not;
@@ -108,13 +112,13 @@ TEST_P(TestOnlyParametersVariantTest, ProtoSerializationRoundTrip) {
 
 TEST(TestOnlyParametersTest, ParseInvalidKeyFormatFails) {
   ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
-  TestProto wrong_key_size;
-  wrong_key_size.set_num(kTestOnlyKeySizeInBytes + 1);
-  TestProto unexpected_field;
-  unexpected_field.set_num(kTestOnlyKeySizeInBytes);
-  unexpected_field.set_str("unexpected");
+  TestOnlyKeyFormat too_large_key_size;
+  too_large_key_size.set_key_size(kTestOnlyKeySizeInBytes + 1);
+  TestOnlyKeyFormat too_small_key_size;
+  too_small_key_size.set_key_size(kTestOnlyKeySizeInBytes - 1);
 
-  for (const TestProto& key_format : {wrong_key_size, unexpected_field}) {
+  for (const TestOnlyKeyFormat& key_format :
+       {too_large_key_size, too_small_key_size}) {
     KeyTemplate key_template;
     key_template.set_type_url(kTestOnlyKeyTypeUrl);
     key_template.set_output_prefix_type(OutputPrefixType::TINK);
@@ -208,6 +212,25 @@ TEST_P(TestOnlySymmetricKeyVariantTest, ProtoSerializationRoundTrip) {
       registry.ParseKey(**serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*key));
+}
+
+TEST(TestOnlySymmetricKeyTest, ParseKeyWithInvalidVersionFails) {
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  TestOnlyKey proto_key;
+  proto_key.set_version(1);
+  proto_key.set_key_value("key");
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(
+          kTestOnlyKeyTypeUrl,
+          RestrictedData(proto_key.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          kKeyId);
+  ASSERT_THAT(serialization, IsOk());
+
+  EXPECT_THAT(MutableSerializationRegistry::GlobalInstance().ParseKey(
+                  *serialization, InsecureSecretKeyAccess::Get()),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(TestOnlySymmetricKeyTest, IdRequirementMismatchFails) {

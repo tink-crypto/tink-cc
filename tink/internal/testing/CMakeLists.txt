@@ -169,7 +169,7 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::util::test_util
-    tink::proto::test_proto_cc_proto
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_tinkpb
   TESTONLY
 )
@@ -202,6 +202,56 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::proto::test_proto_cc_proto
+    tink::proto::test_only_key_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
+)
+
+tink_cc_library(
+  NAME test_only_key_managers
+  SRCS
+    test_only_key_managers.cc
+    test_only_key_managers.h
+  DEPS
+    tink::internal::testing::test_only_key
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::aead
+    tink::core::key_type_manager
+    tink::core::private_key_type_manager
+    tink::core::template_util
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::subtle::random
+    tink::util::test_util
+    tink::proto::test_only_key_cc_proto
+    tink::proto::tink_cc_proto
+  TESTONLY
+)
+
+tink_cc_test(
+  NAME test_only_key_managers_test
+  SRCS
+    test_only_key_managers_test.cc
+  DEPS
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::aead
+    tink::core::configuration
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::aead::aead_wrapper
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::signature::public_key_sign_wrapper
+    tink::signature::public_key_verify_wrapper
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )

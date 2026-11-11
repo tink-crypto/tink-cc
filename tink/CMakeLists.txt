@@ -876,18 +876,17 @@ tink_cc_test(
   SRCS
     core/binary_keyset_writer_test.cc
   DEPS
-    tink::core::aead
     tink::core::binary_keyset_writer
     tink::core::insecure_secret_key_access_testonly
+    tink::core::key_gen_configuration
     tink::core::keyset_handle
     tink::core::proto_keyset_format
     gmock
     absl::memory
     absl::status
     absl::status_matchers
-    tink::aead::aead_config
-    tink::aead::aead_key_templates
-    tink::config::global_registry
+    tink::internal::key_gen_configuration_impl
+    tink::internal::testing::test_only_key_managers
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers

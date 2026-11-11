@@ -27,11 +27,10 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "tink/aead.h"
-#include "tink/aead/aead_config.h"
-#include "tink/aead/aead_key_templates.h"
-#include "tink/config/global_registry.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/testing/test_only_key_managers.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
 #include "tink/proto_keyset_format.h"
 #include "tink/util/secret_data.h"
@@ -46,8 +45,12 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::crypto::tink::internal::KeyGenConfigurationImpl;
+using ::crypto::tink::internal::TestOnlyKeyTemplate;
+using ::crypto::tink::internal::TestOnlyKeyTypeManager;
 using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
+using ::crypto::tink::test::DummyAead;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
@@ -58,8 +61,6 @@ using ::testing::SizeIs;
 class BinaryKeysetWriterTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_THAT(AeadConfig::Register(), IsOk());
-
     Keyset::Key key;
     AddTinkKey("some key type", 42, key, KeyStatusType::ENABLED,
                KeyData::SYMMETRIC, &keyset_);
@@ -138,17 +139,14 @@ TEST_F(BinaryKeysetWriterTest, testDestinationStreamErrors) {
 }
 
 TEST_F(BinaryKeysetWriterTest, EncryptedKeysetOverhead) {
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> keysetEncryptionHandle =
-      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
-                                KeyGenConfigGlobalRegistry());
-  ASSERT_THAT(keysetEncryptionHandle, IsOk());
-  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
-      (*keysetEncryptionHandle)->GetPrimitive<Aead>(ConfigGlobalRegistry());
-  ASSERT_THAT(keyset_encryption_aead, IsOk());
+  DummyAead keyset_encryption_aead("keyset encryption aead");
 
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(KeyGenConfigurationImpl::AddKeyTypeManager(
+                  std::make_unique<TestOnlyKeyTypeManager>(), key_gen_config),
+              IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
-                                KeyGenConfigGlobalRegistry());
+      KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
   absl::StatusOr<SecretData> serialized_keyset =
@@ -156,8 +154,8 @@ TEST_F(BinaryKeysetWriterTest, EncryptedKeysetOverhead) {
                                          InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_keyset, IsOk());
   absl::StatusOr<std::string> raw_encrypted_keyset =
-      (*keyset_encryption_aead)
-          ->Encrypt(util::SecretDataAsStringView(*serialized_keyset), "");
+      keyset_encryption_aead.Encrypt(
+          (*serialized_keyset).AsStringView(), "");
   ASSERT_THAT(raw_encrypted_keyset, IsOk());
 
   std::stringbuf encrypted_keyset;
@@ -166,7 +164,7 @@ TEST_F(BinaryKeysetWriterTest, EncryptedKeysetOverhead) {
           std::make_unique<std::ostream>(&encrypted_keyset));
   ASSERT_THAT(writer, IsOk());
 
-  auto status = (*handle)->Write(writer->get(), **keyset_encryption_aead);
+  auto status = (*handle)->Write(writer->get(), keyset_encryption_aead);
   ASSERT_THAT(status, IsOk());
 
   // encrypted_keyset is a serialized protocol buffer that only contains

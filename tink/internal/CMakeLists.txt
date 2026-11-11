@@ -2334,9 +2334,7 @@ tink_cc_test(
     tink::core::annotations
     tink::core::key_gen_configuration
     tink::core::keyset_handle
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::ecdsa_verify_key_manager
-    tink::signature::signature_key_templates
+    tink::internal::testing::test_only_key_managers
     tink::util::secret_proto
     tink::proto::tink_cc_proto
 )

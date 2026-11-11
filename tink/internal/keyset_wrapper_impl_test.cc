@@ -27,18 +27,16 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_wrapper.h"
-#include "tink/aead/xchacha20_poly1305_key.h"
-#include "tink/aead/xchacha20_poly1305_parameters.h"
-#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/keyset_wrapper.h"
+#include "tink/internal/testing/test_only_key.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -49,8 +47,8 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/test_keyset_handle.h"
 #include "tink/util/test_util.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
-#include "proto/xchacha20_poly1305.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -113,39 +111,23 @@ absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKeyFailing(
   return absl::Status(absl::StatusCode::kNotFound, "Not found.");
 }
 
-// Creates an XChaCha20Poly1305Key from the given parameters.
-absl::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
-CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
-                           absl::optional<int> id_requirement) {
-  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      params.GetVariant(), secret, id_requirement, GetPartialKeyAccess());
-  if (!key.ok()) {
-    return key.status();
-  }
-  return std::make_unique<XChaCha20Poly1305Key>(*key);
-}
-
-// Returns a fake Aead for an XChaCha20Poly1305Key proto: these tests exercise
-// the keyset wrapper, not the AEAD.
-absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
+// Returns a fake Aead for a test-only key proto: these tests exercise the
+// keyset wrapper, not the AEAD. Consistent with `NewTestOnlyAead`.
+absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromTestOnlyKeyData(
     const google::crypto::tink::KeyData& key_data) {
-  google::crypto::tink::XChaCha20Poly1305Key key;
+  google::crypto::tink::TestOnlyKey key;
   if (!key.ParseFromString(key_data.value())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse XChaCha20Poly1305Key proto");
+                        "Failed to parse TestOnlyKey proto");
   }
-  return {std::make_unique<::crypto::tink::test::DummyAead>(key.key_value())};
+  return {std::make_unique<::crypto::tink::test::DummyAead>(
+      absl::BytesToHexString(key.key_value()))};
 }
 
-// Returns a fake Aead for an XChaCha20Poly1305Key.
-absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305Key(
+// Returns a fake Aead for a TestOnlySymmetricKey.
+absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromTestOnlyKey(
     const Key& key) {
-  XChaCha20Poly1305Key xchacha_key =
-      dynamic_cast<const XChaCha20Poly1305Key&>(key);
-  return {std::make_unique<::crypto::tink::test::DummyAead>(
-      xchacha_key.GetKeyBytes(GetPartialKeyAccess())
-          .GetSecret(InsecureSecretKeyAccess::Get()))};
+  return NewTestOnlyAead(dynamic_cast<const TestOnlySymmetricKey&>(key));
 }
 
 google::crypto::tink::KeyData OnlyTypeUrlKeyData(absl::string_view type_url) {
@@ -185,24 +167,24 @@ TEST(KeysetWrapperImplTest, Basic) {
 }
 
 using KeysetWrapperImplTest =
-    testing::TestWithParam<XChaCha20Poly1305Parameters::Variant>;
+    testing::TestWithParam<TestOnlyParameters::Variant>;
 
 INSTANTIATE_TEST_SUITE_P(
     KeysetWrapperImplTestSuite, KeysetWrapperImplTest,
-    testing::Values(XChaCha20Poly1305Parameters::Variant::kTink,
-                    XChaCha20Poly1305Parameters::Variant::kNoPrefix));
+    testing::Values(TestOnlyParameters::Variant::kTink,
+                    TestOnlyParameters::Variant::kNoPrefix));
 
 TEST_P(KeysetWrapperImplTest, BasicFromKey) {
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  XChaCha20Poly1305Parameters::Variant variant = GetParam();
-  absl::StatusOr<XChaCha20Poly1305Parameters> params =
-      XChaCha20Poly1305Parameters::Create(variant);
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  TestOnlyParameters::Variant variant = GetParam();
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(variant);
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
-                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
-                                               key_gen_config),
-              IsOk());
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+          CreateTestOnlyKey, key_gen_config),
+      IsOk());
 
   KeysetHandleBuilder::Entry entry0 =
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
@@ -234,16 +216,16 @@ TEST_P(KeysetWrapperImplTest, BasicFromKey) {
 }
 
 TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  XChaCha20Poly1305Parameters::Variant variant = GetParam();
-  absl::StatusOr<XChaCha20Poly1305Parameters> params =
-      XChaCha20Poly1305Parameters::Create(variant);
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  TestOnlyParameters::Variant variant = GetParam();
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(variant);
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
-                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
-                                               key_gen_config),
-              IsOk());
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+          CreateTestOnlyKey, key_gen_config),
+      IsOk());
 
   KeysetHandleBuilder::Entry entry0 =
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
@@ -262,8 +244,7 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
 
   AeadWrapper wrapper;
   auto wrapper_impl = std::make_unique<KeysetWrapperImpl<Aead, Aead>>(
-      &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
-      &GetPrimitiveFromXChaCha20Poly1305Key);
+      &wrapper, &GetPrimitiveFromTestOnlyKeyData, &GetPrimitiveFromTestOnlyKey);
   absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
@@ -282,16 +263,16 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
 
 TEST_P(KeysetWrapperImplTest,
        AeadEncryptDecryptFailingPrimitiveGetterFromKeyFallsBackToKeyData) {
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  XChaCha20Poly1305Parameters::Variant variant = GetParam();
-  absl::StatusOr<XChaCha20Poly1305Parameters> params =
-      XChaCha20Poly1305Parameters::Create(variant);
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  TestOnlyParameters::Variant variant = GetParam();
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(variant);
 
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
-                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
-                                               key_gen_config),
-              IsOk());
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<TestOnlyParameters>(
+          CreateTestOnlyKey, key_gen_config),
+      IsOk());
 
   KeysetHandleBuilder::Entry entry0 =
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
@@ -314,7 +295,7 @@ TEST_P(KeysetWrapperImplTest,
   };
   AeadWrapper wrapper;
   auto wrapper_impl = std::make_unique<KeysetWrapperImpl<Aead, Aead>>(
-      &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
+      &wrapper, &GetPrimitiveFromTestOnlyKeyData,
       aead_primitive_getter_failing);
   absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
@@ -335,12 +316,16 @@ TEST_P(KeysetWrapperImplTest,
 // Checks the ciphertext layout for a key with a fixed key ID, and the
 // decryption of a fixed ciphertext.
 TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  std::string key_bytes = test::HexDecodeOrDie(
-      "ab1562faea9f47af3ae1c3d6d030e3af230255dff3df583ced6fbbcbf9d606a9");
-  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
-      XChaCha20Poly1305Parameters::Variant::kTink,
-      RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  const std::string hex_key_bytes =
+      "ab1562faea9f47af3ae1c3d6d030e3af230255dff3df583ced6fbbcbf9d606a9";
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<TestOnlySymmetricKey> key = TestOnlySymmetricKey::Create(
+      *params,
+      RestrictedData(test::HexDecodeOrDie(hex_key_bytes),
+                     InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/0x02030405, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
   KeysetHandleBuilder::Entry entry0 =
@@ -353,26 +338,26 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
   ASSERT_THAT(handle.status(), IsOk());
   AeadWrapper wrapper;
   auto wrapper_impl = std::make_unique<KeysetWrapperImpl<Aead, Aead>>(
-      &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
-      &GetPrimitiveFromXChaCha20Poly1305Key);
+      &wrapper, &GetPrimitiveFromTestOnlyKeyData, &GetPrimitiveFromTestOnlyKey);
   absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
 
   // DummyAead ciphertexts are "<name size>:<ad size>:<name><ad><plaintext>",
-  // and the name is the key bytes.
+  // and the name is the hex-encoded key bytes.
   std::string tink_prefix = test::HexDecodeOrDie(
       absl::StrCat(/*tink_prefix*/ "01", /*key_id*/ "02030405"));
   absl::StatusOr<std::string> encryption =
       (*aead)->Encrypt(/*plaintext=*/"", /*associated_data=*/"");
   ASSERT_THAT(encryption, IsOk());
-  EXPECT_THAT(*encryption, Eq(absl::StrCat(tink_prefix, "32:0:", key_bytes)));
+  EXPECT_THAT(*encryption,
+              Eq(absl::StrCat(tink_prefix, "64:0:", hex_key_bytes)));
   EXPECT_THAT((*aead)->Decrypt(*encryption, /*associated_data=*/""),
               IsOkAndHolds(""));
 
   // Check decryption with a fixed ciphertext.
   std::string fixed_ct =
-      absl::StrCat(tink_prefix, "32:0:", key_bytes, "plaintext");
+      absl::StrCat(tink_prefix, "64:0:", hex_key_bytes, "plaintext");
   EXPECT_THAT((*aead)->Decrypt(fixed_ct, /*associated_data=*/""),
               IsOkAndHolds("plaintext"));
 }

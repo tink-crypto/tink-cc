@@ -254,7 +254,6 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::strings
-    absl::optional
     tink::core::aead
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -265,14 +264,12 @@ tink_cc_test(
     tink::core::primitive_wrapper
     tink::core::restricted_data
     tink::aead::aead_wrapper
-    tink::aead::xchacha20_poly1305_key
-    tink::aead::xchacha20_poly1305_parameters
-    tink::aead::xchacha20_poly1305_proto_serialization
+    tink::internal::testing::test_only_key
     tink::util::secret_data
     tink::util::test_keyset_handle
     tink::util::test_util
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
-    tink::proto::xchacha20_poly1305_cc_proto
 )
 
 tink_cc_test(

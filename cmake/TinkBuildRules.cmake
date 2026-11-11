@@ -314,7 +314,6 @@ function(tink_cc_proto)
     SRCS ${tink_cc_proto_GEN_SRCS}
     DEPS
       protobuf::libprotobuf
-      protobuf::libprotoc
       ${tink_cc_proto_DEPS}
   )
 endfunction()

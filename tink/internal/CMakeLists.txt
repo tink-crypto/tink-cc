@@ -1166,8 +1166,7 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
-    tink::aead::aes_gcm_key
-    tink::aead::aes_gcm_proto_serialization
+    tink::internal::testing::test_only_key
     tink::subtle::random
     tink::util::status
     tink::util::statusor
@@ -1175,6 +1174,7 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )
 

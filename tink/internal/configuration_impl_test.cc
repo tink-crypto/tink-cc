@@ -27,8 +27,6 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
-#include "tink/aead/aes_gcm_key.h"
-#include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/configuration.h"
 #include "tink/core/key_manager_impl.h"
@@ -41,6 +39,7 @@
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/internal/primitive_set.h"
+#include "tink/internal/testing/test_only_key.h"
 #include "tink/key_manager.h"
 #include "tink/keyset_handle.h"
 #include "tink/primitive_wrapper.h"
@@ -54,6 +53,7 @@
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/rsa_ssa_pss.pb.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -165,10 +165,10 @@ class FakePrimitiveWrapper2
   }
 };
 
-std::function<
-    absl::StatusOr<std::unique_ptr<FakePrimitive>>(const AesGcmKey& key)>
+std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(
+    const TestOnlySymmetricKey& key)>
 FakePrimitiveGetterFromKey() {
-  return [](const AesGcmKey& key) {
+  return [](const TestOnlySymmetricKey& key) {
     return std::make_unique<FakePrimitive>("primitive from key");
   };
 }
@@ -185,6 +185,20 @@ std::string AddAesGcmKeyToKeyset(Keyset& keyset, uint32_t key_id,
   test::AddKeyData(key_data, key_id, output_prefix_type, key_status_type,
                    &keyset);
   return std::string(key.key_value());
+}
+
+void AddTestOnlyKeyToKeyset(Keyset& keyset, uint32_t key_id,
+                            OutputPrefixType output_prefix_type,
+                            KeyStatusType key_status_type) {
+  google::crypto::tink::TestOnlyKey key;
+  key.set_version(0);
+  key.set_key_value(subtle::Random::GetRandomBytes(kTestOnlyKeySizeInBytes));
+  KeyData key_data;
+  key_data.set_value(key.SerializeAsString());
+  key_data.set_type_url(kTestOnlyKeyTypeUrl);
+  key_data.set_key_material_type(KeyData::SYMMETRIC);
+  test::AddKeyData(key_data, key_id, output_prefix_type, key_status_type,
+                   &keyset);
 }
 
 TEST(ConfigurationImplTest, AddPrimitiveWrapper) {
@@ -211,17 +225,20 @@ TEST(ConfigurationImplTest, AddLegacyKeyManager) {
 
 TEST(ConfigurationImplTest, AddPrimitiveGetter) {
   Configuration config;
-  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
+  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive,
+                                                     TestOnlySymmetricKey>(
                   FakePrimitiveGetterFromKey(), config)),
               IsOk());
 }
 
 TEST(ConfigurationImplTest, AddPrimitiveGetterForSameTupleTwiceFails) {
   Configuration config;
-  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
+  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive,
+                                                     TestOnlySymmetricKey>(
                   FakePrimitiveGetterFromKey(), config)),
               IsOk());
-  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
+  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive,
+                                                     TestOnlySymmetricKey>(
                   FakePrimitiveGetterFromKey(), config)),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
@@ -311,13 +328,14 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrap) {
 }
 
 TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
-  ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
 
   Configuration config;
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveWrapper(
                   std::make_unique<FakePrimitiveWrapper>(), config)),
               IsOk());
-  ASSERT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
+  ASSERT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive,
+                                                     TestOnlySymmetricKey>(
                   FakePrimitiveGetterFromKey(), config)),
               IsOk());
 
@@ -329,8 +347,8 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
   ASSERT_THAT(wrapper, IsOk());
 
   Keyset keyset;
-  std::string raw_key = AddAesGcmKeyToKeyset(
-      keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
+  AddTestOnlyKeyToKeyset(keyset, /*key_id=*/13, OutputPrefixType::TINK,
+                         KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
   absl::StatusOr<std::unique_ptr<FakePrimitive>> aead =
@@ -541,7 +559,8 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
                   std::make_unique<FakeSignKeyManager>(),
                   std::make_unique<FakeVerifyKeyManager>(), config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
-  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive, AesGcmKey>(
+  EXPECT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive,
+                                                     TestOnlySymmetricKey>(
                   FakePrimitiveGetterFromKey(), config)),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   FakeKeyTypeManager manager;

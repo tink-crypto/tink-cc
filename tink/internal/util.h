@@ -31,13 +31,13 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// Performs a DynamicCast on the input to an "S" and returns the unique pointer.
-// If the input is null or not of dynamic type S, returns an error.
+// Performs a dynamic_cast on the input to an "S" and returns the unique
+// pointer. If the input is null or not of dynamic type S, returns an error.
 // This exists because when calling dynamic_cast on a unique pointer one needs
 // to be careful to not leak memory in case the dynamic cast fails.
 // TODO(b/480880036): Add source location to the error message.
 template <typename S, typename T>
-absl::StatusOr<std::unique_ptr<S>> DynamicCast(std::unique_ptr<T> in) {
+absl::StatusOr<std::unique_ptr<S>> UniquePtrDynamicCast(std::unique_ptr<T> in) {
   S* out = dynamic_cast<S*>(in.get());
   if (out == nullptr) {
     return absl::InternalError(
@@ -53,7 +53,8 @@ absl::StatusOr<std::unique_ptr<S>> DynamicCast(std::unique_ptr<T> in) {
 template <typename T>
 std::unique_ptr<T> CloneKeyOrDie(const T& key) {
   static_assert(std::is_convertible_v<T*, Key*>);
-  absl::StatusOr<std::unique_ptr<T>> result = DynamicCast<T>(key.Clone());
+  absl::StatusOr<std::unique_ptr<T>> result =
+      UniquePtrDynamicCast<T>(key.Clone());
   ABSL_CHECK_OK(result);
   return std::move(*result);
 }

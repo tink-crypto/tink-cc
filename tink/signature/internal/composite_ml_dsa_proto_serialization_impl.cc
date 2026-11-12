@@ -499,7 +499,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
     return parsed_ml_dsa_key.status();
   }
   absl::StatusOr<std::unique_ptr<MlDsaPublicKey>> ml_dsa_public_key =
-      DynamicCast<MlDsaPublicKey>(std::move(*parsed_ml_dsa_key));
+      UniquePtrDynamicCast<MlDsaPublicKey>(std::move(*parsed_ml_dsa_key));
   if (!ml_dsa_public_key.ok()) {
     return absl::InvalidArgumentError(
         "Parsed ML-DSA key is not an MlDsaPublicKey");
@@ -525,7 +525,8 @@ absl::StatusOr<CompositeMlDsaPublicKey> ParsePublicKey(
     return parsed_classical_key.status();
   }
   absl::StatusOr<std::unique_ptr<SignaturePublicKey>> classical_public_key =
-      DynamicCast<SignaturePublicKey>(std::move(*parsed_classical_key));
+      UniquePtrDynamicCast<SignaturePublicKey>(
+          std::move(*parsed_classical_key));
   if (!classical_public_key.ok()) {
     return absl::InvalidArgumentError(
         "Parsed classical key is not a SignaturePublicKey");
@@ -597,7 +598,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
     return parsed_ml_dsa_key.status();
   }
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> ml_dsa_private_key =
-      DynamicCast<MlDsaPrivateKey>(std::move(*parsed_ml_dsa_key));
+      UniquePtrDynamicCast<MlDsaPrivateKey>(std::move(*parsed_ml_dsa_key));
   if (!ml_dsa_private_key.ok()) {
     return absl::InvalidArgumentError(
         "Parsed ML-DSA key is not an MlDsaPrivateKey");
@@ -623,7 +624,8 @@ absl::StatusOr<CompositeMlDsaPrivateKey> ParsePrivateKey(
     return parsed_classical_key.status();
   }
   absl::StatusOr<std::unique_ptr<SignaturePrivateKey>> classical_private_key =
-      DynamicCast<SignaturePrivateKey>(std::move(*parsed_classical_key));
+      UniquePtrDynamicCast<SignaturePrivateKey>(
+          std::move(*parsed_classical_key));
   if (!classical_private_key.ok()) {
     return absl::InvalidArgumentError(
         "Parsed classical key is not a SignaturePrivateKey");
@@ -677,7 +679,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
   }
   absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
       ml_dsa_proto_key_serialization =
-          DynamicCast<ProtoKeySerialization>(std::move(*ml_dsa_serialization));
+          UniquePtrDynamicCast<ProtoKeySerialization>(
+              std::move(*ml_dsa_serialization));
   if (!ml_dsa_proto_key_serialization.ok()) {
     return ml_dsa_proto_key_serialization.status();
   }
@@ -707,8 +710,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return classical_serialization.status();
   }
   absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
-      classical_proto_key_serialization = DynamicCast<ProtoKeySerialization>(
-          std::move(*classical_serialization));
+      classical_proto_key_serialization =
+          UniquePtrDynamicCast<ProtoKeySerialization>(
+              std::move(*classical_serialization));
   if (!classical_proto_key_serialization.ok()) {
     return classical_proto_key_serialization.status();
   }
@@ -780,7 +784,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   }
   absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
       ml_dsa_proto_key_serialization =
-          DynamicCast<ProtoKeySerialization>(std::move(*ml_dsa_serialization));
+          UniquePtrDynamicCast<ProtoKeySerialization>(
+              std::move(*ml_dsa_serialization));
   if (!ml_dsa_proto_key_serialization.ok()) {
     return ml_dsa_proto_key_serialization.status();
   }
@@ -809,8 +814,9 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return classical_serialization.status();
   }
   absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
-      classical_proto_key_serialization = DynamicCast<ProtoKeySerialization>(
-          std::move(*classical_serialization));
+      classical_proto_key_serialization =
+          UniquePtrDynamicCast<ProtoKeySerialization>(
+              std::move(*classical_serialization));
   if (!classical_proto_key_serialization.ok()) {
     return classical_proto_key_serialization.status();
   }

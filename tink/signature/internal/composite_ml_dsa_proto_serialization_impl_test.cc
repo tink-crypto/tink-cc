@@ -303,8 +303,8 @@ absl::StatusOr<KeyData> SerializeKey(const Key& key) {
     return key_serialization.status();
   }
   absl::StatusOr<std::unique_ptr<ProtoKeySerialization>>
-      proto_key_serialization =
-          DynamicCast<ProtoKeySerialization>(std::move(*key_serialization));
+      proto_key_serialization = UniquePtrDynamicCast<ProtoKeySerialization>(
+          std::move(*key_serialization));
   if (!proto_key_serialization.ok()) {
     return proto_key_serialization.status();
   }

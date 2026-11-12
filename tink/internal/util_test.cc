@@ -61,24 +61,24 @@ class Derived : public Base {};
 
 class OtherDerived : public Base {};
 
-TEST(DynamicCastOrError, Works) {
+TEST(UniquePtrDynamicCastTest, Works) {
   std::unique_ptr<Base> base = std::make_unique<Derived>();
   absl::StatusOr<std::unique_ptr<Derived>> derived =
-      DynamicCast<Derived>(std::move(base));
+      UniquePtrDynamicCast<Derived>(std::move(base));
   EXPECT_THAT(derived, IsOkAndHolds(Not(IsNull())));
 }
 
-TEST(DynamicCastOrError, NullptrMakesError) {
+TEST(UniquePtrDynamicCastTest, NullptrMakesError) {
   std::unique_ptr<Base> base = nullptr;
   absl::StatusOr<std::unique_ptr<Derived>> derived =
-      DynamicCast<Derived>(std::move(base));
+      UniquePtrDynamicCast<Derived>(std::move(base));
   EXPECT_THAT(derived, Not(IsOk()));
 }
 
-TEST(DynamicCastOrError, OtherDerivedMakesError) {
+TEST(UniquePtrDynamicCastTest, OtherDerivedMakesError) {
   std::unique_ptr<Base> base = std::make_unique<OtherDerived>();
   absl::StatusOr<std::unique_ptr<Derived>> derived =
-      DynamicCast<Derived>(std::move(base));
+      UniquePtrDynamicCast<Derived>(std::move(base));
   EXPECT_THAT(derived.status(), Not(IsOk()));
 }
 

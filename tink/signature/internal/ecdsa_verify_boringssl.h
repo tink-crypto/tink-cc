@@ -20,13 +20,8 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "openssl/ec.h"
-#include "tink/internal/ec_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_public_key.h"
-#include "tink/subtle/common_enums.h"
 
 namespace crypto {
 namespace tink {

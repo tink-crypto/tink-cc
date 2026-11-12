@@ -1367,6 +1367,8 @@ tink_cc_library(
     config_2026.h
   DEPS
     tink::signature::internal::chunked_prehash_wrapper
+    tink::signature::internal::ecdsa_sign_boringssl
+    tink::signature::internal::ecdsa_verify_boringssl
     tink::signature::internal::ml_dsa_chunked_prehash_boringssl
     tink::signature::internal::ml_dsa_prehash_boringssl
     tink::signature::internal::ml_dsa_proto_serialization
@@ -1378,7 +1380,6 @@ tink_cc_library(
     tink::signature::internal::slh_dsa_proto_serialization
     tink::signature::internal::slh_dsa_sign_boringssl
     tink::signature::internal::slh_dsa_verify_boringssl
-    absl::memory
     absl::status
     absl::statusor
     tink::core::configuration
@@ -1419,8 +1420,6 @@ tink_cc_library(
     tink::signature::slh_dsa_public_key
     tink::signature::subtle::composite_ml_dsa_sign_boringssl
     tink::signature::subtle::composite_ml_dsa_verify_boringssl
-    tink::subtle::ecdsa_sign_boringssl
-    tink::subtle::ecdsa_verify_boringssl
     tink::subtle::ed25519_sign_boringssl
     tink::subtle::ed25519_verify_boringssl
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl

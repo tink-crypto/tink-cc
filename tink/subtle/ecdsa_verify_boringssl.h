@@ -21,12 +21,15 @@
 #include <string>
 #include <utility>
 
+#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_public_key.h"
+#include "tink/signature/internal/ecdsa_verify_boringssl.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -37,11 +40,17 @@ namespace subtle {
 class EcdsaVerifyBoringSsl : public PublicKeyVerify {
  public:
   static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
-      const EcdsaPublicKey& public_key);
+      const EcdsaPublicKey& public_key) {
+    ABSL_ASSIGN_OR_RETURN(std::unique_ptr<PublicKeyVerify> verify,
+                          internal::NewEcdsaVerifyBoringSsl(public_key));
+    return absl::WrapUnique(new EcdsaVerifyBoringSsl(std::move(verify)));
+  }
 
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
-                      absl::string_view data) const override = 0;
+                      absl::string_view data) const override {
+    return verify_->Verify(signature, data);
+  }
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
@@ -50,6 +59,12 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
 
  protected:
   EcdsaVerifyBoringSsl() = default;
+
+ private:
+  explicit EcdsaVerifyBoringSsl(std::unique_ptr<PublicKeyVerify> verify)
+      : verify_(std::move(verify)) {}
+
+  std::unique_ptr<PublicKeyVerify> verify_;
 };
 
 }  // namespace subtle

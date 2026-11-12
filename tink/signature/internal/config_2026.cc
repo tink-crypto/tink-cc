@@ -18,7 +18,6 @@
 
 #include <memory>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
@@ -40,6 +39,8 @@
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/chunked_prehash_wrapper.h"
+#include "tink/signature/internal/ecdsa_sign_boringssl.h"
+#include "tink/signature/internal/ecdsa_verify_boringssl.h"
 #include "tink/signature/internal/ml_dsa_chunked_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
@@ -71,8 +72,6 @@
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/signature/subtle/composite_ml_dsa_sign_boringssl.h"
 #include "tink/signature/subtle/composite_ml_dsa_verify_boringssl.h"
-#include "tink/subtle/ecdsa_sign_boringssl.h"
-#include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/subtle/ed25519_sign_boringssl.h"
 #include "tink/subtle/ed25519_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
@@ -104,16 +103,6 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSignBoringSsl(
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPssVerifyBoringSsl(
     const RsaSsaPssPublicKey& key) {
   return crypto::tink::subtle::RsaSsaPssVerifyBoringSsl::New(key);
-}
-
-absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSignBoringSsl(
-    const EcdsaPrivateKey& key) {
-  return crypto::tink::subtle::EcdsaSignBoringSsl::New(key);
-}
-
-absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEcdsaVerifyBoringSsl(
-    const EcdsaPublicKey& key) {
-  return crypto::tink::subtle::EcdsaVerifyBoringSsl::New(key);
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEd25519SignBoringSsl(

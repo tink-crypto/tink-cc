@@ -33,6 +33,7 @@ namespace {
 
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsNull;
 using ::testing::Not;
 
 // Alias macros so check_rtti_type_ids.sh ignores unit-test fake classes.
@@ -42,6 +43,7 @@ using ::testing::Not;
 constexpr uint64_t kFakeParametersTypeId = 1;
 constexpr uint64_t kFakeAeadParametersTypeId = 2;
 constexpr uint64_t kFakeAesGcmParametersTypeId = 3;
+constexpr uint64_t kFakeAesEaxParametersTypeId = 4;
 constexpr uint64_t kFakeKeyTypeId = 5;
 constexpr uint64_t kFakePrivateKeyTypeId = 6;
 constexpr uint64_t kFakeSignaturePublicKeyTypeId = 7;
@@ -80,6 +82,12 @@ class FakeAesGcmParameters : public FakeAeadParameters {
  private:
   TINK_RTTI_ADD_METHODS_DERIVED(FakeAeadParameters);
   TEST_RTTI_SET_TYPE_ID(kFakeAesGcmParametersTypeId);
+};
+
+class FakeAesEaxParameters : public FakeAeadParameters {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(FakeAeadParameters);
+  TEST_RTTI_SET_TYPE_ID(kFakeAesEaxParametersTypeId);
 };
 
 class FakeKey {
@@ -261,6 +269,43 @@ TEST(RttiTest, GetTypeIndexDynamicMatchesStatic) {
   EXPECT_THAT(GetTypeIndex(leaf_params_ref).name(), Not(IsEmpty()));
 }
 
+TEST(RttiTest, DynamicCastLeafIntermediateAndIdentity) {
+  FakeAesGcmParameters aes_gcm_params;
+  FakeAesEaxParameters aes_eax_params;
+  const FakeParameters* base_gcm = &aes_gcm_params;
+  const FakeParameters* base_eax = &aes_eax_params;
+
+  EXPECT_THAT(DynamicCast<const FakeAesGcmParameters*>(base_gcm),
+              Eq(&aes_gcm_params));
+  EXPECT_THAT(DynamicCast<const FakeAeadParameters*>(base_gcm),
+              Eq(&aes_gcm_params));
+  EXPECT_THAT(DynamicCast<const FakeParameters*>(base_gcm), Eq(base_gcm));
+  EXPECT_THAT(DynamicCast<const FakeAesGcmParameters*>(base_eax), IsNull());
+  EXPECT_THAT(DynamicCast<const FakeAesGcmParameters*>(
+                  static_cast<const FakeParameters*>(nullptr)),
+              IsNull());
+
+  FakeParameters* mutable_base_gcm = &aes_gcm_params;
+  EXPECT_THAT(DynamicCast<FakeAesGcmParameters*>(mutable_base_gcm),
+              Eq(&aes_gcm_params));
+}
+
+TEST(RttiTest, DynamicCastMultiBranchHierarchy) {
+  FakeEcdsaPublicKey public_key;
+  FakeEcdsaPrivateKey private_key;
+  const FakeKey* base_public = &public_key;
+  const FakeKey* base_private = &private_key;
+
+  EXPECT_THAT(DynamicCast<const FakePrivateKey*>(base_public), IsNull());
+  EXPECT_THAT(DynamicCast<const FakePrivateKey*>(base_private),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const FakeSignaturePrivateKey*>(base_private),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const FakeEcdsaPrivateKey*>(base_private),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const FakeEcdsaPublicKey*>(base_private), IsNull());
+}
+
 TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
 #if defined(TINK_USE_CUSTOM_RTTI)
   EXPECT_THAT(
@@ -281,6 +326,9 @@ TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
   EXPECT_THAT(GetTypeIndex(base_a), Eq(GetTypeIndex<FakeKeyManager<TagA>>()));
   EXPECT_THAT(GetTypeIndex(base_b), Eq(GetTypeIndex<FakeKeyManager<TagB>>()));
   EXPECT_THAT(GetTypeIndex(base_a), Not(Eq(GetTypeIndex(base_b))));
+  EXPECT_THAT(DynamicCast<const FakeKeyManager<TagA>*>(&base_a),
+              Eq(&manager_a));
+  EXPECT_THAT(DynamicCast<const FakeKeyManager<TagB>*>(&base_a), IsNull());
 
   ConcreteWrapperAB wrapper1;
   OtherConcreteWrapperAB wrapper2;
@@ -293,6 +341,12 @@ TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
               Eq(GetTypeIndex<OtherConcreteWrapperAB>()));
   EXPECT_THAT(GetTypeIndex(wrapper_base1),
               Not(Eq(GetTypeIndex(wrapper_base2))));
+  EXPECT_THAT(DynamicCast<const ConcreteWrapperAB*>(&wrapper_base1),
+              Eq(&wrapper1));
+  EXPECT_THAT(DynamicCast<const OtherConcreteWrapperAB*>(&wrapper_base1),
+              IsNull());
+  EXPECT_THAT(DynamicCast<const OtherConcreteWrapperAB*>(&wrapper_base2),
+              Eq(&wrapper2));
   EXPECT_THAT((GetTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
               Not(Eq(GetTypeIndex<ConcreteWrapperAB>())));
   EXPECT_THAT((GetTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),

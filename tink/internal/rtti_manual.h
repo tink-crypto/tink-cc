@@ -157,6 +157,21 @@ struct RttiAccess {
   static TypeIndex GetDynamicTypeIndex(const T& object) {
     return object.GetTinkRttiTypeIndex();
   }
+
+  template <typename T>
+  static bool IsInstance(const T& object, TypeIndex target) {
+    return object.IsTinkRttiInstance(target);
+  }
+
+  template <typename Base, typename Self>
+  static bool BaseIsInstance(const Self* self, TypeIndex target) {
+    if constexpr (std::is_base_of_v<Base, Self> &&
+                  !std::is_same_v<Base, Self> && HasRttiMethods<Base>::value) {
+      return static_cast<const Base*>(self)->Base::IsTinkRttiInstance(target);
+    } else {
+      return false;
+    }
+  }
 };
 
 // Returns the compile-time `TypeIndex` for `T`, ignoring top-level
@@ -208,24 +223,59 @@ TypeIndex GetTypeIndex(const T& object) {
   return TypeIndex();
 }
 
+// Safely downcasts `from` to pointer type `To`, returning `nullptr` if
+// `from == nullptr` or if `from`'s runtime object is not an instance of `To`'s
+// pointee type.
+//
+// Note: Assuming all classes in the hierarchy are properly annotated with the
+// `TINK_RTTI_*` macros, this differs from `dynamic_cast<To>(from)` in that it
+// only supports non-virtual pointer downcasts (and identity casts): reference
+// casts, upcasts, sibling cross-casts, `void*` casts, and casts from `virtual`
+// base classes fail at compile time.
+template <typename To, typename From>
+To DynamicCast(From* from) {
+  using CleanTarget = std::remove_cv_t<std::remove_pointer_t<To>>;
+  using CleanFrom = std::remove_cv_t<From>;
+  static_assert(std::is_base_of_v<CleanFrom, CleanTarget>,
+                "Target type of DynamicCast must inherit from From.");
+  static_assert(
+      RttiAccess::HasRttiMethods<CleanFrom>::value &&
+          RttiAccess::HasRttiMethods<CleanTarget>::value &&
+          RttiAccess::HasTypeId<CleanTarget>::value,
+      "Source and target types of DynamicCast must declare "
+      "TINK_RTTI_ADD_METHODS_* and TINK_RTTI_*_TYPE_ID.");
+  if constexpr (RttiAccess::HasRttiMethods<CleanFrom>::value &&
+                RttiAccess::HasTypeId<CleanTarget>::value) {
+    if (from == nullptr ||
+        !RttiAccess::IsInstance(*from, GetTypeIndex<CleanTarget>())) {
+      return nullptr;
+    }
+  }
+  return static_cast<To>(from);
+}
+
 // Declares the root virtual RTTI dispatch methods on a polymorphic base class.
 //
 // Place in the `private:` section of a root base class alongside
 // `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID` (macro ordering within
 // the class does not matter). The enclosing class should also declare a
 // `virtual` destructor. Subclasses of an RTTI-enabled base class must use
-// `TINK_RTTI_ADD_METHODS_DERIVED(DirectBase)` rather than this macro.
-#define TINK_RTTI_ADD_METHODS_BASE()                                      \
-  friend struct ::crypto::tink::internal::RttiAccess;                     \
-  using TinkRttiBaseType = void;                                          \
-  virtual ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()      \
-      const {                                                             \
-    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
-    return ::crypto::tink::internal::GetTypeIndex<Self>();                \
+// `TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)` rather than this macro.
+#define TINK_RTTI_ADD_METHODS_BASE()                                        \
+  friend struct ::crypto::tink::internal::RttiAccess;                       \
+  virtual ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()        \
+      const {                                                               \
+    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;   \
+    return ::crypto::tink::internal::GetTypeIndex<Self>();                  \
+  }                                                                         \
+  virtual bool IsTinkRttiInstance(                                          \
+      ::crypto::tink::internal::TypeIndex target) const {                   \
+    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;   \
+    return target == ::crypto::tink::internal::GetTypeIndex<Self>();        \
   }
 
 // Overrides the virtual RTTI dispatch methods on a subclass of an RTTI-enabled
-// direct base class `BaseClass`.
+// direct base class `BaseClass` and chains type checks upward to `BaseClass`.
 //
 // Place in the `private:` section of the derived class alongside
 // `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`. If `BaseClass` is a
@@ -234,20 +284,26 @@ TypeIndex GetTypeIndex(const T& object) {
 // Verifies at compile time that `BaseClass` is a strict base of the enclosing
 // class and itself declares `TINK_RTTI_ADD_METHODS_BASE` or
 // `TINK_RTTI_ADD_METHODS_DERIVED`.
-#define TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)                          \
-  friend struct ::crypto::tink::internal::RttiAccess;                     \
-  ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()              \
-      const override {                                                    \
-    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
-    static_assert(std::is_base_of_v<BaseClass, Self> &&                   \
-                      !std::is_same_v<BaseClass, Self>,                   \
-                  "Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED."); \
-    static_assert(                                                        \
-        ::crypto::tink::internal::RttiAccess::HasRttiMethods<             \
-            BaseClass>::value,                                            \
-        "BaseClass must declare TINK_RTTI_ADD_METHODS_BASE or "           \
-        "TINK_RTTI_ADD_METHODS_DERIVED.");                                \
-    return ::crypto::tink::internal::GetTypeIndex<Self>();                \
+#define TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)                            \
+  friend struct ::crypto::tink::internal::RttiAccess;                       \
+  ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()                \
+      const override {                                                      \
+    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;   \
+    static_assert(std::is_base_of_v<BaseClass, Self> &&                     \
+                      !std::is_same_v<BaseClass, Self>,                     \
+                  "Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED.");   \
+    static_assert(::crypto::tink::internal::RttiAccess::HasRttiMethods<     \
+                      BaseClass>::value,                                    \
+                  "BaseClass must declare TINK_RTTI_ADD_METHODS_BASE or "   \
+                  "TINK_RTTI_ADD_METHODS_DERIVED.");                        \
+    return ::crypto::tink::internal::GetTypeIndex<Self>();                  \
+  }                                                                         \
+  bool IsTinkRttiInstance(                                                  \
+      ::crypto::tink::internal::TypeIndex target) const override {          \
+    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;   \
+    return target == ::crypto::tink::internal::GetTypeIndex<Self>() ||      \
+           ::crypto::tink::internal::RttiAccess::BaseIsInstance<BaseClass>( \
+               this, target);                                               \
   }
 
 // Assigns a static 16-bit integer type ID (`id` in `[1, 65535]`) to a
@@ -255,9 +311,10 @@ TypeIndex GetTypeIndex(const T& object) {
 // built-in types; external user-defined subclasses should choose IDs in
 // `[32768, 65535]`.
 //
-// Place in the `private:` section of classes or structs that are queried with
-// `GetTypeIndex<T>()` or passed as template parameters to
-// `TINK_RTTI_COMPUTE_TYPE_ID`.
+// Pair with `TINK_RTTI_ADD_METHODS_BASE` or `TINK_RTTI_ADD_METHODS_DERIVED` in
+// the `private:` section of polymorphic classes, or use standalone on types
+// that are only queried with `GetTypeIndex<T>()` or passed as template
+// parameters to `TINK_RTTI_COMPUTE_TYPE_ID`.
 #define TINK_RTTI_SET_TYPE_ID(id)                                    \
   friend struct ::crypto::tink::internal::RttiAccess;                \
   static constexpr std::uint64_t kTinkRttiTypeId =                   \

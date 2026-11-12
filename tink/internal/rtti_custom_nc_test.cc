@@ -56,10 +56,22 @@ class ValidBase {
   TEST_RTTI_SET_TYPE_ID(10);
 };
 
-class ValidDerived : public ValidBase {
+class ValidMiddle : public ValidBase {
  private:
   TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
   TEST_RTTI_SET_TYPE_ID(11);
+};
+
+class ValidLeaf : public ValidMiddle {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(ValidMiddle);
+  TEST_RTTI_SET_TYPE_ID(12);
+};
+
+class ValidSibling : public ValidBase {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
+  TEST_RTTI_SET_TYPE_ID(13);
 };
 
 class OtherRoot {
@@ -149,7 +161,7 @@ class MethodsOnlyBase {
 
  private:
   // Defining RTTI methods on a non-template class without a type-ID macro fails
-  // immediately when instantiating GetTinkRttiTypeIndex().
+  // immediately when instantiating GetTinkRttiTypeIndex() / IsTinkRttiInstance.
   // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
   TINK_RTTI_ADD_METHODS_BASE();
 };
@@ -180,16 +192,12 @@ class UnannotatedPolymorphicBase {
 };
 class DerivedFromUnannotated : public UnannotatedPolymorphicBase {
  private:
-  // expected-error@+2 {{only virtual member functions can be marked}}
+  // expected-error@+2 2 {{only virtual member functions can be marked}}
   // expected-error@+1 {{BaseClass must declare TINK_RTTI_ADD_METHODS_BASE}}
   TINK_RTTI_ADD_METHODS_DERIVED(UnannotatedPolymorphicBase);
   TEST_RTTI_SET_TYPE_ID(122);
 };
 }  // namespace test_derived_macro_with_unannotated_base
-
-// -----------------------------------------------------------------------------
-// 4. Subclass and GetTypeIndex call-site contract checks
-// -----------------------------------------------------------------------------
 
 namespace test_subclass_does_not_silently_inherit_annotations {
 // Inherits from annotated ValidBase, but forgets both TINK_RTTI_* macros!
@@ -202,17 +210,33 @@ class SubclassMissingMethods : public ValidBase {
 };
 
 [[maybe_unused]] void TestForgottenSubclassMacros(
-    const SubclassMissingMethods& missing_methods) {
+    const ValidBase* base_ptr, const SubclassMissingMethods& missing_methods) {
   // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
   (void)GetTypeIndex<UnannotatedSubclass>();
 
+  // expected-error@rtti_manual.h:* {{Source and target types of DynamicCast}}
+  (void)DynamicCast<const UnannotatedSubclass*>(base_ptr);
+
   // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}ADD_METHODS}}
   (void)GetTypeIndex(missing_methods);
+
+  // expected-error@rtti_manual.h:* {{Source and target types of DynamicCast}}
+  (void)DynamicCast<const SubclassMissingMethods*>(base_ptr);
 }
 }  // namespace test_subclass_does_not_silently_inherit_annotations
 
+// -----------------------------------------------------------------------------
+// 4. GetTypeIndex and DynamicCast call-site contract checks
+// -----------------------------------------------------------------------------
+
 namespace test_call_site_errors {
 struct UnannotatedStruct {};
+
+class VirtualDerived : public virtual ValidBase {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
+  TEST_RTTI_SET_TYPE_ID(130);
+};
 
 [[maybe_unused]] void TestGetTypeIndexErrors(const ValidBase* base_ptr,
                                              const Tag1& tag_without_methods,
@@ -234,22 +258,61 @@ struct UnannotatedStruct {};
   (void)GetTypeIndex(plain);
 }
 
+[[maybe_unused]] void TestDynamicCastErrors(const ValidBase* const_base_ptr,
+                                            ValidLeaf* leaf_ptr,
+                                            ValidSibling* sibling_ptr) {
+  // Dropping const:
+  // expected-error@rtti_manual.h:* {{casts away qualifiers}}
+  (void)DynamicCast<ValidLeaf*>(const_base_ptr);
+
+  // Upcast (ValidLeaf* -> ValidBase*):
+  // expected-error@rtti_manual.h:* {{must inherit from From}}
+  (void)DynamicCast<ValidBase*>(leaf_ptr);
+
+  // Cross-cast between siblings (ValidSibling* -> ValidMiddle*):
+  // expected-error@rtti_manual.h:* {{must inherit from From}}
+  // expected-error@rtti_manual.h:* {{not related by inheritance}}
+  (void)DynamicCast<ValidMiddle*>(sibling_ptr);
+
+  // Virtual base downcast rejected at compile time by static_cast:
+  // expected-error@rtti_manual.h:* {{via virtual base}}
+  (void)DynamicCast<const VirtualDerived*>(const_base_ptr);
+}
+
+class UnannotatedSourceBase {
+ public:
+  virtual ~UnannotatedSourceBase() = default;
+};
+
+class AnnotatedChildOfUnannotated : public UnannotatedSourceBase {
+ private:
+  TINK_RTTI_ADD_METHODS_BASE();
+  TEST_RTTI_SET_TYPE_ID(140);
+};
+
+[[maybe_unused]] void TestUnannotatedSourceInDynamicCast(
+    const UnannotatedSourceBase* source_ptr) {
+  // expected-error@rtti_manual.h:* {{Source and target types of DynamicCast}}
+  (void)DynamicCast<const AnnotatedChildOfUnannotated*>(source_ptr);
+}
+
 [[maybe_unused]] void TestCompilerRttiIsDisabled(const ValidBase* base_ptr) {
   // Confirms that -fno-rtti is genuinely active during this test.
   // expected-error@+1 {{use of typeid requires -frtti}}
   (void)typeid(*base_ptr);
   // expected-error@+1 {{use of dynamic_cast requires -frtti}}
-  (void)dynamic_cast<const ValidDerived*>(base_ptr);
+  (void)dynamic_cast<const ValidLeaf*>(base_ptr);
 }
 }  // namespace test_call_site_errors
 
 // Sanity check that valid usages in this translation unit compile cleanly.
-[[maybe_unused]] void ValidUsage(const ValidBase* base_ptr) {
+[[maybe_unused]] const ValidLeaf* ValidUsage(const ValidBase* base_ptr) {
   (void)GetTypeIndex<Tag1>();
   (void)GetTypeIndex<ValidTemplate<Tag1>>();
   if (base_ptr != nullptr) {
     (void)GetTypeIndex(*base_ptr);
   }
+  return DynamicCast<const ValidLeaf*>(base_ptr);
 }
 
 }  // namespace

@@ -53,6 +53,14 @@ TypeIndex GetTypeIndex(const T& object) {
   return std::type_index(typeid(object));
 }
 
+// Downcasts pointer `from` to pointer type `To` via `dynamic_cast<To>(from)`,
+// returning `nullptr` if `from == nullptr` or if `from`'s runtime object is not
+// an instance of `To`.
+template <typename To, typename From>
+To DynamicCast(From* from) {
+  return dynamic_cast<To>(from);
+}
+
 // No-op class-annotation macros in standard C++ RTTI mode (zero vtable or
 // object-size overhead). See `rtti.h` and `rtti_manual.h` for their expansion
 // and requirements when `TINK_USE_CUSTOM_RTTI` is defined.

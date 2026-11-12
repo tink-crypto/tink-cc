@@ -400,6 +400,54 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
       Not(IsOk()));
 }
 
+TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
+       ModifiedSignatureDoesNotVerify) {
+  const internal::SignatureTestVector& param = GetParam();
+  const RsaSsaPkcs1PrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled() &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
+    ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+
+  // The first byte belongs to the output prefix, if the key has one.
+  std::string modified_first = param.signature;
+  modified_first[0] ^= 1;
+  EXPECT_THAT((*verifier)->Verify(modified_first, param.message),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  std::string modified_last = param.signature;
+  modified_last.back() ^= 1;
+  EXPECT_THAT((*verifier)->Verify(modified_last, param.message),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // Shorter than any output prefix.
+  EXPECT_THAT((*verifier)->Verify(param.signature.substr(0, 4), param.message),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // Missing output prefix when the key requires one.
+  if (!typed_key->GetOutputPrefix().empty()) {
+    EXPECT_THAT((*verifier)->Verify(
+                    param.signature.substr(typed_key->GetOutputPrefix().size()),
+                    param.message),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(
     RsaSsaPkcs1VerifyBoringSslTestVectorTest,
     RsaSsaPkcs1VerifyBoringSslTestVectorTest,

@@ -25,6 +25,8 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "openssl/evp.h"
+#include "openssl/opensslv.h"  // For OPENSSL_IS_BORINGSSL.
 #include "tink/aead/internal/aead_util.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/bn_util.h"
@@ -274,12 +276,14 @@ class SubtleUtilBoringSSL {
 #ifdef OPENSSL_IS_BORINGSSL
   // Returns BoringSSL's AES GCM EVP_AEAD for the key size.
   static const EVP_AEAD* GetAesGcmAeadForKeySize(uint32_t size_in_bytes) {
-    absl::StatusOr<const EVP_AEAD *> res =
-        internal::GetAesGcmAeadForKeySize(size_in_bytes);
-    if (!res.ok()) {
-      return nullptr;
+    switch (size_in_bytes) {
+      case 16:
+        return EVP_aead_aes_128_gcm();
+      case 32:
+        return EVP_aead_aes_256_gcm();
+      default:
+        return nullptr;
     }
-    return *res;
   }
 #endif
 };

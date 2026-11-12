@@ -23,7 +23,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -35,17 +34,6 @@ bool IsSupportedKmsEnvelopeAeadDekKeyType(absl::string_view key_type);
 // Returns a pointer to an AES-GCM EVP_CIPHER for the given key size.
 absl::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
     uint32_t key_size_in_bytes);
-
-#ifdef OPENSSL_IS_BORINGSSL
-// Returns a pointer to an AES-GCM EVP_AEAD for the given key size.
-absl::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
-    uint32_t key_size_in_bytes);
-
-// Returns a pointer to an AES-GCM-SIV EVP_AEAD for `key_size_in_bytes` or an
-// error if `key_size_in_bytes` is invalid.
-absl::StatusOr<const EVP_AEAD *> GetAesGcmSivAeadCipherForKeySize(
-    int key_size_in_bytes);
-#endif
 
 }  // namespace internal
 }  // namespace tink

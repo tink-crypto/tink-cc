@@ -36,9 +36,7 @@ tink_cc_library(
     ssl_aead.cc
     ssl_aead.h
   DEPS
-    tink::aead::internal::aead_util
     absl::core_headers
-    absl::cleanup
     absl::absl_check
     absl::status
     absl::statusor
@@ -51,6 +49,7 @@ tink_cc_library(
     tink::internal::err_util
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    tink::util::errors
     tink::util::secret_data
     tink::util::statusor
 )
@@ -217,7 +216,6 @@ tink_cc_test(
   DEPS
     tink::aead::internal::aead_util
     gmock
-    absl::status
     absl::status_matchers
     absl::statusor
     tink::internal::boringssl
@@ -1300,7 +1298,6 @@ tink_cc_library(
     cord_aes_gcm_siv_boringssl.cc
     cord_aes_gcm_siv_boringssl.h
   DEPS
-    tink::aead::internal::aead_util
     tink::aead::internal::cord_utils
     absl::status
     absl::statusor

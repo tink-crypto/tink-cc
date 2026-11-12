@@ -22,7 +22,6 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
-#include "openssl/opensslv.h"  // To get OPENSSL_IS_BORINGSSL if needed
 #include "tink/util/errors.h"
 
 namespace crypto {
@@ -53,36 +52,6 @@ absl::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
                        "Invalid key size %d", key_size_in_bytes);
   }
 }
-
-#ifdef OPENSSL_IS_BORINGSSL
-absl::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
-    uint32_t key_size_in_bytes) {
-  switch (key_size_in_bytes) {
-    case 16:
-      return EVP_aead_aes_128_gcm();
-    case 32:
-      return EVP_aead_aes_256_gcm();
-    default:
-      return ToStatusF(absl::StatusCode::kInvalidArgument,
-                       "Invalid key size %d", key_size_in_bytes);
-  }
-}
-
-absl::StatusOr<const EVP_AEAD *> GetAesGcmSivAeadCipherForKeySize(
-    int key_size_in_bytes) {
-  switch (key_size_in_bytes) {
-    case 16:
-      return EVP_aead_aes_128_gcm_siv();
-    case 32:
-      return EVP_aead_aes_256_gcm_siv();
-    default:
-      return ToStatusF(
-          absl::StatusCode::kInvalidArgument,
-          "Invalid key size; valid values are {16, 32} bytes, got %d",
-          key_size_in_bytes);
-  }
-}
-#endif
 
 }  // namespace internal
 }  // namespace tink

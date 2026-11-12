@@ -38,7 +38,6 @@
 #include "openssl/evp.h"
 #include "tink/aead/aes_gcm_siv_key.h"
 #include "tink/aead/cord_aead.h"
-#include "tink/aead/internal/aead_util.h"
 #include "tink/aead/internal/cord_utils.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
@@ -263,6 +262,22 @@ class CordAesGcmSivBoringSsl : public CordAead {
   std::string output_prefix_;
 };
 
+// Returns a pointer to an AES-GCM-SIV EVP_AEAD for `key_size_in_bytes` or an
+// error if `key_size_in_bytes` is invalid.
+absl::StatusOr<const EVP_AEAD*> GetAesGcmSivAeadForKeySize(
+    int key_size_in_bytes) {
+  switch (key_size_in_bytes) {
+    case 16:
+      return EVP_aead_aes_128_gcm_siv();
+    case 32:
+      return EVP_aead_aes_256_gcm_siv();
+    default:
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Invalid key size; valid values are {16, 32} bytes, got ",
+          key_size_in_bytes));
+  }
+}
+
 absl::StatusOr<std::unique_ptr<CordAead>> New(const SecretData& key,
                                               absl::string_view output_prefix) {
   absl::Status status =
@@ -272,7 +287,7 @@ absl::StatusOr<std::unique_ptr<CordAead>> New(const SecretData& key,
   }
 
   absl::StatusOr<const EVP_AEAD*> aead_cipher =
-      GetAesGcmSivAeadCipherForKeySize(key.size());
+      GetAesGcmSivAeadForKeySize(key.size());
   if (!aead_cipher.ok()) {
     return aead_cipher.status();
   }

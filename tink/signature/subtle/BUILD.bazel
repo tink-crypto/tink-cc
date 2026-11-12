@@ -529,6 +529,37 @@ cc_test(
 )
 
 cc_library(
+    name = "create_ecdsa_signer",
+    srcs = ["create_ecdsa_signer.cc"],
+    hdrs = ["create_ecdsa_signer.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:public_key_sign",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature/internal:ecdsa_sign_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ecdsa_signer_test",
+    srcs = ["create_ecdsa_signer_test.cc"],
+    deps = [
+        ":create_ecdsa_signer",
+        ":create_ecdsa_verifier",
+        "//tink:public_key_sign",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ecdsa_private_key",
+        "//tink/signature/internal/testing:ecdsa_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "create_ecdsa_verifier",
     srcs = ["create_ecdsa_verifier.cc"],
     hdrs = ["create_ecdsa_verifier.h"],

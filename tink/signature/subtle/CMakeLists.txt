@@ -524,6 +524,37 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME create_ecdsa_signer
+  SRCS
+    create_ecdsa_signer.cc
+    create_ecdsa_signer.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_sign
+    tink::signature::ecdsa_private_key
+    tink::signature::internal::ecdsa_sign_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ecdsa_signer_test
+  SRCS
+    create_ecdsa_signer_test.cc
+  DEPS
+    tink::signature::subtle::create_ecdsa_signer
+    tink::signature::subtle::create_ecdsa_verifier
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::ecdsa_private_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
   NAME create_ecdsa_verifier
   SRCS
     create_ecdsa_verifier.cc

@@ -399,6 +399,7 @@
 #include "tink/signature/subtle/create_composite_ml_dsa_signer.h"
 #include "tink/signature/subtle/create_composite_ml_dsa_verifier.h"
 #include "tink/signature/subtle/create_ecdsa_key.h"
+#include "tink/signature/subtle/create_ecdsa_signer.h"
 #include "tink/signature/subtle/create_ecdsa_verifier.h"
 #include "tink/signature/subtle/create_ed25519_key.h"
 #include "tink/signature/subtle/create_ml_dsa_key.h"

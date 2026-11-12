@@ -57,9 +57,10 @@ class KeySerializerImpl : public KeySerializer {
  public:
   // Creates a key serializer with serialization `function`. The referenced
   // `function` should outlive the created key serializer object.
-  explicit KeySerializerImpl(absl::FunctionRef<absl::StatusOr<SerializationT>(
-                                 KeyT, absl::optional<SecretKeyAccessToken>)>
-                                 function)
+  explicit KeySerializerImpl(
+      absl::FunctionRef<absl::StatusOr<SerializationT>(
+          const KeyT&, absl::optional<SecretKeyAccessToken>)>
+          function)
       : function_(function) {}
 
   absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
@@ -81,7 +82,7 @@ class KeySerializerImpl : public KeySerializer {
 
  private:
   std::function<absl::StatusOr<SerializationT>(
-      KeyT, absl::optional<SecretKeyAccessToken>)>
+      const KeyT&, absl::optional<SecretKeyAccessToken>)>
       function_;
 };
 

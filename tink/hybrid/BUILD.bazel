@@ -864,6 +864,8 @@ cc_test(
     tags = ["requires_boringcrypto_update"],
     deps = [
         ":config_2026",
+        ":ecies_parameters",
+        ":hpke_parameters",
         ":hybrid_key_templates",
         ":key_gen_config_2026",
         "//proto:tink_cc_proto",

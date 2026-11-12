@@ -932,6 +932,8 @@ tink_cc_test(
     config_2026_test.cc
   DEPS
     tink::hybrid::config_2026
+    tink::hybrid::ecies_parameters
+    tink::hybrid::hpke_parameters
     tink::hybrid::hybrid_key_templates
     tink::hybrid::key_gen_config_2026
     gmock

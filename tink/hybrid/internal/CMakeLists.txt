@@ -664,6 +664,8 @@ tink_cc_test(
     tink::core::key_status
     tink::core::keyset_handle
     tink::hybrid::ecies_aead_hkdf_private_key_manager
+    tink::hybrid::ecies_parameters
+    tink::hybrid::hpke_parameters
     tink::hybrid::hybrid_key_templates
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
@@ -682,11 +684,13 @@ tink_cc_library(
   DEPS
     tink::hybrid::internal::hpke_private_key_manager
     tink::hybrid::internal::hpke_public_key_manager
-    absl::memory
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
+    tink::hybrid::ecies_proto_serialization
+    tink::hybrid::hpke_proto_serialization
     tink::internal::key_gen_configuration_impl
 )
 

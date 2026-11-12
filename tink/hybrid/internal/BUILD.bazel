@@ -270,9 +270,11 @@ cc_library(
         "//tink:key_gen_configuration",
         "//tink/hybrid:ecies_aead_hkdf_private_key_manager",
         "//tink/hybrid:ecies_aead_hkdf_public_key_manager",
+        "//tink/hybrid:ecies_proto_serialization",
+        "//tink/hybrid:hpke_proto_serialization",
         "//tink/internal:key_gen_configuration_impl",
-        "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
     ],
 )
 
@@ -488,6 +490,8 @@ cc_test(
         "//tink:key_status",
         "//tink:keyset_handle",
         "//tink/hybrid:ecies_aead_hkdf_private_key_manager",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:hpke_parameters",
         "//tink/hybrid:hybrid_key_templates",
         "//tink/hybrid/internal/testing:hpke_test_vectors",
         "//tink/hybrid/internal/testing:hybrid_test_vectors",

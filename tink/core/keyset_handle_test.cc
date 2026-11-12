@@ -83,8 +83,8 @@ using ::crypto::tink::TestKeysetHandle;
 using ::crypto::tink::internal::CreateTestOnlyKey;
 using ::crypto::tink::internal::kTestOnlyKeySizeInBytes;
 using ::crypto::tink::internal::kTestOnlyKeyTypeUrl;
+using ::crypto::tink::internal::kTestOnlyLegacyKeyTypeUrl;
 using ::crypto::tink::internal::kTestOnlyPrivateKeyTypeUrl;
-using ::crypto::tink::internal::kTestOnlyPublicKeyTypeUrl;
 using ::crypto::tink::internal::NewTestOnlyAead;
 using ::crypto::tink::internal::TestOnlyKeyTemplate;
 using ::crypto::tink::internal::TestOnlyKeyTypeManager;
@@ -105,8 +105,8 @@ using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::TestOnlyKey;
 using ::google::crypto::tink::TestOnlyKeyFormat;
+using ::google::crypto::tink::TestOnlyLegacyKey;
 using ::google::crypto::tink::TestOnlyPrivateKey;
-using ::google::crypto::tink::TestOnlyPublicKey;
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -209,18 +209,18 @@ class FakeAeadKeyManager
   const std::string key_type_;
 };
 
-// Fake AEAD key type manager whose keys are `TestOnlyPublicKey`s. The legacy
+// Fake AEAD key type manager whose keys are `TestOnlyLegacyKey`s. The legacy
 // key manager API requires the type URL of a key type to match its key proto,
-// so its type URL is `kTestOnlyPublicKeyTypeUrl`. Unlike symmetric test-only
+// so its type URL is `kTestOnlyLegacyKeyTypeUrl`. Unlike the other test-only
 // keys, its keys have no proto serialization, so they are parsed into
 // `LegacyProtoKey`s.
 class FakeLegacyAeadKeyManager
-    : public KeyTypeManager<TestOnlyPublicKey, TestOnlyKeyFormat, List<Aead>> {
+    : public KeyTypeManager<TestOnlyLegacyKey, TestOnlyKeyFormat, List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
    public:
     absl::StatusOr<std::unique_ptr<Aead>> Create(
-        const TestOnlyPublicKey& key) const override {
+        const TestOnlyLegacyKey& key) const override {
       return {std::make_unique<DummyAead>("fake legacy aead")};
     }
   };
@@ -237,7 +237,7 @@ class FakeLegacyAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  absl::Status ValidateKey(const TestOnlyPublicKey& key) const override {
+  absl::Status ValidateKey(const TestOnlyLegacyKey& key) const override {
     return absl::OkStatus();
   }
 
@@ -246,13 +246,13 @@ class FakeLegacyAeadKeyManager
     return absl::OkStatus();
   }
 
-  absl::StatusOr<TestOnlyPublicKey> CreateKey(
+  absl::StatusOr<TestOnlyLegacyKey> CreateKey(
       const TestOnlyKeyFormat& key_format) const override {
-    return TestOnlyPublicKey();
+    return TestOnlyLegacyKey();
   }
 
  private:
-  const std::string key_type_ = std::string(kTestOnlyPublicKeyTypeUrl);
+  const std::string key_type_ = std::string(kTestOnlyLegacyKeyTypeUrl);
 };
 
 class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
@@ -1455,7 +1455,7 @@ TEST_F(KeysetHandleTest,
   ASSERT_THAT(test_only_params, IsOk());
 
   KeyTemplate fake_key_template = TestOnlyKeyTemplate(OutputPrefixType::RAW);
-  fake_key_template.set_type_url(kTestOnlyPublicKeyTypeUrl);
+  fake_key_template.set_type_url(kTestOnlyLegacyKeyTypeUrl);
   absl::StatusOr<internal::ProtoParametersSerialization> fake_serialization =
       internal::ProtoParametersSerialization::Create(fake_key_template);
   ASSERT_THAT(fake_serialization, IsOk());
@@ -1494,7 +1494,7 @@ TEST_F(KeysetHandleTest,
   EXPECT_THAT(expected_entry1.IsPrimary(), IsFalse());
   EXPECT_THAT(expected_entry1.GetKey()->GetParameters(),
               Eq(internal::UnusableLegacyProtoParameters(
-                  kTestOnlyPublicKeyTypeUrl, OutputPrefixType::RAW)));
+                  kTestOnlyLegacyKeyTypeUrl, OutputPrefixType::RAW)));
 
   Configuration config;
   ASSERT_THAT((internal::ConfigurationImpl::AddPrimitiveGetter<

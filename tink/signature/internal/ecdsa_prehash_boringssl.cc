@@ -30,6 +30,7 @@
 #include "openssl/digest.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/util.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/internal/prehash_format.h"
@@ -97,6 +98,10 @@ absl::StatusOr<std::unique_ptr<Prehash>> EcdsaPrehashBoringSsl::New(
 
 absl::StatusOr<std::string> EcdsaPrehashBoringSsl::Compute(
     absl::string_view data) const {
+  // BoringSSL expects a non-null pointer for data,
+  // regardless of whether the size is 0.
+  data = internal::EnsureStringNonNull(data);
+
   unsigned int digest_size = 0;
   uint8_t digest[EVP_MAX_MD_SIZE];
   if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, md_,

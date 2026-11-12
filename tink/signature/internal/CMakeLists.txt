@@ -1932,6 +1932,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::internal::fips_utils
     tink::internal::md_util
+    tink::internal::util
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key
     tink::signature::prehash
@@ -1948,6 +1949,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
+    absl::string_view
     tink::internal::fips_utils
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key

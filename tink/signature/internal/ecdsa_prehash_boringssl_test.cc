@@ -24,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -94,6 +95,27 @@ TEST_P(EcdsaPrehashBoringSslTestVectorTest,
 
   EXPECT_THAT((*prehasher)->Compute("different_message"),
               IsOkAndHolds(Ne(*test_vector.prehash)));
+}
+
+TEST_P(EcdsaPrehashBoringSslTestVectorTest,
+       EmptyAndNullMessagesProduceSamePrehash) {
+  const SignatureTestVector& test_vector = GetParam();
+  if (!test_vector.prehash.has_value()) {
+    return;
+  }
+  const auto* private_key = dynamic_cast<const EcdsaPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<Prehash>> prehasher =
+      NewEcdsaPrehashBoringSsl(private_key->GetPublicKey());
+  ASSERT_THAT(prehasher, IsOk());
+
+  absl::StatusOr<std::string> empty_prehash =
+      (*prehasher)->Compute(absl::string_view("", 0));
+  ASSERT_THAT(empty_prehash, IsOk());
+  EXPECT_THAT((*prehasher)->Compute(absl::string_view(nullptr, 0)),
+              IsOkAndHolds(*empty_prehash));
 }
 
 TEST(EcdsaPrehashBoringSslSingleTest, FipsModeWithoutBoringCryptoFails) {

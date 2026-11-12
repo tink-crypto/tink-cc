@@ -1937,6 +1937,7 @@ cc_library(
         ":prehash_format",
         "//tink/internal:fips_utils",
         "//tink/internal:md_util",
+        "//tink/internal:util",
         "//tink/signature:ecdsa_parameters",
         "//tink/signature:ecdsa_public_key",
         "//tink/signature:prehash",
@@ -1965,6 +1966,7 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
 )

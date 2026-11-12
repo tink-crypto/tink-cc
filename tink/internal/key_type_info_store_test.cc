@@ -34,11 +34,10 @@
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/key_manager.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
-#include "tink/signature/ecdsa_sign_key_manager.h"
-#include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
@@ -46,8 +45,6 @@
 #include "tink/util/test_util.h"
 #include "tink/util/validation.h"
 #include "proto/aes_gcm.pb.h"
-#include "proto/common.pb.h"
-#include "proto/ecdsa.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -59,11 +56,6 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
-using ::google::crypto::tink::EcdsaKeyFormat;
-using ::google::crypto::tink::EcdsaParams;
-using ::google::crypto::tink::EcdsaSignatureEncoding;
-using ::google::crypto::tink::EllipticCurveType;
-using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 
 // A KeyTypeManager for AES-GCM key protos that returns fake Aead and CordAead
@@ -217,13 +209,14 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
   KeyTypeInfoStore store;
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  std::make_unique<EcdsaSignKeyManager>(),
-                  std::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                  std::make_unique<TestOnlyPublicKeyTypeManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
 
   {
-    std::string private_type_url = EcdsaSignKeyManager().get_key_type();
+    std::string private_type_url =
+        TestOnlyPrivateKeyTypeManager().get_key_type();
     absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(private_type_url);
     ASSERT_THAT(info, IsOk());
 
@@ -233,7 +226,7 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
     EXPECT_EQ((*manager)->get_key_type(), private_type_url);
   }
   {
-    std::string public_type_url = EcdsaVerifyKeyManager().get_key_type();
+    std::string public_type_url = TestOnlyPublicKeyTypeManager().get_key_type();
     absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(public_type_url);
     ASSERT_THAT(info, IsOk());
 
@@ -247,37 +240,38 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAlreadyExists) {
   {
     KeyTypeInfoStore store;
-    ASSERT_THAT(store.AddKeyTypeManager(std::make_unique<EcdsaSignKeyManager>(),
-                                        /*new_key_allowed=*/true),
+    ASSERT_THAT(store.AddKeyTypeManager(
+                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                    /*new_key_allowed=*/true),
                 IsOk());
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    std::make_unique<EcdsaSignKeyManager>(),
-                    std::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
                     /*new_key_allowed=*/true),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     KeyTypeInfoStore store;
-    ASSERT_THAT(
-        store.AddKeyTypeManager(std::make_unique<EcdsaVerifyKeyManager>(),
-                                /*new_key_allowed=*/true),
-        IsOk());
+    ASSERT_THAT(store.AddKeyTypeManager(
+                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
+                    /*new_key_allowed=*/true),
+                IsOk());
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    std::make_unique<EcdsaSignKeyManager>(),
-                    std::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
                     /*new_key_allowed=*/true),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     KeyTypeInfoStore store;
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    std::make_unique<EcdsaSignKeyManager>(),
-                    std::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
                     /*new_key_allowed=*/true),
                 IsOk());
     EXPECT_THAT(store.AddAsymmetricKeyTypeManagers(
-                    std::make_unique<EcdsaSignKeyManager>(),
-                    std::make_unique<EcdsaVerifyKeyManager>(),
+                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
                     /*new_key_allowed=*/true),
                 IsOk());
   }
@@ -286,13 +280,13 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAlreadyExists) {
 TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
   KeyTypeInfoStore store;
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  std::make_unique<EcdsaSignKeyManager>(),
-                  std::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                  std::make_unique<TestOnlyPublicKeyTypeManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
 
-  std::string private_type_url = EcdsaSignKeyManager().get_key_type();
-  std::string public_type_url = EcdsaVerifyKeyManager().get_key_type();
+  std::string private_type_url = TestOnlyPrivateKeyTypeManager().get_key_type();
+  std::string public_type_url = TestOnlyPublicKeyTypeManager().get_key_type();
 
   absl::StatusOr<KeyTypeInfoStore::Info *> private_info =
       store.Get(private_type_url);
@@ -305,8 +299,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed true -> true is allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  std::make_unique<EcdsaSignKeyManager>(),
-                  std::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                  std::make_unique<TestOnlyPublicKeyTypeManager>(),
                   /*new_key_allowed=*/true),
               IsOk());
   private_info = store.Get(private_type_url);
@@ -318,8 +312,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed true -> false is allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  std::make_unique<EcdsaSignKeyManager>(),
-                  std::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                  std::make_unique<TestOnlyPublicKeyTypeManager>(),
                   /*new_key_allowed=*/false),
               IsOk());
   private_info = store.Get(private_type_url);
@@ -331,8 +325,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed false -> false is allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  std::make_unique<EcdsaSignKeyManager>(),
-                  std::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                  std::make_unique<TestOnlyPublicKeyTypeManager>(),
                   /*new_key_allowed=*/false),
               IsOk());
   private_info = store.Get(private_type_url);
@@ -344,8 +338,8 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
 
   // new_key_allowed false -> true is not allowed.
   ASSERT_THAT(store.AddAsymmetricKeyTypeManagers(
-                  std::make_unique<EcdsaSignKeyManager>(),
-                  std::make_unique<EcdsaVerifyKeyManager>(),
+                  std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                  std::make_unique<TestOnlyPublicKeyTypeManager>(),
                   /*new_key_allowed=*/true),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
@@ -466,32 +460,29 @@ TEST(KeyTypeInfoStoreInfoTest, KeyTypeManager) {
 }
 
 TEST(KeyTypeInfoStoreInfoTest, AsymmetricKeyTypeManagers) {
-  KeyTypeInfoStore::Info info(std::make_unique<EcdsaSignKeyManager>().release(),
-                              std::make_unique<EcdsaVerifyKeyManager>().get(),
-                              /*new_key_allowed=*/false);
+  KeyTypeInfoStore::Info info(
+      std::make_unique<TestOnlyPrivateKeyTypeManager>().release(),
+      std::make_unique<TestOnlyPublicKeyTypeManager>().get(),
+      /*new_key_allowed=*/false);
 
   EXPECT_EQ(info.key_manager_type_index(),
-            std::type_index(typeid(EcdsaSignKeyManager)));
+            std::type_index(typeid(TestOnlyPrivateKeyTypeManager)));
   EXPECT_EQ(info.public_key_type_manager_type_index(),
-            std::type_index(typeid(EcdsaVerifyKeyManager)));
+            std::type_index(typeid(TestOnlyPublicKeyTypeManager)));
 
   EXPECT_EQ(info.new_key_allowed(), false);
   info.set_new_key_allowed(true);
   EXPECT_EQ(info.new_key_allowed(), true);
 
-  std::string type_url = EcdsaSignKeyManager().get_key_type();
+  std::string type_url = TestOnlyPrivateKeyTypeManager().get_key_type();
   absl::StatusOr<const KeyManager<PublicKeySign> *> manager =
       info.get_key_manager<PublicKeySign>(type_url);
   ASSERT_THAT(manager, IsOk());
   EXPECT_EQ((*manager)->DoesSupport(type_url), true);
 
-  EcdsaKeyFormat format;
-  EcdsaParams* params = format.mutable_params();
-  params->set_hash_type(HashType::SHA256);
-  params->set_curve(EllipticCurveType::NIST_P256);
-  params->set_encoding(EcdsaSignatureEncoding::DER);
-  EXPECT_THAT(info.key_factory().NewKeyData(format.SerializeAsString()),
-              IsOk());
+  EXPECT_THAT(
+      info.key_factory().NewKeyData(TestOnlyPrivateKeyTemplate().value()),
+      IsOk());
 
   EXPECT_EQ((bool)info.key_deriver(), true);
 }

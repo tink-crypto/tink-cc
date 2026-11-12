@@ -1224,8 +1224,7 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::aead::cord_aead
-    tink::signature::ecdsa_sign_key_manager
-    tink::signature::ecdsa_verify_key_manager
+    tink::internal::testing::test_only_key_managers
     tink::util::input_stream_util
     tink::util::secret_data
     tink::util::statusor
@@ -1233,8 +1232,6 @@ tink_cc_test(
     tink::util::test_util
     tink::util::validation
     tink::proto::aes_gcm_cc_proto
-    tink::proto::common_cc_proto
-    tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
 

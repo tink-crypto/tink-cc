@@ -69,10 +69,24 @@ class TypeIndex {
 // on user classes. Also centralizes compile-time trait and ID validation.
 struct RttiAccess {
   // Evaluates to `std::true_type` iff `T` itself (not merely an ancestor of
-  // `T`) declares `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`. If
-  // `T` only inherits `TinkRttiTypeIdTag` from a `Base`,
-  // `&T::TinkRttiTypeIdTag` has type `void (Base::*)(...) const`, which does
-  // not match `void (T::*)(...) const`.
+  // `T`) declares `TINK_RTTI_ADD_METHODS_BASE` or
+  // `TINK_RTTI_ADD_METHODS_DERIVED`. If `T` only inherits
+  // `GetTinkRttiTypeIndex` from a `Base`, `&T::GetTinkRttiTypeIndex` has type
+  // `TypeIndex (Base::*)() const`, which does not match
+  // `TypeIndex (T::*)() const`.
+  template <typename T>
+  static auto HasRttiMethodsHelper(int)
+      -> std::is_same<decltype(&T::GetTinkRttiTypeIndex),
+                      TypeIndex (T::*)() const>;
+  template <typename T>
+  static std::false_type HasRttiMethodsHelper(...);
+
+  template <typename T>
+  using HasRttiMethods = decltype(HasRttiMethodsHelper<T>(0));
+
+  // Evaluates to `std::true_type` iff `T` itself (not merely an ancestor of
+  // `T`) declares `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`, using
+  // the same member-pointer exact-class check as `HasRttiMethods`.
   template <typename T>
   static auto HasTypeIdHelper(int) -> std::is_same<
       decltype(&T::TinkRttiTypeIdTag),
@@ -138,13 +152,19 @@ struct RttiAccess {
   static constexpr TypeIndex GetStaticTypeIndex() {
     return TypeIndex(T::kTinkRttiTypeId);
   }
+
+  template <typename T>
+  static TypeIndex GetDynamicTypeIndex(const T& object) {
+    return object.GetTinkRttiTypeIndex();
+  }
 };
 
 // Returns the compile-time `TypeIndex` for `T`, ignoring top-level
 // cv-qualifiers and references (analogous to `std::type_index(typeid(T))`).
 //
 // `T` itself (not merely a base class of `T`) must declare
-// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`.
+// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`. `T` does not need to
+// be polymorphic or declare `TINK_RTTI_ADD_METHODS_*` for static lookup.
 template <typename T>
 constexpr TypeIndex GetTypeIndex() {
   using CleanT = std::remove_cv_t<std::remove_reference_t<T>>;
@@ -157,6 +177,78 @@ constexpr TypeIndex GetTypeIndex() {
     return TypeIndex();
   }
 }
+
+// Returns the dynamic `TypeIndex` of `object`'s runtime type via virtual
+// dispatch (analogous to `std::type_index(typeid(object))`).
+//
+// `object` must be passed by reference (passing a pointer fails at compile
+// time; dereference with `*ptr`), and `object`'s static type `T` must declare
+// both a methods macro (`TINK_RTTI_ADD_METHODS_BASE` or
+// `TINK_RTTI_ADD_METHODS_DERIVED`) and a type-ID macro (`TINK_RTTI_SET_TYPE_ID`
+// or `TINK_RTTI_COMPUTE_TYPE_ID`).
+template <typename T>
+TypeIndex GetTypeIndex(const T& object) {
+  static_assert(!std::is_pointer_v<T>,
+                "Pass a reference (*ptr) to GetTypeIndex, not a pointer.");
+  if constexpr (!std::is_pointer_v<T>) {
+    using CleanT = std::remove_cv_t<std::remove_reference_t<T>>;
+    static_assert(
+        RttiAccess::HasRttiMethods<CleanT>::value,
+        "GetTypeIndex(object) requires object's static type to declare "
+        "TINK_RTTI_ADD_METHODS_BASE or TINK_RTTI_ADD_METHODS_DERIVED.");
+    static_assert(
+        RttiAccess::HasTypeId<CleanT>::value,
+        "GetTypeIndex(object) requires object's static type to declare "
+        "TINK_RTTI_SET_TYPE_ID or TINK_RTTI_COMPUTE_TYPE_ID.");
+    if constexpr (RttiAccess::HasRttiMethods<CleanT>::value &&
+                  RttiAccess::HasTypeId<CleanT>::value) {
+      return RttiAccess::GetDynamicTypeIndex(object);
+    }
+  }
+  return TypeIndex();
+}
+
+// Declares the root virtual RTTI dispatch methods on a polymorphic base class.
+//
+// Place in the `private:` section of a root base class alongside
+// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID` (macro ordering within
+// the class does not matter). The enclosing class should also declare a
+// `virtual` destructor. Subclasses of an RTTI-enabled base class must use
+// `TINK_RTTI_ADD_METHODS_DERIVED(DirectBase)` rather than this macro.
+#define TINK_RTTI_ADD_METHODS_BASE()                                      \
+  friend struct ::crypto::tink::internal::RttiAccess;                     \
+  using TinkRttiBaseType = void;                                          \
+  virtual ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()      \
+      const {                                                             \
+    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
+    return ::crypto::tink::internal::GetTypeIndex<Self>();                \
+  }
+
+// Overrides the virtual RTTI dispatch methods on a subclass of an RTTI-enabled
+// direct base class `BaseClass`.
+//
+// Place in the `private:` section of the derived class alongside
+// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`. If `BaseClass` is a
+// multi-parameter template containing commas, alias it first with `using`.
+//
+// Verifies at compile time that `BaseClass` is a strict base of the enclosing
+// class and itself declares `TINK_RTTI_ADD_METHODS_BASE` or
+// `TINK_RTTI_ADD_METHODS_DERIVED`.
+#define TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)                          \
+  friend struct ::crypto::tink::internal::RttiAccess;                     \
+  ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()              \
+      const override {                                                    \
+    using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
+    static_assert(std::is_base_of_v<BaseClass, Self> &&                   \
+                      !std::is_same_v<BaseClass, Self>,                   \
+                  "Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED."); \
+    static_assert(                                                        \
+        ::crypto::tink::internal::RttiAccess::HasRttiMethods<             \
+            BaseClass>::value,                                            \
+        "BaseClass must declare TINK_RTTI_ADD_METHODS_BASE or "           \
+        "TINK_RTTI_ADD_METHODS_DERIVED.");                                \
+    return ::crypto::tink::internal::GetTypeIndex<Self>();                \
+  }
 
 // Assigns a static 16-bit integer type ID (`id` in `[1, 65535]`) to a
 // non-templated class or struct. IDs in `[1, 32767]` are reserved for Tink's

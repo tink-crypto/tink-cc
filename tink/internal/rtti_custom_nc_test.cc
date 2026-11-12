@@ -52,7 +52,23 @@ class ValidBase {
   virtual ~ValidBase() = default;
 
  private:
+  TINK_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(10);
+};
+
+class ValidDerived : public ValidBase {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
+  TEST_RTTI_SET_TYPE_ID(11);
+};
+
+class OtherRoot {
+ public:
+  virtual ~OtherRoot() = default;
+
+ private:
+  TINK_RTTI_ADD_METHODS_BASE();
+  TEST_RTTI_SET_TYPE_ID(14);
 };
 
 template <typename T>
@@ -61,6 +77,7 @@ class ValidTemplate {
   virtual ~ValidTemplate() = default;
 
  private:
+  TINK_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_COMPUTE_TYPE_ID(15, T);
 };
 
@@ -122,31 +139,100 @@ struct FourParamTemplate {
 }  // namespace test_compute_type_id_too_many_params
 
 // -----------------------------------------------------------------------------
-// 3. Subclass and GetTypeIndex<T>() call-site contract checks
+// 3. Class hierarchy and macro pairing checks
+// -----------------------------------------------------------------------------
+
+namespace test_methods_without_type_id {
+class MethodsOnlyBase {
+ public:
+  virtual ~MethodsOnlyBase() = default;
+
+ private:
+  // Defining RTTI methods on a non-template class without a type-ID macro fails
+  // immediately when instantiating GetTinkRttiTypeIndex().
+  // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
+  TINK_RTTI_ADD_METHODS_BASE();
+};
+}  // namespace test_methods_without_type_id
+
+namespace test_derived_macro_with_non_base {
+class NotDerivedFromOtherRoot : public ValidBase {
+ private:
+  // expected-error@+1 {{Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED}}
+  TINK_RTTI_ADD_METHODS_DERIVED(OtherRoot);
+  TEST_RTTI_SET_TYPE_ID(120);
+};
+}  // namespace test_derived_macro_with_non_base
+
+namespace test_derived_macro_with_self_as_base {
+class SelfAsBase : public ValidBase {
+ private:
+  // expected-error@+1 {{Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED}}
+  TINK_RTTI_ADD_METHODS_DERIVED(SelfAsBase);
+  TEST_RTTI_SET_TYPE_ID(121);
+};
+}  // namespace test_derived_macro_with_self_as_base
+
+namespace test_derived_macro_with_unannotated_base {
+class UnannotatedPolymorphicBase {
+ public:
+  virtual ~UnannotatedPolymorphicBase() = default;
+};
+class DerivedFromUnannotated : public UnannotatedPolymorphicBase {
+ private:
+  // expected-error@+2 {{only virtual member functions can be marked}}
+  // expected-error@+1 {{BaseClass must declare TINK_RTTI_ADD_METHODS_BASE}}
+  TINK_RTTI_ADD_METHODS_DERIVED(UnannotatedPolymorphicBase);
+  TEST_RTTI_SET_TYPE_ID(122);
+};
+}  // namespace test_derived_macro_with_unannotated_base
+
+// -----------------------------------------------------------------------------
+// 4. Subclass and GetTypeIndex call-site contract checks
 // -----------------------------------------------------------------------------
 
 namespace test_subclass_does_not_silently_inherit_annotations {
-// Inherits from annotated ValidBase, but forgets TINK_RTTI_SET_TYPE_ID!
+// Inherits from annotated ValidBase, but forgets both TINK_RTTI_* macros!
 class UnannotatedSubclass : public ValidBase {};
 
-[[maybe_unused]] void TestForgottenSubclassMacro() {
+// Inherits from annotated ValidBase, declares SET_TYPE_ID, forgets DERIVED!
+class SubclassMissingMethods : public ValidBase {
+ private:
+  TEST_RTTI_SET_TYPE_ID(123);
+};
+
+[[maybe_unused]] void TestForgottenSubclassMacros(
+    const SubclassMissingMethods& missing_methods) {
   // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
   (void)GetTypeIndex<UnannotatedSubclass>();
+
+  // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}ADD_METHODS}}
+  (void)GetTypeIndex(missing_methods);
 }
 }  // namespace test_subclass_does_not_silently_inherit_annotations
 
 namespace test_call_site_errors {
 struct UnannotatedStruct {};
 
-[[maybe_unused]] void TestGetTypeIndexErrors() {
+[[maybe_unused]] void TestGetTypeIndexErrors(const ValidBase* base_ptr,
+                                             const Tag1& tag_without_methods,
+                                             const UnannotatedStruct& plain) {
   // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
   (void)GetTypeIndex<UnannotatedStruct>();
-}
 
-class ValidDerived : public ValidBase {
- private:
-  TEST_RTTI_SET_TYPE_ID(11);
-};
+  // expected-error@rtti_manual.h:* {{Pass a reference (*ptr) to GetTypeIndex}}
+  (void)GetTypeIndex(base_ptr);
+
+  // Tag1 has TEST_RTTI_SET_TYPE_ID(1), so GetTypeIndex<Tag1>() is valid, but
+  // dynamic GetTypeIndex(tag_without_methods) is rejected because Tag1 is not a
+  // polymorphic class with TINK_RTTI_ADD_METHODS_*.
+  // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}ADD_METHODS}}
+  (void)GetTypeIndex(tag_without_methods);
+
+  // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}ADD_METHODS}}
+  // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}SET_TYPE_ID}}
+  (void)GetTypeIndex(plain);
+}
 
 [[maybe_unused]] void TestCompilerRttiIsDisabled(const ValidBase* base_ptr) {
   // Confirms that -fno-rtti is genuinely active during this test.
@@ -158,9 +244,12 @@ class ValidDerived : public ValidBase {
 }  // namespace test_call_site_errors
 
 // Sanity check that valid usages in this translation unit compile cleanly.
-[[maybe_unused]] void ValidUsage() {
+[[maybe_unused]] void ValidUsage(const ValidBase* base_ptr) {
   (void)GetTypeIndex<Tag1>();
   (void)GetTypeIndex<ValidTemplate<Tag1>>();
+  if (base_ptr != nullptr) {
+    (void)GetTypeIndex(*base_ptr);
+  }
 }
 
 }  // namespace

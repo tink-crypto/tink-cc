@@ -21,6 +21,7 @@
 
 #if !defined(TINK_USE_CUSTOM_RTTI)
 
+#include <type_traits>
 #include <typeindex>
 #include <typeinfo>
 
@@ -39,9 +40,24 @@ TypeIndex GetTypeIndex() {
   return std::type_index(typeid(T));
 }
 
-// No-op class-annotation macros in standard C++ RTTI mode (zero overhead). See
-// `rtti.h` and `rtti_manual.h` for their expansion and requirements when
-// `TINK_USE_CUSTOM_RTTI` is defined.
+// Returns the dynamic `TypeIndex` of `object`'s runtime type (wraps
+// `std::type_index(typeid(object))`).
+//
+// Passing a pointer fails at compile time in both standard and custom RTTI
+// modes so callers dereference first (`*ptr`) rather than accidentally querying
+// the static pointer type `T*`.
+template <typename T>
+TypeIndex GetTypeIndex(const T& object) {
+  static_assert(!std::is_pointer_v<T>,
+                "Pass a reference (*ptr) to GetTypeIndex, not a pointer.");
+  return std::type_index(typeid(object));
+}
+
+// No-op class-annotation macros in standard C++ RTTI mode (zero vtable or
+// object-size overhead). See `rtti.h` and `rtti_manual.h` for their expansion
+// and requirements when `TINK_USE_CUSTOM_RTTI` is defined.
+#define TINK_RTTI_ADD_METHODS_BASE()
+#define TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)
 #define TINK_RTTI_SET_TYPE_ID(id)
 #define TINK_RTTI_COMPUTE_TYPE_ID(id, ...)
 

@@ -857,19 +857,14 @@ tink_cc_library(
     pem_parser_boringssl.cc
     pem_parser_boringssl.h
   DEPS
-    tink::subtle::common_enums
     tink::subtle::subtle_util_boringssl
-    absl::memory
     absl::status
     absl::strings
     tink::internal::boringssl
     tink::internal::bn_util
-    tink::internal::ec_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
-    tink::internal::ssl_util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -1609,22 +1604,17 @@ tink_cc_test(
   SRCS
     pem_parser_boringssl_test.cc
   DEPS
-    tink::subtle::common_enums
     tink::subtle::pem_parser_boringssl
-    tink::subtle::subtle_util_boringssl
     gmock
     absl::status
     absl::status_matchers
     absl::strings
     tink::internal::boringssl
     tink::internal::bn_util
-    tink::internal::ec_util
     tink::internal::err_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
-    tink::internal::testing::ec_test_vectors
     tink::util::secret_data
-    tink::util::test_matchers
     tink::util::test_util
 )
 

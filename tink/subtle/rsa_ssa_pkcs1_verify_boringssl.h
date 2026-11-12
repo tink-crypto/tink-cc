@@ -62,12 +62,6 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
 
  protected:
   RsaSsaPkcs1VerifyBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> New(
-      const internal::RsaPublicKey& pub_key,
-      const internal::RsaSsaPkcs1Params& params,
-      absl::string_view output_prefix, absl::string_view message_suffix);
 };
 
 }  // namespace subtle

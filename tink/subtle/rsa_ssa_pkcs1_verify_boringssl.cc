@@ -21,10 +21,9 @@
 #include <string>
 #include <utility>
 
-#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
-#include "absl/strings/match.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
@@ -32,7 +31,6 @@
 #include "openssl/rsa.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
-#include "tink/internal/output_prefix_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
@@ -48,46 +46,25 @@ namespace subtle {
 
 namespace {
 
-class RsaSsaPkcs1VerifyBoringSslImpl : public RsaSsaPkcs1VerifyBoringSsl {
- public:
-  RsaSsaPkcs1VerifyBoringSslImpl(internal::SslUniquePtr<RSA> rsa,
-                                 const EVP_MD* sig_hash,
-                                 absl::string_view output_prefix,
-                                 absl::string_view message_suffix)
-      : rsa_(std::move(rsa)),
-        sig_hash_(sig_hash),
-        output_prefix_(output_prefix),
-        legacy_message_suffix_(message_suffix) {}
-
-  absl::Status Verify(absl::string_view signature,
-                      absl::string_view data) const override;
-
- private:
-  absl::Status VerifyWithoutPrefix(absl::string_view signature,
-                                   absl::string_view data) const;
-
-  const internal::SslUniquePtr<RSA> rsa_;
-  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
-  const std::string output_prefix_;
-  const std::string legacy_message_suffix_;
-};
-
-absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
-    absl::string_view signature, absl::string_view data) const {
+absl::Status RsaSsaPkcs1Verify(RSA* rsa, const EVP_MD* sig_hash,
+                               absl::string_view signature,
+                               absl::string_view data, bool append_null_byte) {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
 
   ABSL_ASSIGN_OR_RETURN(
       std::string digest,
-      internal::ComputeHash({data, legacy_message_suffix_}, *sig_hash_));
+      append_null_byte
+          ? internal::ComputeHash({data, absl::string_view("\0", 1)}, *sig_hash)
+          : internal::ComputeHash(data, *sig_hash));
 
-  if (RSA_verify(EVP_MD_type(sig_hash_),
+  if (RSA_verify(EVP_MD_type(sig_hash),
                  /*digest=*/reinterpret_cast<const uint8_t*>(digest.data()),
                  /*digest_len=*/digest.size(),
                  /*sig=*/reinterpret_cast<const uint8_t*>(signature.data()),
                  /*sig_len=*/signature.length(),
-                 /*rsa=*/rsa_.get()) != 1) {
+                 /*rsa=*/rsa) != 1) {
     // Signature is invalid.
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid.");
@@ -96,17 +73,59 @@ absl::Status RsaSsaPkcs1VerifyBoringSslImpl::VerifyWithoutPrefix(
   return absl::OkStatus();
 }
 
-absl::Status RsaSsaPkcs1VerifyBoringSslImpl::Verify(
-    absl::string_view signature, absl::string_view data) const {
-  if (output_prefix_.empty()) {
-    return VerifyWithoutPrefix(signature, data);
+class RsaSsaPkcs1VerifyBoringSslImpl final : public RsaSsaPkcs1VerifyBoringSsl {
+ public:
+  RsaSsaPkcs1VerifyBoringSslImpl(internal::SslUniquePtr<RSA> rsa,
+                                 const EVP_MD* sig_hash)
+      : rsa_(std::move(rsa)), sig_hash_(sig_hash) {}
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override {
+    return RsaSsaPkcs1Verify(rsa_.get(), sig_hash_, signature, data,
+                             /*append_null_byte=*/false);
   }
-  if (!absl::StartsWith(signature, output_prefix_)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "OutputPrefix does not match");
+
+ private:
+  const internal::SslUniquePtr<RSA> rsa_;
+  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+};
+
+// Handles Tink output-prefix and legacy '\0'-suffix framing separately so
+// unprefixed verifiers do not carry unused prefix/suffix state.
+class RsaSsaPkcs1VerifyWithPrefix final : public RsaSsaPkcs1VerifyBoringSsl {
+ public:
+  RsaSsaPkcs1VerifyWithPrefix(internal::SslUniquePtr<RSA> rsa,
+                              const EVP_MD* sig_hash,
+                              absl::string_view output_prefix,
+                              bool append_null_byte)
+      : rsa_(std::move(rsa)),
+        sig_hash_(sig_hash),
+        output_prefix_(output_prefix),
+        append_null_byte_(append_null_byte) {}
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override {
+    if (!absl::ConsumePrefix(&signature, output_prefix_)) {
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "OutputPrefix does not match");
+    }
+    return RsaSsaPkcs1Verify(rsa_.get(), sig_hash_, signature, data,
+                             append_null_byte_);
   }
-  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
-                             data);
+
+ private:
+  const internal::SslUniquePtr<RSA> rsa_;
+  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+  const std::string output_prefix_;
+  const bool append_null_byte_;
+};
+
+// Returns the BoringSSL hash for `hash_type` if it may be used for signatures.
+absl::StatusOr<const EVP_MD*> GetSigHash(HashType hash_type) {
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<RsaSsaPkcs1VerifyBoringSsl>());
+  ABSL_RETURN_IF_ERROR(internal::IsHashTypeSafeForSignature(hash_type));
+  return internal::EvpHashFromHashType(hash_type);
 }
 
 }  // namespace
@@ -133,59 +152,29 @@ RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported hash:", key.GetParameters().GetHashType()));
   }
-  return New(public_key, params, key.GetOutputPrefix(),
-             key.GetParameters().GetVariant() ==
-                     RsaSsaPkcs1Parameters::Variant::kLegacy
-                 ? std::string(1, 0)
-                 : "");
+  const RsaSsaPkcs1Parameters::Variant variant =
+      key.GetParameters().GetVariant();
+  if (variant == RsaSsaPkcs1Parameters::Variant::kNoPrefix) {
+    return New(public_key, params);
+  }
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* sig_hash, GetSigHash(params.hash_type));
+  ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<RSA> rsa,
+                        internal::RsaPublicKeyToRsa(public_key));
+  return std::make_unique<RsaSsaPkcs1VerifyWithPrefix>(
+      std::move(rsa), sig_hash, key.GetOutputPrefix(),
+      /*append_null_byte=*/variant == RsaSsaPkcs1Parameters::Variant::kLegacy);
 }
 
 absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
 RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params) {
-  return New(pub_key, params, "", "");
-}
-
-absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
-RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
-                                const internal::RsaSsaPkcs1Params& params,
-                                absl::string_view output_prefix,
-                                absl::string_view message_suffix) {
-  if (!output_prefix.empty() &&
-      output_prefix.size() != internal::kOutputPrefixSize) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Unsupported output prefix size.");
-  }
-  if (!message_suffix.empty() && message_suffix != absl::string_view("\0", 1)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Unsupported message suffix.");
-  }
-
-  absl::Status status =
-      internal::CheckFipsCompatibility<RsaSsaPkcs1VerifyBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-
-  // Check if the hash type is safe to use.
-  absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.hash_type);
-  if (!is_safe.ok()) {
-    return is_safe;
-  }
-
-  absl::StatusOr<const EVP_MD*> sig_hash =
-      internal::EvpHashFromHashType(params.hash_type);
-  if (!sig_hash.ok()) {
-    return sig_hash.status();
-  }
-
+  ABSL_ASSIGN_OR_RETURN(const EVP_MD* sig_hash, GetSigHash(params.hash_type));
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
   ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<RSA> rsa,
                         internal::RsaPublicKeyToRsa(pub_key));
-
-  return std::make_unique<RsaSsaPkcs1VerifyBoringSslImpl>(
-      std::move(rsa), *sig_hash, output_prefix, message_suffix);
+  return std::make_unique<RsaSsaPkcs1VerifyBoringSslImpl>(std::move(rsa),
+                                                          sig_hash);
 }
 
 }  // namespace subtle

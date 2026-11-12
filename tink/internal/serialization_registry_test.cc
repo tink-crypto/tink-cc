@@ -354,7 +354,7 @@ TEST(SerializationRegistryTest, RegistryCopy) {
   ASSERT_THAT(registry1.RegisterKeyParser(&parser2), IsOk());
   ASSERT_THAT(registry1.RegisterKeySerializer(&serializer2), IsOk());
 
-  SerializationRegistry registry2 = registry1;
+  SerializationRegistry registry2(registry1);
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry2.ParseParameters(NoIdSerialization());
@@ -378,6 +378,111 @@ TEST(SerializationRegistryTest, RegistryCopy) {
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key_serialization, IsOk());
   EXPECT_THAT((*key_serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
+
+  // Mutating the copy does not affect the original registry.
+  ParametersParserImpl<IdParamsSerialization, IdParams> id_params_parser(
+      kIdTypeUrl, ParseIdParams);
+  ParametersSerializerImpl<IdParams, IdParamsSerialization>
+      id_params_serializer(kIdTypeUrl, SerializeIdParams);
+  KeyParserImpl<IdKeySerialization, IdKey> id_key_parser(kIdTypeUrl,
+                                                         ParseIdKey);
+  KeySerializerImpl<IdKey, IdKeySerialization> id_key_serializer(
+      SerializeIdKey);
+  ASSERT_THAT(registry2.RegisterParametersParser(&id_params_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterParametersSerializer(&id_params_serializer),
+              IsOk());
+  ASSERT_THAT(registry2.RegisterKeyParser(&id_key_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterKeySerializer(&id_key_serializer), IsOk());
+
+  EXPECT_THAT(registry2.ParseParameters(IdParamsSerialization()), IsOk());
+  EXPECT_THAT(registry2.SerializeParameters<IdParamsSerialization>(IdParams()),
+              IsOk());
+  EXPECT_THAT(registry2.ParseKey(IdKeySerialization(/*id=*/42),
+                                 InsecureSecretKeyAccess::Get()),
+              IsOk());
+  EXPECT_THAT(registry2.SerializeKey<IdKeySerialization>(
+                  IdKey(42), InsecureSecretKeyAccess::Get()),
+              IsOk());
+
+  EXPECT_THAT(registry1.ParseParameters(IdParamsSerialization()).status(),
+              StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(
+      registry1.SerializeParameters<IdParamsSerialization>(IdParams()).status(),
+      StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(registry1
+                  .ParseKey(IdKeySerialization(/*id=*/42),
+                            InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(registry1
+                  .SerializeKey<IdKeySerialization>(
+                      IdKey(42), InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST(SerializationRegistryTest, RegistryCopyAssignment) {
+  SerializationRegistry registry1;
+  ParametersParserImpl<NoIdSerialization, NoIdParams> parser1(kNoIdTypeUrl,
+                                                              ParseNoIdParams);
+  ParametersSerializerImpl<NoIdParams, NoIdSerialization> serializer1(
+      kNoIdTypeUrl, SerializeNoIdParams);
+  KeyParserImpl<NoIdSerialization, NoIdKey> parser2(kNoIdTypeUrl, ParseNoIdKey);
+  KeySerializerImpl<NoIdKey, NoIdSerialization> serializer2(SerializeNoIdKey);
+  ASSERT_THAT(registry1.RegisterParametersParser(&parser1), IsOk());
+  ASSERT_THAT(registry1.RegisterParametersSerializer(&serializer1), IsOk());
+  ASSERT_THAT(registry1.RegisterKeyParser(&parser2), IsOk());
+  ASSERT_THAT(registry1.RegisterKeySerializer(&serializer2), IsOk());
+
+  SerializationRegistry registry2;
+  ParametersParserImpl<IdParamsSerialization, IdParams> id_params_parser(
+      kIdTypeUrl, ParseIdParams);
+  ParametersSerializerImpl<IdParams, IdParamsSerialization>
+      id_params_serializer(kIdTypeUrl, SerializeIdParams);
+  KeyParserImpl<IdKeySerialization, IdKey> id_key_parser(kIdTypeUrl,
+                                                         ParseIdKey);
+  KeySerializerImpl<IdKey, IdKeySerialization> id_key_serializer(
+      SerializeIdKey);
+  ASSERT_THAT(registry2.RegisterParametersParser(&id_params_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterParametersSerializer(&id_params_serializer),
+              IsOk());
+  ASSERT_THAT(registry2.RegisterKeyParser(&id_key_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterKeySerializer(&id_key_serializer), IsOk());
+
+  registry2 = registry1;
+
+  EXPECT_THAT(registry2.ParseParameters(NoIdSerialization()), IsOk());
+  EXPECT_THAT(registry2.SerializeParameters<NoIdSerialization>(NoIdParams()),
+              IsOk());
+  EXPECT_THAT(
+      registry2.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get()),
+      IsOk());
+  EXPECT_THAT(registry2.SerializeKey<NoIdSerialization>(
+                  NoIdKey(), InsecureSecretKeyAccess::Get()),
+              IsOk());
+
+  // Prior entries in `registry2` were overwritten.
+  EXPECT_THAT(registry2.ParseParameters(IdParamsSerialization()).status(),
+              StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(
+      registry2.SerializeParameters<IdParamsSerialization>(IdParams()).status(),
+      StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(registry2
+                  .ParseKey(IdKeySerialization(/*id=*/42),
+                            InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(registry2
+                  .SerializeKey<IdKeySerialization>(
+                      IdKey(42), InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  // Mutating `registry2` after copy-assignment does not affect `registry1`.
+  ASSERT_THAT(registry2.RegisterParametersParser(&id_params_parser), IsOk());
+  EXPECT_THAT(registry2.ParseParameters(IdParamsSerialization()), IsOk());
+  EXPECT_THAT(registry1.ParseParameters(IdParamsSerialization()).status(),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST(SerializationRegistryTest, RegistryMove) {
@@ -393,7 +498,7 @@ TEST(SerializationRegistryTest, RegistryMove) {
   ASSERT_THAT(registry1.RegisterKeyParser(&parser2), IsOk());
   ASSERT_THAT(registry1.RegisterKeySerializer(&serializer2), IsOk());
 
-  SerializationRegistry registry2 = std::move(registry1);
+  SerializationRegistry registry2(std::move(registry1));
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry2.ParseParameters(NoIdSerialization());
@@ -417,6 +522,107 @@ TEST(SerializationRegistryTest, RegistryMove) {
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key_serialization, IsOk());
   EXPECT_THAT((*key_serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
+
+  // Registering additional entries after moving works.
+  ParametersParserImpl<IdParamsSerialization, IdParams> id_params_parser(
+      kIdTypeUrl, ParseIdParams);
+  ParametersSerializerImpl<IdParams, IdParamsSerialization>
+      id_params_serializer(kIdTypeUrl, SerializeIdParams);
+  KeyParserImpl<IdKeySerialization, IdKey> id_key_parser(kIdTypeUrl,
+                                                         ParseIdKey);
+  KeySerializerImpl<IdKey, IdKeySerialization> id_key_serializer(
+      SerializeIdKey);
+  ASSERT_THAT(registry2.RegisterParametersParser(&id_params_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterParametersSerializer(&id_params_serializer),
+              IsOk());
+  ASSERT_THAT(registry2.RegisterKeyParser(&id_key_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterKeySerializer(&id_key_serializer), IsOk());
+
+  EXPECT_THAT(registry2.ParseParameters(IdParamsSerialization()), IsOk());
+  EXPECT_THAT(registry2.SerializeParameters<IdParamsSerialization>(IdParams()),
+              IsOk());
+  EXPECT_THAT(registry2.ParseKey(IdKeySerialization(/*id=*/42),
+                                 InsecureSecretKeyAccess::Get()),
+              IsOk());
+  EXPECT_THAT(registry2.SerializeKey<IdKeySerialization>(
+                  IdKey(42), InsecureSecretKeyAccess::Get()),
+              IsOk());
+}
+
+TEST(SerializationRegistryTest, RegistryMoveAssignment) {
+  SerializationRegistry registry1;
+  ParametersParserImpl<NoIdSerialization, NoIdParams> parser1(kNoIdTypeUrl,
+                                                              ParseNoIdParams);
+  ParametersSerializerImpl<NoIdParams, NoIdSerialization> serializer1(
+      kNoIdTypeUrl, SerializeNoIdParams);
+  KeyParserImpl<NoIdSerialization, NoIdKey> parser2(kNoIdTypeUrl, ParseNoIdKey);
+  KeySerializerImpl<NoIdKey, NoIdSerialization> serializer2(SerializeNoIdKey);
+  ASSERT_THAT(registry1.RegisterParametersParser(&parser1), IsOk());
+  ASSERT_THAT(registry1.RegisterParametersSerializer(&serializer1), IsOk());
+  ASSERT_THAT(registry1.RegisterKeyParser(&parser2), IsOk());
+  ASSERT_THAT(registry1.RegisterKeySerializer(&serializer2), IsOk());
+
+  SerializationRegistry registry2;
+  ParametersParserImpl<IdParamsSerialization, IdParams> id_params_parser(
+      kIdTypeUrl, ParseIdParams);
+  ParametersSerializerImpl<IdParams, IdParamsSerialization>
+      id_params_serializer(kIdTypeUrl, SerializeIdParams);
+  KeyParserImpl<IdKeySerialization, IdKey> id_key_parser(kIdTypeUrl,
+                                                         ParseIdKey);
+  KeySerializerImpl<IdKey, IdKeySerialization> id_key_serializer(
+      SerializeIdKey);
+  ASSERT_THAT(registry2.RegisterParametersParser(&id_params_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterParametersSerializer(&id_params_serializer),
+              IsOk());
+  ASSERT_THAT(registry2.RegisterKeyParser(&id_key_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterKeySerializer(&id_key_serializer), IsOk());
+
+  registry2 = std::move(registry1);
+
+  EXPECT_THAT(registry2.ParseParameters(NoIdSerialization()), IsOk());
+  EXPECT_THAT(registry2.SerializeParameters<NoIdSerialization>(NoIdParams()),
+              IsOk());
+  EXPECT_THAT(
+      registry2.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get()),
+      IsOk());
+  EXPECT_THAT(registry2.SerializeKey<NoIdSerialization>(
+                  NoIdKey(), InsecureSecretKeyAccess::Get()),
+              IsOk());
+
+  // Prior entries in `registry2` were overwritten.
+  EXPECT_THAT(registry2.ParseParameters(IdParamsSerialization()).status(),
+              StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(
+      registry2.SerializeParameters<IdParamsSerialization>(IdParams()).status(),
+      StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(registry2
+                  .ParseKey(IdKeySerialization(/*id=*/42),
+                            InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+  EXPECT_THAT(registry2
+                  .SerializeKey<IdKeySerialization>(
+                      IdKey(42), InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  // Registering additional entries onto `registry2` after move-assignment
+  // works.
+  ASSERT_THAT(registry2.RegisterParametersParser(&id_params_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterParametersSerializer(&id_params_serializer),
+              IsOk());
+  ASSERT_THAT(registry2.RegisterKeyParser(&id_key_parser), IsOk());
+  ASSERT_THAT(registry2.RegisterKeySerializer(&id_key_serializer), IsOk());
+
+  EXPECT_THAT(registry2.ParseParameters(IdParamsSerialization()), IsOk());
+  EXPECT_THAT(registry2.SerializeParameters<IdParamsSerialization>(IdParams()),
+              IsOk());
+  EXPECT_THAT(registry2.ParseKey(IdKeySerialization(/*id=*/42),
+                                 InsecureSecretKeyAccess::Get()),
+              IsOk());
+  EXPECT_THAT(registry2.SerializeKey<IdKeySerialization>(
+                  IdKey(42), InsecureSecretKeyAccess::Get()),
+              IsOk());
 }
 
 TEST(SerializationRegistryTest, DirectRegistrationAndRoundTrip) {

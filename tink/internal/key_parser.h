@@ -79,7 +79,7 @@ class KeyParserImpl : public KeyParser {
   explicit KeyParserImpl(
       absl::string_view object_identifier,
       absl::FunctionRef<absl::StatusOr<KeyT>(
-          SerializationT, absl::optional<SecretKeyAccessToken>)>
+          const SerializationT&, absl::optional<SecretKeyAccessToken>)>
           function)
       : object_identifier_(object_identifier), function_(function) {}
 
@@ -111,7 +111,7 @@ class KeyParserImpl : public KeyParser {
 
  private:
   std::string object_identifier_;
-  std::function<absl::StatusOr<KeyT>(SerializationT,
+  std::function<absl::StatusOr<KeyT>(const SerializationT&,
                                      absl::optional<SecretKeyAccessToken>)>
       function_;
 };

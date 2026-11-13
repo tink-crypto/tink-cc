@@ -33,10 +33,10 @@ include(ExternalProject)
 include(HttpArchive)
 
 set(BORINGSSL_PREFIX "bssl_tink")
-# Release from 2026-09-29.
-set(_tink_boringssl_version "0.20260929.0")
+# Release from 2026-11-05.
+set(_tink_boringssl_version "0.20261105.0")
 set(_tink_boringssl_sha256
-    "04da9ba0664e0a7f028e961c38d604f2cc6dac852a84ca0e51dc1fa051d4c8fe")
+    "2df2b287f3406a3d2f7f51dccb82cffbddf6cf981811e8edcfffe8fbf02c3ac4")
 
 # Download and unpack the sources at configure time: CMake requires the include
 # directory of an imported target to exist when it generates the build files.

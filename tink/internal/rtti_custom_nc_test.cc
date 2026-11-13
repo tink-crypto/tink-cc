@@ -277,6 +277,10 @@ class VirtualDerived : public virtual ValidBase {
   // Virtual base downcast rejected at compile time by static_cast:
   // expected-error@rtti_manual.h:* {{via virtual base}}
   (void)DynamicCast<const VirtualDerived*>(const_base_ptr);
+
+  // Non-pointer target type:
+  // expected-error@rtti_manual.h:* {{only supports pointer target types}}
+  (void)DynamicCast<const ValidLeaf>(const_base_ptr);
 }
 
 class UnannotatedSourceBase {

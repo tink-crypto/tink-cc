@@ -234,6 +234,8 @@ TypeIndex GetTypeIndex(const T& object) {
 // base classes fail at compile time.
 template <typename To, typename From>
 To DynamicCast(From* from) {
+  static_assert(std::is_pointer_v<To>,
+                "DynamicCast only supports pointer target types.");
   using CleanTarget = std::remove_cv_t<std::remove_pointer_t<To>>;
   using CleanFrom = std::remove_cv_t<From>;
   static_assert(std::is_base_of_v<CleanFrom, CleanTarget>,
@@ -244,14 +246,16 @@ To DynamicCast(From* from) {
           RttiAccess::HasTypeId<CleanTarget>::value,
       "Source and target types of DynamicCast must declare "
       "TINK_RTTI_ADD_METHODS_* and TINK_RTTI_*_TYPE_ID.");
-  if constexpr (RttiAccess::HasRttiMethods<CleanFrom>::value &&
-                RttiAccess::HasTypeId<CleanTarget>::value) {
-    if (from == nullptr ||
-        !RttiAccess::IsInstance(*from, GetTypeIndex<CleanTarget>())) {
-      return nullptr;
+  if constexpr (std::is_pointer_v<To>) {
+    if constexpr (RttiAccess::HasRttiMethods<CleanFrom>::value &&
+                  RttiAccess::HasTypeId<CleanTarget>::value) {
+      if (from == nullptr ||
+          !RttiAccess::IsInstance(*from, GetTypeIndex<CleanTarget>())) {
+        return nullptr;
+      }
     }
+    return static_cast<To>(from);
   }
-  return static_cast<To>(from);
 }
 
 // Declares the root virtual RTTI dispatch methods on a polymorphic base class.

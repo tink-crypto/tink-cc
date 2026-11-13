@@ -16,6 +16,7 @@
 
 #include "tink/mac/hmac_key.h"
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -24,6 +25,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
@@ -291,6 +293,40 @@ TEST(HmacKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(HmacKeyTest, DifferentKeyTypeNotEqual) {
+  class OtherKey : public Key {
+   public:
+    explicit OtherKey(const HmacParameters& parameters)
+        : parameters_(parameters) {}
+    const HmacParameters& GetParameters() const override { return parameters_; }
+    absl::optional<int32_t> GetIdRequirement() const override {
+      return std::nullopt;
+    }
+    bool operator==(const Key& other) const override {
+      ABSL_LOG(FATAL) << "Do not call";
+    }
+    std::unique_ptr<Key> Clone() const override { return nullptr; }
+
+   private:
+    HmacParameters parameters_;
+  };
+  absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = GetSecretKeyBytes(32);
+
+  absl::StatusOr<HmacKey> key = HmacKey::Create(
+      *parameters, secret, /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(key.status(), IsOk());
+
+  OtherKey other_key(*parameters);
+  EXPECT_TRUE(*key != other_key);
+  EXPECT_FALSE(*key == other_key);
 }
 
 TEST(HmacKeyTest, CopyConstructor) {

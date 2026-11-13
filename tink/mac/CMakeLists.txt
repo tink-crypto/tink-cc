@@ -420,6 +420,7 @@ tink_cc_test(
   DEPS
     tink::mac::aes_cmac_parameters
     gmock
+    absl::absl_log
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -435,6 +436,7 @@ tink_cc_test(
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
     gmock
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::optional
@@ -485,6 +487,7 @@ tink_cc_test(
   DEPS
     tink::mac::hmac_parameters
     gmock
+    absl::absl_log
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -500,6 +503,7 @@ tink_cc_test(
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     gmock
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::string_view

@@ -16,6 +16,7 @@
 
 #include "tink/mac/aes_cmac_key.h"
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -24,6 +25,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
@@ -264,6 +266,32 @@ TEST(AesCmacKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesCmacKeyTest, DifferentKeyTypeNotEqual) {
+  class OtherKey : public Key {
+   public:
+    explicit OtherKey(const AesCmacParameters& parameters)
+        : parameters_(parameters) {}
+    const AesCmacParameters& GetParameters() const override {
+      return parameters_;
+    }
+    absl::optional<int32_t> GetIdRequirement() const override {
+      return std::nullopt;
+    }
+    bool operator==(const Key& other) const override {
+      ABSL_LOG(FATAL) << "Do not call";
+    }
+    std::unique_ptr<Key> Clone() const override { return nullptr; }
+
+   private:
+    AesCmacParameters parameters_;
+  };
+  const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
+  OtherKey other_key(key.GetParameters());
+
+  EXPECT_TRUE(key != other_key);
+  EXPECT_FALSE(key == other_key);
 }
 
 TEST(AesCmacKeyTest, CopyConstructor) {

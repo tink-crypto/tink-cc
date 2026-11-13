@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/parameters.h"
@@ -316,6 +317,26 @@ TEST(HmacParametersTest, VariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(HmacParametersTest, DifferentParametersTypeNotEqual) {
+  class OtherParameters : public Parameters {
+   public:
+    bool HasIdRequirement() const override { return false; }
+    bool operator==(const Parameters& other) const override {
+      ABSL_LOG(FATAL) << "Do not call";
+    }
+    std::unique_ptr<Parameters> Clone() const override { return nullptr; }
+  };
+  absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32,
+      /*cryptographic_tag_size_in_bytes=*/10, HmacParameters::HashType::kSha256,
+      HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  OtherParameters other_parameters;
+  EXPECT_TRUE(*parameters != other_parameters);
+  EXPECT_FALSE(*parameters == other_parameters);
 }
 
 TEST(HmacParametersTest, Clone) {

@@ -164,7 +164,7 @@ TEST_P(SslOneShotAeadTest, EncryptDecrypt) {
   DoTestDecrypt(aead->get(), kMessage, kAssociatedData, iv, ciphertext_buffer);
 }
 
-// Calculates a new string with the `position`'s byte modified.
+// Calculates a new string with the bit at `position` flipped.
 std::string ModifyString(absl::string_view input_str, int position) {
   std::string modified(input_str.data(), input_str.size());
   modified[position / 8] ^= 1 << (position % 8);
@@ -259,8 +259,8 @@ TEST_P(SslOneShotAeadTest, TestBufferClearsIfDecryptionFails) {
   subtle::ResizeStringUninitialized(&plaintext_buffer, kMessage.size());
   const std::string kExpectedClearedPlaintext(plaintext_buffer.size(), '\0');
   // Alter the tag.
-  for (int i = kCiphertextSize - test_param.tag_size; i < kCiphertextSize;
-       i++) {
+  for (int i = (kCiphertextSize - test_param.tag_size) * 8;
+       i < kCiphertextSize * 8; i++) {
     std::string modified_ciphertext = ModifyString(ciphertext_buffer, i);
     EXPECT_THAT((*aead)
                     ->Decrypt(modified_ciphertext, kAssociatedData, iv,

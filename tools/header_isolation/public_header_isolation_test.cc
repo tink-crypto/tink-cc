@@ -466,6 +466,7 @@
 #include "tink/subtle/hmac_boringssl.h"
 #include "tink/subtle/ind_cpa_cipher.h"
 #include "tink/subtle/nonce_based_streaming_aead.h"
+#include "tink/subtle/pem_parser_boringssl.h"
 #include "tink/subtle/prf/hkdf_streaming_prf.h"
 #include "tink/subtle/prf/prf_set_util.h"
 #include "tink/subtle/prf/streaming_prf.h"

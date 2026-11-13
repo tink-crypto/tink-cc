@@ -653,29 +653,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME subtle_util_boringssl
-  SRCS
-    subtle_util_boringssl.h
-  DEPS
-    tink::subtle::common_enums
-    absl::core_headers
-    absl::strings
-    tink::internal::boringssl
-    tink::aead::internal::aead_util
-    tink::internal::aes_util
-    tink::internal::bn_util
-    tink::internal::ec_key_from_seed
-    tink::internal::ec_util
-    tink::internal::err_util
-    tink::internal::md_util
-    tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
-    tink::util::secret_data
-    tink::util::statusor
-)
-
-tink_cc_library(
   NAME stream_segment_decrypter
   SRCS
     stream_segment_decrypter.h
@@ -856,7 +833,6 @@ tink_cc_library(
     pem_parser_boringssl.cc
     pem_parser_boringssl.h
   DEPS
-    tink::subtle::subtle_util_boringssl
     absl::status
     absl::strings
     tink::internal::boringssl

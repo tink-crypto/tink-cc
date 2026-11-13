@@ -20,7 +20,6 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {

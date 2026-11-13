@@ -402,6 +402,7 @@
 #include "tink/signature/subtle/create_ecdsa_signer.h"
 #include "tink/signature/subtle/create_ecdsa_verifier.h"
 #include "tink/signature/subtle/create_ed25519_key.h"
+#include "tink/signature/subtle/create_ed25519_signer.h"
 #include "tink/signature/subtle/create_ed25519_verifier.h"
 #include "tink/signature/subtle/create_ml_dsa_key.h"
 #include "tink/signature/subtle/create_ml_dsa_prehash.h"

@@ -587,6 +587,35 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME create_ed25519_signer
+  SRCS
+    create_ed25519_signer.cc
+    create_ed25519_signer.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_sign
+    tink::signature::ed25519_private_key
+    tink::signature::internal::ed25519_sign_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_ed25519_signer_test
+  SRCS
+    create_ed25519_signer_test.cc
+  DEPS
+    tink::signature::subtle::create_ed25519_signer
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::ed25519_private_key
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
   NAME create_ed25519_verifier
   SRCS
     create_ed25519_verifier.cc

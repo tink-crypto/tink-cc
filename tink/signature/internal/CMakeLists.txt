@@ -2051,6 +2051,51 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME ed25519_sign_boringssl
+  SRCS
+    ed25519_sign_boringssl.cc
+    ed25519_sign_boringssl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::str_format
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::ec_util
+    tink::internal::fips_utils
+    tink::internal::secret_buffer
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME ed25519_sign_boringssl_test
+  SRCS
+    ed25519_sign_boringssl_test.cc
+  DEPS
+    tink::signature::internal::ed25519_sign_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::ed25519_private_key
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
   NAME ed25519_verify_boringssl
   SRCS
     ed25519_verify_boringssl.cc

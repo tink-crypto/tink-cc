@@ -2049,3 +2049,44 @@ tink_cc_test(
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_library(
+  NAME ed25519_verify_boringssl
+  SRCS
+    ed25519_verify_boringssl.cc
+    ed25519_verify_boringssl.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::str_format
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::internal::ec_util
+    tink::internal::fips_utils
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
+)
+
+tink_cc_test(
+  NAME ed25519_verify_boringssl_test
+  SRCS
+    ed25519_verify_boringssl_test.cc
+  DEPS
+    tink::signature::internal::ed25519_verify_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::ed25519_private_key
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

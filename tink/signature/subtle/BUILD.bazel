@@ -590,3 +590,34 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "create_ed25519_verifier",
+    srcs = ["create_ed25519_verifier.cc"],
+    hdrs = ["create_ed25519_verifier.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:public_key_verify",
+        "//tink/signature:ed25519_public_key",
+        "//tink/signature/internal:ed25519_verify_boringssl",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "create_ed25519_verifier_test",
+    srcs = ["create_ed25519_verifier_test.cc"],
+    deps = [
+        ":create_ed25519_verifier",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ed25519_private_key",
+        "//tink/signature/internal/testing:ed25519_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

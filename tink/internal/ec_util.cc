@@ -856,41 +856,46 @@ absl::StatusOr<std::string> EncodeEcPointToString(EllipticCurveType curve,
 }
 
 absl::StatusOr<crypto::tink::EcPoint> ComputePublicPoint(
-    EllipticCurveType curve, absl::string_view priv_key_value) {
+    EllipticCurveType curve, const SecretData& priv_key_value) {
   absl::StatusOr<SslUniquePtr<EC_GROUP>> group = EcGroupFromCurveType(curve);
   if (!group.ok()) {
     return group.status();
   }
   SslUniquePtr<EC_GROUP> ssl_group = *std::move(group);
 
-  // 1. Validate 1 <= d < order.
-  absl::StatusOr<SslUniquePtr<BIGNUM>> priv_bn = StringToBignum(priv_key_value);
-  if (!priv_bn.ok()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Invalid private key scalar: ", priv_bn.status().message()));
-  }
-  SslUniquePtr<BIGNUM> priv_bn_val = *std::move(priv_bn);
-  if (BN_is_zero(priv_bn_val.get()) || BN_is_negative(priv_bn_val.get())) {
-    return absl::InvalidArgumentError(
-        "Invalid private key scalar: must be 1 <= d < order.");
-  }
-  const BIGNUM* order = EC_GROUP_get0_order(ssl_group.get());
-  if (order == nullptr || BN_cmp(priv_bn_val.get(), order) >= 0) {
-    return absl::InvalidArgumentError(
-        "Invalid private key scalar: must be 1 <= d < order.");
-  }
-
-  // 2. Compute public point W = d * G.
   SslUniquePtr<EC_POINT> pub_point(EC_POINT_new(ssl_group.get()));
   if (pub_point == nullptr) {
     return absl::InternalError("Failed to allocate EC_POINT");
   }
-  int mul_res = CallWithCoreDumpProtection([&]() {
-    return EC_POINT_mul(ssl_group.get(), pub_point.get(), priv_bn_val.get(),
-                        /*q=*/nullptr, /*m=*/nullptr, /*ctx=*/nullptr);
+  const BIGNUM* order = EC_GROUP_get0_order(ssl_group.get());
+  if (order == nullptr) {
+    return absl::InvalidArgumentError(
+        "Invalid private key scalar: must be 1 <= d < order.");
+  }
+
+  absl::Status mul_status = CallWithCoreDumpProtection([&]() -> absl::Status {
+    // 1. Validate 1 <= d < order.
+    absl::StatusOr<SslUniquePtr<BIGNUM>> priv_bn =
+        SecretDataToBignum(priv_key_value);
+    if (!priv_bn.ok()) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Invalid private key scalar: ", priv_bn.status().message()));
+    }
+    if (BN_is_zero((*priv_bn).get()) || BN_is_negative((*priv_bn).get()) ||
+        BN_cmp((*priv_bn).get(), order) >= 0) {
+      return absl::InvalidArgumentError(
+          "Invalid private key scalar: must be 1 <= d < order.");
+    }
+
+    // 2. Compute public point W = d * G.
+    if (EC_POINT_mul(ssl_group.get(), pub_point.get(), (*priv_bn).get(),
+                     /*q=*/nullptr, /*m=*/nullptr, /*ctx=*/nullptr) != 1) {
+      return absl::InternalError("EC_POINT_mul failed");
+    }
+    return absl::OkStatus();
   });
-  if (mul_res != 1) {
-    return absl::InternalError("EC_POINT_mul failed");
+  if (!mul_status.ok()) {
+    return mul_status;
   }
 
   // 3. Retrieve coordinates.

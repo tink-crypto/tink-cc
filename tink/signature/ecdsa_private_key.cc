@@ -79,8 +79,8 @@ absl::Status ValidateKeyPair(const EcdsaPublicKey& public_key,
   return internal::CallWithCoreDumpProtection([&]() {
     // Set EC_KEY private key.
     absl::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
-        internal::StringToBignum(
-            private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
+        internal::SecretDataToBignum(
+            private_key_value.Get(InsecureSecretKeyAccess::Get()));
     if (!priv_big_num.ok()) {
       return priv_big_num.status();
     }
@@ -145,7 +145,7 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
   }
 
   absl::StatusOr<EcPoint> ec_point = internal::ComputePublicPoint(
-      *curve, private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
+      *curve, private_key_value.Get(InsecureSecretKeyAccess::Get()));
   if (!ec_point.ok()) {
     return ec_point.status();
   }

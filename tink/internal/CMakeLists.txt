@@ -159,6 +159,7 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::util
     absl::algorithm_container
+    absl::core_headers
     absl::log
     absl::absl_check
     absl::status

@@ -1289,27 +1289,27 @@ TEST(EcUtilPointEncodingTest, UnsupportedCurveRejects) {
 TEST(EcUtilTest, ComputePublicPointSuccess) {
   absl::StatusOr<EcPoint> p256_point = ComputePublicPoint(
       EllipticCurveType::NIST_P256,
-      P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()));
+      P256SecretValue().Get(InsecureSecretKeyAccess::Get()));
   ASSERT_THAT(p256_point, IsOk());
   EXPECT_THAT(*p256_point, Eq(P256Point()));
 
   absl::StatusOr<EcPoint> p384_point = ComputePublicPoint(
       EllipticCurveType::NIST_P384,
-      P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()));
+      P384SecretValue().Get(InsecureSecretKeyAccess::Get()));
   ASSERT_THAT(p384_point, IsOk());
   EXPECT_THAT(*p384_point, Eq(P384Point()));
 
   absl::StatusOr<EcPoint> p521_point = ComputePublicPoint(
       EllipticCurveType::NIST_P521,
-      P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()));
+      P521SecretValue().Get(InsecureSecretKeyAccess::Get()));
   ASSERT_THAT(p521_point, IsOk());
   EXPECT_THAT(*p521_point, Eq(P521Point()));
 }
 
 TEST(EcUtilTest, ComputePublicPointZeroScalarFails) {
-  EXPECT_THAT(
-      ComputePublicPoint(EllipticCurveType::NIST_P256, std::string(32, '\0')),
-      StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::NIST_P256,
+                                 SecretData(32, /*value=*/0)),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(EcUtilTest, ComputePublicPointOrderScalarFails) {
@@ -1318,24 +1318,27 @@ TEST(EcUtilTest, ComputePublicPointOrderScalarFails) {
   ASSERT_TRUE(absl::HexStringToBytes(
       "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551",
       &order_bytes));
-  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::NIST_P256, order_bytes),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      ComputePublicPoint(EllipticCurveType::NIST_P256, SecretData(order_bytes)),
+      StatusIs(absl::StatusCode::kInvalidArgument));
 
   // n + 1
   std::string order_plus_one_bytes;
   ASSERT_TRUE(absl::HexStringToBytes(
       "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632552",
       &order_plus_one_bytes));
-  EXPECT_THAT(
-      ComputePublicPoint(EllipticCurveType::NIST_P256, order_plus_one_bytes),
-      StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::NIST_P256,
+                                 SecretData(order_plus_one_bytes)),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(EcUtilTest, ComputePublicPointInvalidCurveFails) {
-  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::UNKNOWN_CURVE, "scalar"),
+  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::UNKNOWN_CURVE,
+                                 SecretData("scalar")),
               StatusIs(absl::StatusCode::kUnimplemented));
-  EXPECT_THAT(ComputePublicPoint(EllipticCurveType::CURVE25519, "scalar"),
-              StatusIs(absl::StatusCode::kUnimplemented));
+  EXPECT_THAT(
+      ComputePublicPoint(EllipticCurveType::CURVE25519, SecretData("scalar")),
+      StatusIs(absl::StatusCode::kUnimplemented));
 }
 
 }  // namespace

@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/ec.h"
@@ -203,7 +204,14 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(
 // affine coordinates as an `EcPoint`.
 absl::StatusOr<crypto::tink::EcPoint> ComputePublicPoint(
     crypto::tink::subtle::EllipticCurveType curve,
-    absl::string_view priv_key_value);
+    const SecretData& priv_key_value);
+[[deprecated(
+    "Use ComputePublicPoint(EllipticCurveType, const SecretData&) instead")]]
+ABSL_REFACTOR_INLINE inline absl::StatusOr<crypto::tink::EcPoint>
+ComputePublicPoint(crypto::tink::subtle::EllipticCurveType curve,
+                   absl::string_view priv_key_value) {
+  return ComputePublicPoint(curve, SecretData(priv_key_value));
+}
 
 // Transforms ECDSA IEEE_P1363 signature encoding to DER encoding.
 //

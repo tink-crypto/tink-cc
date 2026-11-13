@@ -24,6 +24,7 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/mac_key.h"
@@ -80,6 +81,9 @@ class AesCmacKey final : public MacKey {
 
   static absl::StatusOr<std::string> ComputeOutputPrefix(
       const AesCmacParameters& parameters, absl::optional<int> id_requirement);
+
+  TINK_RTTI_ADD_METHODS_DERIVED(MacKey);
+  TINK_RTTI_SET_TYPE_ID(106);
 
   AesCmacParameters parameters_;
   RestrictedData key_bytes_;

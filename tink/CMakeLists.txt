@@ -679,6 +679,8 @@ tink_cc_library(
   NAME parameters
   SRCS
     parameters.h
+  DEPS
+    tink::internal::rtti
   PUBLIC
 )
 
@@ -689,6 +691,7 @@ tink_cc_library(
   DEPS
     tink::core::parameters
     absl::optional
+    tink::internal::rtti
 )
 
 tink_cc_library(

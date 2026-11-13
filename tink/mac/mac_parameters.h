@@ -17,13 +17,18 @@
 #ifndef TINK_MAC_MAC_PARAMETERS_H_
 #define TINK_MAC_MAC_PARAMETERS_H_
 
+#include "tink/internal/rtti.h"
 #include "tink/parameters.h"
 
 namespace crypto {
 namespace tink {
 
 // `MacKey` description without the randomly chosen key material.
-class MacParameters : public Parameters {};
+class MacParameters : public Parameters {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_RTTI_SET_TYPE_ID(101);
+};
 
 }  // namespace tink
 }  // namespace crypto

@@ -25,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/rtti.h"
 #include "tink/internal/util.h"
 #include "tink/parameters.h"
 #include "tink/util/status.h"
@@ -82,7 +83,7 @@ int AesCmacParameters::TotalTagSizeInBytes() const {
 
 bool AesCmacParameters::operator==(const Parameters& other) const {
   const AesCmacParameters* that =
-      dynamic_cast<const AesCmacParameters*>(&other);
+      internal::DynamicCast<const AesCmacParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

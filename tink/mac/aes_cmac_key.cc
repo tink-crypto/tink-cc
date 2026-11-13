@@ -24,6 +24,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/internal/output_prefix_util.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/partial_key_access_token.h"
@@ -90,7 +91,7 @@ absl::StatusOr<std::string> AesCmacKey::ComputeOutputPrefix(
 }
 
 bool AesCmacKey::operator==(const Key& other) const {
-  const AesCmacKey* that = dynamic_cast<const AesCmacKey*>(&other);
+  const AesCmacKey* that = internal::DynamicCast<const AesCmacKey*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/rtti.h"
 #include "tink/internal/util.h"
 #include "tink/parameters.h"
 
@@ -98,7 +99,8 @@ int HmacParameters::TotalTagSizeInBytes() const {
 }
 
 bool HmacParameters::operator==(const Parameters& other) const {
-  const HmacParameters* that = dynamic_cast<const HmacParameters*>(&other);
+  const HmacParameters* that =
+      internal::DynamicCast<const HmacParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

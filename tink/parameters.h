@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include "tink/internal/rtti.h"
+
 namespace crypto {
 namespace tink {
 
@@ -55,6 +57,10 @@ class Parameters {
   virtual std::unique_ptr<Parameters> Clone() const = 0;
 
   virtual ~Parameters() = default;
+
+ private:
+  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_RTTI_SET_TYPE_ID(1);
 };
 
 }  // namespace tink

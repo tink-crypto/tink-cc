@@ -87,8 +87,19 @@ echo "---------- CHECKING RTTI TYPE IDS"
 # More targets will be added as -fno-rtti support expands, eventually replacing
 # this list with '...'.
 readonly TARGETS=(
+  "//tink:key"
+  "//tink:parameters"
   "//tink/internal:rtti"
   "//tink/internal:rtti_test"
+  "//tink/internal:util"
+  "//tink/mac:aes_cmac_key"
+  "//tink/mac:aes_cmac_parameters"
+  "//tink/mac:aes_cmac_parameters_test"
+  "//tink/mac:hmac_key"
+  "//tink/mac:hmac_parameters"
+  "//tink/mac:hmac_parameters_test"
+  "//tink/mac:mac_key"
+  "//tink/mac:mac_parameters"
   "//tools:check_rtti_type_ids_test"
 )
 

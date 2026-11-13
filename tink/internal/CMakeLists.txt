@@ -27,6 +27,7 @@ tink_cc_library(
     util.cc
     util.h
   DEPS
+    tink::internal::rtti
     tink::internal::safe_stringops
     tink::internal::secret_buffer
     absl::core_headers
@@ -226,6 +227,7 @@ tink_cc_test(
   SRCS
     util_test.cc
   DEPS
+    tink::internal::rtti
     tink::internal::util
     gmock
     absl::status_matchers

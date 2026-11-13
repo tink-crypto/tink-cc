@@ -24,6 +24,7 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/mac/mac_key.h"
@@ -78,6 +79,9 @@ class HmacKey final : public MacKey {
 
   static absl::StatusOr<std::string> ComputeOutputPrefix(
       const HmacParameters& parameters, absl::optional<int> id_requirement);
+
+  TINK_RTTI_ADD_METHODS_DERIVED(MacKey);
+  TINK_RTTI_SET_TYPE_ID(104);
 
   HmacParameters parameters_;
   RestrictedData key_bytes_;

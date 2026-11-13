@@ -26,6 +26,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/secret_data.h"
@@ -55,11 +56,23 @@ constexpr absl::string_view kLongString =
 class Base {
  public:
   virtual ~Base() = default;
+
+ private:
+  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_RTTI_SET_TYPE_ID(30001);
 };
 
-class Derived : public Base {};
+class Derived : public Base {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Base);
+  TINK_RTTI_SET_TYPE_ID(30002);
+};
 
-class OtherDerived : public Base {};
+class OtherDerived : public Base {
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Base);
+  TINK_RTTI_SET_TYPE_ID(30003);
+};
 
 TEST(UniquePtrDynamicCastTest, Works) {
   std::unique_ptr<Base> base = std::make_unique<Derived>();
@@ -88,7 +101,7 @@ class TestParameters : public Parameters {
   bool HasIdRequirement() const override { return false; }
   bool operator==(const Parameters& other) const override {
     const TestParameters* other_test_parameters =
-        dynamic_cast<const TestParameters*>(&other);
+        DynamicCast<const TestParameters*>(&other);
     if (other_test_parameters == nullptr) return false;
     return has_id_requirement_ == other_test_parameters->has_id_requirement_;
   }
@@ -104,6 +117,9 @@ class TestParameters : public Parameters {
       : has_id_requirement_(has_id_requirement) {}
 
   bool has_id_requirement_;
+
+  TINK_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_RTTI_SET_TYPE_ID(30004);
 };
 
 class TestKey : public Key {
@@ -115,7 +131,7 @@ class TestKey : public Key {
     return std::nullopt;
   }
   bool operator==(const Key& other) const override {
-    const TestKey* other_test_key = dynamic_cast<const TestKey*>(&other);
+    const TestKey* other_test_key = DynamicCast<const TestKey*>(&other);
     if (other_test_key == nullptr) return false;
     return parameters_ == other_test_key->parameters_;
   }
@@ -125,6 +141,9 @@ class TestKey : public Key {
 
  private:
   TestParameters parameters_;
+
+  TINK_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_RTTI_SET_TYPE_ID(30005);
 };
 
 TEST(CloneKeyOrDie, WorksAndClones) {

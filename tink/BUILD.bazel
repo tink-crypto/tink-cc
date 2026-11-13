@@ -688,6 +688,7 @@ cc_library(
     name = "parameters",
     hdrs = ["parameters.h"],
     visibility = ["//visibility:public"],
+    deps = ["//tink/internal:rtti"],
 )
 
 cc_library(
@@ -696,6 +697,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":parameters",
+        "//tink/internal:rtti",
         "@abseil-cpp//absl/types:optional",
     ],
 )

@@ -128,7 +128,10 @@ cc_library(
     name = "mac_parameters",
     hdrs = ["mac_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink/internal:rtti",
+    ],
 )
 
 cc_library(
@@ -138,6 +141,7 @@ cc_library(
     deps = [
         ":mac_parameters",
         "//tink:key",
+        "//tink/internal:rtti",
         "//tink/util:statusor",
         "@abseil-cpp//absl/strings:string_view",
     ],
@@ -168,6 +172,7 @@ cc_library(
         ":mac_parameters",
         "//tink:crypto_format",
         "//tink:parameters",
+        "//tink/internal:rtti",
         "//tink/internal:util",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -188,6 +193,7 @@ cc_library(
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
         "//tink/internal:output_prefix_util",
+        "//tink/internal:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/base:core_headers",
@@ -216,6 +222,7 @@ cc_library(
         ":mac_parameters",
         "//tink:crypto_format",
         "//tink:parameters",
+        "//tink/internal:rtti",
         "//tink/internal:util",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
@@ -236,6 +243,7 @@ cc_library(
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
         "//tink/internal:output_prefix_util",
+        "//tink/internal:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/base:core_headers",
@@ -460,6 +468,7 @@ cc_test(
     deps = [
         ":aes_cmac_parameters",
         "//tink:parameters",
+        "//tink/internal:rtti",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/log:absl_log",
@@ -480,6 +489,7 @@ cc_test(
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink/internal:rtti",
         "//tink/mac/internal:aes_cmac_test_vectors",
         "//tink/util:test_util",
         "@abseil-cpp//absl/log:absl_log",
@@ -530,6 +540,7 @@ cc_test(
     deps = [
         ":hmac_parameters",
         "//tink:parameters",
+        "//tink/internal:rtti",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/log:absl_log",
@@ -550,6 +561,7 @@ cc_test(
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
+        "//tink/internal:rtti",
         "//tink/mac/internal:hmac_test_vectors",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",

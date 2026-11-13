@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/mac_parameters.h"
 #include "tink/util/statusor.h"
@@ -43,6 +44,10 @@ class MacKey : public Key {
   const MacParameters& GetParameters() const override = 0;
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_RTTI_SET_TYPE_ID(102);
 };
 
 }  // namespace tink

@@ -25,6 +25,7 @@
 #include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "tink/internal/rtti.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -319,15 +320,20 @@ TEST(HmacParametersTest, VariantNotEqual) {
   EXPECT_FALSE(*parameters == *other_parameters);
 }
 
+class OtherParameters : public Parameters {
+ public:
+  bool HasIdRequirement() const override { return false; }
+  bool operator==(const Parameters& other) const override {
+    ABSL_LOG(FATAL) << "Do not call";
+  }
+  std::unique_ptr<Parameters> Clone() const override { return nullptr; }
+
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Parameters)
+  TINK_RTTI_SET_TYPE_ID(30008);
+};
+
 TEST(HmacParametersTest, DifferentParametersTypeNotEqual) {
-  class OtherParameters : public Parameters {
-   public:
-    bool HasIdRequirement() const override { return false; }
-    bool operator==(const Parameters& other) const override {
-      ABSL_LOG(FATAL) << "Do not call";
-    }
-    std::unique_ptr<Parameters> Clone() const override { return nullptr; }
-  };
   absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
       /*key_size_in_bytes=*/32,
       /*cryptographic_tag_size_in_bytes=*/10, HmacParameters::HashType::kSha256,

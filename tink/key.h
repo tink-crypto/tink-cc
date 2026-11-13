@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "tink/internal/rtti.h"
 #include "tink/parameters.h"
 
 namespace crypto {
@@ -79,6 +80,10 @@ class Key {
   virtual std::unique_ptr<Key> Clone() const = 0;
 
   virtual ~Key() = default;
+
+ private:
+  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_RTTI_SET_TYPE_ID(2);
 };
 
 }  // namespace tink

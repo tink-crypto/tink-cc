@@ -22,8 +22,8 @@
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/secret_data.h"
 
@@ -38,14 +38,14 @@ namespace internal {
 // TODO(b/480880036): Add source location to the error message.
 template <typename S, typename T>
 absl::StatusOr<std::unique_ptr<S>> UniquePtrDynamicCast(std::unique_ptr<T> in) {
-  S* out = dynamic_cast<S*>(in.get());
+  S* out = DynamicCast<S*>(in.get());
   if (out == nullptr) {
     return absl::InternalError(
-        absl::StrCat("Unable to perform CastOrError, passed in value is ",
-                     (in == nullptr ? "null" : typeid(*in).name())));
+        in == nullptr ? "Unable to perform CastOrError, passed in value is null"
+                      : "Unable to perform CastOrError");
   }
   in.release();
-  return absl::WrapUnique(out);
+  return std::unique_ptr<S>(out);
 }
 
 // Clone a key of type T. May die if T::Clone doesn't return a T -- guaranteed

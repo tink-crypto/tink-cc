@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "tink/internal/rtti.h"
 #include "tink/mac/mac_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -93,6 +94,9 @@ class AesCmacParameters : public MacParameters {
       : key_size_in_bytes_(key_size_in_bytes),
         cryptographic_tag_size_in_bytes_(cryptographic_tag_size_in_bytes),
         variant_(variant) {}
+
+  TINK_RTTI_ADD_METHODS_DERIVED(MacParameters);
+  TINK_RTTI_SET_TYPE_ID(105);
 
   int key_size_in_bytes_;
   int cryptographic_tag_size_in_bytes_;

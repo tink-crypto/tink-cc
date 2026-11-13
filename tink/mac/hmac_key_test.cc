@@ -31,6 +31,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/mac/internal/hmac_test_vectors.h"
@@ -295,23 +296,27 @@ TEST(HmacKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_key == *key);
 }
 
-TEST(HmacKeyTest, DifferentKeyTypeNotEqual) {
-  class OtherKey : public Key {
-   public:
-    explicit OtherKey(const HmacParameters& parameters)
-        : parameters_(parameters) {}
-    const HmacParameters& GetParameters() const override { return parameters_; }
-    absl::optional<int32_t> GetIdRequirement() const override {
-      return std::nullopt;
-    }
-    bool operator==(const Key& other) const override {
-      ABSL_LOG(FATAL) << "Do not call";
-    }
-    std::unique_ptr<Key> Clone() const override { return nullptr; }
+class OtherKey : public Key {
+ public:
+  explicit OtherKey(const HmacParameters& parameters)
+      : parameters_(parameters) {}
+  const HmacParameters& GetParameters() const override { return parameters_; }
+  absl::optional<int32_t> GetIdRequirement() const override {
+    return std::nullopt;
+  }
+  bool operator==(const Key& other) const override {
+    ABSL_LOG(FATAL) << "Do not call";
+  }
+  std::unique_ptr<Key> Clone() const override { return nullptr; }
 
-   private:
-    HmacParameters parameters_;
-  };
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Key)
+  TINK_RTTI_SET_TYPE_ID(30009);
+
+  HmacParameters parameters_;
+};
+
+TEST(HmacKeyTest, DifferentKeyTypeNotEqual) {
   absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kNoPrefix);

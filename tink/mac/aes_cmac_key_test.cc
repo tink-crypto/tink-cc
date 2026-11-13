@@ -30,6 +30,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/internal/aes_cmac_test_vectors.h"
@@ -268,25 +269,29 @@ TEST(AesCmacKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_key == *key);
 }
 
-TEST(AesCmacKeyTest, DifferentKeyTypeNotEqual) {
-  class OtherKey : public Key {
-   public:
-    explicit OtherKey(const AesCmacParameters& parameters)
-        : parameters_(parameters) {}
-    const AesCmacParameters& GetParameters() const override {
-      return parameters_;
-    }
-    absl::optional<int32_t> GetIdRequirement() const override {
-      return std::nullopt;
-    }
-    bool operator==(const Key& other) const override {
-      ABSL_LOG(FATAL) << "Do not call";
-    }
-    std::unique_ptr<Key> Clone() const override { return nullptr; }
+class OtherKey : public Key {
+ public:
+  explicit OtherKey(const AesCmacParameters& parameters)
+      : parameters_(parameters) {}
+  const AesCmacParameters& GetParameters() const override {
+    return parameters_;
+  }
+  absl::optional<int32_t> GetIdRequirement() const override {
+    return std::nullopt;
+  }
+  bool operator==(const Key& other) const override {
+    ABSL_LOG(FATAL) << "Do not call";
+  }
+  std::unique_ptr<Key> Clone() const override { return nullptr; }
 
-   private:
-    AesCmacParameters parameters_;
-  };
+ private:
+  TINK_RTTI_ADD_METHODS_DERIVED(Key)
+  TINK_RTTI_SET_TYPE_ID(30007);
+
+  AesCmacParameters parameters_;
+};
+
+TEST(AesCmacKeyTest, DifferentKeyTypeNotEqual) {
   const AesCmacKey& key = internal::GetAesCmacTestVector(32).key;
   OtherKey other_key(key.GetParameters());
 

@@ -48,10 +48,10 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::NotNull;
@@ -219,7 +219,7 @@ TEST_P(XChaCha20Poly1305ProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -256,10 +256,10 @@ TEST_F(XChaCha20Poly1305ProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kLegacy,
-                                              /*id_requirement=*/123);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kLegacy,
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -282,10 +282,10 @@ TEST_F(XChaCha20Poly1305ProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -305,10 +305,10 @@ TEST_F(XChaCha20Poly1305ProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -328,10 +328,10 @@ TEST_F(XChaCha20Poly1305ProtoSerializationTest, ParseKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -368,7 +368,7 @@ TEST_P(XChaCha20Poly1305ProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));

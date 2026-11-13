@@ -44,10 +44,10 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::google::crypto::tink::KmsAeadKey;
 using ::google::crypto::tink::KmsAeadKeyFormat;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::NotNull;
@@ -162,7 +162,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kRemote,
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kRemote,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -210,7 +210,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kRemote));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kRemote));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));

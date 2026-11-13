@@ -59,10 +59,10 @@ using ::google::crypto::tink::AesCtrKeyFormat;
 using ::google::crypto::tink::AesCtrParams;
 using ::google::crypto::tink::HashType;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::google::crypto::tink::HmacParams;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -357,7 +357,7 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
@@ -408,7 +408,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
           OutputPrefixTypeTP::kLegacy, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
@@ -432,10 +432,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -460,10 +460,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -487,10 +487,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -515,10 +515,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -545,10 +545,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -601,7 +601,7 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),

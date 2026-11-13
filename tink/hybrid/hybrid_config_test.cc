@@ -65,8 +65,6 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyHybridDecrypt;
 using ::crypto::tink::test::DummyHybridEncrypt;
 using ::google::crypto::tink::AesGcmKeyFormat;
@@ -80,6 +78,8 @@ using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::IsNull;
 using ::testing::Not;
 
@@ -135,8 +135,8 @@ TEST_F(HybridConfigTest, EncryptWrapperRegistered) {
       std::move(hybrid_encrypt_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
-  auto wrapped = Registry::Wrap(
-      std::make_unique<internal::PrimitiveSet<HybridEncrypt>>(
+  auto wrapped =
+      Registry::Wrap(std::make_unique<internal::PrimitiveSet<HybridEncrypt>>(
           *std::move(primitive_set)));
 
   ASSERT_THAT(wrapped, IsOk());
@@ -170,8 +170,8 @@ TEST_F(HybridConfigTest, DecryptWrapperRegistered) {
       std::move(hybrid_decrypt_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
-  auto wrapped = Registry::Wrap(
-      std::make_unique<internal::PrimitiveSet<HybridDecrypt>>(
+  auto wrapped =
+      Registry::Wrap(std::make_unique<internal::PrimitiveSet<HybridDecrypt>>(
           *std::move(primitive_set)));
 
   ASSERT_THAT(wrapped, IsOk());
@@ -271,8 +271,8 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          public_key.GetIdRequirement());
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic,
+          OutputPrefixTypeTP::kRaw, public_key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -328,8 +328,8 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          private_key->GetIdRequirement());
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kRaw, private_key->GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =

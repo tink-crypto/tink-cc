@@ -49,12 +49,12 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
 using ::google::crypto::tink::AesGcmHkdfStreamingParams;
 using ::google::crypto::tink::HashType;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -312,10 +312,10 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKey) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -349,10 +349,10 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -373,10 +373,10 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -400,10 +400,10 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -432,10 +432,10 @@ TEST_P(AesGcmHkdfStreamingParsePrefixTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              ignored_output_prefix_type,
-                                              /*id_requirement=*/123);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          ignored_output_prefix_type,
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -456,10 +456,10 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -502,7 +502,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(OutputPrefixTypeTP::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(std::nullopt));

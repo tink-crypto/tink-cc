@@ -57,9 +57,9 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyDeterministicAead;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::Not;
 
@@ -203,7 +203,7 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesSivKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           test_vector.key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 

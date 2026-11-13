@@ -64,14 +64,14 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::test::DummyMac;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Values;
 
 class MacConfigTest : public ::testing::Test {
@@ -213,7 +213,7 @@ TEST_F(MacConfigTest, AesCmacProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
           test_vector.key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -306,7 +306,7 @@ TEST_F(MacConfigTest, HmacProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           test_vector.key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 

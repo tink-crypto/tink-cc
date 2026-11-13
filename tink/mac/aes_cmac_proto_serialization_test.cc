@@ -53,14 +53,14 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::internal::ProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::internal::proto_testing::SerializeMessage;
 using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::AesCmacKeyFormat;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::IsNull;
 using ::testing::IsTrue;
@@ -200,7 +200,7 @@ TEST_P(AesCmacProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateTP& key_template =
+  const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(),
               Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
@@ -228,8 +228,8 @@ TEST_P(AesCmacProtoSerializationTest, ParseKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyMaterialTypeTP::kSymmetric, test_case.output_prefix_type,
-          test_case.id);
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+          test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -268,7 +268,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -292,7 +292,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -316,7 +316,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -356,7 +356,7 @@ TEST_P(AesCmacProtoSerializationTest, SerializeKey) {
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -445,7 +445,7 @@ KeyAndSerialization CanonicalKeyAndSerialization0() {
       "type.googleapis.com/google.crypto.tink.AesCmacKey",
       {FieldWithNumber(2).IsString("16 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink, 104);
+      KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink, 104);
 
   return KeyAndSerialization(std::make_unique<AesCmacKey>(*key), serialization);
 }
@@ -464,7 +464,8 @@ KeyAndSerialization CanonicalKeyAndSerialization1() {
       "type.googleapis.com/google.crypto.tink.AesCmacKey",
       {FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, std::nullopt);
+      KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+      std::nullopt);
 
   return KeyAndSerialization(std::make_unique<AesCmacKey>(*key), serialization);
 }
@@ -485,7 +486,8 @@ KeyAndSerialization NonCanonicalKeyAndSerialization2() {
        FieldWithNumber(1).IsVarint(0),
        FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw, std::nullopt);
+      KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kRaw,
+      std::nullopt);
 
   return KeyAndSerialization(std::make_unique<AesCmacKey>(*key), serialization);
 }

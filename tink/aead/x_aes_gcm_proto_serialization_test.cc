@@ -49,13 +49,13 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::InsecureSecretKeyAccess;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::MutableSerializationRegistry;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::internal::ProtoKeySerialization;
 using ::crypto::tink::internal::ProtoParametersSerialization;
 using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::XAesGcmKeyFormat;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -222,7 +222,7 @@ TEST_P(XAesGcmProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kSymmetric,
+                                    KeyDataTP::KeyMaterialTypeTP::kSymmetric,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -254,7 +254,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSerialization) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kSymmetric,
+                                    KeyDataTP::KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -280,7 +280,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kSymmetric,
+                                    KeyDataTP::KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -304,7 +304,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidVersion) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kSymmetric,
+                                    KeyDataTP::KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -330,7 +330,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSaltSize) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyMaterialTypeTP::kSymmetric,
+                                    KeyDataTP::KeyMaterialTypeTP::kSymmetric,
                                     OutputPrefixTypeTP::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -356,7 +356,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidKeyType) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmKey", serialized_key,
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -393,7 +393,7 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kSymmetric));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));

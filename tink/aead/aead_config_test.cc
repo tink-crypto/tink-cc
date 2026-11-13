@@ -95,10 +95,10 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::HasSubstr;
 using ::testing::IsNull;
 using ::testing::Not;
@@ -265,7 +265,7 @@ TEST_F(AeadConfigTest, AesGcmProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesGcmKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -354,7 +354,7 @@ TEST_F(AeadConfigTest, AesGcmSivProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -445,7 +445,7 @@ TEST_F(AeadConfigTest, AesEaxProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesEaxKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -536,7 +536,7 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -639,7 +639,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -734,7 +734,7 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -825,7 +825,7 @@ TEST_F(AeadConfigTest, XAesGcmProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.XAesGcmKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kSymmetric, OutputPrefixTypeTP::kTink,
           key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 

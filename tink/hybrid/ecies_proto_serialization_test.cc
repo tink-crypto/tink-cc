@@ -67,8 +67,6 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::GetValueOfFixedLength;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::AesSivKeyFormat;
 using ::google::crypto::tink::EciesAeadDemParams;
@@ -83,6 +81,8 @@ using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -1004,8 +1004,8 @@ TEST_P(EciesProtoSerializationTest, ParsePublicKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPublic, test_case.output_prefix_type,
-          test_case.id);
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic,
+          test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1056,7 +1056,8 @@ TEST_F(EciesProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1090,7 +1091,8 @@ TEST_F(EciesProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1152,7 +1154,7 @@ TEST_P(EciesProtoSerializationTest, SerializePublicKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPublic));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -1223,8 +1225,8 @@ TEST_P(EciesProtoSerializationTest, ParsePrivateKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, test_case.output_prefix_type,
-          test_case.id);
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1291,7 +1293,8 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1326,7 +1329,8 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1368,7 +1372,8 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1416,7 +1421,8 @@ TEST_F(EciesProtoSerializationTest,
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1461,7 +1467,8 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -1533,7 +1540,7 @@ TEST_P(EciesProtoSerializationTest, SerializePrivateKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
-              Eq(KeyMaterialTypeTP::kAsymmetricPrivate));
+              Eq(KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
@@ -1669,7 +1676,8 @@ TEST(AeadDemTypeUrlExceptionTest, ParseWithInvalidUrl) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kTink,
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 

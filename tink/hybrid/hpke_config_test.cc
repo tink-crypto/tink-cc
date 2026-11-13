@@ -57,13 +57,13 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::crypto::tink::internal::KeyMaterialTypeTP;
-using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeParams;
 using ::google::crypto::tink::KeyTemplate;
+using ::google::crypto::tink::internal::KeyDataTP;
+using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 
 class HpkeConfigTest : public ::testing::Test {
  protected:
@@ -170,8 +170,8 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kAsymmetricPublic, OutputPrefixTypeTP::kRaw,
-          public_key.GetIdRequirement());
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic,
+          OutputPrefixTypeTP::kRaw, public_key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -234,8 +234,8 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyMaterialTypeTP::kAsymmetricPrivate, OutputPrefixTypeTP::kRaw,
-          private_key.GetIdRequirement());
+          KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+          OutputPrefixTypeTP::kRaw, private_key.GetIdRequirement());
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =

@@ -362,7 +362,6 @@ TEST(DecryptingRandomAccessStreamTest, WrongCiphertext) {
         std::move(seg_decrypter), std::move(wrong_ct));
     EXPECT_THAT(dec_stream_result, IsOk());
     auto dec_stream = std::move(dec_stream_result.value());
-    std::string decrypted;
     int chunk_size = 1;
     int position = 0;
     auto buffer = std::move(util::Buffer::New(chunk_size).value());

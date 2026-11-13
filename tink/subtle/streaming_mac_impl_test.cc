@@ -186,7 +186,6 @@ TEST(StreamingMacImplTest, ComputeRandMac) {
 }
 
 TEST(StreamingMacImplTest, ComputeCheckStreamPosition) {
-  std::string text = "I am a small message";
   auto output_stream = GetComputeMacOutputStream();
 
   // Check position in first buffer returned by Next();
@@ -306,7 +305,6 @@ TEST(StreamingMacImplTest, VerifyRandMac) {
 }
 
 TEST(StreamingMacImplTest, VerifyCheckStreamPosition) {
-  std::string text = "I am a small message";
   std::string expected_mac = "23:1:DummyMac:streaming mac:";
   auto output_stream = GetVerifyMacOutputStream(expected_mac);
 

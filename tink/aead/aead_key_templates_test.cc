@@ -481,8 +481,6 @@ TEST(AeadKeyTemplatesTest, testKmsEnvelopeAeadMultipleKeysSameKek) {
   auto register_fake_kms_client_status = test::FakeKmsClient::RegisterNewClient(
       kek_uri, /* credentials_path= */ "");
 
-  std::string type_url =
-      "type.googleapis.com/google.crypto.tink.KmsEnvelopeAeadKey";
   const KeyTemplate& dek_template = AeadKeyTemplates::Aes128Gcm();
 
   const KeyTemplate& key_template1 =

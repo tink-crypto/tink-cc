@@ -92,7 +92,6 @@ absl::Status MacCli(absl::string_view mode, const std::string keyset_filename,
   absl::StatusOr<std::string> data_file_content = ReadFile(data_filename);
   if (!data_file_content.ok()) return data_file_content.status();
 
-  std::string output;
   if (mode == kCompute) {
     // Compute authentication tag.
     absl::StatusOr<std::string> compute_result =

@@ -293,7 +293,6 @@ bool WycheproofTest(const google::protobuf::Struct& parsed_input,
     for (const google::protobuf::Value& test :
          test_group.struct_value().fields().at("tests").list_value().values()) {
       const auto& test_fields = test.struct_value().fields();
-      std::string comment = test_fields.at("comment").string_value();
       SecretData key = SecretData(GetBytesFromHexValue(test_fields.at("key")));
       std::string iv = GetBytesFromHexValue(test_fields.at("iv"));
       std::string msg = GetBytesFromHexValue(test_fields.at("msg"));

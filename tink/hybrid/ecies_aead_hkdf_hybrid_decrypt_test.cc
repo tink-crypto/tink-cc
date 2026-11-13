@@ -221,7 +221,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testInvalidKeys) {
 
 TEST_F(EciesAeadHkdfHybridDecryptTest, testAesGcmHybridDecryption) {
   // Register DEM key manager.
-  std::string dem_key_type = AesGcmKeyManager().get_key_type();
+  [[maybe_unused]] std::string dem_key_type = AesGcmKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
                   std::make_unique<AesGcmKeyManager>(), true)
                   .ok());
@@ -243,7 +243,8 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesGcmHybridDecryption) {
 
 TEST_F(EciesAeadHkdfHybridDecryptTest, testAesCtrAeadHybridDecryption) {
   // Register DEM key manager.
-  std::string dem_key_type = AesCtrHmacAeadKeyManager().get_key_type();
+  [[maybe_unused]] std::string dem_key_type =
+      AesCtrHmacAeadKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
                   std::make_unique<AesCtrHmacAeadKeyManager>(), true)
                   .ok());
@@ -271,7 +272,8 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testAesCtrAeadHybridDecryption) {
 
 TEST_F(EciesAeadHkdfHybridDecryptTest, testXChaCha20Poly1305HybridDecryption) {
   // Register DEM key manager.
-  std::string dem_key_type = XChaCha20Poly1305KeyManager().get_key_type();
+  [[maybe_unused]] std::string dem_key_type =
+      XChaCha20Poly1305KeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
                   std::make_unique<XChaCha20Poly1305KeyManager>(), true)
                   .ok());
@@ -289,7 +291,7 @@ TEST_F(EciesAeadHkdfHybridDecryptTest, testXChaCha20Poly1305HybridDecryption) {
 
 TEST_F(EciesAeadHkdfHybridDecryptTest, testAesSivHybridDecryption) {
   // Register DEM key manager.
-  std::string dem_key_type = AesSivKeyManager().get_key_type();
+  [[maybe_unused]] std::string dem_key_type = AesSivKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
                   std::make_unique<AesSivKeyManager>(), true)
                   .ok());
@@ -313,7 +315,7 @@ struct TestVector {
 TEST_F(EciesAeadHkdfHybridDecryptTest,
        testAesSivHybridDecryptionWithTestVectors) {
   // Register DEM key manager.
-  std::string dem_key_type = AesSivKeyManager().get_key_type();
+  [[maybe_unused]] std::string dem_key_type = AesSivKeyManager().get_key_type();
   ASSERT_TRUE(Registry::RegisterKeyTypeManager(
                   std::make_unique<AesSivKeyManager>(), true)
                   .ok());

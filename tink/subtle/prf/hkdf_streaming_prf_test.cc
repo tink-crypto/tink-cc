@@ -597,7 +597,7 @@ TEST(HkdfStreamingPrf, TestFipsOnly) {
   HashType hash = SHA1;
   SecretData ikm = Random::GetRandomKeyBytes(123);
   std::string salt = Random::GetRandomBytes(234);
-  std::string info = Random::GetRandomBytes(345);
+  [[maybe_unused]] std::string info = Random::GetRandomBytes(345);
 
   EXPECT_THAT(HkdfStreamingPrf::New(hash, std::move(ikm), salt).status(),
               StatusIs(absl::StatusCode::kInternal));

@@ -652,8 +652,6 @@ TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());
-  std::string ciphertext_and_tag =
-      absl::StrCat(test_vector.ct, test_vector.tag);
   std::string ciphertext_buffer;
   subtle::ResizeStringUninitialized(
       &ciphertext_buffer, (*aead)->CiphertextSize(test_vector.msg.size()));

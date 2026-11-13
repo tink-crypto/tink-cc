@@ -323,7 +323,8 @@ TEST(DecryptingRandomAccessStreamTest, WrongCiphertext) {
        {key_id_2, saead_name_2}});
 
   for (int pt_size : {0, 1, 10, 100, 10000}) {
-    std::string plaintext = subtle::Random::GetRandomBytes(pt_size);
+    [[maybe_unused]] std::string plaintext =
+        subtle::Random::GetRandomBytes(pt_size);
     for (std::string aad : {"some_aad", "", "some other aad"}) {
       SCOPED_TRACE(absl::StrCat("pt_size = ", pt_size,
                                 ", aad = '", aad, "'"));

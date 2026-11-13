@@ -371,7 +371,7 @@ TEST(ConfigurationImplTest, KeysetWrapperWrapMissingKeyTypeInfoFails) {
   ASSERT_THAT(wrapper, IsOk());
 
   Keyset keyset;
-  std::string raw_key = AddAesGcmKeyToKeyset(
+  [[maybe_unused]] std::string raw_key = AddAesGcmKeyToKeyset(
       keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
@@ -401,7 +401,7 @@ TEST(ConfigurationImplTest, KeysetWrapperWrapMissingKeyManagerFails) {
   ASSERT_THAT(wrapper, IsOk());
 
   Keyset keyset;
-  std::string raw_key = AddAesGcmKeyToKeyset(
+  [[maybe_unused]] std::string raw_key = AddAesGcmKeyToKeyset(
       keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
@@ -573,7 +573,7 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
               StatusIs(absl::StatusCode::kFailedPrecondition));
 
   Keyset keyset;
-  std::string raw_key = AddAesGcmKeyToKeyset(
+  [[maybe_unused]] std::string raw_key = AddAesGcmKeyToKeyset(
       keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
   absl::StatusOr<KeysetHandle> raw_handle =

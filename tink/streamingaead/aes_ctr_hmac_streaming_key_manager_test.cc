@@ -114,9 +114,6 @@ TEST(AesCtrHmacStreamingKeyManagerTest, ValidateKeyDerivedKeyWrongVersion) {
 }
 
 TEST(AesCtrHmacStreamingKeyManagerTest, GetPrimitive) {
-  std::string plaintext = "some plaintext";
-  std::string aad = "some aad";
-
   AesCtrHmacStreamingKey key;
   key.set_version(0);
   key.set_key_value("16 bytes of key ");

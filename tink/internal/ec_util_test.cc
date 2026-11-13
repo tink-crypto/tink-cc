@@ -1320,6 +1320,15 @@ TEST(EcUtilTest, ComputePublicPointOrderScalarFails) {
       &order_bytes));
   EXPECT_THAT(ComputePublicPoint(EllipticCurveType::NIST_P256, order_bytes),
               StatusIs(absl::StatusCode::kInvalidArgument));
+
+  // n + 1
+  std::string order_plus_one_bytes;
+  ASSERT_TRUE(absl::HexStringToBytes(
+      "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632552",
+      &order_plus_one_bytes));
+  EXPECT_THAT(
+      ComputePublicPoint(EllipticCurveType::NIST_P256, order_plus_one_bytes),
+      StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(EcUtilTest, ComputePublicPointInvalidCurveFails) {

@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Import Tink as an in-tree dependency.
 set(TINK_BUILD_TESTS OFF)
+set(TINK_BUILD_TESTONLY ON)
 add_subdirectory(.. tink)
 
 # Make sure we have bash.
@@ -21,25 +22,6 @@ endif()
 
 if (TINK_USE_INSTALLED_GOOGLETEST)
   find_package(GTest CONFIG REQUIRED)
-  # NOTE: _create_interface_target is inherited by Tink.
-  _create_interface_target(gmock GTest::gmock)
-  _create_interface_target(gtest_main GTest::gtest_main)
-else()
-  include(FetchContent)
-
-  FetchContent_Declare(
-    googletest
-    URL       https://github.com/google/googletest/releases/download/v1.18.0/googletest-1.18.0.tar.gz
-    URL_HASH  SHA256=6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
-  )
-
-  FetchContent_GetProperties(googletest)
-  if(NOT googletest_POPULATED)
-    FetchContent_Populate(googletest)
-    add_subdirectory(
-      ${googletest_SOURCE_DIR}
-      ${googletest_BINARY_DIR})
-  endif()
 endif()
 
 enable_testing()

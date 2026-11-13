@@ -103,6 +103,7 @@ add_test(NAME create_keyset_test COMMAND create_keyset_test WORKING_DIRECTORY "$
 target_link_libraries(create_keyset_test
   PRIVATE
     create_keyset
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::aead::aead_config
@@ -120,6 +121,7 @@ target_link_libraries(load_cleartext_keyset_test
   PRIVATE
     load_cleartext_keyset
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::aead::aead_config
@@ -139,6 +141,7 @@ target_link_libraries(load_encrypted_keyset_test
     test_util
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::aead::aead_config
@@ -161,6 +164,7 @@ target_link_libraries(write_keyset_test
     write_keyset
     absl::memory
     absl::status
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::aead::aead_config
@@ -178,6 +182,7 @@ target_link_libraries(obtain_and_use_a_primitive_test
   PRIVATE
     load_cleartext_keyset
     obtain_and_use_a_primitive
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::aead::aead_config
@@ -193,6 +198,7 @@ target_link_libraries(write_cleartext_keyset_test
     load_cleartext_keyset
     write_cleartext_keyset
     absl::memory
+    absl::status_matchers
     absl::statusor
     absl::strings
     tink::aead::aead_config

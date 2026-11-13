@@ -50,7 +50,7 @@ endmacro()
 
 set(gtest_force_shared_crt ON CACHE BOOL "Tink dependency override" FORCE)
 
-if (TINK_BUILD_TESTS)
+if (TINK_BUILD_TESTONLY)
   if (TINK_USE_INSTALLED_GOOGLETEST)
     # This uses the CMake's FindGTest module; if successful, this call to
     # find_package generates the targets GTest::gmock, GTest::gtest and
@@ -65,7 +65,9 @@ if (TINK_BUILD_TESTS)
       SHA256 6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
     )
   endif()
+endif()
 
+if (TINK_BUILD_TESTS)
   if (TINK_USE_INSTALLED_BENCHMARK)
     # This uses the benchmark CONFIG; if successful, this call to
     # find_package generates the targets benchmark::benchmark and

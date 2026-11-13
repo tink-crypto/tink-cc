@@ -27,7 +27,8 @@
 #   TINK_GENFILE_DIR generated content root, such pb.{cc,h} files.
 #   TINK_INCLUDE_DIRS list of global include paths.
 #   TINK_CXX_STANDARD C++ standard to enforce, 11 for now.
-#   TINK_BUILD_TESTS flag, set to false to disable tests (default false).
+#   TINK_BUILD_TESTS enables building tests (requires TINK_BUILD_TESTONLY).
+#   TINK_BUILD_TESTONLY enables building test-only helper libraries.
 #
 # Sensible defaults are provided for all variables, except TINK_MODULE, which is
 # defined by calls to tink_module(). Please don't alter it directly.
@@ -45,6 +46,9 @@ if (BUILD_SHARED_LIBS)
 endif()
 
 if (TINK_BUILD_TESTS)
+  if (NOT TINK_BUILD_TESTONLY)
+    message(FATAL_ERROR "TINK_BUILD_TESTS requires TINK_BUILD_TESTONLY")
+  endif()
   enable_testing()
 endif()
 
@@ -97,7 +101,7 @@ endmacro()
 #   DEPS      list of dependency targets.
 #   PUBLIC    flag, signals that this target is intended for external use.
 #   TESTONLY  flag, signals that this target should be ignored if
-#             TINK_BUILD_TESTS=OFF.
+#             TINK_BUILD_TESTONLY=OFF.
 #
 # If SRCS contains only headers, an INTERFACE rule is created. This rule carries
 # include path and link library information, but is not directly buildable.
@@ -119,7 +123,7 @@ function(tink_cc_library)
     "SRCS;DEPS;TAGS"
   )
 
-  if (tink_cc_library_TESTONLY AND NOT TINK_BUILD_TESTS)
+  if (tink_cc_library_TESTONLY AND NOT TINK_BUILD_TESTONLY)
     return()
   endif()
 

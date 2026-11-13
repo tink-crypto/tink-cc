@@ -21,6 +21,7 @@
 
 #if !defined(TINK_USE_CUSTOM_RTTI)
 
+#include <cstdlib>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
@@ -37,7 +38,13 @@ using TypeIndex = std::type_index;
 // cv-qualifiers and references (wraps `std::type_index(typeid(T))`).
 template <typename T>
 TypeIndex GetTypeIndex() {
+#if defined(__cpp_rtti) || defined(__GXX_RTTI) || defined(_CPPRTTI)
   return std::type_index(typeid(T));
+#else
+  static_assert(sizeof(T) == 0,
+                "GetTypeIndex requires -frtti or TINK_USE_CUSTOM_RTTI.");
+  std::abort();
+#endif
 }
 
 // Returns the dynamic `TypeIndex` of `object`'s runtime type (wraps
@@ -50,7 +57,14 @@ template <typename T>
 TypeIndex GetTypeIndex(const T& object) {
   static_assert(!std::is_pointer_v<T>,
                 "Pass a reference (*ptr) to GetTypeIndex, not a pointer.");
+#if defined(__cpp_rtti) || defined(__GXX_RTTI) || defined(_CPPRTTI)
   return std::type_index(typeid(object));
+#else
+  (void)object;
+  static_assert(sizeof(T) == 0,
+                "GetTypeIndex requires -frtti or TINK_USE_CUSTOM_RTTI.");
+  std::abort();
+#endif
 }
 
 // Downcasts pointer `from` to pointer type `To` via `dynamic_cast<To>(from)`,
@@ -58,7 +72,14 @@ TypeIndex GetTypeIndex(const T& object) {
 // an instance of `To`.
 template <typename To, typename From>
 To DynamicCast(From* from) {
+#if defined(__cpp_rtti) || defined(__GXX_RTTI) || defined(_CPPRTTI)
   return dynamic_cast<To>(from);
+#else
+  (void)from;
+  static_assert(sizeof(To) == 0,
+                "DynamicCast requires -frtti or TINK_USE_CUSTOM_RTTI.");
+  return nullptr;
+#endif
 }
 
 // No-op class-annotation macros in standard C++ RTTI mode (zero vtable or

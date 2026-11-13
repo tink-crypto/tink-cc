@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Non-compilation tests for Tink RTTI macros and utilities in
-// `-DTINK_USE_CUSTOM_RTTI -fno-rtti` mode.
+// Non-compilation tests for Tink RTTI macros and utilities with `-fno-rtti`
+// (both with and without `-DTINK_USE_CUSTOM_RTTI`).
 
 #include "tink/internal/rtti.h"
 
@@ -92,6 +92,8 @@ class ValidTemplate {
   TINK_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_COMPUTE_TYPE_ID(15, T);
 };
+
+#if defined(TINK_USE_CUSTOM_RTTI)
 
 // -----------------------------------------------------------------------------
 // 1. Type ID range checks
@@ -318,6 +320,43 @@ class AnnotatedChildOfUnannotated : public UnannotatedSourceBase {
   }
   return DynamicCast<const ValidLeaf*>(base_ptr);
 }
+
+#else  // defined(TINK_USE_CUSTOM_RTTI)
+
+// When compiled with `-fno-rtti` and without `-DTINK_USE_CUSTOM_RTTI`,
+// including `rtti.h`, annotating classes with `TINK_RTTI_*` macros, and
+// referencing `GetTypeIndex` or `DynamicCast` in uninstantiated templates must
+// compile cleanly, while instantiating `GetTypeIndex` or `DynamicCast` must
+// fail with a static_assert.
+
+template <typename T>
+TypeIndex UninstantiatedGetTypeIndexStatic() {
+  return GetTypeIndex<T>();
+}
+
+template <typename T>
+TypeIndex UninstantiatedGetTypeIndexDynamic(const T& obj) {
+  return GetTypeIndex(obj);
+}
+
+template <typename To, typename From>
+To UninstantiatedDynamicCast(From* from) {
+  return DynamicCast<To>(from);
+}
+
+[[maybe_unused]] void TestInstantiatingWithoutRttiFails(
+    const ValidBase* base_ptr) {
+  // expected-error@rtti_native.h:* {{GetTypeIndex requires -frtti}}
+  (void)GetTypeIndex<ValidBase>();
+
+  // expected-error@rtti_native.h:* {{GetTypeIndex requires -frtti}}
+  (void)GetTypeIndex(*base_ptr);
+
+  // expected-error@rtti_native.h:* {{DynamicCast requires -frtti}}
+  (void)DynamicCast<const ValidLeaf*>(base_ptr);
+}
+
+#endif  // defined(TINK_USE_CUSTOM_RTTI)
 
 }  // namespace
 }  // namespace internal

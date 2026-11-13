@@ -16,150 +16,38 @@
 
 #include "tink/subtle/ed25519_verify_boringssl.h"
 
-#include <cstdint>
-#include <cstring>
 #include <memory>
-#include <string>
-#include <utility>
+#include <optional>
 
-#include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "absl/strings/strip.h"
-#include "openssl/evp.h"
-#include "tink/internal/ec_util.h"
-#include "tink/internal/fips_utils.h"
-#include "tink/internal/ssl_unique_ptr.h"
-#include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/internal/ed25519_verify_boringssl.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 
-namespace {
-
-constexpr int kEd25519SignatureLenInBytes = 64;
-
-class Ed25519VerifyBoringSslImpl : public Ed25519VerifyBoringSsl {
- public:
-  explicit Ed25519VerifyBoringSslImpl(
-      internal::SslUniquePtr<EVP_PKEY> public_key,
-      absl::string_view output_prefix, absl::string_view message_suffix)
-      : public_key_(std::move(public_key)),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::Status Verify(absl::string_view signature,
-                      absl::string_view data) const override;
-
- private:
-  absl::Status VerifyWithoutPrefix(absl::string_view signature,
-                                   absl::string_view data) const;
-
-  const internal::SslUniquePtr<EVP_PKEY> public_key_;
-  const std::string output_prefix_;
-  const std::string message_suffix_;
-};
-
-absl::Status Ed25519VerifyBoringSslImpl::VerifyWithoutPrefix(
-    absl::string_view signature, absl::string_view data) const {
-  signature = internal::EnsureStringNonNull(signature);
-  data = internal::EnsureStringNonNull(data);
-
-  if (signature.size() != kEd25519SignatureLenInBytes) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrFormat("Invalid ED25519 signature size (%d). "
-                        "The signature must be %d bytes long.",
-                        signature.size(), kEd25519SignatureLenInBytes));
-  }
-
-  internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
-  // `type` must be set to nullptr with Ed25519.
-  if (EVP_DigestVerifyInit(md_ctx.get(), /*pctx=*/nullptr, /*type=*/nullptr,
-                           /*e=*/nullptr, public_key_.get()) != 1) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EVP_DigestVerifyInit failed.");
-  }
-
-  if (EVP_DigestVerify(
-          md_ctx.get(),
-          /*sig=*/reinterpret_cast<const uint8_t *>(signature.data()),
-          signature.size(),
-          /*data=*/reinterpret_cast<const uint8_t *>(data.data()),
-          data.size()) != 1) {
-    return absl::Status(absl::StatusCode::kInternal, "Signature is not valid.");
-  }
-
-  return absl::OkStatus();
-}
-
-absl::Status Ed25519VerifyBoringSslImpl::Verify(absl::string_view signature,
-                                                absl::string_view data) const {
-  if (output_prefix_.empty() && message_suffix_.empty()) {
-    return VerifyWithoutPrefix(signature, data);
-  }
-  if (!absl::StartsWith(signature, output_prefix_)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "OutputPrefix does not match");
-  }
-  // Stores a copy of the data in case message_suffix_ is not empty.
-  // Needs to stay alive until this method is done.
-  std::string data_copy_holder;
-  if (!message_suffix_.empty()) {
-    data_copy_holder = absl::StrCat(data, message_suffix_);
-    data = data_copy_holder;
-  }
-  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
-                             data);
-}
-
-}  // namespace
-
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
     const Ed25519PublicKey& public_key) {
-  return New(public_key.GetPublicKeyBytes(GetPartialKeyAccess()),
-             public_key.GetOutputPrefix(),
-             public_key.GetParameters().GetVariant() ==
-                     Ed25519Parameters::Variant::kLegacy
-                 ? std::string(1, 0)
-                 : "");
+  return internal::NewEd25519VerifyBoringSsl(public_key);
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
-    absl::string_view public_key, absl::string_view output_prefix,
-    absl::string_view message_suffix) {
-  auto status = internal::CheckFipsCompatibility<Ed25519VerifyBoringSsl>();
-  if (!status.ok()) return status;
-
-  if (public_key.length() !=
-      static_cast<size_t>(internal::Ed25519KeyPubKeySize())) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrFormat("Invalid ED25519 public key size (%d). "
-                        "The only valid size is %d.",
-                        public_key.length(), internal::Ed25519KeyPubKeySize()));
-  }
-
-  // Generate a new EVP_PKEY key and populate it with the public key data.
-  internal::SslUniquePtr<EVP_PKEY> ssl_pub_key(EVP_PKEY_new_raw_public_key(
-      EVP_PKEY_ED25519, /*unused=*/nullptr,
-      reinterpret_cast<const uint8_t*>(public_key.data()),
-      internal::Ed25519KeyPrivKeySize()));
-  if (ssl_pub_key == nullptr) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "EVP_PKEY_new_raw_public_key failed");
-  }
-
-  return std::make_unique<Ed25519VerifyBoringSslImpl>(
-      std::move(ssl_pub_key), output_prefix, message_suffix);
+    absl::string_view public_key) {
+  ABSL_ASSIGN_OR_RETURN(
+      Ed25519Parameters parameters,
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix));
+  ABSL_ASSIGN_OR_RETURN(
+      Ed25519PublicKey key,
+      Ed25519PublicKey::Create(parameters, public_key,
+                               /*id_requirement=*/std::nullopt,
+                               GetPartialKeyAccess()));
+  return internal::NewEd25519VerifyBoringSsl(key);
 }
 
 }  // namespace subtle

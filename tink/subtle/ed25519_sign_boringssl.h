@@ -39,9 +39,7 @@ class Ed25519SignBoringSsl : public PublicKeySign {
   // Ed25519 private key material with the public key material (following the
   // OpenSSL/BoringSSL API).
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      SecretData private_key) {
-    return New(private_key, "", "");
-  }
+      SecretData private_key);
 
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const Ed25519PrivateKey& key);
@@ -56,11 +54,6 @@ class Ed25519SignBoringSsl : public PublicKeySign {
 
  protected:
   Ed25519SignBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      SecretData private_key, absl::string_view output_prefix,
-      absl::string_view message_suffix);
 };
 
 }  // namespace subtle

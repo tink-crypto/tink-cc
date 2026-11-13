@@ -38,9 +38,7 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
       const Ed25519PublicKey& public_key);
 
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
-      absl::string_view public_key) {
-    return New(public_key, "", "");
-  }
+      absl::string_view public_key);
 
   // Verifies that 'signature' is a digital signature for 'data'.
   absl::Status Verify(absl::string_view signature,
@@ -53,11 +51,6 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
 
  protected:
   Ed25519VerifyBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
-      absl::string_view public_key, absl::string_view output_prefix,
-      absl::string_view message_suffix);
 };
 
 }  // namespace subtle

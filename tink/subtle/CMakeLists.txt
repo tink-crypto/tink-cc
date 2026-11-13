@@ -112,21 +112,20 @@ tink_cc_library(
     ed25519_sign_boringssl.h
   DEPS
     absl::status
-    absl::strings
+    absl::status_macros
+    absl::statusor
     absl::str_format
-    tink::internal::boringssl
+    absl::string_view
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::core::restricted_data
     tink::config::tink_fips
-    tink::internal::call_with_core_dump_protection
-    tink::internal::dfsan_forwarders
     tink::internal::ec_util
     tink::internal::fips_utils
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
+    tink::signature::internal::ed25519_sign_boringssl
     tink::util::secret_data
     tink::util::statusor
 )
@@ -137,19 +136,15 @@ tink_cc_library(
     ed25519_verify_boringssl.cc
     ed25519_verify_boringssl.h
   DEPS
-    absl::status
+    absl::status_macros
     absl::statusor
-    absl::strings
-    absl::str_format
-    tink::internal::boringssl
+    absl::string_view
     tink::core::partial_key_access
     tink::core::public_key_verify
-    tink::internal::ec_util
     tink::internal::fips_utils
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
     tink::signature::ed25519_parameters
     tink::signature::ed25519_public_key
+    tink::signature::internal::ed25519_verify_boringssl
     tink::util::status
     tink::util::statusor
 )

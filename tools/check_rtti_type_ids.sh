@@ -15,7 +15,8 @@
 ################################################################################
 
 # Checks that all TINK_RTTI_SET_TYPE_ID and TINK_RTTI_COMPUTE_TYPE_ID usages in
-# <source_dir> specify unique decimal integer literals in [1, 32767].
+# <source_dir> specify unique decimal integer literals in [1, 32767] and match
+# the expected "<id> <file>" registry list.
 
 # Generated with openssl rand -hex 10
 echo "========================================================================="
@@ -24,11 +25,42 @@ echo "========================================================================="
 
 set -euo pipefail
 
-if (( $# != 1 )) || [[ ! -d "$1" ]]; then
-  echo "Usage: $0 <source_dir>" >&2
+# We currently hard code the list of files with IDs here -- this might or might
+# not be useful. If it is annoying, please delete this part of the test.
+
+DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
+1 //third_party/tink/cc/parameters.h
+2 //third_party/tink/cc/key.h
+101 //third_party/tink/cc/mac/mac_parameters.h
+102 //third_party/tink/cc/mac/mac_key.h
+103 //third_party/tink/cc/mac/hmac_parameters.h
+104 //third_party/tink/cc/mac/hmac_key.h
+105 //third_party/tink/cc/mac/aes_cmac_parameters.h
+106 //third_party/tink/cc/mac/aes_cmac_key.h
+30001 //third_party/tink/cc/internal/util_test.cc
+30002 //third_party/tink/cc/internal/util_test.cc
+30003 //third_party/tink/cc/internal/util_test.cc
+30004 //third_party/tink/cc/internal/util_test.cc
+30005 //third_party/tink/cc/internal/util_test.cc
+30006 //third_party/tink/cc/mac/aes_cmac_parameters_test.cc
+30007 //third_party/tink/cc/mac/aes_cmac_key_test.cc
+30008 //third_party/tink/cc/mac/hmac_parameters_test.cc
+30009 //third_party/tink/cc/mac/hmac_key_test.cc
+EOF
+)"
+readonly DEFAULT_EXPECTED_IDS
+
+if (( $# < 1 || $# > 2 )) || [[ ! -d "$1" ]]; then
+  echo "Usage: $0 <source_dir> [expected_ids_file]" >&2
   exit 1
 fi
-readonly TARGET_DIR="$1"
+readonly TARGET_DIR="${1%/}"
+if (( $# == 2 )); then
+  EXPECTED_IDS="$(cat "$2")"
+else
+  EXPECTED_IDS="${DEFAULT_EXPECTED_IDS}"
+fi
+readonly EXPECTED_IDS
 
 LINES="$(grep -rnE --include='*.h' --include='*.cc' \
   'TINK_RTTI_(SET|COMPUTE)_TYPE_ID' "${TARGET_DIR}" \
@@ -36,6 +68,11 @@ LINES="$(grep -rnE --include='*.h' --include='*.cc' \
 readonly LINES
 
 if [[ -z "${LINES}" ]]; then
+  if [[ -n "${EXPECTED_IDS}" ]]; then
+    echo "ERROR: Found 0 RTTI type IDs, but expected:" >&2
+    echo "${EXPECTED_IDS}" >&2
+    exit 1
+  fi
   echo "Checked 0 unique RTTI type ID(s)."
   exit 0
 fi
@@ -69,6 +106,21 @@ if [[ -n "${DUPS}" ]]; then
   for id in ${DUPS}; do
     echo "${LINES}" | grep -E "TINK_RTTI_(SET|COMPUTE)_TYPE_ID\(${id}[),]" >&2
   done
+  exit 1
+fi
+
+ACTUAL_IDS="$(echo "${LINES}" \
+  | sed -E "s#^${TARGET_DIR}/([^:]+):[0-9]+:.*TINK_RTTI_(SET|COMPUTE)_TYPE_ID\(([0-9]+).*#\3 //third_party/tink/cc/\1#" \
+  | LC_ALL=C sort -n -k1,1 -k2,2)"
+readonly ACTUAL_IDS
+
+if [[ "${ACTUAL_IDS}" != "${EXPECTED_IDS}" ]]; then
+  echo "ERROR: Actual RTTI type IDs do not match expected list." >&2
+  echo "Actual:" >&2
+  echo "${ACTUAL_IDS}" >&2
+  echo
+  echo "Diff (-expected +actual):" >&2
+  diff -u <(echo "${EXPECTED_IDS}") <(echo "${ACTUAL_IDS}") >&2
   exit 1
 fi
 

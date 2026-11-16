@@ -91,30 +91,115 @@ macro(tink_module NAME)
   set(TINK_MODULE ${NAME})
 endmacro()
 
-# Declare a Tink library. Produces a static library that can be linked into
-# other test, binary or library targets. Tink libraries are mainly meant as
-# a way to organise code and speed up compilation.
+# Filters DEPS down to external targets, leaving out any `tink::` ones.
+#
+# Parameters:
+#   DEPS             list of dependencies, as e.g. used by `tink_cc_library`.
+#   OUTPUT_VARIABLE  variable to store the result in.
+#
+# Sets OUTPUT_VARIABLE to the list of external targets in DEPS.
+#
+# TODO(b/570488948): Remove this after removing the tink:: dependencies in our
+# `tink_cc_library` etc. rules.
+function(_tink_set_to_external_target_deps)
+  # Filter DEPS down to external targets (absl::, protobuf::, ...), dropping
+  # Tink-internal tink::<MODULE>::<NAME> deps that are already folded into
+  # `tink` / `tink_testonly`.
+  cmake_parse_arguments(PARSE_ARGV 0 _tink_set_to_external_target_deps
+    ""
+    "OUTPUT_VARIABLE"
+    "DEPS"
+  )
+  set(_result "")
+  foreach(_DEP IN LISTS _tink_set_to_external_target_deps_DEPS)
+    if(NOT _DEP MATCHES "^tink::")
+      list(APPEND _result "${_DEP}")
+    endif()
+  endforeach()
+  set(${_tink_set_to_external_target_deps_OUTPUT_VARIABLE} "${_result}" PARENT_SCOPE)
+endfunction()
+
+# Returns a CMake target name for the given namespaced Tink name.
+#
+# Parameters:
+#   NAME             internal name of the target relative to the current module.
+#   OUTPUT_VARIABLE  variable to store the result in.
+#
+# Sets OUTPUT_VARIABLE to the target name usable for e.g. add_library().
+#
+# TODO(b/570488948): Once the legacy target names are gone, consider just
+# storing the fully qualified and escaped form in TINK_MODULE and removing this
+# function.
+function(_tink_set_to_escaped_target_name)
+  # We replace :: with __ in targets, because :: may not appear in target names.
+  # However, the target name should still span multiple name spaces.
+  cmake_parse_arguments(PARSE_ARGV 0 _tink_set_to_escaped_target_name
+    ""
+    "NAME;OUTPUT_VARIABLE"
+    ""
+  )
+  set(_FULL_NAME tink::${TINK_MODULE}::${_tink_set_to_escaped_target_name_NAME})
+  string(REPLACE "::" "__" _ESCAPED_NAME "${_FULL_NAME}")
+  set(${_tink_set_to_escaped_target_name_OUTPUT_VARIABLE}
+      "${_ESCAPED_NAME}" PARENT_SCOPE)
+endfunction()
+
+# Declare the main Tink library target.
+#
+# This target will contain all Tink source and headers that can be used by
+# production code. This includes any public and non-public Tink targets, except
+# for those declared TESTONLY.
+#
+# Actual sources and headers are added to this target by `tink_cc_library`.
+add_library(tink "")
+target_include_directories(tink PUBLIC
+                           "${PROJECT_SOURCE_DIR}" ${TINK_INCLUDE_DIRS})
+target_link_libraries(tink PUBLIC tink::internal::boringssl)
+target_compile_options(tink PRIVATE ${TINK_DEFAULT_COPTS})
+target_compile_features(tink PUBLIC cxx_std_${TINK_CXX_STANDARD})
+set_property(TARGET tink PROPERTY FOLDER "${TINK_IDE_FOLDER}")
+add_library(tink::tink ALIAS tink)
+
+# Declare the test-only Tink library target.
+#
+# This target will contain all Tink source and headers that can be used by test
+# code only. This means any Tink target declared TESTONLY.
+#
+# Actual sources and headers are added to this target by `tink_cc_library`.
+if(TINK_BUILD_TESTONLY)
+  add_library(tink_testonly "")
+  target_link_libraries(tink_testonly PUBLIC tink)
+  target_compile_options(tink_testonly PRIVATE ${TINK_DEFAULT_COPTS})
+  target_compile_features(tink_testonly PUBLIC cxx_std_${TINK_CXX_STANDARD})
+  set_property(TARGET tink_testonly PROPERTY FOLDER "${TINK_IDE_FOLDER}")
+  add_library(tink::testonly ALIAS tink_testonly)
+endif()
+
+# Declare a Tink library. Registers its sources, headers, and external
+# dependencies as part of the `tink` library target (or `tink_testonly` when
+# TESTONLY is specified). Tink library declarations mirror Bazel's cc_library
+# rules to organise code across modules.
 #
 # Arguments:
-#   NAME      base name of the target. See below for target naming conventions.
-#   SRCS      list of source files, including headers.
-#   DEPS      list of dependency targets.
-#   PUBLIC    flag, signals that this target is intended for external use.
-#   TESTONLY  flag, signals that this target should be ignored if
-#             TINK_BUILD_TESTONLY=OFF.
+#   NAME      base name of the library; defines a tink::<MODULE>::<NAME> alias
+#             to `tink` or `tink_testonly`.
+#   SRCS      list of source files, including headers for documentation purposes
+#             and Bazel similarity.
+#   DEPS      list of dependency targets (only external targets are used, the
+#             rest serve documentation purposes only and should match Bazel).
+#   PUBLIC    flag, ignored (accepted for parity with Bazel rules; all
+#             non-TESTONLY libraries and headers are part of `tink`).
+#   TESTONLY  flag, signals that this target belongs to tink_testonly and
+#             should be ignored if TINK_BUILD_TESTONLY=OFF.
 #
-# If SRCS contains only headers, an INTERFACE rule is created. This rule carries
-# include path and link library information, but is not directly buildable.
-#
-# The corresponding build target is named tink_<MODULE>_<NAME> if PUBLIC is
-# specified, or tink_internal_<MODULE>_<NAME> otherwise. An alias is also
-# defined for use in CMake scripts, in the tink::<MODULE>::<NAME> form.
-#
-# Unlike Bazel, CMake does not enforce the rule that all dependencies must be
-# listed. CMake DEPS just carry include, build and link flags that are passed
-# to the compiler. Because of this, a target might compile even if a dependency
-# is not specified, but that could break at any time. So make sure that all
-# dependencies are explicitly specified.
+# Tink-internal `tink::*` entries in DEPS are ignored by CMake (since all Tink
+# sources and headers are compiled together into `tink` / `tink_testonly`),
+# while external entries in DEPS are linked onto `tink` / `tink_testonly`.
+# Unlike Bazel, CMake does not enforce that all dependencies of a rule are
+# listed: a file might still compile and link if another rule already pulled in
+# a needed external dependency, which could break if that other rule changes.
+# Make sure that all dependencies are explicitly specified to stay aligned with
+# Bazel.
 #
 function(tink_cc_library)
   cmake_parse_arguments(PARSE_ARGV 0 tink_cc_library
@@ -122,6 +207,8 @@ function(tink_cc_library)
     "NAME"
     "SRCS;DEPS;TAGS"
   )
+
+  list(FILTER tink_cc_library_SRCS EXCLUDE REGEX "\\.h$")
 
   if (tink_cc_library_TESTONLY AND NOT TINK_BUILD_TESTONLY)
     return()
@@ -144,45 +231,17 @@ function(tink_cc_library)
     endif()
   endforeach()
 
-  # We replace :: with __ in targets, because :: may not appear in target names.
-  # However, the module name should still span multiple name spaces.
-  STRING(REPLACE "::" "__" _ESCAPED_TINK_MODULE ${TINK_MODULE})
+  _tink_set_to_external_target_deps(DEPS ${tink_cc_library_DEPS}
+                                    OUTPUT_VARIABLE _external_deps)
 
-  set(_is_headers_only_lib true)
-  foreach(_src_file ${tink_cc_library_SRCS})
-    if(${_src_file} MATCHES "\\.cc$")
-      set(_is_headers_only_lib false)
-      break()
-    endif()
-  endforeach()
-
-  if (tink_cc_library_PUBLIC)
-    set(_target_name "tink_${_ESCAPED_TINK_MODULE}_${tink_cc_library_NAME}")
+  if(tink_cc_library_TESTONLY)
+    set(_target_name "tink_testonly")
   else()
-    set(_target_name "tink_internal_${_ESCAPED_TINK_MODULE}_${tink_cc_library_NAME}")
+    set(_target_name "tink")
   endif()
 
-  if(NOT _is_headers_only_lib)
-    add_library(${_target_name} "")
-    target_sources(${_target_name} PRIVATE ${tink_cc_library_SRCS})
-    target_include_directories(${_target_name} PUBLIC ${TINK_INCLUDE_DIRS})
-    target_link_libraries(${_target_name} PUBLIC ${tink_cc_library_DEPS})
-    target_compile_options(${_target_name} PRIVATE ${TINK_DEFAULT_COPTS})
-    set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${TINK_CXX_STANDARD})
-    set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD_REQUIRED true)
-    if (tink_cc_library_PUBLIC)
-      set_property(TARGET ${_target_name}
-                   PROPERTY FOLDER "${TINK_IDE_FOLDER}")
-    else()
-      set_property(TARGET ${_target_name}
-                   PROPERTY FOLDER "${TINK_IDE_FOLDER}/Internal")
-    endif()
-  else()
-    add_library(${_target_name} INTERFACE)
-    target_include_directories(${_target_name} INTERFACE ${TINK_INCLUDE_DIRS})
-    target_link_libraries(${_target_name} INTERFACE ${tink_cc_library_DEPS})
-  endif()
-
+  target_sources(${_target_name} PRIVATE ${tink_cc_library_SRCS})
+  target_link_libraries(${_target_name} PUBLIC ${_external_deps})
   add_library(
     tink::${TINK_MODULE}::${tink_cc_library_NAME} ALIAS ${_target_name})
 endfunction(tink_cc_library)
@@ -196,7 +255,8 @@ endfunction(tink_cc_library)
 #   DATA  list of non-code dependencies, such as test vectors.
 #
 # Tests added with this macro are automatically registered.
-# Each test produces a build target named tink_test_<MODULE>_<NAME>.
+# Each test produces a build target named tink__<ESCAPED_MODULE>__<NAME>,
+# where <ESCAPED_MODULE> is <MODULE> with "::" replaced by "__".
 #
 function(tink_cc_test)
   cmake_parse_arguments(PARSE_ARGV 0 tink_cc_test
@@ -225,24 +285,21 @@ function(tink_cc_test)
     endif()
   endforeach()
 
-  # We replace :: with __ in targets, because :: may not appear in target names.
-  # However, the module name should still span multiple name spaces.
-  STRING(REPLACE "::" "__" _ESCAPED_TINK_MODULE ${TINK_MODULE})
-
-  set(_target_name "tink_test_${_ESCAPED_TINK_MODULE}_${tink_cc_test_NAME}")
+  _tink_set_to_escaped_target_name(NAME ${tink_cc_test_NAME}
+                                   OUTPUT_VARIABLE _target_name)
 
   add_executable(${_target_name}
     ${tink_cc_test_SRCS}
   )
 
+  _tink_set_to_external_target_deps(DEPS ${tink_cc_test_DEPS}
+                                    OUTPUT_VARIABLE _external_deps)
+
   if(NOT "benchmark::benchmark_main" IN_LIST tink_cc_test_DEPS
       AND NOT "GTest::gtest_main" IN_LIST tink_cc_test_DEPS)
     target_link_libraries(${_target_name} GTest::gtest_main)
   endif()
-
-  target_link_libraries(${_target_name}
-    ${tink_cc_test_DEPS}
-  )
+  target_link_libraries(${_target_name} tink_testonly ${_external_deps})
 
   set_property(TARGET ${_target_name}
                PROPERTY FOLDER "${TINK_IDE_FOLDER}/Tests")
@@ -270,7 +327,11 @@ endfunction(tink_cc_test)
 #   SRCS list of .proto source files.
 #   DEPS list of proto library dependencies, produced by tink_cc_proto or not.
 #
-# The resulting library follows the same naming convention as tink_cc_library.
+# Each tink_cc_proto rule produces a custom target named
+# tink__<ESCAPED_MODULE>__<NAME> (where <ESCAPED_MODULE> is <MODULE> with "::"
+# replaced by "__") that drives `.pb.{h,cc}` generation, which `tink` depends
+# on, and registers the generated files and dependencies as part of `tink` via
+# tink_cc_library.
 #
 function(tink_cc_proto)
   cmake_parse_arguments(PARSE_ARGV 0 tink_cc_proto
@@ -278,6 +339,10 @@ function(tink_cc_proto)
     "NAME"
     "SRCS;DEPS"
   )
+
+  if (NOT DEFINED TINK_MODULE)
+    message(FATAL_ERROR "TINK_MODULE not defined")
+  endif()
 
   set(tink_cc_proto_GEN_SRCS)
   foreach(_src_path ${tink_cc_proto_SRCS})
@@ -313,6 +378,11 @@ function(tink_cc_proto)
   set_source_files_properties(
     ${tink_cc_proto_GEN_SRCS} PROPERTIES GENERATED true)
 
+  _tink_set_to_escaped_target_name(NAME ${tink_cc_proto_NAME}
+                                  OUTPUT_VARIABLE _target_name)
+  add_custom_target(${_target_name} DEPENDS ${tink_cc_proto_GEN_SRCS})
+  add_dependencies(tink ${_target_name})
+
   tink_cc_library(
     NAME ${tink_cc_proto_NAME}
     SRCS ${tink_cc_proto_GEN_SRCS}
@@ -322,17 +392,15 @@ function(tink_cc_proto)
   )
 endfunction()
 
-# Declare an empty target, that depends on all those specified. Use this rule
-# to group dependencies that are logically related and give them a single name.
+# Group related dependencies under a single logical rule name.
 #
 # Parameters:
-#   NAME  base name of the target.
+#   NAME  base name of the group.
 #   DEPS  list of dependencies to group.
 #
-# Each tink_target_group produces a target named tink_<MODULE>_<NAME>.
+# Delegates to tink_cc_library to forward any external DEPS to `tink`.
 function(tink_target_group)
   cmake_parse_arguments(PARSE_ARGV 0 tink_target_group "" "NAME" "DEPS")
-  set(_target_name "tink_${TINK_MODULE}_${tink_target_group_NAME}")
-  add_custom_target(${_target_name})
-  add_dependencies(${_target_name} ${tink_target_group_DEPS})
+  tink_cc_library(NAME ${tink_target_group_NAME}
+                  DEPS ${tink_target_group_DEPS})
 endfunction()

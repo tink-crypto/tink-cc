@@ -152,7 +152,7 @@ tink_cc_library(
   PUBLIC
 )
 
-add_library(tink::static ALIAS tink_core_cc)
+add_library(tink::static ALIAS tink)
 
 tink_cc_library(
   NAME annotations

@@ -2152,3 +2152,52 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "rsa_ssa_pkcs1_verify_boringssl",
+    srcs = ["rsa_ssa_pkcs1_verify_boringssl.cc"],
+    hdrs = ["rsa_ssa_pkcs1_verify_boringssl.h"],
+    deps = [
+        "//tink:partial_key_access",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/internal:md_util",
+        "//tink/internal:rsa_util",
+        "//tink/internal:ssl_unique_ptr",
+        "//tink/internal:util",
+        "//tink/signature:rsa_ssa_pkcs1_parameters",
+        "//tink/signature:rsa_ssa_pkcs1_public_key",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "rsa_ssa_pkcs1_verify_boringssl_test",
+    size = "small",
+    srcs = ["rsa_ssa_pkcs1_verify_boringssl_test.cc"],
+    data = ["//:testvectors_v1"],
+    tags = ["fips"],
+    deps = [
+        ":rsa_ssa_pkcs1_verify_boringssl",
+        "//tink:partial_key_access",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/internal:rsa_util",
+        "//tink/signature:rsa_ssa_pkcs1_private_key",
+        "//tink/signature:rsa_ssa_pkcs1_public_key",
+        "//tink/signature/internal/testing:rsa_ssa_pkcs1_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
+    ],
+)

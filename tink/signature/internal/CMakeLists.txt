@@ -2135,3 +2135,51 @@ tink_cc_test(
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_library(
+  NAME rsa_ssa_pkcs1_verify_boringssl
+  SRCS
+    rsa_ssa_pkcs1_verify_boringssl.cc
+    rsa_ssa_pkcs1_verify_boringssl.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::internal::md_util
+    tink::internal::rsa_util
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::subtle::common_enums
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pkcs1_verify_boringssl_test
+  SRCS
+    rsa_ssa_pkcs1_verify_boringssl_test.cc
+  DATA
+    wycheproof::testvectors_v1
+  DEPS
+    tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::internal::rsa_util
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+    tink::subtle::common_enums
+)

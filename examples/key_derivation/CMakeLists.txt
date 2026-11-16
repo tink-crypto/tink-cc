@@ -3,9 +3,7 @@ target_include_directories(key_derivation_cli PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(key_derivation_cli
-  tink::static
-  tink::keyderivation::key_derivation_config
-  tink::keyderivation::keyset_deriver
+  tink::tink
   absl::absl_check
   absl::flags_parse
   util)

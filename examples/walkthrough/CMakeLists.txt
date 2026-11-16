@@ -5,12 +5,7 @@ target_include_directories(create_keyset PUBLIC "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(create_keyset
   PUBLIC
     absl::statusor
-    tink::core::keyset_handle
-    tink::util::statusor
-  PRIVATE
-    tink::aead::aead_key_templates
-    tink::config::global_registry
-    tink::proto::tink_cc_proto
+    tink::tink
 )
 
 add_library(load_cleartext_keyset load_cleartext_keyset.cc load_cleartext_keyset.h)
@@ -19,12 +14,7 @@ target_link_libraries(load_cleartext_keyset
   PUBLIC
     absl::statusor
     absl::strings
-    tink::core::keyset_handle
-    tink::util::statusor
-  PRIVATE
-    tink::core::cleartext_keyset_handle
-    tink::core::keyset_reader
-    tink::json::json_keyset_reader
+    tink::tink
 )
 
 add_library(test_util test_util.cc test_util.h)
@@ -33,14 +23,10 @@ target_link_libraries(test_util
   PUBLIC
     absl::statusor
     absl::strings
-    tink::core::aead
-    tink::core::kms_client
-    tink::util::statusor
+    tink::tink
   PRIVATE
     load_cleartext_keyset
     absl::status
-    tink::config::global_registry
-    tink::core::keyset_handle
 )
 
 add_library(load_encrypted_keyset load_encrypted_keyset.cc load_encrypted_keyset.h)
@@ -49,12 +35,7 @@ target_link_libraries(load_encrypted_keyset
   PUBLIC
     absl::statusor
     absl::strings
-    tink::core::aead
-    tink::core::keyset_handle
-    tink::util::statusor
-  PRIVATE
-    tink::core::keyset_reader
-    tink::json::json_keyset_reader
+    tink::tink
 )
 
 add_library(write_keyset write_keyset.cc write_keyset.h)
@@ -62,12 +43,9 @@ target_include_directories(write_keyset PUBLIC "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(write_keyset
   PUBLIC
     absl::status
-    tink::core::aead
-    tink::core::keyset_handle
-    tink::util::status
+    tink::tink
   PRIVATE
     absl::statusor
-    tink::json::json_keyset_writer
 )
 
 add_library(obtain_and_use_a_primitive obtain_and_use_a_primitive.cc obtain_and_use_a_primitive.h)
@@ -76,11 +54,7 @@ target_link_libraries(obtain_and_use_a_primitive
   PUBLIC
     absl::statusor
     absl::strings
-    tink::core::keyset_handle
-    tink::util::statusor
-  PRIVATE
-    tink::config::global_registry
-    tink::core::aead
+    tink::tink
 )
 
 add_library(write_cleartext_keyset write_cleartext_keyset.cc write_cleartext_keyset.h)
@@ -88,12 +62,9 @@ target_include_directories(write_cleartext_keyset PUBLIC "${TINK_EXAMPLES_INCLUD
 target_link_libraries(write_cleartext_keyset
   PUBLIC
     absl::status
-    tink::core::keyset_handle
+    tink::tink
   PRIVATE
     absl::statusor
-    tink::core::cleartext_keyset_handle
-    tink::json::json_keyset_writer
-    tink::util::status
 )
 
 # Test targets.
@@ -106,11 +77,7 @@ target_link_libraries(create_keyset_test
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::aead::aead_config
-    tink::config::global_registry
-    tink::core::aead
-    tink::core::keyset_handle
-    tink::core::registry
+    tink::testonly
     GTest::gmock
     GTest::gtest_main
 )
@@ -124,10 +91,7 @@ target_link_libraries(load_cleartext_keyset_test
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::aead::aead_config
-    tink::config::global_registry
-    tink::core::aead
-    tink::core::keyset_handle
+    tink::testonly
     GTest::gmock
     GTest::gtest_main
 )
@@ -144,12 +108,7 @@ target_link_libraries(load_encrypted_keyset_test
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::aead::aead_config
-    tink::config::global_registry
-    tink::core::aead
-    tink::core::keyset_handle
-    tink::core::kms_clients
-    tink::core::registry
+    tink::testonly
     GTest::gmock
     GTest::gtest_main
 )
@@ -167,11 +126,7 @@ target_link_libraries(write_keyset_test
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::aead::aead_config
-    tink::config::global_registry
-    tink::core::aead
-    tink::core::keyset_handle
-    tink::core::kms_clients
+    tink::testonly
     GTest::gmock
     GTest::gtest_main
 )
@@ -185,8 +140,7 @@ target_link_libraries(obtain_and_use_a_primitive_test
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::aead::aead_config
-    tink::core::keyset_handle
+    tink::testonly
     GTest::gmock
     GTest::gtest_main
 )
@@ -201,10 +155,7 @@ target_link_libraries(write_cleartext_keyset_test
     absl::status_matchers
     absl::statusor
     absl::strings
-    tink::aead::aead_config
-    tink::config::global_registry
-    tink::core::aead
-    tink::core::keyset_handle
+    tink::testonly
     GTest::gmock
     GTest::gtest_main
 )

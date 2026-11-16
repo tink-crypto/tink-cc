@@ -3,7 +3,7 @@ target_include_directories(mac_cli PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(mac_cli
-  tink::static
+  tink::tink
   absl::absl_check
   absl::flags_parse
   util)

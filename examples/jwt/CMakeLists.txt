@@ -3,8 +3,7 @@ target_include_directories(jwt_sign PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(jwt_sign
-  tink::static
-  tink::jwt::jwt_signature_config
+  tink::tink
   absl::absl_check
   absl::flags_parse
   util)
@@ -14,9 +13,7 @@ target_include_directories(jwt_verify PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(jwt_verify
-  tink::static
-  tink::jwt::jwk_set_converter
-  tink::jwt::jwt_signature_config
+  tink::tink
   absl::absl_check
   absl::flags_parse
   util)
@@ -26,9 +23,7 @@ target_include_directories(jwt_generate_public_jwk_set PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(jwt_generate_public_jwk_set
-  tink::static
-  tink::jwt::jwk_set_converter
-  tink::jwt::jwt_signature_config
+  tink::tink
   absl::absl_check
   absl::flags_parse
   util)

@@ -3,7 +3,7 @@ target_include_directories(digital_signatures_cli PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(digital_signatures_cli
-  tink::static
+  tink::tink
   absl::absl_check
   absl::flags_parse
   util)

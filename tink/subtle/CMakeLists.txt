@@ -39,8 +39,6 @@ tink_cc_library(
   PUBLIC
 )
 
-add_library(tink::subtle ALIAS tink)
-
 tink_cc_library(
   NAME ind_cpa_cipher
   SRCS

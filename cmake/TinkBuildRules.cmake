@@ -181,8 +181,9 @@ endif()
 # rules to organise code across modules.
 #
 # Arguments:
-#   NAME      base name of the library; defines a tink::<MODULE>::<NAME> alias
-#             to `tink` or `tink_testonly`.
+#   NAME      base name of the library; ignored (accepted for parity with Bazel
+#             rules). No tink::<MODULE>::<NAME> target or alias is exposed;
+#             downstream code must link against `tink` or `tink_testonly`.
 #   SRCS      list of source files, including headers for documentation purposes
 #             and Bazel similarity.
 #   DEPS      list of dependency targets (only external targets are used, the
@@ -242,8 +243,6 @@ function(tink_cc_library)
 
   target_sources(${_target_name} PRIVATE ${tink_cc_library_SRCS})
   target_link_libraries(${_target_name} PUBLIC ${_external_deps})
-  add_library(
-    tink::${TINK_MODULE}::${tink_cc_library_NAME} ALIAS ${_target_name})
 endfunction(tink_cc_library)
 
 # Declare a Tink test using googletest, with a syntax similar to Bazel.

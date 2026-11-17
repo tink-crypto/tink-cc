@@ -36,6 +36,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/testing/test_only_asymmetric_parameters.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -134,6 +135,35 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
       kTestOnlyKeyTypeUrl, output_prefix_type, key_format.SerializeAsString());
 }
 
+absl::StatusOr<TestOnlyAsymmetricParameters> ParseAsymmetricParameters(
+    const ProtoParametersSerialization& serialization) {
+  if (serialization.GetKeyTemplate().type_url() != kTestOnlyPrivateKeyTypeUrl) {
+    return absl::InvalidArgumentError("Wrong type URL");
+  }
+  TestOnlyKeyFormat key_format;
+  if (!key_format.ParseFromString(serialization.GetKeyTemplate().value())) {
+    return absl::InvalidArgumentError("Failed to parse the key format");
+  }
+  if (key_format.key_size() != kTestOnlyKeySizeInBytes) {
+    return absl::InvalidArgumentError("Invalid key format");
+  }
+  ABSL_ASSIGN_OR_RETURN(
+      Variant variant,
+      ToVariant(serialization.GetKeyTemplate().output_prefix_type()));
+  return TestOnlyAsymmetricParameters::Create(variant);
+}
+
+absl::StatusOr<ProtoParametersSerialization> SerializeAsymmetricParameters(
+    const TestOnlyAsymmetricParameters& parameters) {
+  ABSL_ASSIGN_OR_RETURN(OutputPrefixTypeTP output_prefix_type,
+                        ToOutputPrefixType(parameters.GetVariant()));
+  TestOnlyKeyFormat key_format;
+  key_format.set_key_size(kTestOnlyKeySizeInBytes);
+  return ProtoParametersSerialization::Create(kTestOnlyPrivateKeyTypeUrl,
+                                              output_prefix_type,
+                                              key_format.SerializeAsString());
+}
+
 absl::StatusOr<TestOnlyParameters> GetParameters(
     const ProtoKeySerialization& serialization) {
   ABSL_ASSIGN_OR_RETURN(Variant variant,
@@ -201,6 +231,12 @@ using TestOnlySymmetricKeyParser =
     KeyParserImpl<ProtoKeySerialization, TestOnlySymmetricKey>;
 using TestOnlySymmetricKeySerializer =
     KeySerializerImpl<TestOnlySymmetricKey, ProtoKeySerialization>;
+using TestOnlyAsymmetricParametersParser =
+    ParametersParserImpl<ProtoParametersSerialization,
+                         TestOnlyAsymmetricParameters>;
+using TestOnlyAsymmetricParametersSerializer =
+    ParametersSerializerImpl<TestOnlyAsymmetricParameters,
+                             ProtoParametersSerialization>;
 
 TestOnlyParametersParser* GetParametersParser() {
   static auto* parser =
@@ -222,6 +258,18 @@ TestOnlySymmetricKeyParser* GetKeyParser() {
 
 TestOnlySymmetricKeySerializer* GetKeySerializer() {
   static auto* serializer = new TestOnlySymmetricKeySerializer(SerializeKey);
+  return serializer;
+}
+
+TestOnlyAsymmetricParametersParser* GetAsymmetricParametersParser() {
+  static auto* parser = new TestOnlyAsymmetricParametersParser(
+      kTestOnlyPrivateKeyTypeUrl, ParseAsymmetricParameters);
+  return parser;
+}
+
+TestOnlyAsymmetricParametersSerializer* GetAsymmetricParametersSerializer() {
+  static auto* serializer = new TestOnlyAsymmetricParametersSerializer(
+      kTestOnlyPrivateKeyTypeUrl, SerializeAsymmetricParameters);
   return serializer;
 }
 
@@ -279,7 +327,16 @@ absl::Status RegisterTestOnlyProtoSerialization() {
   if (!status.ok()) {
     return status;
   }
-  return registry.RegisterKeySerializer(GetKeySerializer());
+  status = registry.RegisterKeySerializer(GetKeySerializer());
+  if (!status.ok()) {
+    return status;
+  }
+  status = registry.RegisterParametersParser(GetAsymmetricParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+  return registry.RegisterParametersSerializer(
+      GetAsymmetricParametersSerializer());
 }
 
 absl::StatusOr<std::unique_ptr<Key>> CreateTestOnlyKey(

@@ -144,7 +144,9 @@ tink_cc_test(
 tink_cc_library(
   NAME test_only_key
   SRCS
+    test_only_asymmetric_parameters.cc
     test_only_key.cc
+    test_only_asymmetric_parameters.h
     test_only_key.h
   DEPS
     absl::status
@@ -253,6 +255,24 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::signature::public_key_sign_wrapper
     tink::signature::public_key_verify_wrapper
+    tink::proto::test_only_key_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME test_only_asymmetric_parameters_test
+  SRCS
+    test_only_asymmetric_parameters_test.cc
+  DEPS
+    tink::internal::testing::test_only_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )

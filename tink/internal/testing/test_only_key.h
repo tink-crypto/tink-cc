@@ -44,7 +44,10 @@ namespace internal {
 // The keys are serialized with the test-only protos of
 // `proto/test_only_key.proto`: `TestOnlyKey` for the keys and
 // `TestOnlyKeyFormat` for the key formats. The type URLs of the test-only
-// asymmetric keys of `test_only_key_managers.h` are also defined here.
+// asymmetric keys of `test_only_key_managers.h` are also defined here: the
+// parameters of test-only asymmetric keys (`TestOnlyAsymmetricParameters`, in
+// `test_only_asymmetric_parameters.h`) are serialized as `TestOnlyKeyFormat`s
+// with type URL `kTestOnlyPrivateKeyTypeUrl`.
 
 inline constexpr absl::string_view kTestOnlyKeyTypeUrl =
     "type.googleapis.com/google.crypto.tink.TestOnlyKey";
@@ -157,8 +160,9 @@ class TestOnlySymmetricKey final : public Key {
 };
 
 // Registers the proto serialization of `TestOnlyParameters` and
-// `TestOnlySymmetricKey` (with type URL `kTestOnlyKeyTypeUrl`) in the global
-// `MutableSerializationRegistry`.
+// `TestOnlySymmetricKey` (with type URL `kTestOnlyKeyTypeUrl`) and of
+// `TestOnlyAsymmetricParameters` (with type URL `kTestOnlyPrivateKeyTypeUrl`)
+// in the global `MutableSerializationRegistry`.
 absl::Status RegisterTestOnlyProtoSerialization();
 
 // Creates a `TestOnlySymmetricKey` with random key material of

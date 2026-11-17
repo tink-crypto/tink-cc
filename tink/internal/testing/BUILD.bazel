@@ -149,8 +149,14 @@ cc_test(
 cc_library(
     name = "test_only_key",
     testonly = 1,
-    srcs = ["test_only_key.cc"],
-    hdrs = ["test_only_key.h"],
+    srcs = [
+        "test_only_asymmetric_parameters.cc",
+        "test_only_key.cc",
+    ],
+    hdrs = [
+        "test_only_asymmetric_parameters.h",
+        "test_only_key.h",
+    ],
     deps = [
         "//proto:test_only_key_cc_proto",
         "//proto:tink_cc_tinkpb",
@@ -256,6 +262,24 @@ cc_test(
         "//tink/internal:key_gen_configuration_impl",
         "//tink/signature:public_key_sign_wrapper",
         "//tink/signature:public_key_verify_wrapper",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "test_only_asymmetric_parameters_test",
+    srcs = ["test_only_asymmetric_parameters_test.cc"],
+    deps = [
+        ":test_only_key",
+        "//proto:test_only_key_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",

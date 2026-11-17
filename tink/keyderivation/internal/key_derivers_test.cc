@@ -25,6 +25,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -38,23 +40,28 @@
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/global_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/hmac_proto_serialization_impl.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
@@ -66,6 +73,9 @@
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/prf/hmac_prf_parameters.h"
+#include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -75,6 +85,8 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
@@ -82,6 +94,8 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/hkdf_streaming_prf.h"
 #include "tink/subtle/prf/streaming_prf.h"
@@ -119,6 +133,30 @@ using ::testing::NotNull;
 using ::testing::Test;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
+
+const SerializationRegistry& GetSerializationRegistry() {
+  static const absl::NoDestructor<SerializationRegistry> kRegistry([] {
+    SerializationRegistry registry;
+    ABSL_CHECK_OK(
+        RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesGcmProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesSivProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterHmacProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterHkdfPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterHmacPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterEcdsaProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterEd25519ProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry));
+    return registry;
+  }());
+  return *kRegistry;
+}
 
 using KeyDeriversTest = TestWithParam<std::shared_ptr<Parameters>>;
 
@@ -373,7 +411,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac_GlobalRegistry) {
           .Build();
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -430,7 +468,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm_GlobalRegistry) {
           .Build();
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -472,7 +510,7 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305_GlobalRegistry) {
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -513,7 +551,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv_GlobalRegistry) {
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -556,7 +594,7 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac_GlobalRegistry) {
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -598,7 +636,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCmacPrf_GlobalRegistry) {
       /*key_size_in_bytes=*/32);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -642,7 +680,7 @@ TEST_F(KeyDeriversRfcVectorTest, HkdfPrf_GlobalRegistry) {
       /*salt=*/test::HexDecodeOrDie("2025"));
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -683,7 +721,7 @@ TEST_F(KeyDeriversRfcVectorTest, HmacPrf_GlobalRegistry) {
       /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -725,7 +763,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
 
   // Derive with EcdsaSignKeyManager in global registry.
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -762,7 +800,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
 
   // Derive key with Ed25519SignKeyManager in global registry.
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -819,7 +857,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacStreaming_GlobalRegistry) {
           .Build();
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -873,7 +911,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcmHkdfStreaming_GlobalRegistry) {
           .Build();
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =

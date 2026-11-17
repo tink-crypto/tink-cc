@@ -647,6 +647,35 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME create_rsa_ssa_pkcs1_signer
+  SRCS
+    create_rsa_ssa_pkcs1_signer.cc
+    create_rsa_ssa_pkcs1_signer.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_sign
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::rsa_ssa_pkcs1_sign_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_rsa_ssa_pkcs1_signer_test
+  SRCS
+    create_rsa_ssa_pkcs1_signer_test.cc
+  DEPS
+    tink::signature::subtle::create_rsa_ssa_pkcs1_signer
+    gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::public_key_sign
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
   NAME create_rsa_ssa_pkcs1_verifier
   SRCS
     create_rsa_ssa_pkcs1_verifier.cc

@@ -645,3 +645,33 @@ tink_cc_test(
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
+
+tink_cc_library(
+  NAME create_rsa_ssa_pkcs1_verifier
+  SRCS
+    create_rsa_ssa_pkcs1_verifier.cc
+    create_rsa_ssa_pkcs1_verifier.h
+  DEPS
+    absl::statusor
+    tink::core::public_key_verify
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
+  PUBLIC
+)
+
+tink_cc_test(
+  NAME create_rsa_ssa_pkcs1_verifier_test
+  SRCS
+    create_rsa_ssa_pkcs1_verifier_test.cc
+  DEPS
+    tink::signature::subtle::create_rsa_ssa_pkcs1_verifier
+    gmock
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)

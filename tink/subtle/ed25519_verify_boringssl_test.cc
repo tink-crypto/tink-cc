@@ -194,10 +194,12 @@ TEST(Ed25519VerifyBoringSslFipsTest, testFipsMode) {
 
   constexpr absl::string_view kPublicKey =
       "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025";
-  // Create a new signer.
+  // Create a new verifier.
   EXPECT_THAT(
       Ed25519VerifyBoringSsl::New(test::HexDecodeOrDie(kPublicKey)).status(),
       StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(Ed25519VerifyBoringSsl::New("invalid_length_key").status(),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 using Ed25519VerifyBoringSslTestVectorTest =

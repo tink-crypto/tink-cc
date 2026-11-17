@@ -22,6 +22,7 @@
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ed25519_parameters.h"
@@ -39,6 +40,8 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
     absl::string_view public_key) {
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<Ed25519VerifyBoringSsl>());
   ABSL_ASSIGN_OR_RETURN(
       Ed25519Parameters parameters,
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix));

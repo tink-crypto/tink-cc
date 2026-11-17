@@ -2137,6 +2137,55 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME rsa_ssa_pkcs1_sign_boringssl
+  SRCS
+    rsa_ssa_pkcs1_sign_boringssl.cc
+    rsa_ssa_pkcs1_sign_boringssl.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::internal::boringssl
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::internal::bn_util
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
+    tink::internal::err_util
+    tink::internal::fips_utils
+    tink::internal::md_util
+    tink::internal::rsa_util
+    tink::internal::ssl_unique_ptr
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::subtle::common_enums
+    tink::subtle::subtle_util
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pkcs1_sign_boringssl_test
+  SRCS
+    rsa_ssa_pkcs1_sign_boringssl_test.cc
+  DEPS
+    tink::signature::internal::rsa_ssa_pkcs1_sign_boringssl
+    tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::internal::fips_utils
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+)
+
+tink_cc_library(
   NAME rsa_ssa_pkcs1_verify_boringssl
   SRCS
     rsa_ssa_pkcs1_verify_boringssl.cc

@@ -37,6 +37,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/testing/test_only_asymmetric_parameters.h"
+#include "tink/internal/testing/test_only_public_key.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -56,6 +57,7 @@ using ::google::crypto::tink::TestOnlyKeyFormat;
 using ::google::crypto::tink::internal::KeyDataTP;
 using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using TestOnlyKeyProto = ::google::crypto::tink::TestOnlyKey;
+using TestOnlyPublicKeyProto = ::google::crypto::tink::TestOnlyPublicKey;
 using Variant = TestOnlyParameters::Variant;
 
 absl::StatusOr<Variant> ToVariant(OutputPrefixTypeTP output_prefix_type) {
@@ -83,25 +85,6 @@ absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(Variant variant) {
       return OutputPrefixTypeTP::kLegacy;
     case Variant::kNoPrefix:
       return OutputPrefixTypeTP::kRaw;
-    default:
-      return absl::InvalidArgumentError("Invalid variant");
-  }
-}
-
-absl::StatusOr<std::string> ComputeTestOnlyOutputPrefix(
-    const TestOnlyParameters& parameters, absl::optional<int> id_requirement) {
-  if (parameters.HasIdRequirement() != id_requirement.has_value()) {
-    return absl::InvalidArgumentError(
-        "The ID requirement doesn't match the parameters");
-  }
-  switch (parameters.GetVariant()) {
-    case Variant::kNoPrefix:
-      return std::string("");
-    case Variant::kCrunchy:
-    case Variant::kLegacy:
-      return internal::ComputeOutputPrefix(0, *id_requirement);
-    case Variant::kTink:
-      return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
       return absl::InvalidArgumentError("Invalid variant");
   }
@@ -171,17 +154,22 @@ absl::StatusOr<TestOnlyParameters> GetParameters(
   return TestOnlyParameters::Create(variant);
 }
 
+absl::StatusOr<TestOnlyAsymmetricParameters> GetAsymmetricParameters(
+    const ProtoKeySerialization& serialization) {
+  ABSL_ASSIGN_OR_RETURN(Variant variant,
+                        ToVariant(serialization.GetOutputPrefixTypeTP()));
+  return TestOnlyAsymmetricParameters::Create(variant);
+}
+
 absl::StatusOr<ProtoKeySerialization> CreateKeySerialization(
     absl::string_view type_url, absl::string_view serialized_key,
     SecretKeyAccessToken token, KeyDataTP::KeyMaterialTypeTP key_material_type,
-    const Key& key) {
-  const auto& parameters =
-      static_cast<const TestOnlyParameters&>(key.GetParameters());
+    Variant variant, absl::optional<int> id_requirement) {
   ABSL_ASSIGN_OR_RETURN(OutputPrefixTypeTP output_prefix_type,
-                        ToOutputPrefixType(parameters.GetVariant()));
+                        ToOutputPrefixType(variant));
   return ProtoKeySerialization::Create(
       type_url, RestrictedData(serialized_key, token), key_material_type,
-      output_prefix_type, key.GetIdRequirement());
+      output_prefix_type, id_requirement);
 }
 
 absl::StatusOr<TestOnlySymmetricKey> ParseKey(
@@ -218,9 +206,43 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.set_version(0);
   proto_key.set_key_value(
       key.GetKeyBytes(GetPartialKeyAccess()).GetSecret(*token));
-  return CreateKeySerialization(kTestOnlyKeyTypeUrl,
-                                proto_key.SerializeAsString(), *token,
-                                KeyDataTP::KeyMaterialTypeTP::kSymmetric, key);
+  return CreateKeySerialization(
+      kTestOnlyKeyTypeUrl, proto_key.SerializeAsString(), *token,
+      KeyDataTP::KeyMaterialTypeTP::kSymmetric,
+      key.GetParameters().GetVariant(), key.GetIdRequirement());
+}
+
+absl::StatusOr<TestOnlyPublicKey> ParsePublicKey(
+    const ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (serialization.TypeUrl() != kTestOnlyPublicKeyTypeUrl) {
+    return absl::InvalidArgumentError("Wrong type URL");
+  }
+  TestOnlyPublicKeyProto key;
+  if (!key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
+          GetInsecureSecretKeyAccessInternal()))) {
+    return absl::InvalidArgumentError("Failed to parse the key");
+  }
+  if (key.version() != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted");
+  }
+  ABSL_ASSIGN_OR_RETURN(TestOnlyAsymmetricParameters parameters,
+                        GetAsymmetricParameters(serialization));
+  return TestOnlyPublicKey::Create(parameters, key.key_value(),
+                                   serialization.IdRequirement(),
+                                   GetPartialKeyAccess());
+}
+
+absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
+    const TestOnlyPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
+  TestOnlyPublicKeyProto proto_key;
+  proto_key.set_version(0);
+  proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
+  return CreateKeySerialization(
+      kTestOnlyPublicKeyTypeUrl, proto_key.SerializeAsString(),
+      GetInsecureSecretKeyAccessInternal(),
+      KeyDataTP::KeyMaterialTypeTP::kAsymmetricPublic,
+      key.GetParameters().GetVariant(), key.GetIdRequirement());
 }
 
 using TestOnlyParametersParser =
@@ -237,6 +259,10 @@ using TestOnlyAsymmetricParametersParser =
 using TestOnlyAsymmetricParametersSerializer =
     ParametersSerializerImpl<TestOnlyAsymmetricParameters,
                              ProtoParametersSerialization>;
+using TestOnlyPublicKeyParser =
+    KeyParserImpl<ProtoKeySerialization, TestOnlyPublicKey>;
+using TestOnlyPublicKeySerializer =
+    KeySerializerImpl<TestOnlyPublicKey, ProtoKeySerialization>;
 
 TestOnlyParametersParser* GetParametersParser() {
   static auto* parser =
@@ -273,6 +299,17 @@ TestOnlyAsymmetricParametersSerializer* GetAsymmetricParametersSerializer() {
   return serializer;
 }
 
+TestOnlyPublicKeyParser* GetPublicKeyParser() {
+  static auto* parser =
+      new TestOnlyPublicKeyParser(kTestOnlyPublicKeyTypeUrl, ParsePublicKey);
+  return parser;
+}
+
+TestOnlyPublicKeySerializer* GetPublicKeySerializer() {
+  static auto* serializer = new TestOnlyPublicKeySerializer(SerializePublicKey);
+  return serializer;
+}
+
 }  // namespace
 
 absl::StatusOr<TestOnlyParameters> TestOnlyParameters::Create(Variant variant) {
@@ -293,12 +330,31 @@ bool TestOnlyParameters::operator==(const Parameters& other) const {
   return that != nullptr && variant_ == that->variant_;
 }
 
+absl::StatusOr<std::string> ComputeTestOnlyOutputPrefix(
+    TestOnlyParameters::Variant variant, absl::optional<int> id_requirement) {
+  if ((variant != Variant::kNoPrefix) != id_requirement.has_value()) {
+    return absl::InvalidArgumentError(
+        "The ID requirement doesn't match the variant");
+  }
+  switch (variant) {
+    case Variant::kNoPrefix:
+      return std::string("");
+    case Variant::kCrunchy:
+    case Variant::kLegacy:
+      return ComputeOutputPrefix(0, *id_requirement);
+    case Variant::kTink:
+      return ComputeOutputPrefix(1, *id_requirement);
+    default:
+      return absl::InvalidArgumentError("Invalid variant");
+  }
+}
+
 absl::StatusOr<TestOnlySymmetricKey> TestOnlySymmetricKey::Create(
     const TestOnlyParameters& parameters, const RestrictedData& key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   ABSL_ASSIGN_OR_RETURN(
       std::string output_prefix,
-      ComputeTestOnlyOutputPrefix(parameters, id_requirement));
+      ComputeTestOnlyOutputPrefix(parameters.GetVariant(), id_requirement));
   return TestOnlySymmetricKey(parameters, key_bytes, id_requirement,
                               std::move(output_prefix));
 }
@@ -335,8 +391,10 @@ absl::Status RegisterTestOnlyProtoSerialization() {
   if (!status.ok()) {
     return status;
   }
-  return registry.RegisterParametersSerializer(
-      GetAsymmetricParametersSerializer());
+  ABSL_RETURN_IF_ERROR(registry.RegisterParametersSerializer(
+      GetAsymmetricParametersSerializer()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPublicKeyParser()));
+  return registry.RegisterKeySerializer(GetPublicKeySerializer());
 }
 
 absl::StatusOr<std::unique_ptr<Key>> CreateTestOnlyKey(

@@ -152,10 +152,12 @@ cc_library(
     srcs = [
         "test_only_asymmetric_parameters.cc",
         "test_only_key.cc",
+        "test_only_public_key.cc",
     ],
     hdrs = [
         "test_only_asymmetric_parameters.h",
         "test_only_key.h",
+        "test_only_public_key.h",
     ],
     deps = [
         "//proto:test_only_key_cc_proto",
@@ -165,6 +167,7 @@ cc_library(
         "//tink:parameters",
         "//tink:partial_key_access",
         "//tink:partial_key_access_token",
+        "//tink:public_key_verify",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
         "//tink/internal:internal_insecure_secret_key_access",
@@ -177,6 +180,7 @@ cc_library(
         "//tink/internal:proto_key_serialization",
         "//tink/internal:proto_parameters_serialization",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:statusor",
@@ -282,6 +286,32 @@ cc_test(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "test_only_public_key_test",
+    srcs = ["test_only_public_key_test.cc"],
+    deps = [
+        ":test_only_key",
+        "//proto:test_only_key_cc_proto",
+        "//proto:tink_cc_tinkpb",
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:public_key_verify",
+        "//tink:restricted_data",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_key_serialization",
+        "//tink/internal:serialization",
+        "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

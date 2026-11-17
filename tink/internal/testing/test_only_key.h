@@ -41,13 +41,20 @@ namespace internal {
 // wrappers...). They provide no security at all: their primitives are the
 // dummy primitives of `util/test_util.h`.
 //
+// There are symmetric keys (`TestOnlySymmetricKey`, in this file) and
+// asymmetric public keys (`TestOnlyPublicKey` in `test_only_public_key.h`,
+// with parameters `TestOnlyAsymmetricParameters` in
+// `test_only_asymmetric_parameters.h`), which are not specific to a primitive:
+// they can be used with any primitive, for instance with the primitive getters
+// of this library.
+//
 // The keys are serialized with the test-only protos of
-// `proto/test_only_key.proto`: `TestOnlyKey` for the keys and
-// `TestOnlyKeyFormat` for the key formats. The type URLs of the test-only
-// asymmetric keys of `test_only_key_managers.h` are also defined here: the
-// parameters of test-only asymmetric keys (`TestOnlyAsymmetricParameters`, in
-// `test_only_asymmetric_parameters.h`) are serialized as `TestOnlyKeyFormat`s
-// with type URL `kTestOnlyPrivateKeyTypeUrl`.
+// `proto/test_only_key.proto`:
+//   * symmetric keys (type URL `kTestOnlyKeyTypeUrl`): `TestOnlyKey`;
+//   * public keys (type URL `kTestOnlyPublicKeyTypeUrl`): `TestOnlyPublicKey`;
+//   * parameters: `TestOnlyKeyFormat`, with the type URL of the symmetric keys
+//     or of the test-only private keys of `test_only_key_managers.h` (type URL
+//     `kTestOnlyPrivateKeyTypeUrl`).
 
 inline constexpr absl::string_view kTestOnlyKeyTypeUrl =
     "type.googleapis.com/google.crypto.tink.TestOnlyKey";
@@ -108,6 +115,13 @@ class TestOnlyParameters final : public Parameters {
   Variant variant_;
 };
 
+// Returns the output prefix of a test-only key with `variant` and
+// `id_requirement`, or an error if `variant` is invalid or if `id_requirement`
+// doesn't match `variant` (i.e., `id_requirement` must be set unless `variant`
+// is `kNoPrefix`).
+absl::StatusOr<std::string> ComputeTestOnlyOutputPrefix(
+    TestOnlyParameters::Variant variant, absl::optional<int> id_requirement);
+
 // A test-only symmetric key.
 class TestOnlySymmetricKey final : public Key {
  public:
@@ -159,10 +173,9 @@ class TestOnlySymmetricKey final : public Key {
   std::string output_prefix_;
 };
 
-// Registers the proto serialization of `TestOnlyParameters` and
-// `TestOnlySymmetricKey` (with type URL `kTestOnlyKeyTypeUrl`) and of
-// `TestOnlyAsymmetricParameters` (with type URL `kTestOnlyPrivateKeyTypeUrl`)
-// in the global `MutableSerializationRegistry`.
+// Registers the proto serialization of `TestOnlyParameters`,
+// `TestOnlySymmetricKey`, `TestOnlyAsymmetricParameters` and
+// `TestOnlyPublicKey` in the global `MutableSerializationRegistry`.
 absl::Status RegisterTestOnlyProtoSerialization();
 
 // Creates a `TestOnlySymmetricKey` with random key material of

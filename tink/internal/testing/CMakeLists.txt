@@ -146,9 +146,12 @@ tink_cc_library(
   SRCS
     test_only_asymmetric_parameters.cc
     test_only_key.cc
+    test_only_public_key.cc
     test_only_asymmetric_parameters.h
     test_only_key.h
+    test_only_public_key.h
   DEPS
+    absl::core_headers
     absl::status
     absl::status_macros
     absl::statusor
@@ -160,6 +163,7 @@ tink_cc_library(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::partial_key_access_token
+    tink::core::public_key_verify
     tink::core::restricted_data
     tink::core::secret_key_access_token
     tink::internal::internal_insecure_secret_key_access
@@ -275,4 +279,30 @@ tink_cc_test(
     tink::internal::serialization
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME test_only_public_key_test
+  SRCS
+    test_only_public_key_test.cc
+  DEPS
+    tink::internal::testing::test_only_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::public_key_verify
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::serialization
+    tink::util::test_util
+    tink::proto::test_only_key_cc_proto
+    tink::proto::tink_cc_tinkpb
 )

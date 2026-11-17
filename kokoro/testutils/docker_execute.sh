@@ -99,6 +99,13 @@ main() {
       --workdir=/deps/"${library_to_test}"
       --rm
     )
+    # The host executes scripts from this checkout. Keep the automation
+    # directory read-only so container code cannot append to the script that
+    # bash is currently reading.
+    local -r automation_dir="${path_to_mount}/${library_to_test}/kokoro"
+    if [[ -d "${automation_dir}" ]]; then
+      docker_opts+=( --mount "type=bind,src=${automation_dir},dst=/deps/${library_to_test}/kokoro,readonly" )
+    fi
     if [[ -n "${DOCKER_ENV_FILE}" ]]; then
       docker_opts+=( --env-file="${DOCKER_ENV_FILE}" )
     fi

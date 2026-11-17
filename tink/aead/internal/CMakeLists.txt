@@ -177,6 +177,13 @@ tink_cc_library(
     legacy_kms_envelope_aead_proto_serialization_impl.cc
     legacy_kms_envelope_aead_proto_serialization_impl.h
   DEPS
+    tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
+    tink::aead::internal::aes_eax_proto_serialization_impl
+    tink::aead::internal::aes_gcm_proto_serialization_impl
+    tink::aead::internal::aes_gcm_siv_proto_serialization_impl
+    tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
+    absl::no_destructor
+    absl::absl_check
     absl::status
     absl::statusor
     absl::string_view
@@ -192,7 +199,6 @@ tink_cc_library(
     tink::aead::legacy_kms_envelope_aead_key
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
-    tink::internal::global_serialization_registry
     tink::internal::internal_insecure_secret_key_access
     tink::internal::key_parser
     tink::internal::key_serializer

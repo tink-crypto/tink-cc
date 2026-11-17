@@ -445,11 +445,9 @@ TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("Non-AEAD parameters stored in the `dek_template` field")));
+  EXPECT_THAT(params.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported DEK parameters when parsing")));
 }
 
 TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,

@@ -24,6 +24,8 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -32,10 +34,14 @@
 #include "tink/aead/aes_eax_parameters.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_eax_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_gcm_siv_proto_serialization_impl.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 #include "tink/aead/legacy_kms_envelope_aead_key.h"
 #include "tink/aead/legacy_kms_envelope_aead_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
-#include "tink/internal/global_serialization_registry.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
@@ -153,6 +159,21 @@ ToOutputPrefixType(LegacyKmsEnvelopeAeadParameters::Variant variant) {
   }
 }
 
+const SerializationRegistry& GetDekSerializationRegistry() {
+  static const absl::NoDestructor<SerializationRegistry> kRegistry([] {
+    SerializationRegistry registry;
+    ABSL_CHECK_OK(
+        RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesEaxProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesGcmProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesGcmSivProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(registry));
+    return registry;
+  }());
+  return *kRegistry;
+}
+
 absl::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
     const google::crypto::tink::internal::KeyTemplateTP& key_template) {
   absl::StatusOr<ProtoParametersSerialization> proto_params_serialization =
@@ -160,14 +181,21 @@ absl::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
   if (!proto_params_serialization.ok()) {
     return proto_params_serialization.status();
   }
-  return GlobalSerializationRegistry().ParseParameters(
-      *proto_params_serialization);
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+      GetDekSerializationRegistry().ParseParameters(
+          *proto_params_serialization);
+  if (absl::IsNotFound(parameters.status())) {
+    return absl::InvalidArgumentError(
+        "Unsupported DEK parameters when parsing "
+        "LegacyKmsEnvelopeAeadParameters.");
+  }
+  return parameters;
 }
 
 absl::StatusOr<google::crypto::tink::internal::KeyTemplateTP>
 ParametersToKeyTemplate(const Parameters& parameters) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      GlobalSerializationRegistry()
+      GetDekSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(parameters);
   if (!serialization.ok()) {
     return serialization.status();

@@ -170,7 +170,6 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_parameters
     gmock
     absl::absl_check
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -194,12 +193,12 @@ tink_cc_test(
     tink::internal::legacy_proto_parameters
     tink::internal::mutable_serialization_registry
     tink::keyderivation::internal::prf_based_deriver_key_manager
-    tink::prf::aes_cmac_prf_key
-    tink::prf::aes_cmac_prf_parameters
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
     tink::prf::prf_config
     tink::prf::prf_key_templates
-    tink::util::test_matchers
-    tink::proto::aes_cmac_prf_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
@@ -373,12 +372,13 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::prf::aes_cmac_prf_key
-    tink::prf::aes_cmac_prf_parameters
-    tink::util::test_matchers
-    tink::proto::aes_cmac_prf_cc_proto
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
     tink::proto::xchacha20_poly1305_cc_proto
 )
 

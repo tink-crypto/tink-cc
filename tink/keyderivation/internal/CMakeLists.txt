@@ -389,6 +389,7 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key
@@ -405,12 +406,13 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
-    tink::prf::aes_cmac_prf_key
-    tink::prf::aes_cmac_prf_parameters
-    tink::util::test_matchers
-    tink::proto::aes_cmac_prf_cc_proto
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
     tink::proto::xchacha20_poly1305_cc_proto
 )
 

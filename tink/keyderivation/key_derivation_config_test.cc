@@ -17,12 +17,12 @@
 #include "tink/keyderivation/key_derivation_config.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -47,15 +47,15 @@
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/prf/aes_cmac_prf_key.h"
-#include "tink/prf/aes_cmac_prf_parameters.h"
+#include "tink/prf/hkdf_prf_key.h"
+#include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/prf_config.h"
 #include "tink/prf/prf_key_templates.h"
 #include "tink/proto_parameters_format.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/util/test_matchers.h"
-#include "proto/aes_cmac_prf.pb.h"
+#include "proto/common.pb.h"
+#include "proto/hkdf_prf.pb.h"
 #include "proto/prf_based_deriver.pb.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
@@ -67,7 +67,8 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::google::crypto::tink::AesCmacPrfKeyFormat;
+using ::google::crypto::tink::HashType;
+using ::google::crypto::tink::HkdfPrfKeyFormat;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::PrfBasedDeriverKeyFormat;
@@ -81,7 +82,7 @@ using ::testing::Test;
 constexpr absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey";
 constexpr absl::string_view kPrfKeyTypeUrl =
-    "type.googleapis.com/google.crypto.tink.AesCmacPrfKey";
+    "type.googleapis.com/google.crypto.tink.HkdfPrfKey";
 constexpr absl::string_view kDerivedKeyTypeUrl =
     "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key";
 constexpr absl::string_view kPrfKeyValue = "0123456789abcdef0123456789abcdef";
@@ -133,10 +134,11 @@ TEST_F(KeyDerivationConfigTest, Register) {
   EXPECT_EQ(plaintext, *got);
 }
 
-KeyTemplate GetAesCmacPrfKeyTemplate() {
-  AesCmacPrfKeyFormat key_format;
+KeyTemplate GetHkdfPrfKeyTemplate() {
+  HkdfPrfKeyFormat key_format;
   key_format.set_version(0);
   key_format.set_key_size(kPrfKeyValue.size());
+  key_format.mutable_params()->set_hash(HashType::SHA256);
   KeyTemplate key_template;
   key_template.set_type_url(kPrfKeyTypeUrl);
   key_template.set_value(key_format.SerializeAsString());
@@ -144,15 +146,17 @@ KeyTemplate GetAesCmacPrfKeyTemplate() {
   return key_template;
 }
 
-AesCmacPrfParameters GetAesCmacPrfParameters() {
-  absl::StatusOr<AesCmacPrfParameters> parameters =
-      AesCmacPrfParameters::Create(kPrfKeyValue.size());
+HkdfPrfParameters GetHkdfPrfParameters() {
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      kPrfKeyValue.size(), HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/std::nullopt);
   ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
-AesCmacPrfKey GetAesCmacPrfKey() {
-  absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
+HkdfPrfKey GetHkdfPrfKey() {
+  absl::StatusOr<HkdfPrfKey> key = HkdfPrfKey::Create(
+      GetHkdfPrfParameters(),
       RestrictedData(kPrfKeyValue,
                      internal::GetInsecureSecretKeyAccessInternal()),
       GetPartialKeyAccess());
@@ -187,7 +191,7 @@ TEST_F(KeyDerivationConfigTest,
   KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
 
   PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() = GetAesCmacPrfKeyTemplate();
+  *key_format_proto.mutable_prf_key_template() = GetHkdfPrfKeyTemplate();
   PrfBasedDeriverParams prf_based_deriver_params;
   *prf_based_deriver_params.mutable_derived_key_template() =
       derived_key_template;
@@ -208,7 +212,7 @@ TEST_F(KeyDerivationConfigTest,
 
   absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetAesCmacPrfParameters())
+          .SetPrfParameters(GetHkdfPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
@@ -234,12 +238,12 @@ TEST_F(KeyDerivationConfigTest,
   }
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());  // For XChaCha20Poly1305Key
-  ASSERT_THAT(PrfConfig::Register(), IsOk());  // For AesCmacPrfKey
+  ASSERT_THAT(PrfConfig::Register(), IsOk());   // For HkdfPrfKey
 
   KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
 
   PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() = GetAesCmacPrfKeyTemplate();
+  *key_format_proto.mutable_prf_key_template() = GetHkdfPrfKeyTemplate();
   PrfBasedDeriverParams prf_based_deriver_params;
   *prf_based_deriver_params.mutable_derived_key_template() =
       derived_key_template;
@@ -267,12 +271,12 @@ TEST_F(KeyDerivationConfigTest,
 
   absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetAesCmacPrfParameters())
+          .SetPrfParameters(GetHkdfPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
   absl::StatusOr<PrfBasedKeyDerivationKey> key =
-      PrfBasedKeyDerivationKey::Create(*parameters, GetAesCmacPrfKey(),
+      PrfBasedKeyDerivationKey::Create(*parameters, GetHkdfPrfKey(),
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());

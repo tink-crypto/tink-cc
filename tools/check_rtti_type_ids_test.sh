@@ -35,26 +35,26 @@ test_CheckRttiTypeIds_EmptyDirectorySucceeds() {
 test_CheckRttiTypeIds_ValidUniqueIdsAndIgnoredLinesSucceed() {
   mkdir -p "${TEST_CASE_TMPDIR}/src"
   cat <<'EOF' > "${TEST_CASE_TMPDIR}/src/rtti.h"
-// Usage: TINK_RTTI_SET_TYPE_ID(1);
-#define TINK_RTTI_SET_TYPE_ID(id)
-#define TINK_RTTI_COMPUTE_TYPE_ID(id, ...)
-"Must declare TINK_RTTI_SET_TYPE_ID."
+// Usage: TINK_INTERNAL_RTTI_SET_TYPE_ID(1);
+#define TINK_INTERNAL_RTTI_SET_TYPE_ID(id)
+#define TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID(id, ...)
+"Must declare TINK_INTERNAL_RTTI_SET_TYPE_ID."
 EOF
   cat <<'EOF' > "${TEST_CASE_TMPDIR}/src/types.h"
 class Foo {
-  TINK_RTTI_SET_TYPE_ID(1);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1);
 };
 class Bar {
-  TINK_RTTI_SET_TYPE_ID(32767);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(32767);
 };
 template <typename A, typename B>
 class Wrapper {
-  TINK_RTTI_COMPUTE_TYPE_ID(20, A,
-                            B);
+  TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID(20, A,
+                                     B);
 };
 EOF
   cat <<'EOF' > "${TEST_CASE_TMPDIR}/src/rtti_test.cc"
-#define TEST_RTTI_SET_TYPE_ID TINK_RTTI_SET_TYPE_ID
+#define TEST_RTTI_SET_TYPE_ID TINK_INTERNAL_RTTI_SET_TYPE_ID
 class Fake {
   TEST_RTTI_SET_TYPE_ID(1);
 };
@@ -70,7 +70,7 @@ EOF
 
 test_CheckRttiTypeIds_MismatchedExpectedListFails() {
   mkdir -p "${TEST_CASE_TMPDIR}/src"
-  printf '  TINK_RTTI_SET_TYPE_ID(1);\n' > "${TEST_CASE_TMPDIR}/src/a.h"
+  printf '  TINK_INTERNAL_RTTI_SET_TYPE_ID(1);\n' > "${TEST_CASE_TMPDIR}/src/a.h"
   printf '1 //third_party/tink/cc/b.h\n' > "${TEST_CASE_TMPDIR}/expected.txt"
   "${CLI}" "${TEST_CASE_TMPDIR}/src" "${TEST_CASE_TMPDIR}/expected.txt"
   ASSERT_CMD_FAILED
@@ -78,8 +78,8 @@ test_CheckRttiTypeIds_MismatchedExpectedListFails() {
 
 test_CheckRttiTypeIds_DuplicateIdFails() {
   mkdir -p "${TEST_CASE_TMPDIR}/src"
-  printf '  TINK_RTTI_SET_TYPE_ID(42);\n' > "${TEST_CASE_TMPDIR}/src/a.h"
-  printf '  TINK_RTTI_COMPUTE_TYPE_ID(42, T);\n' > "${TEST_CASE_TMPDIR}/src/b.cc"
+  printf '  TINK_INTERNAL_RTTI_SET_TYPE_ID(42);\n' > "${TEST_CASE_TMPDIR}/src/a.h"
+  printf '  TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID(42, T);\n' > "${TEST_CASE_TMPDIR}/src/b.cc"
   cat <<'EOF' > "${TEST_CASE_TMPDIR}/expected.txt"
 42 //third_party/tink/cc/a.h
 42 //third_party/tink/cc/b.cc
@@ -92,11 +92,11 @@ test_CheckRttiTypeIds_InvalidRangeOrNonDecimalFails() {
   mkdir -p "${TEST_CASE_TMPDIR}/src"
   : > "${TEST_CASE_TMPDIR}/expected.txt"
   for bad in \
-    "  TINK_RTTI_SET_TYPE_ID(0);" \
-    "  TINK_RTTI_SET_TYPE_ID(32768);" \
-    "  TINK_RTTI_SET_TYPE_ID(kMyId);" \
-    "  TINK_RTTI_SET_TYPE_ID(012);" \
-    "  TINK_RTTI_SET_TYPE_ID(0x10);"; do
+    "  TINK_INTERNAL_RTTI_SET_TYPE_ID(0);" \
+    "  TINK_INTERNAL_RTTI_SET_TYPE_ID(32768);" \
+    "  TINK_INTERNAL_RTTI_SET_TYPE_ID(kMyId);" \
+    "  TINK_INTERNAL_RTTI_SET_TYPE_ID(012);" \
+    "  TINK_INTERNAL_RTTI_SET_TYPE_ID(0x10);"; do
     printf '%s\n' "${bad}" > "${TEST_CASE_TMPDIR}/src/bad.h"
     "${CLI}" "${TEST_CASE_TMPDIR}/src" "${TEST_CASE_TMPDIR}/expected.txt"
     ASSERT_CMD_FAILED

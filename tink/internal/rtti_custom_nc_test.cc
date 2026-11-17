@@ -31,8 +31,8 @@ namespace {
 // -----------------------------------------------------------------------------
 
 // Alias macros so check_rtti_type_ids.sh ignores negative-compilation test IDs.
-#define TEST_RTTI_SET_TYPE_ID TINK_RTTI_SET_TYPE_ID
-#define TEST_RTTI_COMPUTE_TYPE_ID TINK_RTTI_COMPUTE_TYPE_ID
+#define TEST_RTTI_SET_TYPE_ID TINK_INTERNAL_RTTI_SET_TYPE_ID
+#define TEST_RTTI_COMPUTE_TYPE_ID TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID
 
 struct Tag1 {
   TEST_RTTI_SET_TYPE_ID(1);
@@ -52,25 +52,25 @@ class ValidBase {
   virtual ~ValidBase() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(10);
 };
 
 class ValidMiddle : public ValidBase {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(ValidBase);
   TEST_RTTI_SET_TYPE_ID(11);
 };
 
 class ValidLeaf : public ValidMiddle {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(ValidMiddle);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(ValidMiddle);
   TEST_RTTI_SET_TYPE_ID(12);
 };
 
 class ValidSibling : public ValidBase {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(ValidBase);
   TEST_RTTI_SET_TYPE_ID(13);
 };
 
@@ -79,7 +79,7 @@ class OtherRoot {
   virtual ~OtherRoot() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(14);
 };
 
@@ -89,7 +89,7 @@ class ValidTemplate {
   virtual ~ValidTemplate() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_COMPUTE_TYPE_ID(15, T);
 };
 
@@ -121,7 +121,7 @@ struct TooLargeId {
 }  // namespace test_overflow_16bit_type_id
 
 // -----------------------------------------------------------------------------
-// 2. TINK_RTTI_COMPUTE_TYPE_ID template parameter validation
+// 2. TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID template parameter validation
 // -----------------------------------------------------------------------------
 
 namespace test_compute_type_id_unannotated_param {
@@ -165,15 +165,15 @@ class MethodsOnlyBase {
   // Defining RTTI methods on a non-template class without a type-ID macro fails
   // immediately when instantiating GetTinkRttiTypeIndex() / IsTinkRttiInstance.
   // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
 };
 }  // namespace test_methods_without_type_id
 
 namespace test_derived_macro_with_non_base {
 class NotDerivedFromOtherRoot : public ValidBase {
  private:
-  // expected-error@+1 {{Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED}}
-  TINK_RTTI_ADD_METHODS_DERIVED(OtherRoot);
+  // expected-error@+1 {{Invalid BaseClass in TINK_INTERNAL_RTTI_}}
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(OtherRoot);
   TEST_RTTI_SET_TYPE_ID(120);
 };
 }  // namespace test_derived_macro_with_non_base
@@ -181,8 +181,8 @@ class NotDerivedFromOtherRoot : public ValidBase {
 namespace test_derived_macro_with_self_as_base {
 class SelfAsBase : public ValidBase {
  private:
-  // expected-error@+1 {{Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED}}
-  TINK_RTTI_ADD_METHODS_DERIVED(SelfAsBase);
+  // expected-error@+1 {{Invalid BaseClass in TINK_INTERNAL_RTTI_}}
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SelfAsBase);
   TEST_RTTI_SET_TYPE_ID(121);
 };
 }  // namespace test_derived_macro_with_self_as_base
@@ -195,14 +195,14 @@ class UnannotatedPolymorphicBase {
 class DerivedFromUnannotated : public UnannotatedPolymorphicBase {
  private:
   // expected-error@+2 2 {{only virtual member functions can be marked}}
-  // expected-error@+1 {{BaseClass must declare TINK_RTTI_ADD_METHODS_BASE}}
-  TINK_RTTI_ADD_METHODS_DERIVED(UnannotatedPolymorphicBase);
+  // expected-error@+1 {{BaseClass must declare TINK_INTERNAL_RTTI_}}
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(UnannotatedPolymorphicBase);
   TEST_RTTI_SET_TYPE_ID(122);
 };
 }  // namespace test_derived_macro_with_unannotated_base
 
 namespace test_subclass_does_not_silently_inherit_annotations {
-// Inherits from annotated ValidBase, but forgets both TINK_RTTI_* macros!
+// Inherits from annotated ValidBase, but forgets TINK_INTERNAL_RTTI_* macros!
 class UnannotatedSubclass : public ValidBase {};
 
 // Inherits from annotated ValidBase, declares SET_TYPE_ID, forgets DERIVED!
@@ -236,7 +236,7 @@ struct UnannotatedStruct {};
 
 class VirtualDerived : public virtual ValidBase {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(ValidBase);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(ValidBase);
   TEST_RTTI_SET_TYPE_ID(130);
 };
 
@@ -251,7 +251,7 @@ class VirtualDerived : public virtual ValidBase {
 
   // Tag1 has TEST_RTTI_SET_TYPE_ID(1), so GetTypeIndex<Tag1>() is valid, but
   // dynamic GetTypeIndex(tag_without_methods) is rejected because Tag1 is not a
-  // polymorphic class with TINK_RTTI_ADD_METHODS_*.
+  // polymorphic class with TINK_INTERNAL_RTTI_ADD_METHODS_*.
   // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}ADD_METHODS}}
   (void)GetTypeIndex(tag_without_methods);
 
@@ -292,7 +292,7 @@ class UnannotatedSourceBase {
 
 class AnnotatedChildOfUnannotated : public UnannotatedSourceBase {
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(140);
 };
 
@@ -324,10 +324,10 @@ class AnnotatedChildOfUnannotated : public UnannotatedSourceBase {
 #else  // defined(TINK_USE_CUSTOM_RTTI)
 
 // When compiled with `-fno-rtti` and without `-DTINK_USE_CUSTOM_RTTI`,
-// including `rtti.h`, annotating classes with `TINK_RTTI_*` macros, and
-// referencing `GetTypeIndex` or `DynamicCast` in uninstantiated templates must
-// compile cleanly, while instantiating `GetTypeIndex` or `DynamicCast` must
-// fail with a static_assert.
+// including `rtti.h`, annotating classes with `TINK_INTERNAL_RTTI_*` macros,
+// and referencing `GetTypeIndex` or `DynamicCast` in uninstantiated templates
+// must compile cleanly, while instantiating `GetTypeIndex` or `DynamicCast`
+// must fail with a static_assert.
 
 template <typename T>
 TypeIndex UninstantiatedGetTypeIndexStatic() {

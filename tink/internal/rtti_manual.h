@@ -65,12 +65,13 @@ class TypeIndex {
   std::uint64_t id_ = 0;
 };
 
-// Befriended by all `TINK_RTTI_*` macros so RTTI members can remain `private:`
-// on user classes. Also centralizes compile-time trait and ID validation.
+// Befriended by all `TINK_INTERNAL_RTTI_*` macros so RTTI members can remain
+// `private:` on user classes. Also centralizes compile-time trait and ID
+// validation.
 struct RttiAccess {
   // Evaluates to `std::true_type` iff `T` itself (not merely an ancestor of
-  // `T`) declares `TINK_RTTI_ADD_METHODS_BASE` or
-  // `TINK_RTTI_ADD_METHODS_DERIVED`. If `T` only inherits
+  // `T`) declares `TINK_INTERNAL_RTTI_ADD_METHODS_BASE` or
+  // `TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED`. If `T` only inherits
   // `GetTinkRttiTypeIndex` from a `Base`, `&T::GetTinkRttiTypeIndex` has type
   // `TypeIndex (Base::*)() const`, which does not match
   // `TypeIndex (T::*)() const`.
@@ -85,8 +86,9 @@ struct RttiAccess {
   using HasRttiMethods = decltype(HasRttiMethodsHelper<T>(0));
 
   // Evaluates to `std::true_type` iff `T` itself (not merely an ancestor of
-  // `T`) declares `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`, using
-  // the same member-pointer exact-class check as `HasRttiMethods`.
+  // `T`) declares `TINK_INTERNAL_RTTI_SET_TYPE_ID` or
+  // `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`, using the same member-pointer
+  // exact-class check as `HasRttiMethods`.
   template <typename T>
   static auto HasTypeIdHelper(int) -> std::is_same<
       decltype(&T::TinkRttiTypeIdTag),
@@ -110,19 +112,20 @@ struct RttiAccess {
   }
 
   // Extracts the 16-bit type ID of a template argument `T` passed to
-  // `TINK_RTTI_COMPUTE_TYPE_ID`. Rejects unannotated types as well as types
-  // whose ID was itself produced by `TINK_RTTI_COMPUTE_TYPE_ID` (> 16 bits).
+  // `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`. Rejects unannotated types as well as
+  // types whose ID was itself produced by `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`
+  // (> 16 bits).
   template <typename T>
   static constexpr std::uint64_t Get16BitTypeId() {
     using CleanT = std::remove_cv_t<std::remove_reference_t<T>>;
     static_assert(HasTypeId<CleanT>::value,
-                  "Template parameter in TINK_RTTI_COMPUTE_TYPE_ID must "
-                  "declare TINK_RTTI_SET_TYPE_ID.");
+                  "Template parameter in TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID "
+                  "must declare TINK_INTERNAL_RTTI_SET_TYPE_ID.");
     if constexpr (HasTypeId<CleanT>::value) {
       static_assert(
           CleanT::kTinkRttiTypeId > 0 && CleanT::kTinkRttiTypeId <= 0xFFFF,
-          "Template parameter in TINK_RTTI_COMPUTE_TYPE_ID must have a 16-bit "
-          "type ID (declared via TINK_RTTI_SET_TYPE_ID).");
+          "Template parameter in TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID must have "
+          "a 16-bit type ID (declared via TINK_INTERNAL_RTTI_SET_TYPE_ID).");
       return CleanT::kTinkRttiTypeId;
     } else {
       return 0;
@@ -133,9 +136,9 @@ struct RttiAccess {
   // (bits `[31:16]`, `[47:32]`, `[63:48]`) into a single 64-bit type ID.
   template <std::int64_t BaseId, typename... Params>
   static constexpr std::uint64_t ComputeTypeId() {
-    static_assert(
-        sizeof...(Params) >= 1 && sizeof...(Params) <= 3,
-        "TINK_RTTI_COMPUTE_TYPE_ID supports 1 to 3 template parameters.");
+    static_assert(sizeof...(Params) >= 1 && sizeof...(Params) <= 3,
+                  "TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID supports 1 to 3 "
+                  "template parameters.");
     std::uint64_t result = Validate16BitId<BaseId>();
     if constexpr (sizeof...(Params) >= 1 && sizeof...(Params) <= 3) {
       const std::uint64_t param_ids[] = {Get16BitTypeId<Params>()...};
@@ -178,14 +181,16 @@ struct RttiAccess {
 // cv-qualifiers and references (analogous to `std::type_index(typeid(T))`).
 //
 // `T` itself (not merely a base class of `T`) must declare
-// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`. `T` does not need to
-// be polymorphic or declare `TINK_RTTI_ADD_METHODS_*` for static lookup.
+// `TINK_INTERNAL_RTTI_SET_TYPE_ID` or `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`. `T`
+// does not need to be polymorphic or declare `TINK_INTERNAL_RTTI_ADD_METHODS_*`
+// for static lookup.
 template <typename T>
 constexpr TypeIndex GetTypeIndex() {
   using CleanT = std::remove_cv_t<std::remove_reference_t<T>>;
   static_assert(RttiAccess::HasTypeId<CleanT>::value,
                 "GetTypeIndex<T>() requires T to declare "
-                "TINK_RTTI_SET_TYPE_ID or TINK_RTTI_COMPUTE_TYPE_ID.");
+                "TINK_INTERNAL_RTTI_SET_TYPE_ID or "
+                "TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID.");
   if constexpr (RttiAccess::HasTypeId<CleanT>::value) {
     return RttiAccess::GetStaticTypeIndex<CleanT>();
   } else {
@@ -198,9 +203,9 @@ constexpr TypeIndex GetTypeIndex() {
 //
 // `object` must be passed by reference (passing a pointer fails at compile
 // time; dereference with `*ptr`), and `object`'s static type `T` must declare
-// both a methods macro (`TINK_RTTI_ADD_METHODS_BASE` or
-// `TINK_RTTI_ADD_METHODS_DERIVED`) and a type-ID macro (`TINK_RTTI_SET_TYPE_ID`
-// or `TINK_RTTI_COMPUTE_TYPE_ID`).
+// both a methods macro (`TINK_INTERNAL_RTTI_ADD_METHODS_BASE` or
+// `TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED`) and a type-ID macro
+// (`TINK_INTERNAL_RTTI_SET_TYPE_ID` or `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`).
 template <typename T>
 TypeIndex GetTypeIndex(const T& object) {
   static_assert(!std::is_pointer_v<T>,
@@ -210,11 +215,13 @@ TypeIndex GetTypeIndex(const T& object) {
     static_assert(
         RttiAccess::HasRttiMethods<CleanT>::value,
         "GetTypeIndex(object) requires object's static type to declare "
-        "TINK_RTTI_ADD_METHODS_BASE or TINK_RTTI_ADD_METHODS_DERIVED.");
+        "TINK_INTERNAL_RTTI_ADD_METHODS_BASE or "
+        "TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED.");
     static_assert(
         RttiAccess::HasTypeId<CleanT>::value,
         "GetTypeIndex(object) requires object's static type to declare "
-        "TINK_RTTI_SET_TYPE_ID or TINK_RTTI_COMPUTE_TYPE_ID.");
+        "TINK_INTERNAL_RTTI_SET_TYPE_ID or "
+        "TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID.");
     if constexpr (RttiAccess::HasRttiMethods<CleanT>::value &&
                   RttiAccess::HasTypeId<CleanT>::value) {
       return RttiAccess::GetDynamicTypeIndex(object);
@@ -228,10 +235,10 @@ TypeIndex GetTypeIndex(const T& object) {
 // pointee type.
 //
 // Note: Assuming all classes in the hierarchy are properly annotated with the
-// `TINK_RTTI_*` macros, this differs from `dynamic_cast<To>(from)` in that it
-// only supports non-virtual pointer downcasts (and identity casts): reference
-// casts, upcasts, sibling cross-casts, `void*` casts, and casts from `virtual`
-// base classes fail at compile time.
+// `TINK_INTERNAL_RTTI_*` macros, this differs from `dynamic_cast<To>(from)` in
+// that it only supports non-virtual pointer downcasts (and identity casts):
+// reference casts, upcasts, sibling cross-casts, `void*` casts, and casts from
+// `virtual` base classes fail at compile time.
 template <typename To, typename From>
 To DynamicCast(From* from) {
   static_assert(std::is_pointer_v<To>,
@@ -245,7 +252,7 @@ To DynamicCast(From* from) {
           RttiAccess::HasRttiMethods<CleanTarget>::value &&
           RttiAccess::HasTypeId<CleanTarget>::value,
       "Source and target types of DynamicCast must declare "
-      "TINK_RTTI_ADD_METHODS_* and TINK_RTTI_*_TYPE_ID.");
+      "TINK_INTERNAL_RTTI_ADD_METHODS_* and TINK_INTERNAL_RTTI_*_TYPE_ID.");
   if constexpr (std::is_pointer_v<To>) {
     if constexpr (RttiAccess::HasRttiMethods<CleanFrom>::value &&
                   RttiAccess::HasTypeId<CleanTarget>::value) {
@@ -261,11 +268,12 @@ To DynamicCast(From* from) {
 // Declares the root virtual RTTI dispatch methods on a polymorphic base class.
 //
 // Place in the `private:` section of a root base class alongside
-// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID` (macro ordering within
-// the class does not matter). The enclosing class should also declare a
-// `virtual` destructor. Subclasses of an RTTI-enabled base class must use
-// `TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)` rather than this macro.
-#define TINK_RTTI_ADD_METHODS_BASE()                                        \
+// `TINK_INTERNAL_RTTI_SET_TYPE_ID` or `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`
+// (macro ordering within the class does not matter). The enclosing class should
+// also declare a `virtual` destructor. Subclasses of an RTTI-enabled base class
+// must use `TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(BaseClass)` rather than this
+// macro.
+#define TINK_INTERNAL_RTTI_ADD_METHODS_BASE()                               \
   friend struct ::crypto::tink::internal::RttiAccess;                       \
   virtual ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()        \
       const {                                                               \
@@ -282,24 +290,27 @@ To DynamicCast(From* from) {
 // direct base class `BaseClass` and chains type checks upward to `BaseClass`.
 //
 // Place in the `private:` section of the derived class alongside
-// `TINK_RTTI_SET_TYPE_ID` or `TINK_RTTI_COMPUTE_TYPE_ID`. If `BaseClass` is a
-// multi-parameter template containing commas, alias it first with `using`.
+// `TINK_INTERNAL_RTTI_SET_TYPE_ID` or `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`. If
+// `BaseClass` is a multi-parameter template containing commas, alias it first
+// with `using`.
 //
 // Verifies at compile time that `BaseClass` is a strict base of the enclosing
-// class and itself declares `TINK_RTTI_ADD_METHODS_BASE` or
-// `TINK_RTTI_ADD_METHODS_DERIVED`.
-#define TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)                            \
+// class and itself declares `TINK_INTERNAL_RTTI_ADD_METHODS_BASE` or
+// `TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED`.
+#define TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(BaseClass)                   \
   friend struct ::crypto::tink::internal::RttiAccess;                       \
   ::crypto::tink::internal::TypeIndex GetTinkRttiTypeIndex()                \
       const override {                                                      \
     using Self = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;   \
-    static_assert(std::is_base_of_v<BaseClass, Self> &&                     \
-                      !std::is_same_v<BaseClass, Self>,                     \
-                  "Invalid BaseClass in TINK_RTTI_ADD_METHODS_DERIVED.");   \
+    static_assert(                                                          \
+        std::is_base_of_v<BaseClass, Self> &&                               \
+            !std::is_same_v<BaseClass, Self>,                               \
+        "Invalid BaseClass in TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED.");    \
     static_assert(::crypto::tink::internal::RttiAccess::HasRttiMethods<     \
                       BaseClass>::value,                                    \
-                  "BaseClass must declare TINK_RTTI_ADD_METHODS_BASE or "   \
-                  "TINK_RTTI_ADD_METHODS_DERIVED.");                        \
+                  "BaseClass must declare "                                 \
+                  "TINK_INTERNAL_RTTI_ADD_METHODS_BASE or "                 \
+                  "TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED.");               \
     return ::crypto::tink::internal::GetTypeIndex<Self>();                  \
   }                                                                         \
   bool IsTinkRttiInstance(                                                  \
@@ -315,11 +326,12 @@ To DynamicCast(From* from) {
 // built-in types; external user-defined subclasses should choose IDs in
 // `[32768, 65535]`.
 //
-// Pair with `TINK_RTTI_ADD_METHODS_BASE` or `TINK_RTTI_ADD_METHODS_DERIVED` in
-// the `private:` section of polymorphic classes, or use standalone on types
-// that are only queried with `GetTypeIndex<T>()` or passed as template
-// parameters to `TINK_RTTI_COMPUTE_TYPE_ID`.
-#define TINK_RTTI_SET_TYPE_ID(id)                                    \
+// Pair with `TINK_INTERNAL_RTTI_ADD_METHODS_BASE` or
+// `TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED` in the `private:` section of
+// polymorphic classes, or use standalone on types that are only queried with
+// `GetTypeIndex<T>()` or passed as template parameters to
+// `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`.
+#define TINK_INTERNAL_RTTI_SET_TYPE_ID(id)                           \
   friend struct ::crypto::tink::internal::RttiAccess;                \
   static constexpr std::uint64_t kTinkRttiTypeId =                   \
       ::crypto::tink::internal::RttiAccess::Validate16BitId<(id)>(); \
@@ -334,12 +346,12 @@ To DynamicCast(From* from) {
 // optional `P2` in bits `[63:48]`).
 //
 // Each template parameter passed in `...` must declare a 16-bit type ID via
-// `TINK_RTTI_SET_TYPE_ID` (nested `TINK_RTTI_COMPUTE_TYPE_ID` arguments are
-// rejected at compile time because their IDs exceed 16 bits). Because all
-// valid 16-bit IDs are strictly non-zero, computed IDs for 0-, 1-, 2-, and
-// 3-parameter types occupy disjoint bit patterns and never alias across
+// `TINK_INTERNAL_RTTI_SET_TYPE_ID` (nested `TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID`
+// arguments are rejected at compile time because their IDs exceed 16 bits).
+// Because all valid 16-bit IDs are strictly non-zero, computed IDs for 0-, 1-,
+// 2-, and 3-parameter types occupy disjoint bit patterns and never alias across
 // different template arities.
-#define TINK_RTTI_COMPUTE_TYPE_ID(id, ...)                                \
+#define TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID(id, ...)                       \
   friend struct ::crypto::tink::internal::RttiAccess;                     \
   static constexpr std::uint64_t kTinkRttiTypeId =                        \
       ::crypto::tink::internal::RttiAccess::ComputeTypeId<(id),           \

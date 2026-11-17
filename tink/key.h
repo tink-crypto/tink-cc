@@ -82,8 +82,8 @@ class Key {
   virtual ~Key() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
-  TINK_RTTI_SET_TYPE_ID(2);
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(2);
 };
 
 }  // namespace tink

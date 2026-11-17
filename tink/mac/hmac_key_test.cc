@@ -310,8 +310,8 @@ class OtherKey : public Key {
   std::unique_ptr<Key> Clone() const override { return nullptr; }
 
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(Key)
-  TINK_RTTI_SET_TYPE_ID(30009);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key)
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30009);
 
   HmacParameters parameters_;
 };

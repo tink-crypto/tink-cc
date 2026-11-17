@@ -14,9 +14,10 @@
 # limitations under the License.
 ################################################################################
 
-# Checks that all TINK_RTTI_SET_TYPE_ID and TINK_RTTI_COMPUTE_TYPE_ID usages in
-# <source_dir> specify unique decimal integer literals in [1, 32767] and match
-# the expected "<id> <file>" registry list.
+# Checks that all TINK_INTERNAL_RTTI_SET_TYPE_ID and
+# TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID usages in <source_dir> specify unique
+# decimal integer literals in [1, 32767] and match the expected "<id> <file>"
+# registry list.
 
 # Generated with openssl rand -hex 10
 echo "========================================================================="
@@ -63,7 +64,7 @@ fi
 readonly EXPECTED_IDS
 
 LINES="$(grep -rnE --include='*.h' --include='*.cc' \
-  'TINK_RTTI_(SET|COMPUTE)_TYPE_ID' "${TARGET_DIR}" \
+  'TINK_INTERNAL_RTTI_(SET|COMPUTE)_TYPE_ID' "${TARGET_DIR}" \
   | grep -vE '^[^:]+:[0-9]+:[[:space:]]*(//|#define|")' || true)"
 readonly LINES
 
@@ -77,26 +78,27 @@ if [[ -z "${LINES}" ]]; then
   exit 0
 fi
 
-VALID_RE='^[^:]+:[0-9]+:[[:space:]]*TINK_RTTI_(SET|COMPUTE)_TYPE_ID'
+VALID_RE='^[^:]+:[0-9]+:[[:space:]]*TINK_INTERNAL_RTTI_(SET|COMPUTE)_TYPE_ID'
 VALID_RE+='\([1-9][0-9]*[),]'
 readonly VALID_RE
 
 BAD_LINES="$(echo "${LINES}" | grep -vE "${VALID_RE}" || true)"
 if [[ -n "${BAD_LINES}" ]]; then
-  echo "ERROR: Malformed or non-literal TINK_RTTI_*_TYPE_ID line(s):" >&2
+  echo "ERROR: Malformed/non-literal TINK_INTERNAL_RTTI_*_TYPE_ID line(s):" >&2
   echo "${BAD_LINES}" >&2
   exit 1
 fi
 
 IDS="$(echo "${LINES}" \
-  | sed -E 's/.*TINK_RTTI_(SET|COMPUTE)_TYPE_ID\(([0-9]+).*/\2/' \
+  | sed -E 's/.*TINK_INTERNAL_RTTI_(SET|COMPUTE)_TYPE_ID\(([0-9]+).*/\2/' \
   | sort -n)"
 readonly IDS
 
 MAX_ID="$(echo "${IDS}" | tail -n 1)"
 if (( MAX_ID > 32767 )); then
   echo "ERROR: RTTI type IDs in Tink must be <= 32767 (got ${MAX_ID}):" >&2
-  echo "${LINES}" | grep -E "TINK_RTTI_(SET|COMPUTE)_TYPE_ID\(${MAX_ID}[),]" >&2
+  echo "${LINES}" \
+    | grep -E "TINK_INTERNAL_RTTI_(SET|COMPUTE)_TYPE_ID\(${MAX_ID}[),]" >&2
   exit 1
 fi
 
@@ -104,13 +106,14 @@ DUPS="$(echo "${IDS}" | uniq -d)"
 if [[ -n "${DUPS}" ]]; then
   echo "ERROR: Duplicate RTTI type IDs found:" >&2
   for id in ${DUPS}; do
-    echo "${LINES}" | grep -E "TINK_RTTI_(SET|COMPUTE)_TYPE_ID\(${id}[),]" >&2
+    echo "${LINES}" \
+      | grep -E "TINK_INTERNAL_RTTI_(SET|COMPUTE)_TYPE_ID\(${id}[),]" >&2
   done
   exit 1
 fi
 
 ACTUAL_IDS="$(echo "${LINES}" \
-  | sed -E "s#^${TARGET_DIR}/([^:]+):[0-9]+:.*TINK_RTTI_(SET|COMPUTE)_TYPE_ID\(([0-9]+).*#\3 //third_party/tink/cc/\1#" \
+  | sed -E "s#^${TARGET_DIR}/([^:]+):[0-9]+:.*TINK_INTERNAL_RTTI_(SET|COMPUTE)_TYPE_ID\(([0-9]+).*#\3 //third_party/tink/cc/\1#" \
   | LC_ALL=C sort -n -k1,1 -k2,2)"
 readonly ACTUAL_IDS
 

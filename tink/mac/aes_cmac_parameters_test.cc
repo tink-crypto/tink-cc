@@ -310,8 +310,8 @@ class OtherParameters : public Parameters {
   std::unique_ptr<Parameters> Clone() const override { return nullptr; }
 
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(Parameters)
-  TINK_RTTI_SET_TYPE_ID(30006);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters)
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30006);
 };
 
 TEST(AesCmacParametersTest, DifferentParametersTypeNotEqual) {

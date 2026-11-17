@@ -85,10 +85,10 @@ To DynamicCast(From* from) {
 // No-op class-annotation macros in standard C++ RTTI mode (zero vtable or
 // object-size overhead). See `rtti.h` and `rtti_manual.h` for their expansion
 // and requirements when `TINK_USE_CUSTOM_RTTI` is defined.
-#define TINK_RTTI_ADD_METHODS_BASE()
-#define TINK_RTTI_ADD_METHODS_DERIVED(BaseClass)
-#define TINK_RTTI_SET_TYPE_ID(id)
-#define TINK_RTTI_COMPUTE_TYPE_ID(id, ...)
+#define TINK_INTERNAL_RTTI_ADD_METHODS_BASE()
+#define TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(BaseClass)
+#define TINK_INTERNAL_RTTI_SET_TYPE_ID(id)
+#define TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID(id, ...)
 
 }  // namespace internal
 }  // namespace tink

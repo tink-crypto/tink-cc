@@ -46,8 +46,8 @@ class MacKey : public Key {
   bool operator==(const Key& other) const override = 0;
 
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(Key);
-  TINK_RTTI_SET_TYPE_ID(102);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(102);
 };
 
 }  // namespace tink

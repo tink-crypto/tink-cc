@@ -58,20 +58,20 @@ class Base {
   virtual ~Base() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
-  TINK_RTTI_SET_TYPE_ID(30001);
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30001);
 };
 
 class Derived : public Base {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(Base);
-  TINK_RTTI_SET_TYPE_ID(30002);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Base);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30002);
 };
 
 class OtherDerived : public Base {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(Base);
-  TINK_RTTI_SET_TYPE_ID(30003);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Base);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30003);
 };
 
 TEST(UniquePtrDynamicCastTest, Works) {
@@ -118,8 +118,8 @@ class TestParameters : public Parameters {
 
   bool has_id_requirement_;
 
-  TINK_RTTI_ADD_METHODS_DERIVED(Parameters);
-  TINK_RTTI_SET_TYPE_ID(30004);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30004);
 };
 
 class TestKey : public Key {
@@ -142,8 +142,8 @@ class TestKey : public Key {
  private:
   TestParameters parameters_;
 
-  TINK_RTTI_ADD_METHODS_DERIVED(Key);
-  TINK_RTTI_SET_TYPE_ID(30005);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30005);
 };
 
 TEST(CloneKeyOrDie, WorksAndClones) {

@@ -82,8 +82,8 @@ class AesCmacKey final : public MacKey {
   static absl::StatusOr<std::string> ComputeOutputPrefix(
       const AesCmacParameters& parameters, absl::optional<int> id_requirement);
 
-  TINK_RTTI_ADD_METHODS_DERIVED(MacKey);
-  TINK_RTTI_SET_TYPE_ID(106);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(MacKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(106);
 
   AesCmacParameters parameters_;
   RestrictedData key_bytes_;

@@ -59,8 +59,8 @@ class Parameters {
   virtual ~Parameters() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
-  TINK_RTTI_SET_TYPE_ID(1);
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1);
 };
 
 }  // namespace tink

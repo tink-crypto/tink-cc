@@ -37,8 +37,8 @@ using ::testing::IsNull;
 using ::testing::Not;
 
 // Alias macros so check_rtti_type_ids.sh ignores unit-test fake classes.
-#define TEST_RTTI_SET_TYPE_ID TINK_RTTI_SET_TYPE_ID
-#define TEST_RTTI_COMPUTE_TYPE_ID TINK_RTTI_COMPUTE_TYPE_ID
+#define TEST_RTTI_SET_TYPE_ID TINK_INTERNAL_RTTI_SET_TYPE_ID
+#define TEST_RTTI_COMPUTE_TYPE_ID TINK_INTERNAL_RTTI_COMPUTE_TYPE_ID
 
 constexpr uint64_t kFakeParametersTypeId = 1;
 constexpr uint64_t kFakeAeadParametersTypeId = 2;
@@ -68,25 +68,25 @@ class FakeParameters {
   virtual ~FakeParameters() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(kFakeParametersTypeId);
 };
 
 class FakeAeadParameters : public FakeParameters {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeParameters);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeParameters);
   TEST_RTTI_SET_TYPE_ID(kFakeAeadParametersTypeId);
 };
 
 class FakeAesGcmParameters : public FakeAeadParameters {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeAeadParameters);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeAeadParameters);
   TEST_RTTI_SET_TYPE_ID(kFakeAesGcmParametersTypeId);
 };
 
 class FakeAesEaxParameters : public FakeAeadParameters {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeAeadParameters);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeAeadParameters);
   TEST_RTTI_SET_TYPE_ID(kFakeAesEaxParametersTypeId);
 };
 
@@ -95,31 +95,31 @@ class FakeKey {
   virtual ~FakeKey() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(kFakeKeyTypeId);
 };
 
 class FakePrivateKey : public FakeKey {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeKey);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeKey);
   TEST_RTTI_SET_TYPE_ID(kFakePrivateKeyTypeId);
 };
 
 class FakeSignaturePublicKey : public FakeKey {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeKey);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeKey);
   TEST_RTTI_SET_TYPE_ID(kFakeSignaturePublicKeyTypeId);
 };
 
 class FakeSignaturePrivateKey : public FakePrivateKey {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakePrivateKey);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakePrivateKey);
   TEST_RTTI_SET_TYPE_ID(kFakeSignaturePrivateKeyTypeId);
 };
 
 class FakeEcdsaPublicKey : public FakeSignaturePublicKey {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeSignaturePublicKey);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeSignaturePublicKey);
   TEST_RTTI_SET_TYPE_ID(kFakeEcdsaPublicKeyTypeId);
 };
 
@@ -127,7 +127,7 @@ class FakeEcdsaPrivateKey : public FakeSignaturePrivateKey {
  private:
   // Also verifies reverse order of SET_TYPE_ID and ADD_METHODS_DERIVED.
   TEST_RTTI_SET_TYPE_ID(kFakeEcdsaPrivateKeyTypeId);
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeSignaturePrivateKey);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeSignaturePrivateKey);
 };
 
 class FakeKeyFactory {
@@ -135,7 +135,7 @@ class FakeKeyFactory {
   virtual ~FakeKeyFactory() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(kFakeKeyFactoryTypeId);
 };
 
@@ -144,13 +144,13 @@ class FakePrivateKeyFactory : public virtual FakeKeyFactory {
   ~FakePrivateKeyFactory() override = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeKeyFactory);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeKeyFactory);
   TEST_RTTI_SET_TYPE_ID(kFakePrivateKeyFactoryTypeId);
 };
 
 class FakeConcretePrivateKeyFactory : public FakePrivateKeyFactory {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakePrivateKeyFactory);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakePrivateKeyFactory);
   TEST_RTTI_SET_TYPE_ID(kFakeConcretePrivateKeyFactoryTypeId);
 };
 
@@ -169,14 +169,14 @@ class FakeKeyManagerBase {
   virtual ~FakeKeyManagerBase() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_SET_TYPE_ID(kFakeKeyManagerBaseTypeId);
 };
 
 template <typename P>
 class FakeKeyManager : public FakeKeyManagerBase {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakeKeyManagerBase);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakeKeyManagerBase);
   TEST_RTTI_COMPUTE_TYPE_ID(kFakeKeyManagerTypeId, P);
 };
 
@@ -186,7 +186,7 @@ class FakePrimitiveWrapper {
   virtual ~FakePrimitiveWrapper() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_COMPUTE_TYPE_ID(kFakePrimitiveWrapperTypeId, InputPrimitive,
                             OutputPrimitive);
 };
@@ -194,13 +194,13 @@ class FakePrimitiveWrapper {
 class ConcreteWrapperAB : public FakePrimitiveWrapper<TagA, TagB> {
  private:
   using Parent = FakePrimitiveWrapper<TagA, TagB>;
-  TINK_RTTI_ADD_METHODS_DERIVED(Parent);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parent);
   TEST_RTTI_SET_TYPE_ID(kConcreteWrapperABTypeId);
 };
 
 class OtherConcreteWrapperAB : public FakePrimitiveWrapper<TagA, TagB> {
  private:
-  TINK_RTTI_ADD_METHODS_DERIVED(FakePrimitiveWrapper);
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(FakePrimitiveWrapper);
   TEST_RTTI_SET_TYPE_ID(kOtherConcreteWrapperABTypeId);
 };
 
@@ -210,7 +210,7 @@ class FakeTripleTemplate {
   virtual ~FakeTripleTemplate() = default;
 
  private:
-  TINK_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
   TEST_RTTI_COMPUTE_TYPE_ID(kFakeTripleTemplateTypeId, P, Q, R);
 };
 

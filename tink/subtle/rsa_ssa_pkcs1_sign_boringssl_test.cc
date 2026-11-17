@@ -44,6 +44,7 @@ namespace subtle {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsEmpty;
@@ -137,6 +138,113 @@ TEST_F(RsaPkcs1SignBoringsslTest, EncodesPkcs1WithSeparateHashes) {
               IsOk());
 }
 
+TEST_F(RsaPkcs1SignBoringsslTest, EncodesPkcs1WithSha384) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  internal::RsaSsaPkcs1Params params{/*hash_type=*/HashType::SHA384};
+  auto signer_or = RsaSsaPkcs1SignBoringSsl::New(private_key_, params);
+  ASSERT_THAT(signer_or, IsOk());
+
+  auto signature_or = (*signer_or)->Sign("testdata");
+  ASSERT_THAT(signature_or, IsOk());
+
+  auto verifier_or = RsaSsaPkcs1VerifyBoringSsl::New(public_key_, params);
+  ASSERT_THAT(verifier_or, IsOk());
+  EXPECT_THAT((*verifier_or)->Verify(*signature_or, "testdata"), IsOk());
+
+  auto sha256_verifier_or = RsaSsaPkcs1VerifyBoringSsl::New(
+      public_key_, internal::RsaSsaPkcs1Params{HashType::SHA256});
+  ASSERT_THAT(sha256_verifier_or, IsOk());
+  EXPECT_THAT((*sha256_verifier_or)->Verify(*signature_or, "testdata"),
+              Not(IsOk()));
+}
+
+TEST_F(RsaPkcs1SignBoringsslTest, EncodesPkcs1WithSha512) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  internal::RsaSsaPkcs1Params params{/*hash_type=*/HashType::SHA512};
+  auto signer_or = RsaSsaPkcs1SignBoringSsl::New(private_key_, params);
+  ASSERT_THAT(signer_or, IsOk());
+
+  auto signature_or = (*signer_or)->Sign("testdata");
+  ASSERT_THAT(signature_or, IsOk());
+
+  auto verifier_or = RsaSsaPkcs1VerifyBoringSsl::New(public_key_, params);
+  ASSERT_THAT(verifier_or, IsOk());
+  EXPECT_THAT((*verifier_or)->Verify(*signature_or, "testdata"), IsOk());
+
+  auto sha384_verifier_or = RsaSsaPkcs1VerifyBoringSsl::New(
+      public_key_, internal::RsaSsaPkcs1Params{HashType::SHA384});
+  ASSERT_THAT(sha384_verifier_or, IsOk());
+  EXPECT_THAT((*sha384_verifier_or)->Verify(*signature_or, "testdata"),
+              Not(IsOk()));
+}
+
+TEST_F(RsaPkcs1SignBoringsslTest, RejectsInvalidOrMismatchedPublicExponent) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  internal::RsaSsaPkcs1Params params{/*hash_type=*/HashType::SHA256};
+
+  // Public exponent <= 65536.
+  {
+    internal::RsaPrivateKey key = private_key_;
+    key.e = "\x03";
+    EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(key, params),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+  // Even public exponent.
+  {
+    internal::RsaPrivateKey key = private_key_;
+    key.e = std::string("\x01\x00\x02", 3);
+    EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(key, params),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+  // Valid odd public exponent > 65536 (65539) that does not match private_key_.
+  {
+    internal::RsaPrivateKey key = private_key_;
+    key.e = std::string("\x01\x00\x03", 3);
+    EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(key, params),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
+}
+
+TEST_F(RsaPkcs1SignBoringsslTest, AcceptsInputsWithLeadingZeros) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  internal::RsaSsaPkcs1Params params{/*hash_type=*/HashType::SHA256};
+  auto expected_signer_or = RsaSsaPkcs1SignBoringSsl::New(private_key_, params);
+  ASSERT_THAT(expected_signer_or, IsOk());
+  auto expected_signature_or = (*expected_signer_or)->Sign("testdata");
+  ASSERT_THAT(expected_signature_or, IsOk());
+
+  auto prepend_zero = [](const SecretData& data) {
+    return SecretData(std::string("\x00", 1) +
+                      std::string(data.AsStringView()));
+  };
+  internal::RsaPrivateKey padded_key = private_key_;
+  padded_key.n = std::string("\x00", 1) + padded_key.n;
+  padded_key.e = std::string("\x00", 1) + padded_key.e;
+  padded_key.d = prepend_zero(padded_key.d);
+  padded_key.p = prepend_zero(padded_key.p);
+  padded_key.q = prepend_zero(padded_key.q);
+  padded_key.dp = prepend_zero(padded_key.dp);
+  padded_key.dq = prepend_zero(padded_key.dq);
+  padded_key.crt = prepend_zero(padded_key.crt);
+
+  auto signer_or = RsaSsaPkcs1SignBoringSsl::New(padded_key, params);
+  ASSERT_THAT(signer_or, IsOk());
+  EXPECT_THAT((*signer_or)->Sign("testdata"),
+              IsOkAndHolds(Eq(*expected_signature_or)));
+}
+
 TEST_F(RsaPkcs1SignBoringsslTest, RejectsUnsafeHash) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
@@ -160,27 +268,27 @@ TEST_F(RsaPkcs1SignBoringsslTest, RejectsInvalidCrtParams) {
   // Flip a few bits in the CRT parameters; check that creation fails.
   {
     internal::RsaPrivateKey key = private_key_;
-    internal::SecretBuffer crt_buffer = util::internal::AsSecretBuffer(key.crt);
+    internal::SecretBuffer crt_buffer = key.crt.AsSecretBuffer();
     crt_buffer[0] ^= 0x80;
-    key.crt = util::internal::AsSecretData(crt_buffer);
+    key.crt = SecretData(crt_buffer);
     auto signer_or = RsaSsaPkcs1SignBoringSsl::New(key, params);
     EXPECT_THAT(signer_or.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     internal::RsaPrivateKey key = private_key_;
-    internal::SecretBuffer dq_buffer = util::internal::AsSecretBuffer(key.dq);
+    internal::SecretBuffer dq_buffer = key.dq.AsSecretBuffer();
     dq_buffer[0] ^= 0x08;
-    key.dq = util::internal::AsSecretData(dq_buffer);
+    key.dq = SecretData(dq_buffer);
     auto signer_or = RsaSsaPkcs1SignBoringSsl::New(key, params);
     EXPECT_THAT(signer_or.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     internal::RsaPrivateKey key = private_key_;
-    internal::SecretBuffer dp_buffer = util::internal::AsSecretBuffer(key.dp);
+    internal::SecretBuffer dp_buffer = key.dp.AsSecretBuffer();
     dp_buffer[0] ^= 0x04;
-    key.dp = util::internal::AsSecretData(dp_buffer);
+    key.dp = SecretData(dp_buffer);
     auto signer_or = RsaSsaPkcs1SignBoringSsl::New(key, params);
     EXPECT_THAT(signer_or.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));

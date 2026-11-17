@@ -16,209 +16,92 @@
 
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
-#include <utility>
-#include <vector>
+#include <optional>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "openssl/evp.h"
-#include "openssl/rsa.h"
+#include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/bn_util.h"
-#include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/dfsan_forwarders.h"
-#include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/md_util.h"
 #include "tink/internal/rsa_util.h"
-#include "tink/internal/ssl_unique_ptr.h"
-#include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
-
 namespace {
 
-class RsaSsaPkcs1SignBoringSslImpl : public RsaSsaPkcs1SignBoringSsl {
- public:
-  RsaSsaPkcs1SignBoringSslImpl(internal::SslUniquePtr<RSA> private_key,
-                               const EVP_MD* sig_hash,
-                               absl::string_view output_prefix,
-                               absl::string_view message_suffix)
-      : private_key_(std::move(private_key)),
-        sig_hash_(sig_hash),
-        output_prefix_(output_prefix),
-        message_suffix_(message_suffix) {}
-
-  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
-
- private:
-  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
-
-  const internal::SslUniquePtr<RSA> private_key_;
-  const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
-  const std::string output_prefix_;
-  const std::string message_suffix_;
-};
-
-absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSslImpl::SignWithoutPrefix(
-    absl::string_view data) const {
-  data = internal::EnsureStringNonNull(data);
-  ABSL_ASSIGN_OR_RETURN(
-      std::string digest,
-      internal::ComputeHash({data, message_suffix_}, *sig_hash_));
-
-  std::string signature;
-  size_t signature_buffer_size = RSA_size(private_key_.get());
-  ResizeStringUninitialized(&signature, signature_buffer_size);
-
-  absl::Status s = internal::CallWithCoreDumpProtection([&]() {
-    unsigned int signature_length = 0;
-    internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
-                                                   signature_buffer_size);
-    if (RSA_sign(/*hash_nid=*/EVP_MD_type(sig_hash_),
-                 /*digest=*/reinterpret_cast<const uint8_t*>(digest.data()),
-                 /*digest_len=*/digest.size(),
-                 /*out=*/reinterpret_cast<uint8_t*>(&signature[0]),
-                 /*out_len=*/&signature_length,
-                 /*rsa=*/private_key_.get()) != 1) {
-      // TODO(b/112581512): Decide if it's safe to propagate the BoringSSL
-      // error. For now, just empty the error stack.
-      internal::GetSslErrors();
-      return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
-    }
-    internal::DfsanClearLabel(&signature[0], signature_buffer_size);
-    signature.resize(signature_length);
-    return absl::OkStatus();
-  });
-  if (!s.ok()) {
-    return s;
+absl::StatusOr<RsaSsaPkcs1Parameters::HashType> ToParametersHashType(
+    HashType hash_type) {
+  switch (hash_type) {
+    case SHA256:
+      return RsaSsaPkcs1Parameters::HashType::kSha256;
+    case SHA384:
+      return RsaSsaPkcs1Parameters::HashType::kSha384;
+    case SHA512:
+      return RsaSsaPkcs1Parameters::HashType::kSha512;
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          absl::StrCat("Unsupported hash: ", hash_type));
   }
-  return signature;
-}
-
-absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSslImpl::Sign(
-    absl::string_view data) const {
-  absl::StatusOr<std::string> signature_without_prefix;
-  signature_without_prefix = SignWithoutPrefix(data);
-  if (!signature_without_prefix.ok()) {
-    return signature_without_prefix.status();
-  }
-  if (output_prefix_.empty()) {
-    return signature_without_prefix;
-  }
-  return absl::StrCat(output_prefix_, *signature_without_prefix);
 }
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const RsaSsaPkcs1PrivateKey& key) {
-  internal::RsaPrivateKey private_key;
-  private_key.n = std::string(
-      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
-  private_key.e = std::string(
-      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  private_key.d =
-      key.GetPrivateExponentData().Get(InsecureSecretKeyAccess::Get());
-  private_key.p = key.GetPrimePData(GetPartialKeyAccess())
-                      .Get(InsecureSecretKeyAccess::Get());
-  private_key.q = key.GetPrimeQData(GetPartialKeyAccess())
-                      .Get(InsecureSecretKeyAccess::Get());
-  private_key.dp =
-      key.GetPrimeExponentPData().Get(InsecureSecretKeyAccess::Get());
-  private_key.dq =
-      key.GetPrimeExponentQData().Get(InsecureSecretKeyAccess::Get());
-  private_key.crt =
-      key.GetCrtCoefficientData().Get(InsecureSecretKeyAccess::Get());
-  internal::RsaSsaPkcs1Params params;
-  switch (key.GetParameters().GetHashType()) {
-    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha256:
-      params.hash_type = SHA256;
-      break;
-    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha384:
-      params.hash_type = SHA384;
-      break;
-    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha512:
-      params.hash_type = SHA512;
-      break;
-    default:
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Unsupported hash:", key.GetParameters().GetHashType()));
-  }
-  return New(private_key, params, key.GetOutputPrefix(),
-             key.GetParameters().GetVariant() ==
-                     RsaSsaPkcs1Parameters::Variant::kLegacy
-                 ? std::string(1, 0)
-                 : "");
+  return internal::NewRsaSsaPkcs1SignBoringSsl(key);
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPkcs1Params& params) {
-  return New(private_key, params, "", "");
-}
-
-absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
-    const internal::RsaPrivateKey& private_key,
-    const internal::RsaSsaPkcs1Params& params, absl::string_view output_prefix,
-    absl::string_view message_suffix) {
-  absl::Status status =
-      internal::CheckFipsCompatibility<RsaSsaPkcs1SignBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-
-  // Check if the hash type is safe to use.
-  absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.hash_type);
-  if (!is_safe.ok()) {
-    return is_safe;
-  }
-
-  absl::StatusOr<const EVP_MD*> sig_hash =
-      internal::EvpHashFromHashType(params.hash_type);
-  if (!sig_hash.ok()) {
-    return sig_hash.status();
-  }
-
-  // Check RSA's modulus.
-  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
-      internal::StringToBignum(private_key.n);
-  if (!n.ok()) {
-    return n.status();
-  }
-  auto modulus_status = internal::ValidateRsaModulusSize(BN_num_bits(n->get()));
-  if (!modulus_status.ok()) {
-    return modulus_status;
-  }
-
-  // The RSA modulus and exponent are checked as part of the conversion to
-  // internal::SslUniquePtr<RSA>.
-  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
-      internal::RsaPrivateKeyToRsa(private_key);
-  if (!rsa.ok()) {
-    return rsa.status();
-  }
-
-  return std::make_unique<RsaSsaPkcs1SignBoringSslImpl>(
-      *std::move(rsa), *sig_hash, output_prefix, message_suffix);
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<RsaSsaPkcs1SignBoringSsl>());
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPkcs1Parameters::HashType hash_type,
+                        ToParametersHashType(params.hash_type));
+  BigInteger modulus(private_key.n);
+  ABSL_ASSIGN_OR_RETURN(
+      RsaSsaPkcs1Parameters parameters,
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(modulus.SizeInBytes() * 8)
+          .SetPublicExponent(BigInteger(private_key.e))
+          .SetHashType(hash_type)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build());
+  ABSL_ASSIGN_OR_RETURN(
+      RsaSsaPkcs1PublicKey public_key,
+      RsaSsaPkcs1PublicKey::Create(parameters, modulus,
+                                   /*id_requirement=*/std::nullopt,
+                                   GetPartialKeyAccess()));
+  ABSL_ASSIGN_OR_RETURN(
+      RsaSsaPkcs1PrivateKey key,
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(public_key)
+          .SetPrimeP(
+              RestrictedData(private_key.p, InsecureSecretKeyAccess::Get()))
+          .SetPrimeQ(
+              RestrictedData(private_key.q, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentP(
+              RestrictedData(private_key.dp, InsecureSecretKeyAccess::Get()))
+          .SetPrimeExponentQ(
+              RestrictedData(private_key.dq, InsecureSecretKeyAccess::Get()))
+          .SetPrivateExponent(
+              RestrictedData(private_key.d, InsecureSecretKeyAccess::Get()))
+          .SetCrtCoefficient(
+              RestrictedData(private_key.crt, InsecureSecretKeyAccess::Get()))
+          .BuildAllowNonConstantTime(GetPartialKeyAccess()));
+  return New(key);
 }
 
 }  // namespace subtle

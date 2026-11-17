@@ -59,12 +59,6 @@ class RsaSsaPkcs1SignBoringSsl : public PublicKeySign {
 
  protected:
   RsaSsaPkcs1SignBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const internal::RsaPrivateKey& private_key,
-      const internal::RsaSsaPkcs1Params& params,
-      absl::string_view output_prefix, absl::string_view message_suffix);
 };
 
 }  // namespace subtle

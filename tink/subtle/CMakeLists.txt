@@ -310,17 +310,12 @@ tink_cc_library(
     absl::status
     absl::status_macros
     absl::statusor
-    absl::strings
-    tink::internal::boringssl
-    tink::core::partial_key_access
+    absl::string_view
     tink::core::public_key_verify
     tink::internal::fips_utils
-    tink::internal::md_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
-    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
     tink::util::status
     tink::util::statusor
 )
@@ -332,28 +327,22 @@ tink_cc_library(
     rsa_ssa_pkcs1_sign_boringssl.h
   DEPS
     tink::subtle::common_enums
-    tink::subtle::subtle_util
-    absl::memory
     absl::status
     absl::status_macros
+    absl::statusor
     absl::strings
-    tink::internal::boringssl
+    absl::string_view
+    tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
-    tink::internal::bn_util
-    tink::internal::call_with_core_dump_protection
-    tink::internal::dfsan_forwarders
-    tink::internal::err_util
+    tink::core::restricted_data
     tink::internal::fips_utils
-    tink::internal::md_util
     tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
-    tink::util::secret_data
-    tink::util::status
+    tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::internal::rsa_ssa_pkcs1_sign_boringssl
     tink::util::statusor
 )
 

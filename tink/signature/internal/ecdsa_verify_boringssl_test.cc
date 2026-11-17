@@ -85,6 +85,13 @@ TEST_P(EcdsaVerifyBoringSslTestVectorTest, VerifyFailsWithModifiedSignature) {
                 Not(IsOk()));
     modified_signature[i] ^= 0x01;
   }
+  if (!typed_key->GetOutputPrefix().empty()) {
+    EXPECT_THAT((*verifier)->Verify(
+                    absl::string_view(param.signature)
+                        .substr(typed_key->GetOutputPrefix().size()),
+                    param.message),
+                Not(IsOk()));
+  }
 }
 
 TEST_P(EcdsaVerifyBoringSslTestVectorTest, VerifyFailsWithModifiedMessage) {

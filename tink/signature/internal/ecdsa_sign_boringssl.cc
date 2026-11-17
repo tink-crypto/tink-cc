@@ -175,7 +175,14 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSignBoringSsl(
   ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
                         internal::EcGroupFromCurveType(converted_curve_type));
   internal::SslUniquePtr<EC_KEY> ec_key(EC_KEY_new());
-  EC_KEY_set_group(ec_key.get(), group.get());
+  if (ec_key == nullptr) {
+    return absl::InternalError(
+        absl::StrCat("EC_KEY_new failed: ", internal::GetSslErrors()));
+  }
+  if (1 != EC_KEY_set_group(ec_key.get(), group.get())) {
+    return absl::InternalError(
+        absl::StrCat("EC_KEY_set_group failed: ", internal::GetSslErrors()));
+  }
 
   const EcPoint& public_point =
       key.GetPublicKey().GetPublicPoint(GetPartialKeyAccess());

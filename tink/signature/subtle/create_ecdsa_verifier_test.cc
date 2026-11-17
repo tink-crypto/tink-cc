@@ -83,6 +83,13 @@ TEST_P(CreateEcdsaPublicKeyVerifyTestVectorTest,
     EXPECT_THAT((*verifier)->Verify(modified_signature, test_vector.message),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
+  if (!private_key.GetOutputPrefix().empty()) {
+    EXPECT_THAT((*verifier)->Verify(
+                    absl::string_view(test_vector.signature)
+                        .substr(private_key.GetOutputPrefix().size()),
+                    test_vector.message),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
 }
 
 TEST_P(CreateEcdsaPublicKeyVerifyTestVectorTest,

@@ -184,6 +184,9 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEcdsaVerifyBoringSsl(
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEcdsaVerifyBoringSsl(
     const EcdsaPublicKey& public_key) {
+  ABSL_RETURN_IF_ERROR(
+      internal::CheckFipsCompatibility<EcdsaVerifyBoringSslImpl>());
+
   ABSL_ASSIGN_OR_RETURN(subtle::EllipticCurveType converted_curve_type,
                         internal::ToSubtleEllipticCurveType(
                             public_key.GetParameters().GetCurveType()));
@@ -197,7 +200,14 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEcdsaVerifyBoringSsl(
   ABSL_ASSIGN_OR_RETURN(internal::SslUniquePtr<EC_GROUP> group,
                         internal::EcGroupFromCurveType(converted_curve_type));
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
-  EC_KEY_set_group(key.get(), group.get());
+  if (key == nullptr) {
+    return absl::InternalError(
+        absl::StrCat("EC_KEY_new failed: ", internal::GetSslErrors()));
+  }
+  if (1 != EC_KEY_set_group(key.get(), group.get())) {
+    return absl::InternalError(
+        absl::StrCat("EC_KEY_set_group failed: ", internal::GetSslErrors()));
+  }
 
   ABSL_ASSIGN_OR_RETURN(
       internal::SslUniquePtr<EC_POINT> pub_key,

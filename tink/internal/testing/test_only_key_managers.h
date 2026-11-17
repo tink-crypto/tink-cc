@@ -49,11 +49,6 @@ namespace internal {
 //     whose key material is the reversed key material of the private key;
 //   * key formats: `TestOnlyKeyFormat`.
 
-inline constexpr absl::string_view kTestOnlyPrivateKeyTypeUrl =
-    "type.googleapis.com/google.crypto.tink.TestOnlyPrivateKey";
-inline constexpr absl::string_view kTestOnlyPublicKeyTypeUrl =
-    "type.googleapis.com/google.crypto.tink.TestOnlyPublicKey";
-
 // Returns a key template for `TestOnlyKeyTypeManager`.
 google::crypto::tink::KeyTemplate TestOnlyKeyTemplate(
     google::crypto::tink::OutputPrefixType output_prefix_type =

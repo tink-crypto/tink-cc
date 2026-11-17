@@ -49,8 +49,8 @@ using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::TestOnlyKey;
 using ::google::crypto::tink::TestOnlyKeyFormat;
-using ::google::crypto::tink::TestOnlyPrivateKey;
-using ::google::crypto::tink::TestOnlyPublicKey;
+using TestOnlyPrivateKeyProto = ::google::crypto::tink::TestOnlyPrivateKey;
+using TestOnlyPublicKeyProto = ::google::crypto::tink::TestOnlyPublicKey;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
@@ -125,7 +125,7 @@ TEST(TestOnlyPrivateKeyTypeManagerTest, CreateKeyAndGetPublicKey) {
   TestOnlyKeyFormat key_format;
   key_format.set_key_size(kTestOnlyKeySizeInBytes);
 
-  absl::StatusOr<TestOnlyPrivateKey> private_key =
+  absl::StatusOr<TestOnlyPrivateKeyProto> private_key =
       TestOnlyPrivateKeyTypeManager().CreateKey(key_format);
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT(private_key->version(), Eq(0));
@@ -133,7 +133,7 @@ TEST(TestOnlyPrivateKeyTypeManagerTest, CreateKeyAndGetPublicKey) {
   EXPECT_THAT(TestOnlyPrivateKeyTypeManager().ValidateKey(*private_key),
               IsOk());
 
-  absl::StatusOr<TestOnlyPublicKey> public_key =
+  absl::StatusOr<TestOnlyPublicKeyProto> public_key =
       TestOnlyPrivateKeyTypeManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
   EXPECT_THAT(public_key->version(), Eq(0));
@@ -144,16 +144,16 @@ TEST(TestOnlyPrivateKeyTypeManagerTest, CreateKeyAndGetPublicKey) {
 }
 
 TEST(TestOnlyPrivateKeyTypeManagerTest, ValidateInvalidKeysFails) {
-  TestOnlyPrivateKey private_key;
+  TestOnlyPrivateKeyProto private_key;
   private_key.set_key_value("ab");
   private_key.mutable_public_key()->set_key_value("ba");
   ASSERT_THAT(TestOnlyPrivateKeyTypeManager().ValidateKey(private_key), IsOk());
 
-  TestOnlyPrivateKey wrong_version = private_key;
+  TestOnlyPrivateKeyProto wrong_version = private_key;
   wrong_version.set_version(1);
-  TestOnlyPrivateKey wrong_public_key_version = private_key;
+  TestOnlyPrivateKeyProto wrong_public_key_version = private_key;
   wrong_public_key_version.mutable_public_key()->set_version(1);
-  TestOnlyPrivateKey wrong_public_key = private_key;
+  TestOnlyPrivateKeyProto wrong_public_key = private_key;
   wrong_public_key.mutable_public_key()->set_key_value("ab");
 
   EXPECT_THAT(TestOnlyPrivateKeyTypeManager().ValidateKey(wrong_version),

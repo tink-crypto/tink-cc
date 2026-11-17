@@ -25,6 +25,8 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
+#include "tink/core/key_type_manager.h"
+#include "tink/core/private_key_type_manager.h"
 #include "tink/internal/testing/test_only_key.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
@@ -42,8 +44,8 @@ using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::TestOnlyKey;
 using ::google::crypto::tink::TestOnlyKeyFormat;
-using ::google::crypto::tink::TestOnlyPrivateKey;
-using ::google::crypto::tink::TestOnlyPublicKey;
+using TestOnlyPrivateKeyProto = ::google::crypto::tink::TestOnlyPrivateKey;
+using TestOnlyPublicKeyProto = ::google::crypto::tink::TestOnlyPublicKey;
 
 KeyTemplate MakeKeyTemplate(absl::string_view type_url,
                             OutputPrefixType output_prefix_type) {
@@ -87,7 +89,7 @@ class AeadFactory : public TestOnlyKeyTypeManager::PrimitiveFactory<Aead> {
 class PublicKeySignFactory
     : public TestOnlyPrivateKeyTypeManager::PrimitiveFactory<PublicKeySign> {
   absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
-      const TestOnlyPrivateKey& key) const override {
+      const TestOnlyPrivateKeyProto& key) const override {
     return {std::make_unique<test::DummyPublicKeySign>(
         absl::BytesToHexString(key.public_key().key_value()))};
   }
@@ -96,7 +98,7 @@ class PublicKeySignFactory
 class PublicKeyVerifyFactory
     : public TestOnlyPublicKeyTypeManager::PrimitiveFactory<PublicKeyVerify> {
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
-      const TestOnlyPublicKey& key) const override {
+      const TestOnlyPublicKeyProto& key) const override {
     return {std::make_unique<test::DummyPublicKeyVerify>(
         absl::BytesToHexString(key.key_value()))};
   }
@@ -136,7 +138,7 @@ TestOnlyPrivateKeyTypeManager::TestOnlyPrivateKeyTypeManager()
     : PrivateKeyTypeManager(std::make_unique<PublicKeySignFactory>()) {}
 
 absl::Status TestOnlyPrivateKeyTypeManager::ValidateKey(
-    const TestOnlyPrivateKey& key) const {
+    const TestOnlyPrivateKeyProto& key) const {
   absl::Status status = ValidateVersion(key.version());
   if (!status.ok()) {
     return status;
@@ -154,9 +156,10 @@ absl::Status TestOnlyPrivateKeyTypeManager::ValidateKeyFormat(
   return ValidateKeyFormatProto(key_format);
 }
 
-absl::StatusOr<TestOnlyPrivateKey> TestOnlyPrivateKeyTypeManager::CreateKey(
+absl::StatusOr<TestOnlyPrivateKeyProto>
+TestOnlyPrivateKeyTypeManager::CreateKey(
     const TestOnlyKeyFormat& key_format) const {
-  TestOnlyPrivateKey key;
+  TestOnlyPrivateKeyProto key;
   key.set_version(get_version());
   key.set_key_value(subtle::Random::GetRandomBytes(key_format.key_size()));
   key.mutable_public_key()->set_version(get_version());
@@ -165,8 +168,9 @@ absl::StatusOr<TestOnlyPrivateKey> TestOnlyPrivateKeyTypeManager::CreateKey(
   return key;
 }
 
-absl::StatusOr<TestOnlyPublicKey> TestOnlyPrivateKeyTypeManager::GetPublicKey(
-    const TestOnlyPrivateKey& private_key) const {
+absl::StatusOr<TestOnlyPublicKeyProto>
+TestOnlyPrivateKeyTypeManager::GetPublicKey(
+    const TestOnlyPrivateKeyProto& private_key) const {
   return private_key.public_key();
 }
 
@@ -174,7 +178,7 @@ TestOnlyPublicKeyTypeManager::TestOnlyPublicKeyTypeManager()
     : KeyTypeManager(std::make_unique<PublicKeyVerifyFactory>()) {}
 
 absl::Status TestOnlyPublicKeyTypeManager::ValidateKey(
-    const TestOnlyPublicKey& key) const {
+    const TestOnlyPublicKeyProto& key) const {
   return ValidateVersion(key.version());
 }
 

@@ -148,6 +148,7 @@ tink_cc_library(
     test_only_key.h
   DEPS
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::string_view

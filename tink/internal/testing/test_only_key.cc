@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
@@ -50,59 +51,56 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::google::crypto::tink::TestOnlyKey;
 using ::google::crypto::tink::TestOnlyKeyFormat;
 using ::google::crypto::tink::internal::KeyDataTP;
 using ::google::crypto::tink::internal::OutputPrefixTypeTP;
+using TestOnlyKeyProto = ::google::crypto::tink::TestOnlyKey;
+using Variant = TestOnlyParameters::Variant;
 
-absl::StatusOr<std::string> ComputeTestOnlyOutputPrefix(
-    TestOnlyParameters::Variant variant, absl::optional<int> id_requirement) {
-  switch (variant) {
-    case TestOnlyParameters::Variant::kNoPrefix:
-      return std::string("");
-    case TestOnlyParameters::Variant::kCrunchy:
-    case TestOnlyParameters::Variant::kLegacy:
-      if (!id_requirement.has_value()) {
-        return absl::InvalidArgumentError("Missing ID requirement");
-      }
-      return ComputeOutputPrefix(0, *id_requirement);
-    case TestOnlyParameters::Variant::kTink:
-      if (!id_requirement.has_value()) {
-        return absl::InvalidArgumentError("Missing ID requirement");
-      }
-      return ComputeOutputPrefix(1, *id_requirement);
-    default:
-      return absl::InvalidArgumentError("Invalid variant");
-  }
-}
-
-absl::StatusOr<TestOnlyParameters::Variant> ToVariant(
-    OutputPrefixTypeTP output_prefix_type) {
+absl::StatusOr<Variant> ToVariant(OutputPrefixTypeTP output_prefix_type) {
   switch (output_prefix_type) {
     case OutputPrefixTypeTP::kTink:
-      return TestOnlyParameters::Variant::kTink;
+      return Variant::kTink;
     case OutputPrefixTypeTP::kCrunchy:
-      return TestOnlyParameters::Variant::kCrunchy;
+      return Variant::kCrunchy;
     case OutputPrefixTypeTP::kLegacy:
-      return TestOnlyParameters::Variant::kLegacy;
+      return Variant::kLegacy;
     case OutputPrefixTypeTP::kRaw:
-      return TestOnlyParameters::Variant::kNoPrefix;
+      return Variant::kNoPrefix;
     default:
       return absl::InvalidArgumentError("Invalid output prefix type");
   }
 }
 
-absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(
-    TestOnlyParameters::Variant variant) {
+absl::StatusOr<OutputPrefixTypeTP> ToOutputPrefixType(Variant variant) {
   switch (variant) {
-    case TestOnlyParameters::Variant::kTink:
+    case Variant::kTink:
       return OutputPrefixTypeTP::kTink;
-    case TestOnlyParameters::Variant::kCrunchy:
+    case Variant::kCrunchy:
       return OutputPrefixTypeTP::kCrunchy;
-    case TestOnlyParameters::Variant::kLegacy:
+    case Variant::kLegacy:
       return OutputPrefixTypeTP::kLegacy;
-    case TestOnlyParameters::Variant::kNoPrefix:
+    case Variant::kNoPrefix:
       return OutputPrefixTypeTP::kRaw;
+    default:
+      return absl::InvalidArgumentError("Invalid variant");
+  }
+}
+
+absl::StatusOr<std::string> ComputeTestOnlyOutputPrefix(
+    const TestOnlyParameters& parameters, absl::optional<int> id_requirement) {
+  if (parameters.HasIdRequirement() != id_requirement.has_value()) {
+    return absl::InvalidArgumentError(
+        "The ID requirement doesn't match the parameters");
+  }
+  switch (parameters.GetVariant()) {
+    case Variant::kNoPrefix:
+      return std::string("");
+    case Variant::kCrunchy:
+    case Variant::kLegacy:
+      return internal::ComputeOutputPrefix(0, *id_requirement);
+    case Variant::kTink:
+      return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
       return absl::InvalidArgumentError("Invalid variant");
   }
@@ -120,25 +118,40 @@ absl::StatusOr<TestOnlyParameters> ParseParameters(
   if (key_format.key_size() != kTestOnlyKeySizeInBytes) {
     return absl::InvalidArgumentError("Invalid key format");
   }
-  absl::StatusOr<TestOnlyParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
-  if (!variant.ok()) {
-    return variant.status();
-  }
-  return TestOnlyParameters::Create(*variant);
+  ABSL_ASSIGN_OR_RETURN(
+      Variant variant,
+      ToVariant(serialization.GetKeyTemplate().output_prefix_type()));
+  return TestOnlyParameters::Create(variant);
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const TestOnlyParameters& parameters) {
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(parameters.GetVariant());
-  if (!output_prefix_type.ok()) {
-    return output_prefix_type.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(OutputPrefixTypeTP output_prefix_type,
+                        ToOutputPrefixType(parameters.GetVariant()));
   TestOnlyKeyFormat key_format;
   key_format.set_key_size(kTestOnlyKeySizeInBytes);
   return ProtoParametersSerialization::Create(
-      kTestOnlyKeyTypeUrl, *output_prefix_type, key_format.SerializeAsString());
+      kTestOnlyKeyTypeUrl, output_prefix_type, key_format.SerializeAsString());
+}
+
+absl::StatusOr<TestOnlyParameters> GetParameters(
+    const ProtoKeySerialization& serialization) {
+  ABSL_ASSIGN_OR_RETURN(Variant variant,
+                        ToVariant(serialization.GetOutputPrefixTypeTP()));
+  return TestOnlyParameters::Create(variant);
+}
+
+absl::StatusOr<ProtoKeySerialization> CreateKeySerialization(
+    absl::string_view type_url, absl::string_view serialized_key,
+    SecretKeyAccessToken token, KeyDataTP::KeyMaterialTypeTP key_material_type,
+    const Key& key) {
+  const auto& parameters =
+      static_cast<const TestOnlyParameters&>(key.GetParameters());
+  ABSL_ASSIGN_OR_RETURN(OutputPrefixTypeTP output_prefix_type,
+                        ToOutputPrefixType(parameters.GetVariant()));
+  return ProtoKeySerialization::Create(
+      type_url, RestrictedData(serialized_key, token), key_material_type,
+      output_prefix_type, key.GetIdRequirement());
 }
 
 absl::StatusOr<TestOnlySymmetricKey> ParseKey(
@@ -150,7 +163,7 @@ absl::StatusOr<TestOnlySymmetricKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  TestOnlyKey key;
+  TestOnlyKeyProto key;
   if (!key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse the key");
@@ -158,18 +171,10 @@ absl::StatusOr<TestOnlySymmetricKey> ParseKey(
   if (key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted");
   }
-  absl::StatusOr<TestOnlyParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixTypeTP());
-  if (!variant.ok()) {
-    return variant.status();
-  }
-  absl::StatusOr<TestOnlyParameters> parameters =
-      TestOnlyParameters::Create(*variant);
-  if (!parameters.ok()) {
-    return parameters.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(TestOnlyParameters parameters,
+                        GetParameters(serialization));
   return TestOnlySymmetricKey::Create(
-      *parameters, RestrictedData(key.key_value(), *token),
+      parameters, RestrictedData(key.key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -179,21 +184,13 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  absl::StatusOr<OutputPrefixTypeTP> output_prefix_type =
-      ToOutputPrefixType(key.GetParameters().GetVariant());
-  if (!output_prefix_type.ok()) {
-    return output_prefix_type.status();
-  }
-  TestOnlyKey proto_key;
+  TestOnlyKeyProto proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(
       key.GetKeyBytes(GetPartialKeyAccess()).GetSecret(*token));
-  std::string serialized_key = proto_key.SerializeAsString();
-  return ProtoKeySerialization::Create(
-      kTestOnlyKeyTypeUrl,
-      RestrictedData(absl::string_view(serialized_key), *token),
-      KeyDataTP::KeyMaterialTypeTP::kSymmetric, *output_prefix_type,
-      key.GetIdRequirement());
+  return CreateKeySerialization(kTestOnlyKeyTypeUrl,
+                                proto_key.SerializeAsString(), *token,
+                                KeyDataTP::KeyMaterialTypeTP::kSymmetric, key);
 }
 
 using TestOnlyParametersParser =
@@ -251,17 +248,11 @@ bool TestOnlyParameters::operator==(const Parameters& other) const {
 absl::StatusOr<TestOnlySymmetricKey> TestOnlySymmetricKey::Create(
     const TestOnlyParameters& parameters, const RestrictedData& key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
-  if (parameters.HasIdRequirement() != id_requirement.has_value()) {
-    return absl::InvalidArgumentError(
-        "The ID requirement doesn't match the parameters");
-  }
-  absl::StatusOr<std::string> output_prefix =
-      ComputeTestOnlyOutputPrefix(parameters.GetVariant(), id_requirement);
-  if (!output_prefix.ok()) {
-    return output_prefix.status();
-  }
+  ABSL_ASSIGN_OR_RETURN(
+      std::string output_prefix,
+      ComputeTestOnlyOutputPrefix(parameters, id_requirement));
   return TestOnlySymmetricKey(parameters, key_bytes, id_requirement,
-                              *std::move(output_prefix));
+                              std::move(output_prefix));
 }
 
 bool TestOnlySymmetricKey::operator==(const Key& other) const {
@@ -293,13 +284,12 @@ absl::Status RegisterTestOnlyProtoSerialization() {
 
 absl::StatusOr<std::unique_ptr<Key>> CreateTestOnlyKey(
     const TestOnlyParameters& parameters, absl::optional<int> id_requirement) {
-  absl::StatusOr<TestOnlySymmetricKey> key = TestOnlySymmetricKey::Create(
-      parameters, RestrictedData(kTestOnlyKeySizeInBytes), id_requirement,
-      GetPartialKeyAccess());
-  if (!key.ok()) {
-    return key.status();
-  }
-  return {std::make_unique<TestOnlySymmetricKey>(*std::move(key))};
+  RestrictedData key_bytes(kTestOnlyKeySizeInBytes);
+  ABSL_ASSIGN_OR_RETURN(
+      TestOnlySymmetricKey key,
+      TestOnlySymmetricKey::Create(parameters, key_bytes, id_requirement,
+                                   GetPartialKeyAccess()));
+  return {std::make_unique<TestOnlySymmetricKey>(std::move(key))};
 }
 
 absl::StatusOr<std::unique_ptr<Aead>> NewTestOnlyAead(

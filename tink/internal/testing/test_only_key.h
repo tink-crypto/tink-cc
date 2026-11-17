@@ -43,10 +43,15 @@ namespace internal {
 //
 // The keys are serialized with the test-only protos of
 // `proto/test_only_key.proto`: `TestOnlyKey` for the keys and
-// `TestOnlyKeyFormat` for the key formats.
+// `TestOnlyKeyFormat` for the key formats. The type URLs of the test-only
+// asymmetric keys of `test_only_key_managers.h` are also defined here.
 
 inline constexpr absl::string_view kTestOnlyKeyTypeUrl =
     "type.googleapis.com/google.crypto.tink.TestOnlyKey";
+inline constexpr absl::string_view kTestOnlyPrivateKeyTypeUrl =
+    "type.googleapis.com/google.crypto.tink.TestOnlyPrivateKey";
+inline constexpr absl::string_view kTestOnlyPublicKeyTypeUrl =
+    "type.googleapis.com/google.crypto.tink.TestOnlyPublicKey";
 
 // Type URL of the `TestOnlyLegacyKey` proto, which never has a registered
 // proto serialization, for tests of keys parsed as `LegacyProtoKey`s.

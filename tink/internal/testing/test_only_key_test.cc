@@ -267,6 +267,41 @@ TEST(TestOnlySymmetricKeyTest, KeysWithDifferentKeyBytesAreNotEqual) {
   EXPECT_THAT(*key1 != *key2, IsTrue());
 }
 
+TEST(TestOnlySymmetricKeyTest, KeysWithDifferentParametersAreNotEqual) {
+  absl::StatusOr<TestOnlyParameters> tink_parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(tink_parameters, IsOk());
+  absl::StatusOr<TestOnlyParameters> crunchy_parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kCrunchy);
+  ASSERT_THAT(crunchy_parameters, IsOk());
+  RestrictedData key_bytes("key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<TestOnlySymmetricKey> key1 = TestOnlySymmetricKey::Create(
+      *tink_parameters, key_bytes, kKeyId, GetPartialKeyAccess());
+  ASSERT_THAT(key1, IsOk());
+  absl::StatusOr<TestOnlySymmetricKey> key2 = TestOnlySymmetricKey::Create(
+      *crunchy_parameters, key_bytes, kKeyId, GetPartialKeyAccess());
+  ASSERT_THAT(key2, IsOk());
+
+  EXPECT_THAT(*key1 == *key2, Eq(false));
+  EXPECT_THAT(*key1 != *key2, IsTrue());
+}
+
+TEST(TestOnlySymmetricKeyTest, KeysWithDifferentIdRequirementsAreNotEqual) {
+  absl::StatusOr<TestOnlyParameters> parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+  RestrictedData key_bytes("key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<TestOnlySymmetricKey> key1 = TestOnlySymmetricKey::Create(
+      *parameters, key_bytes, kKeyId, GetPartialKeyAccess());
+  ASSERT_THAT(key1, IsOk());
+  absl::StatusOr<TestOnlySymmetricKey> key2 = TestOnlySymmetricKey::Create(
+      *parameters, key_bytes, kKeyId + 1, GetPartialKeyAccess());
+  ASSERT_THAT(key2, IsOk());
+
+  EXPECT_THAT(*key1 == *key2, Eq(false));
+  EXPECT_THAT(*key1 != *key2, IsTrue());
+}
+
 TEST(TestOnlySymmetricKeyTest, GenerateFromParametersAndGetPrimitive) {
   ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
   KeyGenConfiguration key_gen_config;

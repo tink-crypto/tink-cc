@@ -48,7 +48,12 @@
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/prf/hmac_prf_parameters.h"
+#include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/aes_cmac_prf_test_vectors.h"
 #include "tink/prf/internal/hkdf_prf_test_vectors.h"
+#include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/hmac_prf_test_vectors.h"
 #include "tink/prf/prf_key.h"
 #include "tink/restricted_data.h"
 #include "proto/common.pb.h"
@@ -107,6 +112,8 @@ const SerializationRegistry& GetHelperRegistry() {
     SerializationRegistry registry;
     ABSL_CHECK_OK(
         RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterHmacPrfProtoSerializationWithRegistry(registry));
     return registry;
   }());
   return *kRegistry;
@@ -349,17 +356,48 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
-     ParseParametersWithInvalidPrfKeyTemplate) {
+     ParseParametersWithInvalidPrfParameters) {
+  HkdfPrfKeyFormat invalid_prf_key_format;
+  invalid_prf_key_format.set_version(0);
+  invalid_prf_key_format.set_key_size(15);
+  invalid_prf_key_format.mutable_params()->set_hash(HashType::SHA256);
+  KeyTemplate invalid_prf_key_template = GetHkdfPrfKeyTemplate();
+  invalid_prf_key_template.set_value(
+      invalid_prf_key_format.SerializeAsString());
   ProtoParametersSerialization serialization = CreateParametersSerialization(
-      ToKeyTemplate(GetXChaCha20Poly1305Parameters()),
-      GetXChaCha20Poly1305KeyTemplate(), OutputPrefixTypeTP::kTink);
+      invalid_prf_key_template, GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink);
+
+  EXPECT_THAT(GetRegistry().ParseParameters(serialization),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Key size must be at least 16 bytes")));
+}
+
+TEST(PrfBasedKeyDerivationProtoSerializationTest,
+     ParseParametersWithNonRawPrfKeyTemplate) {
+  KeyTemplate non_raw_prf_key_template = GetHkdfPrfKeyTemplate();
+  non_raw_prf_key_template.set_output_prefix_type(OutputPrefixType::TINK);
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      non_raw_prf_key_template, GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink);
 
   EXPECT_THAT(
       GetRegistry().ParseParameters(serialization),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
-          HasSubstr(
-              "Non-PRF parameters stored in the `prf_key_template` field")));
+          HasSubstr("Output prefix type must be RAW for HkdfPrfParameters")));
+}
+
+TEST(PrfBasedKeyDerivationProtoSerializationTest,
+     ParseParametersWithInvalidPrfKeyTemplate) {
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      ToKeyTemplate(GetXChaCha20Poly1305Parameters()),
+      GetXChaCha20Poly1305KeyTemplate(), OutputPrefixTypeTP::kTink);
+
+  EXPECT_THAT(GetRegistry().ParseParameters(serialization),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported PRF parameters when parsing "
+                                 "PrfBasedKeyDerivationParameters")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -492,7 +530,8 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
   EXPECT_THAT(GetRegistry().ParseKey(serialization,
                                      GetInsecureSecretKeyAccessInternal()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Non-PRF key stored in the `prf_key` field")));
+                       HasSubstr("Unsupported PRF key when parsing "
+                                 "PrfBasedKeyDerivationKey")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithInvalidVersion) {
@@ -504,6 +543,24 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithInvalidVersion) {
                                      GetInsecureSecretKeyAccessInternal()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
+}
+
+TEST(PrfBasedKeyDerivationProtoSerializationTest,
+     ParseKeyWithInvalidPrfKeySize) {
+  google::crypto::tink::HkdfPrfKey invalid_prf_key;
+  invalid_prf_key.set_version(0);
+  invalid_prf_key.mutable_params()->set_hash(HashType::SHA256);
+  invalid_prf_key.set_key_value("0123456789abcde");
+  KeyData invalid_prf_key_data = GetHkdfPrfKeyData();
+  invalid_prf_key_data.set_value(invalid_prf_key.SerializeAsString());
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      invalid_prf_key_data, GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123);
+
+  EXPECT_THAT(GetRegistry().ParseKey(serialization,
+                                     GetInsecureSecretKeyAccessInternal()),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Key size must be at least 16 bytes")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -669,6 +726,81 @@ TEST_P(PrfBasedKeyDerivationRoundTripTest, SerializeAndParseKey) {
       **serialization, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT(**parsed, Eq(*key));
+}
+
+struct UnsupportedPrfTestCase {
+  std::string test_name;
+  // Non-owning pointer into static NoDestructor test vectors.
+  const PrfKey* prf_key;
+};
+
+using PrfBasedKeyDerivationUnsupportedPrfTypesTest =
+    TestWithParam<UnsupportedPrfTestCase>;
+
+INSTANTIATE_TEST_SUITE_P(
+    PrfBasedKeyDerivationUnsupportedPrfTypesTests,
+    PrfBasedKeyDerivationUnsupportedPrfTypesTest,
+    ValuesIn(std::vector<UnsupportedPrfTestCase>{
+        {"AesCmacPrf", &GetAesCmacPrfTestVector(16).key},
+        {"HmacPrf",
+         &GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256).key},
+    }),
+    [](const TestParamInfo<UnsupportedPrfTestCase>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(PrfBasedKeyDerivationUnsupportedPrfTypesTest, ParseParametersFails) {
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      ToKeyTemplate(GetParam().prf_key->GetParameters()),
+      GetXChaCha20Poly1305KeyTemplate(), OutputPrefixTypeTP::kTink);
+
+  EXPECT_THAT(GetRegistry().ParseParameters(serialization),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported PRF parameters when parsing "
+                                 "PrfBasedKeyDerivationParameters")));
+}
+
+TEST_P(PrfBasedKeyDerivationUnsupportedPrfTypesTest, SerializeParametersFails) {
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(GetParam().prf_key->GetParameters())
+          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(GetRegistry().SerializeParameters<ProtoParametersSerialization>(
+                  *parameters),
+              StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST_P(PrfBasedKeyDerivationUnsupportedPrfTypesTest, ParseKeyFails) {
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      ToKeyData(*GetParam().prf_key), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123);
+
+  EXPECT_THAT(GetRegistry().ParseKey(serialization,
+                                     GetInsecureSecretKeyAccessInternal()),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported PRF key when parsing "
+                                 "PrfBasedKeyDerivationKey")));
+}
+
+TEST_P(PrfBasedKeyDerivationUnsupportedPrfTypesTest, SerializeKeyFails) {
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(GetParam().prf_key->GetParameters())
+          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
+      PrfBasedKeyDerivationKey::Create(*parameters, *GetParam().prf_key,
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(GetRegistry().SerializeKey<ProtoKeySerialization>(
+                  *key, GetInsecureSecretKeyAccessInternal()),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 }  // namespace

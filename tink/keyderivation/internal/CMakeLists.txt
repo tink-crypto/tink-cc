@@ -343,6 +343,8 @@ tink_cc_library(
     prf_based_key_derivation_proto_serialization_impl.cc
     prf_based_key_derivation_proto_serialization_impl.h
   DEPS
+    absl::no_destructor
+    absl::absl_check
     absl::memory
     absl::status
     absl::status_macros
@@ -373,9 +375,8 @@ tink_cc_library(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::prf_key
     tink::prf::prf_parameters
+    tink::prf::internal::hkdf_prf_proto_serialization_impl
     tink::util::status
-    tink::proto::prf_based_deriver_cc_proto
-    tink::proto::tink_cc_proto
     tink::proto::tink_cc_tinkpb
 )
 
@@ -411,8 +412,13 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
+    tink::prf::hmac_prf_parameters
     tink::prf::prf_key
+    tink::prf::internal::aes_cmac_prf_proto_serialization_impl
+    tink::prf::internal::aes_cmac_prf_test_vectors
     tink::prf::internal::hkdf_prf_test_vectors
+    tink::prf::internal::hmac_prf_proto_serialization_impl
+    tink::prf::internal::hmac_prf_test_vectors
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::prf_based_deriver_cc_proto

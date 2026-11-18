@@ -1,6 +1,7 @@
 tink_module(hybrid)
 
 add_subdirectory(internal)
+add_subdirectory(subtle)
 
 tink_cc_library(
   NAME hybrid_config

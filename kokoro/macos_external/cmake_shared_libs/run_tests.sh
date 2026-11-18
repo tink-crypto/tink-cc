@@ -1,0 +1,64 @@
+#!/bin/bash
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+# Generated with openssl rand -hex 10
+echo "==========================================================================="
+echo "Tink Script ID: 19d6a7ea6aab67aa26fc (to quickly find the script from logs)"
+echo "==========================================================================="
+
+set -euo pipefail
+
+# Disable Homebrew auto-updates and cleanup to speed up builds and avoid
+# pulling rolling HEAD package changes on Kokoro VMs.
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+# Enable retry-all-errors for curl in Homebrew so that connection resets
+# and timeouts to ghcr.io are retried alongside HTTP errors.
+export HOMEBREW_CURLRC="${HOME}/.homebrew_curlrc"
+echo "retry-all-errors" > "${HOMEBREW_CURLRC}"
+
+if [[ -n "${KOKORO_ROOT:-}" ]]; then
+  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  cd "${TINK_BASE_DIR}/tink_cc"
+  readonly TINK_SRC_DIR="$(pwd)"
+  cleanup() {
+    rm -rf "${TINK_SRC_DIR}/ccache" \
+      "${TINK_SRC_DIR}/out" \
+      "${TINK_SRC_DIR}/out_examples"
+  }
+  # Kokoro rsyncs all created/modified files under KOKORO_ARTIFACTS_DIR back
+  # off the VM when the job ends; delete build and cache directories on exit so
+  # multi-GB build outputs are not transferred back.
+  trap cleanup EXIT
+fi
+
+# Install cmake if not available
+if ! command -v cmake &> /dev/null; then
+  brew install cmake
+fi
+
+# Install ccache if not available
+if ! command -v ccache &> /dev/null; then
+  brew install ccache
+fi
+
+export CCACHE_DIR="$(pwd)/ccache"
+mkdir -p "${CCACHE_DIR}"
+EXTRA_CMAKE_ARGS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_ASM_COMPILER_LAUNCHER=ccache -DBUILD_SHARED_LIBS=ON"
+
+mkdir -p out out_examples
+./kokoro/testutils/run_cmake_tests.sh -o out . ${EXTRA_CMAKE_ARGS}
+./kokoro/testutils/run_cmake_tests.sh -o out_examples "examples" -DTINK_BUILD_TESTS=OFF ${EXTRA_CMAKE_ARGS}

@@ -14,9 +14,6 @@ option(TINK_USE_INSTALLED_GOOGLETEST "Build Tink linking to GTest installed in t
 option(TINK_USE_INSTALLED_PROTOBUF "Build Tink linking to Protobuf installed in the system" OFF)
 option(TINK_USE_INSTALLED_BENCHMARK "Build Tink linking to benchmark installed in the system" OFF)
 
-set(CPACK_GENERATOR TGZ)
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-
 # For MSCV, force the static runtime.
 # Currently, both absl and cmake allow to override this. In order to make things
 # more likely to be built correctly we currently only allow static runtimes.
@@ -46,7 +43,6 @@ if (TINK_BUILD_TESTONLY)
   endif()
 endif()
 
-include(CPack)
 include(TinkWorkspace)
 include(TinkBuildRules)
 

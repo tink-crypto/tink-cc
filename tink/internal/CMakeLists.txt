@@ -2084,18 +2084,16 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     absl::string_view
+    tink::core::key
     tink::core::key_manager
+    tink::core::parameters
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::signature::internal::ml_dsa_proto_serialization
-    tink::signature::internal::ml_dsa_sign_key_manager
-    tink::signature::internal::ml_dsa_verify_key_manager
+    tink::internal::testing::test_only_key
     tink::util::protobuf_helper
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::common_cc_proto
-    tink::proto::ecdsa_cc_proto
-    tink::proto::ml_dsa_cc_proto
+    tink::proto::test_only_key_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(

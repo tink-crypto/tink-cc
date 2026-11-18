@@ -190,6 +190,7 @@ ExternalProject_Add_StepDependencies(tink_boringssl_build configure
   "${_tink_boringssl_init_cache_file}")
 
 # The library built above, as a target Tink can link against.
+# Linked statically as BoringSSL does not provide a stable ABI and API.
 add_library(tink_internal_boringssl STATIC IMPORTED GLOBAL)
 # CMake does not build imported targets: make everything that links this target
 # wait for the BoringSSL build.
@@ -207,10 +208,11 @@ else()
     IMPORTED_LOCATION "${_tink_boringssl_lib_dir}/${_tink_boringssl_lib_name}")
 endif()
 
-# TODO: b/537605175 - Make BoringSSL a PRIVATE dependency of Tink targets once
-# no public Tink header includes OpenSSL headers. Until then, this include
-# directory propagates to every target that links Tink, so code that uses
-# another OpenSSL may pick up BoringSSL's headers instead.
+# TODO: b/537605175 - Scope this include directory to Tink's own compilation
+# once no public Tink header includes OpenSSL headers. Until then,
+# TINK_INCLUDE_DIRS propagates it to every target that links Tink, so code that
+# uses another OpenSSL may pick up BoringSSL's headers instead.
+list(APPEND TINK_INCLUDE_DIRS "${tink_boringssl_SOURCE_DIR}/include")
 target_include_directories(tink_internal_boringssl INTERFACE
   "${tink_boringssl_SOURCE_DIR}/include")
 # Mirror the link dependencies of BoringSSL's `crypto` target: a static library

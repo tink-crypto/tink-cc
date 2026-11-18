@@ -143,6 +143,91 @@ function(_tink_set_to_escaped_target_name)
   set(${arg_OUTPUT_VARIABLE} "${escaped_name}" PARENT_SCOPE)
 endfunction()
 
+# Merges one library into another.
+#
+# Parameters:
+#   TARGET   CMake target name of the library to merge into.
+#   LIBRARY  CMake target name of the library to merge from. Must be `STATIC`.
+#
+# If `TARGET` is a shared library, just links to `LIBRARY` normally.
+# If `TARGET` is a static library, creates an archive that contains both the
+# contents of `TARGET` and `LIBRARY`.
+#
+# This is used to merge BoringSSL's `crypto` archive into libtink.a / tink.lib
+# so that the static library is self-contained, and forward only BoringSSL's
+# system link dependencies without putting libcrypto.a itself onto downstream
+# linker command lines - thereby insulating downstream users from BoringSSL API
+# changes and even allowing them to link to their own BoringSSL or OpenSSL.
+function(_tink_target_link_merged_library)
+  cmake_parse_arguments(PARSE_ARGV 0 arg
+    ""
+    "TARGET;LIBRARY"
+    ""
+  )
+  get_target_property(library_type ${arg_LIBRARY} TYPE)
+  if(NOT library_type STREQUAL "STATIC_LIBRARY")
+    message(FATAL_ERROR
+            "_tink_target_link_merged_library requires a STATIC library")
+  endif()
+  get_target_property(target_type ${arg_TARGET} TYPE)
+  if(NOT target_type STREQUAL "STATIC_LIBRARY")
+    target_link_libraries(${arg_TARGET}
+                          PRIVATE ${arg_LIBRARY})
+    return()
+  endif()
+
+  add_dependencies(${arg_TARGET} ${arg_LIBRARY})
+  get_target_property(library_deps ${arg_LIBRARY} INTERFACE_LINK_LIBRARIES)
+  if(library_deps)
+    target_link_libraries(${arg_TARGET} PRIVATE ${library_deps})
+  endif()
+  if(MSVC)
+    # MSVC's linker just allows passing a .lib file as an input and it will
+    # embed it into the output.
+    set_property(TARGET ${arg_TARGET}
+                 APPEND PROPERTY STATIC_LIBRARY_OPTIONS
+                 "$<TARGET_FILE:${arg_LIBRARY}>")
+  elseif(APPLE)
+    # Apple's fat binary support is only implemented via Apple's libtool.
+    add_custom_command(TARGET ${arg_TARGET}
+                       POST_BUILD COMMAND
+                       /usr/bin/libtool
+                         -static -no_warning_for_no_symbols
+                         -o "\"$<TARGET_FILE:${arg_TARGET}>\""
+                         "\"$<TARGET_FILE:${arg_TARGET}>\""
+                         "\"$<TARGET_FILE:${arg_LIBRARY}>\"" ||
+                       (
+                         "\"${CMAKE_COMMAND}\"" -E rm -f
+                           "\"$<TARGET_FILE:${arg_TARGET}>\"" &&
+                         "\"${CMAKE_COMMAND}\"" -E false
+                       ))
+  else()
+    # Other systems either have GNU ar or LLVM ar, both of which support
+    # `-M` MRI scripts.
+    set(mri "${PROJECT_BINARY_DIR}/merge_${arg_TARGET}_$<CONFIG>.mri")
+    string(CONCAT mri_content
+           "CREATE $<TARGET_FILE:${arg_TARGET}>.merged\n"
+           "ADDLIB $<TARGET_FILE:${arg_TARGET}>\n"
+           "ADDLIB $<TARGET_FILE:${arg_LIBRARY}>\n"
+           "SAVE\n"
+           "END\n")
+    file(GENERATE OUTPUT "${mri}" CONTENT "${mri_content}")
+    add_custom_command(TARGET ${arg_TARGET}
+                       POST_BUILD COMMAND
+                       "${CMAKE_AR}"
+                         -M < "\"${mri}\"" &&
+                       "\"${CMAKE_COMMAND}\"" -E rename
+                         "\"$<TARGET_FILE:${arg_TARGET}>.merged\""
+                         "\"$<TARGET_FILE:${arg_TARGET}>\"" ||
+                       (
+                         "\"${CMAKE_COMMAND}\"" -E rm -f
+                           "\"$<TARGET_FILE:${arg_TARGET}>\""
+                           "\"$<TARGET_FILE:${arg_TARGET}>.merged\"" &&
+                         "\"${CMAKE_COMMAND}\"" -E false
+                       ))
+  endif()
+endfunction()
+
 # Declare the main Tink library target.
 #
 # This target will contain all Tink source and headers that can be used by
@@ -153,7 +238,8 @@ endfunction()
 add_library(tink "")
 target_include_directories(tink PUBLIC
                            "${PROJECT_SOURCE_DIR}" ${TINK_INCLUDE_DIRS})
-target_link_libraries(tink PUBLIC tink::internal::boringssl)
+_tink_target_link_merged_library(TARGET tink
+                                 LIBRARY tink::internal::boringssl)
 target_compile_options(tink PRIVATE ${TINK_DEFAULT_COPTS})
 target_compile_features(tink PUBLIC cxx_std_${TINK_CXX_STANDARD})
 set_property(TARGET tink PROPERTY FOLDER "${TINK_IDE_FOLDER}")
@@ -168,6 +254,12 @@ add_library(tink::tink ALIAS tink)
 if(TINK_BUILD_TESTONLY)
   add_library(tink_testonly "")
   target_link_libraries(tink_testonly PUBLIC tink)
+  # Link test helpers also to BoringSSL.
+  #
+  # Some, few, test helpers make their own BoringSSL calls, but `tink` does not
+  # re-export BoringSSL symbols due to BoringSSL using `-fvisibility=hidden`.
+  _tink_target_link_merged_library(TARGET tink_testonly
+                                   LIBRARY tink::internal::boringssl)
   target_compile_options(tink_testonly PRIVATE ${TINK_DEFAULT_COPTS})
   target_compile_features(tink_testonly PUBLIC cxx_std_${TINK_CXX_STANDARD})
   set_property(TARGET tink_testonly PROPERTY FOLDER "${TINK_IDE_FOLDER}")
@@ -298,6 +390,13 @@ function(tink_cc_test)
     target_link_libraries(${target_name} GTest::gtest_main)
   endif()
   target_link_libraries(${target_name} tink_testonly ${external_deps})
+
+  # Link all tests also to BoringSSL.
+  #
+  # Some, few, tests make their own BoringSSL calls, but `tink` and
+  # `tink_testonly` do not re-export BoringSSL symbols due to BoringSSL using
+  # `-fvisibility=hidden`.
+  target_link_libraries(${target_name} tink::internal::boringssl)
 
   set_property(TARGET ${target_name}
                PROPERTY FOLDER "${TINK_IDE_FOLDER}/Tests")

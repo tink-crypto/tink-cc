@@ -413,6 +413,7 @@
 #include "tink/signature/subtle/create_rsa_ssa_pkcs1_signer.h"
 #include "tink/signature/subtle/create_rsa_ssa_pkcs1_verifier.h"
 #include "tink/signature/subtle/create_rsa_ssa_pss_key.h"
+#include "tink/signature/subtle/create_rsa_ssa_pss_signer.h"
 #include "tink/signature/subtle/create_rsa_ssa_pss_verifier.h"
 #include "tink/signature/subtle/create_slh_dsa_key.h"
 #include "tink/signature/subtle/create_slh_dsa_signer.h"

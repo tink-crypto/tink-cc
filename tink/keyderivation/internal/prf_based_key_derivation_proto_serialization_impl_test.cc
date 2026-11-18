@@ -16,18 +16,22 @@
 
 #include "tink/keyderivation/internal/prf_based_key_derivation_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
+#include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -35,6 +39,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_struct_conversions.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyderivation/prf_based_key_derivation_key.h"
@@ -43,6 +48,8 @@
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/prf/internal/hkdf_prf_test_vectors.h"
+#include "tink/prf/prf_key.h"
 #include "tink/restricted_data.h"
 #include "proto/common.pb.h"
 #include "proto/hkdf_prf.pb.h"
@@ -66,12 +73,14 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::PrfBasedDeriverKeyFormat;
-using ::google::crypto::tink::PrfBasedDeriverParams;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
 using ::testing::NotNull;
+using ::testing::TestParamInfo;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 constexpr absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey";
@@ -80,6 +89,56 @@ constexpr absl::string_view kPrfKeyTypeUrl =
 constexpr absl::string_view kDerivedKeyTypeUrl =
     "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key";
 constexpr absl::string_view kPrfKeyValue = "0123456789abcdef0123456789abcdef";
+
+const SerializationRegistry& GetRegistry() {
+  static const absl::NoDestructor<SerializationRegistry> kRegistry([] {
+    SerializationRegistry registry;
+    ABSL_CHECK_OK(
+        RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry));
+    return registry;
+  }());
+  return *kRegistry;
+}
+
+// Helper registry used to construct serialized inner KeyTemplate / KeyData
+// protos from Parameters / Key objects for negative test cases.
+const SerializationRegistry& GetHelperRegistry() {
+  static const absl::NoDestructor<SerializationRegistry> kRegistry([] {
+    SerializationRegistry registry;
+    ABSL_CHECK_OK(
+        RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(registry));
+    return registry;
+  }());
+  return *kRegistry;
+}
+
+KeyTemplate ToKeyTemplate(const Parameters& parameters) {
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      GetHelperRegistry().SerializeParameters<ProtoParametersSerialization>(
+          parameters);
+  ABSL_CHECK_OK(serialization);
+  const auto* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ABSL_CHECK_NE(proto_serialization, nullptr);
+  return ToProtoKeyTemplate(proto_serialization->GetKeyTemplate());
+}
+
+KeyData ToKeyData(const Key& key) {
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      GetHelperRegistry().SerializeKey<ProtoKeySerialization>(
+          key, GetInsecureSecretKeyAccessInternal());
+  ABSL_CHECK_OK(serialization);
+  const auto* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ABSL_CHECK_NE(proto_serialization, nullptr);
+  KeyData key_data;
+  key_data.set_type_url(proto_serialization->TypeUrl());
+  key_data.set_value(proto_serialization->SerializedKeyProto().GetSecret(
+      GetInsecureSecretKeyAccessInternal()));
+  key_data.set_key_material_type(static_cast<KeyData::KeyMaterialType>(
+      proto_serialization->GetKeyMaterialTypeTP()));
+  return key_data;
+}
 
 KeyTemplate GetHkdfPrfKeyTemplate() {
   HkdfPrfKeyFormat key_format;
@@ -97,24 +156,6 @@ HkdfPrfParameters GetHkdfPrfParameters() {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       kPrfKeyValue.size(), HkdfPrfParameters::HashType::kSha256,
       /*salt=*/std::nullopt);
-  ABSL_CHECK_OK(parameters);
-  return *parameters;
-}
-
-KeyTemplate GetXChaCha20Poly1305KeyTemplate() {
-  XChaCha20Poly1305KeyFormat key_format;
-  key_format.set_version(0);
-  KeyTemplate key_template;
-  key_template.set_type_url(kDerivedKeyTypeUrl);
-  key_template.set_value(key_format.SerializeAsString());
-  key_template.set_output_prefix_type(OutputPrefixType::TINK);
-  return key_template;
-}
-
-XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
-  absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
-      XChaCha20Poly1305Parameters::Create(
-          XChaCha20Poly1305Parameters::Variant::kTink);
   ABSL_CHECK_OK(parameters);
   return *parameters;
 }
@@ -140,6 +181,77 @@ KeyData GetHkdfPrfKeyData() {
   return key_data;
 }
 
+KeyTemplate GetXChaCha20Poly1305KeyTemplate() {
+  XChaCha20Poly1305KeyFormat key_format;
+  key_format.set_version(0);
+  KeyTemplate key_template;
+  key_template.set_type_url(kDerivedKeyTypeUrl);
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::TINK);
+  return key_template;
+}
+
+XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
+  absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ABSL_CHECK_OK(parameters);
+  return *parameters;
+}
+
+PrfBasedKeyDerivationParameters GetTestParameters() {
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(GetHkdfPrfParameters())
+          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
+          .Build();
+  ABSL_CHECK_OK(parameters);
+  return *parameters;
+}
+
+PrfBasedKeyDerivationKey GetTestKey() {
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
+      PrfBasedKeyDerivationKey::Create(GetTestParameters(), GetHkdfPrfKey(),
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess());
+  ABSL_CHECK_OK(key);
+  return *key;
+}
+
+ProtoParametersSerialization CreateParametersSerialization(
+    const KeyTemplate& prf_key_template,
+    const KeyTemplate& derived_key_template,
+    OutputPrefixTypeTP output_prefix_type) {
+  PrfBasedDeriverKeyFormat key_format_proto;
+  *key_format_proto.mutable_prf_key_template() = prf_key_template;
+  *key_format_proto.mutable_params()->mutable_derived_key_template() =
+      derived_key_template;
+  absl::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kTypeUrl, output_prefix_type, key_format_proto.SerializeAsString());
+  ABSL_CHECK_OK(serialization);
+  return *serialization;
+}
+
+ProtoKeySerialization CreateKeySerialization(
+    const KeyData& prf_key_data, const KeyTemplate& derived_key_template,
+    OutputPrefixTypeTP output_prefix_type, std::optional<int> id_requirement,
+    uint32_t version = 0) {
+  google::crypto::tink::PrfBasedDeriverKey key_proto;
+  key_proto.set_version(version);
+  *key_proto.mutable_prf_key() = prf_key_data;
+  *key_proto.mutable_params()->mutable_derived_key_template() =
+      derived_key_template;
+  RestrictedData serialized_key(key_proto.SerializeAsString(),
+                                GetInsecureSecretKeyAccessInternal());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    output_prefix_type, id_requirement);
+  ABSL_CHECK_OK(serialization);
+  return *serialization;
+}
+
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      RegisterTwiceSucceedsWithMutableRegistry) {
   MutableSerializationRegistry registry;
@@ -155,7 +267,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      RegisterTwiceSucceedsWithRegistry) {
-  // TODO: b/378091229 - Consider disallowing duplicate registrations.
+  // TODO(b/378091229): Consider disallowing duplicate registrations.
   SerializationRegistry registry;
   ASSERT_THAT(
       RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
@@ -172,122 +284,49 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
           registry),
       IsOk());
-
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() = GetHkdfPrfKeyTemplate();
-  PrfBasedDeriverParams prf_based_deriver_params;
-  *prf_based_deriver_params.mutable_derived_key_template() =
-      derived_key_template;
-  *key_format_proto.mutable_params() = prf_based_deriver_params;
-
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kTypeUrl,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      GetHkdfPrfKeyTemplate(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink);
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
-      registry.ParseParameters(*serialization);
+      registry.ParseParameters(serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsTrue());
-
-  const PrfBasedKeyDerivationParameters* prf_based_deriver_parameters =
-      dynamic_cast<const PrfBasedKeyDerivationParameters*>(params->get());
-  ASSERT_THAT(prf_based_deriver_parameters, NotNull());
-
-  EXPECT_THAT(prf_based_deriver_parameters->GetPrfParameters(),
-              Eq(GetHkdfPrfParameters()));
-  EXPECT_THAT(prf_based_deriver_parameters->GetDerivedKeyParameters(),
-              Eq(GetXChaCha20Poly1305Parameters()));
+  EXPECT_THAT(**params, Eq(GetTestParameters()));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseParametersWithRegistry) {
-  SerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
-      IsOk());
-
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() = GetHkdfPrfKeyTemplate();
-  PrfBasedDeriverParams prf_based_deriver_params;
-  *prf_based_deriver_params.mutable_derived_key_template() =
-      derived_key_template;
-  *key_format_proto.mutable_params() = prf_based_deriver_params;
-
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kTypeUrl,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      GetHkdfPrfKeyTemplate(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink);
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
-      registry.ParseParameters(*serialization);
+      GetRegistry().ParseParameters(serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsTrue());
-
-  const PrfBasedKeyDerivationParameters* prf_based_deriver_parameters =
-      dynamic_cast<const PrfBasedKeyDerivationParameters*>(params->get());
-  ASSERT_THAT(prf_based_deriver_parameters, NotNull());
-
-  EXPECT_THAT(prf_based_deriver_parameters->GetPrfParameters(),
-              Eq(GetHkdfPrfParameters()));
-  EXPECT_THAT(prf_based_deriver_parameters->GetDerivedKeyParameters(),
-              Eq(GetXChaCha20Poly1305Parameters()));
+  EXPECT_THAT(**params, Eq(GetTestParameters()));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseParametersWithInvalidSerialization) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
-
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeTP::kRaw, "invalid_serialization");
+  absl::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeTP::kRaw,
+                                           "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  absl::StatusOr<std::unique_ptr<Parameters>> params =
-      registry.ParseParameters(*serialization);
   EXPECT_THAT(
-      params.status(),
+      GetRegistry().ParseParameters(*serialization),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("Failed to parse PrfBasedDeriverKeyFormatTP")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseParametersWithMismatchedOutputPrefix) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      GetHkdfPrfKeyTemplate(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kRaw);
 
-  PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() = GetHkdfPrfKeyTemplate();
-  PrfBasedDeriverParams prf_based_deriver_params;
-  *prf_based_deriver_params.mutable_derived_key_template() =
-      GetXChaCha20Poly1305KeyTemplate();
-  *key_format_proto.mutable_params() = prf_based_deriver_params;
-
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeTP::kRaw,
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Parameters>> params =
-      registry.ParseParameters(*serialization);
-  EXPECT_THAT(params.status(),
+  EXPECT_THAT(GetRegistry().ParseParameters(serialization),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Parsed output prefix type must match derived "
                                  "key output prefix type")));
@@ -295,32 +334,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseParametersWithUnknownOutputPrefix) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
-
   KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
   derived_key_template.set_output_prefix_type(OutputPrefixType::UNKNOWN_PREFIX);
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      GetHkdfPrfKeyTemplate(), derived_key_template,
+      OutputPrefixTypeTP::kUnknownPrefix);
 
-  PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() = GetHkdfPrfKeyTemplate();
-  PrfBasedDeriverParams prf_based_deriver_params;
-  *prf_based_deriver_params.mutable_derived_key_template() =
-      derived_key_template;
-  *key_format_proto.mutable_params() = prf_based_deriver_params;
-
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeTP::kUnknownPrefix,
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Parameters>> params =
-      registry.ParseParameters(*serialization);
   EXPECT_THAT(
-      params.status(),
+      GetRegistry().ParseParameters(serialization),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
@@ -329,30 +350,12 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseParametersWithInvalidPrfKeyTemplate) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      ToKeyTemplate(GetXChaCha20Poly1305Parameters()),
+      GetXChaCha20Poly1305KeyTemplate(), OutputPrefixTypeTP::kTink);
 
-  PrfBasedDeriverKeyFormat key_format_proto;
-  *key_format_proto.mutable_prf_key_template() =
-      GetXChaCha20Poly1305KeyTemplate();
-  PrfBasedDeriverParams prf_based_deriver_params;
-  *prf_based_deriver_params.mutable_derived_key_template() =
-      GetXChaCha20Poly1305KeyTemplate();
-  *key_format_proto.mutable_params() = prf_based_deriver_params;
-
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixTypeTP::kTink,
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Parameters>> params =
-      registry.ParseParameters(*serialization);
   EXPECT_THAT(
-      params.status(),
+      GetRegistry().ParseParameters(serialization),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
@@ -367,21 +370,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           registry),
       IsOk());
 
-  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeParameters<internal::ProtoParametersSerialization>(
-          *parameters);
+      registry.SerializeParameters<ProtoParametersSerialization>(
+          GetTestParameters());
   ASSERT_THAT(serialization, IsOk());
 
-  const internal::ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoParametersSerialization*>(
-          serialization->get());
+  const auto* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
@@ -397,28 +392,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      SerializeParametersWithRegistry) {
-  SerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
-      IsOk());
-
-  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeParameters<internal::ProtoParametersSerialization>(
-          *parameters);
+      GetRegistry().SerializeParameters<ProtoParametersSerialization>(
+          GetTestParameters());
   ASSERT_THAT(serialization, IsOk());
 
-  const internal::ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoParametersSerialization*>(
-          serialization->get());
+  const auto* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-
   const google::crypto::tink::internal::KeyTemplateTP& key_template =
       proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
@@ -437,254 +418,92 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithMutableRegistry) {
       RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
           registry),
       IsOk());
-
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
-  *key_proto.mutable_prf_key() = GetHkdfPrfKeyData();
-  *key_proto.mutable_params()->mutable_derived_key_template() =
-      derived_key_template;
-
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          /*id_requirement=*/123);
-  ASSERT_THAT(serialization, IsOk());
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      GetHkdfPrfKeyData(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123);
 
   absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
+      registry.ParseKey(serialization, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
-  EXPECT_THAT(
-      (*key)->GetParameters().HasIdRequirement(),
-      derived_key_template.output_prefix_type() != OutputPrefixType::RAW);
-
-  absl::StatusOr<PrfBasedKeyDerivationParameters> expected_parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
-          .Build();
-  ASSERT_THAT(expected_parameters, IsOk());
-
-  absl::StatusOr<PrfBasedKeyDerivationKey> expected_key =
-      PrfBasedKeyDerivationKey::Create(*expected_parameters, GetHkdfPrfKey(),
-                                       /*id_requirement=*/123,
-                                       GetPartialKeyAccess());
-  ASSERT_THAT(expected_key, IsOk());
-
-  EXPECT_THAT(**key, Eq(*expected_key));
+  EXPECT_THAT(**key, Eq(GetTestKey()));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithRegistry) {
-  SerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
-      IsOk());
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      GetHkdfPrfKeyData(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123);
 
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
-  *key_proto.mutable_prf_key() = GetHkdfPrfKeyData();
-  *key_proto.mutable_params()->mutable_derived_key_template() =
-      derived_key_template;
-
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          /*id_requirement=*/123);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
+  absl::StatusOr<std::unique_ptr<Key>> key = GetRegistry().ParseKey(
+      serialization, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
-  EXPECT_THAT(
-      (*key)->GetParameters().HasIdRequirement(),
-      derived_key_template.output_prefix_type() != OutputPrefixType::RAW);
-
-  absl::StatusOr<PrfBasedKeyDerivationParameters> expected_parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
-          .Build();
-  ASSERT_THAT(expected_parameters, IsOk());
-
-  absl::StatusOr<PrfBasedKeyDerivationKey> expected_key =
-      PrfBasedKeyDerivationKey::Create(*expected_parameters, GetHkdfPrfKey(),
-                                       /*id_requirement=*/123,
-                                       GetPartialKeyAccess());
-  ASSERT_THAT(expected_key, IsOk());
-
-  EXPECT_THAT(**key, Eq(*expected_key));
+  EXPECT_THAT(**key, Eq(GetTestKey()));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseKeyWithInvalidSerialization) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
-
-  RestrictedData serialized_key = RestrictedData(
-      "invalid_serialization", GetInsecureSecretKeyAccessInternal());
-
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kTink,
-                                              /*id_requirement=*/123);
+  RestrictedData serialized_key("invalid_serialization",
+                                GetInsecureSecretKeyAccessInternal());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
-  EXPECT_THAT(key.status(),
+  EXPECT_THAT(GetRegistry().ParseKey(*serialization,
+                                     GetInsecureSecretKeyAccessInternal()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Failed to parse PrfBasedDeriverKeyTP")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseKeyWithMismatchedOutputPrefix) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      GetHkdfPrfKeyData(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kRaw, /*id_requirement=*/std::nullopt);
 
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
-  *key_proto.mutable_prf_key() = GetHkdfPrfKeyData();
-  *key_proto.mutable_params()->mutable_derived_key_template() =
-      derived_key_template;
-
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeTP::kSymmetric,
-                                              OutputPrefixTypeTP::kRaw,
-                                              /*id_requirement=*/std::nullopt);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
-  EXPECT_THAT(key, StatusIs(absl::StatusCode::kInvalidArgument,
-                            HasSubstr("Parsed output prefix type must match "
-                                      "derived key output prefix type")));
+  EXPECT_THAT(
+      GetRegistry().ParseKey(serialization,
+                             GetInsecureSecretKeyAccessInternal()),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Parsed output prefix type must match derived key "
+                         "output prefix type")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      GetHkdfPrfKeyData(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123);
 
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
-  *key_proto.mutable_prf_key() = GetHkdfPrfKeyData();
-  *key_proto.mutable_params()->mutable_derived_key_template() =
-      derived_key_template;
-
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          /*id_requirement=*/123);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, /*token=*/std::nullopt);
-  EXPECT_THAT(key, StatusIs(absl::StatusCode::kPermissionDenied));
+  EXPECT_THAT(GetRegistry().ParseKey(serialization, /*token=*/std::nullopt),
+              StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      ParseKeyWithInvalidPrfKeyData) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  const KeyData invalid_prf_key_data =
+      ToKeyData(*GetXChaCha20Poly1305TestVector(
+                     XChaCha20Poly1305Parameters::Variant::kTink)
+                     .aead_key);
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      invalid_prf_key_data, GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123);
 
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  google::crypto::tink::XChaCha20Poly1305Key invalid_prf_key;
-  invalid_prf_key.set_version(0);
-  invalid_prf_key.set_key_value("0123456789abcdef0123456789abcdef");
-  KeyData invalid_prf_key_data;
-  invalid_prf_key_data.set_type_url(kDerivedKeyTypeUrl);
-  invalid_prf_key_data.set_value(invalid_prf_key.SerializeAsString());
-  invalid_prf_key_data.set_key_material_type(KeyData::SYMMETRIC);
-
-  google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
-  *key_proto.mutable_prf_key() = invalid_prf_key_data;
-  *key_proto.mutable_params()->mutable_derived_key_template() =
-      derived_key_template;
-
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          /*id_requirement=*/123);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
-  EXPECT_THAT(key,
+  EXPECT_THAT(GetRegistry().ParseKey(serialization,
+                                     GetInsecureSecretKeyAccessInternal()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Non-PRF key stored in the `prf_key` field")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithInvalidVersion) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  ProtoKeySerialization serialization = CreateKeySerialization(
+      GetHkdfPrfKeyData(), GetXChaCha20Poly1305KeyTemplate(),
+      OutputPrefixTypeTP::kTink, /*id_requirement=*/123, /*version=*/1);
 
-  KeyTemplate derived_key_template = GetXChaCha20Poly1305KeyTemplate();
-
-  google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(1);
-  *key_proto.mutable_prf_key() = GetHkdfPrfKeyData();
-  *key_proto.mutable_params()->mutable_derived_key_template() =
-      derived_key_template;
-
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyMaterialTypeTP::kSymmetric,
-          static_cast<OutputPrefixTypeTP>(
-              derived_key_template.output_prefix_type()),
-          /*id_requirement=*/123);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> key =
-      registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
-  EXPECT_THAT(key, StatusIs(absl::StatusCode::kInvalidArgument,
-                            HasSubstr("Only version 0 keys are accepted")));
+  EXPECT_THAT(GetRegistry().ParseKey(serialization,
+                                     GetInsecureSecretKeyAccessInternal()),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 keys are accepted")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -695,99 +514,63 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           registry),
       IsOk());
 
-  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<PrfBasedKeyDerivationKey> key =
-      PrfBasedKeyDerivationKey::Create(*parameters, GetHkdfPrfKey(),
-                                       /*id_requirement=*/123,
-                                       GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, GetInsecureSecretKeyAccessInternal());
+      registry.SerializeKey<ProtoKeySerialization>(
+          GetTestKey(), GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 
-  const internal::ProtoKeySerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoKeySerialization*>(
-          serialization->get());
+  const auto* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
-              Eq(static_cast<OutputPrefixTypeTP>(
-                  GetXChaCha20Poly1305KeyTemplate().output_prefix_type())));
+              Eq(OutputPrefixTypeTP::kTink));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(123));
 
   google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
   ASSERT_THAT(key_proto.ParseFromString(
                   proto_serialization->SerializedKeyProto().GetSecret(
                       GetInsecureSecretKeyAccessInternal())),
               IsTrue());
+  EXPECT_THAT(key_proto.version(), Eq(0));
+  EXPECT_THAT(key_proto.prf_key().type_url(), Eq(kPrfKeyTypeUrl));
+  EXPECT_THAT(key_proto.prf_key().key_material_type(), Eq(KeyData::SYMMETRIC));
+  EXPECT_THAT(key_proto.params().derived_key_template().type_url(),
+              Eq(kDerivedKeyTypeUrl));
 
   google::crypto::tink::HkdfPrfKey hkdf_key;
   ASSERT_THAT(hkdf_key.ParseFromString(key_proto.prf_key().value()), IsTrue());
   EXPECT_THAT(hkdf_key.version(), Eq(0));
   EXPECT_THAT(hkdf_key.params().hash(), Eq(HashType::SHA256));
   EXPECT_THAT(hkdf_key.key_value(), Eq(kPrfKeyValue));
-
-  EXPECT_THAT(key_proto.prf_key().type_url(), Eq(kPrfKeyTypeUrl));
-  EXPECT_THAT(key_proto.prf_key().key_material_type(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(key_proto.params().derived_key_template().type_url(),
-              Eq(kDerivedKeyTypeUrl));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest, SerializeKeyWithRegistry) {
-  SerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(registry),
-      IsOk());
-
-  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
-      PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
-          .Build();
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<PrfBasedKeyDerivationKey> key =
-      PrfBasedKeyDerivationKey::Create(*parameters, GetHkdfPrfKey(),
-                                       /*id_requirement=*/123,
-                                       GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, GetInsecureSecretKeyAccessInternal());
+      GetRegistry().SerializeKey<ProtoKeySerialization>(
+          GetTestKey(), GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
 
-  const internal::ProtoKeySerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoKeySerialization*>(
-          serialization->get());
+  const auto* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
   EXPECT_THAT(proto_serialization->GetKeyMaterialTypeTP(),
               Eq(KeyMaterialTypeTP::kSymmetric));
   EXPECT_THAT(proto_serialization->GetOutputPrefixTypeTP(),
-              Eq(static_cast<OutputPrefixTypeTP>(
-                  GetXChaCha20Poly1305KeyTemplate().output_prefix_type())));
+              Eq(OutputPrefixTypeTP::kTink));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(123));
 
   google::crypto::tink::PrfBasedDeriverKey key_proto;
-  key_proto.set_version(0);
   ASSERT_THAT(key_proto.ParseFromString(
                   proto_serialization->SerializedKeyProto().GetSecret(
                       GetInsecureSecretKeyAccessInternal())),
               IsTrue());
+  EXPECT_THAT(key_proto.version(), Eq(0));
   EXPECT_THAT(key_proto.prf_key().type_url(), Eq(kPrfKeyTypeUrl));
   EXPECT_THAT(key_proto.params().derived_key_template().type_url(),
               Eq(kDerivedKeyTypeUrl));
@@ -795,29 +578,97 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, SerializeKeyWithRegistry) {
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
      SerializeKeyNoSecretKeyAccess) {
-  MutableSerializationRegistry registry;
-  ASSERT_THAT(
-      RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
-          registry),
-      IsOk());
+  EXPECT_THAT(GetRegistry().SerializeKey<ProtoKeySerialization>(
+                  GetTestKey(), /*token=*/std::nullopt),
+              StatusIs(absl::StatusCode::kPermissionDenied));
+}
 
+struct RoundTripTestCase {
+  std::string test_name;
+  // Non-owning pointers into static NoDestructor test vectors.
+  const PrfKey* prf_key;
+  const Parameters* derived_key_parameters;
+};
+
+std::vector<RoundTripTestCase> GetRoundTripTestCases() {
+  const Parameters* xchacha_tink =
+      &GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kTink)
+           .aead_key->GetParameters();
+  const Parameters* xchacha_raw =
+      &GetXChaCha20Poly1305TestVector(
+           XChaCha20Poly1305Parameters::Variant::kNoPrefix)
+           .aead_key->GetParameters();
+  const PrfKey* hkdf_sha256_salt =
+      &GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha256).key;
+  const PrfKey* hkdf_sha256_long_salt =
+      &GetHkdfPrfTestVector(80, HkdfPrfParameters::HashType::kSha256).key;
+  const PrfKey* hkdf_sha1_no_salt =
+      &GetHkdfPrfTestVector(22, HkdfPrfParameters::HashType::kSha1).key;
+
+  return {
+      {"HkdfSha256SaltTink", hkdf_sha256_salt, xchacha_tink},
+      {"HkdfSha256LongSaltRaw", hkdf_sha256_long_salt, xchacha_raw},
+      {"HkdfSha1NoSaltTink", hkdf_sha1_no_salt, xchacha_tink},
+  };
+}
+
+using PrfBasedKeyDerivationRoundTripTest = TestWithParam<RoundTripTestCase>;
+
+INSTANTIATE_TEST_SUITE_P(PrfBasedKeyDerivationRoundTripTests,
+                         PrfBasedKeyDerivationRoundTripTest,
+                         ValuesIn(GetRoundTripTestCases()),
+                         [](const TestParamInfo<RoundTripTestCase>& info) {
+                           return info.param.test_name;
+                         });
+
+TEST_P(PrfBasedKeyDerivationRoundTripTest, SerializeAndParseParameters) {
+  const RoundTripTestCase& test_case = GetParam();
   absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
-          .SetPrfParameters(GetHkdfPrfParameters())
-          .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
+          .SetPrfParameters(test_case.prf_key->GetParameters())
+          .SetDerivedKeyParameters(*test_case.derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      GetRegistry().SerializeParameters<ProtoParametersSerialization>(
+          *parameters);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed =
+      GetRegistry().ParseParameters(**serialization);
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(**parsed, Eq(*parameters));
+}
+
+TEST_P(PrfBasedKeyDerivationRoundTripTest, SerializeAndParseKey) {
+  const RoundTripTestCase& test_case = GetParam();
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(test_case.prf_key->GetParameters())
+          .SetDerivedKeyParameters(*test_case.derived_key_parameters)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::optional<int> id_requirement =
+      test_case.derived_key_parameters->HasIdRequirement()
+          ? std::optional<int>(123)
+          : std::nullopt;
   absl::StatusOr<PrfBasedKeyDerivationKey> key =
-      PrfBasedKeyDerivationKey::Create(*parameters, GetHkdfPrfKey(),
-                                       /*id_requirement=*/123,
-                                       GetPartialKeyAccess());
+      PrfBasedKeyDerivationKey::Create(*parameters, *test_case.prf_key,
+                                       id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      registry.SerializeKey<internal::ProtoKeySerialization>(
-          *key, /*token=*/std::nullopt);
-  ASSERT_THAT(serialization, StatusIs(absl::StatusCode::kPermissionDenied));
+      GetRegistry().SerializeKey<ProtoKeySerialization>(
+          *key, GetInsecureSecretKeyAccessInternal());
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> parsed = GetRegistry().ParseKey(
+      **serialization, GetInsecureSecretKeyAccessInternal());
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(**parsed, Eq(*key));
 }
 
 }  // namespace

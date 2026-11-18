@@ -386,28 +386,33 @@ tink_cc_test(
   DEPS
     tink::keyderivation::internal::prf_based_key_derivation_proto_serialization_impl
     gmock
+    absl::no_destructor
     absl::absl_check
     absl::status
     absl::status_matchers
     absl::statusor
     absl::string_view
-    absl::optional
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::aead::xchacha20_poly1305_parameters
+    tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
     tink::internal::internal_insecure_secret_key_access
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_struct_conversions
     tink::internal::tink_proto_structs
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
+    tink::prf::prf_key
+    tink::prf::internal::hkdf_prf_test_vectors
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::prf_based_deriver_cc_proto

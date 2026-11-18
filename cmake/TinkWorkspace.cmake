@@ -119,16 +119,44 @@ endif()
 # exposed as tink::internal::boringssl.
 include(TinkBoringSSL)
 
+# Asserts that the given target is of the given type.
+#
+# Parameters:
+#   TARGET Name of the target.
+#   TYPE   Expected type of the target.
+function(_tink_assert_target_type)
+  cmake_parse_arguments(PARSE_ARGV 0 arg
+    ""
+    "TARGET;TYPE"
+    ""
+  )
+  get_target_property(target_type ${arg_TARGET} TYPE)
+  if(NOT target_type STREQUAL arg_TYPE)
+    message(FATAL_ERROR
+            "Wrong target type for ${arg_TARGET}: got ${target_type}, want ${arg_TYPE}")
+  endif()
+endfunction()
+
 if (NOT TINK_USE_INSTALLED_PROTOBUF)
   set(protobuf_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)
   set(protobuf_BUILD_EXAMPLES OFF CACHE BOOL "Tink dependency override" FORCE)
   set(protobuf_INSTALL OFF CACHE BOOL "Tink dependency override" FORCE)
+
+  # Protobuf really must be shared if Tink is shared.
+  if(BUILD_SHARED_LIBS)
+    set(protobuf_BUILD_SHARED_LIBS ON CACHE BOOL "Tink dependency override" FORCE)
+  endif()
 
   http_archive(
     NAME protobuf
     URL https://github.com/protocolbuffers/protobuf/releases/download/v36.2/protobuf-36.2.zip
     SHA256 ec61440905b46d42dc58ce7b490f0469263a21f93407f741c97e9b6b09533eb6
   )
+
+  # Verify that the above worked.
+  if(BUILD_SHARED_LIBS)
+    _tink_assert_target_type(TARGET protobuf::libprotobuf TYPE SHARED_LIBRARY)
+  endif()
 else()
   find_package(Protobuf REQUIRED CONFIG)
   include_directories(${Protobuf_INCLUDE_DIRS})

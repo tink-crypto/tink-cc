@@ -14,15 +14,31 @@ option(TINK_USE_INSTALLED_GOOGLETEST "Build Tink linking to GTest installed in t
 option(TINK_USE_INSTALLED_PROTOBUF "Build Tink linking to Protobuf installed in the system" OFF)
 option(TINK_USE_INSTALLED_BENCHMARK "Build Tink linking to benchmark installed in the system" OFF)
 
-# For MSCV, force the static runtime.
+# Announce BUILD_SHARED_LIBS where supported.
+if(NOT MSVC)
+  option(BUILD_SHARED_LIBS "Build shared libraries instead of static ones" OFF)
+endif()
+
+# When building as a shared library, force PIC, as some subcomponents are
+# statically linked into them.
+if(BUILD_SHARED_LIBS)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# For MSVC, force the static runtime.
 # Currently, both absl and cmake allow to override this. In order to make things
 # more likely to be built correctly we currently only allow static runtimes.
 # We need to do this before "include(TinkWorkspace)" since we need to do it
 # before loading absl/proto.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(MSVC)
   set(ABSL_MSVC_STATIC_RUNTIME ON)
   set(protobuf_MSVC_STATIC_RUNTIME ON)
   set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
+  if(BUILD_SHARED_LIBS)
+    # To support shared libraries on MSVC, one first has to implement proper
+    # dllexport/dllimport handling. Elsewhere, visibility does the trick.
+    message(FATAL_ERROR "Shared libraries are not supported with MSVC.")
+  endif()
 endif()
 
 # Allow the linker to deduplicate libraries. Removes warnings on macOS.

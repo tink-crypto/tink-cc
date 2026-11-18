@@ -35,16 +35,6 @@
 
 include(CMakeParseArguments)
 
-# We currently explicitly declare our libraries static below (in add_library).
-# We might remove this, but I'm not confident enough in how this works to
-# guarantee that shared libs work properly. Note that e.g. the protobuf
-# library does extra work on Windows because of the way Abseil is bundled.
-# https://github.com/protocolbuffers/protobuf/blob/v31.1/cmake/abseil-cpp.cmake
-
-if (BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "Tink currently expects to be built with BUILD_SHARED_LIBS=OFF")
-endif()
-
 if (TINK_BUILD_TESTS)
   if (NOT TINK_BUILD_TESTONLY)
     message(FATAL_ERROR "TINK_BUILD_TESTS requires TINK_BUILD_TESTONLY")

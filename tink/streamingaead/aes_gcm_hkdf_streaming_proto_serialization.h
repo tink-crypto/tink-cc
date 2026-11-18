@@ -27,9 +27,6 @@ namespace tink {
 // Registers proto parsers and serializers for AES-GCM-HKDF Streaming parameters
 // and keys.
 inline absl::Status RegisterAesGcmHkdfStreamingProtoSerialization() {
-  // b/418010195: Key Derivation code currently uses
-  // GlobalSerializationRegistry(), not
-  // MutableSerializationRegistry::GlobalInstance().
   return internal::
       RegisterAesGcmHkdfStreamingProtoSerializationWithMutableRegistry(
           internal::MutableSerializationRegistry::GlobalInstance());

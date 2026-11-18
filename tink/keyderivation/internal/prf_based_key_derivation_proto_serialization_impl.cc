@@ -30,7 +30,11 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/global_serialization_registry.h"
+#include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_gcm_siv_proto_serialization_impl.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
+#include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -47,14 +51,23 @@
 #include "tink/key.h"
 #include "tink/keyderivation/prf_based_key_derivation_key.h"
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
+#include "tink/mac/internal/hmac_proto_serialization_impl.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
+#include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
 #include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 #include "tink/prf/prf_key.h"
 #include "tink/prf/prf_parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ed25519_proto_serialization_impl.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization_impl.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 #include "proto/tink.tinkpb.h"
 
 namespace crypto {
@@ -163,15 +176,64 @@ const SerializationRegistry& GetPrfSerializationRegistry() {
   return *kRegistry;
 }
 
-absl::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
+const SerializationRegistry& GetDerivedKeySerializationRegistry() {
+  static const absl::NoDestructor<SerializationRegistry> kRegistry([] {
+    SerializationRegistry registry;
+
+    // AEAD
+    ABSL_CHECK_OK(
+        RegisterAesCtrHmacAeadProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesGcmProtoSerializationWithRegistry(registry));
+    // Included for cross-language compatibility with Tink Java, which supports
+    // deriving AES-GCM-SIV keys. It might be better to remove this.
+    ABSL_CHECK_OK(RegisterAesGcmSivProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(registry));
+
+    // Deterministic AEAD
+    ABSL_CHECK_OK(RegisterAesSivProtoSerializationWithRegistry(registry));
+
+    // MAC
+    ABSL_CHECK_OK(RegisterHmacProtoSerializationWithRegistry(registry));
+
+    // PRF
+    ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterHkdfPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterHmacPrfProtoSerializationWithRegistry(registry));
+
+    // Signature
+    ABSL_CHECK_OK(RegisterEcdsaProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterEd25519ProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterMlDsaProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterSlhDsaProtoSerializationWithRegistry(registry));
+
+    // Streaming AEAD
+    ABSL_CHECK_OK(
+        RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(registry));
+
+    return registry;
+  }());
+  return *kRegistry;
+}
+
+absl::StatusOr<std::unique_ptr<Parameters>> DerivedKeyParametersFromKeyTemplate(
     const KeyTemplateTP& key_template) {
   absl::StatusOr<ProtoParametersSerialization> proto_params_serialization =
       ProtoParametersSerialization::Create(key_template);
   if (!proto_params_serialization.ok()) {
     return proto_params_serialization.status();
   }
-  return GlobalSerializationRegistry().ParseParameters(
-      *proto_params_serialization);
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+      GetDerivedKeySerializationRegistry().ParseParameters(
+          *proto_params_serialization);
+  if (absl::IsNotFound(parameters.status())) {
+    return absl::InvalidArgumentError(
+        "Unsupported derived key parameters when parsing "
+        "PrfBasedKeyDerivationParameters.");
+  }
+  return parameters;
 }
 
 absl::StatusOr<std::unique_ptr<const PrfParameters>>
@@ -298,7 +360,7 @@ absl::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
   }
 
   absl::StatusOr<std::unique_ptr<Parameters>> derived_key_parameters =
-      ParametersFromKeyTemplate(
+      DerivedKeyParametersFromKeyTemplate(
           proto_key_format.params().derived_key_template());
   if (!derived_key_parameters.ok()) {
     return derived_key_parameters.status();
@@ -324,8 +386,9 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return prf_key_template.status();
   }
 
-  absl::StatusOr<KeyTemplateTP> derived_key_template = ParametersToKeyTemplate(
-      parameters.GetDerivedKeyParameters(), GlobalSerializationRegistry());
+  absl::StatusOr<KeyTemplateTP> derived_key_template =
+      ParametersToKeyTemplate(parameters.GetDerivedKeyParameters(),
+                              GetDerivedKeySerializationRegistry());
   if (!derived_key_template.ok()) {
     return derived_key_template.status();
   }
@@ -373,7 +436,8 @@ absl::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
   }
 
   absl::StatusOr<std::unique_ptr<Parameters>> derived_key_parameters =
-      ParametersFromKeyTemplate(proto_key.params().derived_key_template());
+      DerivedKeyParametersFromKeyTemplate(
+          proto_key.params().derived_key_template());
   if (!derived_key_parameters.ok()) {
     return derived_key_parameters.status();
   }
@@ -404,7 +468,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
 
   absl::StatusOr<KeyTemplateTP> derived_key_template =
       ParametersToKeyTemplate(key.GetParameters().GetDerivedKeyParameters(),
-                              GlobalSerializationRegistry());
+                              GetDerivedKeySerializationRegistry());
   if (!derived_key_template.ok()) {
     return derived_key_template.status();
   }

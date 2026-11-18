@@ -30,9 +30,28 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/aes_eax_parameters.h"
+#include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
+#include "tink/aead/internal/aes_eax_proto_serialization_impl.h"
+#include "tink/aead/internal/chacha20_poly1305_proto_serialization_impl.h"
+#include "tink/aead/internal/legacy_kms_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/testing/aes_ctr_hmac_aead_test_vectors.h"
+#include "tink/aead/internal/testing/aes_eax_test_vectors.h"
+#include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
+#include "tink/aead/internal/testing/chacha20_poly1305_test_vectors.h"
+#include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
 #include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
+#include "tink/aead/internal/x_aes_gcm_proto_serialization_impl.h"
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
+#include "tink/aead/legacy_kms_aead_parameters.h"
+#include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/internal/aes_siv_test_vectors.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
@@ -44,6 +63,10 @@
 #include "tink/key.h"
 #include "tink/keyderivation/prf_based_key_derivation_key.h"
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
+#include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
+#include "tink/mac/internal/aes_cmac_test_vectors.h"
+#include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key.h"
@@ -56,6 +79,16 @@
 #include "tink/prf/internal/hmac_prf_test_vectors.h"
 #include "tink/prf/prf_key.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
+#include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
+#include "tink/signature/internal/testing/slh_dsa_test_vectors.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
+#include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
 #include "proto/common.pb.h"
 #include "proto/hkdf_prf.pb.h"
 #include "proto/prf_based_deriver.pb.h"
@@ -114,6 +147,13 @@ const SerializationRegistry& GetHelperRegistry() {
         RegisterXChaCha20Poly1305ProtoSerializationWithRegistry(registry));
     ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerializationWithRegistry(registry));
     ABSL_CHECK_OK(RegisterHmacPrfProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesEaxProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterChaCha20Poly1305ProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(
+        RegisterLegacyKmsAeadProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterXAesGcmProtoSerializationWithRegistry(registry));
+    ABSL_CHECK_OK(RegisterAesCmacProtoSerializationWithRegistry(registry));
     return registry;
   }());
   return *kRegistry;
@@ -667,6 +707,53 @@ std::vector<RoundTripTestCase> GetRoundTripTestCases() {
       {"HkdfSha256SaltTink", hkdf_sha256_salt, xchacha_tink},
       {"HkdfSha256LongSaltRaw", hkdf_sha256_long_salt, xchacha_raw},
       {"HkdfSha1NoSaltTink", hkdf_sha1_no_salt, xchacha_tink},
+      {"DerivedAesCtrHmacAead", hkdf_sha256_salt,
+       &GetAesCtrHmacAeadTestVector(16,
+                                    AesCtrHmacAeadParameters::Variant::kTink)
+            .aead_key->GetParameters()},
+      {"DerivedAesGcm", hkdf_sha256_salt,
+       &GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink)
+            .aead_key->GetParameters()},
+      {"DerivedAesGcmSiv", hkdf_sha256_salt,
+       &GetAesGcmSivTestVector(16, AesGcmSivParameters::Variant::kTink)
+            .aead_key->GetParameters()},
+      {"DerivedAesSiv", hkdf_sha256_salt,
+       &GetAesSivTestVector(32, AesSivParameters::Variant::kTink)
+            .key.GetParameters()},
+      {"DerivedHmac", hkdf_sha256_salt,
+       &GetHmacTestVector(16, HmacParameters::HashType::kSha256,
+                          HmacParameters::Variant::kNoPrefix)
+            .key.GetParameters()},
+      {"DerivedAesCmacPrf", hkdf_sha256_salt,
+       &GetAesCmacPrfTestVector(16).key.GetParameters()},
+      {"DerivedHkdfPrf", hkdf_sha256_salt, &hkdf_sha256_salt->GetParameters()},
+      {"DerivedHmacPrf", hkdf_sha256_salt,
+       &GetHmacPrfTestVector(40, HmacPrfParameters::HashType::kSha256)
+            .key.GetParameters()},
+      {"DerivedEcdsa", hkdf_sha256_salt,
+       &GetEcdsaTestVector(EcdsaParameters::CurveType::kNistP521,
+                           EcdsaParameters::HashType::kSha512,
+                           EcdsaParameters::SignatureEncoding::kIeeeP1363,
+                           EcdsaParameters::Variant::kNoPrefix)
+            .signature_private_key->GetParameters()},
+      {"DerivedEd25519", hkdf_sha256_salt,
+       &GetEd25519TestVector(Ed25519Parameters::Variant::kNoPrefix)
+            .signature_private_key->GetParameters()},
+      {"DerivedMlDsa", hkdf_sha256_salt,
+       &GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa87,
+                           MlDsaParameters::Variant::kTink)
+            .signature_private_key->GetParameters()},
+      {"DerivedSlhDsa", hkdf_sha256_salt,
+       &GetSlhDsaTestVector(SlhDsaParameters::HashType::kSha2,
+                            SlhDsaParameters::SignatureType::kSmallSignature,
+                            SlhDsaParameters::Variant::kTink)
+            .signature_private_key->GetParameters()},
+      {"DerivedAesCtrHmacStreaming", hkdf_sha256_salt,
+       &GetAesCtrHmacStreamingTestVector(16)
+            .streamingaead_key->GetParameters()},
+      {"DerivedAesGcmHkdfStreaming", hkdf_sha256_salt,
+       &GetAesGcmHkdfStreamingTestVector(16)
+            .streamingaead_key->GetParameters()},
   };
 }
 
@@ -796,6 +883,115 @@ TEST_P(PrfBasedKeyDerivationUnsupportedPrfTypesTest, SerializeKeyFails) {
       PrfBasedKeyDerivationKey::Create(*parameters, *GetParam().prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(GetRegistry().SerializeKey<ProtoKeySerialization>(
+                  *key, GetInsecureSecretKeyAccessInternal()),
+              StatusIs(absl::StatusCode::kNotFound));
+}
+
+struct UnsupportedDerivedKeyTestCase {
+  std::string test_name;
+  // Non-owning pointer into static NoDestructor test vectors / parameters.
+  const Parameters* derived_key_parameters;
+};
+
+std::vector<UnsupportedDerivedKeyTestCase> GetUnsupportedDerivedKeyTestCases() {
+  static const absl::NoDestructor<LegacyKmsAeadParameters> kLegacyKmsAeadParams(
+      [] {
+        absl::StatusOr<LegacyKmsAeadParameters> params =
+            LegacyKmsAeadParameters::Create(
+                "key_uri", LegacyKmsAeadParameters::Variant::kTink);
+        ABSL_CHECK_OK(params);
+        return *params;
+      }());
+
+  return {
+      {"AesEax", &GetAesEaxTestVector(16, AesEaxParameters::Variant::kTink)
+                      .aead_key->GetParameters()},
+      {"ChaCha20Poly1305", &GetChaCha20Poly1305TestVector(
+                                ChaCha20Poly1305Parameters::Variant::kTink)
+                                .aead_key->GetParameters()},
+      {"LegacyKmsAead", kLegacyKmsAeadParams.get()},
+      {"XAesGcm", &GetXAesGcmTestVector(8, XAesGcmParameters::Variant::kTink)
+                       .aead_key->GetParameters()},
+      {"AesCmac", &GetAesCmacTestVector(16).key.GetParameters()},
+  };
+}
+
+using PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTest =
+    TestWithParam<UnsupportedDerivedKeyTestCase>;
+
+INSTANTIATE_TEST_SUITE_P(
+    PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTests,
+    PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTest,
+    ValuesIn(GetUnsupportedDerivedKeyTestCases()),
+    [](const TestParamInfo<UnsupportedDerivedKeyTestCase>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTest,
+       ParseParametersFails) {
+  const KeyTemplate derived_key_template =
+      ToKeyTemplate(*GetParam().derived_key_parameters);
+  ProtoParametersSerialization serialization = CreateParametersSerialization(
+      GetHkdfPrfKeyTemplate(), derived_key_template,
+      static_cast<OutputPrefixTypeTP>(
+          derived_key_template.output_prefix_type()));
+
+  EXPECT_THAT(GetRegistry().ParseParameters(serialization),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported derived key parameters when "
+                                 "parsing PrfBasedKeyDerivationParameters")));
+}
+
+TEST_P(PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTest,
+       SerializeParametersFails) {
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(GetHkdfPrfParameters())
+          .SetDerivedKeyParameters(*GetParam().derived_key_parameters)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(GetRegistry().SerializeParameters<ProtoParametersSerialization>(
+                  *parameters),
+              StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST_P(PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTest, ParseKeyFails) {
+  const Parameters& derived_params = *GetParam().derived_key_parameters;
+  const KeyTemplate derived_key_template = ToKeyTemplate(derived_params);
+  std::optional<int> id_requirement = derived_params.HasIdRequirement()
+                                          ? std::optional<int>(123)
+                                          : std::nullopt;
+  ProtoKeySerialization serialization =
+      CreateKeySerialization(GetHkdfPrfKeyData(), derived_key_template,
+                             static_cast<OutputPrefixTypeTP>(
+                                 derived_key_template.output_prefix_type()),
+                             id_requirement);
+
+  EXPECT_THAT(GetRegistry().ParseKey(serialization,
+                                     GetInsecureSecretKeyAccessInternal()),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported derived key parameters when "
+                                 "parsing PrfBasedKeyDerivationParameters")));
+}
+
+TEST_P(PrfBasedKeyDerivationUnsupportedDerivedKeyTypesTest, SerializeKeyFails) {
+  const Parameters& derived_params = *GetParam().derived_key_parameters;
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(GetHkdfPrfParameters())
+          .SetDerivedKeyParameters(derived_params)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  std::optional<int> id_requirement = derived_params.HasIdRequirement()
+                                          ? std::optional<int>(123)
+                                          : std::nullopt;
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
+      PrfBasedKeyDerivationKey::Create(*parameters, GetHkdfPrfKey(),
+                                       id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(GetRegistry().SerializeKey<ProtoKeySerialization>(

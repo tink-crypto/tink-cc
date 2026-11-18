@@ -105,18 +105,18 @@ function(_tink_set_to_external_target_deps)
   # Filter DEPS down to external targets (absl::, protobuf::, ...), dropping
   # Tink-internal tink::<MODULE>::<NAME> deps that are already folded into
   # `tink` / `tink_testonly`.
-  cmake_parse_arguments(PARSE_ARGV 0 _tink_set_to_external_target_deps
+  cmake_parse_arguments(PARSE_ARGV 0 arg
     ""
     "OUTPUT_VARIABLE"
     "DEPS"
   )
-  set(_result "")
-  foreach(_DEP IN LISTS _tink_set_to_external_target_deps_DEPS)
-    if(NOT _DEP MATCHES "^tink::")
-      list(APPEND _result "${_DEP}")
+  set(result "")
+  foreach(dep IN LISTS arg_DEPS)
+    if(NOT dep MATCHES "^tink::")
+      list(APPEND result "${dep}")
     endif()
   endforeach()
-  set(${_tink_set_to_external_target_deps_OUTPUT_VARIABLE} "${_result}" PARENT_SCOPE)
+  set(${arg_OUTPUT_VARIABLE} "${result}" PARENT_SCOPE)
 endfunction()
 
 # Returns a CMake target name for the given namespaced Tink name.
@@ -133,15 +133,14 @@ endfunction()
 function(_tink_set_to_escaped_target_name)
   # We replace :: with __ in targets, because :: may not appear in target names.
   # However, the target name should still span multiple name spaces.
-  cmake_parse_arguments(PARSE_ARGV 0 _tink_set_to_escaped_target_name
+  cmake_parse_arguments(PARSE_ARGV 0 arg
     ""
     "NAME;OUTPUT_VARIABLE"
     ""
   )
-  set(_FULL_NAME tink::${TINK_MODULE}::${_tink_set_to_escaped_target_name_NAME})
-  string(REPLACE "::" "__" _ESCAPED_NAME "${_FULL_NAME}")
-  set(${_tink_set_to_escaped_target_name_OUTPUT_VARIABLE}
-      "${_ESCAPED_NAME}" PARENT_SCOPE)
+  set(full_name tink::${TINK_MODULE}::${arg_NAME})
+  string(REPLACE "::" "__" escaped_name "${full_name}")
+  set(${arg_OUTPUT_VARIABLE} "${escaped_name}" PARENT_SCOPE)
 endfunction()
 
 # Declare the main Tink library target.
@@ -203,15 +202,15 @@ endif()
 # Bazel.
 #
 function(tink_cc_library)
-  cmake_parse_arguments(PARSE_ARGV 0 tink_cc_library
+  cmake_parse_arguments(PARSE_ARGV 0 arg
     "PUBLIC;TESTONLY"
     "NAME"
     "SRCS;DEPS;TAGS"
   )
 
-  list(FILTER tink_cc_library_SRCS EXCLUDE REGEX "\\.h$")
+  list(FILTER arg_SRCS EXCLUDE REGEX "\\.h$")
 
-  if (tink_cc_library_TESTONLY AND NOT TINK_BUILD_TESTONLY)
+  if (arg_TESTONLY AND NOT TINK_BUILD_TESTONLY)
     return()
   endif()
 
@@ -221,28 +220,28 @@ function(tink_cc_library)
   endif()
 
   # Check if this target must be skipped.
-  foreach(_tink_cc_library_tag ${tink_cc_library_TAGS})
+  foreach(tag ${arg_TAGS})
     # Exclude if using BoringSSL.
-    if (${_tink_cc_library_tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_BORINGSSL})
+    if (${tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_BORINGSSL})
       return()
     endif()
     # Exclude if building on Windows.
-    if (${_tink_cc_library_tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_WINDOWS} AND WIN32)
+    if (${tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_WINDOWS} AND WIN32)
       return()
     endif()
   endforeach()
 
-  _tink_set_to_external_target_deps(DEPS ${tink_cc_library_DEPS}
-                                    OUTPUT_VARIABLE _external_deps)
+  _tink_set_to_external_target_deps(DEPS ${arg_DEPS}
+                                    OUTPUT_VARIABLE external_deps)
 
-  if(tink_cc_library_TESTONLY)
-    set(_target_name "tink_testonly")
+  if(arg_TESTONLY)
+    set(target_name "tink_testonly")
   else()
-    set(_target_name "tink")
+    set(target_name "tink")
   endif()
 
-  target_sources(${_target_name} PRIVATE ${tink_cc_library_SRCS})
-  target_link_libraries(${_target_name} PUBLIC ${_external_deps})
+  target_sources(${target_name} PRIVATE ${arg_SRCS})
+  target_link_libraries(${target_name} PUBLIC ${external_deps})
 endfunction(tink_cc_library)
 
 # Declare a Tink test using googletest, with a syntax similar to Bazel.
@@ -258,7 +257,7 @@ endfunction(tink_cc_library)
 # where <ESCAPED_MODULE> is <MODULE> with "::" replaced by "__".
 #
 function(tink_cc_test)
-  cmake_parse_arguments(PARSE_ARGV 0 tink_cc_test
+  cmake_parse_arguments(PARSE_ARGV 0 arg
     ""
     "NAME"
     "SRCS;DEPS;DATA;TAGS"
@@ -273,49 +272,49 @@ function(tink_cc_test)
   endif()
 
   # Check if this target must be skipped.
-  foreach(_tink_cc_test_tag ${tink_cc_test_TAGS})
+  foreach(tag ${arg_TAGS})
     # Exclude if using BoringSSL.
-    if (${_tink_cc_test_tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_BORINGSSL})
+    if (${tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_BORINGSSL})
       return()
     endif()
     # Exclude if building on Windows.
-    if (${_tink_cc_test_tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_WINDOWS} AND WIN32)
+    if (${tag} STREQUAL ${TINK_TARGET_EXCLUDE_IF_WINDOWS} AND WIN32)
       return()
     endif()
   endforeach()
 
-  _tink_set_to_escaped_target_name(NAME ${tink_cc_test_NAME}
-                                   OUTPUT_VARIABLE _target_name)
+  _tink_set_to_escaped_target_name(NAME ${arg_NAME}
+                                   OUTPUT_VARIABLE target_name)
 
-  add_executable(${_target_name}
-    ${tink_cc_test_SRCS}
+  add_executable(${target_name}
+    ${arg_SRCS}
   )
 
-  _tink_set_to_external_target_deps(DEPS ${tink_cc_test_DEPS}
-                                    OUTPUT_VARIABLE _external_deps)
+  _tink_set_to_external_target_deps(DEPS ${arg_DEPS}
+                                    OUTPUT_VARIABLE external_deps)
 
-  if(NOT "benchmark::benchmark_main" IN_LIST tink_cc_test_DEPS
-      AND NOT "GTest::gtest_main" IN_LIST tink_cc_test_DEPS)
-    target_link_libraries(${_target_name} GTest::gtest_main)
+  if(NOT "benchmark::benchmark_main" IN_LIST arg_DEPS
+      AND NOT "GTest::gtest_main" IN_LIST arg_DEPS)
+    target_link_libraries(${target_name} GTest::gtest_main)
   endif()
-  target_link_libraries(${_target_name} tink_testonly ${_external_deps})
+  target_link_libraries(${target_name} tink_testonly ${external_deps})
 
-  set_property(TARGET ${_target_name}
+  set_property(TARGET ${target_name}
                PROPERTY FOLDER "${TINK_IDE_FOLDER}/Tests")
-  set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${TINK_CXX_STANDARD})
-  set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD_REQUIRED true)
+  set_property(TARGET ${target_name} PROPERTY CXX_STANDARD ${TINK_CXX_STANDARD})
+  set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED true)
 
-  set(_test_args "")
+  set(test_args "")
   # Make benchmarks run faster by default. Can always override via e.g.
   # `ctest -V -R 'benchmark'-- --benchmark_min_time=1s`.
-  if("benchmark::benchmark" IN_LIST tink_cc_test_DEPS)
-    list(APPEND _test_args "--benchmark_min_time=0.01s")
+  if("benchmark::benchmark" IN_LIST arg_DEPS)
+    list(APPEND test_args "--benchmark_min_time=0.01s")
   endif()
 
   # Note: This was preferred over using gtest_discover_tests because of [1].
   # [1] https://gitlab.kitware.com/cmake/cmake/-/issues/23039
-  add_test(NAME ${_target_name}
-           COMMAND ${_target_name} ${_test_args}
+  add_test(NAME ${target_name}
+           COMMAND ${target_name} ${test_args}
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endfunction(tink_cc_test)
 
@@ -333,7 +332,7 @@ endfunction(tink_cc_test)
 # tink_cc_library.
 #
 function(tink_cc_proto)
-  cmake_parse_arguments(PARSE_ARGV 0 tink_cc_proto
+  cmake_parse_arguments(PARSE_ARGV 0 arg
     ""
     "NAME"
     "SRCS;DEPS"
@@ -343,51 +342,51 @@ function(tink_cc_proto)
     message(FATAL_ERROR "TINK_MODULE not defined")
   endif()
 
-  set(tink_cc_proto_GEN_SRCS)
-  foreach(_src_path ${tink_cc_proto_SRCS})
-    get_filename_component(_src_absolute_path "${_src_path}" ABSOLUTE)
-    get_filename_component(_src_basename "${_src_path}" NAME_WE)
-    get_filename_component(_src_dir "${_src_absolute_path}" DIRECTORY)
-    file(RELATIVE_PATH _src_rel_path "${PROJECT_SOURCE_DIR}" "${_src_dir}")
+  set(all_gen_srcs)
+  foreach(src_path ${arg_SRCS})
+    get_filename_component(src_absolute_path "${src_path}" ABSOLUTE)
+    get_filename_component(src_basename "${src_path}" NAME_WE)
+    get_filename_component(src_dir "${src_absolute_path}" DIRECTORY)
+    file(RELATIVE_PATH src_rel_path "${PROJECT_SOURCE_DIR}" "${src_dir}")
 
-    set(_gen_srcs)
-    foreach(_gen_ext .pb.h .pb.cc)
-      list(APPEND _gen_srcs
-           "${TINK_GENFILE_DIR}/${_src_rel_path}/${_src_basename}${_gen_ext}")
+    set(gen_srcs)
+    foreach(gen_ext .pb.h .pb.cc)
+      list(APPEND gen_srcs
+           "${TINK_GENFILE_DIR}/${src_rel_path}/${src_basename}${gen_ext}")
     endforeach()
 
-    list(APPEND tink_cc_proto_GEN_SRCS ${_gen_srcs})
+    list(APPEND all_gen_srcs ${gen_srcs})
 
     add_custom_command(
       COMMAND protobuf::protoc
       ARGS
         --cpp_out "${TINK_GENFILE_DIR}"
         -I "${PROJECT_SOURCE_DIR}"
-        "${_src_absolute_path}"
+        "${src_absolute_path}"
       OUTPUT
-        ${_gen_srcs}
+        ${gen_srcs}
       DEPENDS
         protobuf::protoc
-        ${_src_absolute_path}
-      COMMENT "Running CXX protocol buffer compiler on ${_src_path}"
+        ${src_absolute_path}
+      COMMENT "Running CXX protocol buffer compiler on ${src_path}"
       VERBATIM
     )
   endforeach()
 
   set_source_files_properties(
-    ${tink_cc_proto_GEN_SRCS} PROPERTIES GENERATED true)
+    ${all_gen_srcs} PROPERTIES GENERATED true)
 
-  _tink_set_to_escaped_target_name(NAME ${tink_cc_proto_NAME}
-                                  OUTPUT_VARIABLE _target_name)
-  add_custom_target(${_target_name} DEPENDS ${tink_cc_proto_GEN_SRCS})
-  add_dependencies(tink ${_target_name})
+  _tink_set_to_escaped_target_name(NAME ${arg_NAME}
+                                   OUTPUT_VARIABLE target_name)
+  add_custom_target(${target_name} DEPENDS ${all_gen_srcs})
+  add_dependencies(tink ${target_name})
 
   tink_cc_library(
-    NAME ${tink_cc_proto_NAME}
-    SRCS ${tink_cc_proto_GEN_SRCS}
+    NAME ${arg_NAME}
+    SRCS ${all_gen_srcs}
     DEPS
       protobuf::libprotobuf
-      ${tink_cc_proto_DEPS}
+      ${arg_DEPS}
   )
 endfunction()
 

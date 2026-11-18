@@ -37,6 +37,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/testing/test_only_asymmetric_parameters.h"
+#include "tink/internal/testing/test_only_private_key.h"
 #include "tink/internal/testing/test_only_public_key.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
@@ -57,6 +58,7 @@ using ::google::crypto::tink::TestOnlyKeyFormat;
 using ::google::crypto::tink::internal::KeyDataTP;
 using ::google::crypto::tink::internal::OutputPrefixTypeTP;
 using TestOnlyKeyProto = ::google::crypto::tink::TestOnlyKey;
+using TestOnlyPrivateKeyProto = ::google::crypto::tink::TestOnlyPrivateKey;
 using TestOnlyPublicKeyProto = ::google::crypto::tink::TestOnlyPublicKey;
 using Variant = TestOnlyParameters::Variant;
 
@@ -245,6 +247,52 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       key.GetParameters().GetVariant(), key.GetIdRequirement());
 }
 
+absl::StatusOr<TestOnlyPrivateKey> ParsePrivateKey(
+    const ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (serialization.TypeUrl() != kTestOnlyPrivateKeyTypeUrl) {
+    return absl::InvalidArgumentError("Wrong type URL");
+  }
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
+  }
+  TestOnlyPrivateKeyProto key;
+  if (!key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse the key");
+  }
+  if (key.version() != 0 || key.public_key().version() != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted");
+  }
+  ABSL_ASSIGN_OR_RETURN(TestOnlyAsymmetricParameters parameters,
+                        GetAsymmetricParameters(serialization));
+  ABSL_ASSIGN_OR_RETURN(
+      TestOnlyPublicKey public_key,
+      TestOnlyPublicKey::Create(parameters, key.public_key().key_value(),
+                                serialization.IdRequirement(),
+                                GetPartialKeyAccess()));
+  return TestOnlyPrivateKey::Create(public_key,
+                                    RestrictedData(key.key_value(), *token),
+                                    GetPartialKeyAccess());
+}
+
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
+    const TestOnlyPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
+  }
+  // `version` and `public_key.version` are 0 by default.
+  TestOnlyPrivateKeyProto proto_key;
+  proto_key.set_key_value(
+      key.GetPrivateKeyBytes(GetPartialKeyAccess()).GetSecret(*token));
+  proto_key.mutable_public_key()->set_key_value(
+      key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
+  return CreateKeySerialization(
+      kTestOnlyPrivateKeyTypeUrl, proto_key.SerializeAsString(), *token,
+      KeyDataTP::KeyMaterialTypeTP::kAsymmetricPrivate,
+      key.GetParameters().GetVariant(), key.GetIdRequirement());
+}
+
 using TestOnlyParametersParser =
     ParametersParserImpl<ProtoParametersSerialization, TestOnlyParameters>;
 using TestOnlyParametersSerializer =
@@ -259,6 +307,10 @@ using TestOnlyAsymmetricParametersParser =
 using TestOnlyAsymmetricParametersSerializer =
     ParametersSerializerImpl<TestOnlyAsymmetricParameters,
                              ProtoParametersSerialization>;
+using TestOnlyPrivateKeyParser =
+    KeyParserImpl<ProtoKeySerialization, TestOnlyPrivateKey>;
+using TestOnlyPrivateKeySerializer =
+    KeySerializerImpl<TestOnlyPrivateKey, ProtoKeySerialization>;
 using TestOnlyPublicKeyParser =
     KeyParserImpl<ProtoKeySerialization, TestOnlyPublicKey>;
 using TestOnlyPublicKeySerializer =
@@ -296,6 +348,18 @@ TestOnlyAsymmetricParametersParser* GetAsymmetricParametersParser() {
 TestOnlyAsymmetricParametersSerializer* GetAsymmetricParametersSerializer() {
   static auto* serializer = new TestOnlyAsymmetricParametersSerializer(
       kTestOnlyPrivateKeyTypeUrl, SerializeAsymmetricParameters);
+  return serializer;
+}
+
+TestOnlyPrivateKeyParser* GetPrivateKeyParser() {
+  static auto* parser =
+      new TestOnlyPrivateKeyParser(kTestOnlyPrivateKeyTypeUrl, ParsePrivateKey);
+  return parser;
+}
+
+TestOnlyPrivateKeySerializer* GetPrivateKeySerializer() {
+  static auto* serializer =
+      new TestOnlyPrivateKeySerializer(SerializePrivateKey);
   return serializer;
 }
 
@@ -393,6 +457,9 @@ absl::Status RegisterTestOnlyProtoSerialization() {
   }
   ABSL_RETURN_IF_ERROR(registry.RegisterParametersSerializer(
       GetAsymmetricParametersSerializer()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPrivateKeyParser()));
+  ABSL_RETURN_IF_ERROR(
+      registry.RegisterKeySerializer(GetPrivateKeySerializer()));
   ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPublicKeyParser()));
   return registry.RegisterKeySerializer(GetPublicKeySerializer());
 }

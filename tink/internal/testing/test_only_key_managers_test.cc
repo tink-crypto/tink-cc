@@ -18,17 +18,23 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/testing/test_only_key.h"
+#include "tink/internal/testing/test_only_private_key.h"
+#include "tink/internal/testing/test_only_public_key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
@@ -206,6 +212,71 @@ TEST(TestOnlyPrivateKeyTypeManagerTest,
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, "data"), IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, "other data"), Not(IsOk()));
+}
+
+TEST(TestOnlyPrivateKeyTypeManagerTest, CompatibleWithKeyClasses) {
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(
+      KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+          std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+          std::make_unique<TestOnlyPublicKeyTypeManager>(), key_gen_config),
+      IsOk());
+  Configuration key_manager_config;
+  ASSERT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
+                  std::make_unique<PublicKeySignWrapper>(), key_manager_config),
+              IsOk());
+  ASSERT_THAT(
+      ConfigurationImpl::AddPrimitiveWrapper(
+          std::make_unique<PublicKeyVerifyWrapper>(), key_manager_config),
+      IsOk());
+  ASSERT_THAT(
+      ConfigurationImpl::AddAsymmetricKeyManagers(
+          std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+          std::make_unique<TestOnlyPublicKeyTypeManager>(), key_manager_config),
+      IsOk());
+  Configuration key_class_config;
+  ASSERT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
+                  std::make_unique<PublicKeySignWrapper>(), key_class_config),
+              IsOk());
+  ASSERT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
+                  std::make_unique<PublicKeyVerifyWrapper>(), key_class_config),
+              IsOk());
+  ASSERT_THAT(
+      (ConfigurationImpl::AddPrimitiveGetter<PublicKeySign, TestOnlyPrivateKey>(
+          NewTestOnlyPublicKeySign, key_class_config)),
+      IsOk());
+  ASSERT_THAT((ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
+                                                     TestOnlyPublicKey>(
+                  NewTestOnlyPublicKeyVerify, key_class_config)),
+              IsOk());
+
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> private_handle =
+      KeysetHandle::GenerateNew(
+          TestOnlyPrivateKeyTemplate(OutputPrefixType::TINK), key_gen_config);
+  ASSERT_THAT(private_handle, IsOk());
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      (*private_handle)->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+
+  const std::vector<std::pair<absl::string_view, const Configuration*>>
+      configs = {{"key managers", &key_manager_config},
+                 {"key classes", &key_class_config}};
+  for (const auto& [sign_name, sign_config] : configs) {
+    for (const auto& [verify_name, verify_config] : configs) {
+      SCOPED_TRACE(
+          absl::StrCat("sign with ", sign_name, ", verify with ", verify_name));
+      absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+          (*private_handle)->GetPrimitive<PublicKeySign>(*sign_config);
+      ASSERT_THAT(sign, IsOk());
+      absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+          (*public_handle)->GetPrimitive<PublicKeyVerify>(*verify_config);
+      ASSERT_THAT(verify, IsOk());
+      absl::StatusOr<std::string> signature = (*sign)->Sign("data");
+      ASSERT_THAT(signature, IsOk());
+      EXPECT_THAT((*verify)->Verify(*signature, "data"), IsOk());
+    }
+  }
 }
 
 }  // namespace

@@ -146,9 +146,11 @@ tink_cc_library(
   SRCS
     test_only_asymmetric_parameters.cc
     test_only_key.cc
+    test_only_private_key.cc
     test_only_public_key.cc
     test_only_asymmetric_parameters.h
     test_only_key.h
+    test_only_private_key.h
     test_only_public_key.h
   DEPS
     absl::core_headers
@@ -163,6 +165,8 @@ tink_cc_library(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::partial_key_access_token
+    tink::core::private_key
+    tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::restricted_data
     tink::core::secret_key_access_token
@@ -248,6 +252,8 @@ tink_cc_test(
     gmock
     absl::status_matchers
     absl::statusor
+    absl::strings
+    absl::string_view
     tink::core::aead
     tink::core::configuration
     tink::core::key_gen_configuration
@@ -264,21 +270,36 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME test_only_asymmetric_parameters_test
+  NAME test_only_private_key_test
   SRCS
-    test_only_asymmetric_parameters_test.cc
+    test_only_private_key_test.cc
   DEPS
     tink::internal::testing::test_only_key
     gmock
     absl::status
     absl::status_matchers
     absl::statusor
-    tink::core::parameters
+    absl::string_view
+    absl::optional
+    tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::core::restricted_data
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
     tink::internal::mutable_serialization_registry
-    tink::internal::proto_parameters_serialization
+    tink::internal::proto_key_serialization
     tink::internal::serialization
+    tink::signature::public_key_sign_wrapper
+    tink::signature::public_key_verify_wrapper
     tink::proto::test_only_key_cc_proto
-    tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -305,4 +326,22 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_tinkpb
+)
+
+tink_cc_test(
+  NAME test_only_asymmetric_parameters_test
+  SRCS
+    test_only_asymmetric_parameters_test.cc
+  DEPS
+    tink::internal::testing::test_only_key
+    gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::proto::test_only_key_cc_proto
+    tink::proto::tink_cc_proto
 )

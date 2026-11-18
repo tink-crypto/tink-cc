@@ -42,6 +42,7 @@
 #include "tink/internal/primitive_set.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/testing/test_only_asymmetric_parameters.h"
 #include "tink/internal/testing/test_only_key.h"
 #include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -69,9 +70,9 @@ using ::crypto::tink::internal::CreateTestOnlyKey;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::kTestOnlyKeySizeInBytes;
 using ::crypto::tink::internal::kTestOnlyKeyTypeUrl;
-using ::crypto::tink::internal::kTestOnlyPrivateKeyTypeUrl;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::crypto::tink::internal::RegisterTestOnlyProtoSerialization;
+using ::crypto::tink::internal::TestOnlyAsymmetricParameters;
 using ::crypto::tink::internal::TestOnlyKeyTemplate;
 using ::crypto::tink::internal::TestOnlyKeyTypeManager;
 using ::crypto::tink::internal::TestOnlyParameters;
@@ -376,11 +377,12 @@ TEST(KeysetHandleBuilderCustomConfigTest,
   EXPECT_THAT((*handle)[1].GetStatus(), Eq(KeyStatus::kEnabled));
   EXPECT_THAT((*handle)[1].GetId(), Eq(456));
   EXPECT_THAT((*handle)[1].IsPrimary(), IsTrue());
-  // Private test-only keys have no proto serialization, so they are parsed as
-  // `LegacyProtoKey`s.
+  absl::StatusOr<TestOnlyAsymmetricParameters> asymmetric_parameters =
+      TestOnlyAsymmetricParameters::Create(
+          TestOnlyAsymmetricParameters::Variant::kTink);
+  ASSERT_THAT(asymmetric_parameters, IsOk());
   EXPECT_THAT((*handle)[1].GetKey()->GetParameters(),
-              Eq(internal::UnusableLegacyProtoParameters(
-                  kTestOnlyPrivateKeyTypeUrl, OutputPrefixType::TINK)));
+              Eq(*asymmetric_parameters));
 
   EXPECT_THAT((*handle)[2].GetStatus(), Eq(KeyStatus::kDisabled));
   EXPECT_THAT((*handle)[2].IsPrimary(), IsFalse());

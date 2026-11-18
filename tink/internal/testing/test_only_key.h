@@ -42,19 +42,21 @@ namespace internal {
 // dummy primitives of `util/test_util.h`.
 //
 // There are symmetric keys (`TestOnlySymmetricKey`, in this file) and
-// asymmetric public keys (`TestOnlyPublicKey` in `test_only_public_key.h`,
-// with parameters `TestOnlyAsymmetricParameters` in
-// `test_only_asymmetric_parameters.h`), which are not specific to a primitive:
-// they can be used with any primitive, for instance with the primitive getters
-// of this library.
+// asymmetric keys (`TestOnlyPrivateKey` in `test_only_private_key.h` and
+// `TestOnlyPublicKey` in `test_only_public_key.h`, with parameters
+// `TestOnlyAsymmetricParameters` in `test_only_asymmetric_parameters.h`), which
+// are not specific to a primitive: they can be used with any primitive, for
+// instance with the primitive getters of this library.
 //
 // The keys are serialized with the test-only protos of
 // `proto/test_only_key.proto`:
 //   * symmetric keys (type URL `kTestOnlyKeyTypeUrl`): `TestOnlyKey`;
-//   * public keys (type URL `kTestOnlyPublicKeyTypeUrl`): `TestOnlyPublicKey`;
-//   * parameters: `TestOnlyKeyFormat`, with the type URL of the symmetric keys
-//     or of the test-only private keys of `test_only_key_managers.h` (type URL
-//     `kTestOnlyPrivateKeyTypeUrl`).
+//   * private keys (type URL `kTestOnlyPrivateKeyTypeUrl`):
+//     `TestOnlyPrivateKey`;
+//   * public keys (type URL `kTestOnlyPublicKeyTypeUrl`): `TestOnlyPublicKey`,
+//     whose key material is the reversed key material of the private key;
+//   * parameters: `TestOnlyKeyFormat`, with the type URL of the symmetric or
+//     private keys.
 
 inline constexpr absl::string_view kTestOnlyKeyTypeUrl =
     "type.googleapis.com/google.crypto.tink.TestOnlyKey";
@@ -174,8 +176,8 @@ class TestOnlySymmetricKey final : public Key {
 };
 
 // Registers the proto serialization of `TestOnlyParameters`,
-// `TestOnlySymmetricKey`, `TestOnlyAsymmetricParameters` and
-// `TestOnlyPublicKey` in the global `MutableSerializationRegistry`.
+// `TestOnlySymmetricKey`, `TestOnlyAsymmetricParameters`, `TestOnlyPrivateKey`
+// and `TestOnlyPublicKey` in the global `MutableSerializationRegistry`.
 absl::Status RegisterTestOnlyProtoSerialization();
 
 // Creates a `TestOnlySymmetricKey` with random key material of

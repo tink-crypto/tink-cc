@@ -2253,6 +2253,61 @@ cc_test(
 )
 
 cc_library(
+    name = "rsa_ssa_pss_sign_boringssl",
+    srcs = ["rsa_ssa_pss_sign_boringssl.cc"],
+    hdrs = ["rsa_ssa_pss_sign_boringssl.h"],
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:public_key_sign",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:dfsan_forwarders",
+        "//tink/internal:err_util",
+        "//tink/internal:fips_utils",
+        "//tink/internal:md_util",
+        "//tink/internal:rsa_util",
+        "//tink/internal:secret_buffer",
+        "//tink/internal:ssl_unique_ptr",
+        "//tink/signature:rsa_ssa_pss_parameters",
+        "//tink/signature:rsa_ssa_pss_private_key",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:subtle_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_test(
+    name = "rsa_ssa_pss_sign_boringssl_test",
+    size = "large",
+    srcs = ["rsa_ssa_pss_sign_boringssl_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":rsa_ssa_pss_sign_boringssl",
+        ":rsa_ssa_pss_verify_boringssl",
+        "//tink:partial_key_access",
+        "//tink:public_key_sign",
+        "//tink:public_key_verify",
+        "//tink/internal:fips_utils",
+        "//tink/signature:rsa_ssa_pss_parameters",
+        "//tink/signature:rsa_ssa_pss_private_key",
+        "//tink/signature:rsa_ssa_pss_public_key",
+        "//tink/signature/internal/testing:rsa_ssa_pss_test_vectors",
+        "//tink/signature/internal/testing:signature_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "rsa_ssa_pss_verify_boringssl",
     srcs = ["rsa_ssa_pss_verify_boringssl.cc"],
     hdrs = ["rsa_ssa_pss_verify_boringssl.h"],

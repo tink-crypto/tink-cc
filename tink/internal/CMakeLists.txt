@@ -312,9 +312,8 @@ tink_cc_test(
     tink::core::primitive_wrapper
     tink::core::public_key_sign
     tink::core::registry
-    tink::aead::aead_wrapper
-    tink::signature::rsa_ssa_pkcs1_sign_key_manager
-    tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::internal::testing::test_only_key
+    tink::internal::testing::test_only_key_managers
     tink::subtle::random
     tink::util::input_stream_util
     tink::util::istream_input_stream
@@ -322,9 +321,8 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
-    tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
-    tink::proto::rsa_ssa_pkcs1_cc_proto
+    tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )
 

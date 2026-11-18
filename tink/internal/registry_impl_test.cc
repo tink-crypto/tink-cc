@@ -33,7 +33,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
-#include "tink/aead/aead_wrapper.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/private_key_manager_impl.h"
@@ -43,13 +42,13 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/primitive_set.h"
+#include "tink/internal/testing/test_only_key.h"
+#include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/key_manager.h"
 #include "tink/mac.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/public_key_sign.h"
 #include "tink/registry.h"
-#include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
-#include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
@@ -57,9 +56,8 @@
 #include "tink/util/test_util.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
-#include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
-#include "proto/rsa_ssa_pkcs1.pb.h"
+#include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -81,15 +79,14 @@ using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaPrivateKey;
 using ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
-using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
-using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
-using ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
+using ::google::crypto::tink::TestOnlyKeyFormat;
+using ::google::crypto::tink::TestOnlyPrivateKey;
 using ::portable_proto::MessageLite;
 using ::testing::AllOf;
 using ::testing::Eq;
@@ -596,9 +593,10 @@ TEST_F(RegistryTest, testNewKeyData) {
 
 TEST_F(RegistryTest, testGetPublicKeyData) {
   // Setup the registry.
-  auto private_key_type_manager = std::make_unique<RsaSsaPkcs1SignKeyManager>();
+  auto private_key_type_manager =
+      std::make_unique<TestOnlyPrivateKeyTypeManager>();
   auto public_key_type_manager =
-      std::make_unique<RsaSsaPkcs1VerifyKeyManager>();
+      std::make_unique<TestOnlyPublicKeyTypeManager>();
 
   auto status = Registry::RegisterKeyManager(
       internal::MakePrivateKeyManager<PublicKeySign>(
@@ -611,35 +609,35 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   ASSERT_THAT(status, IsOk());
 
   // Create a test private key.
-  RsaSsaPkcs1KeyFormat key_format;
-  key_format.mutable_params()->set_hash_type(HashType::SHA256);
-  key_format.set_modulus_size_in_bits(2048);
-  key_format.set_public_exponent(std::string("\x01\x00\x01", 3));  // F4
-  absl::StatusOr<RsaSsaPkcs1PrivateKey> rsa_key =
-      RsaSsaPkcs1SignKeyManager().CreateKey(key_format);
-  ASSERT_THAT(rsa_key, IsOk());
+  TestOnlyKeyFormat key_format;
+  key_format.set_key_size(kTestOnlyKeySizeInBytes);
+  absl::StatusOr<TestOnlyPrivateKey> private_key =
+      TestOnlyPrivateKeyTypeManager().CreateKey(key_format);
+  ASSERT_THAT(private_key, IsOk());
 
   // Extract public key data and check.
-  auto public_key_data_result = Registry::GetPublicKeyData(
-      RsaSsaPkcs1SignKeyManager().get_key_type(), rsa_key->SerializeAsString());
+  auto public_key_data_result =
+      Registry::GetPublicKeyData(TestOnlyPrivateKeyTypeManager().get_key_type(),
+                                 private_key->SerializeAsString());
   ASSERT_THAT(public_key_data_result, IsOk());
   auto public_key_data = std::move(public_key_data_result.value());
-  EXPECT_EQ(RsaSsaPkcs1VerifyKeyManager().get_key_type(),
+  EXPECT_EQ(TestOnlyPublicKeyTypeManager().get_key_type(),
             public_key_data->type_url());
   EXPECT_EQ(KeyData::ASYMMETRIC_PUBLIC, public_key_data->key_material_type());
-  EXPECT_EQ(rsa_key->public_key().SerializeAsString(),
+  EXPECT_EQ(private_key->public_key().SerializeAsString(),
             public_key_data->value());
 
   // Try with a wrong key type.
   auto wrong_key_type_result = Registry::GetPublicKeyData(
-      ExampleKeyTypeManager().get_key_type(), rsa_key->SerializeAsString());
+      ExampleKeyTypeManager().get_key_type(), private_key->SerializeAsString());
   EXPECT_THAT(wrong_key_type_result,
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("PrivateKeyFactory")));
 
   // Try with a bad serialized key.
-  auto bad_key_result = Registry::GetPublicKeyData(
-      RsaSsaPkcs1SignKeyManager().get_key_type(), "some bad serialized key");
+  auto bad_key_result =
+      Registry::GetPublicKeyData(TestOnlyPrivateKeyTypeManager().get_key_type(),
+                                 "some bad serialized key");
   EXPECT_THAT(bad_key_result, StatusIs(absl::StatusCode::kInvalidArgument,
                                        HasSubstr("Could not parse")));
 }
@@ -647,12 +645,12 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
 // Tests that if we register the same type of wrapper twice, the second call
 // succeeds.
 TEST_F(RegistryTest, RegisterWrapperTwice) {
-  EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
-      IsOk());
-  EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
-      IsOk());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  std::make_unique<AeadVariantWrapper>()),
+              IsOk());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  std::make_unique<AeadVariantWrapper>()),
+              IsOk());
 }
 
 // Tests that if we register the same type of wrapper twice, the second call
@@ -697,11 +695,11 @@ TEST_F(RegistryTest, RegisterTransformingWrapperTwiceMixingBackwards) {
 // Tests that if we register different wrappers for the same primitive twice,
 // the second call fails.
 TEST_F(RegistryTest, RegisterDifferentWrappers) {
-  EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
-      IsOk());
-  absl::Status result =
-      Registry::RegisterPrimitiveWrapper(std::make_unique<TestWrapper<Aead>>());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  std::make_unique<AeadVariantWrapper>()),
+              IsOk());
+  absl::Status result = Registry::RegisterPrimitiveWrapper(
+      std::make_unique<TestWrapper<AeadVariant>>());
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
@@ -763,40 +761,27 @@ TEST_F(RegistryTest, UsualWrappingTest) {
   keyset_info.mutable_key_info(2)->set_key_id(7213743);
   keyset_info.mutable_key_info(2)->set_status(KeyStatusType::ENABLED);
 
-  PrimitiveSet<Aead>::Builder primitive_set_builder;
-  primitive_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead0"),
+  PrimitiveSet<AeadVariant>::Builder primitive_set_builder;
+  primitive_set_builder.AddPrimitive(std::make_unique<AeadVariant>("aead0"),
                                      keyset_info.key_info(0));
-  primitive_set_builder.AddPrimitive(std::make_unique<DummyAead>("aead1"),
+  primitive_set_builder.AddPrimitive(std::make_unique<AeadVariant>("aead1"),
                                      keyset_info.key_info(1));
   primitive_set_builder.AddPrimaryPrimitive(
-      std::make_unique<DummyAead>("primary_aead"), keyset_info.key_info(2));
-  absl::StatusOr<PrimitiveSet<Aead>> primitive_set =
+      std::make_unique<AeadVariant>("primary_aead"), keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<AeadVariant>> primitive_set =
       std::move(primitive_set_builder).Build();
   ASSERT_THAT(primitive_set, IsOk());
 
-  EXPECT_THAT(
-      Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
-      IsOk());
+  EXPECT_THAT(Registry::RegisterPrimitiveWrapper(
+                  std::make_unique<AeadVariantWrapper>()),
+              IsOk());
 
-  auto aead_result = Registry::Wrap<Aead>(
-      std::make_unique<PrimitiveSet<Aead>>(*std::move(primitive_set)));
-  ASSERT_THAT(aead_result, IsOk());
-  std::unique_ptr<Aead> aead = std::move(aead_result.value());
-  std::string plaintext = "some_plaintext";
-  std::string aad = "some_aad";
-
-  auto encrypt_result = aead->Encrypt(plaintext, aad);
-  EXPECT_THAT(encrypt_result, IsOk());
-  std::string ciphertext = encrypt_result.value();
-  EXPECT_PRED_FORMAT2(testing::IsSubstring, "primary_aead", ciphertext);
-
-  auto decrypt_result = aead->Decrypt(ciphertext, aad);
-  EXPECT_THAT(decrypt_result, IsOk());
-  EXPECT_EQ(plaintext, decrypt_result.value());
-
-  decrypt_result = aead->Decrypt("some bad ciphertext", aad);
-  EXPECT_THAT(decrypt_result, StatusIs(absl::StatusCode::kInvalidArgument,
-                                       HasSubstr("decryption failed")));
+  absl::StatusOr<std::unique_ptr<AeadVariant>> aead_variant =
+      Registry::Wrap<AeadVariant>(std::make_unique<PrimitiveSet<AeadVariant>>(
+          *std::move(primitive_set)));
+  ASSERT_THAT(aead_variant, IsOk());
+  // `AeadVariantWrapper` returns the primary primitive.
+  EXPECT_EQ((*aead_variant)->get(), "primary_aead");
 }
 
 std::string AddAesGcmKey(uint32_t key_id, OutputPrefixType output_prefix_type,

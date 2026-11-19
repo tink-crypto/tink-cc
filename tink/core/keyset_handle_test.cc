@@ -117,21 +117,12 @@ namespace {
 
 class KeysetHandleTest : public ::testing::Test {
  protected:
+  // Registers only the proto serialization of the test-only keys, so they are
+  // parsed into key classes, and no global key managers.
   void SetUp() override {
     Registry::Reset();
+    internal::MutableSerializationRegistry::GlobalInstance().Reset();
     ASSERT_THAT(internal::RegisterTestOnlyProtoSerialization(), IsOk());
-    ASSERT_THAT(Registry::RegisterKeyTypeManager(
-                    std::make_unique<TestOnlyKeyTypeManager>(),
-                    /*new_key_allowed=*/true),
-                IsOk());
-    ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
-                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
-                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
-                    /*new_key_allowed=*/true),
-                IsOk());
-    ASSERT_THAT(
-        Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
-        IsOk());
 
     internal::UnSetFipsRestricted();
   }
@@ -150,6 +141,31 @@ class KeysetHandleTest : public ::testing::Test {
 };
 
 using KeysetHandleDeathTest = KeysetHandleTest;
+
+// Tests of the key manager paths: registers the test-only key managers and the
+// AEAD wrapper in the global registry, and no proto serialization, so test-only
+// keys are parsed into `LegacyProtoKey`s.
+class KeysetHandleLegacyTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    Registry::Reset();
+    internal::MutableSerializationRegistry::GlobalInstance().Reset();
+    ASSERT_THAT(Registry::RegisterKeyTypeManager(
+                    std::make_unique<TestOnlyKeyTypeManager>(),
+                    /*new_key_allowed=*/true),
+                IsOk());
+    ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
+                    std::make_unique<TestOnlyPrivateKeyTypeManager>(),
+                    std::make_unique<TestOnlyPublicKeyTypeManager>(),
+                    /*new_key_allowed=*/true),
+                IsOk());
+    ASSERT_THAT(
+        Registry::RegisterPrimitiveWrapper(std::make_unique<AeadWrapper>()),
+        IsOk());
+
+    internal::UnSetFipsRestricted();
+  }
+};
 
 // Fake AEAD key type manager for testing.
 class FakeAeadKeyManager
@@ -373,9 +389,12 @@ TEST_F(KeysetHandleTest, DefaultCtor) {
   KeysetHandle keyset_handle;
   EXPECT_THAT(keyset_handle.size(), Eq(0));
   EXPECT_THAT(keyset_handle.Validate(), Not(IsOk()));
-  EXPECT_THAT(
-      keyset_handle.GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry()),
-      Not(IsOk()));
+  Configuration config;
+  ASSERT_THAT(internal::ConfigurationImpl::AddPrimitiveWrapper(
+                  std::make_unique<AeadWrapper>(), config),
+              IsOk());
+  EXPECT_THAT(keyset_handle.GetPrimitive<crypto::tink::Aead>(config),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(KeysetHandleTest, CopyCtorAndAssignment) {
@@ -785,7 +804,7 @@ TEST_F(KeysetHandleTest, WriteEncryptedKeysetWithAssociatedData) {
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(KeysetHandleTest, GenerateNew) {
+TEST_F(KeysetHandleLegacyTest, GenerateNew) {
   const google::crypto::tink::KeyTemplate templates[] = {
       TestOnlyKeyTemplate(OutputPrefixType::TINK),
       TestOnlyKeyTemplate(OutputPrefixType::RAW),
@@ -800,7 +819,7 @@ TEST_F(KeysetHandleTest, GenerateNew) {
   }
 }
 
-TEST_F(KeysetHandleTest, GenerateNewWithBespokeConfig) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewWithBespokeConfig) {
   KeyGenConfiguration config;
   EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), config).status(),
               StatusIs(absl::StatusCode::kNotFound));
@@ -812,13 +831,13 @@ TEST_F(KeysetHandleTest, GenerateNewWithBespokeConfig) {
               IsOk());
 }
 
-TEST_F(KeysetHandleTest, GenerateNewWithGlobalRegistryConfig) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewWithGlobalRegistryConfig) {
   EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(),
                                         KeyGenConfigGlobalRegistry()),
               IsOk());
 }
 
-TEST_F(KeysetHandleTest, GenerateNewWithAnnotations) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewWithAnnotations) {
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}};
 
@@ -866,7 +885,7 @@ TEST_F(KeysetHandleTest, GenerateNewWithAnnotations) {
   }
 }
 
-TEST_F(KeysetHandleTest, GenerateNewWithNoAnnotations) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewWithNoAnnotations) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(TestOnlyKeyTemplate(),
                                 KeyGenConfigGlobalRegistry());
@@ -875,7 +894,7 @@ TEST_F(KeysetHandleTest, GenerateNewWithNoAnnotations) {
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(KeysetHandleTest, GenerateNewInvalidKeyTemplateFails) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewInvalidKeyTemplateFails) {
   KeyTemplate templ;
   templ.set_type_url("type.googleapis.com/some.unknown.KeyType");
   templ.set_output_prefix_type(OutputPrefixType::TINK);
@@ -913,7 +932,6 @@ class KeysetHandleGenerateNewFromParametersTest : public KeysetHandleTest {};
 
 TEST_F(KeysetHandleGenerateNewFromParametersTest,
        GenerateNewFromParametersEmptyKeyGenConfigFails) {
-  Registry::Reset();
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
 
@@ -995,7 +1013,6 @@ TEST_F(KeysetHandleGenerateNewFromParametersTest,
 
 TEST_F(KeysetHandleGenerateNewFromParametersTest,
        GenerateNewFromParametersWithGlobalRegistryConfigFails) {
-  Registry::Reset();
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
 
@@ -1005,7 +1022,7 @@ TEST_F(KeysetHandleGenerateNewFromParametersTest,
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(KeysetHandleTest, GenerateNewWithUnknownPrefixFails) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewWithUnknownPrefixFails) {
   KeyTemplate key_template = TestOnlyKeyTemplate();
   key_template.set_output_prefix_type(OutputPrefixType::UNKNOWN_PREFIX);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
@@ -1014,7 +1031,7 @@ TEST_F(KeysetHandleTest, GenerateNewWithUnknownPrefixFails) {
                                HasSubstr("key template has UNKNOWN prefix")));
 }
 
-TEST_F(KeysetHandleTest, GenerateNewWithIdRequirementFails) {
+TEST_F(KeysetHandleLegacyTest, GenerateNewWithIdRequirementFails) {
   KeyTemplate key_template = TestOnlyKeyTemplate();
   key_template.set_output_prefix_type(OutputPrefixType::WITH_ID_REQUIREMENT);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
@@ -1049,7 +1066,7 @@ Keyset CreateTestOnlyPrivateMultiKeyset() {
 }
 
 // TODO(b/265865177): Modernize existing GetPublicKeysetHandle tests.
-TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
+TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandle) {
   {  // A keyset with a single key.
     Keyset keyset;
     AddTinkKey(std::string(kTestOnlyPrivateKeyTypeUrl), /*key_id=*/623628,
@@ -1089,7 +1106,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
   }
 }
 
-TEST_F(KeysetHandleTest, GetPublicKeysetHandleErrors) {
+TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandleErrors) {
   {  // A keyset with a single key.
     auto handle_result =
         KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), TestKeyGenConfig());
@@ -1122,7 +1139,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleErrors) {
   }
 }
 
-TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
+TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
   Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
       TestKeysetHandle::GetKeysetHandle(keyset);
@@ -1169,11 +1186,10 @@ TEST_F(KeysetHandleTest,
   }
 }
 
-TEST_F(KeysetHandleTest,
+TEST_F(KeysetHandleLegacyTest,
        GetPublicKeysetHandleWithBespokeConfigEmptySerializationRegistryFails) {
   // Without proto serialization, test-only private keys are parsed into
   // `LegacyProtoKey`s, which require key managers.
-  internal::MutableSerializationRegistry::GlobalInstance().Reset();
   Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
       TestKeysetHandle::GetKeysetHandle(keyset);
@@ -1183,7 +1199,7 @@ TEST_F(KeysetHandleTest,
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithBespokeConfigFails) {
+TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandleWithBespokeConfigFails) {
   KeyGenConfiguration config;
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
                   std::make_unique<TestOnlyKeyTypeManager>(), config),
@@ -1195,7 +1211,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithBespokeConfigFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(KeysetHandleTest,
+TEST_F(KeysetHandleLegacyTest,
        GetPublicKeysetHandleWithGlobalRegistryConfigSucceeds) {
   Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
@@ -1215,7 +1231,8 @@ TEST_F(KeysetHandleTest,
   }
 }
 
-TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithGlobalRegistryConfigFails) {
+TEST_F(KeysetHandleLegacyTest,
+       GetPublicKeysetHandleWithGlobalRegistryConfigFails) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(TestOnlyKeyTemplate(),
                                 KeyGenConfigGlobalRegistry());
@@ -1225,7 +1242,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithGlobalRegistryConfigFails) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(KeysetHandleTest, GetPrimitive) {
+TEST_F(KeysetHandleLegacyTest, GetPrimitive) {
   Keyset keyset;
   KeyData key_data_0 = *Registry::NewKeyData(TestOnlyKeyTemplate()).value();
   AddKeyData(key_data_0, /*key_id=*/0,
@@ -1262,7 +1279,7 @@ TEST_F(KeysetHandleTest, GetPrimitive) {
   EXPECT_EQ(aead->Decrypt(raw_encryption, aad).value(), plaintext);
 }
 
-TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigSucceeds) {
+TEST_F(KeysetHandleLegacyTest, GetPrimitiveWithBespokeConfigSucceeds) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
                   std::make_unique<TestOnlyKeyTypeManager>(), key_gen_config),
@@ -1282,7 +1299,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigSucceeds) {
   EXPECT_THAT((*handle)->GetPrimitive<Aead>(config).status(), IsOk());
 }
 
-TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigFailsIfEmpty) {
+TEST_F(KeysetHandleLegacyTest, GetPrimitiveWithBespokeConfigFailsIfEmpty) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
                   std::make_unique<TestOnlyKeyTypeManager>(), key_gen_config),
@@ -1296,7 +1313,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigFailsIfEmpty) {
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(KeysetHandleTest, GetPrimitiveWithGlobalRegistryConfig) {
+TEST_F(KeysetHandleLegacyTest, GetPrimitiveWithGlobalRegistryConfig) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(TestOnlyKeyTemplate(),
                                 KeyGenConfigGlobalRegistry());
@@ -1307,7 +1324,6 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithGlobalRegistryConfig) {
 
 TEST_P(KeysetHandlePrefixTest,
        GetPrimitiveWithBespokeConfigUsingPrimitiveGettersSucceeds) {
-  Registry::Reset();
   TestOnlyParameters::Variant variant = GetParam();
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(variant);
@@ -1348,7 +1364,6 @@ TEST_P(KeysetHandlePrefixTest,
 
 TEST_F(KeysetHandleTest,
        GetPrimitiveWithBespokeConfigUsingMultipleKeysPrimitiveGettersSucceeds) {
-  Registry::Reset();
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
@@ -1406,7 +1421,6 @@ TEST_F(KeysetHandleTest,
 
 TEST_F(KeysetHandleTest,
        GetPrimitiveWithBespokeConfigMultipleKeysMixedPrimitiveGettersSucceeds) {
-  Registry::Reset();
   absl::StatusOr<TestOnlyParameters> test_only_params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
   ASSERT_THAT(test_only_params, IsOk());
@@ -1479,7 +1493,6 @@ TEST_F(KeysetHandleTest,
 }
 
 TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigNoPrimitiveGetterFails) {
-  Registry::Reset();
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
 

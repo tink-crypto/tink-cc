@@ -954,12 +954,8 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::testing::test_only_key
     tink::internal::testing::test_only_key_managers
-    tink::signature::ecdsa_proto_serialization
-    tink::signature::internal::testing::ecdsa_test_utils
     tink::util::test_keyset_handle
     tink::util::test_util
-    tink::proto::common_cc_proto
-    tink::proto::ecdsa_cc_proto
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
 )

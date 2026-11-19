@@ -65,12 +65,8 @@
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
-#include "tink/signature/ecdsa_proto_serialization.h"
-#include "tink/signature/internal/testing/ecdsa_test_utils.h"
 #include "tink/util/test_keyset_handle.h"
 #include "tink/util/test_util.h"
-#include "proto/common.pb.h"
-#include "proto/ecdsa.pb.h"
 #include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
 
@@ -1029,9 +1025,6 @@ TEST_F(KeysetHandleTest, GenerateNewWithIdRequirementFails) {
                HasSubstr("key template has WITH_ID_REQUIREMENT prefix")));
 }
 
-constexpr char kEcdsaPrivateKeyTypeUrl[] =
-    "type.googleapis.com/google.crypto.tink.EcdsaPrivateKey";
-
 void CompareKeyMetadata(const Keyset::Key& expected,
                         const Keyset::Key& actual) {
   EXPECT_EQ(expected.status(), actual.status());
@@ -1052,39 +1045,6 @@ Keyset CreateTestOnlyPrivateMultiKeyset() {
             NewTestOnlyPrivateKeyProto(), KeyStatusType::ENABLED,
             KeyData::ASYMMETRIC_PRIVATE, &keyset);
   keyset.set_primary_key_id(42);
-  return keyset;
-}
-
-// Returns a keyset with multiple ECDSA private keys. Unlike test-only private
-// keys, they are parsed into `PrivateKey` objects.
-absl::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
-  Keyset keyset;
-
-  AddTinkKey(kEcdsaPrivateKeyTypeUrl,
-             /* key_id= */ 623628,
-             internal::GetEcdsaTestPrivateKey(
-                 google::crypto::tink::EllipticCurveType::NIST_P256,
-                 google::crypto::tink::HashType::SHA256,
-                 google::crypto::tink::EcdsaSignatureEncoding::DER),
-             KeyStatusType::ENABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
-
-  AddLegacyKey(kEcdsaPrivateKeyTypeUrl,
-               /* key_id= */ 36285,
-               internal::GetEcdsaTestPrivateKey(
-                   google::crypto::tink::EllipticCurveType::NIST_P384,
-                   google::crypto::tink::HashType::SHA384,
-                   google::crypto::tink::EcdsaSignatureEncoding::DER),
-               KeyStatusType::DISABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
-
-  AddRawKey(kEcdsaPrivateKeyTypeUrl,
-            /* key_id= */ 42,
-            internal::GetEcdsaTestPrivateKey(
-                google::crypto::tink::EllipticCurveType::NIST_P384,
-                google::crypto::tink::HashType::SHA512,
-                google::crypto::tink::EcdsaSignatureEncoding::DER),
-            KeyStatusType::ENABLED, KeyData::ASYMMETRIC_PRIVATE, &keyset);
-  keyset.set_primary_key_id(42);
-
   return keyset;
 }
 
@@ -1188,13 +1148,11 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
 
 TEST_F(KeysetHandleTest,
        GetPublicKeysetHandleWithBespokeConfigNoKeyManagersSucceeds) {
-  // Test-only private keys have no proto serialization, so this test uses
-  // ECDSA keys, which are parsed into `PrivateKey` objects.
-  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
-  absl::StatusOr<const Keyset> keyset = CreateEcdsaMultiKeyset();
-  ASSERT_THAT(keyset, IsOk());
+  // Test-only private keys have a registered proto serialization, so they are
+  // parsed into `PrivateKey` objects, which need no key managers.
+  Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
-      TestKeysetHandle::GetKeysetHandle(*keyset);
+      TestKeysetHandle::GetKeysetHandle(keyset);
 
   KeyGenConfiguration config;
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
@@ -1202,10 +1160,10 @@ TEST_F(KeysetHandleTest,
   ASSERT_THAT(public_handle, IsOk());
 
   const Keyset& public_keyset = TestKeysetHandle::GetKeyset(**public_handle);
-  EXPECT_EQ(keyset->primary_key_id(), public_keyset.primary_key_id());
-  EXPECT_EQ(keyset->key_size(), public_keyset.key_size());
-  for (int i = 0; i < keyset->key_size(); i++) {
-    CompareKeyMetadata(keyset->key(i), public_keyset.key(i));
+  EXPECT_EQ(keyset.primary_key_id(), public_keyset.primary_key_id());
+  EXPECT_EQ(keyset.key_size(), public_keyset.key_size());
+  for (int i = 0; i < keyset.key_size(); i++) {
+    CompareKeyMetadata(keyset.key(i), public_keyset.key(i));
     EXPECT_EQ(KeyData::ASYMMETRIC_PUBLIC,
               public_keyset.key(i).key_data().key_material_type());
   }
@@ -1213,13 +1171,12 @@ TEST_F(KeysetHandleTest,
 
 TEST_F(KeysetHandleTest,
        GetPublicKeysetHandleWithBespokeConfigEmptySerializationRegistryFails) {
-  // Without proto serialization, ECDSA keys are parsed into `LegacyProtoKey`s,
-  // which require key managers.
+  // Without proto serialization, test-only private keys are parsed into
+  // `LegacyProtoKey`s, which require key managers.
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
-  absl::StatusOr<const Keyset> keyset = CreateEcdsaMultiKeyset();
-  ASSERT_THAT(keyset, IsOk());
+  Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
-      TestKeysetHandle::GetKeysetHandle(*keyset);
+      TestKeysetHandle::GetKeysetHandle(keyset);
 
   KeyGenConfiguration config;
   EXPECT_THAT(handle->GetPublicKeysetHandle(config).status(),

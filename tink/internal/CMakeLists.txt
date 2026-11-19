@@ -2229,8 +2229,8 @@ tink_cc_library(
   NAME rtti
   SRCS
     rtti.h
-    rtti_manual.h
-    rtti_native.h
+  DEPS
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -2238,7 +2238,14 @@ tink_cc_test(
   SRCS
     rtti_test.cc
   DEPS
-    tink::internal::rtti
     gmock
     absl::flat_hash_map
+    tink::core::rtti
+)
+
+tink_cc_library(
+  NAME rtti_impl
+  SRCS
+    rtti_manual.h
+    rtti_native.h
 )

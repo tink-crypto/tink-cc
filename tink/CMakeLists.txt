@@ -1318,3 +1318,12 @@ tink_cc_test(
     tink::signature::signature_key_templates
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME rtti
+  SRCS
+    rtti.h
+  DEPS
+    tink::internal::rtti_impl
+  PUBLIC
+)

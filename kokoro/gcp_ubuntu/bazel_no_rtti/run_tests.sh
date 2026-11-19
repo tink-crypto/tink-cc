@@ -89,6 +89,7 @@ echo "---------- CHECKING RTTI TYPE IDS"
 readonly TARGETS=(
   "//tink:key"
   "//tink:parameters"
+  "//tink:rtti"
   "//tink/internal:rtti"
   "//tink/internal:rtti_test"
   "//tink/internal:util"

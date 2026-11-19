@@ -1328,3 +1328,10 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "rtti",
+    hdrs = ["rtti.h"],
+    visibility = ["//visibility:public"],
+    deps = ["//tink/internal:rtti_impl"],
+)

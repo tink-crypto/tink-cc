@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/internal/rtti.h"
+#include "tink/rtti.h"
 
 #include <cstdint>
 #if !defined(TINK_USE_CUSTOM_RTTI)
@@ -28,7 +28,6 @@
 
 namespace crypto {
 namespace tink {
-namespace internal {
 namespace {
 
 using ::testing::Eq;
@@ -214,29 +213,32 @@ class FakeTripleTemplate {
   TEST_RTTI_COMPUTE_TYPE_ID(kFakeTripleTemplateTypeId, P, Q, R);
 };
 
-TEST(RttiTest, GetTypeIndexStatic) {
+TEST(RttiTest, GetStaticTypeIndex) {
 #if defined(TINK_USE_CUSTOM_RTTI)
-  EXPECT_THAT(GetTypeIndex<FakeEcdsaPublicKey>(),
+  EXPECT_THAT(GetStaticTypeIndex<FakeEcdsaPublicKey>(),
               Eq(TypeIndex(kFakeEcdsaPublicKeyTypeId)));
-  EXPECT_THAT(GetTypeIndex<FakeEcdsaPrivateKey>(),
+  EXPECT_THAT(GetStaticTypeIndex<FakeEcdsaPrivateKey>(),
               Eq(TypeIndex(kFakeEcdsaPrivateKeyTypeId)));
-  EXPECT_THAT(GetTypeIndex<FakeAesGcmParameters>(),
+  EXPECT_THAT(GetStaticTypeIndex<FakeAesGcmParameters>(),
               Eq(TypeIndex(kFakeAesGcmParametersTypeId)));
 #else
-  EXPECT_THAT(GetTypeIndex<FakeEcdsaPublicKey>(),
+  EXPECT_THAT(GetStaticTypeIndex<FakeEcdsaPublicKey>(),
               Eq(std::type_index(typeid(FakeEcdsaPublicKey))));
-  EXPECT_THAT(GetTypeIndex<FakeEcdsaPrivateKey>(),
+  EXPECT_THAT(GetStaticTypeIndex<FakeEcdsaPrivateKey>(),
               Eq(std::type_index(typeid(FakeEcdsaPrivateKey))));
-  EXPECT_THAT(GetTypeIndex<FakeAesGcmParameters>(),
+  EXPECT_THAT(GetStaticTypeIndex<FakeAesGcmParameters>(),
               Eq(std::type_index(typeid(FakeAesGcmParameters))));
 #endif
-  EXPECT_THAT(GetTypeIndex<FakeEcdsaPublicKey>(),
-              Not(Eq(GetTypeIndex<FakeEcdsaPrivateKey>())));
-  EXPECT_THAT(GetTypeIndex<FakeAesGcmParameters>(),
-              Not(Eq(GetTypeIndex<FakeParameters>())));
-  EXPECT_THAT(GetTypeIndex<const FakeKey>(), Eq(GetTypeIndex<FakeKey>()));
-  EXPECT_THAT(GetTypeIndex<const FakeKey&>(), Eq(GetTypeIndex<FakeKey>()));
-  EXPECT_THAT(GetTypeIndex<FakeAesGcmParameters>().name(), Not(IsEmpty()));
+  EXPECT_THAT(GetStaticTypeIndex<FakeEcdsaPublicKey>(),
+              Not(Eq(GetStaticTypeIndex<FakeEcdsaPrivateKey>())));
+  EXPECT_THAT(GetStaticTypeIndex<FakeAesGcmParameters>(),
+              Not(Eq(GetStaticTypeIndex<FakeParameters>())));
+  EXPECT_THAT(GetStaticTypeIndex<const FakeKey>(),
+              Eq(GetStaticTypeIndex<FakeKey>()));
+  EXPECT_THAT(GetStaticTypeIndex<const FakeKey&>(),
+              Eq(GetStaticTypeIndex<FakeKey>()));
+  EXPECT_THAT(GetStaticTypeIndex<FakeAesGcmParameters>().name(),
+              Not(IsEmpty()));
 }
 
 TEST(RttiTest, GetTypeIndexDynamicMatchesStatic) {
@@ -254,18 +256,19 @@ TEST(RttiTest, GetTypeIndexDynamicMatchesStatic) {
   const FakeParameters& leaf_params_ref = leaf_params;
   const FakeKeyFactory& factory_ref = private_key_factory;
 
-  EXPECT_THAT(GetTypeIndex(key_ref), Eq(GetTypeIndex<FakeEcdsaPublicKey>()));
+  EXPECT_THAT(GetTypeIndex(key_ref),
+              Eq(GetStaticTypeIndex<FakeEcdsaPublicKey>()));
   EXPECT_THAT(GetTypeIndex(priv_key_ref),
-              Eq(GetTypeIndex<FakeEcdsaPrivateKey>()));
+              Eq(GetStaticTypeIndex<FakeEcdsaPrivateKey>()));
   EXPECT_THAT(GetTypeIndex(key_ref), Not(Eq(GetTypeIndex(priv_key_ref))));
   EXPECT_THAT(GetTypeIndex(root_params_ref),
-              Eq(GetTypeIndex<FakeParameters>()));
+              Eq(GetStaticTypeIndex<FakeParameters>()));
   EXPECT_THAT(GetTypeIndex(mid_params_ref),
-              Eq(GetTypeIndex<FakeAeadParameters>()));
+              Eq(GetStaticTypeIndex<FakeAeadParameters>()));
   EXPECT_THAT(GetTypeIndex(leaf_params_ref),
-              Eq(GetTypeIndex<FakeAesGcmParameters>()));
+              Eq(GetStaticTypeIndex<FakeAesGcmParameters>()));
   EXPECT_THAT(GetTypeIndex(factory_ref),
-              Eq(GetTypeIndex<FakeConcretePrivateKeyFactory>()));
+              Eq(GetStaticTypeIndex<FakeConcretePrivateKeyFactory>()));
   EXPECT_THAT(GetTypeIndex(leaf_params_ref).name(), Not(IsEmpty()));
 }
 
@@ -308,13 +311,12 @@ TEST(RttiTest, DynamicCastMultiBranchHierarchy) {
 
 TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
 #if defined(TINK_USE_CUSTOM_RTTI)
-  EXPECT_THAT(
-      GetTypeIndex<FakeKeyManager<TagA>>(),
-      Eq(TypeIndex(kFakeKeyManagerTypeId | (kTagATypeId << 16))));
-  EXPECT_THAT((GetTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
+  EXPECT_THAT(GetStaticTypeIndex<FakeKeyManager<TagA>>(),
+              Eq(TypeIndex(kFakeKeyManagerTypeId | (kTagATypeId << 16))));
+  EXPECT_THAT((GetStaticTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
               Eq(TypeIndex(kFakePrimitiveWrapperTypeId | (kTagATypeId << 16) |
                            (kTagBTypeId << 32))));
-  EXPECT_THAT((GetTypeIndex<FakeTripleTemplate<TagA, TagB, TagC>>()),
+  EXPECT_THAT((GetStaticTypeIndex<FakeTripleTemplate<TagA, TagB, TagC>>()),
               Eq(TypeIndex(kFakeTripleTemplateTypeId | (kTagATypeId << 16) |
                            (kTagBTypeId << 32) | (kTagCTypeId << 48))));
 #endif
@@ -323,8 +325,10 @@ TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
   const FakeKeyManagerBase& base_a = manager_a;
   const FakeKeyManagerBase& base_b = manager_b;
 
-  EXPECT_THAT(GetTypeIndex(base_a), Eq(GetTypeIndex<FakeKeyManager<TagA>>()));
-  EXPECT_THAT(GetTypeIndex(base_b), Eq(GetTypeIndex<FakeKeyManager<TagB>>()));
+  EXPECT_THAT(GetTypeIndex(base_a),
+              Eq(GetStaticTypeIndex<FakeKeyManager<TagA>>()));
+  EXPECT_THAT(GetTypeIndex(base_b),
+              Eq(GetStaticTypeIndex<FakeKeyManager<TagB>>()));
   EXPECT_THAT(GetTypeIndex(base_a), Not(Eq(GetTypeIndex(base_b))));
   EXPECT_THAT(DynamicCast<const FakeKeyManager<TagA>*>(&base_a),
               Eq(&manager_a));
@@ -336,9 +340,9 @@ TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
   const FakePrimitiveWrapper<TagA, TagB>& wrapper_base2 = wrapper2;
 
   EXPECT_THAT(GetTypeIndex(wrapper_base1),
-              Eq(GetTypeIndex<ConcreteWrapperAB>()));
+              Eq(GetStaticTypeIndex<ConcreteWrapperAB>()));
   EXPECT_THAT(GetTypeIndex(wrapper_base2),
-              Eq(GetTypeIndex<OtherConcreteWrapperAB>()));
+              Eq(GetStaticTypeIndex<OtherConcreteWrapperAB>()));
   EXPECT_THAT(GetTypeIndex(wrapper_base1),
               Not(Eq(GetTypeIndex(wrapper_base2))));
   EXPECT_THAT(DynamicCast<const ConcreteWrapperAB*>(&wrapper_base1),
@@ -347,36 +351,36 @@ TEST(RttiTest, ComputeTypeIdForTemplatedClasses) {
               IsNull());
   EXPECT_THAT(DynamicCast<const OtherConcreteWrapperAB*>(&wrapper_base2),
               Eq(&wrapper2));
-  EXPECT_THAT((GetTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
-              Not(Eq(GetTypeIndex<ConcreteWrapperAB>())));
-  EXPECT_THAT((GetTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
-              Not(Eq(GetTypeIndex<FakePrimitiveWrapper<TagB, TagA>>())));
+  EXPECT_THAT((GetStaticTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
+              Not(Eq(GetStaticTypeIndex<ConcreteWrapperAB>())));
+  EXPECT_THAT((GetStaticTypeIndex<FakePrimitiveWrapper<TagA, TagB>>()),
+              Not(Eq(GetStaticTypeIndex<FakePrimitiveWrapper<TagB, TagA>>())));
 
-  EXPECT_THAT((GetTypeIndex<FakeTripleTemplate<TagA, TagB, TagC>>()),
-              Not(Eq(GetTypeIndex<FakeTripleTemplate<TagA, TagC, TagB>>())));
+  EXPECT_THAT(
+      (GetStaticTypeIndex<FakeTripleTemplate<TagA, TagB, TagC>>()),
+      Not(Eq(GetStaticTypeIndex<FakeTripleTemplate<TagA, TagC, TagB>>())));
 }
 
 TEST(RttiTest, TypeIndexWorksAsHashMapKey) {
   absl::flat_hash_map<TypeIndex, int> map;
-  map[GetTypeIndex<TagA>()] = 1;
-  map[GetTypeIndex<TagB>()] = 2;
-  map[GetTypeIndex<FakeKey>()] = 3;
+  map[GetStaticTypeIndex<TagA>()] = 1;
+  map[GetStaticTypeIndex<TagB>()] = 2;
+  map[GetStaticTypeIndex<FakeKey>()] = 3;
 
-  EXPECT_THAT(map[GetTypeIndex<TagA>()], Eq(1));
-  EXPECT_THAT(map[GetTypeIndex<TagB>()], Eq(2));
-  EXPECT_THAT(map[GetTypeIndex<FakeKey>()], Eq(3));
-  EXPECT_THAT(GetTypeIndex<TagA>(), Not(Eq(GetTypeIndex<TagB>())));
+  EXPECT_THAT(map[GetStaticTypeIndex<TagA>()], Eq(1));
+  EXPECT_THAT(map[GetStaticTypeIndex<TagB>()], Eq(2));
+  EXPECT_THAT(map[GetStaticTypeIndex<FakeKey>()], Eq(3));
+  EXPECT_THAT(GetStaticTypeIndex<TagA>(), Not(Eq(GetStaticTypeIndex<TagB>())));
 }
 
 TEST(RttiTest, TypeIndexOrdering) {
-  TypeIndex idx_a = GetTypeIndex<TagA>();
-  TypeIndex idx_b = GetTypeIndex<TagB>();
+  TypeIndex idx_a = GetStaticTypeIndex<TagA>();
+  TypeIndex idx_b = GetStaticTypeIndex<TagB>();
 
   EXPECT_FALSE(idx_a < idx_a);
   EXPECT_NE(idx_a < idx_b, idx_b < idx_a);
 }
 
 }  // namespace
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

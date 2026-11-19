@@ -17,13 +17,12 @@
 // Non-compilation tests for Tink RTTI macros and utilities with `-fno-rtti`
 // (both with and without `-DTINK_USE_CUSTOM_RTTI`).
 
-#include "tink/internal/rtti.h"
+#include "tink/rtti.h"
 
 #include <typeinfo>
 
 namespace crypto {
 namespace tink {
-namespace internal {
 namespace {
 
 // -----------------------------------------------------------------------------
@@ -164,7 +163,7 @@ class MethodsOnlyBase {
  private:
   // Defining RTTI methods on a non-template class without a type-ID macro fails
   // immediately when instantiating GetTinkRttiTypeIndex() / IsTinkRttiInstance.
-  // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
+  // expected-error@rtti_manual.h:* {{GetStaticTypeIndex<T>() requires T}}
   TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
 };
 }  // namespace test_methods_without_type_id
@@ -213,8 +212,8 @@ class SubclassMissingMethods : public ValidBase {
 
 [[maybe_unused]] void TestForgottenSubclassMacros(
     const ValidBase* base_ptr, const SubclassMissingMethods& missing_methods) {
-  // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
-  (void)GetTypeIndex<UnannotatedSubclass>();
+  // expected-error@rtti_manual.h:* {{GetStaticTypeIndex<T>() requires T}}
+  (void)GetStaticTypeIndex<UnannotatedSubclass>();
 
   // expected-error@rtti_manual.h:* {{Source and target types of DynamicCast}}
   (void)DynamicCast<const UnannotatedSubclass*>(base_ptr);
@@ -228,7 +227,7 @@ class SubclassMissingMethods : public ValidBase {
 }  // namespace test_subclass_does_not_silently_inherit_annotations
 
 // -----------------------------------------------------------------------------
-// 4. GetTypeIndex and DynamicCast call-site contract checks
+// 4. GetStaticTypeIndex, GetTypeIndex, and DynamicCast call-site contract
 // -----------------------------------------------------------------------------
 
 namespace test_call_site_errors {
@@ -243,15 +242,15 @@ class VirtualDerived : public virtual ValidBase {
 [[maybe_unused]] void TestGetTypeIndexErrors(const ValidBase* base_ptr,
                                              const Tag1& tag_without_methods,
                                              const UnannotatedStruct& plain) {
-  // expected-error@rtti_manual.h:* {{GetTypeIndex<T>() requires T to declare}}
-  (void)GetTypeIndex<UnannotatedStruct>();
+  // expected-error@rtti_manual.h:* {{GetStaticTypeIndex<T>() requires T}}
+  (void)GetStaticTypeIndex<UnannotatedStruct>();
 
   // expected-error@rtti_manual.h:* {{Pass a reference (*ptr) to GetTypeIndex}}
   (void)GetTypeIndex(base_ptr);
 
-  // Tag1 has TEST_RTTI_SET_TYPE_ID(1), so GetTypeIndex<Tag1>() is valid, but
-  // dynamic GetTypeIndex(tag_without_methods) is rejected because Tag1 is not a
-  // polymorphic class with TINK_INTERNAL_RTTI_ADD_METHODS_*.
+  // Tag1 has TEST_RTTI_SET_TYPE_ID(1), so GetStaticTypeIndex<Tag1>() is valid,
+  // but dynamic GetTypeIndex(tag_without_methods) is rejected because Tag1 is
+  // not a polymorphic class with TINK_INTERNAL_RTTI_ADD_METHODS_*.
   // expected-error-re@rtti_manual.h:* {{GetTypeIndex(object){{.*}}ADD_METHODS}}
   (void)GetTypeIndex(tag_without_methods);
 
@@ -313,8 +312,8 @@ class AnnotatedChildOfUnannotated : public UnannotatedSourceBase {
 
 // Sanity check that valid usages in this translation unit compile cleanly.
 [[maybe_unused]] const ValidLeaf* ValidUsage(const ValidBase* base_ptr) {
-  (void)GetTypeIndex<Tag1>();
-  (void)GetTypeIndex<ValidTemplate<Tag1>>();
+  (void)GetStaticTypeIndex<Tag1>();
+  (void)GetStaticTypeIndex<ValidTemplate<Tag1>>();
   if (base_ptr != nullptr) {
     (void)GetTypeIndex(*base_ptr);
   }
@@ -325,13 +324,13 @@ class AnnotatedChildOfUnannotated : public UnannotatedSourceBase {
 
 // When compiled with `-fno-rtti` and without `-DTINK_USE_CUSTOM_RTTI`,
 // including `rtti.h`, annotating classes with `TINK_INTERNAL_RTTI_*` macros,
-// and referencing `GetTypeIndex` or `DynamicCast` in uninstantiated templates
-// must compile cleanly, while instantiating `GetTypeIndex` or `DynamicCast`
-// must fail with a static_assert.
+// and referencing `GetStaticTypeIndex`, `GetTypeIndex`, or `DynamicCast` in
+// uninstantiated templates must compile cleanly, while instantiating them must
+// fail with a static_assert.
 
 template <typename T>
-TypeIndex UninstantiatedGetTypeIndexStatic() {
-  return GetTypeIndex<T>();
+TypeIndex UninstantiatedGetStaticTypeIndex() {
+  return GetStaticTypeIndex<T>();
 }
 
 template <typename T>
@@ -346,8 +345,8 @@ To UninstantiatedDynamicCast(From* from) {
 
 [[maybe_unused]] void TestInstantiatingWithoutRttiFails(
     const ValidBase* base_ptr) {
-  // expected-error@rtti_native.h:* {{GetTypeIndex requires -frtti}}
-  (void)GetTypeIndex<ValidBase>();
+  // expected-error@rtti_native.h:* {{GetStaticTypeIndex requires -frtti}}
+  (void)GetStaticTypeIndex<ValidBase>();
 
   // expected-error@rtti_native.h:* {{GetTypeIndex requires -frtti}}
   (void)GetTypeIndex(*base_ptr);
@@ -359,6 +358,5 @@ To UninstantiatedDynamicCast(From* from) {
 #endif  // defined(TINK_USE_CUSTOM_RTTI)
 
 }  // namespace
-}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

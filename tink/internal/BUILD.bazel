@@ -2245,19 +2245,24 @@ cc_test(
 
 cc_library(
     name = "rtti",
-    hdrs = [
-        "rtti.h",
-        "rtti_manual.h",
-        "rtti_native.h",
-    ],
+    hdrs = ["rtti.h"],
+    deps = ["//tink:rtti"],
 )
 
 cc_test(
     name = "rtti_test",
     srcs = ["rtti_test.cc"],
     deps = [
-        ":rtti",
+        "//tink:rtti",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "rtti_impl",
+    hdrs = [
+        "rtti_manual.h",
+        "rtti_native.h",
     ],
 )

@@ -338,6 +338,7 @@
 #include "tink/random_access_stream.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/chunked_prehash.h"

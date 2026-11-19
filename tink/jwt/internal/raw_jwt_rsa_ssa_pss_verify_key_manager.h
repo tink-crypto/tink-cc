@@ -69,12 +69,6 @@ class RawJwtRsaSsaPssVerifyKeyManager
   static absl::Status ValidateAlgorithm(
       const google::crypto::tink::JwtRsaSsaPssAlgorithm& algorithm);
 
-  static absl::StatusOr<google::crypto::tink::HashType> HashForPssAlgorithm(
-      const google::crypto::tink::JwtRsaSsaPssAlgorithm& algorithm);
-
-  static absl::StatusOr<int> SaltLengthForPssAlgorithm(
-      const google::crypto::tink::JwtRsaSsaPssAlgorithm& algorithm);
-
   const std::string key_type_ =
       absl::StrCat(kTypeGoogleapisCom,
                    google::crypto::tink::JwtRsaSsaPssPublicKey().GetTypeName());

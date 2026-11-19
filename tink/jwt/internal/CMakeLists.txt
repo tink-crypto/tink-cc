@@ -508,28 +508,39 @@ tink_cc_library(
     raw_jwt_rsa_ssa_pss_sign_key_manager.cc
     raw_jwt_rsa_ssa_pss_sign_key_manager.h
   DEPS
+    tink::jwt::internal::jwt_rsa_ssa_pss_proto_serialization_impl
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
+    tink::internal::boringssl
     tink::core::private_key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::fips_utils
+    tink::internal::proto_key_serialization
     tink::internal::rsa_util
+    tink::internal::serialization_registry
     tink::internal::ssl_unique_ptr
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_private_key
     tink::signature::sig_util
     tink::subtle::rsa_ssa_pss_sign_boringssl
+    tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::constants
-    tink::util::enums
-    tink::util::secret_data
     tink::util::validation
-    tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -540,15 +551,21 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_sign_key_manager
     gmock
     absl::flat_hash_set
+    absl::absl_check
+    absl::absl_log
     absl::status_matchers
     absl::statusor
     tink::internal::boringssl
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::internal::bn_util
-    tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
-    tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
@@ -560,25 +577,35 @@ tink_cc_library(
     raw_jwt_rsa_ssa_pss_verify_key_manager.cc
     raw_jwt_rsa_ssa_pss_verify_key_manager.h
   DEPS
+    tink::jwt::internal::jwt_rsa_ssa_pss_proto_serialization_impl
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::internal::boringssl
     tink::core::key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access
     tink::core::public_key_verify
+    tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::fips_utils
+    tink::internal::proto_key_serialization
     tink::internal::rsa_util
+    tink::internal::serialization_registry
     tink::internal::ssl_unique_ptr
+    tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::constants
-    tink::util::enums
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -588,16 +615,18 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
     gmock
+    absl::absl_log
     absl::status
     absl::status_matchers
     absl::statusor
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::internal::rsa_util
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
-    tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_sign_boringssl
-    tink::util::secret_data
     tink::util::test_util
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto

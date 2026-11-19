@@ -22,16 +22,22 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
-#include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
-#include "tink/subtle/common_enums.h"
+#include "tink/public_key_verify.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
 #include "proto/tink.pb.h"
@@ -41,7 +47,6 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
-using ::crypto::tink::subtle::RsaSsaPssVerifyBoringSsl;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using ::google::crypto::tink::JwtRsaSsaPssKeyFormat;
 using ::google::crypto::tink::JwtRsaSsaPssPrivateKey;
@@ -51,6 +56,7 @@ using ::testing::Eq;
 using ::testing::Gt;
 using ::testing::Not;
 using ::testing::SizeIs;
+using ::testing::ValuesIn;
 
 TEST(RawJwtRsaSsaPssSignKeyManagerTest, Basic) {
   EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().get_version(), Eq(0));
@@ -70,8 +76,10 @@ JwtRsaSsaPssKeyFormat CreateKeyFormat(JwtRsaSsaPssAlgorithm algorithm,
 
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), public_exponent);
-  key_format.set_public_exponent(
-      internal::BignumToString(e.get(), BN_num_bytes(e.get())).value());
+  absl::StatusOr<std::string> e_str =
+      internal::BignumToString(e.get(), BN_num_bytes(e.get()));
+  ABSL_CHECK_OK(e_str);
+  key_format.set_public_exponent(*e_str);
 
   return key_format;
 }
@@ -210,7 +218,117 @@ TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateKeyAlwaysNewRsaPair) {
   EXPECT_THAT(keys, SizeIs(2 * num_generated_keys));
 }
 
-JwtRsaSsaPssPrivateKey CreateValidPs256PrivateKey(
+JwtRsaSsaPssAlgorithm ToProtoAlgorithm(
+    JwtRsaSsaPssParameters::Algorithm algorithm) {
+  switch (algorithm) {
+    case JwtRsaSsaPssParameters::Algorithm::kPs256:
+      return JwtRsaSsaPssAlgorithm::PS256;
+    case JwtRsaSsaPssParameters::Algorithm::kPs384:
+      return JwtRsaSsaPssAlgorithm::PS384;
+    case JwtRsaSsaPssParameters::Algorithm::kPs512:
+      return JwtRsaSsaPssAlgorithm::PS512;
+    default:
+      ABSL_LOG(FATAL) << "Unsupported algorithm";
+  }
+}
+
+JwtRsaSsaPssPrivateKey ToJwtRsaSsaPssPrivateKeyProto(
+    const crypto::tink::JwtRsaSsaPssPrivateKey& private_key) {
+  JwtRsaSsaPssPrivateKey key;
+  key.set_version(0);
+  key.set_d(private_key.GetPrivateExponentData(GetPartialKeyAccess())
+                .GetSecret(InsecureSecretKeyAccess::Get()));
+  key.set_p(private_key.GetPrimePData(GetPartialKeyAccess())
+                .GetSecret(InsecureSecretKeyAccess::Get()));
+  key.set_q(private_key.GetPrimeQData(GetPartialKeyAccess())
+                .GetSecret(InsecureSecretKeyAccess::Get()));
+  key.set_dp(private_key.GetPrimeExponentPData(GetPartialKeyAccess())
+                 .GetSecret(InsecureSecretKeyAccess::Get()));
+  key.set_dq(private_key.GetPrimeExponentQData(GetPartialKeyAccess())
+                 .GetSecret(InsecureSecretKeyAccess::Get()));
+  key.set_crt(private_key.GetCrtCoefficientData(GetPartialKeyAccess())
+                  .GetSecret(InsecureSecretKeyAccess::Get()));
+  JwtRsaSsaPssPublicKey* public_key = key.mutable_public_key();
+  public_key->set_version(0);
+  public_key->set_algorithm(ToProtoAlgorithm(
+      private_key.GetPublicKey().GetParameters().GetAlgorithm()));
+  public_key->set_n(std::string(
+      private_key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue()));
+  public_key->set_e(std::string(private_key.GetPublicKey()
+                                    .GetParameters()
+                                    .GetPublicExponent()
+                                    .GetValue()));
+  return key;
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, GetPublicKey) {
+  JwtRsaSsaPssPrivateKey key = ToJwtRsaSsaPssPrivateKeyProto(
+      jwt_internal::GetJwtRsaSsaPssTestVector(
+          JwtRsaSsaPssParameters::Algorithm::kPs256)
+          .key);
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+      RawJwtRsaSsaPssSignKeyManager().GetPublicKey(key);
+  ASSERT_THAT(public_key, IsOk());
+  EXPECT_THAT(public_key->version(), Eq(key.public_key().version()));
+  EXPECT_THAT(public_key->n(), Eq(key.public_key().n()));
+  EXPECT_THAT(public_key->e(), Eq(key.public_key().e()));
+}
+
+using RawJwtRsaSsaPssSignKeyManagerTestVectorTest =
+    testing::TestWithParam<jwt_internal::JwtRsaSsaPssTestVector>;
+
+TEST_P(RawJwtRsaSsaPssSignKeyManagerTestVectorTest, Create) {
+  const crypto::tink::JwtRsaSsaPssPrivateKey& private_key = GetParam().key;
+  JwtRsaSsaPssPrivateKey key = ToJwtRsaSsaPssPrivateKeyProto(private_key);
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> direct_verifier =
+      subtle::RsaSsaPssVerifyBoringSsl::New(
+          private_key.GetPublicKey().GetRsaSsaPssPublicKey(
+              GetPartialKeyAccess()));
+  ASSERT_THAT(direct_verifier, IsOk());
+
+  std::string message = "Some message";
+  absl::StatusOr<std::string> sig = (*signer)->Sign(message);
+  ASSERT_THAT(sig, IsOk());
+  EXPECT_THAT((*direct_verifier)->Verify(*sig, message), IsOk());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RawJwtRsaSsaPssSignKeyManagerTestVectorTests,
+    RawJwtRsaSsaPssSignKeyManagerTestVectorTest,
+    ValuesIn(jwt_internal::CreateJwtRsaSsaPssTestVectors()));
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateWrongKey) {
+  JwtRsaSsaPssPrivateKey key = ToJwtRsaSsaPssPrivateKeyProto(
+      jwt_internal::GetJwtRsaSsaPssTestVector(
+          JwtRsaSsaPssParameters::Algorithm::kPs256)
+          .key);
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key);
+  ASSERT_THAT(signer, IsOk());
+
+  const crypto::tink::JwtRsaSsaPssPrivateKey& second_key =
+      jwt_internal::GetJwtRsaSsaPssTestVector(
+          JwtRsaSsaPssParameters::Algorithm::kPs384)
+          .key;
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> direct_verifier =
+      subtle::RsaSsaPssVerifyBoringSsl::New(
+          second_key.GetPublicKey().GetRsaSsaPssPublicKey(
+              GetPartialKeyAccess()));
+  ASSERT_THAT(direct_verifier, IsOk());
+
+  std::string message = "Some message";
+  absl::StatusOr<std::string> sig = (*signer)->Sign(message);
+  ASSERT_THAT(sig, IsOk());
+  EXPECT_THAT((*direct_verifier)->Verify(*sig, message), Not(IsOk()));
+}
+
+JwtRsaSsaPssPrivateKey CreatePs256PrivateKeyFromVector(
     const jwt_internal::RsaSsaTestVector& test_vector =
         jwt_internal::GetRsa2048BitVector1()) {
   JwtRsaSsaPssPrivateKey key;
@@ -229,63 +347,116 @@ JwtRsaSsaPssPrivateKey CreateValidPs256PrivateKey(
   return key;
 }
 
-TEST(RawJwtRsaSsaPssSignKeyManagerTest, GetPublicKey) {
-  JwtRsaSsaPssPrivateKey key = CreateValidPs256PrivateKey();
-  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
-      RawJwtRsaSsaPssSignKeyManager().GetPublicKey(key);
-  ASSERT_THAT(public_key, IsOk());
-  EXPECT_THAT(public_key->version(), Eq(key.public_key().version()));
-  EXPECT_THAT(public_key->n(), Eq(key.public_key().n()));
-  EXPECT_THAT(public_key->e(), Eq(key.public_key().e()));
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithEmptyKey) {
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(
+                  JwtRsaSsaPssPrivateKey()),
+              Not(IsOk()));
 }
 
-TEST(RawJwtRsaSsaPssSignKeyManagerTest, Create) {
-  JwtRsaSsaPssPrivateKey key =
-      CreateValidPs256PrivateKey(jwt_internal::GetRsa3072BitVector());
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithWrongVersion) {
+  JwtRsaSsaPssPrivateKey key = CreatePs256PrivateKeyFromVector();
+  key.set_version(1);
 
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key);
-  ASSERT_THAT(signer, IsOk());
-
-  internal::RsaSsaPssParams params;
-  params.sig_hash = subtle::HashType::SHA256;
-  params.mgf1_hash = subtle::HashType::SHA256;
-  params.salt_length = 32;
-  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> direct_verifier =
-      subtle::RsaSsaPssVerifyBoringSsl::New(
-          {key.public_key().n(), key.public_key().e()}, params);
-
-  ASSERT_THAT(direct_verifier, IsOk());
-
-  std::string message = "Some message";
-  absl::StatusOr<std::string> sig = (*signer)->Sign(message);
-  EXPECT_THAT((*direct_verifier)->Verify(*sig, message), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
 }
 
-TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateWrongKey) {
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithUnknownAlgorithm) {
+  JwtRsaSsaPssPrivateKey key = CreatePs256PrivateKeyFromVector();
+  key.mutable_public_key()->set_algorithm(JwtRsaSsaPssAlgorithm::PS_UNKNOWN);
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithSmallModulus) {
+  JwtRsaSsaPssPrivateKey key = CreatePs256PrivateKeyFromVector();
+  key.mutable_public_key()->set_n("\x23");
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithMismatchedPublicKey) {
   JwtRsaSsaPssPrivateKey key =
-      CreateValidPs256PrivateKey(jwt_internal::GetRsa2048BitVector1());
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  JwtRsaSsaPssPrivateKey other_key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector2());
+  *key.mutable_public_key() = other_key.public_key();
 
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key);
-  ASSERT_THAT(signer, IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
 
-  JwtRsaSsaPssPrivateKey second_key =
-      CreateValidPs256PrivateKey(jwt_internal::GetRsa2048BitVector2());
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithCorruptedD) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_d(jwt_internal::GetRsa2048BitVector2().d);
 
-  internal::RsaSsaPssParams params;
-  params.sig_hash = subtle::HashType::SHA256;
-  params.mgf1_hash = subtle::HashType::SHA256;
-  params.salt_length = 32;
-  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> direct_verifier =
-      subtle::RsaSsaPssVerifyBoringSsl::New(
-          {second_key.public_key().n(), second_key.public_key().e()}, params);
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
 
-  ASSERT_THAT(direct_verifier, IsOk());
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithCorruptedP) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_p(jwt_internal::GetRsa2048BitVector2().p);
 
-  std::string message = "Some message";
-  absl::StatusOr<std::string> sig = (*signer)->Sign(message);
-  EXPECT_THAT((*direct_verifier)->Verify(*sig, message), Not(IsOk()));
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithCorruptedQ) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_q(jwt_internal::GetRsa2048BitVector2().q);
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithCorruptedDp) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_dp(jwt_internal::GetRsa2048BitVector2().dp);
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithCorruptedDq) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_dq(jwt_internal::GetRsa2048BitVector2().dq);
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithCorruptedCrt) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_crt(jwt_internal::GetRsa2048BitVector2().q_inv);
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
+}
+
+TEST(RawJwtRsaSsaPssSignKeyManagerTest, CreateFailsWithOversizedDp) {
+  JwtRsaSsaPssPrivateKey key =
+      CreatePs256PrivateKeyFromVector(jwt_internal::GetRsa2048BitVector1());
+  key.set_dp(std::string(key.p().size() + 1, '\x01'));
+
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().ValidateKey(key), IsOk());
+  EXPECT_THAT(RawJwtRsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key),
+              Not(IsOk()));
 }
 
 }  // namespace

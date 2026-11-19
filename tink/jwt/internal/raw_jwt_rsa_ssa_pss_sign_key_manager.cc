@@ -17,42 +17,49 @@
 #include "tink/jwt/internal/raw_jwt_rsa_ssa_pss_sign_key_manager.h"
 
 #include <memory>
-#include <string>
+#include <optional>
 #include <utility>
 
-#include "absl/memory/memory.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "openssl/bn.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/rsa_util.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/jwt/internal/jwt_rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/jwt/internal/raw_jwt_rsa_ssa_pss_verify_key_manager.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
+#include "tink/key.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/signature/sig_util.h"
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
-#include "tink/util/enums.h"
-#include "tink/util/secret_data.h"
+#include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 #include "tink/util/validation.h"
-#include "proto/common.pb.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
-#include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
-
-using ::crypto::tink::util::Enums;
-using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
-using ::google::crypto::tink::JwtRsaSsaPssKeyFormat;
-using ::google::crypto::tink::JwtRsaSsaPssPrivateKey;
-using ::google::crypto::tink::JwtRsaSsaPssPublicKey;
-
 namespace {
-std::unique_ptr<JwtRsaSsaPssPrivateKey> RsaPrivateKeySubtleToProto(
+
+using ::google::crypto::tink::JwtRsaSsaPssKeyFormat;
+using JwtRsaSsaPssPrivateKeyProto =
+    ::google::crypto::tink::JwtRsaSsaPssPrivateKey;
+using JwtRsaSsaPssPublicKeyProto =
+    ::google::crypto::tink::JwtRsaSsaPssPublicKey;
+
+std::unique_ptr<JwtRsaSsaPssPrivateKeyProto> RsaPrivateKeySubtleToProto(
     const internal::RsaPrivateKey& private_key) {
-  auto key_proto = std::make_unique<JwtRsaSsaPssPrivateKey>();
+  auto key_proto = std::make_unique<JwtRsaSsaPssPrivateKeyProto>();
   key_proto->set_version(RawJwtRsaSsaPssSignKeyManager().get_version());
   key_proto->set_d(private_key.d.AsStringView());
   key_proto->set_p(private_key.p.AsStringView());
@@ -60,30 +67,47 @@ std::unique_ptr<JwtRsaSsaPssPrivateKey> RsaPrivateKeySubtleToProto(
   key_proto->set_dp(private_key.dp.AsStringView());
   key_proto->set_dq(private_key.dq.AsStringView());
   key_proto->set_crt(private_key.crt.AsStringView());
-  JwtRsaSsaPssPublicKey* public_key_proto = key_proto->mutable_public_key();
+  JwtRsaSsaPssPublicKeyProto* public_key_proto =
+      key_proto->mutable_public_key();
   public_key_proto->set_version(RawJwtRsaSsaPssSignKeyManager().get_version());
   public_key_proto->set_n(private_key.n);
   public_key_proto->set_e(private_key.e);
   return key_proto;
 }
 
-internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
-    const JwtRsaSsaPssPrivateKey& key_proto) {
-  internal::RsaPrivateKey key;
-  key.n = key_proto.public_key().n();
-  key.e = key_proto.public_key().e();
-  key.d = SecretData(key_proto.d());
-  key.p = SecretData(key_proto.p());
-  key.q = SecretData(key_proto.q());
-  key.dp = SecretData(key_proto.dp());
-  key.dq = SecretData(key_proto.dq());
-  key.crt = SecretData(key_proto.crt());
-  return key;
+absl::StatusOr<JwtRsaSsaPssPrivateKey> ParseJwtRsaSsaPssPrivateKey(
+    const JwtRsaSsaPssPrivateKeyProto& jwt_rsa_ssa_pss_private_key) {
+  static const internal::SerializationRegistry* registry = []() {
+    auto* registry = new internal::SerializationRegistry();
+    ABSL_CHECK_OK(internal::RegisterJwtRsaSsaPssProtoSerializationWithRegistry(
+        *registry));
+    return registry;
+  }();
+  ABSL_ASSIGN_OR_RETURN(
+      internal::ProtoKeySerialization serialization,
+      internal::ProtoKeySerialization::Create(
+          RawJwtRsaSsaPssSignKeyManager().get_key_type(),
+          RestrictedData(jwt_rsa_ssa_pss_private_key.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt));
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<Key> key,
+      registry->ParseKey(serialization, InsecureSecretKeyAccess::Get()));
+  const auto* private_key =
+      dynamic_cast<const JwtRsaSsaPssPrivateKey*>(key.get());
+  if (private_key == nullptr) {
+    return absl::InternalError("Failed to cast to JwtRsaSsaPssPrivateKey");
+  }
+  return *private_key;
 }
 
 }  // namespace
 
-absl::StatusOr<JwtRsaSsaPssPrivateKey> RawJwtRsaSsaPssSignKeyManager::CreateKey(
+absl::StatusOr<JwtRsaSsaPssPrivateKeyProto>
+RawJwtRsaSsaPssSignKeyManager::CreateKey(
     const JwtRsaSsaPssKeyFormat& key_format) const {
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(key_format.public_exponent());
@@ -99,7 +123,7 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> RawJwtRsaSsaPssSignKeyManager::CreateKey(
     return status;
   }
 
-  JwtRsaSsaPssPrivateKey key_proto =
+  JwtRsaSsaPssPrivateKeyProto key_proto =
       std::move(*RsaPrivateKeySubtleToProto(private_key));
   key_proto.mutable_public_key()->set_algorithm(key_format.algorithm());
   return key_proto;
@@ -107,34 +131,19 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> RawJwtRsaSsaPssSignKeyManager::CreateKey(
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>>
 RawJwtRsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
-    const JwtRsaSsaPssPrivateKey& private_key) const {
-  auto key = RsaPrivateKeyProtoToSubtle(private_key);
-  JwtRsaSsaPssAlgorithm algorithm = private_key.public_key().algorithm();
-  absl::StatusOr<HashType> hash =
-      RawJwtRsaSsaPssVerifyKeyManager::HashForPssAlgorithm(algorithm);
-  if (!hash.ok()) {
-    return hash.status();
-  }
-  absl::StatusOr<int> salt_length =
-      RawJwtRsaSsaPssVerifyKeyManager::SaltLengthForPssAlgorithm(algorithm);
-  if (!salt_length.ok()) {
-    return salt_length.status();
-  }
-  internal::RsaSsaPssParams params;
-  params.sig_hash = Enums::ProtoToSubtle(*hash);
-  params.mgf1_hash = Enums::ProtoToSubtle(*hash);
-  params.salt_length = *salt_length;
-  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      subtle::RsaSsaPssSignBoringSsl::New(key, params);
-  if (!signer.ok()) return signer.status();
+    const JwtRsaSsaPssPrivateKeyProto& private_key) const {
+  ABSL_ASSIGN_OR_RETURN(JwtRsaSsaPssPrivateKey parsed_key,
+                        ParseJwtRsaSsaPssPrivateKey(private_key));
+  const RsaSsaPssPrivateKey& rsa_private_key =
+      parsed_key.GetRsaSsaPssPrivateKey(GetPartialKeyAccess());
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<PublicKeySign> signer,
+                        subtle::RsaSsaPssSignBoringSsl::New(rsa_private_key));
   // To check that the key is correct, we sign a test message with private key
   // and verify with public key.
-  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      RawJwtRsaSsaPssVerifyKeyManager().GetPrimitive<PublicKeyVerify>(
-          private_key.public_key());
-  if (!verifier.ok()) return verifier.status();
-  absl::Status sign_verify_result =
-      SignAndVerify(signer->get(), verifier->get());
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<PublicKeyVerify> verifier,
+      subtle::RsaSsaPssVerifyBoringSsl::New(rsa_private_key.GetPublicKey()));
+  absl::Status sign_verify_result = SignAndVerify(signer.get(), verifier.get());
   if (!sign_verify_result.ok()) {
     return absl::Status(absl::StatusCode::kInternal,
                         "security bug: signing with private key followed by "
@@ -144,7 +153,7 @@ RawJwtRsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
 }
 
 absl::Status RawJwtRsaSsaPssSignKeyManager::ValidateKey(
-    const JwtRsaSsaPssPrivateKey& key) const {
+    const JwtRsaSsaPssPrivateKeyProto& key) const {
   absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return RawJwtRsaSsaPssVerifyKeyManager().ValidateKey(key.public_key());

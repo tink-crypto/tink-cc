@@ -1004,7 +1004,6 @@ tink_cc_test(
     tink::core::parameters
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::util::test_matchers
 )
 
 tink_cc_library(

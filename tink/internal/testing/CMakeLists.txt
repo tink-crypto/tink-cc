@@ -179,6 +179,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::serialization_registry
     tink::util::test_util
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_tinkpb
@@ -213,6 +214,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::serialization_registry
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
     tink::proto::tink_cc_tinkpb

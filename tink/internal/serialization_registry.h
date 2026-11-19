@@ -60,6 +60,12 @@ class SerializationRegistry {
   SerializationRegistry& operator=(const SerializationRegistry& other) =
       default;
 
+  // Returns true if no parsers or serializers are registered.
+  bool IsEmpty() const {
+    return parameters_parsers_.empty() && parameters_serializers_.empty() &&
+           key_parsers_.empty() && key_serializers_.empty();
+  }
+
   // Registers parameters `parser`. Returns an error if a different parameters
   // parser with the same parser index has already been registered.
   absl::Status RegisterParametersParser(ParametersParser* parser);

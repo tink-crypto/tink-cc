@@ -36,6 +36,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/testing/test_only_asymmetric_parameters.h"
 #include "tink/internal/testing/test_only_private_key.h"
 #include "tink/internal/testing/test_only_public_key.h"
@@ -374,6 +375,25 @@ TestOnlyPublicKeySerializer* GetPublicKeySerializer() {
   return serializer;
 }
 
+template <typename RegistryT>
+absl::Status RegisterTestOnlyProtoSerializationImpl(RegistryT& registry) {
+  ABSL_RETURN_IF_ERROR(
+      registry.RegisterParametersParser(GetParametersParser()));
+  ABSL_RETURN_IF_ERROR(
+      registry.RegisterParametersSerializer(GetParametersSerializer()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetKeyParser()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterKeySerializer(GetKeySerializer()));
+  ABSL_RETURN_IF_ERROR(
+      registry.RegisterParametersParser(GetAsymmetricParametersParser()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterParametersSerializer(
+      GetAsymmetricParametersSerializer()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPrivateKeyParser()));
+  ABSL_RETURN_IF_ERROR(
+      registry.RegisterKeySerializer(GetPrivateKeySerializer()));
+  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPublicKeyParser()));
+  return registry.RegisterKeySerializer(GetPublicKeySerializer());
+}
+
 }  // namespace
 
 absl::StatusOr<TestOnlyParameters> TestOnlyParameters::Create(Variant variant) {
@@ -432,36 +452,13 @@ bool TestOnlySymmetricKey::operator==(const Key& other) const {
 }
 
 absl::Status RegisterTestOnlyProtoSerialization() {
-  MutableSerializationRegistry& registry =
-      MutableSerializationRegistry::GlobalInstance();
-  absl::Status status =
-      registry.RegisterParametersParser(GetParametersParser());
-  if (!status.ok()) {
-    return status;
-  }
-  status = registry.RegisterParametersSerializer(GetParametersSerializer());
-  if (!status.ok()) {
-    return status;
-  }
-  status = registry.RegisterKeyParser(GetKeyParser());
-  if (!status.ok()) {
-    return status;
-  }
-  status = registry.RegisterKeySerializer(GetKeySerializer());
-  if (!status.ok()) {
-    return status;
-  }
-  status = registry.RegisterParametersParser(GetAsymmetricParametersParser());
-  if (!status.ok()) {
-    return status;
-  }
-  ABSL_RETURN_IF_ERROR(registry.RegisterParametersSerializer(
-      GetAsymmetricParametersSerializer()));
-  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPrivateKeyParser()));
-  ABSL_RETURN_IF_ERROR(
-      registry.RegisterKeySerializer(GetPrivateKeySerializer()));
-  ABSL_RETURN_IF_ERROR(registry.RegisterKeyParser(GetPublicKeyParser()));
-  return registry.RegisterKeySerializer(GetPublicKeySerializer());
+  return RegisterTestOnlyProtoSerializationImpl(
+      MutableSerializationRegistry::GlobalInstance());
+}
+
+absl::Status RegisterTestOnlyProtoSerializationWithRegistry(
+    SerializationRegistry& registry) {
+  return RegisterTestOnlyProtoSerializationImpl(registry);
 }
 
 absl::StatusOr<std::unique_ptr<Key>> CreateTestOnlyKey(

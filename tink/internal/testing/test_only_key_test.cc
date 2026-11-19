@@ -36,6 +36,10 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/internal/testing/test_only_asymmetric_parameters.h"
+#include "tink/internal/testing/test_only_private_key.h"
+#include "tink/internal/testing/test_only_public_key.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -339,6 +343,78 @@ TEST(TestOnlySymmetricKeyTest, GenerateFromParametersAndGetPrimitive) {
   absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt("plaintext", "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds("plaintext"));
+}
+
+TEST(RegisterTestOnlyProtoSerializationWithRegistryTest,
+     RegistersAllTestOnlyTypes) {
+  SerializationRegistry registry;
+  ASSERT_THAT(RegisterTestOnlyProtoSerializationWithRegistry(registry), IsOk());
+  // Re-registration into the same registry is idempotent.
+  EXPECT_THAT(RegisterTestOnlyProtoSerializationWithRegistry(registry), IsOk());
+
+  absl::StatusOr<TestOnlyParameters> symmetric_parameters =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(symmetric_parameters, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>>
+      serialized_symmetric_parameters =
+          registry.SerializeParameters<ProtoParametersSerialization>(
+              *symmetric_parameters);
+  ASSERT_THAT(serialized_symmetric_parameters, IsOk());
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_symmetric_parameters =
+      registry.ParseParameters(**serialized_symmetric_parameters);
+  ASSERT_THAT(parsed_symmetric_parameters, IsOk());
+  EXPECT_THAT(**parsed_symmetric_parameters, Eq(*symmetric_parameters));
+
+  absl::StatusOr<TestOnlySymmetricKey> symmetric_key =
+      TestOnlySymmetricKey::Create(
+          *symmetric_parameters,
+          RestrictedData("key", InsecureSecretKeyAccess::Get()), kKeyId,
+          GetPartialKeyAccess());
+  ASSERT_THAT(symmetric_key, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_symmetric_key =
+      registry.SerializeKey<ProtoKeySerialization>(
+          *symmetric_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_symmetric_key, IsOk());
+  absl::StatusOr<std::unique_ptr<Key>> parsed_symmetric_key = registry.ParseKey(
+      **serialized_symmetric_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_symmetric_key, IsOk());
+  EXPECT_THAT(**parsed_symmetric_key, Eq(*symmetric_key));
+
+  absl::StatusOr<TestOnlyAsymmetricParameters> asymmetric_parameters =
+      TestOnlyAsymmetricParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(asymmetric_parameters, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>>
+      serialized_asymmetric_parameters =
+          registry.SerializeParameters<ProtoParametersSerialization>(
+              *asymmetric_parameters);
+  ASSERT_THAT(serialized_asymmetric_parameters, IsOk());
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_asymmetric_parameters =
+      registry.ParseParameters(**serialized_asymmetric_parameters);
+  ASSERT_THAT(parsed_asymmetric_parameters, IsOk());
+  EXPECT_THAT(**parsed_asymmetric_parameters, Eq(*asymmetric_parameters));
+
+  absl::StatusOr<TestOnlyPrivateKey> private_key = TestOnlyPrivateKey::Create(
+      *asymmetric_parameters,
+      RestrictedData("private key", InsecureSecretKeyAccess::Get()), kKeyId,
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_private_key =
+      registry.SerializeKey<ProtoKeySerialization>(
+          *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_private_key, IsOk());
+  absl::StatusOr<std::unique_ptr<Key>> parsed_private_key = registry.ParseKey(
+      **serialized_private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_private_key, IsOk());
+  EXPECT_THAT(**parsed_private_key, Eq(*private_key));
+
+  const TestOnlyPublicKey& public_key = private_key->GetPublicKey();
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_public_key =
+      registry.SerializeKey<ProtoKeySerialization>(public_key, std::nullopt);
+  ASSERT_THAT(serialized_public_key, IsOk());
+  absl::StatusOr<std::unique_ptr<Key>> parsed_public_key =
+      registry.ParseKey(**serialized_public_key, std::nullopt);
+  ASSERT_THAT(parsed_public_key, IsOk());
+  EXPECT_THAT(**parsed_public_key, Eq(public_key));
 }
 
 }  // namespace

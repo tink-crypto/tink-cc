@@ -17,6 +17,7 @@
 #include "tink/internal/serialization_registry.h"
 
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <typeindex>
 #include <utility>
@@ -41,7 +42,6 @@
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
@@ -703,6 +703,40 @@ TEST(SerializationRegistryTest, DirectRegistrationRejectsConflicts) {
               StatusIs(absl::StatusCode::kAlreadyExists));
   EXPECT_THAT(registry.RegisterKeySerializer(&key_serializer2),
               StatusIs(absl::StatusCode::kAlreadyExists));
+}
+
+TEST(SerializationRegistryTest, IsEmpty) {
+  SerializationRegistry empty_registry;
+  EXPECT_THAT(empty_registry.IsEmpty(), IsTrue());
+
+  ParametersParserImpl<NoIdSerialization, NoIdParams> params_parser(
+      kNoIdTypeUrl, ParseNoIdParams);
+  ParametersSerializerImpl<NoIdParams, NoIdSerialization> params_serializer(
+      kNoIdTypeUrl, SerializeNoIdParams);
+  KeyParserImpl<IdKeySerialization, IdKey> key_parser(kIdTypeUrl, ParseIdKey);
+  KeySerializerImpl<IdKey, IdKeySerialization> key_serializer(SerializeIdKey);
+
+  {
+    SerializationRegistry registry;
+    ASSERT_THAT(registry.RegisterParametersParser(&params_parser), IsOk());
+    EXPECT_THAT(registry.IsEmpty(), IsFalse());
+  }
+  {
+    SerializationRegistry registry;
+    ASSERT_THAT(registry.RegisterParametersSerializer(&params_serializer),
+                IsOk());
+    EXPECT_THAT(registry.IsEmpty(), IsFalse());
+  }
+  {
+    SerializationRegistry registry;
+    ASSERT_THAT(registry.RegisterKeyParser(&key_parser), IsOk());
+    EXPECT_THAT(registry.IsEmpty(), IsFalse());
+  }
+  {
+    SerializationRegistry registry;
+    ASSERT_THAT(registry.RegisterKeySerializer(&key_serializer), IsOk());
+    EXPECT_THAT(registry.IsEmpty(), IsFalse());
+  }
 }
 
 }  // namespace internal

@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access_token.h"
@@ -179,6 +180,12 @@ class TestOnlySymmetricKey final : public Key {
 // `TestOnlySymmetricKey`, `TestOnlyAsymmetricParameters`, `TestOnlyPrivateKey`
 // and `TestOnlyPublicKey` in the global `MutableSerializationRegistry`.
 absl::Status RegisterTestOnlyProtoSerialization();
+
+// Registers the proto serialization of `TestOnlyParameters`,
+// `TestOnlySymmetricKey`, `TestOnlyAsymmetricParameters`, `TestOnlyPrivateKey`
+// and `TestOnlyPublicKey` in `registry`.
+absl::Status RegisterTestOnlyProtoSerializationWithRegistry(
+    SerializationRegistry& registry);
 
 // Creates a `TestOnlySymmetricKey` with random key material of
 // `kTestOnlyKeySizeInBytes` bytes. Can be added to a `KeyGenConfiguration`

@@ -451,7 +451,6 @@
 #include "tink/streamingaead/subtle/create_aes_gcm_hkdf_streaming_aead.h"
 #include "tink/subtle/aes_cmac_boringssl.h"
 #include "tink/subtle/aes_ctr_boringssl.h"
-#include "tink/subtle/aes_ctr_hmac_streaming.h"
 #include "tink/subtle/aes_eax_boringssl.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_decrypter.h"

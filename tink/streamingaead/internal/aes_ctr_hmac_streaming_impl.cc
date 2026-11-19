@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/subtle/aes_ctr_hmac_streaming.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_impl.h"
 
 #include <cstdint>
 #include <cstring>
@@ -54,11 +54,19 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 
 using ::crypto::tink::internal::CallWithCoreDumpProtection;
 using ::crypto::tink::internal::DfsanClearLabel;
 using ::crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe;
+using ::crypto::tink::subtle::HashType;
+using ::crypto::tink::subtle::Hkdf;
+using ::crypto::tink::subtle::Random;
+using ::crypto::tink::subtle::SHA1;
+using ::crypto::tink::subtle::SHA256;
+using ::crypto::tink::subtle::SHA512;
+using ::crypto::tink::subtle::StreamSegmentDecrypter;
+using ::crypto::tink::subtle::StreamSegmentEncrypter;
 
 static std::string NonceForSegment(absl::string_view nonce_prefix,
                                    int64_t segment_number,
@@ -469,6 +477,6 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
   return absl::OkStatus();
 }
 
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

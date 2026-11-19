@@ -27,7 +27,7 @@
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
-#include "tink/subtle/aes_ctr_hmac_streaming.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_impl.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -58,7 +58,7 @@ absl::StatusOr<std::unique_ptr<StreamingAead>> NewAesCtrHmacStreaming(
                         ToSubtleHashType(key.GetParameters().HkdfHashType()));
   ABSL_ASSIGN_OR_RETURN(subtle::HashType tag_algo,
                         ToSubtleHashType(key.GetParameters().HmacHashType()));
-  subtle::AesCtrHmacStreaming::Params params;
+  AesCtrHmacStreaming::Params params;
   params.ikm = key.GetInitialKeyMaterial(GetPartialKeyAccess())
                    .Get(InsecureSecretKeyAccess::Get());
   params.hkdf_algo = hkdf_algo;
@@ -68,7 +68,7 @@ absl::StatusOr<std::unique_ptr<StreamingAead>> NewAesCtrHmacStreaming(
   params.ciphertext_offset = 0;
   params.tag_algo = tag_algo;
   params.tag_size = key.GetParameters().HmacTagSizeInBytes();
-  return subtle::AesCtrHmacStreaming::New(std::move(params));
+  return AesCtrHmacStreaming::New(std::move(params));
 }
 
 }  // namespace internal

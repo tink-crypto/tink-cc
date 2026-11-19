@@ -14,8 +14,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SUBTLE_AES_CTR_HMAC_STREAMING_H_
-#define TINK_SUBTLE_AES_CTR_HMAC_STREAMING_H_
+#ifndef TINK_STREAMINGAEAD_INTERNAL_AES_CTR_HMAC_STREAMING_IMPL_H_
+#define TINK_STREAMINGAEAD_INTERNAL_AES_CTR_HMAC_STREAMING_IMPL_H_
 
 #include <cstdint>
 #include <memory>
@@ -37,7 +37,7 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 
 // Streaming encryption using AES-CTR and HMAC.
 //
@@ -62,15 +62,15 @@ namespace subtle {
 //
 // In principle header_size is redundant information, since the length of the
 // header can be determined from the key size.
-class AesCtrHmacStreaming : public NonceBasedStreamingAead {
+class AesCtrHmacStreaming : public subtle::NonceBasedStreamingAead {
  public:
   struct Params {
     SecretData ikm;
-    HashType hkdf_algo;
+    subtle::HashType hkdf_algo;
     int key_size;
     int ciphertext_segment_size;
     int ciphertext_offset;
-    HashType tag_algo;
+    subtle::HashType tag_algo;
     int tag_size;
   };
 
@@ -95,21 +95,21 @@ class AesCtrHmacStreaming : public NonceBasedStreamingAead {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  protected:
-  absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> NewSegmentEncrypter(
-      absl::string_view associated_data) const override;
+  absl::StatusOr<std::unique_ptr<subtle::StreamSegmentEncrypter>>
+  NewSegmentEncrypter(absl::string_view associated_data) const override;
 
-  absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> NewSegmentDecrypter(
-      absl::string_view associated_data) const override;
+  absl::StatusOr<std::unique_ptr<subtle::StreamSegmentDecrypter>>
+  NewSegmentDecrypter(absl::string_view associated_data) const override;
 
  private:
   explicit AesCtrHmacStreaming(Params params) : params_(std::move(params)) {}
   const Params params_;
 };
 
-class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
+class AesCtrHmacStreamSegmentEncrypter : public subtle::StreamSegmentEncrypter {
  public:
   // A factory.
-  static absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> New(
+  static absl::StatusOr<std::unique_ptr<subtle::StreamSegmentEncrypter>> New(
       const AesCtrHmacStreaming::Params& params,
       absl::string_view associated_data);
 
@@ -156,10 +156,10 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
   int64_t segment_number_;
 };
 
-class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
+class AesCtrHmacStreamSegmentDecrypter : public subtle::StreamSegmentDecrypter {
  public:
   // A factory.
-  static absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> New(
+  static absl::StatusOr<std::unique_ptr<subtle::StreamSegmentDecrypter>> New(
       const AesCtrHmacStreaming::Params& params,
       absl::string_view associated_data);
 
@@ -183,12 +183,12 @@ class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
   ~AesCtrHmacStreamSegmentDecrypter() override = default;
 
  private:
-  AesCtrHmacStreamSegmentDecrypter(SecretData ikm, HashType hkdf_algo,
+  AesCtrHmacStreamSegmentDecrypter(SecretData ikm, subtle::HashType hkdf_algo,
                                    int key_size,
                                    absl::string_view associated_data,
                                    int ciphertext_segment_size,
-                                   int ciphertext_offset, HashType tag_algo,
-                                   int tag_size)
+                                   int ciphertext_offset,
+                                   subtle::HashType tag_algo, int tag_size)
       : ikm_(std::move(ikm)),
         hkdf_algo_(hkdf_algo),
         key_size_(key_size),
@@ -200,12 +200,12 @@ class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
 
   // Parameters set upon decrypter creation.
   const SecretData ikm_;
-  const HashType hkdf_algo_;
+  const subtle::HashType hkdf_algo_;
   const int key_size_;
   const std::string associated_data_;
   const int ciphertext_segment_size_;
   const int ciphertext_offset_;
-  const HashType tag_algo_;
+  const subtle::HashType tag_algo_;
   const int tag_size_;
 
   // Parameters set when initializing with data from stream header.
@@ -215,8 +215,8 @@ class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
   std::unique_ptr<internal::StatefulMacFactory> mac_;
 };
 
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SUBTLE_AES_CTR_HMAC_STREAMING_H_
+#endif  // TINK_STREAMINGAEAD_INTERNAL_AES_CTR_HMAC_STREAMING_IMPL_H_

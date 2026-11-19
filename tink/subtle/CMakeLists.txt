@@ -435,43 +435,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME aes_ctr_hmac_streaming
-  SRCS
-    aes_ctr_hmac_streaming.cc
-    aes_ctr_hmac_streaming.h
-  DEPS
-    tink::subtle::common_enums
-    tink::subtle::hkdf
-    tink::subtle::hmac_boringssl
-    tink::subtle::nonce_based_streaming_aead
-    tink::subtle::random
-    tink::subtle::stream_segment_decrypter
-    tink::subtle::stream_segment_encrypter
-    absl::core_headers
-    absl::absl_check
-    absl::memory
-    absl::status
-    absl::status_macros
-    absl::statusor
-    absl::strings
-    absl::span
-    tink::internal::boringssl
-    tink::core::mac
-    tink::core::secret_data
-    tink::internal::aes_util
-    tink::internal::dfsan_forwarders
-    tink::internal::endian
-    tink::internal::fips_utils
-    tink::internal::safe_stringops
-    tink::internal::ssl_unique_ptr
-    tink::mac::internal::stateful_hmac_boringssl
-    tink::mac::internal::stateful_mac
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-)
-
-tink_cc_library(
   NAME aes_eax_boringssl
   SRCS
     aes_eax_boringssl.cc
@@ -1016,34 +979,6 @@ tink_cc_test(
     tink::core::random_access_stream
     tink::config::tink_fips
     tink::internal::test_random_access_stream
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_test(
-  NAME aes_ctr_hmac_streaming_test
-  SRCS
-    aes_ctr_hmac_streaming_test.cc
-  DEPS
-    tink::subtle::aes_ctr_hmac_streaming
-    tink::subtle::common_enums
-    tink::subtle::random
-    tink::subtle::stream_segment_decrypter
-    tink::subtle::stream_segment_encrypter
-    tink::subtle::streaming_aead_test_util
-    gmock
-    absl::absl_check
-    absl::memory
-    absl::status
-    absl::status_matchers
-    absl::statusor
-    absl::strings
-    benchmark::benchmark_main
-    tink::core::random_access_stream
-    tink::config::tink_fips
-    tink::internal::test_random_access_stream
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

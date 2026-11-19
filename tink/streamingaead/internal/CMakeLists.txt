@@ -198,6 +198,7 @@ tink_cc_library(
     aes_ctr_hmac_streaming.cc
     aes_ctr_hmac_streaming.h
   DEPS
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_impl
     absl::status
     absl::status_macros
     absl::statusor
@@ -206,7 +207,6 @@ tink_cc_library(
     tink::core::streaming_aead
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
-    tink::subtle::aes_ctr_hmac_streaming
     tink::subtle::common_enums
 )
 
@@ -270,4 +270,70 @@ tink_cc_test(
     tink::subtle::streaming_aead_test_util
     tink::util::input_stream_util
     tink::util::istream_input_stream
+)
+
+tink_cc_library(
+  NAME aes_ctr_hmac_streaming_impl
+  SRCS
+    aes_ctr_hmac_streaming_impl.cc
+    aes_ctr_hmac_streaming_impl.h
+  DEPS
+    absl::core_headers
+    absl::absl_check
+    absl::memory
+    absl::status
+    absl::status_macros
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::internal::boringssl
+    tink::core::mac
+    tink::core::secret_data
+    tink::internal::aes_util
+    tink::internal::dfsan_forwarders
+    tink::internal::endian
+    tink::internal::fips_utils
+    tink::internal::safe_stringops
+    tink::internal::ssl_unique_ptr
+    tink::mac::internal::stateful_hmac_boringssl
+    tink::mac::internal::stateful_mac
+    tink::subtle::common_enums
+    tink::subtle::hkdf
+    tink::subtle::hmac_boringssl
+    tink::subtle::nonce_based_streaming_aead
+    tink::subtle::random
+    tink::subtle::stream_segment_decrypter
+    tink::subtle::stream_segment_encrypter
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME aes_ctr_hmac_streaming_impl_test
+  SRCS
+    aes_ctr_hmac_streaming_impl_test.cc
+  DEPS
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_impl
+    gmock
+    absl::absl_check
+    absl::memory
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::strings
+    benchmark::benchmark_main
+    tink::core::random_access_stream
+    tink::config::tink_fips
+    tink::internal::test_random_access_stream
+    tink::subtle::common_enums
+    tink::subtle::random
+    tink::subtle::stream_segment_decrypter
+    tink::subtle::stream_segment_encrypter
+    tink::subtle::streaming_aead_test_util
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
 )

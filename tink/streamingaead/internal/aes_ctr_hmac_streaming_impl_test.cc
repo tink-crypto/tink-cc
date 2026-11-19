@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/subtle/aes_ctr_hmac_streaming.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_impl.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -53,8 +53,18 @@ using ::testing::HasSubstr;
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 namespace {
+
+using ::crypto::tink::subtle::EnumToString;
+using ::crypto::tink::subtle::HashType;
+using ::crypto::tink::subtle::Random;
+using ::crypto::tink::subtle::SHA1;
+using ::crypto::tink::subtle::SHA256;
+using ::crypto::tink::subtle::SHA384;
+using ::crypto::tink::subtle::SHA512;
+using ::crypto::tink::subtle::StreamSegmentDecrypter;
+using ::crypto::tink::subtle::StreamSegmentEncrypter;
 
 AesCtrHmacStreaming::Params ValidParams() {
   AesCtrHmacStreaming::Params params;
@@ -656,6 +666,6 @@ BENCHMARK(BM_AesCtrHmacStreamSegmentDecrypter)
     ->Range(256, kMaxDataSize);
 
 }  // namespace
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

@@ -68,9 +68,9 @@ class BufferedInputStream : public crypto::tink::InputStream {
   int64_t position_;     // current position in the stream (from the beginning)
 
   // Counters that describe the state of the data in buffer_.
-  int count_in_buffer_;  // # of bytes available in buffer_
-  int count_backedup_;   // # of bytes available in buffer_ that were backed up
-  int buffer_offset_;    // offset at which the returned bytes start in buffer_
+  int64_t count_in_buffer_;  // # of bytes available in buffer_
+  int64_t count_backedup_;   // # of bytes available in buffer_ that were backed up
+  int64_t buffer_offset_;    // offset at which the returned bytes start in buffer_
 };
 
 }  // namespace streamingaead

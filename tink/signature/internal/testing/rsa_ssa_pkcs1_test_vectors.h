@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS1_TEST_VECTORS_H_
 
 #include <vector>
+
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 
@@ -29,6 +30,12 @@ namespace internal {
 // RsaSsaPkcs1TestUtil.createRsaSsaPkcs1TestVectors (and were generated using
 // Tink Java).
 std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors();
+
+// Returns the same test vectors as `CreateRsaSsaPkcs1TestVectors()`, but
+// containing only `RsaSsaPkcs1PublicKey` so verification-only tests do not
+// construct and validate RSA private keys.
+std::vector<SignatureVerifyOnlyTestVector>
+CreateRsaSsaPkcs1VerifyOnlyTestVectors();
 
 // Expose dummy test vectors to extract valid keys for use in Composite ML-DSA
 // tests.

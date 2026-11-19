@@ -33,6 +33,7 @@ tink_cc_library(
   DEPS
     absl::string_view
     tink::signature::signature_private_key
+    tink::signature::signature_public_key
   TESTONLY
 )
 
@@ -264,4 +265,16 @@ tink_cc_library(
     absl::string_view
     tink::signature::ml_dsa_parameters
   TESTONLY
+)
+
+tink_cc_test(
+  NAME rsa_ssa_pkcs1_test_vectors_test
+  SRCS
+    rsa_ssa_pkcs1_test_vectors_test.cc
+  DEPS
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
+    gmock
+    tink::signature::signature_private_key
+    tink::signature::signature_public_key
 )

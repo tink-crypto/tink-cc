@@ -40,6 +40,7 @@ cc_library(
     hdrs = ["signature_test_vector.h"],
     deps = [
         "//tink/signature:signature_private_key",
+        "//tink/signature:signature_public_key",
         "@abseil-cpp//absl/strings:string_view",
     ],
 )
@@ -271,5 +272,17 @@ cc_library(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "rsa_ssa_pkcs1_test_vectors_test",
+    srcs = ["rsa_ssa_pkcs1_test_vectors_test.cc"],
+    deps = [
+        ":rsa_ssa_pkcs1_test_vectors",
+        ":signature_test_vector",
+        "//tink/signature:signature_private_key",
+        "//tink/signature:signature_public_key",
+        "@googletest//:gtest_main",
     ],
 )

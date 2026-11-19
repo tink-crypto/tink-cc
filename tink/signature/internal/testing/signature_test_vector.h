@@ -24,6 +24,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/signature/signature_private_key.h"
+#include "tink/signature/signature_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +41,25 @@ struct SignatureTestVector {
         prehash(std::move(prehash)) {}
 
   std::shared_ptr<SignaturePrivateKey> signature_private_key;
+  std::string signature;
+  std::string message;
+  std::optional<std::string> prehash;
+};
+
+// Test vector containing only the public key, signature, and message.
+// Useful in tests where only verification is needed, avoiding the cost of
+// constructing and validating private keys.
+struct SignatureVerifyOnlyTestVector {
+  SignatureVerifyOnlyTestVector(
+      std::shared_ptr<SignaturePublicKey> signature_public_key,
+      absl::string_view signature, absl::string_view message,
+      std::optional<std::string> prehash = std::nullopt)
+      : signature_public_key(std::move(signature_public_key)),
+        signature(signature),
+        message(message),
+        prehash(std::move(prehash)) {}
+
+  std::shared_ptr<SignaturePublicKey> signature_public_key;
   std::string signature;
   std::string message;
   std::optional<std::string> prehash;

@@ -14,20 +14,21 @@
 
 # Download, unpack and setup Tink dependencies.
 #
-# Despite the looks, http_archive rules are not purely declarative, and order
-# matters. All variables defined before a rule are visible when configuring the
-# dependency it declares, and the targets provided by a dependency are visible
-# (only) after it has been declared. Following dependencies may rely on targets
-# defined by a previous one, for instance on gtest or absl.
+# Despite the looks, _tink_http_archive rules are not purely declarative, and
+# order matters. All variables defined before a rule are visible when
+# configuring the dependency it declares, and the targets provided by a
+# dependency are visible (only) after it has been declared. Following
+# dependencies may rely on targets defined by a previous one, for instance on
+# gtest or absl.
 #
 # Some rules imported from dependencies require small fixes, which are specified
-# after the relative http_archive rule. Please always document the intended
-# purpose of such statements, and why they are necessary.
+# after the relative _tink_http_archive rule. Please always document the
+# intended purpose of such statements, and why they are necessary.
 #
 # In general, when adding a new dependency you should follow this structure:
 #
 # <set any configuration variable, if any>
-# <http_archive for your dependency>
+# <_tink_http_archive for your dependency>
 # <define or fix newly imported targets, if any>
 #
 # Many projects provide switches to disable tests or examples, which you should
@@ -59,7 +60,7 @@ if (TINK_BUILD_TESTONLY)
     _create_interface_target(gmock GTest::gmock)
     _create_interface_target(gtest_main GTest::gtest_main)
   else()
-    http_archive(
+    _tink_http_archive(
       NAME googletest
       URL https://github.com/google/googletest/releases/download/v1.18.0/googletest-1.18.0.tar.gz
       SHA256 6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
@@ -83,14 +84,14 @@ if (TINK_BUILD_TESTS)
   else()
     set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
 
-    http_archive(
+    _tink_http_archive(
         NAME benchmark
         URL https://github.com/google/benchmark/archive/refs/tags/v1.9.5.tar.gz
         SHA256 9631341c82bac4a288bef951f8b26b41f69021794184ece969f8473977eaa340
       )
   endif()
 
-  http_archive(
+  _tink_http_archive(
     NAME wycheproof
     URL https://github.com/c2sp/wycheproof/archive/b51abcfb8dafa5316791e57cf48512a2147d9671.zip
     SHA256 56ba9f3deba06b1cc33430a770a9b6bd6ddc8af69188ea0b46d10bda60176978
@@ -104,7 +105,7 @@ if (TINK_BUILD_TESTS)
 endif()
 
 if (NOT TINK_USE_INSTALLED_ABSEIL)
-  http_archive(
+  _tink_http_archive(
     NAME abseil
     URL https://github.com/abseil/abseil-cpp/releases/download/20260817.0/abseil-cpp-20260817.0.tar.gz
     SHA256 f7e05179df39c45434cad433f5783840bb3788ef322976f9138bc6b72b3a107d
@@ -147,7 +148,7 @@ if (NOT TINK_USE_INSTALLED_PROTOBUF)
     set(protobuf_BUILD_SHARED_LIBS ON CACHE BOOL "Tink dependency override" FORCE)
   endif()
 
-  http_archive(
+  _tink_http_archive(
     NAME protobuf
     URL https://github.com/protocolbuffers/protobuf/releases/download/v36.2/protobuf-36.2.zip
     SHA256 ec61440905b46d42dc58ce7b490f0469263a21f93407f741c97e9b6b09533eb6

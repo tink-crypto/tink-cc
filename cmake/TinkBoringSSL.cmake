@@ -41,7 +41,7 @@ set(_tink_boringssl_sha256
 # Download and unpack the sources at configure time: CMake requires the include
 # directory of an imported target to exist when it generates the build files.
 # The name is Tink-specific because FetchContent names are global.
-http_archive(
+_tink_http_archive(
   NAME tink_boringssl
   URL "https://github.com/google/boringssl/releases/download/${_tink_boringssl_version}/boringssl-${_tink_boringssl_version}.tar.gz"
   SHA256 "${_tink_boringssl_sha256}"
@@ -175,7 +175,7 @@ else()
 endif()
 
 ExternalProject_Add(tink_boringssl_build
-  # The sources were downloaded by http_archive above.
+  # The sources were downloaded by _tink_http_archive above.
   SOURCE_DIR "${tink_boringssl_SOURCE_DIR}"
   PREFIX "${_tink_boringssl_dir}"
   BINARY_DIR "${_tink_boringssl_dir}/build"

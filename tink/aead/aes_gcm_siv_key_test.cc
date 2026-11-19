@@ -31,6 +31,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -39,6 +40,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -49,19 +51,20 @@ INSTANTIATE_TEST_SUITE_P(AesGcmSivKeyTestSuite, AesGcmSivKeyTest,
 
 TEST_P(AesGcmSivKeyTest, CreateSucceeds) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesGcmSivKey& key =
-      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  const AesGcmSivKey* key =
+      DynamicCast<const AesGcmSivKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesGcmSivKey> created_key = AesGcmSivKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
-  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
-  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key->GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key->GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key->GetOutputPrefix()));
   EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
-              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
+              Eq(key->GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesGcmSivKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -106,17 +109,18 @@ TEST(AesGcmSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
 
 TEST_P(AesGcmSivKeyTest, KeyEquals) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesGcmSivKey& key =
-      dynamic_cast<const AesGcmSivKey&>(*test_vector.aead_key);
+  const AesGcmSivKey* key =
+      DynamicCast<const AesGcmSivKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesGcmSivKey> created_key = AesGcmSivKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*created_key == *other_key);
@@ -126,18 +130,20 @@ TEST_P(AesGcmSivKeyTest, KeyEquals) {
 }
 
 TEST(AesGcmSivKeyTest, DifferentVariantNotEqual) {
-  const AesGcmSivKey& crunchy_key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32,
-                                        AesGcmSivParameters::Variant::kCrunchy)
-           .aead_key);
-  const AesGcmSivKey& tink_key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
-           .aead_key);
+  const AesGcmSivKey* crunchy_key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32,
+                                       AesGcmSivParameters::Variant::kCrunchy)
+          .aead_key.get());
+  ASSERT_THAT(crunchy_key, NotNull());
+  const AesGcmSivKey* tink_key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(tink_key, NotNull());
 
-  EXPECT_TRUE(crunchy_key != tink_key);
-  EXPECT_TRUE(tink_key != crunchy_key);
-  EXPECT_FALSE(crunchy_key == tink_key);
-  EXPECT_FALSE(tink_key == crunchy_key);
+  EXPECT_TRUE(*crunchy_key != *tink_key);
+  EXPECT_TRUE(*tink_key != *crunchy_key);
+  EXPECT_FALSE(*crunchy_key == *tink_key);
+  EXPECT_FALSE(*tink_key == *crunchy_key);
 }
 
 TEST(AesGcmSivKeyTest, DifferentSecretDataNotEqual) {
@@ -184,34 +190,39 @@ TEST(AesGcmSivKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(AesGcmSivKeyTest, CopyConstructor) {
-  const AesGcmSivKey& key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
-           .aead_key);
+  const AesGcmSivKey* key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  AesGcmSivKey copy(key);
+  AesGcmSivKey copy(*key);
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesGcmSivKeyTest, CopyAssignment) {
-  const AesGcmSivKey& key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
-           .aead_key);
-  const AesGcmSivKey& other_key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(16,
-                                        AesGcmSivParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesGcmSivKey* key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
+  const AesGcmSivKey* other_key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(16,
+                                       AesGcmSivParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(other_key, NotNull());
 
-  AesGcmSivKey copy = other_key;
-  copy = key;
+  AesGcmSivKey copy = *other_key;
+  copy = *key;
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesGcmSivKeyTest, MoveConstructor) {
-  AesGcmSivKey key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
-           .aead_key);
+  const AesGcmSivKey* test_key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(test_key, NotNull());
+  AesGcmSivKey key = *test_key;
 
   AesGcmSivKey expected = key;
   AesGcmSivKey moved(std::move(key));
@@ -220,13 +231,17 @@ TEST(AesGcmSivKeyTest, MoveConstructor) {
 }
 
 TEST(AesGcmSivKeyTest, MoveAssignment) {
-  AesGcmSivKey key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
-           .aead_key);
-  AesGcmSivKey other_key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(16,
-                                        AesGcmSivParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesGcmSivKey* test_key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(test_key, NotNull());
+  const AesGcmSivKey* test_other_key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(16,
+                                       AesGcmSivParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(test_other_key, NotNull());
+  AesGcmSivKey key = *test_key;
+  AesGcmSivKey other_key = *test_other_key;
 
   AesGcmSivKey expected = key;
   other_key = std::move(key);
@@ -235,13 +250,14 @@ TEST(AesGcmSivKeyTest, MoveAssignment) {
 }
 
 TEST(AesGcmSivKeyTest, Clone) {
-  const AesGcmSivKey& key = dynamic_cast<const AesGcmSivKey&>(
-      *internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
-           .aead_key);
+  const AesGcmSivKey* key = DynamicCast<const AesGcmSivKey*>(
+      internal::GetAesGcmSivTestVector(32, AesGcmSivParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  std::unique_ptr<Key> cloned_key = key.Clone();
+  std::unique_ptr<Key> cloned_key = key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(key));
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

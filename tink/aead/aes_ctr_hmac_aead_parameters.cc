@@ -24,6 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 namespace crypto {
 namespace tink {
 
@@ -151,7 +152,7 @@ AesCtrHmacAeadParameters::Builder::Build() {
 
 bool AesCtrHmacAeadParameters::operator==(const Parameters& other) const {
   const AesCtrHmacAeadParameters* that =
-      dynamic_cast<const AesCtrHmacAeadParameters*>(&other);
+      DynamicCast<const AesCtrHmacAeadParameters*>(&other);
   if (that == nullptr) return false;
   return aes_key_size_in_bytes_ == that->aes_key_size_in_bytes_ &&
          hmac_key_size_in_bytes_ == that->hmac_key_size_in_bytes_ &&

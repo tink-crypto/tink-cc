@@ -31,6 +31,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +41,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -50,25 +52,26 @@ INSTANTIATE_TEST_SUITE_P(AesCtrHmacAeadKeyBuildTestSuite, AesCtrHmacAeadKeyTest,
 
 TEST_P(AesCtrHmacAeadKeyTest, BuildKeySucceeds) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesCtrHmacAeadKey& key =
-      dynamic_cast<const AesCtrHmacAeadKey&>(*test_vector.aead_key);
+  const AesCtrHmacAeadKey* key =
+      DynamicCast<const AesCtrHmacAeadKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesCtrHmacAeadKey> created_key =
       AesCtrHmacAeadKey::Builder()
-          .SetParameters(key.GetParameters())
-          .SetAesKeyBytes(key.GetAesKeyBytes(GetPartialKeyAccess()))
-          .SetHmacKeyBytes(key.GetHmacKeyBytes(GetPartialKeyAccess()))
-          .SetIdRequirement(key.GetIdRequirement())
+          .SetParameters(key->GetParameters())
+          .SetAesKeyBytes(key->GetAesKeyBytes(GetPartialKeyAccess()))
+          .SetHmacKeyBytes(key->GetHmacKeyBytes(GetPartialKeyAccess()))
+          .SetIdRequirement(key->GetIdRequirement())
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
-  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
-  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key->GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key->GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key->GetOutputPrefix()));
   EXPECT_THAT(created_key->GetAesKeyBytes(GetPartialKeyAccess()),
-              Eq(key.GetAesKeyBytes(GetPartialKeyAccess())));
+              Eq(key->GetAesKeyBytes(GetPartialKeyAccess())));
   EXPECT_THAT(created_key->GetHmacKeyBytes(GetPartialKeyAccess()),
-              Eq(key.GetHmacKeyBytes(GetPartialKeyAccess())));
+              Eq(key->GetHmacKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildKeyWithMismatchedAesKeySizeFails) {
@@ -245,24 +248,25 @@ TEST(AesCtrHmacAeadKeyTest, BuildTinkKeyWithoutIdRequirementFails) {
 
 TEST_P(AesCtrHmacAeadKeyTest, KeyEquals) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesCtrHmacAeadKey& key =
-      dynamic_cast<const AesCtrHmacAeadKey&>(*test_vector.aead_key);
+  const AesCtrHmacAeadKey* key =
+      DynamicCast<const AesCtrHmacAeadKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesCtrHmacAeadKey> created_key =
       AesCtrHmacAeadKey::Builder()
-          .SetParameters(key.GetParameters())
-          .SetAesKeyBytes(key.GetAesKeyBytes(GetPartialKeyAccess()))
-          .SetHmacKeyBytes(key.GetHmacKeyBytes(GetPartialKeyAccess()))
-          .SetIdRequirement(key.GetIdRequirement())
+          .SetParameters(key->GetParameters())
+          .SetAesKeyBytes(key->GetAesKeyBytes(GetPartialKeyAccess()))
+          .SetHmacKeyBytes(key->GetHmacKeyBytes(GetPartialKeyAccess()))
+          .SetIdRequirement(key->GetIdRequirement())
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesCtrHmacAeadKey> other_key =
       AesCtrHmacAeadKey::Builder()
-          .SetParameters(key.GetParameters())
-          .SetAesKeyBytes(key.GetAesKeyBytes(GetPartialKeyAccess()))
-          .SetHmacKeyBytes(key.GetHmacKeyBytes(GetPartialKeyAccess()))
-          .SetIdRequirement(key.GetIdRequirement())
+          .SetParameters(key->GetParameters())
+          .SetAesKeyBytes(key->GetAesKeyBytes(GetPartialKeyAccess()))
+          .SetHmacKeyBytes(key->GetHmacKeyBytes(GetPartialKeyAccess()))
+          .SetIdRequirement(key->GetIdRequirement())
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -273,21 +277,23 @@ TEST_P(AesCtrHmacAeadKeyTest, KeyEquals) {
 }
 
 TEST(AesCtrHmacAeadKeyTest, DifferentParametersKeysNotEqual) {
-  const AesCtrHmacAeadKey& key1 = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/32,
-           AesCtrHmacAeadParameters::Variant::kTink)
-           .aead_key);
-  const AesCtrHmacAeadKey& key2 = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/16,
-           AesCtrHmacAeadParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesCtrHmacAeadKey* key1 = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/32,
+          AesCtrHmacAeadParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key1, NotNull());
+  const AesCtrHmacAeadKey* key2 = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/16,
+          AesCtrHmacAeadParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(key2, NotNull());
 
-  EXPECT_TRUE(key1 != key2);
-  EXPECT_TRUE(key2 != key1);
-  EXPECT_FALSE(key1 == key2);
-  EXPECT_FALSE(key2 == key1);
+  EXPECT_TRUE(*key1 != *key2);
+  EXPECT_TRUE(*key2 != *key1);
+  EXPECT_FALSE(*key1 == *key2);
+  EXPECT_FALSE(*key2 == *key1);
 }
 
 TEST(AesCtrHmacAeadKeyTest, DifferentAesKeyMaterialNotEqual) {
@@ -407,41 +413,46 @@ TEST(AesCtrHmacAeadKeyTest, DifferentIdRequirementKeysNotEqual) {
 }
 
 TEST(AesCtrHmacAeadKeyTest, CopyConstructor) {
-  const auto& key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/16,
-           AesCtrHmacAeadParameters::Variant::kTink)
-           .aead_key);
+  const AesCtrHmacAeadKey* key = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/16,
+          AesCtrHmacAeadParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  AesCtrHmacAeadKey copy(key);
+  AesCtrHmacAeadKey copy(*key);
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesCtrHmacAeadKeyTest, CopyAssignment) {
-  const auto& key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/16,
-           AesCtrHmacAeadParameters::Variant::kTink)
-           .aead_key);
-  const auto& other_key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/32,
-           AesCtrHmacAeadParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesCtrHmacAeadKey* key = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/16,
+          AesCtrHmacAeadParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
+  const AesCtrHmacAeadKey* other_key = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/32,
+          AesCtrHmacAeadParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(other_key, NotNull());
 
-  AesCtrHmacAeadKey copy = other_key;
-  copy = key;
+  AesCtrHmacAeadKey copy = *other_key;
+  copy = *key;
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesCtrHmacAeadKeyTest, MoveConstructor) {
-  AesCtrHmacAeadKey key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/16,
-           AesCtrHmacAeadParameters::Variant::kTink)
-           .aead_key);
+  const AesCtrHmacAeadKey* test_key = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/16,
+          AesCtrHmacAeadParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(test_key, NotNull());
+  AesCtrHmacAeadKey key = *test_key;
 
   AesCtrHmacAeadKey expected = key;
   AesCtrHmacAeadKey move(std::move(key));
@@ -450,16 +461,21 @@ TEST(AesCtrHmacAeadKeyTest, MoveConstructor) {
 }
 
 TEST(AesCtrHmacAeadKeyTest, MoveAssignment) {
-  AesCtrHmacAeadKey key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/16,
-           AesCtrHmacAeadParameters::Variant::kTink)
-           .aead_key);
-  AesCtrHmacAeadKey other_key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/32,
-           AesCtrHmacAeadParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesCtrHmacAeadKey* test_key = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/16,
+          AesCtrHmacAeadParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(test_key, NotNull());
+  const AesCtrHmacAeadKey* test_other_key =
+      DynamicCast<const AesCtrHmacAeadKey*>(
+          internal::GetAesCtrHmacAeadTestVector(
+              /*aes_key_size_in_bytes=*/32,
+              AesCtrHmacAeadParameters::Variant::kNoPrefix)
+              .aead_key.get());
+  ASSERT_THAT(test_other_key, NotNull());
+  AesCtrHmacAeadKey key = *test_key;
+  AesCtrHmacAeadKey other_key = *test_other_key;
 
   AesCtrHmacAeadKey expected = key;
   other_key = std::move(key);
@@ -468,16 +484,17 @@ TEST(AesCtrHmacAeadKeyTest, MoveAssignment) {
 }
 
 TEST(AesCtrHmacAeadKeyTest, Clone) {
-  const auto& key = dynamic_cast<const AesCtrHmacAeadKey&>(
-      *internal::GetAesCtrHmacAeadTestVector(
-           /*aes_key_size_in_bytes=*/16,
-           AesCtrHmacAeadParameters::Variant::kTink)
-           .aead_key);
+  const AesCtrHmacAeadKey* key = DynamicCast<const AesCtrHmacAeadKey*>(
+      internal::GetAesCtrHmacAeadTestVector(
+          /*aes_key_size_in_bytes=*/16,
+          AesCtrHmacAeadParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key.Clone();
+  std::unique_ptr<Key> cloned_key = key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(key));
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

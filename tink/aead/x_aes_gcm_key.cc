@@ -28,6 +28,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -84,7 +85,7 @@ absl::StatusOr<XAesGcmKey> XAesGcmKey::Create(
 }
 
 bool XAesGcmKey::operator==(const Key& other) const {
-  const XAesGcmKey* that = dynamic_cast<const XAesGcmKey*>(&other);
+  const XAesGcmKey* that = DynamicCast<const XAesGcmKey*>(&other);
   if (that == nullptr) {
     return false;
   }

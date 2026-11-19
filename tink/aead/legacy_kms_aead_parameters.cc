@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -37,7 +38,7 @@ absl::StatusOr<LegacyKmsAeadParameters> LegacyKmsAeadParameters::Create(
 
 bool LegacyKmsAeadParameters::operator==(const Parameters& other) const {
   const LegacyKmsAeadParameters* that =
-      dynamic_cast<const LegacyKmsAeadParameters*>(&other);
+      DynamicCast<const LegacyKmsAeadParameters*>(&other);
   return that != nullptr && key_uri_ == that->key_uri_ &&
          variant_ == that->variant_;
 }

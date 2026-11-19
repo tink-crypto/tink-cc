@@ -30,6 +30,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -79,6 +80,9 @@ class AesGcmSivKey final : public AeadKey {
         key_bytes_(key_bytes),
         id_requirement_(id_requirement),
         output_prefix_(std::move(output_prefix)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(210);
 
   AesGcmSivParameters parameters_;
   RestrictedData key_bytes_;

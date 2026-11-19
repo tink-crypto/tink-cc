@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -82,7 +83,7 @@ absl::StatusOr<AesGcmParameters> AesGcmParameters::Builder::Build() {
 }
 
 bool AesGcmParameters::operator==(const Parameters& other) const {
-  const AesGcmParameters* that = dynamic_cast<const AesGcmParameters*>(&other);
+  const AesGcmParameters* that = DynamicCast<const AesGcmParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

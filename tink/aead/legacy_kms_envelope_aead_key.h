@@ -28,6 +28,7 @@
 #include "tink/aead/aead_key.h"
 #include "tink/aead/legacy_kms_envelope_aead_parameters.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -79,6 +80,9 @@ class LegacyKmsEnvelopeAeadKey final : public AeadKey {
       : parameters_(parameters),
         id_requirement_(id_requirement),
         output_prefix_(std::move(output_prefix)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(216);
 
   LegacyKmsEnvelopeAeadParameters parameters_;
   absl::optional<int> id_requirement_;

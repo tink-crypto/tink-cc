@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -41,7 +42,7 @@ absl::StatusOr<XAesGcmParameters> XAesGcmParameters::Create(
 
 bool XAesGcmParameters::operator==(const Parameters& other) const {
   const XAesGcmParameters* that =
-      dynamic_cast<const XAesGcmParameters*>(&other);
+      DynamicCast<const XAesGcmParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

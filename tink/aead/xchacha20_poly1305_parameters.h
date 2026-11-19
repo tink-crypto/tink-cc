@@ -21,6 +21,7 @@
 
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -68,6 +69,9 @@ class XChaCha20Poly1305Parameters : public AeadParameters {
 
  private:
   explicit XChaCha20Poly1305Parameters(Variant variant) : variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(219);
 
   Variant variant_;
 };

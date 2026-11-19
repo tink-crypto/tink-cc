@@ -27,6 +27,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -98,7 +99,7 @@ absl::StatusOr<ChaCha20Poly1305Key> ChaCha20Poly1305Key::Create(
 
 bool ChaCha20Poly1305Key::operator==(const Key& other) const {
   const ChaCha20Poly1305Key* that =
-      dynamic_cast<const ChaCha20Poly1305Key*>(&other);
+      DynamicCast<const ChaCha20Poly1305Key*>(&other);
   if (that == nullptr) {
     return false;
   }

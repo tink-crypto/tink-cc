@@ -359,6 +359,7 @@ tink_cc_library(
     aead_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -369,6 +370,7 @@ tink_cc_library(
     tink::aead::aead_parameters
     absl::strings
     tink::core::key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -381,6 +383,7 @@ tink_cc_library(
     absl::status
     absl::strings
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -400,6 +403,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -425,6 +429,7 @@ tink_cc_library(
     absl::status
     absl::strings
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -444,6 +449,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -491,6 +497,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -511,6 +518,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -535,6 +543,7 @@ tink_cc_library(
     tink::aead::aead_parameters
     absl::status
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -554,6 +563,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -578,6 +588,7 @@ tink_cc_library(
     tink::aead::aead_parameters
     absl::status
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -597,6 +608,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -626,6 +638,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::parameters
+    tink::core::rtti
     tink::util::statusor
 )
 
@@ -645,6 +658,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -670,6 +684,7 @@ tink_cc_library(
     absl::status
     absl::strings
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -690,6 +705,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -752,6 +768,7 @@ tink_cc_library(
     absl::status
     absl::string_view
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -769,6 +786,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::key
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -800,6 +818,7 @@ tink_cc_library(
     absl::status
     absl::string_view
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -818,6 +837,7 @@ tink_cc_library(
     absl::string_view
     absl::optional
     tink::core::key
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -1270,6 +1290,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_test_vectors
 )
@@ -1330,6 +1351,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_siv_test_vectors
 )
@@ -1390,6 +1412,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_eax_test_vectors
 )
@@ -1450,6 +1473,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::xchacha20_poly1305_test_vectors
 )
@@ -1515,6 +1539,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::chacha20_poly1305_test_vectors
     tink::internal::ssl_unique_ptr
@@ -1577,6 +1602,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_ctr_hmac_aead_test_vectors
 )
@@ -1642,6 +1668,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::x_aes_gcm_test_vectors
 )

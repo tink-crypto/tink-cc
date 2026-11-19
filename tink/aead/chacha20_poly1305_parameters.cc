@@ -20,6 +20,7 @@
 
 #include "absl/status/status.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -40,7 +41,7 @@ absl::StatusOr<ChaCha20Poly1305Parameters> ChaCha20Poly1305Parameters::Create(
 
 bool ChaCha20Poly1305Parameters::operator==(const Parameters& other) const {
   const ChaCha20Poly1305Parameters* that =
-      dynamic_cast<const ChaCha20Poly1305Parameters*>(&other);
+      DynamicCast<const ChaCha20Poly1305Parameters*>(&other);
   return that != nullptr && variant_ == that->variant_;
 }
 

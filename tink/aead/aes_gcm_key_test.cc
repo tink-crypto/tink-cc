@@ -32,6 +32,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +41,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -50,16 +52,18 @@ INSTANTIATE_TEST_SUITE_P(AesGcmKeyTestSuite, AesGcmKeyTest,
 
 TEST_P(AesGcmKeyTest, CreateSucceeds) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  const AesGcmKey* key =
+      DynamicCast<const AesGcmKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesGcmKey> created_key = AesGcmKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
-  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
-  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key->GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key->GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key->GetOutputPrefix()));
 }
 
 TEST(AesGcmKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -116,29 +120,33 @@ TEST(AesGcmKeyTest, CreateKeyWithInvalidIdRequirementFails) {
 
 TEST_P(AesGcmKeyTest, GetKeyBytes) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  const AesGcmKey* key =
+      DynamicCast<const AesGcmKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesGcmKey> created_key = AesGcmKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
   EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
-              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
+              Eq(key->GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST_P(AesGcmKeyTest, KeyEquals) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
+  const AesGcmKey* key =
+      DynamicCast<const AesGcmKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesGcmKey> created_key = AesGcmKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*created_key == *other_key);

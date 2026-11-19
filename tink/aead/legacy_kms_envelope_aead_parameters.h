@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -136,6 +137,9 @@ class LegacyKmsEnvelopeAeadParameters : public AeadParameters {
         variant_(variant),
         dek_parsing_strategy_(dek_parsing_strategy),
         dek_parameters_(std::move(dek_parameters)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(215);
 
   std::string key_uri_;
   Variant variant_;

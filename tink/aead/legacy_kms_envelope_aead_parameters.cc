@@ -28,6 +28,7 @@
 #include "tink/aead/aes_gcm_siv_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -40,28 +41,31 @@ absl::Status ValidateDekParsingStrategy(
     const AeadParameters& dek_parameters) {
   if (dek_parsing_strategy == LegacyKmsEnvelopeAeadParameters::
                                   DekParsingStrategy::kAssumeAesCtrHmac &&
-      typeid(dek_parameters) == typeid(AesCtrHmacAeadParameters)) {
+      GetTypeIndex(dek_parameters) ==
+          GetStaticTypeIndex<AesCtrHmacAeadParameters>()) {
     return absl::OkStatus();
   }
   if (dek_parsing_strategy ==
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax &&
-      typeid(dek_parameters) == typeid(AesEaxParameters)) {
+      GetTypeIndex(dek_parameters) == GetStaticTypeIndex<AesEaxParameters>()) {
     return absl::OkStatus();
   }
   if (dek_parsing_strategy ==
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm &&
-      typeid(dek_parameters) == typeid(AesGcmParameters)) {
+      GetTypeIndex(dek_parameters) == GetStaticTypeIndex<AesGcmParameters>()) {
     return absl::OkStatus();
   }
   if (dek_parsing_strategy == LegacyKmsEnvelopeAeadParameters::
                                   DekParsingStrategy::kAssumeAesGcmSiv &&
-      typeid(dek_parameters) == typeid(AesGcmSivParameters)) {
+      GetTypeIndex(dek_parameters) ==
+          GetStaticTypeIndex<AesGcmSivParameters>()) {
     return absl::OkStatus();
   }
   if (dek_parsing_strategy ==
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
               kAssumeXChaCha20Poly1305 &&
-      typeid(dek_parameters) == typeid(XChaCha20Poly1305Parameters)) {
+      GetTypeIndex(dek_parameters) ==
+          GetStaticTypeIndex<XChaCha20Poly1305Parameters>()) {
     return absl::OkStatus();
   }
   return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -93,22 +97,21 @@ LegacyKmsEnvelopeAeadParameters::Create(absl::string_view key_uri,
 
   std::unique_ptr<Parameters> cloned_dek_parameters = dek_parameters.Clone();
   const AeadParameters* dek_parameters_ptr =
-      dynamic_cast<const AeadParameters*>(cloned_dek_parameters.get());
+      DynamicCast<const AeadParameters*>(cloned_dek_parameters.get());
   if (dek_parameters_ptr == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "DEK parameters cannot be set to non-AEAD parameters.");
   }
+  cloned_dek_parameters.release();
 
-  return LegacyKmsEnvelopeAeadParameters(
-      key_uri, variant, dek_parsing_strategy,
-      absl::WrapUnique(dynamic_cast<const AeadParameters*>(
-          cloned_dek_parameters.release())));
+  return LegacyKmsEnvelopeAeadParameters(key_uri, variant, dek_parsing_strategy,
+                                         absl::WrapUnique(dek_parameters_ptr));
 }
 
 bool LegacyKmsEnvelopeAeadParameters::operator==(
     const Parameters& other) const {
   const LegacyKmsEnvelopeAeadParameters* that =
-      dynamic_cast<const LegacyKmsEnvelopeAeadParameters*>(&other);
+      DynamicCast<const LegacyKmsEnvelopeAeadParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

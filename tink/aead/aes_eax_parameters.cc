@@ -20,6 +20,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -102,7 +103,7 @@ absl::StatusOr<AesEaxParameters> AesEaxParameters::Builder::Build() {
 }
 
 bool AesEaxParameters::operator==(const Parameters& other) const {
-  const AesEaxParameters* that = dynamic_cast<const AesEaxParameters*>(&other);
+  const AesEaxParameters* that = DynamicCast<const AesEaxParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

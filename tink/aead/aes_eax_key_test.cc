@@ -32,6 +32,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +41,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -50,18 +52,20 @@ INSTANTIATE_TEST_SUITE_P(AesEaxParametersBuildTestSuite, AesEaxKeyTest,
 
 TEST_P(AesEaxKeyTest, CreateSucceeds) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
+  const AesEaxKey* key =
+      DynamicCast<const AesEaxKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesEaxKey> created_key = AesEaxKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
-  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
-  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key.GetOutputPrefix()));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key->GetParameters()));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key->GetIdRequirement()));
+  EXPECT_THAT(created_key->GetOutputPrefix(), Eq(key->GetOutputPrefix()));
   EXPECT_THAT(created_key->GetKeyBytes(GetPartialKeyAccess()),
-              Eq(key.GetKeyBytes(GetPartialKeyAccess())));
+              Eq(key->GetKeyBytes(GetPartialKeyAccess())));
 }
 
 TEST(AesEaxKeyTest, CreateKeyWithMismatchedKeySizeFails) {
@@ -122,33 +126,37 @@ TEST(AesEaxKeyTest, CreateKeyWithInvalidIdRequirementFails) {
 
 TEST_P(AesEaxKeyTest, KeyEquals) {
   const internal::AeadTestVector& test_vector = GetParam();
-  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(*test_vector.aead_key);
+  const AesEaxKey* key =
+      DynamicCast<const AesEaxKey*>(test_vector.aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesEaxKey> other_key = AesEaxKey::Create(
-      key.GetParameters(), key.GetKeyBytes(GetPartialKeyAccess()),
-      key.GetIdRequirement(), GetPartialKeyAccess());
+      key->GetParameters(), key->GetKeyBytes(GetPartialKeyAccess()),
+      key->GetIdRequirement(), GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(key == *other_key);
-  EXPECT_TRUE(*other_key == key);
-  EXPECT_FALSE(key != *other_key);
-  EXPECT_FALSE(*other_key != key);
+  EXPECT_TRUE(*key == *other_key);
+  EXPECT_TRUE(*other_key == *key);
+  EXPECT_FALSE(*key != *other_key);
+  EXPECT_FALSE(*other_key != *key);
 }
 
 TEST(AesEaxKeyTest, DifferentParametersKeysNotEqual) {
-  const AesEaxKey& key1 = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
-                                     AesEaxParameters::Variant::kTink)
-           .aead_key);
-  const AesEaxKey& key2 = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
-                                     AesEaxParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesEaxKey* key1 = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                    AesEaxParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key1, NotNull());
+  const AesEaxKey* key2 = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
+                                    AesEaxParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(key2, NotNull());
 
-  EXPECT_TRUE(key1 != key2);
-  EXPECT_TRUE(key2 != key1);
-  EXPECT_FALSE(key1 == key2);
-  EXPECT_FALSE(key2 == key1);
+  EXPECT_TRUE(*key1 != *key2);
+  EXPECT_TRUE(*key2 != *key1);
+  EXPECT_FALSE(*key1 == *key2);
+  EXPECT_FALSE(*key2 == *key1);
 }
 
 TEST(AesEaxKeyTest, DifferentSecretDataKeysNotEqual) {
@@ -209,37 +217,42 @@ TEST(AesEaxKeyTest, DifferentIdRequirementKeysNotEqual) {
 }
 
 TEST(AesEaxKeyTest, CopyConstructor) {
-  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
-                                     AesEaxParameters::Variant::kTink)
-           .aead_key);
+  const AesEaxKey* key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                    AesEaxParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  AesEaxKey copy(key);
+  AesEaxKey copy(*key);
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesEaxKeyTest, CopyAssignment) {
-  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
-                                     AesEaxParameters::Variant::kTink)
-           .aead_key);
-  const AesEaxKey& other_key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
-                                     AesEaxParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesEaxKey* key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                    AesEaxParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
+  const AesEaxKey* other_key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
+                                    AesEaxParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(other_key, NotNull());
 
-  AesEaxKey copy = other_key;
-  copy = key;
+  AesEaxKey copy = *other_key;
+  copy = *key;
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesEaxKeyTest, MoveConstructor) {
-  AesEaxKey key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
-                                     AesEaxParameters::Variant::kTink)
-           .aead_key);
+  const AesEaxKey* test_key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                    AesEaxParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(test_key, NotNull());
+  AesEaxKey key = *test_key;
 
   AesEaxKey expected = key;
   AesEaxKey move(std::move(key));
@@ -248,14 +261,18 @@ TEST(AesEaxKeyTest, MoveConstructor) {
 }
 
 TEST(AesEaxKeyTest, MoveAssignment) {
-  AesEaxKey key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
-                                     AesEaxParameters::Variant::kTink)
-           .aead_key);
-  AesEaxKey other_key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
-                                     AesEaxParameters::Variant::kNoPrefix)
-           .aead_key);
+  const AesEaxKey* test_key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                    AesEaxParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(test_key, NotNull());
+  const AesEaxKey* test_other_key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/16,
+                                    AesEaxParameters::Variant::kNoPrefix)
+          .aead_key.get());
+  ASSERT_THAT(test_other_key, NotNull());
+  AesEaxKey key = *test_key;
+  AesEaxKey other_key = *test_other_key;
 
   AesEaxKey expected = key;
   other_key = std::move(key);
@@ -264,15 +281,16 @@ TEST(AesEaxKeyTest, MoveAssignment) {
 }
 
 TEST(AesEaxKeyTest, Clone) {
-  const AesEaxKey& key = dynamic_cast<const AesEaxKey&>(
-      *internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
-                                     AesEaxParameters::Variant::kTink)
-           .aead_key);
+  const AesEaxKey* key = DynamicCast<const AesEaxKey*>(
+      internal::GetAesEaxTestVector(/*key_size_in_bytes=*/32,
+                                    AesEaxParameters::Variant::kTink)
+          .aead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key.Clone();
+  std::unique_ptr<Key> cloned_key = key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(key));
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

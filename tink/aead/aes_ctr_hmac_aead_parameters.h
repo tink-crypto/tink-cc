@@ -22,6 +22,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -148,6 +149,9 @@ class AesCtrHmacAeadParameters : public AeadParameters {
         tag_size_in_bytes_(tag_size_in_bytes),
         hash_type_(hash_type),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(203);
 
   int aes_key_size_in_bytes_;
   int hmac_key_size_in_bytes_;

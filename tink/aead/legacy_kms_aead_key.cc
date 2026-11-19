@@ -25,6 +25,7 @@
 #include "tink/aead/legacy_kms_aead_parameters.h"
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -79,7 +80,7 @@ absl::StatusOr<LegacyKmsAeadKey> LegacyKmsAeadKey::Create(
 }
 
 bool LegacyKmsAeadKey::operator==(const Key& other) const {
-  const LegacyKmsAeadKey* that = dynamic_cast<const LegacyKmsAeadKey*>(&other);
+  const LegacyKmsAeadKey* that = DynamicCast<const LegacyKmsAeadKey*>(&other);
   if (that == nullptr) {
     return false;
   }

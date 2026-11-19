@@ -30,6 +30,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -108,6 +109,9 @@ class AesCtrHmacAeadKey final : public AeadKey {
         hmac_key_bytes_(hmac_key_bytes),
         id_requirement_(id_requirement),
         output_prefix_(std::move(output_prefix)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(204);
 
   AesCtrHmacAeadParameters parameters_;
   RestrictedData aes_key_bytes_;

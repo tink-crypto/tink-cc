@@ -21,6 +21,7 @@
 
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -65,6 +66,9 @@ class XAesGcmParameters : public AeadParameters {
  private:
   XAesGcmParameters(Variant variant, int salt_size_bytes)
       : variant_(variant), salt_size_bytes_(salt_size_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(217);
 
   Variant variant_;
   int salt_size_bytes_;

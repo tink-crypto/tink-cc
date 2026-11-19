@@ -27,6 +27,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -92,7 +93,7 @@ absl::StatusOr<AesEaxKey> AesEaxKey::Create(const AesEaxParameters& parameters,
 }
 
 bool AesEaxKey::operator==(const Key& other) const {
-  const AesEaxKey* that = dynamic_cast<const AesEaxKey*>(&other);
+  const AesEaxKey* that = DynamicCast<const AesEaxKey*>(&other);
   if (that == nullptr) {
     return false;
   }

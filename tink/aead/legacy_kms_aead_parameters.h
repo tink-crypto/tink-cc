@@ -23,6 +23,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -68,6 +69,9 @@ class LegacyKmsAeadParameters : public AeadParameters {
  private:
   explicit LegacyKmsAeadParameters(absl::string_view key_uri, Variant variant)
       : key_uri_(key_uri), variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(AeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(213);
 
   std::string key_uri_;
   Variant variant_;

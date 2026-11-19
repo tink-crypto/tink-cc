@@ -29,11 +29,13 @@
 #   TINK_CXX_STANDARD C++ standard to enforce, 11 for now.
 #   TINK_BUILD_TESTS enables building tests (requires TINK_BUILD_TESTONLY).
 #   TINK_BUILD_TESTONLY enables building test-only helper libraries.
+#   TINK_ENABLE_INSTALL enables installation.
 #
 # Sensible defaults are provided for all variables, except TINK_MODULE, which is
 # defined by calls to tink_module(). Please don't alter it directly.
 
 include(CMakeParseArguments)
+include(GNUInstallDirs)
 
 if (TINK_BUILD_TESTS)
   if (NOT TINK_BUILD_TESTONLY)
@@ -233,6 +235,9 @@ _tink_target_link_merged_library(TARGET tink
 target_compile_options(tink PRIVATE ${TINK_DEFAULT_COPTS})
 target_compile_features(tink PUBLIC cxx_std_${TINK_CXX_STANDARD})
 set_property(TARGET tink PROPERTY FOLDER "${TINK_IDE_FOLDER}")
+set_property(TARGET tink PROPERTY OUTPUT_NAME tink${PROJECT_VERSION_MAJOR})
+set_property(TARGET tink PROPERTY VERSION "${PROJECT_VERSION}")
+set_property(TARGET tink PROPERTY SOVERSION "${PROJECT_VERSION_MAJOR}")
 add_library(tink::tink ALIAS tink)
 
 # Declare the test-only Tink library target.
@@ -253,8 +258,88 @@ if(TINK_BUILD_TESTONLY)
   target_compile_options(tink_testonly PRIVATE ${TINK_DEFAULT_COPTS})
   target_compile_features(tink_testonly PUBLIC cxx_std_${TINK_CXX_STANDARD})
   set_property(TARGET tink_testonly PROPERTY FOLDER "${TINK_IDE_FOLDER}")
+  set_property(TARGET tink_testonly PROPERTY OUTPUT_NAME tink${PROJECT_VERSION_MAJOR}_testonly)
+  set_property(TARGET tink_testonly PROPERTY VERSION "${PROJECT_VERSION}")
+  set_property(TARGET tink_testonly PROPERTY SOVERSION "${PROJECT_VERSION_MAJOR}")
   add_library(tink::testonly ALIAS tink_testonly)
 endif()
+
+if(TINK_ENABLE_INSTALL)
+  install(TARGETS tink)
+  if(TINK_BUILD_TESTONLY)
+    install(TARGETS tink_testonly)
+  endif()
+endif()
+
+# Preference list of source directories for headers. Headers will be assumed
+# relative to the first matching directory in this list.
+set(_tink_source_dirs)
+foreach(_tink_source_dir "${TINK_GENFILE_DIR}" "${PROJECT_SOURCE_DIR}")
+  cmake_path(ABSOLUTE_PATH _tink_source_dir
+             BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+             NORMALIZE)
+  list(APPEND _tink_source_dirs "${_tink_source_dir}")
+endforeach()
+
+define_property(SOURCE PROPERTY _TINK_HEADER_INSTALLED
+                BRIEF_DOCS "Header install indicator."
+                FULL_DOCS  "Indicates whether a header has been installed.")
+
+# Installs headers under `<includedir>/tink-<major>`, preserving each header's
+# path relative to `TINK_GENFILE_DIR` (for generated headers) or
+# `PROJECT_SOURCE_DIR` (for source headers).
+function(_tink_install_headers)
+  if(NOT TINK_ENABLE_INSTALL)
+    return()
+  endif()
+  cmake_parse_arguments(PARSE_ARGV 0 arg
+    ""
+    ""
+    "HDRS"
+  )
+
+  foreach(hdr IN LISTS arg_HDRS)
+    cmake_path(ABSOLUTE_PATH hdr
+               BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+               NORMALIZE)
+
+    get_property(already_installed
+                 SOURCE "${hdr}"
+                 DIRECTORY "${PROJECT_SOURCE_DIR}"
+                 PROPERTY _TINK_HEADER_INSTALLED)
+    if(already_installed)
+      continue()
+    endif()
+
+    foreach(source_dir IN LISTS _tink_source_dirs)
+      cmake_path(IS_PREFIX source_dir "${hdr}" is_prefix)
+      if(NOT is_prefix)
+        continue()
+      endif()
+      cmake_path(RELATIVE_PATH hdr
+                 BASE_DIRECTORY "${source_dir}"
+                 OUTPUT_VARIABLE rel_hdr)
+      cmake_path(GET rel_hdr PARENT_PATH rel_dir)
+      set(dest "${CMAKE_INSTALL_INCLUDEDIR}/tink-${PROJECT_VERSION_MAJOR}")
+      if(NOT "${rel_dir}" STREQUAL "")
+        cmake_path(APPEND dest "${rel_dir}")
+      endif()
+      install(FILES "${hdr}" DESTINATION "${dest}")
+      set_property(SOURCE "${hdr}"
+                   DIRECTORY "${PROJECT_SOURCE_DIR}"
+                   PROPERTY _TINK_HEADER_INSTALLED TRUE)
+      break()
+    endforeach()
+
+    get_property(actually_installed
+                 SOURCE "${hdr}"
+                 DIRECTORY "${PROJECT_SOURCE_DIR}"
+                 PROPERTY _TINK_HEADER_INSTALLED)
+    if(NOT actually_installed)
+      message(FATAL_ERROR "Header ${hdr} directory not in ${_tink_source_dirs}")
+    endif()
+  endforeach()
+endfunction()
 
 # Declare a Tink library. Registers its sources, headers, and external
 # dependencies as part of the `tink` library target (or `tink_testonly` when
@@ -290,6 +375,8 @@ function(tink_cc_library)
     "SRCS;DEPS;TAGS"
   )
 
+  set(hdrs "${arg_SRCS}")
+  list(FILTER hdrs INCLUDE REGEX "\\.h$")
   list(FILTER arg_SRCS EXCLUDE REGEX "\\.h$")
 
   if (arg_TESTONLY AND NOT TINK_BUILD_TESTONLY)
@@ -324,6 +411,7 @@ function(tink_cc_library)
 
   target_sources(${target_name} PRIVATE ${arg_SRCS})
   target_link_libraries(${target_name} PUBLIC ${external_deps})
+  _tink_install_headers(HDRS ${hdrs})
 endfunction(tink_cc_library)
 
 # Declare a Tink test using googletest, with a syntax similar to Bazel.

@@ -44,6 +44,33 @@ endif()
 # Allow the linker to deduplicate libraries. Removes warnings on macOS.
 set(CMAKE_LINK_LIBRARIES_STRATEGY REORDER_FREELY)
 
+set(_tink_enable_install_default OFF)
+if (PROJECT_IS_TOP_LEVEL
+    AND TINK_USE_INSTALLED_ABSEIL
+    AND TINK_USE_INSTALLED_PROTOBUF
+    AND (NOT TINK_BUILD_TESTONLY OR TINK_USE_INSTALLED_GOOGLETEST))
+  set(_tink_enable_install_default ON)
+endif()
+option(TINK_ENABLE_INSTALL
+  "Enable installation of Tink"
+  ${_tink_enable_install_default})
+unset(_tink_enable_install_default)
+
+if (TINK_ENABLE_INSTALL)
+  if (NOT TINK_USE_INSTALLED_ABSEIL)
+    message(FATAL_ERROR
+      "TINK_ENABLE_INSTALL requires TINK_USE_INSTALLED_ABSEIL=ON")
+  endif()
+  if (NOT TINK_USE_INSTALLED_PROTOBUF)
+    message(FATAL_ERROR
+      "TINK_ENABLE_INSTALL requires TINK_USE_INSTALLED_PROTOBUF=ON")
+  endif()
+  if (TINK_BUILD_TESTONLY AND NOT TINK_USE_INSTALLED_GOOGLETEST)
+    message(FATAL_ERROR
+      "TINK_ENABLE_INSTALL with TINK_BUILD_TESTONLY requires TINK_USE_INSTALLED_GOOGLETEST=ON")
+  endif()
+endif()
+
 if (TINK_BUILD_TESTONLY)
   # We do not want to test Abseil
   set(ABSL_BUILD_TESTING OFF CACHE BOOL "" FORCE)
@@ -75,3 +102,10 @@ list(APPEND TINK_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_subdirectory(tink)
 add_subdirectory(proto)
+
+if (PROJECT_IS_TOP_LEVEL AND NOT TINK_ENABLE_INSTALL)
+  install(CODE [[message(FATAL_ERROR
+    "Installing Tink requires TINK_ENABLE_INSTALL=ON "
+    "(with TINK_USE_INSTALLED_ABSEIL=ON, TINK_USE_INSTALLED_PROTOBUF=ON, "
+    "and if TINK_BUILD_TESTONLY=ON, TINK_USE_INSTALLED_GOOGLETEST=ON).")]])
+endif()

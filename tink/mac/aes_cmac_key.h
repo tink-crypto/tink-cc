@@ -24,12 +24,12 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/mac_key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {

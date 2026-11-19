@@ -24,11 +24,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/internal/output_prefix_util.h"
-#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -92,7 +92,7 @@ absl::StatusOr<std::string> HmacKey::ComputeOutputPrefix(
 }
 
 bool HmacKey::operator==(const Key& other) const {
-  const HmacKey* that = internal::DynamicCast<const HmacKey*>(&other);
+  const HmacKey* that = DynamicCast<const HmacKey*>(&other);
   if (that == nullptr) {
     return false;
   }

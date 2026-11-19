@@ -678,7 +678,7 @@ tink_cc_library(
   SRCS
     parameters.h
   DEPS
-    tink::internal::rtti
+    tink::core::rtti
   PUBLIC
 )
 
@@ -688,8 +688,8 @@ tink_cc_library(
     key.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
     absl::optional
-    tink::internal::rtti
 )
 
 tink_cc_library(
@@ -1326,4 +1326,14 @@ tink_cc_library(
   DEPS
     tink::internal::rtti_impl
   PUBLIC
+)
+
+tink_cc_test(
+  NAME rtti_test
+  SRCS
+    rtti_test.cc
+  DEPS
+    tink::core::rtti
+    gmock
+    absl::flat_hash_map
 )

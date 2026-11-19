@@ -20,9 +20,9 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/mac_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {

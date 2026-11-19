@@ -688,7 +688,7 @@ cc_library(
     name = "parameters",
     hdrs = ["parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink/internal:rtti"],
+    deps = [":rtti"],
 )
 
 cc_library(
@@ -697,7 +697,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":parameters",
-        "//tink/internal:rtti",
+        ":rtti",
         "@abseil-cpp//absl/types:optional",
     ],
 )
@@ -1334,4 +1334,14 @@ cc_library(
     hdrs = ["rtti.h"],
     visibility = ["//visibility:public"],
     deps = ["//tink/internal:rtti_impl"],
+)
+
+cc_test(
+    name = "rtti_test",
+    srcs = ["rtti_test.cc"],
+    deps = [
+        ":rtti",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@googletest//:gtest_main",
+    ],
 )

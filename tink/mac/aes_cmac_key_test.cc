@@ -30,12 +30,12 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/internal/aes_cmac_test_vectors.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {

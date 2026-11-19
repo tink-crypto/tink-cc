@@ -21,8 +21,8 @@
 #include <memory>
 
 #include "absl/types/optional.h"
-#include "tink/internal/rtti.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {

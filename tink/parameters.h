@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "tink/internal/rtti.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {

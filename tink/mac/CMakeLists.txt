@@ -127,7 +127,7 @@ tink_cc_library(
     mac_parameters.h
   DEPS
     tink::core::parameters
-    tink::internal::rtti
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -138,7 +138,7 @@ tink_cc_library(
     tink::mac::mac_parameters
     absl::string_view
     tink::core::key
-    tink::internal::rtti
+    tink::core::rtti
     tink::util::statusor
 )
 
@@ -168,7 +168,7 @@ tink_cc_library(
     absl::strings
     tink::core::crypto_format
     tink::core::parameters
-    tink::internal::rtti
+    tink::core::rtti
     tink::internal::util
     tink::util::status
     tink::util::statusor
@@ -189,8 +189,8 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
-    tink::internal::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -217,7 +217,7 @@ tink_cc_library(
     absl::strings
     tink::core::crypto_format
     tink::core::parameters
-    tink::internal::rtti
+    tink::core::rtti
     tink::internal::util
     tink::util::statusor
 )
@@ -237,8 +237,8 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::output_prefix_util
-    tink::internal::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -430,7 +430,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     tink::core::parameters
-    tink::internal::rtti
+    tink::core::rtti
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -451,7 +451,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
-    tink::internal::rtti
+    tink::core::rtti
     tink::mac::internal::aes_cmac_test_vectors
     tink::util::test_util
 )
@@ -499,7 +499,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     tink::core::parameters
-    tink::internal::rtti
+    tink::core::rtti
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -521,8 +521,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_key_access_token
-    tink::internal::rtti
     tink::mac::internal::hmac_test_vectors
 )
 

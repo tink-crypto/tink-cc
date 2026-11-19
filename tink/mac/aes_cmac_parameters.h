@@ -19,9 +19,9 @@
 
 #include <memory>
 
-#include "tink/internal/rtti.h"
 #include "tink/mac/mac_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {

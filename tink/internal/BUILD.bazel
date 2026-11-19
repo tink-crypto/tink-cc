@@ -29,10 +29,10 @@ cc_library(
     srcs = ["util.cc"],
     hdrs = ["util.h"],
     deps = [
-        ":rtti",
         ":safe_stringops",
         ":secret_buffer",
         "//tink:key",
+        "//tink:rtti",
         "//tink:secret_data",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/base:core_headers",
@@ -246,10 +246,10 @@ cc_test(
     name = "util_test",
     srcs = ["util_test.cc"],
     deps = [
-        ":rtti",
         ":util",
         "//tink:key",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink:secret_data",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
@@ -2239,22 +2239,6 @@ cc_test(
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "rtti",
-    hdrs = ["rtti.h"],
-    deps = ["//tink:rtti"],
-)
-
-cc_test(
-    name = "rtti_test",
-    srcs = ["rtti_test.cc"],
-    deps = [
-        "//tink:rtti",
-        "@abseil-cpp//absl/container:flat_hash_map",
         "@googletest//:gtest_main",
     ],
 )

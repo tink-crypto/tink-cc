@@ -23,8 +23,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/internal/rtti.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 
 namespace crypto {

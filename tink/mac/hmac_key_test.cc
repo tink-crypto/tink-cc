@@ -31,12 +31,12 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/rtti.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 
 namespace crypto {

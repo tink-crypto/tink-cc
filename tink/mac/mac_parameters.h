@@ -17,8 +17,8 @@
 #ifndef TINK_MAC_MAC_PARAMETERS_H_
 #define TINK_MAC_MAC_PARAMETERS_H_
 
-#include "tink/internal/rtti.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {

@@ -25,8 +25,8 @@
 #include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "tink/internal/rtti.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 

@@ -23,9 +23,9 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/crypto_format.h"
-#include "tink/internal/rtti.h"
 #include "tink/internal/util.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -99,8 +99,7 @@ int HmacParameters::TotalTagSizeInBytes() const {
 }
 
 bool HmacParameters::operator==(const Parameters& other) const {
-  const HmacParameters* that =
-      internal::DynamicCast<const HmacParameters*>(&other);
+  const HmacParameters* that = DynamicCast<const HmacParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

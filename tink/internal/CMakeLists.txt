@@ -27,7 +27,6 @@ tink_cc_library(
     util.cc
     util.h
   DEPS
-    tink::internal::rtti
     tink::internal::safe_stringops
     tink::internal::secret_buffer
     absl::core_headers
@@ -37,6 +36,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::key
+    tink::core::rtti
     tink::core::secret_data
     tink::util::secret_data
 )
@@ -227,7 +227,6 @@ tink_cc_test(
   SRCS
     util_test.cc
   DEPS
-    tink::internal::rtti
     tink::internal::util
     gmock
     absl::status_matchers
@@ -236,6 +235,7 @@ tink_cc_test(
     absl::optional
     tink::core::key
     tink::core::parameters
+    tink::core::rtti
     tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
@@ -2223,24 +2223,6 @@ tink_cc_test(
     tink::internal::testing::test_only_key_managers
     tink::util::secret_proto
     tink::proto::tink_cc_proto
-)
-
-tink_cc_library(
-  NAME rtti
-  SRCS
-    rtti.h
-  DEPS
-    tink::core::rtti
-)
-
-tink_cc_test(
-  NAME rtti_test
-  SRCS
-    rtti_test.cc
-  DEPS
-    gmock
-    absl::flat_hash_map
-    tink::core::rtti
 )
 
 tink_cc_library(

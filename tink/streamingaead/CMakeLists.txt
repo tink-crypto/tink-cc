@@ -98,15 +98,21 @@ tink_cc_library(
     aes_ctr_hmac_streaming_key_manager.cc
     aes_ctr_hmac_streaming_key_manager.h
   DEPS
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::streaming_aead
-    tink::subtle::aes_ctr_hmac_streaming
+    tink::streamingaead::internal::aes_ctr_hmac_streaming
     tink::subtle::random
     tink::util::constants
     tink::util::enums
@@ -402,32 +408,31 @@ tink_cc_test(
   SRCS
     aes_ctr_hmac_streaming_key_manager_test.cc
   DEPS
+    tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::streaming_aead_config
     gmock
-    absl::memory
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::strings
+    absl::string_view
     tink::core::input_stream
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::streaming_aead
     tink::config::global_registry
+    tink::streamingaead::internal::aes_ctr_hmac_streaming
     tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
     tink::streamingaead::internal::testing::streamingaead_test_vector
-    tink::subtle::aes_ctr_hmac_streaming
-    tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::streaming_aead_test_util
-    tink::subtle::test_util
     tink::util::input_stream_util
     tink::util::istream_input_stream
-    tink::util::ostream_output_stream
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::proto::aes_ctr_hmac_streaming_cc_proto
     tink::proto::aes_eax_cc_proto
     tink::proto::common_cc_proto

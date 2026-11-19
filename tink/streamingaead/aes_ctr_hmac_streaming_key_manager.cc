@@ -16,49 +16,49 @@
 
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 
-#include <string>
+#include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/input_stream.h"
-#include "tink/subtle/aes_ctr_hmac_streaming.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/streaming_aead.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
 
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::subtle::AesCtrHmacStreaming;
-using ::google::crypto::tink::AesCtrHmacStreamingKey;
 using ::google::crypto::tink::AesCtrHmacStreamingKeyFormat;
 using ::google::crypto::tink::AesCtrHmacStreamingParams;
 using ::google::crypto::tink::HashType;
 
-absl::StatusOr<std::unique_ptr<StreamingAead>>
-AesCtrHmacStreamingKeyManager::StreamingAeadFactory::Create(
-    const google::crypto::tink::AesCtrHmacStreamingKey& key) const {
-  subtle::AesCtrHmacStreaming::Params params;
-  params.ikm = util::SecretDataFromStringView(key.key_value());
-  params.hkdf_algo =
-      crypto::tink::util::Enums::ProtoToSubtle(key.params().hkdf_hash_type());
-  params.key_size = key.params().derived_key_size();
-  params.ciphertext_segment_size = key.params().ciphertext_segment_size();
-  params.ciphertext_offset = 0;
-  params.tag_algo = crypto::tink::util::Enums::ProtoToSubtle(
-      key.params().hmac_params().hash());
-  params.tag_size = key.params().hmac_params().tag_size();
-  auto streaming_result =
-      crypto::tink::subtle::AesCtrHmacStreaming::New(params);
-  if (!streaming_result.ok()) return streaming_result.status();
-  return {std::move(streaming_result.value())};
-}
-
 namespace {
+
+constexpr int kNoncePrefixSizeInBytes = 7;
+
+absl::StatusOr<AesCtrHmacStreamingParameters::HashType> FromProtoHashType(
+    HashType hash_type) {
+  switch (hash_type) {
+    case HashType::SHA1:
+      return AesCtrHmacStreamingParameters::HashType::kSha1;
+    case HashType::SHA256:
+      return AesCtrHmacStreamingParameters::HashType::kSha256;
+    case HashType::SHA512:
+      return AesCtrHmacStreamingParameters::HashType::kSha512;
+    default:
+      return absl::InvalidArgumentError("Unsupported proto hash type");
+  }
+}
 
 absl::Status ValidateParams(const AesCtrHmacStreamingParams& params) {
   if (!(params.hkdf_hash_type() == HashType::SHA1 ||
@@ -86,8 +86,7 @@ absl::Status ValidateParams(const AesCtrHmacStreamingParams& params) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "hmac_params.tag_size too big");
   }
-  int header_size = 1 + params.derived_key_size() +
-      AesCtrHmacStreaming::kNoncePrefixSizeInBytes;
+  int header_size = 1 + params.derived_key_size() + kNoncePrefixSizeInBytes;
   if (params.ciphertext_segment_size() <=
       header_size + params.hmac_params().tag_size()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -102,11 +101,38 @@ absl::Status ValidateParams(const AesCtrHmacStreamingParams& params) {
 
 }  // namespace
 
+absl::StatusOr<std::unique_ptr<StreamingAead>>
+AesCtrHmacStreamingKeyManager::StreamingAeadFactory::Create(
+    const google::crypto::tink::AesCtrHmacStreamingKey& key) const {
+  ABSL_ASSIGN_OR_RETURN(AesCtrHmacStreamingParameters::HashType hkdf_hash_type,
+                        FromProtoHashType(key.params().hkdf_hash_type()));
+  ABSL_ASSIGN_OR_RETURN(AesCtrHmacStreamingParameters::HashType hmac_hash_type,
+                        FromProtoHashType(key.params().hmac_params().hash()));
+  ABSL_ASSIGN_OR_RETURN(
+      AesCtrHmacStreamingParameters parameters,
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(key.key_value().size())
+          .SetDerivedKeySizeInBytes(key.params().derived_key_size())
+          .SetHkdfHashType(hkdf_hash_type)
+          .SetHmacHashType(hmac_hash_type)
+          .SetHmacTagSizeInBytes(key.params().hmac_params().tag_size())
+          .SetCiphertextSegmentSizeInBytes(
+              key.params().ciphertext_segment_size())
+          .Build());
+  ABSL_ASSIGN_OR_RETURN(
+      crypto::tink::AesCtrHmacStreamingKey streaming_key,
+      crypto::tink::AesCtrHmacStreamingKey::Create(
+          parameters,
+          RestrictedData(key.key_value(), InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess()));
+  return internal::NewAesCtrHmacStreaming(streaming_key);
+}
+
 absl::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey>
 AesCtrHmacStreamingKeyManager::CreateKey(
     const google::crypto::tink::AesCtrHmacStreamingKeyFormat& key_format)
     const {
-  AesCtrHmacStreamingKey key;
+  google::crypto::tink::AesCtrHmacStreamingKey key;
   key.set_version(get_version());
   key.set_key_value(subtle::Random::GetRandomBytes(key_format.key_size()));
   *key.mutable_params() = key_format.params();
@@ -125,7 +151,7 @@ AesCtrHmacStreamingKeyManager::DeriveKey(
   if (!randomness_or.ok()) {
     return randomness_or.status();
   }
-  AesCtrHmacStreamingKey key;
+  google::crypto::tink::AesCtrHmacStreamingKey key;
   key.set_version(get_version());
   key.set_key_value(util::SecretDataAsStringView(*randomness_or));
   *key.mutable_params() = key_format.params();
@@ -133,7 +159,7 @@ AesCtrHmacStreamingKeyManager::DeriveKey(
 }
 
 absl::Status AesCtrHmacStreamingKeyManager::ValidateKey(
-    const AesCtrHmacStreamingKey& key) const {
+    const google::crypto::tink::AesCtrHmacStreamingKey& key) const {
   absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < key.params().derived_key_size()) {

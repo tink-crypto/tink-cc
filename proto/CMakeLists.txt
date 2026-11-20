@@ -222,7 +222,7 @@ tink_cc_proto(
   SRCS jwt_ml_dsa.proto
 )
 
-tink_target_group(
+tink_cc_library(
   NAME public_protos_cc_proto
   DEPS
     tink::proto::config_cc_proto

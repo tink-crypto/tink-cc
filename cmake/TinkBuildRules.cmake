@@ -581,16 +581,3 @@ function(tink_cc_proto)
       ${arg_DEPS}
   )
 endfunction()
-
-# Group related dependencies under a single logical rule name.
-#
-# Parameters:
-#   NAME  base name of the group.
-#   DEPS  list of dependencies to group.
-#
-# Delegates to tink_cc_library to forward any external DEPS to `tink`.
-function(tink_target_group)
-  cmake_parse_arguments(PARSE_ARGV 0 tink_target_group "" "NAME" "DEPS")
-  tink_cc_library(NAME ${tink_target_group_NAME}
-                  DEPS ${tink_target_group_DEPS})
-endfunction()

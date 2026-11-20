@@ -25,6 +25,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -439,6 +440,33 @@ TEST(AesGcmHkdfStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(AesGcmHkdfStreamingParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, Clone) {

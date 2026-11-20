@@ -595,6 +595,7 @@ tink_cc_test(
     aes_ctr_hmac_streaming_parameters_test.cc
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -611,6 +612,8 @@ tink_cc_test(
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -659,6 +662,7 @@ tink_cc_test(
   SRCS
     aes_gcm_hkdf_streaming_parameters_test.cc
   DEPS
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     GTest::gmock
     absl::status
@@ -674,6 +678,8 @@ tink_cc_test(
   SRCS
     aes_gcm_hkdf_streaming_key_test.cc
   DEPS
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     GTest::gmock

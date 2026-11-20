@@ -28,6 +28,8 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
 
@@ -171,6 +173,44 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentParametersNotEqual) {
 
   absl::StatusOr<AesGcmHkdfStreamingKey> other_key =
       AesGcmHkdfStreamingKey::Create(*parameters2, initial_key_material,
+                                     GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesGcmHkdfStreamingKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+      *parameters, RestrictedData(/*num_random_bytes=*/35),
+      GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> other_key =
+      AesCtrHmacStreamingKey::Create(*other_parameters,
+                                     RestrictedData(/*num_random_bytes=*/35),
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 

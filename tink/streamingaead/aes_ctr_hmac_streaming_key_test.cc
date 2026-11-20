@@ -30,6 +30,8 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
 
@@ -149,6 +151,44 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentParametersNotEqual) {
   EXPECT_TRUE(key2 != key1);
   EXPECT_FALSE(key1 == key2);
   EXPECT_FALSE(key2 == key1);
+}
+
+TEST(AesCtrHmacStreamingKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, RestrictedData(/*num_random_bytes=*/35),
+      GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<AesGcmHkdfStreamingKey> other_key =
+      AesGcmHkdfStreamingKey::Create(*other_parameters,
+                                     RestrictedData(/*num_random_bytes=*/35),
+                                     GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
 }
 
 TEST(AesCtrHmacStreamingKeyTest, Clone) {

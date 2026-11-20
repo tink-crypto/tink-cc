@@ -48,6 +48,8 @@
 #include "tink/signature/internal/ml_dsa_sign_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
 #include "tink/signature/internal/prehash_wrapper.h"
+#include "tink/signature/internal/rsa_ssa_pss_sign_boringssl.h"
+#include "tink/signature/internal/rsa_ssa_pss_verify_boringssl.h"
 #include "tink/signature/internal/sign_prehash_wrapper.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
@@ -76,8 +78,6 @@
 #include "tink/subtle/ed25519_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
-#include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
-#include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 
 namespace crypto {
 namespace tink {
@@ -93,16 +93,6 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1SignBoringSsl(
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPkcs1VerifyBoringSsl(
     const RsaSsaPkcs1PublicKey& key) {
   return crypto::tink::subtle::RsaSsaPkcs1VerifyBoringSsl::New(key);
-}
-
-absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSignBoringSsl(
-    const RsaSsaPssPrivateKey& key) {
-  return crypto::tink::subtle::RsaSsaPssSignBoringSsl::New(key);
-}
-
-absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPssVerifyBoringSsl(
-    const RsaSsaPssPublicKey& key) {
-  return crypto::tink::subtle::RsaSsaPssVerifyBoringSsl::New(key);
 }
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEd25519SignBoringSsl(

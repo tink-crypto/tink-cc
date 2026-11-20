@@ -21,24 +21,18 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/internal/rsa_util.h"
-#include "tink/internal/secret_buffer.h"
-#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
-#include "tink/signature/rsa_ssa_pss_public_key.h"
-#include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -51,205 +45,129 @@ using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::NotNull;
 
-internal::RsaPrivateKey ToRsaPrivateKey(const RsaSsaPssPrivateKey& key) {
-  internal::RsaPrivateKey private_key;
-  private_key.n = std::string(
-      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
-  private_key.e = std::string(
-      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  private_key.d =
-      key.GetPrivateExponentData().Get(InsecureSecretKeyAccess::Get());
-  private_key.p = key.GetPrimePData().Get(InsecureSecretKeyAccess::Get());
-  private_key.q = key.GetPrimeQData().Get(InsecureSecretKeyAccess::Get());
-  private_key.dp =
-      key.GetPrimeExponentPData().Get(InsecureSecretKeyAccess::Get());
-  private_key.dq =
-      key.GetPrimeExponentQData().Get(InsecureSecretKeyAccess::Get());
-  private_key.crt =
-      key.GetCrtCoefficientData().Get(InsecureSecretKeyAccess::Get());
-  return private_key;
-}
-
-internal::RsaPublicKey ToRsaPublicKey(const RsaSsaPssPublicKey& key) {
-  internal::RsaPublicKey public_key;
-  public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
-  public_key.e =
-      std::string(key.GetParameters().GetPublicExponent().GetValue());
-  return public_key;
-}
-
-class RsaPssSignBoringsslTest : public ::testing::Test {
- public:
-  RsaPssSignBoringsslTest() {
-    const internal::SignatureTestVector& test_vector =
-        internal::Create2048BitTestVector();
-    const RsaSsaPssPrivateKey* typed_key =
-        dynamic_cast<const RsaSsaPssPrivateKey*>(
-            test_vector.signature_private_key.get());
-    ABSL_CHECK(typed_key != nullptr);
-    private_key_ = ToRsaPrivateKey(*typed_key);
-    public_key_ = ToRsaPublicKey(typed_key->GetPublicKey());
-  }
-
- protected:
-  internal::RsaPrivateKey private_key_;
-  internal::RsaPublicKey public_key_;
-};
-
-TEST_F(RsaPssSignBoringsslTest, EncodesPss) {
+TEST(RsaPssSignBoringsslTest, EncodesPss) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA256,
-                                   /*salt_length=*/32};
+  const internal::SignatureTestVector& test_vector =
+      internal::Create2048BitTestVector();
+  const auto* private_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
-  auto signer_or = RsaSsaPssSignBoringSsl::New(private_key_, params);
-  ASSERT_THAT(signer_or, IsOk());
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPssSignBoringSsl::New(*private_key);
+  ASSERT_THAT(signer, IsOk());
 
-  auto signature_or = signer_or.value()->Sign("testdata");
-  ASSERT_THAT(signature_or, IsOk());
-  EXPECT_THAT(signature_or.value(), Not(IsEmpty()));
+  absl::StatusOr<std::string> signature = (*signer)->Sign("testdata");
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT(*signature, Not(IsEmpty()));
 
-  auto verifier_or = RsaSsaPssVerifyBoringSsl::New(public_key_, params);
-  ASSERT_THAT(verifier_or, IsOk());
-  EXPECT_THAT(verifier_or.value()->Verify(signature_or.value(), "testdata"),
-              IsOk());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPssVerifyBoringSsl::New(private_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "testdata"), IsOk());
 }
 
-TEST_F(RsaPssSignBoringsslTest, EncodesPssWithSeparateHashes) {
+TEST(RsaPssSignBoringsslTest, EncodesPssWithSha384) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA1,
-                                   /*salt_length=*/32};
+  const auto* sha384_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      internal::GetRsaSsaPssTestVector(2048,
+                                       RsaSsaPssParameters::HashType::kSha384,
+                                       RsaSsaPssParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha384_key, NotNull());
 
-  auto signer_or = RsaSsaPssSignBoringSsl::New(private_key_, params);
-  ASSERT_THAT(signer_or, IsOk());
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPssSignBoringSsl::New(*sha384_key);
+  ASSERT_THAT(signer, IsOk());
 
-  auto signature_or = signer_or.value()->Sign("testdata");
-  ASSERT_THAT(signature_or, IsOk());
-  EXPECT_THAT(signature_or.value(), Not(IsEmpty()));
+  absl::StatusOr<std::string> signature = (*signer)->Sign("testdata");
+  ASSERT_THAT(signature, IsOk());
 
-  auto verifier_or = RsaSsaPssVerifyBoringSsl::New(public_key_, params);
-  ASSERT_THAT(verifier_or, IsOk());
-  EXPECT_THAT(verifier_or.value()->Verify(signature_or.value(), "testdata"),
-              IsOk());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPssVerifyBoringSsl::New(sha384_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "testdata"), IsOk());
+
+  const auto* sha256_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      internal::GetRsaSsaPssTestVector(2048,
+                                       RsaSsaPssParameters::HashType::kSha256,
+                                       RsaSsaPssParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha256_key, NotNull());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> sha256_verifier =
+      RsaSsaPssVerifyBoringSsl::New(sha256_key->GetPublicKey());
+  ASSERT_THAT(sha256_verifier, IsOk());
+  EXPECT_THAT((*sha256_verifier)->Verify(*signature, "testdata"), Not(IsOk()));
 }
 
-TEST_F(RsaPssSignBoringsslTest, NegativeSaltLengthFails) {
+TEST(RsaPssSignBoringsslTest, EncodesPssWithSha512) {
   if (internal::IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA256,
-                                   /*salt_length=*/-1};
-  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(private_key_, params),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       testing::HasSubstr("Salt length is negative")));
-}
+  const auto* sha512_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      internal::GetRsaSsaPssTestVector(2048,
+                                       RsaSsaPssParameters::HashType::kSha512,
+                                       RsaSsaPssParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha512_key, NotNull());
 
-TEST_F(RsaPssSignBoringsslTest, RejectsInvalidPaddingHash) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test not run in FIPS-only mode";
-  }
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPssSignBoringSsl::New(*sha512_key);
+  ASSERT_THAT(signer, IsOk());
 
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::UNKNOWN_HASH,
-                                   /*salt_length=*/0};
-  ASSERT_THAT(RsaSsaPssSignBoringSsl::New(private_key_, params).status(),
-              StatusIs(absl::StatusCode::kUnimplemented));
-}
+  absl::StatusOr<std::string> signature = (*signer)->Sign("testdata");
+  ASSERT_THAT(signature, IsOk());
 
-TEST_F(RsaPssSignBoringsslTest, RejectsUnsafePaddingHash) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test not run in FIPS-only mode";
-  }
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPssVerifyBoringSsl::New(sha512_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "testdata"), IsOk());
 
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA1,
-                                   /*mgf1_hash=*/HashType::SHA1,
-                                   /*salt_length=*/0};
-  ASSERT_THAT(RsaSsaPssSignBoringSsl::New(private_key_, params).status(),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
-TEST_F(RsaPssSignBoringsslTest, RejectsInvalidCrtParams) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test not run in FIPS-only mode";
-  }
-
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA256,
-                                   /*salt_length=*/32};
-  ASSERT_THAT(private_key_.crt, Not(IsEmpty()));
-  ASSERT_THAT(private_key_.dq, Not(IsEmpty()));
-  ASSERT_THAT(private_key_.dp, Not(IsEmpty()));
-
-  // Flip a few bits in the CRT parameters; check that creation fails.
-  {
-    internal::RsaPrivateKey key = private_key_;
-    internal::SecretBuffer crt_buffer = util::internal::AsSecretBuffer(key.crt);
-    crt_buffer[0] ^= 0x80;
-    key.crt = util::internal::AsSecretData(crt_buffer);
-    auto signer_or = RsaSsaPssSignBoringSsl::New(key, params);
-    EXPECT_THAT(signer_or.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument));
-  }
-  {
-    internal::RsaPrivateKey key = private_key_;
-    internal::SecretBuffer dq_buffer = util::internal::AsSecretBuffer(key.dq);
-    dq_buffer[0] ^= 0x08;
-    key.dq = util::internal::AsSecretData(dq_buffer);
-    auto signer_or = RsaSsaPssSignBoringSsl::New(key, params);
-    EXPECT_THAT(signer_or.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument));
-  }
-  {
-    internal::RsaPrivateKey key = private_key_;
-    internal::SecretBuffer dp_buffer = util::internal::AsSecretBuffer(key.dp);
-    dp_buffer[0] ^= 0x04;
-    key.dp = util::internal::AsSecretData(dp_buffer);
-    auto signer_or = RsaSsaPssSignBoringSsl::New(key, params);
-    EXPECT_THAT(signer_or.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument));
-  }
+  const auto* sha384_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      internal::GetRsaSsaPssTestVector(2048,
+                                       RsaSsaPssParameters::HashType::kSha384,
+                                       RsaSsaPssParameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha384_key, NotNull());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> sha384_verifier =
+      RsaSsaPssVerifyBoringSsl::New(sha384_key->GetPublicKey());
+  ASSERT_THAT(sha384_verifier, IsOk());
+  EXPECT_THAT((*sha384_verifier)->Verify(*signature, "testdata"), Not(IsOk()));
 }
 
 // FIPS-only mode test
-TEST_F(RsaPssSignBoringsslTest, TestFipsFailWithoutBoringCrypto) {
+TEST(RsaPssSignBoringsslTest, TestFipsFailWithoutBoringCrypto) {
   if (!internal::IsFipsModeEnabled() || internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA256,
-                                   /*salt_length=*/32};
-  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(private_key_, params).status(),
+  const internal::SignatureTestVector& test_vector =
+      internal::Create2048BitTestVector();
+  const auto* private_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(*private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 
-TEST_F(RsaPssSignBoringsslTest, TestAllowedFipsModuli) {
+TEST(RsaPssSignBoringsslTest, TestAllowedFipsModuli) {
   if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
   }
   const internal::SignatureTestVector& test_vector =
       internal::Create3072BitTestVector();
-  const RsaSsaPssPrivateKey* typed_key =
-      dynamic_cast<const RsaSsaPssPrivateKey*>(
-          test_vector.signature_private_key.get());
+  const auto* typed_key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+      test_vector.signature_private_key.get());
   ASSERT_THAT(typed_key, NotNull());
-  internal::RsaPrivateKey private_key = ToRsaPrivateKey(*typed_key);
-
-  internal::RsaSsaPssParams params{/*sig_hash=*/HashType::SHA256,
-                                   /*mgf1_hash=*/HashType::SHA256,
-                                   /*salt_length=*/32};
-  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(private_key, params).status(),
-              IsOk());
+  EXPECT_THAT(RsaSsaPssSignBoringSsl::New(*typed_key).status(), IsOk());
 }
 
 using RsaSsaPssSignBoringSSLTestVectorTest =

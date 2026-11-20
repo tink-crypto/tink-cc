@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,10 +26,13 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "tink/big_integer.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
@@ -37,13 +41,12 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
 
-// TODO(quannguyen):
-//  + Add tests for parameters validation.
 namespace crypto {
 namespace tink {
 namespace subtle {
@@ -61,12 +64,41 @@ using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
 using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectorsV1;
 
-internal::RsaPublicKey ToRsaPublicKey(const RsaSsaPssPublicKey& key) {
-  internal::RsaPublicKey public_key;
-  public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
-  public_key.e =
-      std::string(key.GetParameters().GetPublicExponent().GetValue());
-  return public_key;
+absl::StatusOr<RsaSsaPssParameters::HashType> ToParametersHashType(
+    HashType hash_type) {
+  switch (hash_type) {
+    case HashType::SHA256:
+      return RsaSsaPssParameters::HashType::kSha256;
+    case HashType::SHA384:
+      return RsaSsaPssParameters::HashType::kSha384;
+    case HashType::SHA512:
+      return RsaSsaPssParameters::HashType::kSha512;
+    default:
+      return absl::InvalidArgumentError(
+          absl::StrCat("Unsupported hash: ", hash_type));
+  }
+}
+
+absl::StatusOr<RsaSsaPssPublicKey> CreatePublicKey(
+    const internal::RsaPublicKey& pub_key,
+    const internal::RsaSsaPssParams& params) {
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPssParameters::HashType sig_hash,
+                        ToParametersHashType(params.sig_hash));
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPssParameters::HashType mgf1_hash,
+                        ToParametersHashType(params.mgf1_hash));
+  BigInteger modulus(pub_key.n);
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPssParameters parameters,
+                        RsaSsaPssParameters::Builder()
+                            .SetModulusSizeInBits(modulus.SizeInBytes() * 8)
+                            .SetPublicExponent(BigInteger(pub_key.e))
+                            .SetSigHashType(sig_hash)
+                            .SetMgf1HashType(mgf1_hash)
+                            .SetSaltLengthInBytes(params.salt_length)
+                            .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+                            .Build());
+  return RsaSsaPssPublicKey::Create(parameters, modulus,
+                                    /*id_requirement=*/std::nullopt,
+                                    GetPartialKeyAccess());
 }
 
 // Test vector from
@@ -125,57 +157,15 @@ TEST(RsaSsaPssVerifyBoringSslTest, BasicVerify) {
       kNistTestVector.mgf1_hash,
       kNistTestVector.salt_length,
   };
+  absl::StatusOr<RsaSsaPssPublicKey> key = CreatePublicKey(pub_key, params);
+  ASSERT_THAT(key, IsOk());
 
-  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
-      RsaSsaPssVerifyBoringSsl::New(pub_key, params);
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPssVerifyBoringSsl::New(*key);
   ASSERT_THAT(verifier, IsOk());
   absl::Status status =
       (*verifier)->Verify(kNistTestVector.signature, kNistTestVector.message);
   EXPECT_THAT(status, IsOk()) << internal::GetSslErrors();
-}
-
-TEST(RsaSsaPssVerifyBoringSslTest, NewErrors) {
-  if (internal::IsFipsModeEnabled()) {
-    GTEST_SKIP() << "Test not run in FIPS-only mode";
-  }
-  const NistTestVector kNistTestVector = GetNistTestVector();
-  internal::RsaPublicKey nist_pub_key{kNistTestVector.n, kNistTestVector.e};
-  internal::RsaSsaPssParams nist_params = {
-      kNistTestVector.sig_hash,
-      kNistTestVector.mgf1_hash,
-      kNistTestVector.salt_length,
-  };
-  internal::RsaPublicKey small_pub_key{std::string("\x23"), std::string("\x3")};
-  internal::RsaSsaPssParams sha1_hash_params = {
-      HashType::SHA1, kNistTestVector.mgf1_hash, kNistTestVector.salt_length};
-
-  {  // Small modulus.
-    auto result = RsaSsaPssVerifyBoringSsl::New(small_pub_key, nist_params);
-    EXPECT_THAT(result, Not(IsOk()));
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
-    EXPECT_PRED_FORMAT2(testing::IsSubstring,
-                        "only modulus size >= 2048-bit is supported",
-                        std::string(result.status().message()));
-  }
-
-  {  // Use SHA1 for digital signature.
-    auto result = RsaSsaPssVerifyBoringSsl::New(nist_pub_key, sha1_hash_params);
-    EXPECT_THAT(result, Not(IsOk()));
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
-    EXPECT_PRED_FORMAT2(testing::IsSubstring,
-                        "SHA1 is not safe for digital signature",
-                        std::string(result.status().message()));
-  }
-
-  {  // Negative salt length.
-    internal::RsaSsaPssParams negative_salt_params = {
-        kNistTestVector.sig_hash, kNistTestVector.mgf1_hash, -1};
-    absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> result =
-        RsaSsaPssVerifyBoringSsl::New(nist_pub_key, negative_salt_params);
-    EXPECT_THAT(result,
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         testing::HasSubstr("Salt length is negative")));
-  }
 }
 
 TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
@@ -189,12 +179,14 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
       kNistTestVector.mgf1_hash,
       kNistTestVector.salt_length,
   };
+  absl::StatusOr<RsaSsaPssPublicKey> key = CreatePublicKey(pub_key, params);
+  ASSERT_THAT(key, IsOk());
 
-  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
-      RsaSsaPssVerifyBoringSsl::New(pub_key, params);
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPssVerifyBoringSsl::New(*key);
   ASSERT_THAT(verifier, IsOk());
   // Modify the message.
-  for (std::size_t i = 0; i < kNistTestVector.message.length(); i++) {
+  for (std::size_t i = 0; i < kNistTestVector.message.length() * 8; i++) {
     std::string modified_message = kNistTestVector.message;
     modified_message[i / 8] ^= 1 << (i % 8);
     absl::Status status =
@@ -202,7 +194,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
     EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
   // Modify the signature.
-  for (std::size_t i = 0; i < kNistTestVector.signature.length(); i++) {
+  for (std::size_t i = 0; i < kNistTestVector.signature.length() * 8; i++) {
     std::string modified_signature = kNistTestVector.signature;
     modified_signature[i / 8] ^= 1 << (i % 8);
     absl::Status status =
@@ -216,6 +208,47 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
         (*verifier)->Verify(truncated_signature, kNistTestVector.message);
     EXPECT_THAT(status, Not(IsOk())) << internal::GetSslErrors();
   }
+}
+
+TEST(RsaSsaPssVerifyBoringSslTest, VerifyWithSha384) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+  const internal::SignatureTestVector& test_vector =
+      internal::Create4096BitTestVector();
+  const RsaSsaPssPrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPssPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPssVerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
+              IsOk());
+
+  absl::StatusOr<RsaSsaPssParameters> sha256_params =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(
+              typed_key->GetParameters().GetModulusSizeInBits())
+          .SetPublicExponent(typed_key->GetParameters().GetPublicExponent())
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(48)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(sha256_params, IsOk());
+  absl::StatusOr<RsaSsaPssPublicKey> sha256_key = RsaSsaPssPublicKey::Create(
+      *sha256_params,
+      typed_key->GetPublicKey().GetModulus(GetPartialKeyAccess()),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(sha256_key, IsOk());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> sha256_verifier =
+      RsaSsaPssVerifyBoringSsl::New(*sha256_key);
+  ASSERT_THAT(sha256_verifier, IsOk());
+  EXPECT_THAT(
+      (*sha256_verifier)->Verify(test_vector.signature, test_vector.message),
+      Not(IsOk()));
 }
 
 // Wycheproof test vector for RSA-SSA PSS.
@@ -261,7 +294,7 @@ std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
           /*mgf_hash_type=*/
           GetHashTypeFromValue(test_group_fields.at("mgfSha")),
           /*salt_length=*/
-          (int)test_group_fields.at("sLen").number_value(),
+          static_cast<int>(test_group_fields.at("sLen").number_value()),
           /*expected=*/test.struct_value().fields().at("result").string_value(),
           /*msg=*/GetBytesFromHexValue(test_fields.at("msg")),
           /*sig=*/GetBytesFromHexValue(test_fields.at("sig")),
@@ -276,15 +309,16 @@ std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
 }
 
 // Creates a verifier using the parameters in `test_vector`.
-absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> GetVerifier(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
     const RsaSsaPssWycheproofTestVector& test_vector) {
-  internal::RsaPublicKey key = test_vector.key;
   internal::RsaSsaPssParams params = {
       test_vector.hash_type,
       test_vector.mgf_hash_type,
       test_vector.salt_length,
   };
-  return RsaSsaPssVerifyBoringSsl::New(key, params);
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPssPublicKey key,
+                        CreatePublicKey(test_vector.key, params));
+  return RsaSsaPssVerifyBoringSsl::New(key);
 }
 
 using RsaSsaPssWycheproofTest =
@@ -296,7 +330,7 @@ TEST_P(RsaSsaPssWycheproofTest, SignatureVerify) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
   RsaSsaPssWycheproofTestVector params = GetParam();
-  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       GetVerifier(params);
   ASSERT_THAT(verifier, IsOk());
   absl::Status result = (*verifier)->Verify(params.sig, params.msg);
@@ -356,7 +390,9 @@ TEST(RsaSsaPssVerifyBoringSslTest, TestFipsFailWithoutBoringCrypto) {
       /*mgf1_hash=*/HashType::SHA256,
       /*salt_length=*/32,
   };
-  EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(pub_key, params).status(),
+  absl::StatusOr<RsaSsaPssPublicKey> key = CreatePublicKey(pub_key, params);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(*key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 
@@ -371,13 +407,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, TestAllowedFipsModuli) {
       dynamic_cast<const RsaSsaPssPrivateKey*>(
           test_vector.signature_private_key.get());
   ASSERT_THAT(typed_key, NotNull());
-  internal::RsaPublicKey public_key = ToRsaPublicKey(typed_key->GetPublicKey());
-  internal::RsaSsaPssParams params = {
-      /*sig_hash=*/HashType::SHA256,
-      /*mgf1_hash=*/HashType::SHA256,
-      /*salt_length=*/32,
-  };
-  EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(public_key, params).status(),
+  EXPECT_THAT(RsaSsaPssVerifyBoringSsl::New(typed_key->GetPublicKey()).status(),
               IsOk());
 }
 

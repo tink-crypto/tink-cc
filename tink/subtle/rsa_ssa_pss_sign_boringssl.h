@@ -22,19 +22,17 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/internal/rsa_ssa_pss_sign_boringssl.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
-struct RsaPrivateKey;
-struct RsaSsaPssParams;
-}  // namespace internal
 namespace subtle {
 
 // The RSA SSA (Signature Schemes with Appendix) using PSS (Probabilistic
@@ -43,13 +41,9 @@ namespace subtle {
 class RsaSsaPssSignBoringSsl : public PublicKeySign {
  public:
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const crypto::tink::internal::RsaPrivateKey& private_key,
-      const crypto::tink::internal::RsaSsaPssParams& params) {
-    return New(private_key, params, "", "");
+      const RsaSsaPssPrivateKey& key) {
+    return internal::NewRsaSsaPssSignBoringSsl(key);
   }
-
-  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const RsaSsaPssPrivateKey& key);
 
   ~RsaSsaPssSignBoringSsl() override = default;
 
@@ -60,12 +54,6 @@ class RsaSsaPssSignBoringSsl : public PublicKeySign {
 
  protected:
   RsaSsaPssSignBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const crypto::tink::internal::RsaPrivateKey& private_key,
-      const crypto::tink::internal::RsaSsaPssParams& params,
-      absl::string_view output_prefix, absl::string_view message_suffix);
 };
 
 }  // namespace subtle

@@ -21,9 +21,11 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/internal/rsa_ssa_pss_verify_boringssl.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/status.h"
@@ -31,10 +33,6 @@
 
 namespace crypto {
 namespace tink {
-namespace internal {
-struct RsaPublicKey;
-struct RsaSsaPssParams;
-}  // namespace internal
 namespace subtle {
 
 // RSA SSA (Signature Schemes with Appendix) using  PSS  (Probabilistic
@@ -42,12 +40,10 @@ namespace subtle {
 // https://tools.ietf.org/html/rfc8017#section-8.1).
 class RsaSsaPssVerifyBoringSsl : public PublicKeyVerify {
  public:
-  static absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> New(
-      const internal::RsaPublicKey& pub_key,
-      const internal::RsaSsaPssParams& params);
-
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
-      const RsaSsaPssPublicKey& pub_key);
+      const RsaSsaPssPublicKey& pub_key) {
+    return internal::NewRsaSsaPssVerifyBoringSsl(pub_key);
+  }
 
   ~RsaSsaPssVerifyBoringSsl() override = default;
 
@@ -59,12 +55,6 @@ class RsaSsaPssVerifyBoringSsl : public PublicKeyVerify {
 
  protected:
   RsaSsaPssVerifyBoringSsl() = default;
-
- private:
-  static absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> New(
-      const internal::RsaPublicKey& pub_key,
-      const internal::RsaSsaPssParams& params, absl::string_view output_prefix,
-      absl::string_view message_suffix);
 };
 
 }  // namespace subtle

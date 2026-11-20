@@ -20,6 +20,7 @@
 #include "tink/internal/configuration_helper.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/serialization_registry.h"
 
 namespace crypto {
 namespace tink {
@@ -49,6 +50,7 @@ class Configuration {
   crypto::tink::internal::KeyTypeInfoStore key_type_info_store_;
   crypto::tink::internal::KeysetWrapperStore keyset_wrapper_store_;
   crypto::tink::internal::PrimitiveGetterFnMap primitive_getter_fn_map_;
+  crypto::tink::internal::SerializationRegistry serialization_registry_;
 };
 
 }  // namespace tink

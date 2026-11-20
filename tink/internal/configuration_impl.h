@@ -23,6 +23,7 @@
 #include <typeindex>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -31,6 +32,7 @@
 #include "tink/internal/configuration_helper.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
 #include "tink/key_manager.h"
 #include "tink/util/status.h"
@@ -200,11 +202,36 @@ class ConfigurationImpl {
     return &config.keyset_wrapper_store_;
   }
 
+  // Returns a non-null pointer to `config`'s internal `SerializationRegistry`
+  // (valid for the lifetime of `config`), or `kFailedPrecondition` if `config`
+  // is in global registry mode.
+  static absl::StatusOr<const crypto::tink::internal::SerializationRegistry*>
+  GetSerializationRegistry(
+      const crypto::tink::Configuration& config ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+    if (config.global_registry_mode_) {
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kConfigurationImplErr);
+    }
+    return &config.serialization_registry_;
+  }
+
+  static absl::StatusOr<crypto::tink::internal::SerializationRegistry*>
+  GetSerializationRegistry(
+      crypto::tink::Configuration& config ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+    if (config.global_registry_mode_) {
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kConfigurationImplErr);
+    }
+    return &config.serialization_registry_;
+  }
+
   // `config` can be set to global registry mode only if empty.
   static absl::Status SetGlobalRegistryMode(
       crypto::tink::Configuration& config) {
     if (!config.key_type_info_store_.IsEmpty() ||
-        !config.keyset_wrapper_store_.IsEmpty()) {
+        !config.keyset_wrapper_store_.IsEmpty() ||
+        !config.primitive_getter_fn_map_.empty() ||
+        !config.serialization_registry_.IsEmpty()) {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "Using the global registry is only "
                           "allowed when Configuration is empty.");

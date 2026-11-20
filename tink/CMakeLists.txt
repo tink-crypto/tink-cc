@@ -764,6 +764,7 @@ tink_cc_library(
     tink::internal::configuration_helper
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::serialization_registry
 )
 
 tink_cc_library(

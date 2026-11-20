@@ -1125,6 +1125,8 @@ tink_cc_library(
     tink::internal::configuration_helper
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::serialization_registry
+    absl::core_headers
     absl::status
     absl::statusor
     absl::strings
@@ -1147,10 +1149,14 @@ tink_cc_test(
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
     tink::internal::primitive_set
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     GTest::gmock
-    absl::memory
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::string_view
     tink::core::cleartext_keyset_handle
     tink::core::configuration
@@ -1160,17 +1166,18 @@ tink_cc_test(
     tink::core::template_util
     tink::core::input_stream
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::key_manager
     tink::core::keyset_handle
+    tink::core::parameters
+    tink::core::partial_key_access
     tink::core::primitive_wrapper
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
+    tink::core::restricted_data
     tink::internal::testing::test_only_key
     tink::subtle::random
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto

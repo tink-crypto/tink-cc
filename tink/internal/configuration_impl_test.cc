@@ -20,12 +20,13 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/configuration.h"
@@ -39,17 +40,22 @@
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/internal/primitive_set.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/testing/test_only_key.h"
+#include "tink/key.h"
 #include "tink/key_manager.h"
 #include "tink/keyset_handle.h"
+#include "tink/parameters.h"
+#include "tink/partial_key_access.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/registry.h"
+#include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/rsa_ssa_pss.pb.h"
@@ -62,6 +68,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::KeyData;
@@ -72,6 +79,8 @@ using ::google::crypto::tink::RsaSsaPssKeyFormat;
 using ::google::crypto::tink::RsaSsaPssParams;
 using ::google::crypto::tink::RsaSsaPssPrivateKey;
 using ::google::crypto::tink::RsaSsaPssPublicKey;
+using ::testing::Eq;
+using ::testing::Pointee;
 
 class FakePrimitive {
  public:
@@ -571,6 +580,12 @@ TEST(ConfigurationImplTest, GlobalRegistryMode) {
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_THAT(ConfigurationImpl::GetKeysetWrapperStore(config).status(),
               StatusIs(absl::StatusCode::kFailedPrecondition));
+  EXPECT_THAT(ConfigurationImpl::GetSerializationRegistry(config).status(),
+              StatusIs(absl::StatusCode::kFailedPrecondition));
+  const Configuration& const_config = config;
+  EXPECT_THAT(
+      ConfigurationImpl::GetSerializationRegistry(const_config).status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition));
 
   Keyset keyset;
   [[maybe_unused]] std::string raw_key = AddAesGcmKeyToKeyset(
@@ -599,6 +614,74 @@ TEST(ConfigurationImplTest, GlobalRegistryModeWithNonEmptyConfigFails) {
   ASSERT_THAT(ConfigurationImpl::AddPrimitiveWrapper(
                   std::make_unique<FakePrimitiveWrapper>(), config),
               IsOk());
+  EXPECT_THAT(ConfigurationImpl::SetGlobalRegistryMode(config),
+              StatusIs(absl::StatusCode::kFailedPrecondition));
+  EXPECT_FALSE(ConfigurationImpl::IsInGlobalRegistryMode(config));
+}
+
+TEST(ConfigurationImplTest, GetSerializationRegistry) {
+  Configuration config;
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+  EXPECT_TRUE((*registry)->IsEmpty());
+
+  ASSERT_THAT(RegisterTestOnlyProtoSerializationWithRegistry(**registry),
+              IsOk());
+  EXPECT_FALSE((*registry)->IsEmpty());
+
+  const Configuration& const_config = config;
+  absl::StatusOr<const SerializationRegistry*> const_registry =
+      ConfigurationImpl::GetSerializationRegistry(const_config);
+  ASSERT_THAT(const_registry, IsOk());
+
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+      (*const_registry)
+          ->SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialized_params, IsOk());
+  EXPECT_THAT((*const_registry)->ParseParameters(**serialized_params),
+              IsOkAndHolds(Pointee(Eq(*params))));
+
+  absl::StatusOr<TestOnlySymmetricKey> key = TestOnlySymmetricKey::Create(
+      *params,
+      RestrictedData(std::string(kTestOnlyKeySizeInBytes, 'a'),
+                     InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+      (*const_registry)
+          ->SerializeKey<ProtoKeySerialization>(*key,
+                                                InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_key, IsOk());
+  EXPECT_THAT((*const_registry)
+                  ->ParseKey(**serialized_key, InsecureSecretKeyAccess::Get()),
+              IsOkAndHolds(Pointee(Eq(*key))));
+}
+
+TEST(ConfigurationImplTest,
+     GlobalRegistryModeWithNonEmptySerializationRegistryFails) {
+  Configuration config;
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+  ASSERT_THAT(RegisterTestOnlyProtoSerializationWithRegistry(**registry),
+              IsOk());
+
+  EXPECT_THAT(ConfigurationImpl::SetGlobalRegistryMode(config),
+              StatusIs(absl::StatusCode::kFailedPrecondition));
+  EXPECT_FALSE(ConfigurationImpl::IsInGlobalRegistryMode(config));
+}
+
+TEST(ConfigurationImplTest, GlobalRegistryModeWithPrimitiveGetterFails) {
+  Configuration config;
+  ASSERT_THAT((ConfigurationImpl::AddPrimitiveGetter<FakePrimitive,
+                                                     TestOnlySymmetricKey>(
+                  FakePrimitiveGetterFromKey(), config)),
+              IsOk());
+
   EXPECT_THAT(ConfigurationImpl::SetGlobalRegistryMode(config),
               StatusIs(absl::StatusCode::kFailedPrecondition));
   EXPECT_FALSE(ConfigurationImpl::IsInGlobalRegistryMode(config));

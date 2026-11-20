@@ -526,6 +526,7 @@ tink_cc_test(
     aes_cmac_prf_parameters_test.cc
   DEPS
     tink::prf::aes_cmac_prf_parameters
+    tink::prf::hmac_prf_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -541,6 +542,8 @@ tink_cc_test(
   DEPS
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -584,6 +587,7 @@ tink_cc_test(
   SRCS
     hmac_prf_parameters_test.cc
   DEPS
+    tink::prf::aes_cmac_prf_parameters
     tink::prf::hmac_prf_parameters
     GTest::gmock
     absl::status
@@ -598,6 +602,7 @@ tink_cc_test(
   SRCS
     hmac_prf_key_test.cc
   DEPS
+    tink::prf::aes_cmac_prf_key
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_parameters
     GTest::gmock
@@ -644,6 +649,7 @@ tink_cc_test(
   SRCS
     hkdf_prf_parameters_test.cc
   DEPS
+    tink::prf::aes_cmac_prf_parameters
     tink::prf::hkdf_prf_parameters
     GTest::gmock
     absl::status
@@ -661,6 +667,7 @@ tink_cc_test(
   SRCS
     hkdf_prf_key_test.cc
   DEPS
+    tink::prf::aes_cmac_prf_key
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     GTest::gmock

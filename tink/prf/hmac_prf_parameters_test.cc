@@ -24,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/parameters.h"
+#include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -183,6 +184,21 @@ TEST(HmacPrfParametersTest, DifferentashTypeNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(HmacPrfParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCmacPrfParameters> other_parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(HmacPrfParametersTest, Clone) {

@@ -583,6 +583,7 @@ cc_test(
     srcs = ["aes_cmac_prf_parameters_test.cc"],
     deps = [
         ":aes_cmac_prf_parameters",
+        ":hmac_prf_parameters",
         "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
@@ -598,6 +599,8 @@ cc_test(
     deps = [
         ":aes_cmac_prf_key",
         ":aes_cmac_prf_parameters",
+        ":hmac_prf_key",
+        ":hmac_prf_parameters",
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
@@ -641,6 +644,7 @@ cc_test(
     name = "hmac_prf_parameters_test",
     srcs = ["hmac_prf_parameters_test.cc"],
     deps = [
+        ":aes_cmac_prf_parameters",
         ":hmac_prf_parameters",
         "//tink:parameters",
         "//tink/util:statusor",
@@ -655,6 +659,7 @@ cc_test(
     name = "hmac_prf_key_test",
     srcs = ["hmac_prf_key_test.cc"],
     deps = [
+        ":aes_cmac_prf_key",
         ":hmac_prf_key",
         ":hmac_prf_parameters",
         "//tink:key",
@@ -701,6 +706,7 @@ cc_test(
     name = "hkdf_prf_parameters_test",
     srcs = ["hkdf_prf_parameters_test.cc"],
     deps = [
+        ":aes_cmac_prf_parameters",
         ":hkdf_prf_parameters",
         "//tink:parameters",
         "//tink/util:statusor",
@@ -718,6 +724,7 @@ cc_test(
     name = "hkdf_prf_key_test",
     srcs = ["hkdf_prf_key_test.cc"],
     deps = [
+        ":aes_cmac_prf_key",
         ":hkdf_prf_key",
         ":hkdf_prf_parameters",
         "//tink:key",

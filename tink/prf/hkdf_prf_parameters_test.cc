@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
+#include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -245,6 +246,22 @@ TEST(HkdfPrfParametersTest, DifferentSaltNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(HkdfPrfParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/std::nullopt);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCmacPrfParameters> other_parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(HkdfPrfParametersTest, Clone) {

@@ -27,6 +27,8 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
+#include "tink/prf/hmac_prf_key.h"
+#include "tink/prf/hmac_prf_parameters.h"
 #include "tink/prf/internal/aes_cmac_prf_test_vectors.h"
 #include "tink/restricted_data.h"
 
@@ -104,6 +106,27 @@ TEST(AesCmacPrfKeyTest, DifferentParametersNotEqual) {
   EXPECT_TRUE(key2 != key1);
   EXPECT_FALSE(key1 == key2);
   EXPECT_FALSE(key2 == key1);
+}
+
+TEST(AesCmacPrfKeyTest, DifferentKeyTypeNotEqual) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<AesCmacPrfKey> key =
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<HmacPrfParameters> hmac_parameters = HmacPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
+  ASSERT_THAT(hmac_parameters, IsOk());
+
+  absl::StatusOr<HmacPrfKey> other_key =
+      HmacPrfKey::Create(*hmac_parameters, secret, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
 }
 
 TEST(AesCmacPrfKeyTest, CopyConstructor) {

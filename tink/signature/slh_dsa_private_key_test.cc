@@ -394,6 +394,21 @@ TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
   EXPECT_FALSE(*key2 == *key1);
 }
 
+TEST(SlhDsaPrivateKeyTest, DifferentKeyTypeNotEqual) {
+  const auto* private_key = static_cast<const SlhDsaPrivateKey*>(
+      internal::GetSlhDsaTestVector(
+          SlhDsaParameters::HashType::kSha2,
+          SlhDsaParameters::SignatureType::kSmallSignature,
+          SlhDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  const SlhDsaPublicKey& public_key = private_key->GetPublicKey();
+
+  EXPECT_TRUE(*private_key != public_key);
+  EXPECT_TRUE(public_key != *private_key);
+  EXPECT_FALSE(*private_key == public_key);
+  EXPECT_FALSE(public_key == *private_key);
+}
+
 TEST(SlhDsaPrivateKeyTest, Clone) {
   const auto* test_private_key = static_cast<const SlhDsaPrivateKey*>(
       internal::GetSlhDsaTestVector(

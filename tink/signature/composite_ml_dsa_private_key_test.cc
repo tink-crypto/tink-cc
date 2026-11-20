@@ -317,6 +317,32 @@ TEST_P(CompositeMlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*private_key2 == *private_key1);
 }
 
+TEST(CompositeMlDsaPrivateKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+          CompositeMlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  MlDsaPrivateKey ml_dsa_private_key = GenerateMlDsaPrivateKeyForTestOrDie(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
+  std::unique_ptr<SignaturePrivateKey> classical_private_key =
+      GenerateClassicalPrivateKeyForTestOrDie(
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
+
+  absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
+      CompositeMlDsaPrivateKey::Create(
+          *parameters, ml_dsa_private_key, std::move(classical_private_key),
+          /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_TRUE(*private_key != ml_dsa_private_key);
+  EXPECT_TRUE(ml_dsa_private_key != *private_key);
+  EXPECT_FALSE(*private_key == ml_dsa_private_key);
+  EXPECT_FALSE(ml_dsa_private_key == *private_key);
+}
+
 TEST(CompositeMlDsaPrivateKeyTest, Clone) {
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(

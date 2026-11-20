@@ -30,6 +30,8 @@
 #include "openssl/slhdsa.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/subtle/random.h"
 
@@ -239,6 +241,34 @@ TEST(SlhDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(SlhDsaPublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, subtle::Random::GetRandomBytes(32),
+      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> other_key = Ed25519PublicKey::Create(
+      *other_params, std::string(32, 'a'), /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*public_key != *other_key);
+  EXPECT_TRUE(*other_key != *public_key);
+  EXPECT_FALSE(*public_key == *other_key);
+  EXPECT_FALSE(*other_key == *public_key);
 }
 
 TEST(SlhDsaPublicKeyTest, Clone) {

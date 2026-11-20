@@ -1763,6 +1763,7 @@ cc_test(
     name = "ml_dsa_parameters_test",
     srcs = ["ml_dsa_parameters_test.cc"],
     deps = [
+        ":ed25519_parameters",
         ":ml_dsa_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
@@ -1801,6 +1802,8 @@ cc_test(
     name = "ml_dsa_public_key_test",
     srcs = ["ml_dsa_public_key_test.cc"],
     deps = [
+        ":ed25519_parameters",
+        ":ed25519_public_key",
         ":ml_dsa_parameters",
         ":ml_dsa_public_key",
         "//tink:key",
@@ -1820,6 +1823,7 @@ cc_test(
     name = "slh_dsa_parameters_test",
     srcs = ["slh_dsa_parameters_test.cc"],
     deps = [
+        ":ed25519_parameters",
         ":slh_dsa_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
@@ -1886,6 +1890,8 @@ cc_test(
     name = "slh_dsa_public_key_test",
     srcs = ["slh_dsa_public_key_test.cc"],
     deps = [
+        ":ed25519_parameters",
+        ":ed25519_public_key",
         ":slh_dsa_parameters",
         ":slh_dsa_public_key",
         "//tink:key",
@@ -1918,6 +1924,7 @@ cc_test(
     srcs = ["composite_ml_dsa_parameters_test.cc"],
     deps = [
         ":composite_ml_dsa_parameters",
+        ":ed25519_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",

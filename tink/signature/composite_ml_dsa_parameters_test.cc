@@ -25,6 +25,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -392,6 +393,24 @@ TEST_P(CompositeMlDsaParametersTest, DifferentVariantNotEqual) {
 
   EXPECT_TRUE(*parameter != *other_parameter);
   EXPECT_FALSE(*parameter == *other_parameter);
+}
+
+TEST(CompositeMlDsaParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP256,
+          CompositeMlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(CompositeMlDsaParametersTest, Clone) {

@@ -266,6 +266,19 @@ TEST(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_private_key == *private_key1);
 }
 
+TEST(MlDsaPrivateKeyTest, DifferentKeyTypeNotEqual) {
+  const auto* private_key = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+  const MlDsaPublicKey& public_key = private_key->GetPublicKey();
+
+  EXPECT_TRUE(*private_key != public_key);
+  EXPECT_TRUE(public_key != *private_key);
+  EXPECT_FALSE(*private_key == public_key);
+  EXPECT_FALSE(public_key == *private_key);
+}
+
 TEST(MlDsaPrivateKeyTest, Clone) {
   const auto* private_key = static_cast<const MlDsaPrivateKey*>(
       internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,

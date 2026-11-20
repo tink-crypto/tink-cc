@@ -1615,6 +1615,7 @@ tink_cc_test(
   SRCS
     ml_dsa_parameters_test.cc
   DEPS
+    tink::signature::ed25519_parameters
     tink::signature::ml_dsa_parameters
     GTest::gmock
     absl::status
@@ -1696,6 +1697,8 @@ tink_cc_test(
   SRCS
     ml_dsa_public_key_test.cc
   DEPS
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key
     GTest::gmock
@@ -1729,6 +1732,7 @@ tink_cc_test(
   SRCS
     slh_dsa_parameters_test.cc
   DEPS
+    tink::signature::ed25519_parameters
     tink::signature::slh_dsa_parameters
     GTest::gmock
     absl::no_destructor
@@ -1819,6 +1823,8 @@ tink_cc_test(
   SRCS
     slh_dsa_public_key_test.cc
   DEPS
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_public_key
     GTest::gmock
@@ -1850,6 +1856,7 @@ tink_cc_test(
     composite_ml_dsa_parameters_test.cc
   DEPS
     tink::signature::composite_ml_dsa_parameters
+    tink::signature::ed25519_parameters
     GTest::gmock
     absl::status
     absl::status_matchers

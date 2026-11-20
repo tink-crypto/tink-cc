@@ -419,6 +419,32 @@ TEST_P(CompositeMlDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_public_key == *public_key);
 }
 
+TEST(CompositeMlDsaPublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+          CompositeMlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  MlDsaPublicKey ml_dsa_public_key = GenerateMlDsaPublicKeyOrDie(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
+  std::unique_ptr<SignaturePublicKey> classical_public_key =
+      GenerateClassicalPublicKeyOrDie(
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
+
+  absl::StatusOr<CompositeMlDsaPublicKey> public_key =
+      CompositeMlDsaPublicKey::Create(
+          *parameters, ml_dsa_public_key, std::move(classical_public_key),
+          /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  EXPECT_TRUE(*public_key != ml_dsa_public_key);
+  EXPECT_TRUE(ml_dsa_public_key != *public_key);
+  EXPECT_FALSE(*public_key == ml_dsa_public_key);
+  EXPECT_FALSE(ml_dsa_public_key == *public_key);
+}
+
 TEST(CompositeMlDsaPublicKeyTest, Clone) {
   absl::StatusOr<CompositeMlDsaParameters> parameters =
       CompositeMlDsaParameters::Create(

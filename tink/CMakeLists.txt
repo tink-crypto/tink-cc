@@ -778,6 +778,7 @@ tink_cc_library(
     absl::statusor
     absl::optional
     tink::internal::key_type_info_store
+    tink::internal::serialization_registry
 )
 
 tink_cc_library(

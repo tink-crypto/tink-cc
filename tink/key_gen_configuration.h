@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 
@@ -62,6 +63,7 @@ class KeyGenConfiguration {
   crypto::tink::internal::KeyTypeInfoStore key_type_info_store_;
   // KeyCreatorFnMap holds functions that construct a Key from Parameters.
   crypto::tink::internal::KeyCreatorFnMap key_creator_fn_map_;
+  crypto::tink::internal::SerializationRegistry serialization_registry_;
 };
 
 }  // namespace tink

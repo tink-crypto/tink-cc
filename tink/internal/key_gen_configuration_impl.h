@@ -21,11 +21,13 @@
 #include <typeindex>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_manager.h"
@@ -122,6 +124,29 @@ class KeyGenConfigurationImpl {
     return &config.key_type_info_store_;
   }
 
+  // Returns a non-null pointer to `config`'s internal `SerializationRegistry`
+  // (valid for the lifetime of `config`), or `kFailedPrecondition` if `config`
+  // is in global registry mode.
+  static absl::StatusOr<const crypto::tink::internal::SerializationRegistry*>
+  GetSerializationRegistry(const crypto::tink::KeyGenConfiguration& config
+                               ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+    if (config.global_registry_mode_) {
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
+    }
+    return &config.serialization_registry_;
+  }
+
+  static absl::StatusOr<crypto::tink::internal::SerializationRegistry*>
+  GetSerializationRegistry(
+      crypto::tink::KeyGenConfiguration& config ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+    if (config.global_registry_mode_) {
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
+    }
+    return &config.serialization_registry_;
+  }
+
   // Creates a new key from `parameters` using `config`'s `key_creator_fn_map_`.
   // Only works for key types added to `config` via `AddKeyCreator`.
   static absl::StatusOr<std::unique_ptr<crypto::tink::Key>> CreateKey(
@@ -141,7 +166,9 @@ class KeyGenConfigurationImpl {
   // `config` can be set to global registry mode only if empty.
   static absl::Status SetGlobalRegistryMode(
       crypto::tink::KeyGenConfiguration& config) {
-    if (!config.key_type_info_store_.IsEmpty()) {
+    if (!config.key_type_info_store_.IsEmpty() ||
+        !config.key_creator_fn_map_.empty() ||
+        !config.serialization_registry_.IsEmpty()) {
       return absl::Status(
           absl::StatusCode::kFailedPrecondition,
           "Using the global registry is only allowed when KeyGenConfiguration "

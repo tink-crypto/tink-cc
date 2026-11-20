@@ -142,6 +142,11 @@ class KeysetHandleTest : public ::testing::Test {
 
 using KeysetHandleDeathTest = KeysetHandleTest;
 
+// Tests of the key class paths: key creators, primitive getters and
+// `PrivateKey::GetPublicKey()`. Same setup as `KeysetHandleTest`, which holds
+// the tests that do not depend on the path.
+using KeysetHandleKeyClassTest = KeysetHandleTest;
+
 // Tests of the key manager paths: registers the test-only key managers and the
 // AEAD wrapper in the global registry, and no proto serialization, so test-only
 // keys are parsed into `LegacyProtoKey`s.
@@ -903,15 +908,16 @@ TEST_F(KeysetHandleLegacyTest, GenerateNewInvalidKeyTemplateFails) {
   EXPECT_THAT(handle_result, StatusIs(absl::StatusCode::kNotFound));
 }
 
-class KeysetHandlePrefixTest
-    : public KeysetHandleTest,
+class KeysetHandleKeyClassPrefixTest
+    : public KeysetHandleKeyClassTest,
       public ::testing::WithParamInterface<TestOnlyParameters::Variant> {};
 
-INSTANTIATE_TEST_SUITE_P(KeysetHandlePrefixTestSuite, KeysetHandlePrefixTest,
+INSTANTIATE_TEST_SUITE_P(KeysetHandleKeyClassPrefixTestSuite,
+                         KeysetHandleKeyClassPrefixTest,
                          Values(TestOnlyParameters::Variant::kTink,
                                 TestOnlyParameters::Variant::kNoPrefix));
 
-TEST_P(KeysetHandlePrefixTest, GenerateNewFromParametersWorks) {
+TEST_P(KeysetHandleKeyClassPrefixTest, GenerateNewFromParametersWorks) {
   TestOnlyParameters::Variant variant = GetParam();
 
   absl::StatusOr<TestOnlyParameters> params =
@@ -928,9 +934,7 @@ TEST_P(KeysetHandlePrefixTest, GenerateNewFromParametersWorks) {
   EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
 }
 
-class KeysetHandleGenerateNewFromParametersTest : public KeysetHandleTest {};
-
-TEST_F(KeysetHandleGenerateNewFromParametersTest,
+TEST_F(KeysetHandleKeyClassTest,
        GenerateNewFromParametersEmptyKeyGenConfigFails) {
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
@@ -942,8 +946,7 @@ TEST_F(KeysetHandleGenerateNewFromParametersTest,
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(KeysetHandleGenerateNewFromParametersTest,
-       GenerateNewFromAbstractParametersWorks) {
+TEST_F(KeysetHandleKeyClassTest, GenerateNewFromAbstractParametersWorks) {
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
   ASSERT_THAT(params.status(), IsOk());
@@ -963,8 +966,7 @@ TEST_F(KeysetHandleGenerateNewFromParametersTest,
   EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
 }
 
-TEST_F(KeysetHandleGenerateNewFromParametersTest,
-       GenerateNewFromParametersWithAnnotations) {
+TEST_F(KeysetHandleKeyClassTest, GenerateNewFromParametersWithAnnotations) {
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}};
 
@@ -1011,7 +1013,7 @@ TEST_F(KeysetHandleGenerateNewFromParametersTest,
   Registry::Reset();
 }
 
-TEST_F(KeysetHandleGenerateNewFromParametersTest,
+TEST_F(KeysetHandleKeyClassTest,
        GenerateNewFromParametersWithGlobalRegistryConfigFails) {
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
@@ -1163,7 +1165,7 @@ TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
   }
 }
 
-TEST_F(KeysetHandleTest,
+TEST_F(KeysetHandleKeyClassTest,
        GetPublicKeysetHandleWithBespokeConfigNoKeyManagersSucceeds) {
   // Test-only private keys have a registered proto serialization, so they are
   // parsed into `PrivateKey` objects, which need no key managers.
@@ -1322,7 +1324,7 @@ TEST_F(KeysetHandleLegacyTest, GetPrimitiveWithGlobalRegistryConfig) {
   EXPECT_THAT((*handle)->GetPrimitive<Aead>(ConfigGlobalRegistry()), IsOk());
 }
 
-TEST_P(KeysetHandlePrefixTest,
+TEST_P(KeysetHandleKeyClassPrefixTest,
        GetPrimitiveWithBespokeConfigUsingPrimitiveGettersSucceeds) {
   TestOnlyParameters::Variant variant = GetParam();
   absl::StatusOr<TestOnlyParameters> params =
@@ -1362,7 +1364,7 @@ TEST_P(KeysetHandlePrefixTest,
   EXPECT_EQ(*decryption, plaintext);
 }
 
-TEST_F(KeysetHandleTest,
+TEST_F(KeysetHandleKeyClassTest,
        GetPrimitiveWithBespokeConfigUsingMultipleKeysPrimitiveGettersSucceeds) {
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
@@ -1419,7 +1421,7 @@ TEST_F(KeysetHandleTest,
   EXPECT_EQ(*decryption, plaintext);
 }
 
-TEST_F(KeysetHandleTest,
+TEST_F(KeysetHandleKeyClassTest,
        GetPrimitiveWithBespokeConfigMultipleKeysMixedPrimitiveGettersSucceeds) {
   absl::StatusOr<TestOnlyParameters> test_only_params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
@@ -1492,7 +1494,8 @@ TEST_F(KeysetHandleTest,
   EXPECT_EQ(*decryption, plaintext);
 }
 
-TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigNoPrimitiveGetterFails) {
+TEST_F(KeysetHandleKeyClassTest,
+       GetPrimitiveWithBespokeConfigNoPrimitiveGetterFails) {
   absl::StatusOr<TestOnlyParameters> params =
       TestOnlyParameters::Create(TestOnlyParameters::Variant::kNoPrefix);
 

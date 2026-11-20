@@ -341,6 +341,10 @@ function(_tink_install_headers)
   endforeach()
 endfunction()
 
+define_property(TARGET PROPERTY _TINK_LINKED_DEPS
+                BRIEF_DOCS "Linked external dependencies."
+                FULL_DOCS  "External targets already linked onto this target.")
+
 # Declare a Tink library. Registers its sources, headers, and external
 # dependencies as part of the `tink` library target (or `tink_testonly` when
 # TESTONLY is specified). Tink library declarations mirror Bazel's cc_library
@@ -410,7 +414,18 @@ function(tink_cc_library)
   endif()
 
   target_sources(${target_name} PRIVATE ${arg_SRCS})
-  target_link_libraries(${target_name} PUBLIC ${external_deps})
+  if(external_deps)
+    list(REMOVE_DUPLICATES external_deps)
+    get_target_property(existing_deps ${target_name} _TINK_LINKED_DEPS)
+    if(existing_deps)
+      list(REMOVE_ITEM external_deps ${existing_deps})
+    endif()
+    if(external_deps)
+      target_link_libraries(${target_name} PUBLIC ${external_deps})
+      set_property(TARGET ${target_name} APPEND PROPERTY _TINK_LINKED_DEPS
+                   ${external_deps})
+    endif()
+  endif()
   _tink_install_headers(HDRS ${hdrs})
 endfunction(tink_cc_library)
 

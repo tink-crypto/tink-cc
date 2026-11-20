@@ -15,12 +15,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/aead/internal/kms_aead_key_gen_config_2026.h"
+
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
+#include "tink/aead/internal/legacy_kms_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/legacy_kms_envelope_aead_proto_serialization_impl.h"
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
@@ -28,6 +33,15 @@ namespace tink {
 namespace internal {
 
 absl::Status AddKmsAeadKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(RegisterLegacyKmsAeadProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistry(
+          *serialization_registry));
+
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<KmsAeadKeyManager>(), config);
   if (!status.ok()) {

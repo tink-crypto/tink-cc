@@ -1158,11 +1158,15 @@ tink_cc_library(
     kms_aead_config_2026.cc
     kms_aead_config_2026.h
   DEPS
+    tink::aead::internal::legacy_kms_aead_proto_serialization_impl
+    tink::aead::internal::legacy_kms_envelope_aead_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::configuration
     tink::aead::kms_aead_key_manager
     tink::aead::kms_envelope_aead_key_manager
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_test(
@@ -1173,15 +1177,28 @@ tink_cc_test(
     tink::aead::internal::kms_aead_config_2026
     tink::aead::internal::kms_aead_key_gen_config_2026
     GTest::gmock
+    absl::absl_check
     absl::status_matchers
     absl::statusor
     tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
+    tink::core::parameters
+    tink::aead::aes_gcm_parameters
     tink::aead::kms_aead_key_manager
     tink::aead::kms_envelope_aead_key_manager
+    tink::aead::legacy_kms_aead_key
+    tink::aead::legacy_kms_aead_parameters
+    tink::aead::legacy_kms_envelope_aead_key
+    tink::aead::legacy_kms_envelope_aead_parameters
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
 )
 
 tink_cc_library(
@@ -1190,11 +1207,15 @@ tink_cc_library(
     kms_aead_key_gen_config_2026.cc
     kms_aead_key_gen_config_2026.h
   DEPS
+    tink::aead::internal::legacy_kms_aead_proto_serialization_impl
+    tink::aead::internal::legacy_kms_envelope_aead_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::aead::kms_aead_key_manager
     tink::aead::kms_envelope_aead_key_manager
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_test(
@@ -1219,7 +1240,14 @@ tink_cc_library(
     config_2026.cc
     config_2026.h
   DEPS
+    tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
+    tink::aead::internal::aes_eax_proto_serialization_impl
+    tink::aead::internal::aes_gcm_proto_serialization_impl
+    tink::aead::internal::aes_gcm_siv_proto_serialization_impl
+    tink::aead::internal::x_aes_gcm_proto_serialization_impl
+    tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::configuration
     tink::aead::aead_wrapper
     tink::aead::aes_ctr_hmac_aead_key_manager
@@ -1230,6 +1258,7 @@ tink_cc_library(
     tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_test(
@@ -1245,20 +1274,40 @@ tink_cc_test(
     absl::cord
     tink::core::aead
     tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::keyset_handle
+    tink::core::parameters
     tink::aead::aead_key_templates
     tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_eax_key_manager
+    tink::aead::aes_eax_parameters
     tink::aead::aes_gcm_key_manager
+    tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_siv_key_manager
+    tink::aead::aes_gcm_siv_parameters
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key_manager
+    tink::aead::x_aes_gcm_parameters
     tink::aead::xchacha20_poly1305_key_manager
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_ctr_hmac_aead_test_vectors
+    tink::aead::internal::testing::aes_eax_test_vectors
+    tink::aead::internal::testing::aes_gcm_siv_test_vectors
+    tink::aead::internal::testing::aes_gcm_test_vectors
+    tink::aead::internal::testing::x_aes_gcm_test_vectors
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::proto::tink_cc_proto
 )
 
@@ -1268,12 +1317,18 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
+    tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
     tink::aead::internal::aes_ctr_hmac_key_creator
     tink::aead::internal::aes_eax_key_creator
+    tink::aead::internal::aes_eax_proto_serialization_impl
     tink::aead::internal::aes_gcm_key_creator
+    tink::aead::internal::aes_gcm_proto_serialization_impl
     tink::aead::internal::aes_gcm_siv_key_creator
+    tink::aead::internal::aes_gcm_siv_proto_serialization_impl
     tink::aead::internal::x_aes_gcm_key_creator
+    tink::aead::internal::x_aes_gcm_proto_serialization_impl
     tink::aead::internal::xchacha20_poly1305_key_creator
+    tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
     absl::status
     absl::status_macros
     tink::core::key_gen_configuration
@@ -1296,6 +1351,7 @@ tink_cc_library(
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_library(

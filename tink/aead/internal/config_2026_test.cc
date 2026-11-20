@@ -27,20 +27,40 @@
 #include "tink/aead.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/aes_eax_key_manager.h"
+#include "tink/aead/aes_eax_parameters.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/key_gen_config_2026.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_ctr_hmac_aead_test_vectors.h"
+#include "tink/aead/internal/testing/aes_eax_test_vectors.h"
+#include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
+#include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
+#include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
+#include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/configuration.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
+#include "tink/parameters.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -168,6 +188,85 @@ TEST_P(CordAead2026BoringSslKeyTypesTest, GetPrimitive) {
   absl::StatusOr<absl::Cord> ciphertext = (*aead)->Encrypt(plaintext, aad);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, aad), IsOkAndHolds(plaintext));
+}
+
+struct NamedAeadTestVector {
+  std::string test_name;
+  AeadTestVector vector;
+};
+
+using Aead2026SerializationTest = TestWithParam<NamedAeadTestVector>;
+
+INSTANTIATE_TEST_SUITE_P(
+    Aead2026SerializationTestSuite, Aead2026SerializationTest,
+    Values(
+        NamedAeadTestVector{"AesCtrHmacAead",
+                            GetAesCtrHmacAeadTestVector(
+                                /*aes_key_size_in_bytes=*/16,
+                                AesCtrHmacAeadParameters::Variant::kTink)},
+        NamedAeadTestVector{"AesEax", GetAesEaxTestVector(
+                                          /*key_size_in_bytes=*/16,
+                                          AesEaxParameters::Variant::kTink)},
+        NamedAeadTestVector{"AesGcm", GetAesGcmTestVector(
+                                          /*key_size_in_bytes=*/16,
+                                          AesGcmParameters::Variant::kTink)},
+        NamedAeadTestVector{
+            "AesGcmSiv",
+            GetAesGcmSivTestVector(
+                /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink)},
+        NamedAeadTestVector{"XAesGcm", GetXAesGcmTestVector(
+                                           /*salt_size_in_bytes=*/12,
+                                           XAesGcmParameters::Variant::kTink)},
+        NamedAeadTestVector{"XChaCha20Poly1305",
+                            GetXChaCha20Poly1305TestVector(
+                                XChaCha20Poly1305Parameters::Variant::kTink)}),
+    [](const testing::TestParamInfo<NamedAeadTestVector>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(Aead2026SerializationTest, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddAead2026(config), IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddAeadKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<SerializationRegistry*> key_gen_registry =
+      KeyGenConfigurationImpl::GetSerializationRegistry(key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  const Key& key = *GetParam().vector.aead_key;
+  struct NamedRegistry {
+    const char* name;
+    const SerializationRegistry* registry;
+  };
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const SerializationRegistry* serialization_registry = entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<ProtoParametersSerialization>(
+                key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+        serialization_registry->ParseParameters(**serialized_params);
+    ASSERT_THAT(parsed_params, IsOk());
+    EXPECT_EQ(**parsed_params, key.GetParameters());
+
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+        serialization_registry->SerializeKey<ProtoKeySerialization>(
+            key, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(serialized_key, IsOk());
+    absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+        serialization_registry->ParseKey(**serialized_key,
+                                         InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(parsed_key, IsOk());
+    EXPECT_EQ(**parsed_key, key);
+  }
 }
 
 }  // namespace

@@ -27,6 +27,8 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_eax_parameters.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/aes_eax_test_vectors.h"
 #include "tink/key.h"
@@ -208,6 +210,34 @@ TEST(AesEaxKeyTest, DifferentIdRequirementKeysNotEqual) {
   absl::StatusOr<AesEaxKey> other_key =
       AesEaxKey::Create(*parameters, secret, /*id_requirement=*/0x02030405,
                         GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesEaxKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<AesEaxKey> key =
+      AesEaxKey::Create(*parameters, secret, /*id_requirement=*/std::nullopt,
+                        GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);

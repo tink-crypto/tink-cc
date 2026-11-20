@@ -26,6 +26,8 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/aes_gcm_siv_test_vectors.h"
 #include "tink/key.h"
@@ -181,6 +183,28 @@ TEST(AesGcmSivKeyTest, DifferentIdRequirementNotEqual) {
 
   absl::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
       *params, secret, /*id_requirement=*/0x02030405, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesGcmSivKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+      *params, secret, /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);

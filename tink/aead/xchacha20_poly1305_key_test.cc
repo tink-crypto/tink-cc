@@ -25,6 +25,8 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/xchacha20_poly1305_test_vectors.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
@@ -205,6 +207,25 @@ TEST(XChaCha20Poly1305KeyTest, DifferentIdRequirementNotEqual) {
   absl::StatusOr<XChaCha20Poly1305Key> other_key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink, secret,
       /*id_requirement=*/0x02030405, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(XChaCha20Poly1305KeyTest, DifferentKeyTypeNotEqual) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, secret,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);

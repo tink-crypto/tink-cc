@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -165,6 +166,27 @@ TEST(ChaCha20Poly1305ParametersTest, DifferentVariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(ChaCha20Poly1305ParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
+      ChaCha20Poly1305Parameters::Create(
+          ChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesGcmParameters> other_parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(ChaCha20Poly1305ParametersTest, Clone) {

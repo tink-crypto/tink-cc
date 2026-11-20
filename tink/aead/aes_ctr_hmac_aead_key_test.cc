@@ -17,6 +17,7 @@
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -26,6 +27,8 @@
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/aes_ctr_hmac_aead_test_vectors.h"
 #include "tink/key.h"
@@ -404,6 +407,40 @@ TEST(AesCtrHmacAeadKeyTest, DifferentIdRequirementKeysNotEqual) {
           .SetHmacKeyBytes(hmac_secret)
           .SetIdRequirement(0x02030405)
           .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesCtrHmacAeadKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(32)
+          .SetHmacKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(32)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/32);
+  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<AesCtrHmacAeadKey> key =
+      AesCtrHmacAeadKey::Builder()
+          .SetParameters(*parameters)
+          .SetAesKeyBytes(aes_secret)
+          .SetHmacKeyBytes(hmac_secret)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, aes_secret,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);

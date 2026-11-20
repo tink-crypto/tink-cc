@@ -17,6 +17,7 @@
 #include "tink/aead/legacy_kms_envelope_aead_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -27,9 +28,13 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/legacy_kms_envelope_aead_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/key.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -206,6 +211,35 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentIdRequirementNotEqual) {
   absl::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters,
                                        /*id_requirement=*/0x02030405);
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentKeyTypeNotEqual) {
+  XChaCha20Poly1305Parameters dek_parameters =
+      CreateXChaCha20Poly1305KeyParameters();
+
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(
+          kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
+          LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
+              kAssumeXChaCha20Poly1305,
+          dek_parameters);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+      LegacyKmsEnvelopeAeadKey::Create(*parameters,
+                                       /*id_requirement=*/std::nullopt);
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix,
+      RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);

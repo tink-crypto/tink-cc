@@ -17,6 +17,7 @@
 #include "tink/aead/legacy_kms_aead_key.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -26,8 +27,12 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/legacy_kms_aead_parameters.h"
 #include "tink/key.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -159,6 +164,28 @@ TEST(LegacyKmsAeadKeyTest, DifferentIdRequirementNotEqual) {
   absl::StatusOr<LegacyKmsAeadKey> other_key =
       LegacyKmsAeadKey::Create(*parameters,
                                /*id_requirement=*/0x02030405);
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(LegacyKmsAeadKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
+      LegacyKmsAeadParameters::Create(
+          kKeyUri, LegacyKmsAeadParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<LegacyKmsAeadKey> key =
+      LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/std::nullopt);
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix,
+      RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
   EXPECT_TRUE(*key != *other_key);

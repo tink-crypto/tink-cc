@@ -25,6 +25,8 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/x_aes_gcm_test_vectors.h"
 #include "tink/aead/x_aes_gcm_parameters.h"
@@ -213,6 +215,28 @@ TEST(XAesGcmKeyTest, DifferentSaltSizeNotEqual) {
   EXPECT_TRUE(*key8 != *key12);
   EXPECT_FALSE(*key12 == *key8);
   EXPECT_FALSE(*key8 == *key12);
+}
+
+TEST(XAesGcmKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kNoPrefix, kSaltSizeBytes);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *params, secret, /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*key != *other_key);
+  EXPECT_TRUE(*other_key != *key);
+  EXPECT_FALSE(*key == *other_key);
+  EXPECT_FALSE(*other_key == *key);
 }
 
 TEST(XAesGcmKeyTest, CopyConstructor) {

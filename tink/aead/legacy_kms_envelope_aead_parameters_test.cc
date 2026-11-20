@@ -29,6 +29,7 @@
 #include "tink/aead/aes_eax_parameters.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -249,6 +250,37 @@ TEST(LegacyKmsEnvelopeAeadParametersTest,
           HasSubstr("mismatching parsing strategy and DEK parameters type")));
 }
 
+TEST(LegacyKmsEnvelopeAeadParametersTest,
+     CreateWithAssumeAesCtrHmacMismatchingDekParametersFails) {
+  AesGcmParameters dek_parameters = CreateAesGcmKeyParameters();
+
+  EXPECT_THAT(
+      LegacyKmsEnvelopeAeadParameters::Create(
+          kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
+          LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
+              kAssumeAesCtrHmac,
+          dek_parameters)
+          .status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("mismatching parsing strategy and DEK parameters type")));
+}
+
+TEST(LegacyKmsEnvelopeAeadParametersTest,
+     CreateWithAssumeAesGcmSivMismatchingDekParametersFails) {
+  AesGcmParameters dek_parameters = CreateAesGcmKeyParameters();
+
+  EXPECT_THAT(
+      LegacyKmsEnvelopeAeadParameters::Create(
+          kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
+          LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcmSiv,
+          dek_parameters)
+          .status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("mismatching parsing strategy and DEK parameters type")));
+}
+
 TEST(LegacyKmsEnvelopeAeadParametersTest, CopyConstructor) {
   AesGcmParameters dek_parameters = CreateAesGcmKeyParameters();
 
@@ -428,6 +460,28 @@ TEST(LegacyKmsEnvelopeAeadParametersTest, DifferentVariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(LegacyKmsEnvelopeAeadParametersTest, DifferentParametersTypeNotEqual) {
+  XChaCha20Poly1305Parameters dek_parameters =
+      CreateXChaCha20Poly1305KeyParameters();
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(
+          kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
+          LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
+              kAssumeXChaCha20Poly1305,
+          dek_parameters);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Parameters> other_parameters =
+      ChaCha20Poly1305Parameters::Create(
+          ChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(LegacyKmsEnvelopeAeadParametersTest, Clone) {

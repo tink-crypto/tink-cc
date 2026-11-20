@@ -2213,8 +2213,6 @@ tink_cc_test(
   NAME rsa_ssa_pkcs1_verify_boringssl_test
   SRCS
     rsa_ssa_pkcs1_verify_boringssl_test.cc
-  DATA
-    wycheproof::testvectors_v1
   DEPS
     tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
     GTest::gmock
@@ -2226,7 +2224,6 @@ tink_cc_test(
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::internal::rsa_util
-    tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector

@@ -32,7 +32,6 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
 
@@ -52,15 +51,15 @@ TEST(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
 
-  const SignatureTestVector test_vector = CreateRsaSsaPkcs1TestVectors()[0];
-  const RsaSsaPkcs1PrivateKey* typed_key =
-      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
-          test_vector.signature_private_key.get());
-  ASSERT_THAT(typed_key, NotNull());
-  const RsaSsaPkcs1PublicKey& public_key = typed_key->GetPublicKey();
+  const SignatureVerifyOnlyTestVector test_vector =
+      CreateRsaSsaPkcs1VerifyOnlyTestVectors()[0];
+  const RsaSsaPkcs1PublicKey* public_key =
+      dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+          test_vector.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
   RsaPublicKey valid_pub_key{
-      std::string(public_key.GetModulus(GetPartialKeyAccess()).GetValue()),
-      std::string(public_key.GetParameters().GetPublicExponent().GetValue())};
+      std::string(public_key->GetModulus(GetPartialKeyAccess()).GetValue()),
+      std::string(public_key->GetParameters().GetPublicExponent().GetValue())};
   RsaSsaPkcs1Params valid_params{subtle::HashType::SHA256};
 
   // Small modulus (< 2048-bit).
@@ -78,59 +77,55 @@ TEST(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
 }
 
 using RsaSsaPkcs1VerifyBoringSslTestVectorTest =
-    testing::TestWithParam<SignatureTestVector>;
+    testing::TestWithParam<SignatureVerifyOnlyTestVector>;
 
 TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
-  const SignatureTestVector& param = GetParam();
-  const RsaSsaPkcs1PrivateKey* typed_key =
-      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
-          param.signature_private_key.get());
-  ASSERT_THAT(typed_key, NotNull());
+  const SignatureVerifyOnlyTestVector& param = GetParam();
+  const RsaSsaPkcs1PublicKey* public_key =
+      dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+          param.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
   if (IsFipsModeEnabled() &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
+      public_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      public_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      public_key->GetParameters().GetModulusSizeInBits() != 4096) {
     // Users wants FIPS but modulus size doesn't support FIPS
-    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey()),
-                Not(IsOk()));
+    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), Not(IsOk()));
     return;
   }
   if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     // Users wants FIPS, but we don't have FIPS.
-    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey()),
-                Not(IsOk()));
+    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), Not(IsOk()));
     return;
   }
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey());
+      NewRsaSsaPkcs1VerifyBoringSsl(*public_key);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
 }
 
 TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
        DifferentMessageDoesNotVerify) {
-  const SignatureTestVector& param = GetParam();
-  const RsaSsaPkcs1PrivateKey* typed_key =
-      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
-          param.signature_private_key.get());
-  ASSERT_THAT(typed_key, NotNull());
+  const SignatureVerifyOnlyTestVector& param = GetParam();
+  const RsaSsaPkcs1PublicKey* public_key =
+      dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+          param.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
   if (IsFipsModeEnabled() &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
+      public_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      public_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      public_key->GetParameters().GetModulusSizeInBits() != 4096) {
     // Users wants FIPS but modulus size doesn't support FIPS
-    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey()),
-                Not(IsOk()));
+    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), Not(IsOk()));
     return;
   }
   if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
     // Users wants FIPS, but we don't have FIPS.
-    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey()),
-                Not(IsOk()));
+    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), Not(IsOk()));
     return;
   }
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey());
+      NewRsaSsaPkcs1VerifyBoringSsl(*public_key);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(
       (*verifier)->Verify(param.signature, absl::StrCat(param.message, "a")),
@@ -142,26 +137,24 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
 
 TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
        ModifiedSignatureDoesNotVerify) {
-  const SignatureTestVector& param = GetParam();
-  const RsaSsaPkcs1PrivateKey* typed_key =
-      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
-          param.signature_private_key.get());
-  ASSERT_THAT(typed_key, NotNull());
+  const SignatureVerifyOnlyTestVector& param = GetParam();
+  const RsaSsaPkcs1PublicKey* public_key =
+      dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+          param.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
   if (IsFipsModeEnabled() &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 3072 &&
-      typed_key->GetParameters().GetModulusSizeInBits() != 4096) {
-    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey()),
-                Not(IsOk()));
+      public_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      public_key->GetParameters().GetModulusSizeInBits() != 3072 &&
+      public_key->GetParameters().GetModulusSizeInBits() != 4096) {
+    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), Not(IsOk()));
     return;
   }
   if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
-    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey()),
-                Not(IsOk()));
+    ASSERT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), Not(IsOk()));
     return;
   }
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewRsaSsaPkcs1VerifyBoringSsl(typed_key->GetPublicKey());
+      NewRsaSsaPkcs1VerifyBoringSsl(*public_key);
   ASSERT_THAT(verifier, IsOk());
 
   // The first byte belongs to the output prefix, if the key has one.
@@ -180,17 +173,19 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
               StatusIs(absl::StatusCode::kInvalidArgument));
 
   // Missing output prefix when the key requires one.
-  if (!typed_key->GetOutputPrefix().empty()) {
-    EXPECT_THAT((*verifier)->Verify(
-                    param.signature.substr(typed_key->GetOutputPrefix().size()),
-                    param.message),
-                StatusIs(absl::StatusCode::kInvalidArgument));
+  if (!public_key->GetOutputPrefix().empty()) {
+    EXPECT_THAT(
+        (*verifier)->Verify(
+            param.signature.substr(public_key->GetOutputPrefix().size()),
+            param.message),
+        StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
-                         RsaSsaPkcs1VerifyBoringSslTestVectorTest,
-                         testing::ValuesIn(CreateRsaSsaPkcs1TestVectors()));
+INSTANTIATE_TEST_SUITE_P(
+    RsaSsaPkcs1VerifyBoringSslTestVectorTest,
+    RsaSsaPkcs1VerifyBoringSslTestVectorTest,
+    testing::ValuesIn(CreateRsaSsaPkcs1VerifyOnlyTestVectors()));
 
 }  // namespace
 }  // namespace internal

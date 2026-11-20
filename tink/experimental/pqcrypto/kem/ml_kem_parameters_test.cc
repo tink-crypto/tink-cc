@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -124,6 +125,22 @@ TEST(MlKemParametersTest, ParametersEquals) {
   EXPECT_TRUE(*other_parameters == *parameters);
   EXPECT_FALSE(*parameters != *other_parameters);
   EXPECT_FALSE(*other_parameters != *parameters);
+}
+
+TEST(MlKemParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<ChaCha20Poly1305Parameters> other_parameters =
+      ChaCha20Poly1305Parameters::Create(
+          ChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(MlKemParametersTest, Clone) {

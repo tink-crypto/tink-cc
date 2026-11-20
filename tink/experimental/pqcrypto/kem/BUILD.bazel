@@ -71,6 +71,7 @@ cc_test(
     deps = [
         ":ml_kem_parameters",
         "//tink:parameters",
+        "//tink/aead:chacha20_poly1305_parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
@@ -108,9 +109,14 @@ cc_test(
     srcs = ["ml_kem_public_key_test.cc"],
     deps = [
         ":ml_kem_parameters",
+        ":ml_kem_private_key",
         ":ml_kem_public_key",
+        "//tink:insecure_secret_key_access",
         "//tink:key",
         "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink:secret_data",
+        "//tink/internal:secret_buffer",
         "//tink/util:secret_data",
         "//tink/util:statusor",
         "//tink/util:test_matchers",

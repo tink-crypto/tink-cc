@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -28,8 +29,13 @@
 #include "absl/types/optional.h"
 #include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
+#include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -211,6 +217,35 @@ TEST_P(MlKemPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(MlKemPublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes;
+  public_key_bytes.resize(MLKEM768_PUBLIC_KEY_BYTES);
+  internal::SecretBuffer private_seed_bytes(MLKEM_SEED_BYTES);
+  auto bssl_private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
+  MLKEM768_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                        private_seed_bytes.data(), bssl_private_key.get());
+
+  absl::StatusOr<MlKemPublicKey> public_key =
+      MlKemPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_seed(SecretData(std::move(private_seed_bytes)),
+                              InsecureSecretKeyAccess::Get());
+  absl::StatusOr<MlKemPrivateKey> private_key =
+      MlKemPrivateKey::Create(*public_key, private_seed, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_TRUE(*public_key != *private_key);
+  EXPECT_TRUE(*private_key != *public_key);
+  EXPECT_FALSE(*public_key == *private_key);
+  EXPECT_FALSE(*private_key == *public_key);
 }
 
 TEST(MlKemPublicKeyTest, Clone) {

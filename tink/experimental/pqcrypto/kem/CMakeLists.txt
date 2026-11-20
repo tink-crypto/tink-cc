@@ -21,6 +21,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     tink::core::parameters
+    tink::aead::chacha20_poly1305_parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -101,6 +102,7 @@ tink_cc_test(
     ml_kem_public_key_test.cc
   DEPS
     tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::ml_kem_public_key
     GTest::gmock
     absl::status
@@ -108,8 +110,12 @@ tink_cc_test(
     absl::strings
     absl::optional
     tink::internal::boringssl
+    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers

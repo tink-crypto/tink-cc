@@ -280,6 +280,29 @@ TEST_P(MlKemPrivateKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_private_key == *private_key);
 }
 
+TEST(MlKemPrivateKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlKemPublicKey> public_key =
+      MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_TRUE(*private_key != *public_key);
+  EXPECT_TRUE(*public_key != *private_key);
+  EXPECT_FALSE(*private_key == *public_key);
+  EXPECT_FALSE(*public_key == *private_key);
+}
+
 TEST(MlKemPrivateKeyTest, Clone) {
   absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);

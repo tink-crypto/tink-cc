@@ -17,50 +17,81 @@
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 
 #include <memory>
-#include <utility>
+#include <optional>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "openssl/bn.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/rsa_util.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/key.h"
 #include "tink/public_key_verify.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
+#include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/rsa_ssa_pss.pb.h"
-#include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
+namespace {
 
 using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::RsaSsaPssParams;
 using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 
+absl::StatusOr<RsaSsaPssPublicKey> ParseRsaSsaPssPublicKeyWithNoPrefix(
+    const RsaSsaPssPublicKeyProto& rsa_ssa_pss_public_key) {
+  static const internal::SerializationRegistry* registry = []() {
+    auto* registry = new internal::SerializationRegistry();
+    ABSL_CHECK_OK(
+        internal::RegisterRsaSsaPssProtoSerializationWithRegistry(*registry));
+    return registry;
+  }();
+  // KeyTypeManager primitives only receive the raw key proto (without
+  // OutputPrefixType or key ID) and must produce raw (kNoPrefix) primitives;
+  // the output prefix is handled by PublicKeyVerifyWrapper.
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          RsaSsaPssVerifyKeyManager().get_key_type(),
+          RestrictedData(rsa_ssa_pss_public_key.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPublic,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt);
+  ABSL_RETURN_IF_ERROR(serialization.status());
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<Key> key,
+      registry->ParseKey(*serialization, InsecureSecretKeyAccess::Get()));
+  const auto* public_key = dynamic_cast<const RsaSsaPssPublicKey*>(key.get());
+  if (public_key == nullptr) {
+    return absl::InternalError("Failed to cast to RsaSsaPssPublicKey");
+  }
+  return *public_key;
+}
+
+}  // namespace
+
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const RsaSsaPssPublicKeyProto& rsa_ssa_pss_public_key) const {
-  internal::RsaPublicKey rsa_pub_key;
-  rsa_pub_key.n = rsa_ssa_pss_public_key.n();
-  rsa_pub_key.e = rsa_ssa_pss_public_key.e();
-
-  internal::RsaSsaPssParams params;
-  RsaSsaPssParams rsa_ssa_pss_params = rsa_ssa_pss_public_key.params();
-  params.sig_hash = Enums::ProtoToSubtle(rsa_ssa_pss_params.sig_hash());
-  params.mgf1_hash = Enums::ProtoToSubtle(rsa_ssa_pss_params.mgf1_hash());
-  params.salt_length = rsa_ssa_pss_params.salt_length();
-
-  auto rsa_ssa_pss_result =
-      subtle::RsaSsaPssVerifyBoringSsl::New(rsa_pub_key, params);
-  if (!rsa_ssa_pss_result.ok()) return rsa_ssa_pss_result.status();
-  return {std::move(rsa_ssa_pss_result).value()};
+  ABSL_ASSIGN_OR_RETURN(
+      RsaSsaPssPublicKey public_key,
+      ParseRsaSsaPssPublicKeyWithNoPrefix(rsa_ssa_pss_public_key));
+  return subtle::RsaSsaPssVerifyBoringSsl::New(public_key);
 }
 
 absl::Status RsaSsaPssVerifyKeyManager::ValidateKey(

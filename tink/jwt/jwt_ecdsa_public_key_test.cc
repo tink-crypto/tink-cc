@@ -32,8 +32,11 @@
 #include "tink/internal/ec_util.h"
 #include "tink/jwt/internal/testing/jwt_ecdsa_test_vectors.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
+#include "tink/jwt/jwt_hmac_key.h"
+#include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
@@ -384,6 +387,32 @@ TEST(JwtEcdsaPublicKeyTest, DifferentCustomKidNotEqual) {
           .SetParameters(key.GetParameters())
           .SetPublicPoint(key.GetPublicPoint(GetPartialKeyAccess()))
           .SetCustomKid("other_custom_kid")
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(key != *other_key);
+  EXPECT_TRUE(*other_key != key);
+  EXPECT_FALSE(key == *other_key);
+  EXPECT_FALSE(*other_key == key);
+}
+
+TEST(JwtEcdsaPublicKeyTest, DifferentKeyTypeNotEqual) {
+  const JwtEcdsaPublicKey& key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
+
+  absl::StatusOr<JwtHmacParameters> other_parameters =
+      JwtHmacParameters::Create(
+          /*key_size_in_bytes=*/32,
+          JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<JwtHmacKey> other_key =
+      JwtHmacKey::Builder()
+          .SetParameters(*other_parameters)
+          .SetKeyBytes(RestrictedData(/*num_random_bytes=*/32))
+          .SetIdRequirement(123)
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 

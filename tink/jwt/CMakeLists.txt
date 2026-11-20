@@ -693,6 +693,7 @@ tink_cc_test(
   SRCS
     jwt_hmac_parameters_test.cc
   DEPS
+    tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_hmac_parameters
     GTest::gmock
     absl::status
@@ -708,6 +709,8 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_hmac_key
     tink::jwt::jwt_hmac_parameters
+    tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_public_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -756,6 +759,7 @@ tink_cc_test(
     jwt_ecdsa_parameters_test.cc
   DEPS
     tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_hmac_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -771,6 +775,8 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_public_key
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -780,6 +786,7 @@ tink_cc_test(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_data
     tink::internal::ec_util
     tink::jwt::internal::testing::jwt_ecdsa_test_vectors
     tink::signature::ecdsa_parameters
@@ -853,6 +860,7 @@ tink_cc_test(
   SRCS
     jwt_rsa_ssa_pkcs1_parameters_test.cc
   DEPS
+    tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     GTest::gmock
     absl::status
@@ -871,6 +879,8 @@ tink_cc_test(
   SRCS
     jwt_rsa_ssa_pkcs1_public_key_test.cc
   DEPS
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     GTest::gmock
@@ -883,6 +893,7 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_data
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
@@ -956,6 +967,7 @@ tink_cc_test(
   SRCS
     jwt_rsa_ssa_pss_parameters_test.cc
   DEPS
+    tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_rsa_ssa_pss_parameters
     GTest::gmock
     absl::status
@@ -974,6 +986,8 @@ tink_cc_test(
   SRCS
     jwt_rsa_ssa_pss_public_key_test.cc
   DEPS
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_public_key
     GTest::gmock
@@ -986,6 +1000,7 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_data
     tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
@@ -1071,6 +1086,7 @@ tink_cc_test(
   SRCS
     jwt_ml_dsa_parameters_test.cc
   DEPS
+    tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_ml_dsa_parameters
     GTest::gmock
     absl::status
@@ -1106,6 +1122,8 @@ tink_cc_test(
   SRCS
     jwt_ml_dsa_public_key_test.cc
   DEPS
+    tink::jwt::jwt_hmac_key
+    tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_public_key
     GTest::gmock
@@ -1115,6 +1133,7 @@ tink_cc_test(
     absl::string_view
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_data
     tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key

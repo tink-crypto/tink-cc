@@ -29,6 +29,7 @@
 #include "tink/big_integer.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/test_matchers.h"
 
@@ -444,6 +445,30 @@ TEST(JwtRsaSsaPkcs1ParametersTest, PublicExponentNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(JwtRsaSsaPkcs1ParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+      JwtRsaSsaPkcs1Parameters::Builder()
+          .SetKidStrategy(
+              JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId)
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<JwtHmacParameters> other_parameters =
+      JwtHmacParameters::Create(
+          /*key_size_in_bytes=*/32,
+          JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, Clone) {

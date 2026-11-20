@@ -25,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/parameters.h"
 
 namespace crypto {
@@ -295,6 +296,25 @@ TEST(JwtHmacParametersTest, AlgorithmNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(JwtHmacParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32,
+      JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<JwtEcdsaParameters> other_parameters =
+      JwtEcdsaParameters::Create(
+          JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(JwtHmacParametersTest, Clone) {

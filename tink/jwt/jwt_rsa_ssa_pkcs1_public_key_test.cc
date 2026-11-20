@@ -30,9 +30,12 @@
 #include "absl/strings/string_view.h"
 #include "tink/big_integer.h"
 #include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
+#include "tink/jwt/jwt_hmac_key.h"
+#include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 
@@ -552,6 +555,33 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentCustomKidNotEqual) {
   EXPECT_TRUE(other_key != key);
   EXPECT_FALSE(key == other_key);
   EXPECT_FALSE(other_key == key);
+}
+
+TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentKeyTypeNotEqual) {
+  const JwtRsaSsaPkcs1PublicKey& key = GetValidPublicKey(
+      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+      JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
+      /*id_requirement=*/123, /*custom_kid=*/std::nullopt);
+
+  absl::StatusOr<JwtHmacParameters> other_parameters =
+      JwtHmacParameters::Create(
+          /*key_size_in_bytes=*/32,
+          JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<JwtHmacKey> other_key =
+      JwtHmacKey::Builder()
+          .SetParameters(*other_parameters)
+          .SetKeyBytes(RestrictedData(/*num_random_bytes=*/32))
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(key != *other_key);
+  EXPECT_TRUE(*other_key != key);
+  EXPECT_FALSE(key == *other_key);
+  EXPECT_FALSE(*other_key == key);
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, Clone) {

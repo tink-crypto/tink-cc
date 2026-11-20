@@ -29,6 +29,8 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/jwt/internal/testing/jwt_hmac_test_vectors.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_ml_dsa_parameters.h"
+#include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -346,6 +348,31 @@ TEST(JwtHmacKeyTest, DifferentCustomKidNotEqual) {
   EXPECT_TRUE(*key2 != key1);
   EXPECT_FALSE(key1 == *key2);
   EXPECT_FALSE(*key2 == key1);
+}
+
+TEST(JwtHmacKeyTest, DifferentKeyTypeNotEqual) {
+  const JwtHmacKey& key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
+
+  absl::StatusOr<JwtMlDsaParameters> other_parameters =
+      JwtMlDsaParameters::Create(
+          JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
+          JwtMlDsaParameters::Algorithm::kMlDsa44);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  absl::StatusOr<JwtMlDsaPublicKey> other_key =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*other_parameters)
+          .SetPublicKeyBytes(std::string(1312, 'a'))
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(key != *other_key);
+  EXPECT_TRUE(*other_key != key);
+  EXPECT_FALSE(key == *other_key);
+  EXPECT_FALSE(*other_key == key);
 }
 
 TEST(JwtHmacKeyTest, Clone) {

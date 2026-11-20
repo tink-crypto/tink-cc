@@ -240,13 +240,22 @@ tink_cc_library(
     absl::status
     absl::status_macros
     absl::statusor
+    absl::string_view
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
+    tink::core::secret_data
     tink::core::streaming_aead
+    tink::internal::fips_utils
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
-    tink::subtle::aes_gcm_hkdf_streaming
+    tink::subtle::aes_gcm_hkdf_stream_segment_decrypter
+    tink::subtle::aes_gcm_hkdf_stream_segment_encrypter
     tink::subtle::common_enums
+    tink::subtle::hkdf
+    tink::subtle::nonce_based_streaming_aead
+    tink::subtle::random
+    tink::subtle::stream_segment_decrypter
+    tink::subtle::stream_segment_encrypter
 )
 
 tink_cc_test(
@@ -257,19 +266,27 @@ tink_cc_test(
     tink::streamingaead::internal::aes_gcm_hkdf_streaming
     GTest::gmock
     absl::status
+    absl::status_macros
     absl::status_matchers
     absl::statusor
+    absl::strings
+    absl::string_view
     tink::core::input_stream
+    tink::core::output_stream
     tink::core::random_access_stream
     tink::core::streaming_aead
     tink::internal::fips_utils
     tink::internal::test_random_access_stream
     tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::streamingaead::internal::testing::aes_gcm_hkdf_streaming_test_vectors
     tink::streamingaead::internal::testing::streamingaead_test_vector
+    tink::subtle::random
     tink::subtle::streaming_aead_test_util
     tink::util::input_stream_util
     tink::util::istream_input_stream
+    tink::util::ostream_output_stream
+    tink::util::test_util
 )
 
 tink_cc_library(

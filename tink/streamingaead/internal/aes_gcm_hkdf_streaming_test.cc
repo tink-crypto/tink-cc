@@ -16,6 +16,8 @@
 
 #include "tink/streamingaead/internal/aes_gcm_hkdf_streaming.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -24,19 +26,27 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/test_random_access_stream.h"
+#include "tink/output_stream.h"
 #include "tink/random_access_stream.h"
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
+#include "tink/subtle/random.h"
 #include "tink/subtle/streaming_aead_test_util.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
+#include "tink/util/ostream_output_stream.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -46,6 +56,10 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::testing::Eq;
+using ::testing::Ge;
+using ::testing::HasSubstr;
+using ::testing::Ne;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
@@ -125,6 +139,124 @@ TEST_P(AesGcmHkdfStreamingTest, EncryptThenDecrypt) {
                                  param.plaintext, param.associated_data,
                                  /*ciphertext_offset=*/0),
               IsOk());
+}
+
+TEST_P(AesGcmHkdfStreamingTest, EncryptThenDecryptLongPlaintext) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const StreamingAeadTestVector& param = GetParam();
+  const auto* key = dynamic_cast<const AesGcmHkdfStreamingKey*>(
+      param.streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+      NewAesGcmHkdfStreaming(*key);
+  ASSERT_THAT(streaming_aead, IsOk());
+
+  // 10 KB plaintext spans many segments for all test vector segment sizes.
+  std::string plaintext = subtle::Random::GetRandomBytes(10000);
+  EXPECT_THAT(EncryptThenDecrypt(streaming_aead->get(), streaming_aead->get(),
+                                 plaintext, param.associated_data,
+                                 /*ciphertext_offset=*/0),
+              IsOk());
+}
+
+TEST_P(AesGcmHkdfStreamingTest, EncryptUsesFreshSaltPerStream) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const StreamingAeadTestVector& param = GetParam();
+  const auto* key = dynamic_cast<const AesGcmHkdfStreamingKey*>(
+      param.streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+      NewAesGcmHkdfStreaming(*key);
+  ASSERT_THAT(streaming_aead, IsOk());
+
+  StreamingAead& aead = **streaming_aead;
+  auto encrypt_empty = [&aead, &param]() -> absl::StatusOr<std::string> {
+    auto ct_stream = std::make_unique<std::stringstream>();
+    std::stringbuf* ct_buf = ct_stream->rdbuf();
+    ABSL_ASSIGN_OR_RETURN(
+        std::unique_ptr<OutputStream> enc_stream,
+        aead.NewEncryptingStream(
+            std::make_unique<util::OstreamOutputStream>(std::move(ct_stream)),
+            param.associated_data));
+    ABSL_RETURN_IF_ERROR(enc_stream->Close());
+    return ct_buf->str();
+  };
+
+  absl::StatusOr<std::string> ct1 = encrypt_empty();
+  ASSERT_THAT(ct1, IsOk());
+  absl::StatusOr<std::string> ct2 = encrypt_empty();
+  ASSERT_THAT(ct2, IsOk());
+
+  // AES-GCM-HKDF header format:
+  // header_size (1 byte) || salt (derived_key_size bytes) ||
+  // nonce_prefix (7 bytes).
+  const int derived_key_size = key->GetParameters().DerivedKeySizeInBytes();
+  const int expected_header_size = 1 + derived_key_size + 7;
+  ASSERT_THAT(ct1->size(), Ge(static_cast<size_t>(expected_header_size)));
+  ASSERT_THAT(ct2->size(), Ge(static_cast<size_t>(expected_header_size)));
+  EXPECT_THAT(static_cast<int>(static_cast<uint8_t>((*ct1)[0])),
+              Eq(expected_header_size));
+  EXPECT_THAT(static_cast<int>(static_cast<uint8_t>((*ct2)[0])),
+              Eq(expected_header_size));
+
+  absl::string_view salt1 = absl::string_view(*ct1).substr(1, derived_key_size);
+  absl::string_view salt2 = absl::string_view(*ct2).substr(1, derived_key_size);
+  EXPECT_THAT(salt1, Ne(salt2));
+}
+
+TEST(AesGcmHkdfStreamingTest, NewEncryptingStreamNullDestinationFails) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const StreamingAeadTestVector& test_vector =
+      GetAesGcmHkdfStreamingTestVector(16);
+  const auto* key = dynamic_cast<const AesGcmHkdfStreamingKey*>(
+      test_vector.streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+      NewAesGcmHkdfStreaming(*key);
+  ASSERT_THAT(streaming_aead, IsOk());
+
+  EXPECT_THAT(
+      (*streaming_aead)->NewEncryptingStream(nullptr, "some associated data"),
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("non-null")));
+}
+
+TEST(AesGcmHkdfStreamingTest, SizeIsUnauthenticated) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  const StreamingAeadTestVector& test_vector =
+      GetAesGcmHkdfStreamingTestVector(16);
+  const auto* key = dynamic_cast<const AesGcmHkdfStreamingKey*>(
+      test_vector.streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+      NewAesGcmHkdfStreaming(*key);
+  ASSERT_THAT(streaming_aead, IsOk());
+
+  std::string associated_data = "some associated data";
+  // The header is 24 = 0x18 bytes for this key and Tink verifies that the
+  // ciphertext starts with 0x18 in the first byte.
+  std::string wrong_ciphertext =
+      absl::StrCat(test::HexDecodeOrDie("18"), std::string(92, 'a'));
+  absl::StatusOr<std::unique_ptr<RandomAccessStream>> plaintext_stream =
+      (*streaming_aead)
+          ->NewDecryptingRandomAccessStream(
+              std::make_unique<TestRandomAccessStream>(wrong_ciphertext),
+              associated_data);
+  ASSERT_THAT(plaintext_stream, IsOk());
+  // 93 bytes of ciphertext with 64-byte segments: 24-byte header + two 16-byte
+  // tags leaves 37 bytes of plaintext.
+  EXPECT_THAT((*plaintext_stream)->size(), IsOkAndHolds(Eq(37)));
 }
 
 TEST(AesGcmHkdfStreamingTest, FipsOnly) {

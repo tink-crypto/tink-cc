@@ -27,7 +27,7 @@ tink_cc_test(
     create_aes_cmac_prf_test.cc
   DEPS
     tink::prf::subtle::create_aes_cmac_prf
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -65,7 +65,7 @@ tink_cc_test(
     create_hkdf_prf_test.cc
   DEPS
     tink::prf::subtle::create_hkdf_prf
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -107,7 +107,7 @@ tink_cc_test(
     create_hmac_prf_test.cc
   DEPS
     tink::prf::subtle::create_hmac_prf
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

@@ -19,7 +19,7 @@ tink_cc_test(
     create_ecies_key_test.cc
   DEPS
     tink::hybrid::subtle::create_ecies_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -48,7 +48,7 @@ tink_cc_test(
     create_hpke_key_test.cc
   DEPS
     tink::hybrid::subtle::create_hpke_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -75,7 +75,7 @@ tink_cc_test(
     create_hpke_decrypt_test.cc
   DEPS
     tink::hybrid::subtle::create_hpke_decrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -111,7 +111,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::subtle::create_hpke_decrypt
     tink::hybrid::subtle::create_hpke_encrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -142,7 +142,7 @@ tink_cc_test(
     create_ecies_decrypt_test.cc
   DEPS
     tink::hybrid::subtle::create_ecies_decrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -174,7 +174,7 @@ tink_cc_test(
     tink::hybrid::subtle::create_ecies_decrypt
     tink::hybrid::subtle::create_ecies_encrypt
     tink::hybrid::subtle::create_ecies_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

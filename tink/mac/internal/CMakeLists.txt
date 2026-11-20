@@ -154,7 +154,7 @@ tink_cc_test(
     tink::mac::internal::chunked_mac_impl
     tink::mac::internal::hmac_test_vectors
     tink::mac::internal::stateful_mac
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -177,7 +177,7 @@ tink_cc_test(
     tink::mac::internal::chunked_mac_impl
     tink::mac::internal::chunked_mac_wrapper
     tink::mac::internal::stateful_mac
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -196,7 +196,7 @@ tink_cc_test(
   SRCS
     chunked_mac_test.cc
   DEPS
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -221,7 +221,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::stateful_hmac_boringssl
     tink::mac::internal::stateful_mac
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::absl_log
     absl::memory
@@ -248,7 +248,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_mac
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status_matchers
@@ -268,7 +268,7 @@ tink_cc_test(
     aes_cmac_proto_serialization_impl_test.cc
   DEPS
     tink::mac::internal::aes_cmac_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status
@@ -330,7 +330,7 @@ tink_cc_test(
     hmac_proto_serialization_impl_test.cc
   DEPS
     tink::mac::internal::hmac_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -369,7 +369,7 @@ tink_cc_test(
     hmac_proto_structs_test.cc
   DEPS
     tink::mac::internal::hmac_proto_structs
-    gmock
+    GTest::gmock
     absl::strings
     tink::internal::common_proto_enums
     tink::internal::testing::field_with_number
@@ -421,7 +421,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::config_2026
     tink::mac::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::chunked_mac
@@ -516,7 +516,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::hmac_boringssl
     tink::mac::internal::hmac_test_vectors
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -566,7 +566,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::aes_cmac_boringssl
     tink::mac::internal::aes_cmac_test_vectors
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

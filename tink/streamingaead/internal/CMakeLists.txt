@@ -42,7 +42,7 @@ tink_cc_test(
     aes_gcm_hkdf_streaming_proto_serialization_impl_test.cc
   DEPS
     tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -106,7 +106,7 @@ tink_cc_test(
     aes_ctr_hmac_streaming_proto_serialization_impl_test.cc
   DEPS
     tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -154,7 +154,7 @@ tink_cc_test(
   DEPS
     tink::streamingaead::internal::config_2026
     tink::streamingaead::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::memory
     absl::status_matchers
     tink::core::configuration
@@ -216,7 +216,7 @@ tink_cc_test(
     aes_ctr_hmac_streaming_test.cc
   DEPS
     tink::streamingaead::internal::aes_ctr_hmac_streaming
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -255,7 +255,7 @@ tink_cc_test(
     aes_gcm_hkdf_streaming_test.cc
   DEPS
     tink::streamingaead::internal::aes_gcm_hkdf_streaming
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -316,7 +316,7 @@ tink_cc_test(
     aes_ctr_hmac_streaming_impl_test.cc
   DEPS
     tink::streamingaead::internal::aes_ctr_hmac_streaming_impl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status

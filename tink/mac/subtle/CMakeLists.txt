@@ -19,7 +19,7 @@ tink_cc_test(
     create_hmac_mac_test.cc
   DEPS
     tink::mac::subtle::create_hmac_mac
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -48,7 +48,7 @@ tink_cc_test(
     create_aes_cmac_mac_test.cc
   DEPS
     tink::mac::subtle::create_aes_cmac_mac
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -81,7 +81,7 @@ tink_cc_test(
     create_aes_cmac_chunked_mac_test.cc
   DEPS
     tink::mac::subtle::create_aes_cmac_chunked_mac
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -109,7 +109,7 @@ tink_cc_test(
     create_hmac_chunked_mac_test.cc
   DEPS
     tink::mac::subtle::create_hmac_chunked_mac
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

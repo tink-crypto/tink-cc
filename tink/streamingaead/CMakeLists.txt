@@ -340,7 +340,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::streaming_aead_config
     tink::streamingaead::streaming_aead_wrapper
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -377,7 +377,7 @@ tink_cc_test(
   DEPS
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::streaming_aead_config
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -412,7 +412,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::streaming_aead_config
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -447,7 +447,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::streaming_aead_key_templates
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::util::test_matchers
     tink::proto::aes_ctr_hmac_streaming_cc_proto
@@ -470,7 +470,7 @@ tink_cc_test(
     tink::streamingaead::key_gen_config_2026
     tink::streamingaead::streaming_aead_config
     tink::streamingaead::streaming_aead_key_templates
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::key_status
@@ -498,7 +498,7 @@ tink_cc_test(
     buffered_input_stream_test.cc
   DEPS
     tink::streamingaead::buffered_input_stream
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -515,7 +515,7 @@ tink_cc_test(
     decrypting_input_stream_test.cc
   DEPS
     tink::streamingaead::decrypting_input_stream
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -538,7 +538,7 @@ tink_cc_test(
     decrypting_random_access_stream_test.cc
   DEPS
     tink::streamingaead::decrypting_random_access_stream
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -563,7 +563,7 @@ tink_cc_test(
   DEPS
     tink::streamingaead::buffered_input_stream
     tink::streamingaead::shared_input_stream
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -580,7 +580,7 @@ tink_cc_test(
     shared_random_access_stream_test.cc
   DEPS
     tink::streamingaead::shared_random_access_stream
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::strings
@@ -595,7 +595,7 @@ tink_cc_test(
     aes_ctr_hmac_streaming_parameters_test.cc
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -611,7 +611,7 @@ tink_cc_test(
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -631,7 +631,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -660,7 +660,7 @@ tink_cc_test(
     aes_gcm_hkdf_streaming_parameters_test.cc
   DEPS
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -676,7 +676,7 @@ tink_cc_test(
   DEPS
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -694,7 +694,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

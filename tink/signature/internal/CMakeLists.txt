@@ -32,7 +32,7 @@ tink_cc_test(
     ecdsa_raw_sign_boringssl_test.cc
   DEPS
     tink::signature::internal::ecdsa_raw_sign_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_macros
     absl::status_matchers
@@ -80,7 +80,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_sign_boringssl
-    gmock
+    GTest::gmock
     absl::absl_log
     absl::status
     absl::status_matchers
@@ -119,7 +119,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_sign_boringssl
     tink::signature::internal::ml_dsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -155,7 +155,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::absl_log
     absl::status
@@ -197,7 +197,7 @@ tink_cc_test(
     slh_dsa_proto_serialization_test.cc
   DEPS
     tink::signature::internal::slh_dsa_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -251,7 +251,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_sign_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -293,7 +293,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_sign_boringssl
     tink::signature::internal::slh_dsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -352,7 +352,7 @@ tink_cc_test(
     ed25519_proto_serialization_impl_test.cc
   DEPS
     tink::signature::internal::ed25519_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -425,7 +425,7 @@ tink_cc_test(
     ecdsa_proto_serialization_impl_test.cc
   DEPS
     tink::signature::internal::ecdsa_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -504,7 +504,7 @@ tink_cc_test(
     rsa_ssa_pkcs1_proto_serialization_impl_test.cc
   DEPS
     tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -587,7 +587,7 @@ tink_cc_test(
     rsa_ssa_pss_proto_serialization_impl_test.cc
   DEPS
     tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -665,7 +665,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::absl_log
     absl::status
@@ -733,7 +733,7 @@ tink_cc_test(
     slh_dsa_proto_serialization_impl_test.cc
   DEPS
     tink::signature::internal::slh_dsa_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -815,7 +815,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_proto_serialization_impl
     tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
     tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -867,7 +867,7 @@ tink_cc_test(
     composite_ml_dsa_util_boringssl_test.cc
   DEPS
     tink::signature::internal::composite_ml_dsa_util_boringssl
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::signature::composite_ml_dsa_parameters
@@ -928,7 +928,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_sign_key_manager
     tink::signature::internal::ml_dsa_verify_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::insecure_secret_key_access_testonly
@@ -949,7 +949,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_verify_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::string_view
     tink::core::key_manager
@@ -993,7 +993,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::slh_dsa_sign_key_manager
     tink::signature::internal::slh_dsa_verify_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::insecure_secret_key_access_testonly
@@ -1035,7 +1035,7 @@ tink_cc_test(
     slh_dsa_verify_key_manager_test.cc
   DEPS
     tink::signature::internal::slh_dsa_verify_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::string_view
     tink::core::key_manager
@@ -1074,7 +1074,7 @@ tink_cc_test(
     ecdsa_key_creator_test.cc
   DEPS
     tink::signature::internal::ecdsa_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1110,7 +1110,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1152,7 +1152,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1199,7 +1199,7 @@ tink_cc_test(
     composite_ml_dsa_key_creator_test.cc
   DEPS
     tink::signature::internal::composite_ml_dsa_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1236,7 +1236,7 @@ tink_cc_test(
     ed25519_key_creator_test.cc
   DEPS
     tink::signature::internal::ed25519_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1278,7 +1278,7 @@ tink_cc_test(
     rsa_ssa_pkcs1_key_creator_test.cc
   DEPS
     tink::signature::internal::rsa_ssa_pkcs1_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1320,7 +1320,7 @@ tink_cc_test(
     rsa_ssa_pss_key_creator_test.cc
   DEPS
     tink::signature::internal::rsa_ssa_pss_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1354,7 +1354,7 @@ tink_cc_test(
     slh_dsa_parameter_set_test.cc
   DEPS
     tink::signature::internal::slh_dsa_parameter_set
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::signature::slh_dsa_parameters
@@ -1436,7 +1436,7 @@ tink_cc_test(
     tink::signature::internal::config_2026
     tink::signature::internal::key_gen_config_2026
     tink::signature::internal::ml_dsa_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::configuration
@@ -1509,7 +1509,7 @@ tink_cc_test(
     key_gen_config_2026_test.cc
   DEPS
     tink::signature::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::key_gen_configuration
@@ -1541,7 +1541,7 @@ tink_cc_test(
     ml_dsa_pem_test.cc
   DEPS
     tink::signature::internal::ml_dsa_pem
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1574,7 +1574,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_prehash_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1623,7 +1623,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_prehash_boringssl
     tink::signature::internal::ml_dsa_sign_prehash_boringssl
     tink::signature::internal::ml_dsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1657,7 +1657,7 @@ tink_cc_test(
     prehash_format_test.cc
   DEPS
     tink::signature::internal::prehash_format
-    gmock
+    GTest::gmock
     tink::util::test_util
 )
 
@@ -1685,7 +1685,7 @@ tink_cc_test(
     prehash_wrapper_test.cc
   DEPS
     tink::signature::internal::prehash_wrapper
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -1724,7 +1724,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::config_2026
     tink::signature::internal::sign_prehash_wrapper
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -1776,7 +1776,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ml_dsa_chunked_prehash_boringssl
     tink::signature::internal::ml_dsa_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1814,7 +1814,7 @@ tink_cc_test(
     chunked_prehash_wrapper_test.cc
   DEPS
     tink::signature::internal::chunked_prehash_wrapper
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -1858,7 +1858,7 @@ tink_cc_test(
     composite_ml_dsa_sign_boringssl_test.cc
   DEPS
     tink::signature::internal::composite_ml_dsa_sign_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1903,7 +1903,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::composite_ml_dsa_sign_boringssl
     tink::signature::internal::composite_ml_dsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1944,7 +1944,7 @@ tink_cc_test(
     ecdsa_prehash_boringssl_test.cc
   DEPS
     tink::signature::internal::ecdsa_prehash_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1993,7 +1993,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::ecdsa_sign_boringssl
     tink::signature::internal::ecdsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2036,7 +2036,7 @@ tink_cc_test(
     ecdsa_verify_boringssl_test.cc
   DEPS
     tink::signature::internal::ecdsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2083,7 +2083,7 @@ tink_cc_test(
     ed25519_sign_boringssl_test.cc
   DEPS
     tink::signature::internal::ed25519_sign_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2123,7 +2123,7 @@ tink_cc_test(
     ed25519_verify_boringssl_test.cc
   DEPS
     tink::signature::internal::ed25519_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2172,7 +2172,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::rsa_ssa_pkcs1_sign_boringssl
     tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2217,7 +2217,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::signature::internal::rsa_ssa_pkcs1_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2269,7 +2269,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::rsa_ssa_pss_sign_boringssl
     tink::signature::internal::rsa_ssa_pss_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_macros
     absl::status_matchers
@@ -2318,7 +2318,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::signature::internal::rsa_ssa_pss_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_macros

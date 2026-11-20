@@ -211,7 +211,7 @@ tink_cc_library(
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
-    gmock
+    GTest::gmock
     absl::status
   TESTONLY
 )
@@ -272,7 +272,7 @@ tink_cc_test(
     tink::util::buffer
     tink::util::status
     tink::util::test_matchers
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -288,7 +288,7 @@ tink_cc_test(
     tink::util::errors
     tink::util::status
     tink::util::test_matchers
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
 )
@@ -300,7 +300,7 @@ tink_cc_test(
   DEPS
     tink::util::enums
     tink::util::test_matchers
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::subtle::common_enums
     tink::proto::common_cc_proto
@@ -314,7 +314,7 @@ tink_cc_test(
     file_input_stream_test.cc
   DEPS
     tink::util::file_input_stream
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -330,7 +330,7 @@ tink_cc_test(
     file_output_stream_test.cc
   DEPS
     tink::util::file_output_stream
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -347,7 +347,7 @@ tink_cc_test(
   DEPS
     tink::util::buffer
     tink::util::file_random_access_stream
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -364,7 +364,7 @@ tink_cc_test(
     istream_input_stream_test.cc
   DEPS
     tink::util::istream_input_stream
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -379,7 +379,7 @@ tink_cc_test(
     ostream_output_stream_test.cc
   DEPS
     tink::util::ostream_output_stream
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -395,7 +395,7 @@ tink_cc_test(
     tink::util::buffer
     tink::util::ostream_output_stream
     tink::util::test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -417,7 +417,7 @@ tink_cc_test(
     validation_test.cc
   DEPS
     tink::util::validation
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::proto::tink_cc_proto
@@ -433,7 +433,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::status
     tink::util::test_matchers
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -462,7 +462,7 @@ tink_cc_test(
     secret_data_test.cc
   DEPS
     tink::util::secret_data
-    gmock
+    GTest::gmock
     absl::strings
     benchmark::benchmark_main
     tink::internal::secret_buffer
@@ -492,7 +492,7 @@ tink_cc_test(
     tink::util::secret_proto
     tink::util::statusor
     tink::util::test_matchers
-    gmock
+    GTest::gmock
     absl::memory
     absl::status_matchers
     absl::statusor
@@ -538,7 +538,7 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::aead
     tink::core::keyset_handle
@@ -558,6 +558,6 @@ tink_cc_test(
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
-    gmock
+    GTest::gmock
     absl::status
 )

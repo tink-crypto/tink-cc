@@ -47,7 +47,7 @@ tink_cc_test(
     signature_key_parser_test.cc
   DEPS
     tink::pem::signature_key_parser
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::check
     absl::status

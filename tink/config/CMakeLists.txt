@@ -168,7 +168,7 @@ tink_cc_test(
     tink_config_test.cc
   DEPS
     tink::config::tink_config
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::aead
@@ -191,7 +191,7 @@ tink_cc_test(
     config_util_test.cc
   DEPS
     tink::config::config_util
-    gmock
+    GTest::gmock
     tink::proto::config_cc_proto
 )
 
@@ -201,7 +201,7 @@ tink_cc_test(
     tink_fips_test.cc
   DEPS
     tink::config::tink_fips
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::registry
@@ -217,7 +217,7 @@ tink_cc_test(
     global_registry_test.cc
   DEPS
     tink::config::global_registry
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -243,7 +243,7 @@ tink_cc_test(
   DEPS
     tink::config::fips_140_2
     tink::config::key_gen_fips_140_2
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -293,7 +293,7 @@ tink_cc_test(
     key_gen_fips_140_2_test.cc
   DEPS
     tink::config::key_gen_fips_140_2
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -322,7 +322,7 @@ tink_cc_test(
     key_gen_config_2026_test.cc
   DEPS
     tink::config::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::aead::aes_gcm_key_manager
@@ -341,7 +341,7 @@ tink_cc_test(
   DEPS
     tink::config::config_2026
     tink::config::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::aead

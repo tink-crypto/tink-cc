@@ -18,7 +18,7 @@ tink_cc_test(
     tink_type_resolver_test.cc
   DEPS
     tink::json::internal::tink_type_resolver
-    gmock
+    GTest::gmock
     absl::status_matchers
     protobuf::libprotobuf
     tink::util::test_matchers

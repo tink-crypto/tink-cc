@@ -48,7 +48,7 @@ tink_cc_test(
   DEPS
     tink::kem::internal::kem_decapsulate_wrapper
     tink::kem::internal::kem_encapsulate_wrapper
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status
@@ -104,7 +104,7 @@ tink_cc_test(
     kem_encapsulate_wrapper_test.cc
   DEPS
     tink::kem::internal::kem_encapsulate_wrapper
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status

@@ -451,7 +451,7 @@ tink_cc_test(
     tink::hybrid::ecies_public_key
     tink::hybrid::hybrid_config
     tink::hybrid::hybrid_key_templates
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -494,7 +494,7 @@ tink_cc_test(
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     tink::hybrid::hybrid_key_templates
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -528,7 +528,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::failing_hybrid
     tink::hybrid::hybrid_decrypt_wrapper
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -554,7 +554,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::failing_hybrid
     tink::hybrid::hybrid_encrypt_wrapper
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -581,7 +581,7 @@ tink_cc_test(
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::hybrid_config
     tink::hybrid::hybrid_key_templates
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::aead::aead_key_templates
     tink::daead::deterministic_aead_key_templates
@@ -600,7 +600,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::ecies_aead_hkdf_hybrid_decrypt
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::string_view
@@ -625,7 +625,7 @@ tink_cc_test(
     ecies_aead_hkdf_hybrid_encrypt_test.cc
   DEPS
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -645,7 +645,7 @@ tink_cc_test(
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::hybrid_config
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -678,7 +678,7 @@ tink_cc_test(
     ecies_aead_hkdf_public_key_manager_test.cc
   DEPS
     tink::hybrid::ecies_aead_hkdf_public_key_manager
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::aead::aead_key_templates
@@ -697,7 +697,7 @@ tink_cc_test(
     failing_hybrid_test.cc
   DEPS
     tink::hybrid::failing_hybrid
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::hybrid_decrypt
@@ -711,7 +711,7 @@ tink_cc_test(
     hpke_parameters_test.cc
   DEPS
     tink::hybrid::hpke_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -727,7 +727,7 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -748,7 +748,7 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -773,7 +773,7 @@ tink_cc_test(
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_proto_serialization
     tink::hybrid::hpke_public_key
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -803,7 +803,7 @@ tink_cc_test(
     ecies_parameters_test.cc
   DEPS
     tink::hybrid::ecies_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -826,7 +826,7 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -851,7 +851,7 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -879,7 +879,7 @@ tink_cc_test(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_proto_serialization
     tink::hybrid::ecies_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_macros
     absl::status_matchers
@@ -937,7 +937,7 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::hybrid::hybrid_key_templates
     tink::hybrid::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::hybrid_decrypt

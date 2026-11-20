@@ -207,7 +207,7 @@ tink_cc_test(
     composite_ml_dsa_test_util_test.cc
   DEPS
     tink::signature::internal::testing::composite_ml_dsa_test_util
-    gmock
+    GTest::gmock
     absl::optional
     tink::signature::composite_ml_dsa_parameters
 )
@@ -274,7 +274,7 @@ tink_cc_test(
   DEPS
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    gmock
+    GTest::gmock
     tink::signature::signature_private_key
     tink::signature::signature_public_key
 )

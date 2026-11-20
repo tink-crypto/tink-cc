@@ -41,7 +41,7 @@ tink_cc_test(
     aes_siv_proto_serialization_impl_test.cc
   DEPS
     tink::daead::internal::aes_siv_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -81,7 +81,7 @@ tink_cc_test(
     aes_siv_proto_format_test.cc
   DEPS
     tink::daead::internal::aes_siv_proto_format
-    gmock
+    GTest::gmock
     absl::strings
     tink::internal::testing::field_with_number
 )
@@ -107,7 +107,7 @@ tink_cc_test(
   DEPS
     tink::daead::internal::config_2026
     tink::daead::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::configuration
     tink::core::deterministic_aead
@@ -200,7 +200,7 @@ tink_cc_test(
   DEPS
     tink::daead::internal::aes_siv_boringssl
     tink::daead::internal::aes_siv_test_vectors
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

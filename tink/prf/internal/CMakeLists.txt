@@ -102,7 +102,7 @@ tink_cc_test(
     aes_cmac_prf_proto_serialization_impl_test.cc
   DEPS
     tink::prf::internal::aes_cmac_prf_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -132,7 +132,7 @@ tink_cc_test(
     hkdf_prf_proto_serialization_impl_test.cc
   DEPS
     tink::prf::internal::hkdf_prf_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -164,7 +164,7 @@ tink_cc_test(
     hmac_prf_proto_serialization_impl_test.cc
   DEPS
     tink::prf::internal::hmac_prf_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -212,7 +212,7 @@ tink_cc_test(
   DEPS
     tink::prf::internal::config_2026
     tink::prf::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::configuration
     tink::core::key_gen_configuration

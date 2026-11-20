@@ -31,7 +31,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_raw_decapsulate_boringssl
     tink::experimental::pqcrypto::kem::internal::ml_kem_raw_encapsulate_boringssl
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -81,7 +81,7 @@ tink_cc_test(
   DEPS
     tink::experimental::pqcrypto::kem::internal::ml_kem_raw_encapsulate_boringssl
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::boringssl
@@ -119,7 +119,7 @@ tink_cc_test(
     ml_kem_test_util_test.cc
   DEPS
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
@@ -163,7 +163,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_decapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -221,7 +221,7 @@ tink_cc_test(
   DEPS
     tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers

@@ -17,7 +17,7 @@ tink_cc_test(
     ml_kem_parameters_test.cc
   DEPS
     tink::experimental::pqcrypto::kem::ml_kem_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -57,7 +57,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::ml_kem_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -102,7 +102,7 @@ tink_cc_test(
   DEPS
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -158,7 +158,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::ml_kem_proto_serialization
     tink::experimental::pqcrypto::kem::ml_kem_public_key
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers

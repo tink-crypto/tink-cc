@@ -331,7 +331,7 @@ tink_cc_library(
   SRCS
     mock_aead.h
   DEPS
-    gmock
+    GTest::gmock
     absl::strings
     tink::core::aead
     tink::util::statusor
@@ -862,7 +862,7 @@ tink_cc_test(
   DEPS
     tink::aead::aead_wrapper
     tink::aead::mock_aead
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -912,7 +912,7 @@ tink_cc_test(
     tink::aead::x_aes_gcm_parameters
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -975,7 +975,7 @@ tink_cc_test(
     tink::aead::kms_envelope_aead_key_manager
     tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1011,7 +1011,7 @@ tink_cc_test(
   DEPS
     tink::aead::aead_config
     tink::aead::aes_eax_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::aead
     tink::core::key_status
@@ -1038,7 +1038,7 @@ tink_cc_test(
     tink::aead::aes_gcm_key_manager
     tink::aead::cord_aead
     tink::aead::cord_aead_wrapper
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1071,7 +1071,7 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_parameters
     tink::aead::cord_aead
     tink::aead::cord_aead_wrapper
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1105,7 +1105,7 @@ tink_cc_test(
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::config_2026
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::aead
@@ -1133,7 +1133,7 @@ tink_cc_test(
   DEPS
     tink::aead::aead_config
     tink::aead::xchacha20_poly1305_key_manager
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::boringssl
@@ -1157,7 +1157,7 @@ tink_cc_test(
     kms_aead_key_manager_test.cc
   DEPS
     tink::aead::kms_aead_key_manager
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1181,7 +1181,7 @@ tink_cc_test(
     tink::aead::aead_config
     tink::aead::aead_key_templates
     tink::aead::kms_envelope_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1208,7 +1208,7 @@ tink_cc_test(
     tink::aead::aes_eax_key_manager
     tink::aead::kms_envelope_aead
     tink::aead::kms_envelope_aead_key_manager
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1236,7 +1236,7 @@ tink_cc_test(
   DEPS
     tink::aead::cord_aead
     tink::aead::cord_aead_wrapper
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1255,7 +1255,7 @@ tink_cc_test(
     failing_aead_test.cc
   DEPS
     tink::aead::failing_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::aead
@@ -1268,7 +1268,7 @@ tink_cc_test(
     aes_gcm_parameters_test.cc
   DEPS
     tink::aead::aes_gcm_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -1283,7 +1283,7 @@ tink_cc_test(
   DEPS
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::optional
@@ -1303,7 +1303,7 @@ tink_cc_test(
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1329,7 +1329,7 @@ tink_cc_test(
     aes_gcm_siv_parameters_test.cc
   DEPS
     tink::aead::aes_gcm_siv_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -1344,7 +1344,7 @@ tink_cc_test(
   DEPS
     tink::aead::aes_gcm_siv_key
     tink::aead::aes_gcm_siv_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::optional
@@ -1364,7 +1364,7 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_key
     tink::aead::aes_gcm_siv_parameters
     tink::aead::aes_gcm_siv_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1390,7 +1390,7 @@ tink_cc_test(
     aes_eax_parameters_test.cc
   DEPS
     tink::aead::aes_eax_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -1405,7 +1405,7 @@ tink_cc_test(
   DEPS
     tink::aead::aes_eax_key
     tink::aead::aes_eax_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::optional
@@ -1425,7 +1425,7 @@ tink_cc_test(
     tink::aead::aes_eax_key
     tink::aead::aes_eax_parameters
     tink::aead::aes_eax_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1452,7 +1452,7 @@ tink_cc_test(
     xchacha20_poly1305_parameters_test.cc
   DEPS
     tink::aead::xchacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::statusor
@@ -1466,7 +1466,7 @@ tink_cc_test(
   DEPS
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::optional
@@ -1486,7 +1486,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1513,7 +1513,7 @@ tink_cc_test(
     chacha20_poly1305_parameters_test.cc
   DEPS
     tink::aead::chacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -1528,7 +1528,7 @@ tink_cc_test(
   DEPS
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1553,7 +1553,7 @@ tink_cc_test(
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
     tink::aead::chacha20_poly1305_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1580,7 +1580,7 @@ tink_cc_test(
     aes_ctr_hmac_aead_parameters_test.cc
   DEPS
     tink::aead::aes_ctr_hmac_aead_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -1595,7 +1595,7 @@ tink_cc_test(
   DEPS
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::optional
@@ -1615,7 +1615,7 @@ tink_cc_test(
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_ctr_hmac_aead_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1646,7 +1646,7 @@ tink_cc_test(
     x_aes_gcm_parameters_test.cc
   DEPS
     tink::aead::x_aes_gcm_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -1661,7 +1661,7 @@ tink_cc_test(
   DEPS
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::optional
@@ -1682,7 +1682,7 @@ tink_cc_test(
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key_manager
     tink::aead::x_aes_gcm_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::cord
@@ -1705,7 +1705,7 @@ tink_cc_test(
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
     tink::aead::x_aes_gcm_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1732,7 +1732,7 @@ tink_cc_test(
     legacy_kms_aead_parameters_test.cc
   DEPS
     tink::aead::legacy_kms_aead_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::string_view
@@ -1748,7 +1748,7 @@ tink_cc_test(
   DEPS
     tink::aead::legacy_kms_aead_key
     tink::aead::legacy_kms_aead_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::string_view
@@ -1766,7 +1766,7 @@ tink_cc_test(
     tink::aead::legacy_kms_aead_key
     tink::aead::legacy_kms_aead_parameters
     tink::aead::legacy_kms_aead_proto_serialization
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -1795,7 +1795,7 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_parameters
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1813,7 +1813,7 @@ tink_cc_test(
     tink::aead::legacy_kms_envelope_aead_key
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1838,7 +1838,7 @@ tink_cc_test(
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::legacy_kms_envelope_aead_proto_serialization
     tink::aead::xchacha20_poly1305_parameters
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status_matchers
@@ -1874,7 +1874,7 @@ tink_cc_test(
   DEPS
     tink::aead::aead_config
     tink::aead::aead_key_templates
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::statusor
     absl::string_view
@@ -1925,7 +1925,7 @@ tink_cc_test(
     tink::aead::aead_key_templates
     tink::aead::config_2026
     tink::aead::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::aead

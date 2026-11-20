@@ -142,7 +142,7 @@ tink_cc_test(
   DEPS
     tink::keyderivation::keyset_deriver
     tink::keyderivation::keyset_deriver_wrapper
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -168,7 +168,7 @@ tink_cc_test(
     tink::keyderivation::keyset_deriver
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -211,7 +211,7 @@ tink_cc_test(
   DEPS
     tink::keyderivation::key_derivation_key_templates
     tink::keyderivation::keyset_deriver_wrapper
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -237,7 +237,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::keyderivation::prf_based_key_derivation_proto_serialization
-    gmock
+    GTest::gmock
     absl::memory
     absl::status_matchers
     absl::statusor
@@ -315,7 +315,7 @@ tink_cc_test(
     prf_based_key_derivation_parameters_test.cc
   DEPS
     tink::keyderivation::prf_based_key_derivation_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -334,7 +334,7 @@ tink_cc_test(
   DEPS
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::key
@@ -355,7 +355,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::keyderivation::prf_based_key_derivation_proto_serialization
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status_matchers
     absl::statusor

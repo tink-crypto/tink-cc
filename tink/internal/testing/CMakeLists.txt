@@ -5,7 +5,7 @@ tink_cc_library(
   SRCS
     equals_proto_key_serialization.h
   DEPS
-    gmock
+    GTest::gmock
     absl::strings
     absl::string_view
     absl::optional
@@ -21,7 +21,7 @@ tink_cc_test(
     equals_proto_key_serialization_test.cc
   DEPS
     tink::internal::testing::equals_proto_key_serialization
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -60,7 +60,7 @@ tink_cc_test(
   DEPS
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -122,7 +122,7 @@ tink_cc_test(
     ec_test_vectors_test.cc
   DEPS
     tink::internal::testing::ec_test_vectors
-    gmock
+    GTest::gmock
     tink::internal::ec_util
     tink::subtle::common_enums
 )
@@ -135,7 +135,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::internal::testing::wycheproof_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::subtle::common_enums
     tink::util::test_matchers
@@ -192,7 +192,7 @@ tink_cc_test(
     test_only_key_test.cc
   DEPS
     tink::internal::testing::test_only_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -251,7 +251,7 @@ tink_cc_test(
   DEPS
     tink::internal::testing::test_only_key
     tink::internal::testing::test_only_key_managers
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -277,7 +277,7 @@ tink_cc_test(
     test_only_private_key_test.cc
   DEPS
     tink::internal::testing::test_only_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -310,7 +310,7 @@ tink_cc_test(
     test_only_public_key_test.cc
   DEPS
     tink::internal::testing::test_only_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -336,7 +336,7 @@ tink_cc_test(
     test_only_asymmetric_parameters_test.cc
   DEPS
     tink::internal::testing::test_only_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

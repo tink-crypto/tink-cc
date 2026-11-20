@@ -19,7 +19,7 @@ tink_cc_test(
     create_aes_ctr_hmac_streaming_aead_test.cc
   DEPS
     tink::streamingaead::subtle::create_aes_ctr_hmac_streaming_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -52,7 +52,7 @@ tink_cc_test(
     create_aes_gcm_hkdf_streaming_aead_test.cc
   DEPS
     tink::streamingaead::subtle::create_aes_gcm_hkdf_streaming_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

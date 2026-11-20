@@ -282,7 +282,7 @@ tink_cc_test(
   DEPS
     tink::mac::failing_mac
     tink::mac::mac_wrapper
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -315,7 +315,7 @@ tink_cc_test(
     tink::mac::hmac_parameters
     tink::mac::mac_config
     tink::mac::mac_key_templates
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -353,7 +353,7 @@ tink_cc_test(
     tink::mac::aes_cmac_key_manager
     tink::mac::hmac_key_manager
     tink::mac::mac_key_templates
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::key_manager_impl
     tink::core::mac
@@ -370,7 +370,7 @@ tink_cc_test(
     aes_cmac_key_manager_test.cc
   DEPS
     tink::mac::aes_cmac_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::chunked_mac
     tink::core::mac
@@ -389,7 +389,7 @@ tink_cc_test(
     hmac_key_manager_test.cc
   DEPS
     tink::mac::hmac_key_manager
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -412,7 +412,7 @@ tink_cc_test(
     failing_mac_test.cc
   DEPS
     tink::mac::failing_mac
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::mac
@@ -425,7 +425,7 @@ tink_cc_test(
     aes_cmac_parameters_test.cc
   DEPS
     tink::mac::aes_cmac_parameters
-    gmock
+    GTest::gmock
     absl::absl_log
     absl::status
     absl::status_matchers
@@ -442,7 +442,7 @@ tink_cc_test(
   DEPS
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
-    gmock
+    GTest::gmock
     absl::absl_log
     absl::status
     absl::status_matchers
@@ -464,7 +464,7 @@ tink_cc_test(
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
     tink::mac::aes_cmac_proto_serialization
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::memory
     absl::status
@@ -494,7 +494,7 @@ tink_cc_test(
     hmac_parameters_test.cc
   DEPS
     tink::mac::hmac_parameters
-    gmock
+    GTest::gmock
     absl::absl_log
     absl::status
     absl::status_matchers
@@ -511,7 +511,7 @@ tink_cc_test(
   DEPS
     tink::mac::hmac_key
     tink::mac::hmac_parameters
-    gmock
+    GTest::gmock
     absl::absl_log
     absl::status
     absl::status_matchers
@@ -534,7 +534,7 @@ tink_cc_test(
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     tink::mac::hmac_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -576,7 +576,7 @@ tink_cc_test(
     tink::mac::hmac_parameters
     tink::mac::key_gen_config_2026
     tink::mac::mac_key_templates
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::chunked_mac

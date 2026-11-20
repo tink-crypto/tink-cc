@@ -66,7 +66,7 @@ tink_cc_test(
     json_keyset_reader_test.cc
   DEPS
     tink::json::json_keyset_reader
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -86,7 +86,7 @@ tink_cc_test(
   DEPS
     tink::json::json_keyset_reader
     tink::json::json_keyset_writer
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -113,7 +113,7 @@ tink_cc_test(
     json_proto_keyset_format_test.cc
   DEPS
     tink::json::json_proto_keyset_format
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

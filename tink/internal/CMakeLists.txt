@@ -50,7 +50,7 @@ tink_cc_library(
   DEPS
     absl::absl_check
     absl::strings
-    gmock
+    GTest::gmock
     tink::subtle::random
     tink::util::status
   TESTONLY
@@ -228,7 +228,7 @@ tink_cc_test(
     util_test.cc
   DEPS
     tink::internal::util
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -250,7 +250,7 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_impl
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -281,7 +281,7 @@ tink_cc_test(
     key_info_test.cc
   DEPS
     tink::internal::key_info
-    gmock
+    GTest::gmock
     tink::proto::tink_cc_proto
 )
 
@@ -294,7 +294,7 @@ tink_cc_test(
     tink::internal::monitoring_client_mocks
     tink::internal::primitive_set
     tink::internal::registry_impl
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -332,7 +332,7 @@ tink_cc_test(
     err_util_test.cc
   DEPS
     tink::internal::err_util
-    gmock
+    GTest::gmock
     absl::strings
     tink::internal::boringssl
 )
@@ -344,7 +344,7 @@ tink_cc_test(
   DEPS
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -364,7 +364,7 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -384,7 +384,7 @@ tink_cc_test(
     fips_utils_test.cc
   DEPS
     tink::internal::fips_utils
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::status
@@ -403,7 +403,7 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -451,7 +451,7 @@ tink_cc_test(
     md_util_test.cc
   DEPS
     tink::internal::md_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::strings
     tink::internal::boringssl
@@ -483,7 +483,7 @@ tink_cc_test(
     aes_util_test.cc
   DEPS
     tink::internal::aes_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::boringssl
@@ -514,7 +514,7 @@ tink_cc_test(
     tink::internal::monitoring_key_set_info
     tink::internal::monitoring_util
     tink::internal::primitive_set
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -555,7 +555,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -588,7 +588,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_key_serialization
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -619,7 +619,7 @@ tink_cc_test(
     tink::internal::legacy_proto_parameters
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::parameters
@@ -654,7 +654,7 @@ tink_cc_test(
     tink::internal::legacy_proto_key
     tink::internal::proto_key_serialization
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -683,7 +683,7 @@ tink_cc_test(
   DEPS
     tink::internal::parser_index
     tink::internal::serialization
-    gmock
+    GTest::gmock
     absl::strings
 )
 
@@ -704,7 +704,7 @@ tink_cc_test(
   DEPS
     tink::internal::serialization_test_util
     tink::internal::serializer_index
-    gmock
+    GTest::gmock
 )
 
 tink_cc_library(
@@ -731,7 +731,7 @@ tink_cc_test(
     tink::internal::parser_index
     tink::internal::serialization
     tink::internal::serialization_test_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -764,7 +764,7 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_test_util
     tink::internal::serializer_index
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -800,7 +800,7 @@ tink_cc_test(
     tink::internal::parser_index
     tink::internal::serialization
     tink::internal::serialization_test_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -838,7 +838,7 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_test_util
     tink::internal::serializer_index
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -869,7 +869,7 @@ tink_cc_test(
     key_status_util_test.cc
   DEPS
     tink::internal::key_status_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::key_status
@@ -926,7 +926,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -994,7 +994,7 @@ tink_cc_test(
     tink::internal::serialization_registry
     tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1043,7 +1043,7 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1077,7 +1077,7 @@ tink_cc_test(
     serialization_test_util_test.cc
   DEPS
     tink::internal::serialization_test_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::optional
     tink::core::insecure_secret_key_access
@@ -1108,7 +1108,7 @@ tink_cc_test(
     test_random_access_stream_test.cc
   DEPS
     tink::internal::test_random_access_stream
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::subtle::random
@@ -1147,7 +1147,7 @@ tink_cc_test(
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
     tink::internal::primitive_set
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1210,7 +1210,7 @@ tink_cc_test(
   DEPS
     tink::internal::fips_utils
     tink::internal::key_type_info_store
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1264,7 +1264,7 @@ tink_cc_test(
     tink::internal::keyset_wrapper_store
     tink::internal::primitive_set
     tink::internal::registry_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::string_view
@@ -1305,7 +1305,7 @@ tink_cc_test(
   DEPS
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1346,7 +1346,7 @@ tink_cc_test(
     call_with_core_dump_protection_test.cc
   DEPS
     tink::internal::call_with_core_dump_protection
-    gmock
+    GTest::gmock
 )
 
 tink_cc_library(
@@ -1364,7 +1364,7 @@ tink_cc_test(
     safe_stringops_test.cc
   DEPS
     tink::internal::safe_stringops
-    gmock
+    GTest::gmock
 )
 
 tink_cc_library(
@@ -1402,7 +1402,7 @@ tink_cc_test(
     bn_encoding_util_test.cc
   DEPS
     tink::internal::bn_encoding_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1444,7 +1444,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
-    gmock
+    GTest::gmock
     absl::status
     absl::statusor
     absl::strings
@@ -1478,7 +1478,7 @@ tink_cc_test(
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
-    gmock
+    GTest::gmock
     absl::strings
     absl::string_view
     absl::span
@@ -1511,7 +1511,7 @@ tink_cc_test(
     proto_parser_state_test.cc
   DEPS
     tink::internal::proto_parser_state
-    gmock
+    GTest::gmock
     absl::crc32c
     absl::span
 )
@@ -1539,7 +1539,7 @@ tink_cc_test(
     output_prefix_util_test.cc
   DEPS
     tink::internal::output_prefix_util
-    gmock
+    GTest::gmock
 )
 
 tink_cc_library(
@@ -1568,7 +1568,7 @@ tink_cc_test(
     sanitizing_allocator_test.cc
   DEPS
     tink::internal::sanitizing_allocator
-    gmock
+    GTest::gmock
 )
 
 tink_cc_library(
@@ -1589,7 +1589,7 @@ tink_cc_test(
     secret_buffer_test.cc
   DEPS
     tink::internal::secret_buffer
-    gmock
+    GTest::gmock
     absl::string_view
     absl::span
     tink::util::secret_data
@@ -1612,7 +1612,7 @@ tink_cc_test(
     tink_proto_structs_test.cc
   DEPS
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     absl::strings
     tink::core::secret_data
     tink::internal::testing::field_with_number
@@ -1654,7 +1654,7 @@ tink_cc_test(
     tink::internal::proto_parser_repeated_secret_data_field
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
-    gmock
+    GTest::gmock
     absl::crc32c
     absl::strings
     absl::string_view
@@ -1680,7 +1680,7 @@ tink_cc_library(
     monitoring_client_mocks.h
   DEPS
     tink::internal::monitoring
-    gmock
+    GTest::gmock
     tink::util::statusor
   TESTONLY
 )
@@ -1697,7 +1697,7 @@ tink_cc_test(
     endian_test.cc
   DEPS
     tink::internal::endian
-    gmock
+    GTest::gmock
 )
 
 tink_cc_library(
@@ -1726,7 +1726,7 @@ tink_cc_test(
     monitoring_key_set_info_test.cc
   DEPS
     tink::internal::monitoring_key_set_info
-    gmock
+    GTest::gmock
     tink::core::key_status
 )
 
@@ -1752,7 +1752,7 @@ tink_cc_test(
     xwing_util_test.cc
   DEPS
     tink::internal::xwing_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::util::secret_data
@@ -1783,7 +1783,7 @@ tink_cc_test(
     mlkem_util_test.cc
   DEPS
     tink::internal::mlkem_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1835,7 +1835,7 @@ tink_cc_test(
     tink::internal::proto_parser_scalar_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
-    gmock
+    GTest::gmock
     absl::strings
     absl::string_view
     absl::span
@@ -1884,7 +1884,7 @@ tink_cc_test(
     tink::internal::proto_parser_secret_data_field
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
-    gmock
+    GTest::gmock
     absl::nullability
     absl::crc32c
     absl::absl_check
@@ -1931,7 +1931,7 @@ tink_cc_test(
     tink::internal::proto_parser_options
     tink::internal::proto_parser_secret_data_field
     tink::internal::proto_parser_state
-    gmock
+    GTest::gmock
     absl::crc32c
     absl::strings
     absl::string_view
@@ -1974,7 +1974,7 @@ tink_cc_test(
     legacy_key_manager_impl_test.cc
   DEPS
     tink::internal::legacy_key_manager_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2009,7 +2009,7 @@ tink_cc_test(
   DEPS
     tink::internal::tink_proto_struct_conversions
     tink::internal::tink_proto_structs
-    gmock
+    GTest::gmock
     tink::util::secret_data
     tink::proto::tink_cc_proto
 )
@@ -2029,7 +2029,7 @@ tink_cc_test(
     legacy_annotations_test.cc
   DEPS
     tink::internal::legacy_annotations
-    gmock
+    GTest::gmock
     absl::flat_hash_map
 )
 
@@ -2074,7 +2074,7 @@ tink_cc_test(
     primitive_set_base_test.cc
   DEPS
     tink::internal::primitive_set_base
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -2091,7 +2091,7 @@ tink_cc_test(
     primitive_set_base_entry_test.cc
   DEPS
     tink::internal::primitive_set_base
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::status
     absl::status_matchers
@@ -2108,7 +2108,7 @@ tink_cc_test(
     primitive_set_test.cc
   DEPS
     tink::internal::primitive_set
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -2147,7 +2147,7 @@ tink_cc_test(
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2178,7 +2178,7 @@ tink_cc_test(
     aes_ctr128_test.cc
   DEPS
     tink::internal::aes_ctr128
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -2211,7 +2211,7 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::keyset_handle_access
     tink::internal::legacy_annotations
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::absl_check
     absl::status_matchers

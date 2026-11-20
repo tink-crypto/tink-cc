@@ -37,28 +37,14 @@
 include(HttpArchive)
 include(TinkUtil)
 
-# Creates an interface target from an imported one.
-#
-# Parameters:
-#   INTERFACE_TARGET Name of the interface target.
-#   IMPORTED_TARGET Name of the imported target (e.g., with find_package).
-#
-macro(_create_interface_target INTERFACE_TARGET IMPORTED_TARGET)
-  add_library(${INTERFACE_TARGET} INTERFACE)
-  target_link_libraries(${INTERFACE_TARGET} INTERFACE ${IMPORTED_TARGET})
-  target_include_directories(${INTERFACE_TARGET} INTERFACE ${IMPORTED_TARGET})
-endmacro()
-
 set(gtest_force_shared_crt ON CACHE BOOL "Tink dependency override" FORCE)
 
 if (TINK_BUILD_TESTONLY)
   if (TINK_USE_INSTALLED_GOOGLETEST)
-    # This uses the CMake's FindGTest module; if successful, this call to
+    # This uses CMake's GTest config package; if successful, this call to
     # find_package generates the targets GTest::gmock, GTest::gtest and
     # GTest::gtest_main.
     find_package(GTest CONFIG REQUIRED)
-    _create_interface_target(gmock GTest::gmock)
-    _create_interface_target(gtest_main GTest::gtest_main)
   else()
     _tink_http_archive(
       NAME googletest
@@ -74,13 +60,6 @@ if (TINK_BUILD_TESTS)
     # find_package generates the targets benchmark::benchmark and
     # benchmark::benchmark_main.
     find_package(benchmark CONFIG REQUIRED)
-    # Ensure non-namespaced targets are also available for compatibility.
-    if (NOT TARGET benchmark)
-      _create_interface_target(benchmark benchmark::benchmark)
-    endif()
-    if (NOT TARGET benchmark_main)
-      _create_interface_target(benchmark_main benchmark::benchmark_main)
-    endif()
   else()
     set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
 

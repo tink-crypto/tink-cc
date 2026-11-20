@@ -508,7 +508,7 @@ tink_cc_test(
     raw_jwt_test.cc
   DEPS
     tink::jwt::raw_jwt
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::time
@@ -523,7 +523,7 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -547,7 +547,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::time
@@ -568,7 +568,7 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::keyset_handle
@@ -590,7 +590,7 @@ tink_cc_test(
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -625,7 +625,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_signature_config
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -664,7 +664,7 @@ tink_cc_test(
     tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_key_templates
     tink::jwt::jwt_mac_config
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -694,7 +694,7 @@ tink_cc_test(
     jwt_hmac_parameters_test.cc
   DEPS
     tink::jwt::jwt_hmac_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -708,7 +708,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_hmac_key
     tink::jwt::jwt_hmac_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -728,7 +728,7 @@ tink_cc_test(
     tink::jwt::jwt_hmac_key
     tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_hmac_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -756,7 +756,7 @@ tink_cc_test(
     jwt_ecdsa_parameters_test.cc
   DEPS
     tink::jwt::jwt_ecdsa_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -771,7 +771,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -796,7 +796,7 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -821,7 +821,7 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -854,7 +854,7 @@ tink_cc_test(
     jwt_rsa_ssa_pkcs1_parameters_test.cc
   DEPS
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -873,7 +873,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
@@ -896,7 +896,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
@@ -927,7 +927,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_log
     absl::status
@@ -957,7 +957,7 @@ tink_cc_test(
     jwt_rsa_ssa_pss_parameters_test.cc
   DEPS
     tink::jwt::jwt_rsa_ssa_pss_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -976,7 +976,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_public_key
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
@@ -999,7 +999,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
@@ -1030,7 +1030,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_proto_serialization
     tink::jwt::jwt_rsa_ssa_pss_public_key
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_log
     absl::status
@@ -1072,7 +1072,7 @@ tink_cc_test(
     jwt_ml_dsa_parameters_test.cc
   DEPS
     tink::jwt::jwt_ml_dsa_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1108,7 +1108,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1149,7 +1149,7 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1187,7 +1187,7 @@ tink_cc_test(
     tink::jwt::jwt_mac_key_gen_config_2026
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::time
@@ -1228,7 +1228,7 @@ tink_cc_test(
     tink::jwt::jwt_signature_key_gen_config_2026
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::keyset_handle
@@ -1265,7 +1265,7 @@ tink_cc_test(
     tink::jwt::jwt_ml_dsa_private_key
     tink::jwt::jwt_ml_dsa_proto_serialization
     tink::jwt::jwt_ml_dsa_public_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1293,7 +1293,7 @@ tink_cc_test(
   DEPS
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pss_parameters
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::statusor
     benchmark::benchmark_main

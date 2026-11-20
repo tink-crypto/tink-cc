@@ -22,7 +22,7 @@ tink_cc_test(
     create_aes_ctr_hmac_aead_test.cc
   DEPS
     tink::aead::subtle::create_aes_ctr_hmac_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -56,7 +56,7 @@ tink_cc_test(
     create_chacha20_poly1305_aead_test.cc
   DEPS
     tink::aead::subtle::create_chacha20_poly1305_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -86,7 +86,7 @@ tink_cc_test(
     create_aes_gcm_cord_aead_test.cc
   DEPS
     tink::aead::subtle::create_aes_gcm_cord_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -124,7 +124,7 @@ tink_cc_test(
     create_aes_eax_aead_test.cc
   DEPS
     tink::aead::subtle::create_aes_eax_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -160,7 +160,7 @@ tink_cc_test(
     create_aes_gcm_aead_test.cc
   DEPS
     tink::aead::subtle::create_aes_gcm_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -196,7 +196,7 @@ tink_cc_test(
     create_xchacha20_poly1305_aead_test.cc
   DEPS
     tink::aead::subtle::create_xchacha20_poly1305_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -229,7 +229,7 @@ tink_cc_test(
     create_aes_gcm_siv_aead_test.cc
   DEPS
     tink::aead::subtle::create_aes_gcm_siv_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -262,7 +262,7 @@ tink_cc_test(
     create_x_aes_gcm_aead_test.cc
   DEPS
     tink::aead::subtle::create_x_aes_gcm_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -292,7 +292,7 @@ tink_cc_test(
     create_aes_gcm_siv_cord_aead_test.cc
   DEPS
     tink::aead::subtle::create_aes_gcm_siv_cord_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::cord
@@ -324,7 +324,7 @@ tink_cc_test(
     create_x_aes_gcm_cord_aead_test.cc
   DEPS
     tink::aead::subtle::create_x_aes_gcm_cord_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::cord

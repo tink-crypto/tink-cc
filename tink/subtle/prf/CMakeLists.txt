@@ -80,7 +80,7 @@ tink_cc_test(
     hkdf_streaming_prf_test.cc
   DEPS
     tink::subtle::prf::hkdf_streaming_prf
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -102,7 +102,7 @@ tink_cc_test(
   DEPS
     tink::subtle::prf::streaming_prf
     tink::subtle::prf::streaming_prf_wrapper
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -123,7 +123,7 @@ tink_cc_test(
   DEPS
     tink::subtle::prf::prf_set_util
     tink::subtle::prf::streaming_prf
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers

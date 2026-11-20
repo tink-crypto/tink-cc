@@ -20,7 +20,7 @@ tink_cc_test(
     create_jwt_ml_dsa_key_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_ml_dsa_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -48,7 +48,7 @@ tink_cc_test(
     create_jwt_ecdsa_key_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_ecdsa_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -76,7 +76,7 @@ tink_cc_test(
     create_jwt_rsa_ssa_pss_key_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_rsa_ssa_pss_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -104,7 +104,7 @@ tink_cc_test(
     create_jwt_rsa_ssa_pkcs1_key_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_rsa_ssa_pkcs1_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -132,7 +132,7 @@ tink_cc_test(
     create_jwt_hmac_key_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_hmac_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -159,7 +159,7 @@ tink_cc_test(
     create_jwt_hmac_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_hmac
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -191,7 +191,7 @@ tink_cc_test(
     create_jwt_ecdsa_public_key_sign_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_ecdsa_public_key_sign
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::jwt::jwt_public_key_sign
@@ -223,7 +223,7 @@ tink_cc_test(
   DEPS
     tink::jwt::subtle::create_jwt_ecdsa_public_key_sign
     tink::jwt::subtle::create_jwt_ecdsa_public_key_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -256,7 +256,7 @@ tink_cc_test(
     create_jwt_rsa_ssa_pkcs1_public_key_sign_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_rsa_ssa_pkcs1_public_key_sign
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::jwt::jwt_public_key_sign
@@ -288,7 +288,7 @@ tink_cc_test(
   DEPS
     tink::jwt::subtle::create_jwt_rsa_ssa_pkcs1_public_key_sign
     tink::jwt::subtle::create_jwt_rsa_ssa_pkcs1_public_key_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -321,7 +321,7 @@ tink_cc_test(
     create_jwt_rsa_ssa_pss_public_key_sign_test.cc
   DEPS
     tink::jwt::subtle::create_jwt_rsa_ssa_pss_public_key_sign
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::jwt::jwt_public_key_sign
@@ -353,7 +353,7 @@ tink_cc_test(
   DEPS
     tink::jwt::subtle::create_jwt_rsa_ssa_pss_public_key_sign
     tink::jwt::subtle::create_jwt_rsa_ssa_pss_public_key_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -388,7 +388,7 @@ tink_cc_test(
     tink::jwt::subtle::create_jwt_ml_dsa_key
     tink::jwt::subtle::create_jwt_ml_dsa_public_key_sign
     tink::jwt::subtle::create_jwt_ml_dsa_public_key_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -423,7 +423,7 @@ tink_cc_test(
     tink::jwt::subtle::create_jwt_ml_dsa_key
     tink::jwt::subtle::create_jwt_ml_dsa_public_key_sign
     tink::jwt::subtle::create_jwt_ml_dsa_public_key_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::jwt::jwt_ml_dsa_parameters

@@ -228,7 +228,7 @@ tink_cc_test(
     tink::hybrid::internal::hpke_context
     tink::hybrid::internal::hpke_test_util
     tink::hybrid::internal::hpke_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -247,7 +247,7 @@ tink_cc_test(
     tink::hybrid::internal::hpke_test_util
     tink::hybrid::internal::hpke_util
     tink::hybrid::internal::test_hpke_context_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -264,7 +264,7 @@ tink_cc_test(
     tink::hybrid::internal::hpke_decrypt
     tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -291,7 +291,7 @@ tink_cc_test(
     tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_test_util
     tink::hybrid::internal::hpke_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -315,7 +315,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::internal::hpke_key_manager_util
     tink::hybrid::internal::hpke_test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::status
@@ -330,7 +330,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_private_key_manager
-    gmock
+    GTest::gmock
     absl::btree
     absl::status
     absl::status_matchers
@@ -358,7 +358,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::internal::hpke_public_key_manager
     tink::hybrid::internal::hpke_test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::test_matchers
@@ -374,7 +374,7 @@ tink_cc_test(
     tink::hybrid::internal::hpke_test_util
     tink::hybrid::internal::hpke_util
     tink::hybrid::internal::hpke_util_boringssl
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::internal::boringssl
@@ -389,7 +389,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::internal::hpke_test_util
     tink::hybrid::internal::hpke_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -435,7 +435,7 @@ tink_cc_test(
     ecies_aead_hkdf_dem_helper_test.cc
   DEPS
     tink::hybrid::internal::ecies_aead_hkdf_dem_helper
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -508,7 +508,7 @@ tink_cc_test(
     ecies_proto_serialization_impl_test.cc
   DEPS
     tink::hybrid::internal::ecies_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::check
     absl::status
     absl::status_macros
@@ -589,7 +589,7 @@ tink_cc_test(
     hpke_proto_serialization_impl_test.cc
   DEPS
     tink::hybrid::internal::hpke_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -654,7 +654,7 @@ tink_cc_test(
     tink::hybrid::internal::config_2026
     tink::hybrid::internal::hpke_private_key_manager
     tink::hybrid::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::configuration
@@ -720,7 +720,7 @@ tink_cc_test(
     ecies_key_creator_test.cc
   DEPS
     tink::hybrid::internal::ecies_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -759,7 +759,7 @@ tink_cc_test(
     hpke_key_creator_test.cc
   DEPS
     tink::hybrid::internal::hpke_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -788,7 +788,7 @@ tink_cc_test(
     hpke_proto_structs_test.cc
   DEPS
     tink::hybrid::internal::hpke_proto_structs
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -832,7 +832,7 @@ tink_cc_test(
     ecies_aead_hkdf_hybrid_decrypt_test.cc
   DEPS
     tink::hybrid::internal::ecies_aead_hkdf_hybrid_decrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -875,7 +875,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::internal::ecies_aead_hkdf_hybrid_decrypt
     tink::hybrid::internal::ecies_aead_hkdf_hybrid_encrypt
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

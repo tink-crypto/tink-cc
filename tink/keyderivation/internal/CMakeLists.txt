@@ -42,7 +42,7 @@ tink_cc_test(
     prf_based_deriver_test.cc
   DEPS
     tink::keyderivation::internal::prf_based_deriver
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -101,7 +101,7 @@ tink_cc_test(
   DEPS
     tink::keyderivation::internal::prf_based_deriver
     tink::keyderivation::internal::prf_based_deriver_key_manager
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -208,7 +208,7 @@ tink_cc_test(
     key_derivers_test.cc
   DEPS
     tink::keyderivation::internal::key_derivers
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::memory
@@ -324,7 +324,7 @@ tink_cc_test(
     config_prf_for_deriver_test.cc
   DEPS
     tink::keyderivation::internal::config_prf_for_deriver
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::internal::configuration_impl
     tink::internal::key_type_info_store
@@ -399,7 +399,7 @@ tink_cc_test(
     prf_based_key_derivation_proto_serialization_impl_test.cc
   DEPS
     tink::keyderivation::internal::prf_based_key_derivation_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -495,7 +495,7 @@ tink_cc_test(
     tink::keyderivation::internal::config_2026
     tink::keyderivation::internal::key_gen_config_2026
     tink::keyderivation::internal::prf_based_deriver_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::configuration
@@ -527,7 +527,7 @@ tink_cc_test(
   DEPS
     tink::keyderivation::internal::key_gen_config_2026
     tink::keyderivation::internal::prf_based_deriver_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::key_gen_configuration

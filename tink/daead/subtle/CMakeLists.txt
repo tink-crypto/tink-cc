@@ -20,7 +20,7 @@ tink_cc_test(
     aead_or_daead_test.cc
   DEPS
     tink::daead::subtle::aead_or_daead
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -51,7 +51,7 @@ tink_cc_test(
     create_aes_siv_deterministic_aead_test.cc
   DEPS
     tink::daead::subtle::create_aes_siv_deterministic_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -94,7 +94,7 @@ tink_cc_test(
   DEPS
     tink::daead::subtle::create_aes_siv_deterministic_aeads
     tink::daead::subtle::deterministic_aeads
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

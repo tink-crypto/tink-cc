@@ -854,7 +854,7 @@ tink_cc_test(
     core/version_test.cc
   DEPS
     tink::core::version
-    gmock
+    GTest::gmock
     tink::internal::util
 )
 
@@ -864,7 +864,7 @@ tink_cc_test(
     core/binary_keyset_reader_test.cc
   DEPS
     tink::core::binary_keyset_reader
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::test_matchers
@@ -882,7 +882,7 @@ tink_cc_test(
     tink::core::key_gen_configuration
     tink::core::keyset_handle
     tink::core::proto_keyset_format
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -901,7 +901,7 @@ tink_cc_test(
     core/crypto_format_test.cc
   DEPS
     tink::core::crypto_format
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::test_matchers
@@ -933,7 +933,7 @@ tink_cc_test(
     tink::core::primitive_wrapper
     tink::core::registry
     tink::core::restricted_data
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::absl_check
     absl::status
@@ -976,7 +976,7 @@ tink_cc_test(
     tink::core::primitive_wrapper
     tink::core::registry
     tink::core::restricted_data
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -1008,7 +1008,7 @@ tink_cc_test(
     core/key_manager_test.cc
   DEPS
     tink::core::key_manager
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::status
@@ -1024,7 +1024,7 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::keyset_manager
     tink::core::registry
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::testing::test_only_key
@@ -1043,7 +1043,7 @@ tink_cc_test(
     tink::core::cleartext_keyset_handle
     tink::core::insecure_secret_key_access_testonly
     tink::core::keyset_handle
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     protobuf::libprotobuf
@@ -1061,7 +1061,7 @@ tink_cc_test(
   DEPS
     tink::core::keyset_handle
     tink::core::legacy_get_keyset_info
-    gmock
+    GTest::gmock
     absl::strings
     tink::util::test_keyset_handle
     tink::util::test_util
@@ -1076,7 +1076,7 @@ tink_cc_test(
     tink::core::aead
     tink::core::kms_client
     tink::core::kms_clients
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1091,7 +1091,7 @@ tink_cc_test(
     core/template_util_test.cc
   DEPS
     tink::core::template_util
-    gmock
+    GTest::gmock
 )
 
 tink_cc_test(
@@ -1102,7 +1102,7 @@ tink_cc_test(
     tink::core::aead
     tink::core::key_type_manager
     tink::core::template_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1124,7 +1124,7 @@ tink_cc_test(
   DEPS
     tink::core::aead
     tink::core::key_manager_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::string_view
@@ -1153,7 +1153,7 @@ tink_cc_test(
     tink::core::template_util
     tink::core::key_manager
     tink::core::registry
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1174,7 +1174,7 @@ tink_cc_test(
   DEPS
     tink::core::partial_key_access
     tink::core::partial_key_access_token
-    gmock
+    GTest::gmock
     absl::core_headers
 )
 
@@ -1185,7 +1185,7 @@ tink_cc_test(
   DEPS
     tink::core::insecure_secret_key_access_testonly
     tink::core::restricted_data
-    gmock
+    GTest::gmock
     tink::subtle::random
 )
 
@@ -1206,7 +1206,7 @@ tink_cc_test(
     tink::core::proto_keyset_format
     tink::core::restricted_data
     tink::core::secret_data
-    gmock
+    GTest::gmock
     absl::memory
     absl::status_matchers
     absl::statusor
@@ -1226,7 +1226,7 @@ tink_cc_test(
     core/big_integer_test.cc
   DEPS
     tink::core::big_integer
-    gmock
+    GTest::gmock
     absl::string_view
     tink::util::test_util
 )
@@ -1238,7 +1238,7 @@ tink_cc_test(
   DEPS
     tink::core::big_integer
     tink::core::ec_point
-    gmock
+    GTest::gmock
     tink::subtle::random
 )
 
@@ -1249,7 +1249,7 @@ tink_cc_test(
   DEPS
     tink::core::parameters
     tink::core::proto_parameters_format
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::legacy_proto_parameters
@@ -1283,7 +1283,7 @@ tink_cc_test(
     secret_data_test.cc
   DEPS
     tink::core::secret_data
-    gmock
+    GTest::gmock
     absl::crc32c
     absl::status_matchers
     absl::strings
@@ -1305,7 +1305,7 @@ tink_cc_test(
     tink::core::keyset_manager
     tink::core::public_key_sign
     tink::core::public_key_verify
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::statusor
     benchmark::benchmark_main
@@ -1334,6 +1334,6 @@ tink_cc_test(
     rtti_test.cc
   DEPS
     tink::core::rtti
-    gmock
+    GTest::gmock
     absl::flat_hash_map
 )

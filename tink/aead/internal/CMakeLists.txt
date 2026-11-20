@@ -89,7 +89,7 @@ tink_cc_library(
     mock_zero_copy_aead.h
   DEPS
     tink::aead::internal::zero_copy_aead
-    gmock
+    GTest::gmock
     absl::statusor
     absl::strings
     absl::span
@@ -221,7 +221,7 @@ tink_cc_test(
     aead_util_test.cc
   DEPS
     tink::aead::internal::aead_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::internal::boringssl
@@ -236,7 +236,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::ssl_aead
     tink::aead::internal::wycheproof_aead
-    gmock
+    GTest::gmock
     absl::flat_hash_set
     absl::status
     absl::status_matchers
@@ -260,7 +260,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::wycheproof_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -288,7 +288,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::mock_zero_copy_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -306,7 +306,7 @@ tink_cc_test(
     tink::aead::internal::wycheproof_aead
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_boringssl
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -332,7 +332,7 @@ tink_cc_test(
     ssl_aead_large_inputs_test.cc
   DEPS
     tink::aead::internal::ssl_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -351,7 +351,7 @@ tink_cc_test(
     tink::aead::internal::mock_zero_copy_aead
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aead_wrapper
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -383,7 +383,7 @@ tink_cc_test(
     cord_utils_test.cc
   DEPS
     tink::aead::internal::cord_utils
-    gmock
+    GTest::gmock
     absl::strings
     absl::cord
     absl::string_view
@@ -420,7 +420,7 @@ tink_cc_test(
     cord_x_aes_gcm_boringssl_test.cc
   DEPS
     tink::aead::internal::cord_x_aes_gcm_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -461,7 +461,7 @@ tink_cc_test(
     base_x_aes_gcm_test.cc
   DEPS
     tink::aead::internal::base_x_aes_gcm
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -507,7 +507,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_x_aes_gcm_boringssl
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -569,7 +569,7 @@ tink_cc_test(
     xchacha20_poly1305_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -630,7 +630,7 @@ tink_cc_test(
     chacha20_poly1305_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::chacha20_poly1305_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -690,7 +690,7 @@ tink_cc_test(
     x_aes_gcm_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::x_aes_gcm_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -749,7 +749,7 @@ tink_cc_test(
     legacy_kms_aead_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::legacy_kms_aead_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -811,7 +811,7 @@ tink_cc_test(
     aes_gcm_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::aes_gcm_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -873,7 +873,7 @@ tink_cc_test(
     aes_gcm_siv_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::aes_gcm_siv_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -932,7 +932,7 @@ tink_cc_test(
     aes_ctr_hmac_aead_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -998,7 +998,7 @@ tink_cc_test(
     aes_eax_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::aes_eax_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1030,7 +1030,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::aead::internal::wycheproof_aead
-    gmock
+    GTest::gmock
     tink::util::test_util
 )
 
@@ -1040,7 +1040,7 @@ tink_cc_test(
     legacy_kms_envelope_aead_proto_serialization_impl_test.cc
   DEPS
     tink::aead::internal::legacy_kms_envelope_aead_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1095,7 +1095,7 @@ tink_cc_test(
     aes_gcm_proto_format_test.cc
   DEPS
     tink::aead::internal::aes_gcm_proto_format
-    gmock
+    GTest::gmock
     absl::strings
     tink::internal::testing::field_with_number
     tink::util::secret_data
@@ -1117,7 +1117,7 @@ tink_cc_test(
     xchacha20_poly1305_proto_format_test.cc
   DEPS
     tink::aead::internal::xchacha20_poly1305_proto_format
-    gmock
+    GTest::gmock
     tink::internal::testing::field_with_number
     tink::util::secret_data
 )
@@ -1144,7 +1144,7 @@ tink_cc_test(
     aes_ctr_hmac_proto_structs_test.cc
   DEPS
     tink::aead::internal::aes_ctr_hmac_proto_structs
-    gmock
+    GTest::gmock
     absl::strings
     tink::internal::testing::field_with_number
     tink::util::secret_data
@@ -1172,7 +1172,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::kms_aead_config_2026
     tink::aead::internal::kms_aead_key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::configuration
@@ -1203,7 +1203,7 @@ tink_cc_test(
     kms_aead_key_gen_config_2026_test.cc
   DEPS
     tink::aead::internal::kms_aead_key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::key_gen_configuration
@@ -1239,7 +1239,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::config_2026
     tink::aead::internal::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::cord
@@ -1334,7 +1334,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::cord_aes_gcm_siv_boringssl
     tink::aead::internal::wycheproof_aead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1380,7 +1380,7 @@ tink_cc_test(
     dummy_zero_copy_aead_test.cc
   DEPS
     tink::aead::internal::dummy_zero_copy_aead
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::span
@@ -1424,7 +1424,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_ctr_hmac_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1485,7 +1485,7 @@ tink_cc_test(
     tink::aead::internal::wycheproof_aead
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_xchacha20_poly1305_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1537,7 +1537,7 @@ tink_cc_test(
     tink::aead::internal::wycheproof_aead
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_siv_boringssl
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -1579,7 +1579,7 @@ tink_cc_test(
     aes_gcm_key_creator_test.cc
   DEPS
     tink::aead::internal::aes_gcm_key_creator
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1615,7 +1615,7 @@ tink_cc_test(
     aes_ctr_hmac_key_creator_test.cc
   DEPS
     tink::aead::internal::aes_ctr_hmac_key_creator
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1651,7 +1651,7 @@ tink_cc_test(
     aes_eax_key_creator_test.cc
   DEPS
     tink::aead::internal::aes_eax_key_creator
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1687,7 +1687,7 @@ tink_cc_test(
     xchacha20_poly1305_key_creator_test.cc
   DEPS
     tink::aead::internal::xchacha20_poly1305_key_creator
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1723,7 +1723,7 @@ tink_cc_test(
     aes_gcm_siv_key_creator_test.cc
   DEPS
     tink::aead::internal::aes_gcm_siv_key_creator
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1759,7 +1759,7 @@ tink_cc_test(
     x_aes_gcm_key_creator_test.cc
   DEPS
     tink::aead::internal::x_aes_gcm_key_creator
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1806,7 +1806,7 @@ tink_cc_test(
     tink::aead::internal::wycheproof_aead
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_chacha20_poly1305_boringssl
-    gmock
+    GTest::gmock
     absl::algorithm_container
     absl::status
     absl::status_matchers
@@ -1859,7 +1859,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_eax_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

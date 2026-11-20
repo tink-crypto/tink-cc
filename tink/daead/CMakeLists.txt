@@ -192,7 +192,7 @@ tink_cc_test(
     aes_siv_key_manager_test.cc
   DEPS
     tink::daead::aes_siv_key_manager
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -214,7 +214,7 @@ tink_cc_test(
   DEPS
     tink::daead::deterministic_aead_wrapper
     tink::daead::failing_daead
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -243,7 +243,7 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     tink::daead::deterministic_aead_config
     tink::daead::deterministic_aead_key_templates
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -276,7 +276,7 @@ tink_cc_test(
   DEPS
     tink::daead::aes_siv_key_manager
     tink::daead::deterministic_aead_key_templates
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::key_manager_impl
     tink::core::deterministic_aead
@@ -292,7 +292,7 @@ tink_cc_test(
     failing_daead_test.cc
   DEPS
     tink::daead::failing_daead
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::deterministic_aead
@@ -305,7 +305,7 @@ tink_cc_test(
     aes_siv_parameters_test.cc
   DEPS
     tink::daead::aes_siv_parameters
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
@@ -320,7 +320,7 @@ tink_cc_test(
   DEPS
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::flat_hash_map
     absl::absl_check
@@ -345,7 +345,7 @@ tink_cc_test(
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
     tink::daead::aes_siv_proto_serialization
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -385,7 +385,7 @@ tink_cc_test(
     tink::daead::config_2026
     tink::daead::deterministic_aead_key_templates
     tink::daead::key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::core::deterministic_aead
     tink::core::keyset_handle

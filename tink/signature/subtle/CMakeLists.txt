@@ -17,7 +17,7 @@ tink_cc_test(
     composite_ml_dsa_sign_boringssl_test.cc
   DEPS
     tink::signature::subtle::composite_ml_dsa_sign_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -49,7 +49,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::composite_ml_dsa_sign_boringssl
     tink::signature::subtle::composite_ml_dsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -85,7 +85,7 @@ tink_cc_test(
     create_ecdsa_key_test.cc
   DEPS
     tink::signature::subtle::create_ecdsa_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -113,7 +113,7 @@ tink_cc_test(
     create_ed25519_key_test.cc
   DEPS
     tink::signature::subtle::create_ed25519_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -142,7 +142,7 @@ tink_cc_test(
     create_rsa_ssa_pkcs1_key_test.cc
   DEPS
     tink::signature::subtle::create_rsa_ssa_pkcs1_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -171,7 +171,7 @@ tink_cc_test(
     create_rsa_ssa_pss_key_test.cc
   DEPS
     tink::signature::subtle::create_rsa_ssa_pss_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -200,7 +200,7 @@ tink_cc_test(
     create_ml_dsa_key_test.cc
   DEPS
     tink::signature::subtle::create_ml_dsa_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -229,7 +229,7 @@ tink_cc_test(
     create_composite_ml_dsa_key_test.cc
   DEPS
     tink::signature::subtle::create_composite_ml_dsa_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -257,7 +257,7 @@ tink_cc_test(
     create_slh_dsa_key_test.cc
   DEPS
     tink::signature::subtle::create_slh_dsa_key
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -285,7 +285,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::create_ml_dsa_signer
     tink::signature::subtle::create_ml_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
@@ -316,7 +316,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::create_ml_dsa_signer
     tink::signature::subtle::create_ml_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -350,7 +350,7 @@ tink_cc_test(
     create_slh_dsa_verifier_test.cc
   DEPS
     tink::signature::subtle::create_slh_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -384,7 +384,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::create_slh_dsa_signer
     tink::signature::subtle::create_slh_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
@@ -414,7 +414,7 @@ tink_cc_test(
     create_ml_dsa_prehash_test.cc
   DEPS
     tink::signature::subtle::create_ml_dsa_prehash
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -446,7 +446,7 @@ tink_cc_test(
     create_ml_dsa_sign_prehash_test.cc
   DEPS
     tink::signature::subtle::create_ml_dsa_sign_prehash
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -479,7 +479,7 @@ tink_cc_test(
     create_composite_ml_dsa_verifier_test.cc
   DEPS
     tink::signature::subtle::create_composite_ml_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -511,7 +511,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::create_composite_ml_dsa_signer
     tink::signature::subtle::create_composite_ml_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -543,7 +543,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::create_ecdsa_signer
     tink::signature::subtle::create_ecdsa_verifier
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
@@ -573,7 +573,7 @@ tink_cc_test(
     create_ecdsa_verifier_test.cc
   DEPS
     tink::signature::subtle::create_ecdsa_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -605,7 +605,7 @@ tink_cc_test(
     create_ed25519_signer_test.cc
   DEPS
     tink::signature::subtle::create_ed25519_signer
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
@@ -634,7 +634,7 @@ tink_cc_test(
     create_ed25519_verifier_test.cc
   DEPS
     tink::signature::subtle::create_ed25519_verifier
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -665,7 +665,7 @@ tink_cc_test(
     create_rsa_ssa_pkcs1_signer_test.cc
   DEPS
     tink::signature::subtle::create_rsa_ssa_pkcs1_signer
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
@@ -694,7 +694,7 @@ tink_cc_test(
     create_rsa_ssa_pkcs1_verifier_test.cc
   DEPS
     tink::signature::subtle::create_rsa_ssa_pkcs1_verifier
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -726,7 +726,7 @@ tink_cc_test(
     tink::signature::subtle::create_rsa_ssa_pss_key
     tink::signature::subtle::create_rsa_ssa_pss_signer
     tink::signature::subtle::create_rsa_ssa_pss_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -761,7 +761,7 @@ tink_cc_test(
   DEPS
     tink::signature::subtle::create_rsa_ssa_pss_key
     tink::signature::subtle::create_rsa_ssa_pss_verifier
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor

@@ -46,7 +46,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::json_util
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::util::test_matchers
@@ -77,7 +77,7 @@ tink_cc_test(
     tink::jwt::internal::json_util
     tink::jwt::internal::jwt_format
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::time
@@ -93,7 +93,7 @@ tink_cc_test(
     raw_jwt_hmac_key_manager_test.cc
   DEPS
     tink::jwt::internal::raw_jwt_hmac_key_manager
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -141,7 +141,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_impl
     tink::jwt::internal::jwt_mac_internal
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -200,7 +200,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_hmac_key_manager
     tink::jwt::internal::jwt_mac_internal
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -254,7 +254,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_internal
     tink::jwt::internal::jwt_mac_wrapper
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -324,7 +324,7 @@ tink_cc_test(
     raw_jwt_ecdsa_sign_key_manager_test.cc
   DEPS
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -382,7 +382,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -436,7 +436,7 @@ tink_cc_test(
     raw_jwt_rsa_ssa_pkcs1_sign_key_manager_test.cc
   DEPS
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_sign_key_manager
-    gmock
+    GTest::gmock
     absl::flat_hash_set
     absl::status_matchers
     absl::statusor
@@ -486,7 +486,7 @@ tink_cc_test(
     raw_jwt_rsa_ssa_pkcs1_verify_key_manager_test.cc
   DEPS
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -549,7 +549,7 @@ tink_cc_test(
     raw_jwt_rsa_ssa_pss_sign_key_manager_test.cc
   DEPS
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_sign_key_manager
-    gmock
+    GTest::gmock
     absl::flat_hash_set
     absl::absl_check
     absl::absl_log
@@ -614,7 +614,7 @@ tink_cc_test(
     raw_jwt_rsa_ssa_pss_verify_key_manager_test.cc
   DEPS
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
-    gmock
+    GTest::gmock
     absl::absl_log
     absl::status
     absl::status_matchers
@@ -682,7 +682,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_sign_impl
     tink::jwt::internal::jwt_public_key_verify_impl
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status_matchers
     absl::statusor
@@ -757,7 +757,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::jwt_public_key_verify_internal
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -835,7 +835,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_internal
     tink::jwt::internal::jwt_public_key_verify_wrapper
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::flat_hash_map
     absl::status
     absl::status_matchers
@@ -933,7 +933,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -1007,7 +1007,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     protobuf::libprotobuf
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -1104,7 +1104,7 @@ tink_cc_test(
     jwt_rsa_ssa_pkcs1_proto_serialization_impl_test.cc
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_log
     absl::status
@@ -1177,7 +1177,7 @@ tink_cc_test(
     jwt_rsa_ssa_pss_proto_serialization_impl_test.cc
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pss_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::absl_log
@@ -1255,7 +1255,7 @@ tink_cc_test(
     jwt_ecdsa_proto_serialization_impl_test.cc
   DEPS
     tink::jwt::internal::jwt_ecdsa_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1324,7 +1324,7 @@ tink_cc_test(
     jwt_hmac_proto_serialization_impl_test.cc
   DEPS
     tink::jwt::internal::jwt_hmac_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1382,7 +1382,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_hmac_key_manager
     tink::jwt::internal::jwt_mac_config_2026
     tink::jwt::internal::jwt_mac_key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status_matchers
     absl::statusor
@@ -1500,7 +1500,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     tink::jwt::internal::jwt_signature_config_2026
     tink::jwt::internal::jwt_signature_key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status_matchers
     absl::statusor
@@ -1572,7 +1572,7 @@ tink_cc_test(
     jwt_signature_key_gen_config_2026_test.cc
   DEPS
     tink::jwt::internal::jwt_signature_key_gen_config_2026
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::key_gen_configuration
@@ -1618,7 +1618,7 @@ tink_cc_test(
     jwt_ml_dsa_proto_serialization_impl_test.cc
   DEPS
     tink::jwt::internal::jwt_ml_dsa_proto_serialization_impl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1674,7 +1674,7 @@ tink_cc_test(
     jwt_ml_dsa_key_creator_test.cc
   DEPS
     tink::jwt::internal::jwt_ml_dsa_key_creator
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1755,7 +1755,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_internal
     tink::jwt::internal::raw_jwt_ml_dsa_signer
     tink::jwt::internal::raw_jwt_ml_dsa_verifier
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::string_view
@@ -1829,7 +1829,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::raw_jwt_ml_dsa_sign_key_manager
     tink::jwt::internal::raw_jwt_ml_dsa_verify_key_manager
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     absl::optional
@@ -1882,7 +1882,7 @@ tink_cc_test(
     jwt_ml_dsa_signature_config_test.cc
   DEPS
     tink::jwt::internal::jwt_ml_dsa_signature_config
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::keyset_handle
@@ -1924,7 +1924,7 @@ tink_cc_test(
     jwt_ecdsa_key_creator_test.cc
   DEPS
     tink::jwt::internal::jwt_ecdsa_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1952,7 +1952,7 @@ tink_cc_test(
     jwt_mac_key_creator_test.cc
   DEPS
     tink::jwt::internal::jwt_mac_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1989,7 +1989,7 @@ tink_cc_test(
     jwt_rsa_ssa_pkcs1_key_creator_test.cc
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2026,7 +2026,7 @@ tink_cc_test(
     jwt_rsa_ssa_pss_key_creator_test.cc
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pss_key_creator
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -2063,7 +2063,7 @@ tink_cc_test(
     jwt_hmac_test.cc
   DEPS
     tink::jwt::internal::jwt_hmac
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -2102,7 +2102,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign
     tink::jwt::internal::jwt_public_key_verify_impl
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -2144,7 +2144,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign
     tink::jwt::internal::jwt_ecdsa_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -2184,7 +2184,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_public_key_verify_impl
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -2226,7 +2226,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -2266,7 +2266,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_public_key_verify_impl
     tink::jwt::internal::jwt_rsa_ssa_pss_sign
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access
@@ -2308,7 +2308,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_rsa_ssa_pss_sign
     tink::jwt::internal::jwt_rsa_ssa_pss_verify
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::partial_key_access

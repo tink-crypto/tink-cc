@@ -797,7 +797,7 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::status
     absl::status_matchers
@@ -816,7 +816,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
     tink::subtle::ecies_hkdf_sender_kem_boringssl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::status
     absl::status_matchers
@@ -835,7 +835,7 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::hkdf
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::strings
     tink::util::secret_data
@@ -851,7 +851,7 @@ tink_cc_test(
     aes_cmac_boringssl_test.cc
   DEPS
     tink::subtle::aes_cmac_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -881,7 +881,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::hmac_boringssl
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -905,7 +905,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::subtle::aes_gcm_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -935,7 +935,7 @@ tink_cc_test(
     tink::subtle::hkdf
     tink::subtle::random
     tink::subtle::stream_segment_encrypter
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -951,7 +951,7 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_gcm_hkdf_stream_segment_encrypter
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -970,7 +970,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::streaming_aead_test_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -991,7 +991,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::subtle::aes_eax_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1021,7 +1021,7 @@ tink_cc_test(
     tink::subtle::encrypt_then_authenticate
     tink::subtle::hmac_boringssl
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::status_matchers
     absl::strings
     tink::core::aead
@@ -1038,7 +1038,7 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_ctr_boringssl
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::fips_utils
@@ -1058,7 +1058,7 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_siv_boringssl
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1084,7 +1084,7 @@ tink_cc_test(
   DEPS
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1110,7 +1110,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_macros
@@ -1139,7 +1139,7 @@ tink_cc_test(
     tink::subtle::ed25519_sign_boringssl
     tink::subtle::ed25519_verify_boringssl
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::status
     absl::status_matchers
@@ -1167,7 +1167,7 @@ tink_cc_test(
     wycheproof::testvectors_v1
   DEPS
     tink::subtle::ed25519_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1192,7 +1192,7 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1218,7 +1218,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1246,7 +1246,7 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    gmock
+    GTest::gmock
     absl::no_destructor
     absl::absl_check
     absl::status
@@ -1273,7 +1273,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::status_matchers
@@ -1299,7 +1299,7 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_gcm_siv_boringssl
     tink::subtle::subtle_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1320,7 +1320,7 @@ tink_cc_test(
     random_test.cc
   DEPS
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::flat_hash_set
     absl::status_matchers
     absl::span
@@ -1334,7 +1334,7 @@ tink_cc_test(
     common_enums_test.cc
   DEPS
     tink::subtle::common_enums
-    gmock
+    GTest::gmock
 )
 
 tink_cc_test(
@@ -1343,7 +1343,7 @@ tink_cc_test(
     subtle_util_test.cc
   DEPS
     tink::subtle::subtle_util
-    gmock
+    GTest::gmock
 )
 
 tink_cc_test(
@@ -1355,7 +1355,7 @@ tink_cc_test(
   DEPS
     tink::subtle::subtle_util
     tink::subtle::xchacha20_poly1305_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1379,7 +1379,7 @@ tink_cc_test(
     tink::subtle::stream_segment_decrypter
     tink::subtle::streaming_aead_decrypting_stream
     tink::subtle::test_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1400,7 +1400,7 @@ tink_cc_test(
     tink::subtle::stream_segment_encrypter
     tink::subtle::streaming_aead_encrypting_stream
     tink::subtle::test_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1418,7 +1418,7 @@ tink_cc_test(
     aead_test_util_test.cc
   DEPS
     tink::subtle::aead_test_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::util::test_matchers
     tink::util::test_util
@@ -1430,7 +1430,7 @@ tink_cc_test(
     streaming_aead_test_util_test.cc
   DEPS
     tink::subtle::streaming_aead_test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     tink::util::test_matchers
@@ -1443,7 +1443,7 @@ tink_cc_test(
     hybrid_test_util_test.cc
   DEPS
     tink::subtle::hybrid_test_util
-    gmock
+    GTest::gmock
     absl::status_matchers
     tink::util::test_matchers
     tink::util::test_util
@@ -1457,7 +1457,7 @@ tink_cc_test(
     tink::subtle::decrypting_random_access_stream
     tink::subtle::random
     tink::subtle::test_util
-    gmock
+    GTest::gmock
     absl::memory
     absl::status
     absl::status_matchers
@@ -1479,7 +1479,7 @@ tink_cc_test(
     tink::subtle::random
     tink::subtle::streaming_mac_impl
     tink::subtle::test_util
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
@@ -1497,7 +1497,7 @@ tink_cc_test(
     pem_parser_boringssl_test.cc
   DEPS
     tink::subtle::pem_parser_boringssl
-    gmock
+    GTest::gmock
     absl::status
     absl::status_matchers
     absl::strings
@@ -1517,7 +1517,7 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_siv_boringssl
     tink::subtle::random
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::statusor
@@ -1533,7 +1533,7 @@ tink_cc_test(
     ecdsa_sign_boringssl_benchmark.cc
   DEPS
     tink::subtle::ecdsa_sign_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::string_view
@@ -1554,7 +1554,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::absl_log
     absl::status
@@ -1580,7 +1580,7 @@ tink_cc_test(
     rsa_ssa_pkcs1_sign_boringssl_benchmark.cc
   DEPS
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::statusor
     benchmark::benchmark_main
@@ -1599,7 +1599,7 @@ tink_cc_test(
   DEPS
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::statusor
@@ -1619,7 +1619,7 @@ tink_cc_test(
     rsa_ssa_pss_sign_boringssl_benchmark.cc
   DEPS
     tink::subtle::rsa_ssa_pss_sign_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::statusor
     benchmark::benchmark_main
@@ -1638,7 +1638,7 @@ tink_cc_test(
   DEPS
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    gmock
+    GTest::gmock
     absl::absl_check
     absl::status
     absl::statusor

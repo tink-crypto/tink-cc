@@ -2243,3 +2243,30 @@ tink_cc_library(
     rtti_manual.h
     rtti_native.h
 )
+
+tink_cc_library(
+  NAME secret_proto_util
+  SRCS
+    secret_proto_util.cc
+    secret_proto_util.h
+  DEPS
+    tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
+    absl::status
+    absl::statusor
+    tink::util::protobuf_helper
+)
+
+tink_cc_test(
+  NAME secret_proto_util_test
+  SRCS
+    secret_proto_util_test.cc
+  DEPS
+    tink::internal::secret_buffer
+    tink::internal::secret_proto_util
+    GTest::gmock
+    absl::status_matchers
+    absl::statusor
+    tink::core::secret_data
+    tink::proto::tink_cc_proto
+)

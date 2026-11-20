@@ -272,6 +272,20 @@ TEST(SecretBufferTest, SubstrRvalueRef) {
   }
 }
 
+TEST(SecretBufferTest, ZeroSizeConstructor) {
+  SecretBuffer buffer(0);
+  EXPECT_THAT(buffer.empty(), IsTrue());
+  EXPECT_THAT(buffer.size(), Eq(0));
+  EXPECT_THAT(buffer.capacity(), Eq(0));
+  EXPECT_THAT(buffer.data(), Eq(nullptr));
+  EXPECT_THAT(buffer.AsStringView(), Eq(""));
+
+  SecretBuffer buffer_with_value(0, 0x42);
+  EXPECT_THAT(buffer_with_value.empty(), IsTrue());
+  EXPECT_THAT(buffer_with_value.size(), Eq(0));
+  EXPECT_THAT(buffer_with_value.data(), Eq(nullptr));
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

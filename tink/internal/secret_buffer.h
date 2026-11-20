@@ -61,7 +61,9 @@ class SecretBuffer {
 
   explicit SecretBuffer(size_t size, uint8_t value = 0) {
     reserve(size);
-    memset(data_, value, size);
+    if (size > 0) {
+      memset(data_, value, size);
+    }
     size_ = size;
   }
 

@@ -2262,3 +2262,30 @@ cc_library(
         "rtti_native.h",
     ],
 )
+
+cc_library(
+    name = "secret_proto_util",
+    srcs = ["secret_proto_util.cc"],
+    hdrs = ["secret_proto_util.h"],
+    deps = [
+        ":call_with_core_dump_protection",
+        ":secret_buffer",
+        "//tink/util:protobuf_helper",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "secret_proto_util_test",
+    srcs = ["secret_proto_util_test.cc"],
+    deps = [
+        ":secret_buffer",
+        ":secret_proto_util",
+        "//proto:tink_cc_proto",
+        "//tink:secret_data",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

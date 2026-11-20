@@ -16,34 +16,36 @@
 
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/config/global_registry.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/streaming_aead.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming.h"
 #include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
 #include "tink/streamingaead/streaming_aead_config.h"
-#include "tink/subtle/aes_gcm_hkdf_streaming.h"
-#include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/streaming_aead_test_util.h"
-#include "tink/subtle/test_util.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
-#include "tink/util/ostream_output_stream.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
-#include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm_hkdf_streaming.pb.h"
 #include "proto/common.pb.h"
 #include "proto/tink.pb.h"
@@ -55,7 +57,6 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::StreamingAeadTestVector;
 using ::crypto::tink::util::IstreamInputStream;
-using ::google::crypto::tink::AesGcmHkdfStreamingKey;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
 using ::google::crypto::tink::HashType;
 using ::testing::Eq;
@@ -65,7 +66,7 @@ using ::testing::Not;
 namespace {
 
 TEST(AesGcmHkdfStreamingKeyManagerTest, ValidateKey) {
-  AesGcmHkdfStreamingKey key;
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
   key.set_version(0);
   key.set_key_value("0123456789abcdef");
   key.mutable_params()->set_derived_key_size(16);
@@ -77,7 +78,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, ValidateKey) {
 TEST(AesGcmHkdfStreamingKeyManagerTest, ValidateKeyDerivedKeySizes) {
   for (int derived_key_size = 0; derived_key_size < 42; derived_key_size++) {
     SCOPED_TRACE(absl::StrCat(" derived_key_size = ", derived_key_size));
-    AesGcmHkdfStreamingKey key;
+    google::crypto::tink::AesGcmHkdfStreamingKey key;
     key.set_version(0);
     key.set_key_value(std::string(derived_key_size, 'a'));  // ikm
     key.mutable_params()->set_derived_key_size(derived_key_size);
@@ -93,7 +94,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, ValidateKeyDerivedKeySizes) {
 }
 
 TEST(AesGcmHkdfStreamingKeyManagerTest, ValidateKeyDerivedKeyWrongVersion) {
-  AesGcmHkdfStreamingKey key;
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
   key.set_version(1);
   key.set_key_value("0123456789abcdef");
   key.mutable_params()->set_derived_key_size(16);
@@ -104,7 +105,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, ValidateKeyDerivedKeyWrongVersion) {
 }
 
 TEST(AesGcmHkdfStreamingKeyManagerTest, GetPrimitive) {
-  AesGcmHkdfStreamingKey key;
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
   key.set_version(0);
   key.set_key_value("16 bytes of key ");
   key.mutable_params()->set_ciphertext_segment_size(1024);
@@ -113,20 +114,25 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, GetPrimitive) {
 
   auto streaming_aead_from_manager_result =
       AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key);
-  EXPECT_THAT(streaming_aead_from_manager_result, IsOk());
+  ASSERT_THAT(streaming_aead_from_manager_result, IsOk());
 
-  int derived_key_size = 16;
-  int ciphertext_segment_size = 1024;
-  int ciphertext_offset = 0;
-  subtle::AesGcmHkdfStreaming::Params params;
-  params.ikm = util::SecretDataFromStringView("16 bytes of key ");
-  params.hkdf_hash = crypto::tink::subtle::HashType::SHA256;
-  params.derived_key_size = derived_key_size;
-  params.ciphertext_segment_size = ciphertext_segment_size;
-  params.ciphertext_offset = ciphertext_offset;
-  auto streaming_aead_direct_result =
-      subtle::AesGcmHkdfStreaming::New(std::move(params));
-  EXPECT_THAT(streaming_aead_direct_result, IsOk());
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<crypto::tink::AesGcmHkdfStreamingKey> streaming_key =
+      crypto::tink::AesGcmHkdfStreamingKey::Create(
+          *parameters,
+          RestrictedData("16 bytes of key ", InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess());
+  ASSERT_THAT(streaming_key, IsOk());
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead_direct_result =
+      internal::NewAesGcmHkdfStreaming(*streaming_key);
+  ASSERT_THAT(streaming_aead_direct_result, IsOk());
 
   // Check that the two primitives are the same by encrypting with one, and
   // decrypting with the other.
@@ -134,8 +140,143 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, GetPrimitive) {
       EncryptThenDecrypt(streaming_aead_from_manager_result.value().get(),
                          streaming_aead_direct_result.value().get(),
                          subtle::Random::GetRandomBytes(10000),
-                         "some associated data", ciphertext_offset),
+                         "some associated data", /*ciphertext_offset=*/0),
       IsOk());
+}
+
+struct HashCase {
+  absl::string_view name;
+  HashType proto_hash;
+  AesGcmHkdfStreamingParameters::HashType hash;
+};
+
+using AesGcmHkdfStreamingKeyManagerHashTypesTest =
+    testing::TestWithParam<HashCase>;
+
+TEST_P(AesGcmHkdfStreamingKeyManagerHashTypesTest, GetPrimitive) {
+  const HashCase& test_case = GetParam();
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
+  key.set_version(0);
+  key.set_key_value("16 bytes of key ");
+  key.mutable_params()->set_ciphertext_segment_size(1024);
+  key.mutable_params()->set_derived_key_size(16);
+  key.mutable_params()->set_hkdf_hash_type(test_case.proto_hash);
+
+  absl::StatusOr<std::unique_ptr<StreamingAead>> from_manager =
+      AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key);
+  ASSERT_THAT(from_manager, IsOk());
+
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHashType(test_case.hash)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+  absl::StatusOr<crypto::tink::AesGcmHkdfStreamingKey> streaming_key =
+      crypto::tink::AesGcmHkdfStreamingKey::Create(
+          *parameters,
+          RestrictedData("16 bytes of key ", InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess());
+  ASSERT_THAT(streaming_key, IsOk());
+  absl::StatusOr<std::unique_ptr<StreamingAead>> direct =
+      internal::NewAesGcmHkdfStreaming(*streaming_key);
+  ASSERT_THAT(direct, IsOk());
+
+  EXPECT_THAT(EncryptThenDecrypt(from_manager->get(), direct->get(),
+                                 "some plaintext", "some associated data",
+                                 /*ciphertext_offset=*/0),
+              IsOk());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AesGcmHkdfStreamingKeyManagerHashTypesTest,
+    AesGcmHkdfStreamingKeyManagerHashTypesTest,
+    testing::Values(HashCase{"Sha1", HashType::SHA1,
+                             AesGcmHkdfStreamingParameters::HashType::kSha1},
+                    HashCase{"Sha256", HashType::SHA256,
+                             AesGcmHkdfStreamingParameters::HashType::kSha256},
+                    HashCase{"Sha512", HashType::SHA512,
+                             AesGcmHkdfStreamingParameters::HashType::kSha512}),
+    [](const testing::TestParamInfo<HashCase>& info) {
+      return std::string(info.param.name);
+    });
+
+TEST(AesGcmHkdfStreamingKeyManagerTest, GetPrimitiveUnsupportedHashTypeFails) {
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
+  key.set_version(0);
+  key.set_key_value("16 bytes of key ");
+  key.mutable_params()->set_ciphertext_segment_size(1024);
+  key.mutable_params()->set_derived_key_size(16);
+
+  key.mutable_params()->set_hkdf_hash_type(HashType::UNKNOWN_HASH);
+  EXPECT_THAT(AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported proto hash type")));
+
+  key.mutable_params()->set_hkdf_hash_type(HashType::SHA224);
+  EXPECT_THAT(AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported proto hash type")));
+
+  key.mutable_params()->set_hkdf_hash_type(HashType::SHA384);
+  EXPECT_THAT(AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported proto hash type")));
+}
+
+TEST(AesGcmHkdfStreamingKeyManagerTest,
+     GetPrimitiveInvalidKeyAndDerivedKeySizes) {
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
+  key.set_version(0);
+  key.mutable_params()->set_ciphertext_segment_size(1024);
+  key.mutable_params()->set_hkdf_hash_type(HashType::SHA256);
+
+  key.set_key_value(std::string(24, 'a'));
+  key.mutable_params()->set_derived_key_size(24);
+  EXPECT_THAT(
+      AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Derived key size must be either 16 or 32 bytes")));
+
+  key.set_key_value(std::string(16, 'a'));
+  key.mutable_params()->set_derived_key_size(32);
+  EXPECT_THAT(
+      AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Key size must be at least the derived key size.")));
+}
+
+TEST(AesGcmHkdfStreamingKeyManagerTest, GetPrimitiveSegmentSizeBoundary) {
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
+  key.set_version(0);
+  key.set_key_value(std::string(16, 'a'));
+  key.mutable_params()->set_derived_key_size(16);
+  key.mutable_params()->set_hkdf_hash_type(HashType::SHA256);
+
+  // Min ciphertext segment size is derived_key_size + 25 (41 for 16-byte keys).
+  key.mutable_params()->set_ciphertext_segment_size(40);
+  EXPECT_THAT(
+      AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Ciphertext segment size must be at least 41 bytes")));
+
+  key.mutable_params()->set_ciphertext_segment_size(41);
+  EXPECT_THAT(AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+              IsOk());
+
+  key.set_key_value(std::string(32, 'a'));
+  key.mutable_params()->set_derived_key_size(32);
+  key.mutable_params()->set_ciphertext_segment_size(56);
+  EXPECT_THAT(
+      AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Ciphertext segment size must be at least 57 bytes")));
+
+  key.mutable_params()->set_ciphertext_segment_size(57);
+  EXPECT_THAT(AesGcmHkdfStreamingKeyManager().GetPrimitive<StreamingAead>(key),
+              IsOk());
 }
 
 TEST(AesGcmHkdfStreamingKeyManagerTest, Version) {
@@ -230,7 +371,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, DeriveKey) {
   IstreamInputStream input_stream{
       std::make_unique<std::stringstream>("01234567890123456789012345678901")};
 
-  absl::StatusOr<AesGcmHkdfStreamingKey> key_or =
+  absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey> key_or =
       AesGcmHkdfStreamingKeyManager().DeriveKey(key_format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),

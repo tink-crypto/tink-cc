@@ -17,18 +17,23 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
 
 #include <cstdint>
-#include <string>
+#include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/streaming_aead.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
-#include "tink/subtle/aes_gcm_hkdf_streaming.h"
 #include "tink/subtle/random.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
 
@@ -36,27 +41,25 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::subtle::AesGcmHkdfStreamSegmentEncrypter;
-using ::google::crypto::tink::AesGcmHkdfStreamingKey;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
 using ::google::crypto::tink::AesGcmHkdfStreamingParams;
 using ::google::crypto::tink::HashType;
 
-absl::StatusOr<std::unique_ptr<StreamingAead>>
-AesGcmHkdfStreamingKeyManager::AesGcmHkdfStreamingKeyManagerFactory::Create(
-    const google::crypto::tink::AesGcmHkdfStreamingKey& key) const {
-  subtle::AesGcmHkdfStreaming::Params params;
-  params.ikm = util::SecretDataFromStringView(key.key_value());
-  params.hkdf_hash =
-      crypto::tink::util::Enums::ProtoToSubtle(key.params().hkdf_hash_type());
-  params.derived_key_size = key.params().derived_key_size();
-  params.ciphertext_segment_size = key.params().ciphertext_segment_size();
-  params.ciphertext_offset = 0;
-  auto streaming_result = subtle::AesGcmHkdfStreaming::New(std::move(params));
-  if (!streaming_result.ok()) return streaming_result.status();
-  return {std::move(streaming_result.value())};
-}
-
 namespace {
+
+absl::StatusOr<AesGcmHkdfStreamingParameters::HashType> FromProtoHashType(
+    HashType hash_type) {
+  switch (hash_type) {
+    case HashType::SHA1:
+      return AesGcmHkdfStreamingParameters::HashType::kSha1;
+    case HashType::SHA256:
+      return AesGcmHkdfStreamingParameters::HashType::kSha256;
+    case HashType::SHA512:
+      return AesGcmHkdfStreamingParameters::HashType::kSha512;
+    default:
+      return absl::InvalidArgumentError("Unsupported proto hash type");
+  }
+}
 
 absl::Status ValidateParams(const AesGcmHkdfStreamingParams& params) {
   if (!(params.hkdf_hash_type() == HashType::SHA1 ||
@@ -78,11 +81,34 @@ absl::Status ValidateParams(const AesGcmHkdfStreamingParams& params) {
 
 }  // namespace
 
+absl::StatusOr<std::unique_ptr<StreamingAead>>
+AesGcmHkdfStreamingKeyManager::AesGcmHkdfStreamingKeyManagerFactory::Create(
+    const google::crypto::tink::AesGcmHkdfStreamingKey& key) const {
+  ABSL_ASSIGN_OR_RETURN(AesGcmHkdfStreamingParameters::HashType hkdf_hash_type,
+                        FromProtoHashType(key.params().hkdf_hash_type()));
+  ABSL_ASSIGN_OR_RETURN(
+      AesGcmHkdfStreamingParameters parameters,
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(key.key_value().size())
+          .SetDerivedKeySizeInBytes(key.params().derived_key_size())
+          .SetHashType(hkdf_hash_type)
+          .SetCiphertextSegmentSizeInBytes(
+              key.params().ciphertext_segment_size())
+          .Build());
+  ABSL_ASSIGN_OR_RETURN(
+      crypto::tink::AesGcmHkdfStreamingKey streaming_key,
+      crypto::tink::AesGcmHkdfStreamingKey::Create(
+          parameters,
+          RestrictedData(key.key_value(), InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess()));
+  return internal::NewAesGcmHkdfStreaming(streaming_key);
+}
+
 absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
 AesGcmHkdfStreamingKeyManager::CreateKey(
     const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format)
     const {
-  AesGcmHkdfStreamingKey key;
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
   key.set_version(get_version());
   key.set_key_value(subtle::Random::GetRandomBytes(key_format.key_size()));
   *key.mutable_params() = key_format.params();
@@ -101,7 +127,7 @@ AesGcmHkdfStreamingKeyManager::DeriveKey(
   if (!randomness_or.ok()) {
     return randomness_or.status();
   }
-  AesGcmHkdfStreamingKey key;
+  google::crypto::tink::AesGcmHkdfStreamingKey key;
   key.set_version(get_version());
   key.set_key_value(util::SecretDataAsStringView(*randomness_or));
   *key.mutable_params() = key_format.params();
@@ -109,7 +135,7 @@ AesGcmHkdfStreamingKeyManager::DeriveKey(
 }
 
 absl::Status AesGcmHkdfStreamingKeyManager::ValidateKey(
-    const AesGcmHkdfStreamingKey& key) const {
+    const google::crypto::tink::AesGcmHkdfStreamingKey& key) const {
   absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < key.params().derived_key_size()) {

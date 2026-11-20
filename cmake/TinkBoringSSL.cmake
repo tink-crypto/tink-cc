@@ -38,9 +38,9 @@ set(_tink_boringssl_version "0.20261105.0")
 set(_tink_boringssl_sha256
     "2df2b287f3406a3d2f7f51dccb82cffbddf6cf981811e8edcfffe8fbf02c3ac4")
 
-# Download and unpack the sources at configure time: CMake requires the include
-# directory of an imported target to exist when it generates the build files.
-# The name is Tink-specific because FetchContent names are global.
+# Download and unpack the sources at configure time so the headers and source
+# tree exist before the build starts. The name is Tink-specific because
+# FetchContent names are global.
 _tink_http_archive(
   NAME tink_boringssl
   URL "https://github.com/google/boringssl/releases/download/${_tink_boringssl_version}/boringssl-${_tink_boringssl_version}.tar.gz"
@@ -216,13 +216,17 @@ else()
     IMPORTED_LOCATION "${_tink_boringssl_lib_dir}/${_tink_boringssl_lib_name}")
 endif()
 
+# Pass BoringSSL's headers via TINK_INCLUDE_DIRS (-I) rather than
+# tink_internal_boringssl's INTERFACE_INCLUDE_DIRECTORIES (which CMake defaults
+# to -isystem on IMPORTED targets, demoting TINK_INCLUDE_DIRS's -I to -isystem
+# and allowing shared-prefix system directories such as Homebrew's include
+# directory to shadow BoringSSL's headers when OpenSSL is installed).
+#
 # TODO: b/537605175 - Scope this include directory to Tink's own compilation
 # once no public Tink header includes OpenSSL headers. Until then,
 # TINK_INCLUDE_DIRS propagates it to every target that links Tink, so code that
 # uses another OpenSSL may pick up BoringSSL's headers instead.
 list(APPEND TINK_INCLUDE_DIRS "${tink_boringssl_SOURCE_DIR}/include")
-target_include_directories(tink_internal_boringssl INTERFACE
-  "${tink_boringssl_SOURCE_DIR}/include")
 # Mirror the link dependencies of BoringSSL's `crypto` target: a static library
 # does not carry its own dependencies.
 if (NOT WIN32 AND NOT CMAKE_SYSTEM_NAME MATCHES "^(Generic|Android)$")

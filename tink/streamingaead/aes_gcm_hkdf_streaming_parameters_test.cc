@@ -193,28 +193,45 @@ TEST(AesGcmHkdfStreamingParametersTest, BuildWithoutSettingSegmentSizeFails) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, BuildWithMinimumSegmentSize) {
-  // Min ciphertext segment size = derived key size + 24
+  // Min ciphertext segment size = derived key size + 25
   EXPECT_THAT(AesGcmHkdfStreamingParameters::Builder()
                   .SetKeySizeInBytes(19)
                   .SetDerivedKeySizeInBytes(16)
                   .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
-                  .SetCiphertextSegmentSizeInBytes(40)
+                  .SetCiphertextSegmentSizeInBytes(41)
+                  .Build(),
+              IsOk());
+  EXPECT_THAT(AesGcmHkdfStreamingParameters::Builder()
+                  .SetKeySizeInBytes(35)
+                  .SetDerivedKeySizeInBytes(32)
+                  .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+                  .SetCiphertextSegmentSizeInBytes(57)
                   .Build(),
               IsOk());
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, BuildWithInvalidSegmentSizeFails) {
-  // Min ciphertext segment size = derived key size + 24
+  // Min ciphertext segment size = derived key size + 25
   EXPECT_THAT(
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(19)
           .SetDerivedKeySizeInBytes(16)
           .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
-          .SetCiphertextSegmentSizeInBytes(39)
+          .SetCiphertextSegmentSizeInBytes(40)
           .Build()
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Ciphertext segment size must be at least 40 bytes")));
+               HasSubstr("Ciphertext segment size must be at least 41 bytes")));
+  EXPECT_THAT(
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .SetCiphertextSegmentSizeInBytes(56)
+          .Build()
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Ciphertext segment size must be at least 57 bytes")));
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, CopyConstructor) {

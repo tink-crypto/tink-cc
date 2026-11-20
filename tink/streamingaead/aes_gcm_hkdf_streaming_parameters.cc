@@ -83,7 +83,7 @@ AesGcmHkdfStreamingParameters::Builder::Build() {
   }
   // CiphertextSegmentSize > DerivedKeySize + 24
   // https://developers.google.com/tink/streaming-aead/aes_gcm_hkdf_streaming#key_and_parameters
-  int min_segment_size = *derived_key_size_in_bytes_ + 24;
+  int min_segment_size = *derived_key_size_in_bytes_ + 25;
   if (*segment_size_in_bytes_ < min_segment_size) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

@@ -309,6 +309,7 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     tink::core::parameters
+    tink::aead::chacha20_poly1305_parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -334,6 +335,8 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
     tink::daead::internal::aes_siv_test_vectors
 )
 

@@ -25,6 +25,8 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/optional.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_parameters.h"
 #include "tink/daead/internal/aes_siv_test_vectors.h"
 #include "tink/key.h"
@@ -182,6 +184,21 @@ TEST(AesSivKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesSivKeyTest, DifferentKeyTypeNotEqual) {
+  const AesSivKey& key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
+  absl::StatusOr<ChaCha20Poly1305Key> other_key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix,
+      RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(key != *other_key);
+  EXPECT_TRUE(*other_key != key);
+  EXPECT_FALSE(key == *other_key);
+  EXPECT_FALSE(*other_key == key);
 }
 
 TEST(AesSivKeyTest, CopyConstructor) {

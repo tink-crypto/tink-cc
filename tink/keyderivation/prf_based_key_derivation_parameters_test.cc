@@ -332,6 +332,29 @@ TEST(PrfBasedKeyDerivationParametersTest,
   EXPECT_FALSE(*parameters == *other_parameters);
 }
 
+TEST(PrfBasedKeyDerivationParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<AesCmacPrfParameters> prf_parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
+  ASSERT_THAT(prf_parameters, IsOk());
+
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(derived_key_parameters, IsOk());
+
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(*prf_parameters)
+          .SetDerivedKeyParameters(*derived_key_parameters)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *derived_key_parameters);
+  EXPECT_TRUE(*derived_key_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *derived_key_parameters);
+  EXPECT_FALSE(*derived_key_parameters == *parameters);
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

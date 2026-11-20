@@ -341,6 +341,7 @@ cc_test(
     deps = [
         ":aes_siv_parameters",
         "//tink:parameters",
+        "//tink/aead:chacha20_poly1305_parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
@@ -360,6 +361,8 @@ cc_test(
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
+        "//tink/aead:chacha20_poly1305_key",
+        "//tink/aead:chacha20_poly1305_parameters",
         "//tink/daead/internal:aes_siv_test_vectors",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/container:flat_hash_map",

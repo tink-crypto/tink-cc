@@ -490,6 +490,33 @@ TEST(PrfBasedKeyDerivationKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_key == *key);
 }
 
+TEST(PrfBasedKeyDerivationKeyTest, DifferentKeyTypeNotEqual) {
+  const AesCmacPrfKey& prf_key = internal::GetAesCmacPrfTestVector(32).key;
+
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(derived_key_parameters, IsOk());
+
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(prf_key.GetParameters())
+          .SetDerivedKeyParameters(*derived_key_parameters)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
+      PrfBasedKeyDerivationKey::Create(*parameters, prf_key,
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_TRUE(*key != prf_key);
+  EXPECT_TRUE(prf_key != *key);
+  EXPECT_FALSE(*key == prf_key);
+  EXPECT_FALSE(prf_key == *key);
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

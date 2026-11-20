@@ -127,9 +127,8 @@ set(_tink_boringssl_copied_settings
   CMAKE_RANLIB
   CMAKE_READELF
   CMAKE_STRIP
-  # Compiler and linker flags.
-  CMAKE_C_FLAGS
-  CMAKE_CXX_FLAGS
+  # Compiler and linker flags (CMAKE_C_FLAGS and CMAKE_CXX_FLAGS are handled
+  # separately below to append -DOPENSSL_NO_SOCK=).
   CMAKE_ASM_FLAGS
   CMAKE_EXE_LINKER_FLAGS
   CMAKE_MODULE_LINKER_FLAGS
@@ -152,6 +151,15 @@ foreach(_tink_var IN LISTS _tink_boringssl_copied_settings)
     string(APPEND _tink_boringssl_init_cache
       "set(${_tink_var} [==[${${_tink_var}}]==] CACHE STRING \"\" FORCE)\n")
   endif()
+endforeach()
+# Compile out BoringSSL's socket and connect BIOs, which Tink does not use, so
+# `crypto` has no dependency on Winsock (`ws2_32`) on Windows. Use an empty
+# value (`=`) to match `openssl/target.h`'s `#define OPENSSL_NO_SOCK` on
+# embedded targets without triggering `-Wmacro-redefined`.
+foreach(_tink_flags_var CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+  set(_tink_flags "${${_tink_flags_var}} -DOPENSSL_NO_SOCK=")
+  string(APPEND _tink_boringssl_init_cache
+    "set(${_tink_flags_var} [==[${_tink_flags}]==] CACHE STRING \"\" FORCE)\n")
 endforeach()
 set(_tink_boringssl_init_cache_file "${_tink_boringssl_dir}/init_cache.cmake")
 # Only touch the script when its content changes, so that BoringSSL is
@@ -217,9 +225,7 @@ target_include_directories(tink_internal_boringssl INTERFACE
   "${tink_boringssl_SOURCE_DIR}/include")
 # Mirror the link dependencies of BoringSSL's `crypto` target: a static library
 # does not carry its own dependencies.
-if (WIN32)
-  target_link_libraries(tink_internal_boringssl INTERFACE ws2_32)
-elseif (NOT CMAKE_SYSTEM_NAME MATCHES "^(Generic|Android)$")
+if (NOT WIN32 AND NOT CMAKE_SYSTEM_NAME MATCHES "^(Generic|Android)$")
   find_package(Threads REQUIRED)
   target_link_libraries(tink_internal_boringssl INTERFACE Threads::Threads)
 endif()

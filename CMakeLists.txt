@@ -89,14 +89,11 @@ endif()
 include(TinkWorkspace)
 include(TinkBuildRules)
 
-# BoringSSL only applies BORINGSSL_PREFIX to its own targets (add_definitions is
-# directory-scoped). Tink's sources include BoringSSL headers, so they must be
-# compiled with the same BORINGSSL_PREFIX as the BoringSSL they link against.
-# This is directory-scoped too: it applies to Tink's targets only, not to
-# projects that consume Tink.
-if (BORINGSSL_PREFIX)
-  add_compile_definitions(BORINGSSL_PREFIX=${BORINGSSL_PREFIX})
-endif()
+# BoringSSL only applies BORINGSSL_PREFIX and OPENSSL_NO_SOCK to its own targets
+# (directory-scoped). Tink's sources include BoringSSL headers, so they must be
+# compiled with the matching defines. This is directory-scoped too: it applies
+# to Tink's targets only, not to projects that consume Tink.
+add_compile_definitions(BORINGSSL_PREFIX=${BORINGSSL_PREFIX} OPENSSL_NO_SOCK=)
 
 list(APPEND TINK_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}")
 

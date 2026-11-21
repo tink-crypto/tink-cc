@@ -54,14 +54,25 @@ echo "CONTAINER_IMAGE is ${CONTAINER_IMAGE}"
 
 cd "${TINK_BASE_DIR}/tink_cc"
 
+# Keep the remote-cache credential out of the checkout. The checkout is
+# bind-mounted into the build container and transferred back as a job
+# artifact, so a key written here would outlive the job.
+readonly CACHE_KEY_DIR="$(mktemp -d /tmp/tink-cache-key.XXXXXX)"
+trap 'rm -rf "${CACHE_KEY_DIR}" /tmp/env_variables.txt' EXIT
+: > /tmp/env_variables.txt
+CACHE_KEY_MOUNT=()
 if [[ -v TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET ]]; then
-  cp "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" ./cache_key
+  # The build runs as an unprivileged user inside the container; make the
+  # read-only mount readable without making it writable.
+  install -m 444 "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" "${CACHE_KEY_DIR}/cache_key"
   cat <<EOF > /tmp/env_variables.txt
 BAZEL_REMOTE_CACHE_NAME=${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET}/bazel/${TINK_CC_BASE_IMAGE_HASH}
 EOF
-else
-  touch /tmp/env_variables.txt
+  CACHE_KEY_MOUNT=(
+    --mount "type=bind,src=${CACHE_KEY_DIR}/cache_key,dst=/tmp/cache_key,readonly"
+  )
 fi
+readonly CACHE_KEY_MOUNT
 
 ### =========================================== EMBEDDED SCRIPT: _do_run_test.sh
 ### The _do_run_test.sh script will run as "tinkuser"
@@ -74,7 +85,7 @@ cd /home/tinkuser/tink_cc/
 CACHE_FLAGS=()
 if [[ -n "${BAZEL_REMOTE_CACHE_NAME:-}" ]]; then
   CACHE_FLAGS+=("--remote_cache=https://storage.googleapis.com/${BAZEL_REMOTE_CACHE_NAME}")
-  CACHE_FLAGS+=("--google_credentials=$(realpath ./cache_key)")
+  CACHE_FLAGS+=("--google_credentials=/tmp/cache_key")
   # Avoid downloading cached intermediate/top-level build outputs unless needed
   # by a local action.
   CACHE_FLAGS+=("--remote_download_minimal")
@@ -173,9 +184,13 @@ echo "-- PULLING DOCKER IMAGE"
 time docker pull "${CONTAINER_IMAGE}"
 
 echo "-- RUNNING DOCKER"
+# The host executes this driver from the checkout. Keep the automation
+# directory read-only so container code cannot append to it.
 time docker run \
   --network="host" \
   --mount type=bind,src="${TINK_BASE_DIR}",dst=/tink_orig_dir \
+  --mount type=bind,src="${TINK_BASE_DIR}/tink_cc/kokoro",dst=/tink_orig_dir/tink_cc/kokoro,readonly \
+  "${CACHE_KEY_MOUNT[@]}" \
   --env-file /tmp/env_variables.txt \
   --rm \
   "${CONTAINER_IMAGE}" \

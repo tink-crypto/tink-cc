@@ -32,6 +32,7 @@
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/hybrid/hpke_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -649,6 +650,32 @@ TEST(EciesParametersTest, VariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(EciesParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<EciesParameters> parameters =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<HpkeParameters> other_parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 struct AesGcmDemTestCase {

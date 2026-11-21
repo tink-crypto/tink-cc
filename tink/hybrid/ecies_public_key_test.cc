@@ -32,6 +32,8 @@
 #include "tink/ec_point.h"
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_private_key.h"
+#include "tink/hybrid/hpke_parameters.h"
+#include "tink/hybrid/hpke_public_key.h"
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/testing/ec_test_vectors.h"
@@ -401,6 +403,42 @@ TEST(EciesPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(EciesPublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(*params, std::string(32, 'a'),
+                                           /*id_requirement=*/0x01020304,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkeParameters> other_params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<HpkePublicKey> other_key = HpkePublicKey::Create(
+      *other_params, std::string(32, 'a'),
+      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*public_key != *other_key);
+  EXPECT_TRUE(*other_key != *public_key);
+  EXPECT_FALSE(*public_key == *other_key);
+  EXPECT_FALSE(*other_key == *public_key);
 }
 
 TEST(EciesPublicKeyTest, CopyConstructor) {

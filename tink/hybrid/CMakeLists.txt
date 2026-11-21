@@ -710,6 +710,7 @@ tink_cc_test(
   SRCS
     hpke_parameters_test.cc
   DEPS
+    tink::hybrid::ecies_parameters
     tink::hybrid::hpke_parameters
     GTest::gmock
     absl::status
@@ -724,6 +725,8 @@ tink_cc_test(
   SRCS
     hpke_public_key_test.cc
   DEPS
+    tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_public_key
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
@@ -803,6 +806,7 @@ tink_cc_test(
     ecies_parameters_test.cc
   DEPS
     tink::hybrid::ecies_parameters
+    tink::hybrid::hpke_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -826,6 +830,8 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_public_key
     GTest::gmock
     absl::status
     absl::status_matchers

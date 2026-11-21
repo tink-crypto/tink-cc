@@ -767,6 +767,7 @@ cc_test(
     name = "hpke_parameters_test",
     srcs = ["hpke_parameters_test.cc"],
     deps = [
+        ":ecies_parameters",
         ":hpke_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
@@ -781,6 +782,8 @@ cc_test(
     name = "hpke_public_key_test",
     srcs = ["hpke_public_key_test.cc"],
     deps = [
+        ":ecies_parameters",
+        ":ecies_public_key",
         ":hpke_parameters",
         ":hpke_private_key",
         ":hpke_public_key",
@@ -883,6 +886,7 @@ cc_test(
     srcs = ["ecies_parameters_test.cc"],
     deps = [
         ":ecies_parameters",
+        ":hpke_parameters",
         "//tink:parameters",
         "//tink/aead:aes_ctr_hmac_aead_parameters",
         "//tink/aead:aes_gcm_parameters",
@@ -906,6 +910,8 @@ cc_test(
         ":ecies_parameters",
         ":ecies_private_key",
         ":ecies_public_key",
+        ":hpke_parameters",
+        ":hpke_public_key",
         "//tink:big_integer",
         "//tink:ec_point",
         "//tink:key",

@@ -28,6 +28,8 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
+#include "tink/hybrid/ecies_parameters.h"
+#include "tink/hybrid/ecies_public_key.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"
@@ -523,6 +525,42 @@ TEST(HpkePublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(key));
+}
+
+TEST(HpkePublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, std::string(32, 'a'),
+      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<EciesParameters> other_params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<EciesPublicKey> other_key =
+      EciesPublicKey::CreateForCurveX25519(*other_params, std::string(32, 'a'),
+                                           /*id_requirement=*/0x01020304,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*public_key != *other_key);
+  EXPECT_TRUE(*other_key != *public_key);
+  EXPECT_FALSE(*public_key == *other_key);
+  EXPECT_FALSE(*other_key == *public_key);
 }
 
 }  // namespace

@@ -30,6 +30,7 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -464,6 +465,26 @@ TEST(RsaSsaPkcs1ParametersTest, PublicExponentNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(RsaSsaPkcs1ParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(RsaSsaPkcs1ParametersTest, Clonel) {

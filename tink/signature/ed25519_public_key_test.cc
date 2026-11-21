@@ -29,7 +29,9 @@
 #include "absl/status/status_matchers.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/util/test_util.h"
@@ -238,6 +240,24 @@ TEST(Ed25519PublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(Ed25519PublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *params, RestrictedData(/*num_random_bytes=*/32),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  const Ed25519PublicKey& public_key = private_key->GetPublicKey();
+
+  EXPECT_TRUE(public_key != *private_key);
+  EXPECT_TRUE(*private_key != public_key);
+  EXPECT_FALSE(public_key == *private_key);
+  EXPECT_FALSE(*private_key == public_key);
 }
 
 TEST(Ed25519PublicKeyTest, Clone) {

@@ -1200,6 +1200,7 @@ tink_cc_test(
   SRCS
     ed25519_parameters_test.cc
   DEPS
+    tink::signature::ecdsa_parameters
     tink::signature::ed25519_parameters
     GTest::gmock
     absl::status
@@ -1215,6 +1216,7 @@ tink_cc_test(
     ed25519_public_key_test.cc
   DEPS
     tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     GTest::gmock
     absl::no_destructor
@@ -1223,6 +1225,7 @@ tink_cc_test(
     absl::status_matchers
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_data
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
@@ -1289,6 +1292,7 @@ tink_cc_test(
   SRCS
     rsa_ssa_pkcs1_parameters_test.cc
   DEPS
+    tink::signature::ed25519_parameters
     tink::signature::rsa_ssa_pkcs1_parameters
     GTest::gmock
     absl::status
@@ -1307,6 +1311,8 @@ tink_cc_test(
   SRCS
     rsa_ssa_pkcs1_public_key_test.cc
   DEPS
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
     GTest::gmock
@@ -1395,6 +1401,7 @@ tink_cc_test(
   SRCS
     rsa_ssa_pss_parameters_test.cc
   DEPS
+    tink::signature::ed25519_parameters
     tink::signature::rsa_ssa_pss_parameters
     GTest::gmock
     absl::status
@@ -1413,6 +1420,8 @@ tink_cc_test(
   SRCS
     rsa_ssa_pss_public_key_test.cc
   DEPS
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
     GTest::gmock
@@ -1505,6 +1514,7 @@ tink_cc_test(
     ecdsa_parameters_test.cc
   DEPS
     tink::signature::ecdsa_parameters
+    tink::signature::ed25519_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -1520,6 +1530,8 @@ tink_cc_test(
   DEPS
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check

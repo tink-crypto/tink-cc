@@ -1360,6 +1360,7 @@ cc_test(
     name = "ed25519_parameters_test",
     srcs = ["ed25519_parameters_test.cc"],
     deps = [
+        ":ecdsa_parameters",
         ":ed25519_parameters",
         "//tink:parameters",
         "//tink/util:statusor",
@@ -1375,9 +1376,11 @@ cc_test(
     srcs = ["ed25519_public_key_test.cc"],
     deps = [
         ":ed25519_parameters",
+        ":ed25519_private_key",
         ":ed25519_public_key",
         "//tink:key",
         "//tink:partial_key_access",
+        "//tink:restricted_data",
         "//tink/signature/internal/testing:ed25519_test_vectors",
         "//tink/signature/internal/testing:signature_test_vector",
         "//tink/util:test_util",
@@ -1449,6 +1452,7 @@ cc_test(
     name = "rsa_ssa_pkcs1_parameters_test",
     srcs = ["rsa_ssa_pkcs1_parameters_test.cc"],
     deps = [
+        ":ed25519_parameters",
         ":rsa_ssa_pkcs1_parameters",
         "//tink:big_integer",
         "//tink:parameters",
@@ -1467,6 +1471,8 @@ cc_test(
     name = "rsa_ssa_pkcs1_public_key_test",
     srcs = ["rsa_ssa_pkcs1_public_key_test.cc"],
     deps = [
+        ":ed25519_parameters",
+        ":ed25519_public_key",
         ":rsa_ssa_pkcs1_parameters",
         ":rsa_ssa_pkcs1_public_key",
         "//tink:big_integer",
@@ -1555,6 +1561,7 @@ cc_test(
     name = "rsa_ssa_pss_parameters_test",
     srcs = ["rsa_ssa_pss_parameters_test.cc"],
     deps = [
+        ":ed25519_parameters",
         ":rsa_ssa_pss_parameters",
         "//tink:big_integer",
         "//tink:parameters",
@@ -1573,6 +1580,8 @@ cc_test(
     name = "rsa_ssa_pss_public_key_test",
     srcs = ["rsa_ssa_pss_public_key_test.cc"],
     deps = [
+        ":ed25519_parameters",
+        ":ed25519_public_key",
         ":rsa_ssa_pss_parameters",
         ":rsa_ssa_pss_public_key",
         "//tink:big_integer",
@@ -1665,6 +1674,7 @@ cc_test(
     srcs = ["ecdsa_parameters_test.cc"],
     deps = [
         ":ecdsa_parameters",
+        ":ed25519_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
@@ -1680,6 +1690,8 @@ cc_test(
     deps = [
         ":ecdsa_parameters",
         ":ecdsa_public_key",
+        ":ed25519_parameters",
+        ":ed25519_public_key",
         "//tink:big_integer",
         "//tink:ec_point",
         "//tink:key",

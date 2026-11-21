@@ -306,6 +306,24 @@ TEST(Ed25519PrivateKeyTest, DifferentPublicKeyNotEqual) {
   EXPECT_FALSE(*other_private_key == *private_key);
 }
 
+TEST(Ed25519PrivateKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *params, RestrictedData(/*num_random_bytes=*/32),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  const Ed25519PublicKey& public_key = private_key->GetPublicKey();
+
+  EXPECT_TRUE(*private_key != public_key);
+  EXPECT_TRUE(public_key != *private_key);
+  EXPECT_FALSE(*private_key == public_key);
+  EXPECT_FALSE(public_key == *private_key);
+}
+
 TEST(Ed25519PrivateKeyTest, Clone) {
   absl::StatusOr<Ed25519Parameters> params =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);

@@ -30,13 +30,15 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
-#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 
 namespace crypto {
 namespace tink {
@@ -553,6 +555,36 @@ TEST(EcdsaPublicKeyTest, GetPaddedXWithLeadingZerosP256) {
   EXPECT_EQ(public_key->GetPaddedX(), x_bytes);
   EXPECT_EQ(public_key->GetPaddedY().size(), 32);
   EXPECT_EQ(public_key->GetPaddedY(), y_bytes);
+}
+
+TEST(EcdsaPublicKeyTest, DifferentKeyTypeNotEqual) {
+  absl::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, GetP256EcPoint(), /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(other_params, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> other_key = Ed25519PublicKey::Create(
+      *other_params, std::string(32, 'a'), /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  EXPECT_TRUE(*public_key != *other_key);
+  EXPECT_TRUE(*other_key != *public_key);
+  EXPECT_FALSE(*public_key == *other_key);
+  EXPECT_FALSE(*other_key == *public_key);
 }
 
 }  // namespace

@@ -31,6 +31,7 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -624,6 +625,28 @@ TEST(RsaSsaPssParametersTest, PublicExponentNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(RsaSsaPssParametersTest, DifferentParametersTypeNotEqual) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .SetModulusSizeInBits(2048)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
+          .SetSaltLengthInBytes(64)
+          .SetPublicExponent(kF4)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<Ed25519Parameters> other_parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_TRUE(*other_parameters != *parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+  EXPECT_FALSE(*other_parameters == *parameters);
 }
 
 TEST(RsaSsaPssParametersTest, Clone) {

@@ -287,6 +287,25 @@ TEST(RsaUtilTest, ValidateRsaPublicExponent) {
       internal::BignumToString(e_bn.get(), BN_num_bytes(e_bn.get()));
   ASSERT_THAT(e_str, IsOk());
   EXPECT_THAT(ValidateRsaPublicExponent(*e_str), IsOk());
+
+  // Valid non-F4 and leading-zero-padded encodings on the fallback path.
+  EXPECT_THAT(ValidateRsaPublicExponent(test::HexDecodeOrDie("010003")),
+              IsOk());
+  EXPECT_THAT(ValidateRsaPublicExponent(test::HexDecodeOrDie("ffffffff")),
+              IsOk());
+  EXPECT_THAT(ValidateRsaPublicExponent(test::HexDecodeOrDie("00010001")),
+              IsOk());
+  EXPECT_THAT(ValidateRsaPublicExponent(test::HexDecodeOrDie("0000010003")),
+              IsOk());
+
+  // Invalid edge-case encodings: empty, zero, 1, 3-byte padded small odd
+  // values, 65535, F4 prefix/suffix values, and 33-bit odd values.
+  for (absl::string_view hex : {"", "00", "01", "000001", "000003", "ffff",
+                                "00ffff", "01000100", "0100010001",
+                                "0100000001"}) {
+    EXPECT_THAT(ValidateRsaPublicExponent(test::HexDecodeOrDie(hex)),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  }
 }
 
 TEST(RsaUtilTest, GetRsaDefaultPublicExponent) {

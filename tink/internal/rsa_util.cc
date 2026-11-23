@@ -93,6 +93,9 @@ absl::Status ValidateRsaPublicExponent(const BIGNUM* exponent) {
 }
 
 absl::Status ValidateRsaPublicExponent(absl::string_view exponent) {
+  if (exponent == GetRsaDefaultPublicExponent().GetValue()) {
+    return absl::OkStatus();
+  }
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(exponent);
   if (!e.ok()) {

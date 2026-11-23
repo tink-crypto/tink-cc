@@ -24,12 +24,16 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/config.h"
-#include "openssl/crypto.h"
 
 namespace crypto {
 namespace tink {
 namespace util {
 namespace internal {
+namespace sanitizing_allocator_internal {
+
+void Cleanse(void* ptr, std::size_t size);
+
+}  // namespace sanitizing_allocator_internal
 
 template <typename T>
 struct SanitizingAllocatorImpl {
@@ -58,7 +62,7 @@ struct SanitizingAllocatorImpl {
   }
 
   static void deallocate(void* ptr, std::size_t n) {
-    OPENSSL_cleanse(ptr, n * sizeof(T));
+    sanitizing_allocator_internal::Cleanse(ptr, n * sizeof(T));
 #ifdef __cpp_aligned_new
     ::operator delete(ptr, std::align_val_t(alignof(T)));
 #else
@@ -72,7 +76,7 @@ template <>
 struct SanitizingAllocatorImpl<void> {
   static void* allocate(std::size_t n) { return std::malloc(n); }
   static void deallocate(void* ptr, std::size_t n) {
-    OPENSSL_cleanse(ptr, n);
+    sanitizing_allocator_internal::Cleanse(ptr, n);
     return std::free(ptr);
   }
 };

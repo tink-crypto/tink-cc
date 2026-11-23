@@ -1569,6 +1569,7 @@ tink_cc_library(
 tink_cc_library(
   NAME sanitizing_allocator
   SRCS
+    sanitizing_allocator.cc
     sanitizing_allocator.h
   DEPS
     absl::config

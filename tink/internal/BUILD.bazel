@@ -1570,6 +1570,7 @@ cc_library(
 
 cc_library(
     name = "sanitizing_allocator",
+    srcs = ["sanitizing_allocator.cc"],
     hdrs = ["sanitizing_allocator.h"],
     deps = [
         "@abseil-cpp//absl/base:config",

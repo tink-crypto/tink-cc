@@ -724,22 +724,6 @@ tink_cc_library(
     tink::util::statusor
 )
 
-tink_cc_library(
-  NAME pem_parser_boringssl
-  SRCS
-    pem_parser_boringssl.cc
-    pem_parser_boringssl.h
-  DEPS
-    absl::status
-    absl::strings
-    tink::internal::boringssl
-    tink::internal::bn_util
-    tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
-    tink::util::secret_data
-    tink::util::statusor
-)
-
 # tests
 
 tink_cc_test(
@@ -1417,25 +1401,6 @@ tink_cc_test(
     tink::core::secret_data
     tink::mac::internal::stateful_mac
     tink::util::secret_data
-)
-
-tink_cc_test(
-  NAME pem_parser_boringssl_test
-  SRCS
-    pem_parser_boringssl_test.cc
-  DEPS
-    tink::subtle::pem_parser_boringssl
-    GTest::gmock
-    absl::status
-    absl::status_matchers
-    absl::strings
-    tink::internal::boringssl
-    tink::internal::bn_util
-    tink::internal::err_util
-    tink::internal::rsa_util
-    tink::internal::ssl_unique_ptr
-    tink::util::secret_data
-    tink::util::test_util
 )
 
 tink_cc_test(

@@ -732,22 +732,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "pem_parser_boringssl",
-    srcs = ["pem_parser_boringssl.cc"],
-    hdrs = ["pem_parser_boringssl.h"],
-    deps = [
-        "//tink/internal:bn_util",
-        "//tink/internal:rsa_util",
-        "//tink/internal:ssl_unique_ptr",
-        "//tink/util:secret_data",
-        "//tink/util:statusor",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
-    ],
-)
-
 # tests
 
 cc_test(
@@ -1455,25 +1439,6 @@ cc_test(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "pem_parser_boringssl_test",
-    srcs = ["pem_parser_boringssl_test.cc"],
-    deps = [
-        ":pem_parser_boringssl",
-        "//tink/internal:bn_util",
-        "//tink/internal:err_util",
-        "//tink/internal:rsa_util",
-        "//tink/internal:ssl_unique_ptr",
-        "//tink/util:secret_data",
-        "//tink/util:test_util",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:status_matchers",
-        "@abseil-cpp//absl/strings",
-        "@boringssl//:crypto",
         "@googletest//:gtest_main",
     ],
 )

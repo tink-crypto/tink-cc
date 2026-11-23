@@ -92,11 +92,14 @@ tink_cc_library(
     config_2026.cc
     config_2026.h
   DEPS
+    tink::daead::internal::aes_siv_proto_serialization_impl
     absl::memory
+    absl::status_macros
     tink::core::configuration
     tink::daead::aes_siv_key_manager
     tink::daead::deterministic_aead_wrapper
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::util::status
 )
 
@@ -105,20 +108,30 @@ tink_cc_test(
   SRCS
     config_2026_test.cc
   DEPS
+    tink::daead::internal::aes_siv_test_vectors
     tink::daead::internal::config_2026
     tink::daead::internal::key_gen_config_2026
     GTest::gmock
     absl::status_matchers
     tink::core::configuration
     tink::core::deterministic_aead
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::keyset_handle
+    tink::core::parameters
+    tink::daead::aes_siv_key
     tink::daead::aes_siv_key_manager
+    tink::daead::aes_siv_parameters
     tink::daead::deterministic_aead_key_templates
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
@@ -130,10 +143,13 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
+    tink::daead::internal::aes_siv_proto_serialization_impl
     absl::memory
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::daead::aes_siv_key_manager
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
     tink::util::status
 )
 

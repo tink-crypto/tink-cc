@@ -17,8 +17,11 @@
 #include "tink/daead/internal/key_gen_config_2026.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status_macros.h"
 #include "tink/daead/aes_siv_key_manager.h"
+#include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/util/status.h"
 
@@ -27,6 +30,11 @@ namespace tink {
 namespace internal {
 
 absl::Status AddDeterministicAeadKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesSivProtoSerializationWithRegistry(*serialization_registry));
   return KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesSivKeyManager>(), config);
 }

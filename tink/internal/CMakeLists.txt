@@ -2053,6 +2053,7 @@ tink_cc_library(
     primitive_set_base.h
   DEPS
     absl::core_headers
+    absl::nullability
     absl::flat_hash_map
     absl::memory
     absl::status
@@ -2070,6 +2071,7 @@ tink_cc_library(
     primitive_set.h
   DEPS
     absl::core_headers
+    absl::nullability
     absl::flat_hash_map
     absl::memory
     absl::status

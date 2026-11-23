@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
@@ -68,6 +69,13 @@ class PrimitiveSet {
     static absl::StatusOr<std::unique_ptr<Entry<P>>> New(
         std::unique_ptr<P> primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
+      return New(std::move(primitive), /*full_primitive=*/nullptr, key_info);
+    }
+
+    static absl::StatusOr<std::unique_ptr<Entry<P>>> New(
+        std::unique_ptr<P> primitive,
+        /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
       if (key_info.status() != google::crypto::tink::KeyStatusType::ENABLED) {
         return absl::Status(absl::StatusCode::kInvalidArgument,
                             "The key must be ENABLED.");
@@ -84,15 +92,29 @@ class PrimitiveSet {
         return absl::Status(absl::StatusCode::kInvalidArgument,
                             "The primitive must be non-null.");
       }
-      return absl::WrapUnique(new Entry(std::move(primitive), *identifier,
-                                        key_info.status(), key_info.key_id(),
-                                        key_info.output_prefix_type(),
-                                        key_info.type_url()));
+      return absl::WrapUnique(
+          new Entry(std::move(primitive), std::move(full_primitive),
+                    *identifier, key_info.status(), key_info.key_id(),
+                    key_info.output_prefix_type(), key_info.type_url()));
     }
 
     P2& get_primitive() const { return *primitive_; }
 
+    bool has_full_primitive() const { return full_primitive_ != nullptr; }
+
+    // Returns the full primitive.
+    //
+    // Precondition: `has_full_primitive()` is true.
+    P2& get_full_primitive() const {
+      // NOLINTNEXTLINE(google3-runtime-pointer-nullability*)
+      return *full_primitive_;
+    }
+
     std::unique_ptr<P> ReleasePrimitive() { return std::move(primitive_); }
+
+    /*absl_nullable - not yet supported*/ std::unique_ptr<P> ReleaseFullPrimitive() {
+      return std::move(full_primitive_);
+    }
 
     // Returns an empty string if the output prefix type is WITH_ID_REQUIREMENT.
     // Otherwise, it returns the corresponding output prefix according to
@@ -113,11 +135,14 @@ class PrimitiveSet {
     absl::string_view get_key_type_url() const { return key_type_url_; }
 
    private:
-    Entry(std::unique_ptr<P2> primitive, const std::string& identifier,
+    Entry(std::unique_ptr<P2> primitive,
+          /*absl_nullable - not yet supported*/ std::unique_ptr<P2> full_primitive,
+          const std::string& identifier,
           google::crypto::tink::KeyStatusType status, uint32_t key_id,
           google::crypto::tink::OutputPrefixType output_prefix_type,
           absl::string_view key_type_url)
         : primitive_(std::move(primitive)),
+          full_primitive_(std::move(full_primitive)),
           identifier_(identifier),
           key_id_(key_id),
           status_(static_cast<uint8_t>(status)),
@@ -125,6 +150,7 @@ class PrimitiveSet {
           key_type_url_(key_type_url) {}
 
     std::unique_ptr<P> primitive_;
+    /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive_;
     std::string identifier_;
     uint32_t key_id_;
     uint8_t status_;
@@ -164,14 +190,16 @@ class PrimitiveSet {
 
   static absl::StatusOr<Entry<P>*> AddPrimitiveImpl(
       std::unique_ptr<P> primitive,
+      /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive,
       const google::crypto::tink::KeysetInfo::KeyInfo& key_info,
       CiphertextPrefixToPrimitivesMap& primitives,
       std::vector<Entry<P>*>& primitives_in_keyset_order) {
-    auto entry_or = Entry<P>::New(std::move(primitive), key_info);
+    absl::StatusOr<std::unique_ptr<Entry<P>>> entry_or = Entry<P>::New(
+        std::move(primitive), std::move(full_primitive), key_info);
     if (!entry_or.ok()) return entry_or.status();
 
     std::string identifier = entry_or.value()->get_identifier();
-    auto& primitives_for_identifier = primitives[identifier];
+    Primitives& primitives_for_identifier = primitives[identifier];
     primitives_for_identifier.push_back(std::move(entry_or.value()));
 
     Entry<P>* stored_entry = primitives_for_identifier.back().get();
@@ -189,12 +217,8 @@ class PrimitiveSet {
     Builder& AddPrimitive(
         std::unique_ptr<P> primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
-      absl::MutexLock lock(mutex_);
-      if (!status_.ok()) return *this;
-      status_ = AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
-                                 primitives_in_keyset_order_)
-                    .status();
-      return *this;
+      return AddPrimitive(std::move(primitive), /*full_primitive=*/nullptr,
+                          key_info);
     }
 
     Builder&& AddPrimitive(
@@ -203,16 +227,55 @@ class PrimitiveSet {
       return std::move(AddPrimitive(std::move(primitive), key_info));
     }
 
+    // Adds 'primitive' and optional 'full_primitive' to this set for the
+    // specified 'key'.
+    Builder& AddPrimitive(
+        std::unique_ptr<P> primitive,
+        /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
+      absl::MutexLock lock(mutex_);
+      if (!status_.ok()) return *this;
+      status_ =
+          AddPrimitiveImpl(std::move(primitive), std::move(full_primitive),
+                           key_info, primitives_, primitives_in_keyset_order_)
+              .status();
+      return *this;
+    }
+
+    Builder&& AddPrimitive(
+        std::unique_ptr<P> primitive,
+        /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) && {
+      return std::move(AddPrimitive(std::move(primitive),
+                                    std::move(full_primitive), key_info));
+    }
+
     // Adds 'primitive' to this set for the specified 'key' and marks it
     // primary.
     Builder& AddPrimaryPrimitive(
         std::unique_ptr<P> primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
+      return AddPrimaryPrimitive(std::move(primitive),
+                                 /*full_primitive=*/nullptr, key_info);
+    }
+
+    Builder&& AddPrimaryPrimitive(
+        std::unique_ptr<P> primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) && {
+      return std::move(AddPrimaryPrimitive(std::move(primitive), key_info));
+    }
+
+    // Adds 'primitive' and optional 'full_primitive' to this set for the
+    // specified 'key' and marks it primary.
+    Builder& AddPrimaryPrimitive(
+        std::unique_ptr<P> primitive,
+        /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
       absl::MutexLock lock(mutex_);
       if (!status_.ok()) return *this;
-      auto entry_result =
-          AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
-                           primitives_in_keyset_order_);
+      absl::StatusOr<Entry<P>*> entry_result =
+          AddPrimitiveImpl(std::move(primitive), std::move(full_primitive),
+                           key_info, primitives_, primitives_in_keyset_order_);
       if (!entry_result.ok()) {
         status_ = entry_result.status();
         return *this;
@@ -223,8 +286,10 @@ class PrimitiveSet {
 
     Builder&& AddPrimaryPrimitive(
         std::unique_ptr<P> primitive,
+        /*absl_nullable - not yet supported*/ std::unique_ptr<P> full_primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) && {
-      return std::move(AddPrimaryPrimitive(std::move(primitive), key_info));
+      return std::move(AddPrimaryPrimitive(
+          std::move(primitive), std::move(full_primitive), key_info));
     }
 
     // Add the given annotations. Existing annotations will not be overwritten.

@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -41,7 +42,16 @@ PrimitiveSetBase::EntryBase::EntryBase(
     google::crypto::tink::KeyStatusType status, uint32_t key_id,
     google::crypto::tink::OutputPrefixType output_prefix_type,
     absl::string_view key_type_url)
+    : EntryBase(std::move(primitive), NullUntypedPrimitive(), identifier,
+                status, key_id, output_prefix_type, key_type_url) {}
+
+PrimitiveSetBase::EntryBase::EntryBase(
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+    const std::string& identifier, google::crypto::tink::KeyStatusType status,
+    uint32_t key_id, google::crypto::tink::OutputPrefixType output_prefix_type,
+    absl::string_view key_type_url)
     : primitive_(std::move(primitive)),
+      full_primitive_(std::move(full_primitive)),
       identifier_(identifier),
       key_id_(key_id),
       status_(static_cast<uint8_t>(status)),
@@ -51,6 +61,13 @@ PrimitiveSetBase::EntryBase::EntryBase(
 absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>>
 PrimitiveSetBase::EntryBase::New(
     UntypedPrimitive primitive,
+    const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
+  return New(std::move(primitive), NullUntypedPrimitive(), key_info);
+}
+
+absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>>
+PrimitiveSetBase::EntryBase::New(
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
     const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
   if (key_info.status() != google::crypto::tink::KeyStatusType::ENABLED) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -68,9 +85,10 @@ PrimitiveSetBase::EntryBase::New(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "The primitive must be non-null.");
   }
-  return absl::WrapUnique(new EntryBase(
-      std::move(primitive), *identifier, key_info.status(), key_info.key_id(),
-      key_info.output_prefix_type(), key_info.type_url()));
+  return absl::WrapUnique(
+      new EntryBase(std::move(primitive), std::move(full_primitive),
+                    *identifier, key_info.status(), key_info.key_id(),
+                    key_info.output_prefix_type(), key_info.type_url()));
 }
 
 absl::Status PrimitiveSetBase::SetPrimaryImpl(
@@ -96,12 +114,12 @@ absl::Status PrimitiveSetBase::SetPrimaryImpl(
 }
 
 absl::StatusOr<PrimitiveSetBase::EntryBase*> PrimitiveSetBase::AddPrimitiveImpl(
-    UntypedPrimitive primitive,
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
     const google::crypto::tink::KeysetInfo::KeyInfo& key_info,
     CiphertextPrefixToPrimitivesMap& primitives,
     std::vector<EntryBase*>& primitives_in_keyset_order) {
-  absl::StatusOr<std::unique_ptr<EntryBase>> entry_or =
-      EntryBase::New(std::move(primitive), key_info);
+  absl::StatusOr<std::unique_ptr<EntryBase>> entry_or = EntryBase::New(
+      std::move(primitive), std::move(full_primitive), key_info);
   if (!entry_or.ok()) return entry_or.status();
 
   std::string identifier = entry_or.value()->get_identifier();
@@ -116,12 +134,7 @@ absl::StatusOr<PrimitiveSetBase::EntryBase*> PrimitiveSetBase::AddPrimitiveImpl(
 PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddPrimitive(
     UntypedPrimitive primitive,
     const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
-  absl::MutexLock lock(mutex_);
-  if (!status_.ok()) return *this;
-  status_ = AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
-                             primitives_in_keyset_order_)
-                .status();
-  return *this;
+  return AddPrimitive(std::move(primitive), NullUntypedPrimitive(), key_info);
 }
 
 PrimitiveSetBase::Builder&& PrimitiveSetBase::Builder::AddPrimitive(
@@ -130,13 +143,45 @@ PrimitiveSetBase::Builder&& PrimitiveSetBase::Builder::AddPrimitive(
   return std::move(AddPrimitive(std::move(primitive), key_info));
 }
 
-PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddPrimaryPrimitive(
-    UntypedPrimitive primitive,
+PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddPrimitive(
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
     const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
   absl::MutexLock lock(mutex_);
   if (!status_.ok()) return *this;
-  absl::StatusOr<EntryBase*> entry_result = AddPrimitiveImpl(
-      std::move(primitive), key_info, primitives_, primitives_in_keyset_order_);
+  status_ = AddPrimitiveImpl(std::move(primitive), std::move(full_primitive),
+                             key_info, primitives_, primitives_in_keyset_order_)
+                .status();
+  return *this;
+}
+
+PrimitiveSetBase::Builder&& PrimitiveSetBase::Builder::AddPrimitive(
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+    const google::crypto::tink::KeysetInfo::KeyInfo& key_info) && {
+  return std::move(
+      AddPrimitive(std::move(primitive), std::move(full_primitive), key_info));
+}
+
+PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddPrimaryPrimitive(
+    UntypedPrimitive primitive,
+    const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
+  return AddPrimaryPrimitive(std::move(primitive), NullUntypedPrimitive(),
+                             key_info);
+}
+
+PrimitiveSetBase::Builder&& PrimitiveSetBase::Builder::AddPrimaryPrimitive(
+    UntypedPrimitive primitive,
+    const google::crypto::tink::KeysetInfo::KeyInfo& key_info) && {
+  return std::move(AddPrimaryPrimitive(std::move(primitive), key_info));
+}
+
+PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddPrimaryPrimitive(
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+    const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
+  absl::MutexLock lock(mutex_);
+  if (!status_.ok()) return *this;
+  absl::StatusOr<EntryBase*> entry_result =
+      AddPrimitiveImpl(std::move(primitive), std::move(full_primitive),
+                       key_info, primitives_, primitives_in_keyset_order_);
   if (!entry_result.ok()) {
     status_ = entry_result.status();
     return *this;
@@ -146,9 +191,10 @@ PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddPrimaryPrimitive(
 }
 
 PrimitiveSetBase::Builder&& PrimitiveSetBase::Builder::AddPrimaryPrimitive(
-    UntypedPrimitive primitive,
+    UntypedPrimitive primitive, /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
     const google::crypto::tink::KeysetInfo::KeyInfo& key_info) && {
-  return std::move(AddPrimaryPrimitive(std::move(primitive), key_info));
+  return std::move(AddPrimaryPrimitive(std::move(primitive),
+                                       std::move(full_primitive), key_info));
 }
 
 PrimitiveSetBase::Builder& PrimitiveSetBase::Builder::AddAnnotations(

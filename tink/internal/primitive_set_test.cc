@@ -45,7 +45,9 @@ using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::Not;
+using ::testing::NotNull;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAreArray;
 
@@ -533,6 +535,176 @@ TEST_F(PrimitiveSetTest, ReleaseAllEntries) {
   EXPECT_EQ(pset->get_primary(), nullptr);
   EXPECT_THAT(pset->get_all(), SizeIs(0));
   EXPECT_THAT(pset->get_all_in_keyset_order(), SizeIs(0));
+}
+
+TEST_F(PrimitiveSetTest, EntryWithoutFullPrimitive) {
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_url_1");
+
+  absl::StatusOr<std::unique_ptr<internal::PrimitiveSet<Mac>::Entry<Mac>>>
+      entry_2arg = internal::PrimitiveSet<Mac>::Entry<Mac>::New(
+          std::make_unique<DummyMac>("MAC1"), key_info);
+  ASSERT_THAT(entry_2arg, IsOk());
+  EXPECT_FALSE((*entry_2arg)->has_full_primitive());
+  EXPECT_THAT((*entry_2arg)->get_primitive().ComputeMac("data"),
+              Eq(DummyMac("MAC1").ComputeMac("data")));
+  EXPECT_THAT((*entry_2arg)->ReleaseFullPrimitive(), IsNull());
+
+  absl::StatusOr<std::unique_ptr<internal::PrimitiveSet<Mac>::Entry<Mac>>>
+      entry_null_full = internal::PrimitiveSet<Mac>::Entry<Mac>::New(
+          std::make_unique<DummyMac>("MAC2"), /*full_primitive=*/nullptr,
+          key_info);
+  ASSERT_THAT(entry_null_full, IsOk());
+  EXPECT_FALSE((*entry_null_full)->has_full_primitive());
+  EXPECT_THAT((*entry_null_full)->ReleaseFullPrimitive(), IsNull());
+}
+
+TEST_F(PrimitiveSetTest, EntryWithFullPrimitive) {
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_url_1");
+
+  absl::StatusOr<std::unique_ptr<internal::PrimitiveSet<Mac>::Entry<Mac>>>
+      entry = internal::PrimitiveSet<Mac>::Entry<Mac>::New(
+          std::make_unique<DummyMac>("RAW_MAC"),
+          std::make_unique<DummyMac>("FULL_MAC"), key_info);
+  ASSERT_THAT(entry, IsOk());
+  ASSERT_TRUE((*entry)->has_full_primitive());
+  EXPECT_THAT((*entry)->get_primitive().ComputeMac("data"),
+              Eq(DummyMac("RAW_MAC").ComputeMac("data")));
+  EXPECT_THAT((*entry)->get_full_primitive().ComputeMac("data"),
+              Eq(DummyMac("FULL_MAC").ComputeMac("data")));
+
+  std::unique_ptr<Mac> released_full = (*entry)->ReleaseFullPrimitive();
+  ASSERT_THAT(released_full, NotNull());
+  EXPECT_FALSE((*entry)->has_full_primitive());
+  EXPECT_THAT(released_full->ComputeMac("data"),
+              Eq(DummyMac("FULL_MAC").ComputeMac("data")));
+  // The non-full primitive remains intact.
+  EXPECT_THAT((*entry)->get_primitive().ComputeMac("data"),
+              Eq(DummyMac("RAW_MAC").ComputeMac("data")));
+}
+
+TEST_F(PrimitiveSetTest, EntryNewFailsOnInvalidArgsWithFullPrimitive) {
+  KeysetInfo::KeyInfo enabled_key = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_url_1");
+  EXPECT_THAT(internal::PrimitiveSet<Mac>::Entry<Mac>::New(
+                  /*primitive=*/nullptr, std::make_unique<DummyMac>("FULL_MAC"),
+                  enabled_key),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  KeysetInfo::KeyInfo disabled_key = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::DISABLED, "type_url_1");
+  EXPECT_THAT(internal::PrimitiveSet<Mac>::Entry<Mac>::New(
+                  std::make_unique<DummyMac>("RAW_MAC"),
+                  std::make_unique<DummyMac>("FULL_MAC"), disabled_key),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(PrimitiveSetTest, BuilderWithFullPrimitivesRvalue) {
+  KeysetInfo::KeyInfo key_1 =
+      CreateKey(1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_1");
+  KeysetInfo::KeyInfo key_2 =
+      CreateKey(2, OutputPrefixType::RAW, KeyStatusType::ENABLED, "type_2");
+  KeysetInfo::KeyInfo key_3 =
+      CreateKey(3, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_3");
+  KeysetInfo::KeyInfo key_4 =
+      CreateKey(4, OutputPrefixType::LEGACY, KeyStatusType::ENABLED, "type_4");
+
+  absl::StatusOr<internal::PrimitiveSet<Mac>> pset =
+      internal::PrimitiveSet<Mac>::Builder{}
+          .AddPrimitive(std::make_unique<DummyMac>("RAW1"),
+                        std::make_unique<DummyMac>("FULL1"), key_1)
+          .AddPrimitive(std::make_unique<DummyMac>("RAW2"),
+                        /*full_primitive=*/nullptr, key_2)
+          .AddPrimaryPrimitive(std::make_unique<DummyMac>("RAW3"),
+                               std::make_unique<DummyMac>("FULL3"), key_3)
+          .AddPrimitive(std::make_unique<DummyMac>("RAW4"), key_4)
+          .Build();
+  ASSERT_THAT(pset, IsOk());
+
+  const internal::PrimitiveSet<Mac>::Entry<Mac>* primary = pset->get_primary();
+  ASSERT_THAT(primary, NotNull());
+  ASSERT_TRUE(primary->has_full_primitive());
+  EXPECT_THAT(primary->get_primitive().ComputeMac("data"),
+              Eq(DummyMac("RAW3").ComputeMac("data")));
+  EXPECT_THAT(primary->get_full_primitive().ComputeMac("data"),
+              Eq(DummyMac("FULL3").ComputeMac("data")));
+
+  std::vector<internal::PrimitiveSet<Mac>::Entry<Mac>*> ordered =
+      pset->get_all_in_keyset_order();
+  ASSERT_THAT(ordered, SizeIs(4));
+  ASSERT_TRUE(ordered[0]->has_full_primitive());
+  EXPECT_THAT(ordered[0]->get_full_primitive().ComputeMac("data"),
+              Eq(DummyMac("FULL1").ComputeMac("data")));
+  EXPECT_FALSE(ordered[1]->has_full_primitive());
+  ASSERT_TRUE(ordered[2]->has_full_primitive());
+  EXPECT_THAT(ordered[2]->get_full_primitive().ComputeMac("data"),
+              Eq(DummyMac("FULL3").ComputeMac("data")));
+  EXPECT_FALSE(ordered[3]->has_full_primitive());
+}
+
+TEST_F(PrimitiveSetTest, BuilderWithFullPrimitivesLvalueAndReleaseAllEntries) {
+  internal::PrimitiveSet<Mac>::Builder builder;
+  KeysetInfo::KeyInfo key_1 =
+      CreateKey(1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_1");
+  KeysetInfo::KeyInfo key_2 =
+      CreateKey(2, OutputPrefixType::RAW, KeyStatusType::ENABLED, "type_2");
+  KeysetInfo::KeyInfo key_3 =
+      CreateKey(3, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_3");
+
+  builder.AddPrimitive(std::make_unique<DummyMac>("RAW1"),
+                       std::make_unique<DummyMac>("FULL1"), key_1);
+  builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("RAW2"),
+                              /*full_primitive=*/nullptr, key_2);
+  builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("RAW3"),
+                              std::make_unique<DummyMac>("FULL3"), key_3);
+
+  absl::StatusOr<internal::PrimitiveSet<Mac>> pset = std::move(builder).Build();
+  ASSERT_THAT(pset, IsOk());
+  ASSERT_THAT(pset->get_primary(), NotNull());
+  EXPECT_EQ(pset->get_primary()->get_key_id(), 3);
+
+  std::vector<std::unique_ptr<internal::PrimitiveSet<Mac>::Entry<Mac>>>
+      released = pset->ReleaseAllEntries();
+  ASSERT_THAT(released, SizeIs(3));
+
+  EXPECT_TRUE(released[0]->has_full_primitive());
+  std::unique_ptr<Mac> full_1 = released[0]->ReleaseFullPrimitive();
+  ASSERT_THAT(full_1, NotNull());
+  EXPECT_THAT(full_1->ComputeMac(""), Eq(DummyMac("FULL1").ComputeMac("")));
+
+  EXPECT_FALSE(released[1]->has_full_primitive());
+  EXPECT_THAT(released[1]->ReleaseFullPrimitive(), IsNull());
+
+  EXPECT_TRUE(released[2]->has_full_primitive());
+  std::unique_ptr<Mac> full_3 = released[2]->ReleaseFullPrimitive();
+  ASSERT_THAT(full_3, NotNull());
+  EXPECT_THAT(full_3->ComputeMac(""), Eq(DummyMac("FULL3").ComputeMac("")));
+}
+
+TEST_F(PrimitiveSetTest, BuilderWithFullPrimitiveErrorShortCircuit) {
+  KeysetInfo::KeyInfo valid_key =
+      CreateKey(1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_1");
+  KeysetInfo::KeyInfo disabled_key =
+      CreateKey(2, OutputPrefixType::TINK, KeyStatusType::DISABLED, "type_2");
+
+  EXPECT_THAT(internal::PrimitiveSet<Mac>::Builder{}
+                  .AddPrimitive(/*primitive=*/nullptr,
+                                std::make_unique<DummyMac>("FULL1"), valid_key)
+                  .Build(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+
+  internal::PrimitiveSet<Mac>::Builder builder;
+  builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("RAW1"),
+                              std::make_unique<DummyMac>("FULL1"),
+                              disabled_key);
+  // Subsequent valid additions after an error should be short-circuited.
+  builder.AddPrimitive(std::make_unique<DummyMac>("RAW2"),
+                       std::make_unique<DummyMac>("FULL2"), valid_key);
+  builder.AddPrimaryPrimitive(std::make_unique<DummyMac>("RAW3"),
+                              std::make_unique<DummyMac>("FULL3"), valid_key);
+  EXPECT_THAT(std::move(builder).Build(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

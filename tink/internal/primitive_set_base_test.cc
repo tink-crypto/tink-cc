@@ -42,7 +42,9 @@ using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::Not;
+using ::testing::NotNull;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAreArray;
 
@@ -67,6 +69,18 @@ template <typename T>
 const T* GetTyped(const PrimitiveSetBase::EntryBase* entry) {
   if (entry == nullptr) return nullptr;
   return static_cast<const T*>(entry->get_untyped_primitive());
+}
+
+template <typename T>
+T* GetTypedFull(PrimitiveSetBase::EntryBase* entry) {
+  if (entry == nullptr) return nullptr;
+  return static_cast<T*>(entry->get_untyped_full_primitive());
+}
+
+template <typename T>
+const T* GetTypedFull(const PrimitiveSetBase::EntryBase* entry) {
+  if (entry == nullptr) return nullptr;
+  return static_cast<const T*>(entry->get_untyped_full_primitive());
 }
 
 class PrimitiveSetBaseTest : public ::testing::Test {};
@@ -562,6 +576,59 @@ TEST_F(PrimitiveSetBaseTest, ReleaseAllEntries) {
   EXPECT_THAT(pset->get_all_in_keyset_order(), SizeIs(0));
   EXPECT_THAT(pset->get_raw_primitives(),
               StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST_F(PrimitiveSetBaseTest, FullPrimitivesAndReleaseAllEntries) {
+  KeysetInfo::KeyInfo key_1 =
+      CreateKey(1, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_1");
+  KeysetInfo::KeyInfo key_2 =
+      CreateKey(2, OutputPrefixType::RAW, KeyStatusType::ENABLED, "type_2");
+  KeysetInfo::KeyInfo key_3 =
+      CreateKey(3, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_3");
+
+  absl::StatusOr<PrimitiveSetBase> pset =
+      PrimitiveSetBase::Builder{}
+          .AddPrimitive(MakeUntyped(std::make_unique<DummyMac>("RAW1")),
+                        MakeUntyped(std::make_unique<DummyMac>("FULL1")), key_1)
+          .AddPrimitive(MakeUntyped(std::make_unique<DummyMac>("RAW2")),
+                        PrimitiveSetBase::NullUntypedPrimitive(), key_2)
+          .AddPrimaryPrimitive(MakeUntyped(std::make_unique<DummyMac>("RAW3")),
+                               MakeUntyped(std::make_unique<DummyMac>("FULL3")),
+                               key_3)
+          .Build();
+  ASSERT_THAT(pset, IsOk());
+
+  const PrimitiveSetBase::EntryBase* primary = pset->get_primary();
+  ASSERT_THAT(primary, NotNull());
+  ASSERT_TRUE(primary->has_untyped_full_primitive());
+  EXPECT_THAT(GetTyped<Mac>(primary)->ComputeMac("data"),
+              Eq(DummyMac("RAW3").ComputeMac("data")));
+  EXPECT_THAT(GetTypedFull<Mac>(primary)->ComputeMac("data"),
+              Eq(DummyMac("FULL3").ComputeMac("data")));
+
+  std::vector<PrimitiveSetBase::EntryBase*> ordered =
+      pset->get_all_in_keyset_order();
+  ASSERT_THAT(ordered, SizeIs(3));
+  EXPECT_TRUE(ordered[0]->has_untyped_full_primitive());
+  EXPECT_FALSE(ordered[1]->has_untyped_full_primitive());
+  EXPECT_THAT(GetTypedFull<Mac>(ordered[1]), IsNull());
+  EXPECT_TRUE(ordered[2]->has_untyped_full_primitive());
+
+  std::vector<std::unique_ptr<PrimitiveSetBase::EntryBase>> released =
+      pset->ReleaseAllEntries();
+  ASSERT_THAT(released, SizeIs(3));
+
+  void* full_1_raw = released[0]->ReleaseUntypedFullPrimitive();
+  ASSERT_THAT(full_1_raw, NotNull());
+  std::unique_ptr<Mac> full_1(static_cast<Mac*>(full_1_raw));
+  EXPECT_THAT(full_1->ComputeMac(""), Eq(DummyMac("FULL1").ComputeMac("")));
+
+  EXPECT_THAT(released[1]->ReleaseUntypedFullPrimitive(), IsNull());
+
+  void* full_3_raw = released[2]->ReleaseUntypedFullPrimitive();
+  ASSERT_THAT(full_3_raw, NotNull());
+  std::unique_ptr<Mac> full_3(static_cast<Mac*>(full_3_raw));
+  EXPECT_THAT(full_3->ComputeMac(""), Eq(DummyMac("FULL3").ComputeMac("")));
 }
 
 }  // namespace

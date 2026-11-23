@@ -231,6 +231,128 @@ TEST(EntryBaseTest,
   EXPECT_TRUE(deleted);
 }
 
+TEST(EntryBaseTest, DefaultCreationHasNoFullPrimitive) {
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type.url/mac");
+
+  absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>> entry_2arg =
+      PrimitiveSetBase::EntryBase::New(
+          MakeUntyped(std::make_unique<DummyMac>("MAC1")), key_info);
+  ASSERT_THAT(entry_2arg, IsOk());
+  EXPECT_FALSE((*entry_2arg)->has_untyped_full_primitive());
+  EXPECT_THAT((*entry_2arg)->get_untyped_full_primitive(), IsNull());
+  EXPECT_THAT((*entry_2arg)->ReleaseUntypedFullPrimitive(), IsNull());
+
+  absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>> entry_null_full =
+      PrimitiveSetBase::EntryBase::New(
+          MakeUntyped(std::make_unique<DummyMac>("MAC2")),
+          PrimitiveSetBase::NullUntypedPrimitive(), key_info);
+  ASSERT_THAT(entry_null_full, IsOk());
+  EXPECT_FALSE((*entry_null_full)->has_untyped_full_primitive());
+  EXPECT_THAT((*entry_null_full)->get_untyped_full_primitive(), IsNull());
+  EXPECT_THAT((*entry_null_full)->ReleaseUntypedFullPrimitive(), IsNull());
+}
+
+TEST(EntryBaseTest, CreationAndAccessorsWithFullPrimitive) {
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type.url/mac");
+
+  absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>> entry_or =
+      PrimitiveSetBase::EntryBase::New(
+          MakeUntyped(std::make_unique<DummyMac>("RAW_MAC")),
+          MakeUntyped(std::make_unique<DummyMac>("FULL_MAC")), key_info);
+  ASSERT_THAT(entry_or, IsOk());
+  std::unique_ptr<PrimitiveSetBase::EntryBase> entry = std::move(*entry_or);
+
+  ASSERT_TRUE(entry->has_untyped_full_primitive());
+  ASSERT_THAT(entry->get_untyped_full_primitive(), NotNull());
+  EXPECT_THAT(GetTyped<Mac>(entry.get())->ComputeMac("data"),
+              Eq(DummyMac("RAW_MAC").ComputeMac("data")));
+  Mac* full_mac = static_cast<Mac*>(entry->get_untyped_full_primitive());
+  EXPECT_THAT(full_mac->ComputeMac("data"),
+              Eq(DummyMac("FULL_MAC").ComputeMac("data")));
+
+  void* released_full_raw = entry->ReleaseUntypedFullPrimitive();
+  ASSERT_THAT(released_full_raw, NotNull());
+  EXPECT_FALSE(entry->has_untyped_full_primitive());
+  EXPECT_THAT(entry->get_untyped_full_primitive(), IsNull());
+  EXPECT_THAT(entry->get_untyped_primitive(), NotNull());
+
+  std::unique_ptr<Mac> released_full(static_cast<Mac*>(released_full_raw));
+  EXPECT_THAT(released_full->ComputeMac("data"),
+              Eq(DummyMac("FULL_MAC").ComputeMac("data")));
+}
+
+TEST(EntryBaseTest, CreationWithFullPrimitiveFailsOnNullPrimitiveAndCleansUp) {
+  bool full_deleted = false;
+  auto full_tracker = std::make_unique<LifetimeTracker>();
+  full_tracker->deleted = &full_deleted;
+
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      12345, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type.url/custom");
+
+  EXPECT_THAT(PrimitiveSetBase::EntryBase::New(
+                  PrimitiveSetBase::NullUntypedPrimitive(),
+                  MakeUntyped(std::move(full_tracker)), key_info),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_TRUE(full_deleted);
+}
+
+TEST(EntryBaseTest, FullPrimitiveLifecycleAndDeleter) {
+  bool raw_deleted = false;
+  bool full_deleted = false;
+  auto raw_tracker = std::make_unique<LifetimeTracker>();
+  raw_tracker->deleted = &raw_deleted;
+  auto full_tracker = std::make_unique<LifetimeTracker>();
+  full_tracker->deleted = &full_deleted;
+
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      42, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type.url/custom");
+
+  {
+    absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>> entry_or =
+        PrimitiveSetBase::EntryBase::New(MakeUntyped(std::move(raw_tracker)),
+                                         MakeUntyped(std::move(full_tracker)),
+                                         key_info);
+    ASSERT_THAT(entry_or, IsOk());
+    EXPECT_FALSE(raw_deleted);
+    EXPECT_FALSE(full_deleted);
+  }
+  EXPECT_TRUE(raw_deleted);
+  EXPECT_TRUE(full_deleted);
+}
+
+TEST(EntryBaseTest,
+     ReleaseUntypedFullPrimitiveDoesNotRunDeleterOnEntryDestruction) {
+  bool raw_deleted = false;
+  bool full_deleted = false;
+  auto raw_tracker = std::make_unique<LifetimeTracker>();
+  raw_tracker->deleted = &raw_deleted;
+  auto full_tracker = std::make_unique<LifetimeTracker>();
+  full_tracker->deleted = &full_deleted;
+
+  KeysetInfo::KeyInfo key_info = CreateKey(
+      42, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type.url/custom");
+
+  void* released_full_ptr = nullptr;
+  {
+    absl::StatusOr<std::unique_ptr<PrimitiveSetBase::EntryBase>> entry_or =
+        PrimitiveSetBase::EntryBase::New(MakeUntyped(std::move(raw_tracker)),
+                                         MakeUntyped(std::move(full_tracker)),
+                                         key_info);
+    ASSERT_THAT(entry_or, IsOk());
+    released_full_ptr = (*entry_or)->ReleaseUntypedFullPrimitive();
+    ASSERT_THAT(released_full_ptr, NotNull());
+    EXPECT_FALSE(raw_deleted);
+    EXPECT_FALSE(full_deleted);
+  }
+  EXPECT_TRUE(raw_deleted);
+  EXPECT_FALSE(full_deleted);
+
+  delete static_cast<LifetimeTracker*>(released_full_ptr);
+  EXPECT_TRUE(full_deleted);
+}
+
 // -----------------------------------------------------------------------------
 // Additional PrimitiveSetBase::Builder and Lifecycle tests
 // -----------------------------------------------------------------------------
@@ -433,6 +555,42 @@ TEST(PrimitiveSetBaseEntryTest,
   EXPECT_THAT(released_second, SizeIs(0));
 }
 
+TEST(PrimitiveSetBaseEntryTest, BuilderWithFullPrimitiveLvalueAndRvalue) {
+  KeysetInfo::KeyInfo key_1 =
+      CreateKey(10, OutputPrefixType::TINK, KeyStatusType::ENABLED, "type_1");
+  KeysetInfo::KeyInfo key_2 =
+      CreateKey(20, OutputPrefixType::RAW, KeyStatusType::ENABLED, "type_2");
+
+  // Rvalue Builder
+  absl::StatusOr<PrimitiveSetBase> rvalue_pset =
+      PrimitiveSetBase::Builder{}
+          .AddPrimitive(MakeUntyped(std::make_unique<DummyMac>("RAW1")),
+                        MakeUntyped(std::make_unique<DummyMac>("FULL1")), key_1)
+          .AddPrimaryPrimitive(MakeUntyped(std::make_unique<DummyMac>("RAW2")),
+                               MakeUntyped(std::make_unique<DummyMac>("FULL2")),
+                               key_2)
+          .Build();
+  ASSERT_THAT(rvalue_pset, IsOk());
+  ASSERT_THAT(rvalue_pset->get_primary(), NotNull());
+  EXPECT_TRUE(rvalue_pset->get_primary()->has_untyped_full_primitive());
+
+  // Lvalue Builder + error short-circuit
+  PrimitiveSetBase::Builder lvalue_builder;
+  KeysetInfo::KeyInfo disabled_key =
+      CreateKey(30, OutputPrefixType::TINK, KeyStatusType::DISABLED, "type_3");
+  lvalue_builder.AddPrimitive(MakeUntyped(std::make_unique<DummyMac>("RAW1")),
+                              MakeUntyped(std::make_unique<DummyMac>("FULL1")),
+                              key_1);
+  lvalue_builder.AddPrimaryPrimitive(
+      MakeUntyped(std::make_unique<DummyMac>("RAW_BAD")),
+      MakeUntyped(std::make_unique<DummyMac>("FULL_BAD")), disabled_key);
+  lvalue_builder.AddPrimaryPrimitive(
+      MakeUntyped(std::make_unique<DummyMac>("RAW2")),
+      MakeUntyped(std::make_unique<DummyMac>("FULL2")), key_2);
+  EXPECT_THAT(std::move(lvalue_builder).Build(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 }  // namespace
 
 class PrimitiveSetBaseInternalTest : public ::testing::Test {
@@ -447,6 +605,16 @@ class PrimitiveSetBaseInternalTest : public ::testing::Test {
         : PrimitiveSetBase::EntryBase(std::move(primitive), identifier, status,
                                       key_id, output_prefix_type,
                                       key_type_url) {}
+
+    TestEntryBase(PrimitiveSetBase::UntypedPrimitive primitive,
+                  PrimitiveSetBase::UntypedPrimitive full_primitive,
+                  const std::string& identifier,
+                  google::crypto::tink::KeyStatusType status, uint32_t key_id,
+                  google::crypto::tink::OutputPrefixType output_prefix_type,
+                  absl::string_view key_type_url)
+        : PrimitiveSetBase::EntryBase(
+              std::move(primitive), std::move(full_primitive), identifier,
+              status, key_id, output_prefix_type, key_type_url) {}
   };
 
   static absl::Status SetPrimaryImpl(
@@ -511,6 +679,18 @@ TEST_F(PrimitiveSetBaseInternalTest, SetPrimaryImplEntryNotHeldFails) {
       StatusIs(absl::StatusCode::kInvalidArgument,
                "Primary cannot be set to an entry which is not held by this "
                "primitive set."));
+}
+
+TEST_F(PrimitiveSetBaseInternalTest, ProtectedConstructorWithFullPrimitive) {
+  TestEntryBase entry(MakeUntyped(std::make_unique<DummyMac>("RAW_MAC")),
+                      MakeUntyped(std::make_unique<DummyMac>("FULL_MAC")),
+                      "identifier", KeyStatusType::ENABLED, 1,
+                      OutputPrefixType::TINK, "type_url");
+  EXPECT_TRUE(entry.has_untyped_full_primitive());
+  ASSERT_THAT(entry.get_untyped_full_primitive(), NotNull());
+  Mac* full_mac = static_cast<Mac*>(entry.get_untyped_full_primitive());
+  EXPECT_THAT(full_mac->ComputeMac("data"),
+              Eq(DummyMac("FULL_MAC").ComputeMac("data")));
 }
 
 }  // namespace internal

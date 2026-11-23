@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
@@ -44,6 +45,10 @@ class PrimitiveSetBase {
   // the type-erased object when the `unique_ptr` is destroyed.
   using UntypedPrimitive = std::unique_ptr<void, void (*)(void*)>;
 
+  static /*absl_nullable - not yet supported*/ UntypedPrimitive NullUntypedPrimitive() {
+    return UntypedPrimitive(nullptr, +[](void*) {});
+  }
+
   // EntryBase holds individual instances of type-erased primitives in the set.
   class EntryBase {
    public:
@@ -51,10 +56,27 @@ class PrimitiveSetBase {
         UntypedPrimitive primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info);
 
+    static absl::StatusOr<std::unique_ptr<EntryBase>> New(
+        UntypedPrimitive primitive,
+        /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info);
+
     virtual ~EntryBase() = default;
 
     void* get_untyped_primitive() const { return primitive_.get(); }
+    bool has_untyped_full_primitive() const {
+      return full_primitive_ != nullptr;
+    }
+    // Returns the full primitive.
+    //
+    // Precondition: `has_untyped_full_primitive()` is true.
+    void* /*absl_nullable - not yet supported*/ get_untyped_full_primitive() const {
+      return full_primitive_.get();
+    }
     void* ReleaseUntypedPrimitive() { return primitive_.release(); }
+    void* /*absl_nullable - not yet supported*/ ReleaseUntypedFullPrimitive() {
+      return full_primitive_.release();
+    }
 
     // Returns an empty string if the output prefix type is WITH_ID_REQUIREMENT.
     // Otherwise, it returns the corresponding output prefix according to
@@ -80,8 +102,16 @@ class PrimitiveSetBase {
               google::crypto::tink::OutputPrefixType output_prefix_type,
               absl::string_view key_type_url);
 
+    EntryBase(UntypedPrimitive primitive,
+              /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+              const std::string& identifier,
+              google::crypto::tink::KeyStatusType status, uint32_t key_id,
+              google::crypto::tink::OutputPrefixType output_prefix_type,
+              absl::string_view key_type_url);
+
    private:
     UntypedPrimitive primitive_;
+    /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive_;
     std::string identifier_;
     uint32_t key_id_;
     uint8_t status_;
@@ -106,6 +136,17 @@ class PrimitiveSetBase {
         UntypedPrimitive primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &&;
 
+    // Adds 'primitive' and optional 'full_primitive' to this set for the
+    // specified 'key'.
+    Builder& AddPrimitive(
+        UntypedPrimitive primitive,
+        /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &;
+    Builder&& AddPrimitive(
+        UntypedPrimitive primitive,
+        /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &&;
+
     // Adds 'primitive' to this set for the specified 'key' and marks it
     // primary.
     Builder& AddPrimaryPrimitive(
@@ -113,6 +154,17 @@ class PrimitiveSetBase {
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &;
     Builder&& AddPrimaryPrimitive(
         UntypedPrimitive primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &&;
+
+    // Adds 'primitive' and optional 'full_primitive' to this set for the
+    // specified 'key' and marks it primary.
+    Builder& AddPrimaryPrimitive(
+        UntypedPrimitive primitive,
+        /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
+        const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &;
+    Builder&& AddPrimaryPrimitive(
+        UntypedPrimitive primitive,
+        /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) &&;
 
     // Add the given annotations. Existing annotations will not be overwritten.
@@ -181,6 +233,7 @@ class PrimitiveSetBase {
 
   static absl::StatusOr<EntryBase*> AddPrimitiveImpl(
       UntypedPrimitive primitive,
+      /*absl_nullable - not yet supported*/ UntypedPrimitive full_primitive,
       const google::crypto::tink::KeysetInfo::KeyInfo& key_info,
       CiphertextPrefixToPrimitivesMap& primitives,
       std::vector<EntryBase*>& primitives_in_keyset_order);

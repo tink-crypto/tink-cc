@@ -372,7 +372,6 @@ tink_cc_test(
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::secret_data
-    tink::subtle::random
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

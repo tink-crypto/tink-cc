@@ -405,7 +405,6 @@ cc_test(
         ":ssl_unique_ptr",
         "//tink:big_integer",
         "//tink:secret_data",
-        "//tink/subtle:random",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",

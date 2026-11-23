@@ -1845,6 +1845,7 @@ cc_library(
     hdrs = ["composite_ml_dsa_sign_boringssl.h"],
     deps = [
         ":composite_ml_dsa_util_boringssl",
+        ":ecdsa_sign_boringssl",
         ":ml_dsa_sign_boringssl",
         "//tink:public_key_sign",
         "//tink/internal:fips_utils",
@@ -1854,7 +1855,6 @@ cc_library(
         "//tink/signature:ed25519_private_key",
         "//tink/signature:rsa_ssa_pkcs1_private_key",
         "//tink/signature:rsa_ssa_pss_private_key",
-        "//tink/subtle:ecdsa_sign_boringssl",
         "//tink/subtle:ed25519_sign_boringssl",
         "//tink/subtle:rsa_ssa_pkcs1_sign_boringssl",
         "//tink/subtle:rsa_ssa_pss_sign_boringssl",
@@ -1888,6 +1888,7 @@ cc_library(
     hdrs = ["composite_ml_dsa_verify_boringssl.h"],
     deps = [
         ":composite_ml_dsa_util_boringssl",
+        ":ecdsa_verify_boringssl",
         ":ml_dsa_verify_boringssl",
         "//tink:public_key_verify",
         "//tink/internal:fips_utils",
@@ -1897,7 +1898,6 @@ cc_library(
         "//tink/signature:ed25519_public_key",
         "//tink/signature:rsa_ssa_pkcs1_public_key",
         "//tink/signature:rsa_ssa_pss_public_key",
-        "//tink/subtle:ecdsa_verify_boringssl",
         "//tink/subtle:ed25519_verify_boringssl",
         "//tink/subtle:rsa_ssa_pkcs1_verify_boringssl",
         "//tink/subtle:rsa_ssa_pss_verify_boringssl",

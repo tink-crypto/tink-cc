@@ -38,7 +38,7 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
-#include "tink/subtle/ecdsa_sign_boringssl.h"
+#include "tink/signature/internal/ecdsa_sign_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
@@ -180,7 +180,7 @@ EcdsaSignKeyManager::PublicKeySignFactory::Create(
     const EcdsaPrivateKeyProto& ecdsa_private_key) const {
   ABSL_ASSIGN_OR_RETURN(EcdsaPrivateKey private_key,
                         ParseEcdsaPrivateKeyWithNoPrefix(ecdsa_private_key));
-  return subtle::EcdsaSignBoringSsl::New(private_key);
+  return internal::NewEcdsaSignBoringSsl(private_key);
 }
 
 absl::Status EcdsaSignKeyManager::ValidateKey(

@@ -31,10 +31,10 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/composite_ml_dsa_util_boringssl.h"
+#include "tink/signature/internal/ecdsa_sign_boringssl.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
-#include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/subtle/ed25519_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
@@ -67,7 +67,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> GetClassicalPublicKeySign(
         return absl::InvalidArgumentError(
             "Classical private key is not an ECDSA private key.");
       }
-      return subtle::EcdsaSignBoringSsl::New(*classical_private_key);
+      return internal::NewEcdsaSignBoringSsl(*classical_private_key);
     }
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss: {

@@ -32,7 +32,7 @@
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
-#include "tink/subtle/ecdsa_verify_boringssl.h"
+#include "tink/signature/internal/ecdsa_verify_boringssl.h"
 #include "tink/util/errors.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
@@ -87,7 +87,7 @@ EcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const EcdsaPublicKeyProto& ecdsa_public_key) const {
   ABSL_ASSIGN_OR_RETURN(EcdsaPublicKey public_key,
                         ParseEcdsaPublicKeyWithNoPrefix(ecdsa_public_key));
-  return subtle::EcdsaVerifyBoringSsl::New(public_key);
+  return internal::NewEcdsaVerifyBoringSsl(public_key);
 }
 
 absl::Status EcdsaVerifyKeyManager::ValidateParams(

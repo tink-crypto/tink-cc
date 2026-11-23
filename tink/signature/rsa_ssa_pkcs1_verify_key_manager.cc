@@ -17,7 +17,6 @@
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 
 #include <memory>
-#include <utility>
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -27,7 +26,7 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_verify.h"
-#include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/errors.h"
 #include "tink/util/protobuf_helper.h"
@@ -54,10 +53,7 @@ RsaSsaPkcs1VerifyKeyManager::PublicKeyVerifyFactory::Create(
   RsaSsaPkcs1Params rsa_ssa_pkcs1_params = rsa_ssa_pkcs1_public_key.params();
   params.hash_type = Enums::ProtoToSubtle(rsa_ssa_pkcs1_params.hash_type());
 
-  auto rsa_ssa_pkcs1_result =
-      subtle::RsaSsaPkcs1VerifyBoringSsl::New(rsa_pub_key, params);
-  if (!rsa_ssa_pkcs1_result.ok()) return rsa_ssa_pkcs1_result.status();
-  return {std::move(rsa_ssa_pkcs1_result.value())};
+  return internal::NewRsaSsaPkcs1VerifyBoringSsl(rsa_pub_key, params);
 }
 
 absl::Status RsaSsaPkcs1VerifyKeyManager::ValidateParams(

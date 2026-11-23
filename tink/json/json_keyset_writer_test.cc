@@ -27,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/binary_keyset_reader.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -34,10 +35,7 @@
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_keyset_handle.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -111,6 +109,63 @@ TEST(JsonKeysetWriterTest, WriteAndReadKeyset) {
   ASSERT_THAT(read_result, IsOk());
   EXPECT_THAT((*read_result)->SerializeAsString(),
               Eq(keyset.SerializeAsString()));
+}
+
+TEST(JsonKeysetWriterTest, WriteKeysetProducesExpectedJson) {
+  Keyset keyset;
+  keyset.set_primary_key_id(42);
+  Keyset::Key* key = keyset.add_key();
+  key->mutable_key_data()->set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesGcmKey");
+  key->mutable_key_data()->set_value("some key value");
+  key->mutable_key_data()->set_key_material_type(KeyData::SYMMETRIC);
+  key->set_status(KeyStatusType::ENABLED);
+  key->set_key_id(42);
+  key->set_output_prefix_type(OutputPrefixType::TINK);
+
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  ASSERT_THAT((*writer)->Write(keyset), IsOk());
+  EXPECT_THAT(
+      buffer.str(),
+      Eq(R"({"primaryKeyId":42,"key":[{"keyData":{"typeUrl":)"
+         R"("type.googleapis.com/google.crypto.tink.AesGcmKey",)"
+         R"("value":"c29tZSBrZXkgdmFsdWU=","keyMaterialType":"SYMMETRIC"},)"
+         R"("status":"ENABLED","keyId":42,"outputPrefixType":"TINK"}]})"));
+}
+
+TEST(JsonKeysetWriterTest, WriteAndReadEmptyKeyset) {
+  Keyset keyset;
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  ASSERT_THAT((*writer)->Write(keyset), IsOk());
+  EXPECT_THAT(buffer.str(), Eq("{}"));
+
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(buffer.str());
+  ASSERT_THAT(reader, IsOk());
+  absl::StatusOr<std::unique_ptr<Keyset>> read_result = (*reader)->Read();
+  ASSERT_THAT(read_result, IsOk());
+  EXPECT_THAT((*read_result)->SerializeAsString(), Eq(""));
+}
+
+TEST(JsonKeysetWriterTest, WriteKeysetWithInvalidUtf8TypeUrlFails) {
+  Keyset keyset;
+  Keyset::Key* key = keyset.add_key();
+  key->mutable_key_data()->set_type_url("\xff\xfe");
+
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  EXPECT_THAT((*writer)->Write(keyset), Not(IsOk()));
 }
 
 TEST(JsonKeysetWriterTest, WriteAndReadEncryptedKeyset) {

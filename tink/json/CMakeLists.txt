@@ -26,9 +26,14 @@ tink_cc_library(
     json_keyset_writer.h
   DEPS
     absl::status
+    absl::status_macros
+    absl::statusor
     absl::string_view
     protobuf::libprotobuf
     tink::core::keyset_writer
+    tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
+    tink::internal::secret_proto_util
     tink::json::internal::tink_type_resolver
     tink::util::status
     tink::util::statusor
@@ -89,16 +94,14 @@ tink_cc_test(
     GTest::gmock
     absl::status
     absl::status_matchers
+    absl::statusor
     absl::strings
     tink::core::binary_keyset_reader
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
     tink::core::keyset_reader
     tink::core::keyset_writer
-    tink::util::status
-    tink::util::statusor
     tink::util::test_keyset_handle
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_eax_cc_proto
     tink::proto::aes_gcm_cc_proto

@@ -22,11 +22,15 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/json/json.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/secret_buffer.h"
+#include "tink/internal/secret_proto_util.h"
 #include "tink/json/internal/tink_type_resolver.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -35,6 +39,7 @@ namespace tink {
 
 using google::crypto::tink::EncryptedKeyset;
 using google::crypto::tink::Keyset;
+using ::google::protobuf::json::BinaryToJsonStream;
 using ::google::protobuf::json::BinaryToJsonString;
 using ::google::protobuf::json::PrintOptions;
 
@@ -45,14 +50,17 @@ const char kEncryptedKeysetTypeUrl[] =
     "type.googleapis.com/google.crypto.tink.EncryptedKeyset";
 
 absl::StatusOr<std::string> ToJsonString(const Keyset& keyset) {
+  ABSL_ASSIGN_OR_RETURN(internal::SecretBuffer serialized_keyset,
+                        internal::SerializeProtoAsSecretBuffer(keyset));
   PrintOptions options;
   std::string output;
-  absl::Status status =
-      BinaryToJsonString(internal::GetTinkTypeResolver(), kKeysetTypeUrl,
-                         keyset.SerializeAsString(), &output, options);
-  if (!status.ok()) {
-    return status;
-  }
+  ABSL_RETURN_IF_ERROR(internal::CallWithCoreDumpProtection([&]() {
+    google::protobuf::io::ArrayInputStream input_stream(
+        serialized_keyset.data(), static_cast<int>(serialized_keyset.size()));
+    google::protobuf::io::StringOutputStream output_stream(&output);
+    return BinaryToJsonStream(internal::GetTinkTypeResolver(), kKeysetTypeUrl,
+                              &input_stream, &output_stream, options);
+  }));
   return output;
 }
 

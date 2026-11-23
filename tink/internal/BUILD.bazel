@@ -1371,15 +1371,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "safe_stringops",
-    hdrs = ["safe_stringops.h"],
-    deps = [
-        ":call_with_core_dump_protection",
-        "@boringssl//:crypto",
-    ],
-)
-
 cc_test(
     name = "safe_stringops_test",
     srcs = ["safe_stringops_test.cc"],
@@ -2289,5 +2280,15 @@ cc_test(
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "safe_stringops",
+    srcs = ["safe_stringops.cc"],
+    hdrs = ["safe_stringops.h"],
+    deps = [
+        ":call_with_core_dump_protection",
+        "@boringssl//:crypto",
     ],
 )

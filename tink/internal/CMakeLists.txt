@@ -1365,6 +1365,7 @@ tink_cc_test(
 tink_cc_library(
   NAME safe_stringops
   SRCS
+    safe_stringops.cc
     safe_stringops.h
   DEPS
     tink::internal::call_with_core_dump_protection

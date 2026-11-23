@@ -17,10 +17,10 @@
 #ifndef TINK_INTERNAL_SAFE_STRINGOPS_H_
 #define TINK_INTERNAL_SAFE_STRINGOPS_H_
 
+#include <cstddef>
 #include <cstring>
 
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "openssl/crypto.h"
 
 namespace crypto {
 namespace tink {
@@ -43,10 +43,7 @@ inline void* SafeMemMove(void* dst, const void* src, size_t n) {
 // Not only protects from leaking any info about the contents in the core dump,
 // but also is safe for crypto material (const time).
 
-inline bool SafeCryptoMemEquals(const void* s1, const void* s2, size_t n) {
-  return CallWithCoreDumpProtection(
-      [s1, s2, n]() { return CRYPTO_memcmp(s1, s2, n) == 0; });
-}
+bool SafeCryptoMemEquals(const void* s1, const void* s2, size_t n);
 
 }  // namespace internal
 }  // namespace tink

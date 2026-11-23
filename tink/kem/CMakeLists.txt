@@ -1,3 +1,7 @@
+tink_module(kem)
+
+add_subdirectory(internal)
+
 tink_cc_library(
   NAME kem_decapsulate
   SRCS

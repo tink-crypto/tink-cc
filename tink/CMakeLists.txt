@@ -13,6 +13,8 @@ add_subdirectory(streamingaead)
 add_subdirectory(subtle)
 add_subdirectory(util)
 add_subdirectory(pem)
+add_subdirectory(experimental)
+add_subdirectory(kem)
 
 tink_module(core)
 

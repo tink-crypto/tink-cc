@@ -1,3 +1,5 @@
+tink_module(kem::internal)
+
 tink_cc_library(
   NAME raw_kem_decapsulate
   SRCS

@@ -1,3 +1,5 @@
+tink_module(experimental::pqcrypto::kem::internal)
+
 tink_cc_library(
   NAME ml_kem_raw_decapsulate_boringssl
   SRCS

@@ -1,3 +1,5 @@
+tink_module(experimental::kem)
+
 tink_cc_library(
   NAME kem_parameters
   SRCS

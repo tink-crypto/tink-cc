@@ -1,3 +1,7 @@
+tink_module(experimental::pqcrypto::kem)
+
+add_subdirectory(internal)
+
 tink_cc_library(
   NAME ml_kem_parameters
   SRCS

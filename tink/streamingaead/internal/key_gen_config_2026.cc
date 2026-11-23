@@ -16,18 +16,33 @@
 
 #include "tink/streamingaead/internal/key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
+#include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
-#include "tink/util/status.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 absl::Status AddStreamingAeadKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(
+          *serialization_registry));
+
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesCtrHmacStreamingKeyManager>(), config);
   if (!status.ok()) {

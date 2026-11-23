@@ -138,9 +138,13 @@ tink_cc_library(
     config_2026.cc
     config_2026.h
   DEPS
-    absl::memory
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
+    tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
+    absl::status
+    absl::status_macros
     tink::core::configuration
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::streaming_aead_wrapper
@@ -159,17 +163,28 @@ tink_cc_test(
     absl::status_matchers
     tink::core::configuration
     tink::core::input_stream
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::keyset_handle
     tink::core::output_stream
+    tink::core::parameters
     tink::core::streaming_aead
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
+    tink::streamingaead::streaming_aead_key
     tink::streamingaead::streaming_aead_key_templates
+    tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
+    tink::streamingaead::internal::testing::aes_gcm_hkdf_streaming_test_vectors
+    tink::streamingaead::internal::testing::streamingaead_test_vector
     tink::subtle::test_util
     tink::util::istream_input_stream
     tink::util::ostream_output_stream
@@ -184,9 +199,13 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
-    absl::memory
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
+    tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
+    absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::util::status

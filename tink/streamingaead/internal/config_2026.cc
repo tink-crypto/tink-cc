@@ -16,19 +16,33 @@
 
 #include "tink/streamingaead/internal/config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
+#include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 #include "tink/streamingaead/streaming_aead_wrapper.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 absl::Status AddStreamingAead2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(SerializationRegistry * serialization_registry,
+                        ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesCtrHmacStreamingProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(
+          *serialization_registry));
+
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<StreamingAeadWrapper>(), config);
   if (!status.ok()) {

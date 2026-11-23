@@ -27,17 +27,28 @@
 #include "absl/status/status_matchers.h"
 #include "tink/configuration.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
 #include "tink/output_stream.h"
+#include "tink/parameters.h"
 #include "tink/streaming_aead.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
 #include "tink/streamingaead/internal/key_gen_config_2026.h"
+#include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
+#include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
+#include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
+#include "tink/streamingaead/streaming_aead_key.h"
 #include "tink/streamingaead/streaming_aead_key_templates.h"
 #include "tink/subtle/test_util.h"
 #include "tink/util/istream_input_stream.h"
@@ -125,6 +136,60 @@ TEST(StreamingAeadV0Test, GetPrimitive) {
     std::string got;
     ASSERT_THAT(ReadFromStream((*decrypt).get(), &got), IsOk());
     EXPECT_EQ(got, plaintext);
+  }
+}
+
+using StreamingAead2026SerializationTest =
+    testing::TestWithParam<StreamingAeadTestVector>;
+
+INSTANTIATE_TEST_SUITE_P(
+    StreamingAead2026SerializationTestSuite, StreamingAead2026SerializationTest,
+    testing::Values(
+        GetAesCtrHmacStreamingTestVector(/*key_size_in_bytes=*/32),
+        GetAesGcmHkdfStreamingTestVector(/*key_size_in_bytes=*/32)));
+
+TEST_P(StreamingAead2026SerializationTest, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddStreamingAead2026(config), IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddStreamingAeadKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<SerializationRegistry*> key_gen_registry =
+      KeyGenConfigurationImpl::GetSerializationRegistry(key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  const Key& key = *GetParam().streamingaead_key;
+  struct NamedRegistry {
+    const char* name;
+    const SerializationRegistry* registry;
+  };
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const SerializationRegistry* serialization_registry = entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<ProtoParametersSerialization>(
+                key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+        serialization_registry->ParseParameters(**serialized_params);
+    ASSERT_THAT(parsed_params, IsOk());
+    EXPECT_EQ(**parsed_params, key.GetParameters());
+
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+        serialization_registry->SerializeKey<ProtoKeySerialization>(
+            key, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(serialized_key, IsOk());
+    absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+        serialization_registry->ParseKey(**serialized_key,
+                                         InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(parsed_key, IsOk());
+    EXPECT_EQ(**parsed_key, key);
   }
 }
 

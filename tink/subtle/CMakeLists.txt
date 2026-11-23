@@ -387,29 +387,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME aes_gcm_hkdf_streaming
-  SRCS
-    aes_gcm_hkdf_streaming.cc
-    aes_gcm_hkdf_streaming.h
-  DEPS
-    tink::subtle::aes_gcm_hkdf_stream_segment_decrypter
-    tink::subtle::aes_gcm_hkdf_stream_segment_encrypter
-    tink::subtle::common_enums
-    tink::subtle::hkdf
-    tink::subtle::nonce_based_streaming_aead
-    tink::subtle::random
-    tink::subtle::stream_segment_decrypter
-    tink::subtle::stream_segment_encrypter
-    absl::memory
-    absl::status
-    absl::statusor
-    absl::string_view
-    tink::internal::fips_utils
-    tink::util::secret_data
-    tink::util::statusor
-)
-
-tink_cc_library(
   NAME aes_eax_boringssl
   SRCS
     aes_eax_boringssl.cc
@@ -932,28 +909,6 @@ tink_cc_test(
     absl::strings
     tink::util::status
     tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_test(
-  NAME aes_gcm_hkdf_streaming_test
-  SRCS
-    aes_gcm_hkdf_streaming_test.cc
-  DEPS
-    tink::subtle::aes_gcm_hkdf_streaming
-    tink::subtle::common_enums
-    tink::subtle::random
-    tink::subtle::streaming_aead_test_util
-    GTest::gmock
-    absl::memory
-    absl::status
-    absl::status_matchers
-    absl::statusor
-    absl::strings
-    tink::core::random_access_stream
-    tink::config::tink_fips
-    tink::internal::test_random_access_stream
     tink::util::test_matchers
     tink::util::test_util
 )

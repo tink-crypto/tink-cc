@@ -455,7 +455,6 @@
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_decrypter.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
-#include "tink/subtle/aes_gcm_hkdf_streaming.h"
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
 #include "tink/subtle/aes_siv_boringssl.h"
 #include "tink/subtle/common_enums.h"

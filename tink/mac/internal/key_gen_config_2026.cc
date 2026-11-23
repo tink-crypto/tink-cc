@@ -18,24 +18,34 @@
 
 #include <memory>
 
-#include "absl/status/status_macros.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/mac/aes_cmac_key_manager.h"
 #include "tink/mac/aes_cmac_proto_serialization.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/hmac_proto_serialization.h"
+#include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
+#include "tink/mac/internal/hmac_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 absl::Status AddMacKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
   ABSL_RETURN_IF_ERROR(RegisterAesCmacProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesCmacProtoSerializationWithRegistry(*serialization_registry));
   ABSL_RETURN_IF_ERROR(KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesCmacKeyManager>(), config));
   ABSL_RETURN_IF_ERROR(RegisterHmacProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      RegisterHmacProtoSerializationWithRegistry(*serialization_registry));
   return KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<HmacKeyManager>(), config);
 }

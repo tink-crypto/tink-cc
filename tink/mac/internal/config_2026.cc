@@ -16,13 +16,18 @@
 
 #include "tink/mac/internal/config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/mac/aes_cmac_key_manager.h"
 #include "tink/mac/hmac_key_manager.h"
+#include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
 #include "tink/mac/internal/chunked_mac_wrapper.h"
+#include "tink/mac/internal/hmac_proto_serialization_impl.h"
 #include "tink/mac/mac_wrapper.h"
 
 namespace crypto {
@@ -30,6 +35,13 @@ namespace tink {
 namespace internal {
 
 absl::Status AddMac2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(SerializationRegistry * serialization_registry,
+                        ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterAesCmacProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterHmacProtoSerializationWithRegistry(*serialization_registry));
+
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<MacWrapper>(), config);
   if (!status.ok()) {

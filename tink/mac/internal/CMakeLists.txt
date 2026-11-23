@@ -404,11 +404,14 @@ tink_cc_library(
     config_2026.cc
     config_2026.h
   DEPS
+    tink::mac::internal::aes_cmac_proto_serialization_impl
     tink::mac::internal::chunked_mac_wrapper
-    absl::memory
+    tink::mac::internal::hmac_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::configuration
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::mac::aes_cmac_key_manager
     tink::mac::hmac_key_manager
     tink::mac::mac_wrapper
@@ -419,20 +422,29 @@ tink_cc_test(
   SRCS
     config_2026_test.cc
   DEPS
+    tink::mac::internal::aes_cmac_test_vectors
     tink::mac::internal::config_2026
+    tink::mac::internal::hmac_test_vectors
     tink::mac::internal::key_gen_config_2026
     GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::chunked_mac
     tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::keyset_handle
     tink::core::mac
+    tink::core::parameters
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::mac::aes_cmac_key_manager
     tink::mac::aes_cmac_parameters
     tink::mac::hmac_key_manager
@@ -447,10 +459,13 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
+    tink::mac::internal::aes_cmac_proto_serialization_impl
+    tink::mac::internal::hmac_proto_serialization_impl
     absl::status
     absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
     tink::mac::aes_cmac_key_manager
     tink::mac::aes_cmac_proto_serialization
     tink::mac::hmac_key_manager

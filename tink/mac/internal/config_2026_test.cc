@@ -25,10 +25,16 @@
 #include "absl/status/statusor.h"
 #include "tink/chunked_mac.h"
 #include "tink/configuration.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac.h"
@@ -36,8 +42,11 @@
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/aes_cmac_test_vectors.h"
+#include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/mac/internal/key_gen_config_2026.h"
 #include "tink/mac/mac_key_templates.h"
+#include "tink/parameters.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -187,6 +196,71 @@ TEST(Mac2026Test, GenerateNewFromHmacParameters) {
   absl::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT((*mac)->VerifyMac(*tag, data), IsOk());
+}
+
+struct NamedKey {
+  std::string test_name;
+  const Key* key;
+};
+
+using Mac2026SerializationTest = TestWithParam<NamedKey>;
+
+INSTANTIATE_TEST_SUITE_P(
+    Mac2026SerializationTestSuite, Mac2026SerializationTest,
+    Values(NamedKey{"AesCmac",
+                    &GetAesCmacTestVector(/*key_size_in_bytes=*/32).key},
+           NamedKey{"Hmac",
+                    &GetHmacTestVector(/*key_size_in_bytes=*/40,
+                                       HmacParameters::HashType::kSha256,
+                                       HmacParameters::Variant::kTink)
+                         .key}),
+    [](const testing::TestParamInfo<NamedKey>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(Mac2026SerializationTest, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddMac2026(config), IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddMacKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<SerializationRegistry*> key_gen_registry =
+      KeyGenConfigurationImpl::GetSerializationRegistry(key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  struct NamedRegistry {
+    std::string name;
+    const SerializationRegistry* registry;
+  };
+  const Key& key = *GetParam().key;
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const SerializationRegistry* serialization_registry = entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<ProtoParametersSerialization>(
+                key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+        serialization_registry->ParseParameters(**serialized_params);
+    ASSERT_THAT(parsed_params, IsOk());
+    EXPECT_EQ(**parsed_params, key.GetParameters());
+
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+        serialization_registry->SerializeKey<ProtoKeySerialization>(
+            key, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(serialized_key, IsOk());
+    absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+        serialization_registry->ParseKey(**serialized_key,
+                                         InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(parsed_key, IsOk());
+    EXPECT_EQ(**parsed_key, key);
+  }
 }
 
 }  // namespace

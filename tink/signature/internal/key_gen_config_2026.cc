@@ -16,9 +16,12 @@
 
 #include "tink/signature/internal/key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_proto_serialization.h"
@@ -29,10 +32,17 @@
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/composite_ml_dsa_key_creator.h"
+#include "tink/signature/internal/composite_ml_dsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
@@ -47,6 +57,24 @@ namespace tink {
 namespace internal {
 
 absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterEcdsaProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterRsaSsaPssProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterEd25519ProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterMlDsaProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterSlhDsaProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(RegisterCompositeMlDsaProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = RegisterEcdsaProtoSerialization();
   if (!status.ok()) {
     return status;

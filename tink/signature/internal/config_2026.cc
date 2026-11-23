@@ -19,9 +19,11 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/chunked_prehash.h"
@@ -39,19 +41,26 @@
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/chunked_prehash_wrapper.h"
+#include "tink/signature/internal/composite_ml_dsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/signature/internal/ecdsa_sign_boringssl.h"
 #include "tink/signature/internal/ecdsa_verify_boringssl.h"
+#include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 #include "tink/signature/internal/ml_dsa_chunked_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization_impl.h"
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
 #include "tink/signature/internal/ml_dsa_sign_prehash_boringssl.h"
 #include "tink/signature/internal/ml_dsa_verify_boringssl.h"
 #include "tink/signature/internal/prehash_wrapper.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/signature/internal/rsa_ssa_pss_sign_boringssl.h"
 #include "tink/signature/internal/rsa_ssa_pss_verify_boringssl.h"
 #include "tink/signature/internal/sign_prehash_wrapper.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 #include "tink/signature/ml_dsa_private_key.h"
@@ -118,6 +127,23 @@ NewCompositeMlDsaVerifyBoringSsl(const CompositeMlDsaPublicKey& key) {
 }  // namespace
 
 absl::Status AddSignature2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(SerializationRegistry * serialization_registry,
+                        ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterEcdsaProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterEd25519ProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterRsaSsaPssProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterMlDsaProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterSlhDsaProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(RegisterCompositeMlDsaProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {

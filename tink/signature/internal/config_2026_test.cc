@@ -16,25 +16,37 @@
 
 #include "tink/signature/internal/config_2026.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/parameters.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/chunked_prehash.h"
+#include "tink/signature/composite_ml_dsa_parameters.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_2026.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
@@ -49,9 +61,12 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/prehash.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/sign_prehash.h"
+#include "tink/signature/signature_private_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "proto/tink.pb.h"
 
@@ -64,6 +79,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::Pointee;
 
 TEST(SignatureV0Test, PrimitiveWrappers) {
   Configuration config;
@@ -484,6 +500,101 @@ INSTANTIATE_TEST_SUITE_P(MlDsaTest, RandomizedSignaturesTest,
 INSTANTIATE_TEST_SUITE_P(
     CompositeMlDsaTest, RandomizedSignaturesTest,
     testing::ValuesIn(internal::CreateCompositeMlDsaTestVectors()));
+
+absl::StatusOr<std::unique_ptr<Key>> RoundTripKey(
+    const SerializationRegistry& registry, const Key& key) {
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<Serialization> serialized_key,
+                        registry.SerializeKey<ProtoKeySerialization>(
+                            key, InsecureSecretKeyAccess::Get()));
+  return registry.ParseKey(*serialized_key, InsecureSecretKeyAccess::Get());
+}
+
+struct NamedSignatureTestVector {
+  std::string test_name;
+  internal::SignatureTestVector test_vector;
+};
+
+using SignatureSerializationTest =
+    testing::TestWithParam<NamedSignatureTestVector>;
+
+TEST_P(SignatureSerializationTest, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddSignature2026(config), IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<SerializationRegistry*> key_gen_registry =
+      KeyGenConfigurationImpl::GetSerializationRegistry(key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  struct NamedRegistry {
+    std::string name;
+    const SerializationRegistry* registry;
+  };
+  const SignaturePrivateKey& private_key =
+      *GetParam().test_vector.signature_private_key;
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const SerializationRegistry* serialization_registry = entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<ProtoParametersSerialization>(
+                private_key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    EXPECT_THAT(
+        serialization_registry->ParseParameters(**serialized_params),
+        IsOkAndHolds(Pointee(Eq(std::cref(private_key.GetParameters())))));
+
+    EXPECT_THAT(RoundTripKey(*serialization_registry, private_key),
+                IsOkAndHolds(Pointee(Eq(std::cref(private_key)))));
+    EXPECT_THAT(
+        RoundTripKey(*serialization_registry, private_key.GetPublicKey()),
+        IsOkAndHolds(Pointee(Eq(std::cref(private_key.GetPublicKey())))));
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SignatureSerializationTestSuite, SignatureSerializationTest,
+    testing::Values(
+        NamedSignatureTestVector{"RsaSsaPkcs1",
+                                 internal::GetRsaSsaPkcs1TestVector(
+                                     /*modulus_size_in_bits=*/2048,
+                                     RsaSsaPkcs1Parameters::HashType::kSha512,
+                                     RsaSsaPkcs1Parameters::Variant::kTink)},
+        NamedSignatureTestVector{
+            "Ed25519",
+            internal::GetEd25519TestVector(Ed25519Parameters::Variant::kTink)},
+        NamedSignatureTestVector{"RsaSsaPss",
+                                 internal::GetRsaSsaPssTestVector(
+                                     /*modulus_size_in_bits=*/2048,
+                                     RsaSsaPssParameters::HashType::kSha512,
+                                     RsaSsaPssParameters::Variant::kTink)},
+        NamedSignatureTestVector{
+            "Ecdsa", internal::GetEcdsaTestVector(
+                         EcdsaParameters::CurveType::kNistP256,
+                         EcdsaParameters::HashType::kSha256,
+                         EcdsaParameters::SignatureEncoding::kIeeeP1363,
+                         EcdsaParameters::Variant::kTink)},
+        NamedSignatureTestVector{
+            "SlhDsa", internal::GetSlhDsaTestVector(
+                          SlhDsaParameters::HashType::kSha2,
+                          SlhDsaParameters::SignatureType::kSmallSignature,
+                          SlhDsaParameters::Variant::kTink)},
+        NamedSignatureTestVector{
+            "MlDsa",
+            internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                         MlDsaParameters::Variant::kTink)},
+        NamedSignatureTestVector{
+            "CompositeMlDsa", internal::CreateMlDsa65Ed2551TestVector(
+                                  CompositeMlDsaParameters::Variant::kTink)}),
+    [](const testing::TestParamInfo<NamedSignatureTestVector>& info) {
+      return info.param.test_name;
+    });
 
 }  // namespace
 }  // namespace internal

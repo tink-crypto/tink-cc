@@ -1367,27 +1367,36 @@ tink_cc_library(
     config_2026.h
   DEPS
     tink::signature::internal::chunked_prehash_wrapper
+    tink::signature::internal::composite_ml_dsa_proto_serialization_impl
+    tink::signature::internal::ecdsa_proto_serialization_impl
     tink::signature::internal::ecdsa_sign_boringssl
     tink::signature::internal::ecdsa_verify_boringssl
+    tink::signature::internal::ed25519_proto_serialization_impl
     tink::signature::internal::ml_dsa_chunked_prehash_boringssl
     tink::signature::internal::ml_dsa_prehash_boringssl
     tink::signature::internal::ml_dsa_proto_serialization
+    tink::signature::internal::ml_dsa_proto_serialization_impl
     tink::signature::internal::ml_dsa_sign_boringssl
     tink::signature::internal::ml_dsa_sign_prehash_boringssl
     tink::signature::internal::ml_dsa_verify_boringssl
     tink::signature::internal::prehash_wrapper
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
     tink::signature::internal::rsa_ssa_pss_sign_boringssl
     tink::signature::internal::rsa_ssa_pss_verify_boringssl
     tink::signature::internal::sign_prehash_wrapper
     tink::signature::internal::slh_dsa_proto_serialization
+    tink::signature::internal::slh_dsa_proto_serialization_impl
     tink::signature::internal::slh_dsa_sign_boringssl
     tink::signature::internal::slh_dsa_verify_boringssl
     absl::status
+    absl::status_macros
     absl::statusor
     tink::core::configuration
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::signature::chunked_prehash
     tink::signature::composite_ml_dsa_private_key
     tink::signature::composite_ml_dsa_proto_serialization
@@ -1437,27 +1446,41 @@ tink_cc_test(
     tink::signature::internal::key_gen_config_2026
     tink::signature::internal::ml_dsa_key_creator
     GTest::gmock
+    absl::status_macros
     absl::status_matchers
     absl::statusor
     tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::parameters
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::signature::chunked_prehash
+    tink::signature::composite_ml_dsa_parameters
+    tink::signature::ecdsa_parameters
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_parameters
     tink::signature::ed25519_verify_key_manager
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::prehash
+    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::sign_prehash
+    tink::signature::signature_private_key
     tink::signature::slh_dsa_parameters
     tink::signature::internal::testing::composite_ml_dsa_test_vectors
     tink::signature::internal::testing::ecdsa_test_vectors
@@ -1477,14 +1500,22 @@ tink_cc_library(
     key_gen_config_2026.h
   DEPS
     tink::signature::internal::composite_ml_dsa_key_creator
+    tink::signature::internal::composite_ml_dsa_proto_serialization_impl
+    tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::ed25519_proto_serialization_impl
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization
+    tink::signature::internal::ml_dsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_proto_serialization
-    absl::memory
+    tink::signature::internal::slh_dsa_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_proto_serialization
     tink::signature::ecdsa_proto_serialization

@@ -24,9 +24,12 @@
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
 #include "tink/hybrid/ecies_proto_serialization.h"
 #include "tink/hybrid/hpke_proto_serialization.h"
+#include "tink/hybrid/internal/ecies_proto_serialization_impl.h"
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
+#include "tink/hybrid/internal/hpke_proto_serialization_impl.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
@@ -34,11 +37,18 @@ namespace tink {
 namespace internal {
 
 absl::Status AddHybridKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
   ABSL_RETURN_IF_ERROR(RegisterHpkeProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      RegisterHpkeProtoSerializationWithRegistry(*serialization_registry));
   ABSL_RETURN_IF_ERROR(KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       std::make_unique<HpkePrivateKeyManager>(),
       std::make_unique<HpkePublicKeyManager>(), config));
   ABSL_RETURN_IF_ERROR(RegisterEciesProtoSerialization());
+  ABSL_RETURN_IF_ERROR(
+      RegisterEciesProtoSerializationWithRegistry(*serialization_registry));
   return KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       std::make_unique<EciesAeadHkdfPrivateKeyManager>(),
       std::make_unique<EciesAeadHkdfPublicKeyManager>(), config);

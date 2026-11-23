@@ -626,12 +626,15 @@ tink_cc_library(
     config_2026.cc
     config_2026.h
   DEPS
+    tink::hybrid::internal::ecies_proto_serialization_impl
     tink::hybrid::internal::hpke_decrypt
     tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_private_key_manager
+    tink::hybrid::internal::hpke_proto_serialization_impl
     tink::hybrid::internal::hpke_public_key_manager
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     tink::core::configuration
     tink::core::hybrid_decrypt
@@ -644,6 +647,7 @@ tink_cc_library(
     tink::hybrid::hybrid_decrypt_wrapper
     tink::hybrid::hybrid_encrypt_wrapper
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_test(
@@ -655,24 +659,35 @@ tink_cc_test(
     tink::hybrid::internal::hpke_private_key_manager
     tink::hybrid::internal::key_gen_config_2026
     GTest::gmock
+    absl::status_macros
     absl::status_matchers
     absl::statusor
     tink::core::configuration
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::parameters
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_parameters
     tink::hybrid::hpke_parameters
     tink::hybrid::hybrid_key_templates
+    tink::hybrid::hybrid_private_key
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::subtle::common_enums
     tink::proto::tink_cc_proto
 )
 
@@ -682,7 +697,9 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
+    tink::hybrid::internal::ecies_proto_serialization_impl
     tink::hybrid::internal::hpke_private_key_manager
+    tink::hybrid::internal::hpke_proto_serialization_impl
     tink::hybrid::internal::hpke_public_key_manager
     absl::status
     absl::status_macros
@@ -692,6 +709,7 @@ tink_cc_library(
     tink::hybrid::ecies_proto_serialization
     tink::hybrid::hpke_proto_serialization
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_library(

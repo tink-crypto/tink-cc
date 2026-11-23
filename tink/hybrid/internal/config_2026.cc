@@ -20,22 +20,26 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
-#include "tink/hybrid/hybrid_decrypt_wrapper.h"
-#include "tink/hybrid/hybrid_encrypt_wrapper.h"
-#include "tink/hybrid_decrypt.h"
-#include "tink/hybrid_encrypt.h"
 #include "tink/hybrid/hpke_private_key.h"
 #include "tink/hybrid/hpke_proto_serialization.h"
 #include "tink/hybrid/hpke_public_key.h"
+#include "tink/hybrid/hybrid_decrypt_wrapper.h"
+#include "tink/hybrid/hybrid_encrypt_wrapper.h"
+#include "tink/hybrid/internal/ecies_proto_serialization_impl.h"
 #include "tink/hybrid/internal/hpke_decrypt.h"
 #include "tink/hybrid/internal/hpke_encrypt.h"
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
+#include "tink/hybrid/internal/hpke_proto_serialization_impl.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
+#include "tink/hybrid_decrypt.h"
+#include "tink/hybrid_encrypt.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 
 namespace crypto {
 namespace tink {
@@ -56,6 +60,13 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> NewHpkeEncrypt(
 }  // namespace
 
 absl::Status AddHybrid2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(SerializationRegistry * serialization_registry,
+                        ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterHpkeProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterEciesProtoSerializationWithRegistry(*serialization_registry));
+
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<HybridEncryptWrapper>(), config);
   if (!status.ok()) {

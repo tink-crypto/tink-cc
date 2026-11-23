@@ -16,11 +16,13 @@
 
 #include "tink/hybrid/internal/config_2026.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
@@ -28,19 +30,29 @@
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hybrid_key_templates.h"
+#include "tink/hybrid/hybrid_private_key.h"
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
 #include "tink/hybrid/internal/key_gen_config_2026.h"
+#include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/parameters.h"
+#include "tink/subtle/common_enums.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -52,6 +64,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::google::crypto::tink::KeyTemplate;
 using ::testing::Eq;
+using ::testing::Pointee;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -251,6 +264,77 @@ TEST_P(HybridTestVectorTest, EncryptWorks) {
 
 INSTANTIATE_TEST_SUITE_P(HpkeTestVectorTest, HybridTestVectorTest,
                          testing::ValuesIn(internal::CreateHpkeTestVectors()));
+
+absl::StatusOr<std::unique_ptr<Key>> RoundTripKey(
+    const SerializationRegistry& registry, const Key& key) {
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<Serialization> serialized_key,
+                        registry.SerializeKey<ProtoKeySerialization>(
+                            key, InsecureSecretKeyAccess::Get()));
+  return registry.ParseKey(*serialized_key, InsecureSecretKeyAccess::Get());
+}
+
+struct NamedHybridKey {
+  std::string test_name;
+  const HybridPrivateKey* private_key;
+};
+
+using Hybrid2026SerializationTest = TestWithParam<NamedHybridKey>;
+
+INSTANTIATE_TEST_SUITE_P(
+    Hybrid2026SerializationTestSuite, Hybrid2026SerializationTest,
+    Values(
+        NamedHybridKey{
+            "Hpke",
+            GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                              HpkeParameters::KdfId::kHkdfSha256,
+                              HpkeParameters::AeadId::kAesGcm128,
+                              HpkeParameters::Variant::kTink)
+                .hybrid_private_key.get()},
+        NamedHybridKey{
+            "Ecies", GetEciesPrivateKey(subtle::EllipticCurveType::NIST_P256)}),
+    [](const testing::TestParamInfo<NamedHybridKey>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(Hybrid2026SerializationTest, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddHybrid2026(config), IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddHybridKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<SerializationRegistry*> key_gen_registry =
+      KeyGenConfigurationImpl::GetSerializationRegistry(key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  const HybridPrivateKey& private_key = *GetParam().private_key;
+  struct NamedRegistry {
+    const char* name;
+    const SerializationRegistry* registry;
+  };
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const SerializationRegistry* serialization_registry = entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<ProtoParametersSerialization>(
+                private_key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    EXPECT_THAT(
+        serialization_registry->ParseParameters(**serialized_params),
+        IsOkAndHolds(Pointee(Eq(std::cref(private_key.GetParameters())))));
+
+    EXPECT_THAT(RoundTripKey(*serialization_registry, private_key),
+                IsOkAndHolds(Pointee(Eq(std::cref(private_key)))));
+    EXPECT_THAT(
+        RoundTripKey(*serialization_registry, private_key.GetPublicKey()),
+        IsOkAndHolds(Pointee(Eq(std::cref(private_key.GetPublicKey())))));
+  }
+}
 
 }  // namespace
 }  // namespace internal

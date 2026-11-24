@@ -26,7 +26,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -37,6 +39,7 @@ using ::absl_testing::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -233,6 +236,26 @@ TEST(JwtMlDsaParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(JwtMlDsaParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtMlDsaParameters::Algorithm::kMlDsa87);
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<JwtMlDsaParameters>()));
+  EXPECT_THAT(DynamicCast<const JwtSignatureParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtMlDsaParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtHmacParameters*>(base_parameters), IsNull());
+
+  const JwtSignatureParameters* jwt_signature_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const JwtMlDsaParameters*>(jwt_signature_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

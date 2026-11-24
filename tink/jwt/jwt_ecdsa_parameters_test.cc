@@ -25,7 +25,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -37,6 +39,7 @@ using ::absl_testing::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -228,6 +231,26 @@ TEST(JwtEcdsaParametersTest, GetPrivateKeyLength) {
           JwtEcdsaParameters::Algorithm::kEs512);
   ASSERT_THAT(es512_parameters, IsOk());
   EXPECT_THAT(es512_parameters->GetPrivateKeyLength(), Eq(66));
+}
+
+TEST(JwtEcdsaParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
+      JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<JwtEcdsaParameters>()));
+  EXPECT_THAT(DynamicCast<const JwtSignatureParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtEcdsaParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtHmacParameters*>(base_parameters), IsNull());
+
+  const JwtSignatureParameters* jwt_signature_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const JwtEcdsaParameters*>(jwt_signature_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

@@ -26,7 +26,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
+#include "tink/jwt/jwt_mac_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -37,6 +39,7 @@ using ::absl_testing::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -326,6 +329,28 @@ TEST(JwtHmacParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(JwtHmacParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32,
+      JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<JwtHmacParameters>()));
+  EXPECT_THAT(DynamicCast<const JwtMacParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtHmacParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtEcdsaParameters*>(base_parameters),
+              IsNull());
+
+  const JwtMacParameters* jwt_mac_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const JwtHmacParameters*>(jwt_mac_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

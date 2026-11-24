@@ -33,9 +33,11 @@
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
+#include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 
@@ -47,6 +49,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -594,6 +597,27 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(key));
+}
+
+TEST(JwtRsaSsaPkcs1PublicKeyTest, DynamicCastAndTypeIndex) {
+  const JwtRsaSsaPkcs1PublicKey& public_key = GetValidPublicKey(
+      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+      JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
+      /*id_requirement=*/std::nullopt, /*custom_kid=*/"custom_kid");
+
+  const Key* base_key = &public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<JwtRsaSsaPkcs1PublicKey>()));
+  EXPECT_THAT(DynamicCast<const JwtSignaturePublicKey*>(base_key),
+              Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const JwtRsaSsaPkcs1PublicKey*>(base_key),
+              Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const JwtHmacKey*>(base_key), IsNull());
+
+  const JwtSignaturePublicKey* jwt_signature_public_key = &public_key;
+  EXPECT_THAT(
+      DynamicCast<const JwtRsaSsaPkcs1PublicKey*>(jwt_signature_public_key),
+      Eq(&public_key));
 }
 
 }  // namespace

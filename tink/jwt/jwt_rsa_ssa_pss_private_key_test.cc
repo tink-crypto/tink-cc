@@ -39,11 +39,15 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
+#include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
+#include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/util/test_util.h"
 
@@ -55,6 +59,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -968,6 +973,31 @@ TEST(JwtRsaSsaPssPrivateKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = private_key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(private_key));
+}
+
+TEST(JwtRsaSsaPssPrivateKeyTest, DynamicCastAndTypeIndex) {
+  const JwtRsaSsaPssPrivateKey& private_key = GetValidPrivateKey();
+
+  const Key* base_key = &private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<JwtRsaSsaPssPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtSignaturePrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtRsaSsaPssPrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtEcdsaPrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const JwtSignaturePrivateKey*>(base_private_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtRsaSsaPssPrivateKey*>(base_private_key),
+              Eq(&private_key));
+
+  const JwtSignaturePrivateKey* jwt_signature_private_key = &private_key;
+  EXPECT_THAT(
+      DynamicCast<const JwtRsaSsaPssPrivateKey*>(jwt_signature_private_key),
+      Eq(&private_key));
 }
 
 }  // namespace

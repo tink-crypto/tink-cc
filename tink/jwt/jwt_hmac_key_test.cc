@@ -29,11 +29,13 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/jwt/internal/testing/jwt_hmac_test_vectors.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_mac_key.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -43,6 +45,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -435,6 +438,21 @@ TEST(JwtHmacKeyTest, MoveAssignment) {
   EXPECT_THAT(other_key, Eq(jwt_internal::GetJwtHmacTestVector(
                                 JwtHmacParameters::Algorithm::kHs256)
                                 .key));
+}
+
+TEST(JwtHmacKeyTest, DynamicCastAndTypeIndex) {
+  const JwtHmacKey& key =
+      jwt_internal::GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+          .key;
+
+  const Key* base_key = &key;
+  EXPECT_THAT(GetTypeIndex(*base_key), Eq(GetStaticTypeIndex<JwtHmacKey>()));
+  EXPECT_THAT(DynamicCast<const JwtMacKey*>(base_key), Eq(&key));
+  EXPECT_THAT(DynamicCast<const JwtHmacKey*>(base_key), Eq(&key));
+  EXPECT_THAT(DynamicCast<const JwtMlDsaPublicKey*>(base_key), IsNull());
+
+  const JwtMacKey* jwt_mac_key = &key;
+  EXPECT_THAT(DynamicCast<const JwtHmacKey*>(jwt_mac_key), Eq(&key));
 }
 
 }  // namespace

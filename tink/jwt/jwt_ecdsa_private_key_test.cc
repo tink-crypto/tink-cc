@@ -31,9 +31,13 @@
 #include "tink/jwt/internal/testing/jwt_ecdsa_test_vectors.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
+#include "tink/jwt/jwt_ml_dsa_private_key.h"
+#include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
@@ -47,6 +51,7 @@ using ::absl_testing::StatusIs;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::StrEq;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
@@ -324,6 +329,32 @@ TEST(JwtEcdsaPrivateKeyTest, MoveAssignment) {
   EXPECT_THAT(other_key, Eq(jwt_internal::GetJwtEcdsaTestVector(
                                 subtle::EllipticCurveType::NIST_P256)
                                 .key));
+}
+
+TEST(JwtEcdsaPrivateKeyTest, DynamicCastAndTypeIndex) {
+  const JwtEcdsaPrivateKey& private_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key;
+
+  const Key* base_key = &private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<JwtEcdsaPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtSignaturePrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtEcdsaPrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtMlDsaPrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const JwtSignaturePrivateKey*>(base_private_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const JwtEcdsaPrivateKey*>(base_private_key),
+              Eq(&private_key));
+
+  const JwtSignaturePrivateKey* jwt_signature_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const JwtEcdsaPrivateKey*>(jwt_signature_private_key),
+              Eq(&private_key));
 }
 
 }  // namespace

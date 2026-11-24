@@ -31,9 +31,11 @@
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
+#include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 
@@ -45,6 +47,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -593,6 +596,35 @@ TEST(JwtMlDsaPublicKeyTest, DifferentKeyTypeNotEqual) {
   EXPECT_TRUE(*other_key != *public_key);
   EXPECT_FALSE(*public_key == *other_key);
   EXPECT_FALSE(*other_key == *public_key);
+}
+
+TEST(JwtMlDsaPublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<JwtMlDsaParameters> params = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<JwtMlDsaPublicKey> public_key =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*params)
+          .SetPublicKeyBytes(
+              jwt_internal::CreateJwtMlDsa65TestVector().public_key_bytes)
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<JwtMlDsaPublicKey>()));
+  EXPECT_THAT(DynamicCast<const JwtSignaturePublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const JwtMlDsaPublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const JwtHmacKey*>(base_key), IsNull());
+
+  const JwtSignaturePublicKey* jwt_signature_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const JwtMlDsaPublicKey*>(jwt_signature_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

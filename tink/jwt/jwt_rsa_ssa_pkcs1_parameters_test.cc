@@ -30,7 +30,9 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -41,6 +43,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -484,6 +487,32 @@ TEST(JwtRsaSsaPkcs1ParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(JwtRsaSsaPkcs1ParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+      JwtRsaSsaPkcs1Parameters::Builder()
+          .SetKidStrategy(
+              JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId)
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<JwtRsaSsaPkcs1Parameters>()));
+  EXPECT_THAT(DynamicCast<const JwtSignatureParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtRsaSsaPkcs1Parameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const JwtHmacParameters*>(base_parameters), IsNull());
+
+  const JwtSignatureParameters* jwt_signature_parameters = &*parameters;
+  EXPECT_THAT(
+      DynamicCast<const JwtRsaSsaPkcs1Parameters*>(jwt_signature_parameters),
+      Eq(&*parameters));
 }
 
 }  // namespace

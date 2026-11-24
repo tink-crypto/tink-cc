@@ -34,9 +34,11 @@
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
@@ -50,6 +52,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::Lt;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
@@ -431,6 +434,24 @@ TEST(JwtEcdsaPublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(key));
+}
+
+TEST(JwtEcdsaPublicKeyTest, DynamicCastAndTypeIndex) {
+  const JwtEcdsaPublicKey& public_key =
+      jwt_internal::GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+          .key.GetPublicKey();
+
+  const Key* base_key = &public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<JwtEcdsaPublicKey>()));
+  EXPECT_THAT(DynamicCast<const JwtSignaturePublicKey*>(base_key),
+              Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const JwtEcdsaPublicKey*>(base_key), Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const JwtHmacKey*>(base_key), IsNull());
+
+  const JwtSignaturePublicKey* jwt_signature_public_key = &public_key;
+  EXPECT_THAT(DynamicCast<const JwtEcdsaPublicKey*>(jwt_signature_public_key),
+              Eq(&public_key));
 }
 
 }  // namespace

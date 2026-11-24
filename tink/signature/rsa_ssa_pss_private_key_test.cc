@@ -31,8 +31,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/restricted_data.h"
-#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
@@ -41,9 +39,15 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
+#include "tink/restricted_data.h"
+#include "tink/rtti.h"
+#include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
+#include "tink/signature/signature_private_key.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -54,6 +58,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -1160,6 +1165,47 @@ TEST(RsaSsaPssPrivateKeyTest, MoveAssignment) {
   moved = std::move(private_key);
 
   EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(RsaSsaPssPrivateKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(GetF4())
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus = GetValidPublicKey().GetModulus(GetPartialKeyAccess());
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, modulus,
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RsaSsaPssPrivateKey private_key = CreateWithValidPrivateValues(*public_key);
+
+  const Key* base_key = &private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<RsaSsaPssPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const RsaSsaPssPrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_private_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const RsaSsaPssPrivateKey*>(base_private_key),
+              Eq(&private_key));
+
+  const SignaturePrivateKey* signature_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const RsaSsaPssPrivateKey*>(signature_private_key),
+              Eq(&private_key));
 }
 
 }  // namespace

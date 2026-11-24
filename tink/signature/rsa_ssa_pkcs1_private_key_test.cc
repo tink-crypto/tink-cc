@@ -30,8 +30,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/restricted_data.h"
-#include "tink/util/test_util.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/big_integer.h"
@@ -40,9 +38,15 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
+#include "tink/restricted_data.h"
+#include "tink/rtti.h"
+#include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
+#include "tink/signature/signature_private_key.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -51,6 +55,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -1016,6 +1021,30 @@ TEST(RsaSsaPkcs1PrivateKeyTest, MoveAssignment) {
   *moved = std::move(*private_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(RsaSsaPkcs1PrivateKeyTest, DynamicCastAndTypeIndex) {
+  const RsaSsaPkcs1PrivateKey& private_key = Get2048BitPrivateKey();
+
+  const Key* base_key = &private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<RsaSsaPkcs1PrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1PrivateKey*>(base_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_private_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1PrivateKey*>(base_private_key),
+              Eq(&private_key));
+
+  const SignaturePrivateKey* signature_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1PrivateKey*>(signature_private_key),
+              Eq(&private_key));
 }
 
 }  // namespace

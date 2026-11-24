@@ -30,10 +30,13 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/signature_public_key.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -43,6 +46,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -364,6 +368,29 @@ TEST(Ed25519PublicKeyTest, MoveAssignment) {
   *moved = std::move(*public_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(Ed25519PublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, std::string(32, 'a'), /*id_requirement=*/std::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<Ed25519PublicKey>()));
+  EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(base_key), Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const EcdsaPublicKey*>(base_key), IsNull());
+
+  const SignaturePublicKey* signature_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(signature_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

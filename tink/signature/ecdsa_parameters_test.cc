@@ -25,7 +25,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/signature_parameters.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -36,6 +38,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -515,6 +518,30 @@ TEST(EcdsaParametersTest, GetPrivateKeyLengthP521) {
   ASSERT_THAT(parameters, IsOk());
 
   EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(66));
+}
+
+TEST(EcdsaParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<EcdsaParameters>()));
+  EXPECT_THAT(DynamicCast<const SignatureParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const EcdsaParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const Ed25519Parameters*>(base_parameters), IsNull());
+
+  const SignatureParameters* signature_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const EcdsaParameters*>(signature_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

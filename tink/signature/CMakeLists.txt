@@ -1198,10 +1198,12 @@ tink_cc_test(
   DEPS
     tink::signature::ecdsa_parameters
     tink::signature::ed25519_parameters
+    tink::signature::signature_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
+    tink::core::rtti
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1211,9 +1213,11 @@ tink_cc_test(
   SRCS
     ed25519_public_key_test.cc
   DEPS
+    tink::signature::ecdsa_public_key
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
+    tink::signature::signature_public_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check
@@ -1222,6 +1226,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
@@ -1232,9 +1237,11 @@ tink_cc_test(
   SRCS
     ed25519_private_key_test.cc
   DEPS
+    tink::signature::ecdsa_private_key
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
+    tink::signature::signature_private_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check
@@ -1243,7 +1250,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::ec_util
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
@@ -1290,12 +1299,14 @@ tink_cc_test(
   DEPS
     tink::signature::ed25519_parameters
     tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::signature_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::statusor
@@ -1311,6 +1322,7 @@ tink_cc_test(
     tink::signature::ed25519_public_key
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::signature_public_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -1319,6 +1331,7 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
@@ -1329,9 +1342,11 @@ tink_cc_test(
   SRCS
     rsa_ssa_pkcs1_private_key_test.cc
   DEPS
+    tink::signature::ed25519_private_key
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
+    tink::signature::signature_private_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check
@@ -1345,7 +1360,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
@@ -1399,6 +1416,7 @@ tink_cc_test(
   DEPS
     tink::signature::ed25519_parameters
     tink::signature::rsa_ssa_pss_parameters
+    tink::signature::signature_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -1406,6 +1424,7 @@ tink_cc_test(
     tink::internal::boringssl
     tink::core::big_integer
     tink::core::parameters
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::test_matchers
@@ -1420,6 +1439,7 @@ tink_cc_test(
     tink::signature::ed25519_public_key
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
+    tink::signature::signature_public_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check
@@ -1431,6 +1451,7 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::test_util
@@ -1441,9 +1462,11 @@ tink_cc_test(
   SRCS
     rsa_ssa_pss_private_key_test.cc
   DEPS
+    tink::signature::ed25519_private_key
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::rsa_ssa_pss_public_key
+    tink::signature::signature_private_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check
@@ -1458,7 +1481,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
@@ -1511,11 +1536,13 @@ tink_cc_test(
   DEPS
     tink::signature::ecdsa_parameters
     tink::signature::ed25519_parameters
+    tink::signature::signature_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::test_matchers
 )
 
@@ -1528,6 +1555,7 @@ tink_cc_test(
     tink::signature::ecdsa_public_key
     tink::signature::ed25519_parameters
     tink::signature::ed25519_public_key
+    tink::signature::signature_public_key
     GTest::gmock
     absl::no_destructor
     absl::absl_check
@@ -1540,6 +1568,7 @@ tink_cc_test(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
 )
@@ -1552,6 +1581,8 @@ tink_cc_test(
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
+    tink::signature::ed25519_private_key
+    tink::signature::signature_private_key
     GTest::gmock
     absl::absl_check
     absl::absl_log
@@ -1564,7 +1595,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::test_util

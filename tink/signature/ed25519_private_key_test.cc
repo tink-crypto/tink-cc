@@ -31,11 +31,15 @@
 #include "tink/internal/ec_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
+#include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/signature_private_key.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 
@@ -46,6 +50,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -480,6 +485,37 @@ TEST(Ed25519PrivateKeyTest, MoveAssignment) {
   *moved = std::move(*private_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(Ed25519PrivateKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *params, RestrictedData(/*num_random_bytes=*/32),
+      /*id_requirement=*/std::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  const Key* base_key = &*private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<Ed25519PrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PrivateKey*>(base_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const EcdsaPrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &*private_key;
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_private_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PrivateKey*>(base_private_key),
+              Eq(&*private_key));
+
+  const SignaturePrivateKey* signature_private_key = &*private_key;
+  EXPECT_THAT(DynamicCast<const Ed25519PrivateKey*>(signature_private_key),
+              Eq(&*private_key));
 }
 
 }  // namespace

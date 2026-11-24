@@ -33,11 +33,13 @@
 #include "tink/big_integer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
+#include "tink/signature/signature_public_key.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -47,6 +49,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -545,6 +548,23 @@ TEST(RsaSsaPssPublicKeyTest, DifferentKeyTypeNotEqual) {
   EXPECT_TRUE(*other_key != *public_key);
   EXPECT_FALSE(*public_key == *other_key);
   EXPECT_FALSE(*other_key == *public_key);
+}
+
+TEST(RsaSsaPssPublicKeyTest, DynamicCastAndTypeIndex) {
+  const RsaSsaPssPublicKey& public_key = Get2048BitPublicKey();
+
+  const Key* base_key = &public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<RsaSsaPssPublicKey>()));
+  EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
+              Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const RsaSsaPssPublicKey*>(base_key),
+              Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(base_key), IsNull());
+
+  const SignaturePublicKey* signature_public_key = &public_key;
+  EXPECT_THAT(DynamicCast<const RsaSsaPssPublicKey*>(signature_public_key),
+              Eq(&public_key));
 }
 
 }  // namespace

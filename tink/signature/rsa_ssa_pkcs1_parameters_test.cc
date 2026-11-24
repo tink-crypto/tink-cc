@@ -30,7 +30,9 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/signature_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -41,6 +43,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -499,6 +502,30 @@ TEST(RsaSsaPkcs1ParametersTest, Clonel) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(RsaSsaPkcs1ParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<RsaSsaPkcs1Parameters>()));
+  EXPECT_THAT(DynamicCast<const SignatureParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1Parameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const Ed25519Parameters*>(base_parameters), IsNull());
+
+  const SignatureParameters* signature_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1Parameters*>(signature_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

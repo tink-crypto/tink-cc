@@ -29,9 +29,11 @@
 #include "tink/big_integer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
+#include "tink/signature/signature_public_key.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -43,6 +45,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -527,6 +530,37 @@ TEST(RsaSsaPkcs1PublicKeyTest, DifferentKeyTypeNotEqual) {
   EXPECT_TRUE(*other_key != *public_key);
   EXPECT_FALSE(*public_key == *other_key);
   EXPECT_FALSE(*other_key == *public_key);
+}
+
+TEST(RsaSsaPkcs1PublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
+  absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
+                                   /*id_requirement=*/0x02030400,
+                                   GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<RsaSsaPkcs1PublicKey>()));
+  EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1PublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(base_key), IsNull());
+
+  const SignaturePublicKey* signature_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const RsaSsaPkcs1PublicKey*>(signature_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

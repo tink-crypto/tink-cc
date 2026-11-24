@@ -68,7 +68,6 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
   static absl::StatusOr<EcdsaPrivateKey> CreateAllowNonConstantTime(
       const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
       PartialKeyAccessToken token);
-  const RestrictedData& GetPrivateKey() const;
 
   const EcdsaPublicKey& GetPublicKey() const override { return public_key_; }
 

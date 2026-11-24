@@ -22,6 +22,9 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/parameters.h"
 
 namespace crypto {
@@ -34,6 +37,15 @@ struct Fips1402TestCase {
   // used as a gtest parameter name.
   std::string name;
   std::shared_ptr<const Parameters> params;
+};
+
+// A single key serialization test case for `ConfigFips140_2()` /
+// `KeyGenConfigFips140_2()`.
+struct Fips1402KeyTestCase {
+  // Human readable, unique name; only contains [A-Za-z0-9_] so that it can be
+  // used as a gtest parameter name.
+  std::string name;
+  std::shared_ptr<const Key> key;
 };
 
 // The tables below are the authoritative list of parameters that are allowed
@@ -53,6 +65,16 @@ std::vector<Fips1402TestCase> DeniedAeadParameters();
 std::vector<Fips1402TestCase> DeniedMacParameters();
 std::vector<Fips1402TestCase> DeniedPrfParameters();
 std::vector<Fips1402TestCase> DeniedSignatureParameters();
+
+// Representative keys (symmetric, asymmetric private, and asymmetric public)
+// from static test vectors for every key type in `ConfigFips140_2()` and
+// `KeyGenConfigFips140_2()`.
+std::vector<Fips1402KeyTestCase> AllowedFips1402Keys();
+
+// Serializes `key` to `ProtoKeySerialization` and parses it back using
+// `registry`.
+absl::StatusOr<std::unique_ptr<Key>> RoundTripKey(
+    const SerializationRegistry& registry, const Key& key);
 
 // Registers the proto serializations of all the parameters and keys used in
 // the tables above in the global serialization registry.

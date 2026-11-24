@@ -24,6 +24,7 @@
 
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
@@ -33,28 +34,46 @@
 #include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
 #include "tink/aead/aes_gcm_siv_proto_serialization.h"
+#include "tink/aead/internal/testing/aead_test_vector.h"
+#include "tink/aead/internal/testing/aes_ctr_hmac_aead_test_vectors.h"
+#include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
 #include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/x_aes_gcm_proto_serialization.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/aes_cmac_proto_serialization.h"
+#include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/mac/hmac_proto_serialization.h"
+#include "tink/mac/internal/hmac_test_vectors.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/prf/aes_cmac_prf_proto_serialization.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/hkdf_prf_proto_serialization.h"
+#include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/prf/hmac_prf_proto_serialization.h"
+#include "tink/prf/internal/hmac_prf_test_vectors.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_proto_serialization.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
+#include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_proto_serialization.h"
+#include "tink/signature/signature_private_key.h"
+#include "tink/signature/signature_public_key.h"
 
 namespace crypto {
 namespace tink {
@@ -424,6 +443,52 @@ std::vector<Fips1402TestCase> DeniedSignatureParameters() {
       MakeTestCase("Ed25519_Tink", Ed25519Parameters::Create(
                                        Ed25519Parameters::Variant::kTink)),
   };
+}
+
+std::vector<Fips1402KeyTestCase> AllowedFips1402Keys() {
+  const SignatureTestVector& ecdsa_vector = GetEcdsaTestVector(
+      EcdsaParameters::CurveType::kNistP256, EcdsaParameters::HashType::kSha256,
+      EcdsaParameters::SignatureEncoding::kIeeeP1363,
+      EcdsaParameters::Variant::kTink);
+  const SignatureTestVector& rsa_ssa_pss_vector = GetRsaSsaPssTestVector(
+      /*modulus_size_in_bits=*/2048, RsaSsaPssParameters::HashType::kSha512,
+      RsaSsaPssParameters::Variant::kTink);
+  const SignatureTestVector& rsa_ssa_pkcs1_vector = GetRsaSsaPkcs1TestVector(
+      /*modulus_size_in_bits=*/2048, RsaSsaPkcs1Parameters::HashType::kSha512,
+      RsaSsaPkcs1Parameters::Variant::kTink);
+  return {
+      {"Hmac", GetHmacTestVector(/*key_size_in_bytes=*/40,
+                                 HmacParameters::HashType::kSha256,
+                                 HmacParameters::Variant::kTink)
+                   .key.Clone()},
+      {"AesCtrHmacAead",
+       GetAesCtrHmacAeadTestVector(/*aes_key_size_in_bytes=*/16,
+                                   AesCtrHmacAeadParameters::Variant::kTink)
+           .aead_key},
+      {"AesGcm", GetAesGcmTestVector(/*key_size_in_bytes=*/16,
+                                     AesGcmParameters::Variant::kTink)
+                     .aead_key},
+      {"HmacPrf", GetHmacPrfTestVector(/*key_size_in_bytes=*/40,
+                                       HmacPrfParameters::HashType::kSha256)
+                      .key.Clone()},
+      {"EcdsaPrivate", ecdsa_vector.signature_private_key},
+      {"EcdsaPublic",
+       ecdsa_vector.signature_private_key->GetPublicKey().Clone()},
+      {"RsaSsaPssPrivate", rsa_ssa_pss_vector.signature_private_key},
+      {"RsaSsaPssPublic",
+       rsa_ssa_pss_vector.signature_private_key->GetPublicKey().Clone()},
+      {"RsaSsaPkcs1Private", rsa_ssa_pkcs1_vector.signature_private_key},
+      {"RsaSsaPkcs1Public",
+       rsa_ssa_pkcs1_vector.signature_private_key->GetPublicKey().Clone()},
+  };
+}
+
+absl::StatusOr<std::unique_ptr<Key>> RoundTripKey(
+    const SerializationRegistry& registry, const Key& key) {
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<Serialization> serialized_key,
+                        registry.SerializeKey<ProtoKeySerialization>(
+                            key, InsecureSecretKeyAccess::Get()));
+  return registry.ParseKey(*serialized_key, InsecureSecretKeyAccess::Get());
 }
 
 absl::Status RegisterFips1402TestProtoSerializations() {

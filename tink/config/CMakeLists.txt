@@ -57,18 +57,24 @@ tink_cc_library(
     fips_140_2.h
   DEPS
     absl::absl_check
-    absl::memory
+    absl::status
+    absl::status_macros
     tink::core::configuration
     tink::aead::aead_wrapper
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_gcm_key_manager
+    tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
+    tink::aead::internal::aes_gcm_proto_serialization_impl
     tink::internal::configuration_impl
     tink::internal::fips_utils
+    tink::internal::serialization_registry
     tink::mac::hmac_key_manager
     tink::mac::mac_wrapper
     tink::mac::internal::chunked_mac_wrapper
+    tink::mac::internal::hmac_proto_serialization_impl
     tink::prf::hmac_prf_key_manager
     tink::prf::prf_set_wrapper
+    tink::prf::internal::hmac_prf_proto_serialization_impl
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::public_key_sign_wrapper
@@ -77,7 +83,9 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::util::status
+    tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
 )
 
 tink_cc_library(
@@ -87,21 +95,29 @@ tink_cc_library(
     key_gen_fips_140_2.h
   DEPS
     absl::absl_check
-    absl::memory
+    absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_gcm_key_manager
+    tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
+    tink::aead::internal::aes_gcm_proto_serialization_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
     tink::mac::hmac_key_manager
+    tink::mac::internal::hmac_proto_serialization_impl
     tink::prf::hmac_prf_key_manager
+    tink::prf::internal::hmac_prf_proto_serialization_impl
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::util::status
+    tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
 )
 
 tink_cc_library(
@@ -250,11 +266,12 @@ tink_cc_test(
     absl::statusor
     tink::core::aead
     tink::core::chunked_mac
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
-    tink::core::keyset_handle_builder
     tink::core::mac
+    tink::core::parameters
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::aead::aead_key_templates
@@ -270,6 +287,9 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::mac::aes_cmac_key_manager
     tink::mac::hmac_key_manager
     tink::prf::aes_cmac_prf_key_manager
@@ -283,8 +303,6 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(
@@ -297,8 +315,10 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
+    tink::core::key
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::parameters
     tink::aead::aead_key_templates
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_gcm_key_manager
@@ -306,14 +326,15 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::mac::aes_cmac_key_manager
     tink::mac::hmac_key_manager
     tink::prf::hmac_prf_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::util::statusor
-    tink::util::test_matchers
 )
 
 tink_cc_test(

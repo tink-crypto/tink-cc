@@ -16,34 +16,50 @@
 
 #include "tink/config/fips_140_2.h"
 
+#include <memory>
+
 #include "absl/log/absl_check.h"
-#include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/internal/chunked_mac_wrapper.h"
+#include "tink/mac/internal/hmac_proto_serialization_impl.h"
 #include "tink/mac/mac_wrapper.h"
 #include "tink/prf/hmac_prf_key_manager.h"
+#include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 #include "tink/prf/prf_set_wrapper.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
 absl::Status AddMac(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterHmacProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<MacWrapper>(), config);
   if (!status.ok()) {
@@ -60,6 +76,15 @@ absl::Status AddMac(Configuration& config) {
 }
 
 absl::Status AddAead(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterAesCtrHmacAeadProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(internal::RegisterAesGcmProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<AeadWrapper>(), config);
   if (!status.ok()) {
@@ -76,6 +101,12 @@ absl::Status AddAead(Configuration& config) {
 }
 
 absl::Status AddPrf(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterHmacPrfProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<PrfSetWrapper>(), config);
   if (!status.ok()) {
@@ -87,6 +118,18 @@ absl::Status AddPrf(Configuration& config) {
 }
 
 absl::Status AddSignature(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterEcdsaProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterRsaSsaPssProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(
+          *serialization_registry));
+
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {

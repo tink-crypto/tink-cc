@@ -16,6 +16,8 @@
 
 #include "tink/config/key_gen_fips_140_2.h"
 
+#include <functional>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -30,25 +32,29 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/mac/aes_cmac_key_manager.h"
 #include "tink/mac/hmac_key_manager.h"
+#include "tink/parameters.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::AllowedAeadParameters;
+using ::crypto::tink::internal::AllowedFips1402Keys;
 using ::crypto::tink::internal::AllowedMacParameters;
 using ::crypto::tink::internal::AllowedPrfParameters;
 using ::crypto::tink::internal::AllowedSignatureParameters;
@@ -56,8 +62,12 @@ using ::crypto::tink::internal::DeniedAeadParameters;
 using ::crypto::tink::internal::DeniedMacParameters;
 using ::crypto::tink::internal::DeniedPrfParameters;
 using ::crypto::tink::internal::DeniedSignatureParameters;
+using ::crypto::tink::internal::Fips1402KeyTestCase;
 using ::crypto::tink::internal::Fips1402TestCase;
+using ::crypto::tink::internal::RoundTripKey;
+using ::testing::Eq;
 using ::testing::Not;
+using ::testing::Pointee;
 using ::testing::TestParamInfo;
 using ::testing::ValuesIn;
 
@@ -163,6 +173,22 @@ TEST_P(KeyGenFips1402AllowedTest, GenerateKeysetSucceeds) {
   EXPECT_THAT(GenerateKeyset(), IsOk());
 }
 
+TEST_P(KeyGenFips1402AllowedTest, SerializationRegistry) {
+  absl::StatusOr<const internal::SerializationRegistry*> registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(
+          KeyGenConfigFips140_2());
+  ASSERT_THAT(registry, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+      (*registry)->SerializeParameters<internal::ProtoParametersSerialization>(
+          *GetParam().params);
+  ASSERT_THAT(serialized_params, IsOk());
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+      (*registry)->ParseParameters(**serialized_params);
+  ASSERT_THAT(parsed_params, IsOk());
+  EXPECT_EQ(**parsed_params, *GetParam().params);
+}
+
 INSTANTIATE_TEST_SUITE_P(Aead, KeyGenFips1402AllowedTest,
                          ValuesIn(AllowedAeadParameters()), TestCaseName);
 INSTANTIATE_TEST_SUITE_P(Mac, KeyGenFips1402AllowedTest,
@@ -178,6 +204,18 @@ TEST_P(KeyGenFips1402DeniedTest, GenerateKeysetFails) {
   EXPECT_THAT(GenerateKeyset(), Not(IsOk()));
 }
 
+TEST_P(KeyGenFips1402DeniedTest, SerializationRegistryRejectsDeniedParameters) {
+  absl::StatusOr<const internal::SerializationRegistry*> registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(
+          KeyGenConfigFips140_2());
+  ASSERT_THAT(registry, IsOk());
+
+  EXPECT_THAT(
+      (*registry)->SerializeParameters<internal::ProtoParametersSerialization>(
+          *GetParam().params),
+      StatusIs(absl::StatusCode::kNotFound));
+}
+
 INSTANTIATE_TEST_SUITE_P(Aead, KeyGenFips1402DeniedTest,
                          ValuesIn(DeniedAeadParameters()), TestCaseName);
 INSTANTIATE_TEST_SUITE_P(Mac, KeyGenFips1402DeniedTest,
@@ -186,6 +224,36 @@ INSTANTIATE_TEST_SUITE_P(Prf, KeyGenFips1402DeniedTest,
                          ValuesIn(DeniedPrfParameters()), TestCaseName);
 INSTANTIATE_TEST_SUITE_P(Signature, KeyGenFips1402DeniedTest,
                          ValuesIn(DeniedSignatureParameters()), TestCaseName);
+
+class KeyGenFips1402KeySerializationTest
+    : public testing::TestWithParam<Fips1402KeyTestCase> {
+ protected:
+  void SetUp() override {
+    if (!internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP() << "Only test in FIPS mode";
+    }
+    internal::SetFipsRestricted();
+  }
+
+  void TearDown() override { internal::UnSetFipsRestricted(); }
+};
+
+TEST_P(KeyGenFips1402KeySerializationTest, KeySerializationRoundTrip) {
+  absl::StatusOr<const internal::SerializationRegistry*> registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(
+          KeyGenConfigFips140_2());
+  ASSERT_THAT(registry, IsOk());
+
+  EXPECT_THAT(RoundTripKey(**registry, *GetParam().key),
+              IsOkAndHolds(Pointee(Eq(std::cref(*GetParam().key)))));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    KeyGenFips1402KeySerializationTests, KeyGenFips1402KeySerializationTest,
+    ValuesIn(AllowedFips1402Keys()),
+    [](const TestParamInfo<Fips1402KeyTestCase>& info) {
+      return info.param.name;
+    });
 
 }  // namespace
 }  // namespace tink

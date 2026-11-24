@@ -16,19 +16,35 @@
 
 #include "tink/prf/internal/key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
+#include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/prf/aes_cmac_prf_key_manager.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/prf/hmac_prf_key_manager.h"
-#include "tink/util/status.h"
+#include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
+#include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 absl::Status AddPrfKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      SerializationRegistry * serialization_registry,
+      KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(RegisterAesCmacPrfProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterHkdfPrfProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      RegisterHmacPrfProtoSerializationWithRegistry(*serialization_registry));
+
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesCmacPrfKeyManager>(), config);
   if (!status.ok()) {

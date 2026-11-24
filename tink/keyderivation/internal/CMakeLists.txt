@@ -313,9 +313,12 @@ tink_cc_library(
   DEPS
     absl::absl_check
     absl::memory
+    absl::statusor
     tink::core::configuration
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::prf::hkdf_prf_key_manager
+    tink::prf::internal::hkdf_prf_proto_serialization_impl
 )
 
 tink_cc_test(
@@ -326,13 +329,22 @@ tink_cc_test(
     tink::keyderivation::internal::config_prf_for_deriver
     GTest::gmock
     absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
     tink::internal::configuration_impl
     tink::internal::key_type_info_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_key_manager
+    tink::prf::hkdf_prf_parameters
+    tink::prf::internal::hkdf_prf_test_vectors
     tink::subtle::prf::streaming_prf
     tink::util::input_stream_util
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
@@ -480,10 +492,12 @@ tink_cc_library(
     config_2026.h
   DEPS
     tink::keyderivation::internal::prf_based_deriver_key_manager
-    absl::memory
+    tink::keyderivation::internal::prf_based_key_derivation_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::configuration
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::keyderivation::keyset_deriver_wrapper
 )
 
@@ -495,16 +509,25 @@ tink_cc_test(
     tink::keyderivation::internal::config_2026
     tink::keyderivation::internal::key_gen_config_2026
     tink::keyderivation::internal::prf_based_deriver_key_manager
+    tink::keyderivation::internal::prf_based_key_derivation_test_vectors
     GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::configuration
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
+    tink::core::parameters
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::keyderivation::keyset_deriver
+    tink::keyderivation::prf_based_key_derivation_key
 )
 
 tink_cc_library(
@@ -514,10 +537,12 @@ tink_cc_library(
     key_gen_config_2026.h
   DEPS
     tink::keyderivation::internal::prf_based_deriver_key_manager
-    absl::memory
+    tink::keyderivation::internal::prf_based_key_derivation_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_test(
@@ -527,12 +552,21 @@ tink_cc_test(
   DEPS
     tink::keyderivation::internal::key_gen_config_2026
     tink::keyderivation::internal::prf_based_deriver_key_manager
+    tink::keyderivation::internal::prf_based_key_derivation_test_vectors
     GTest::gmock
     absl::status_matchers
     absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::key_gen_configuration
+    tink::core::parameters
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::keyderivation::prf_based_key_derivation_key
 )
 
 tink_cc_library(

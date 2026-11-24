@@ -16,11 +16,15 @@
 
 #include "tink/keyderivation/internal/config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
+#include "tink/keyderivation/internal/prf_based_key_derivation_proto_serialization_impl.h"
 #include "tink/keyderivation/keyset_deriver_wrapper.h"
 
 namespace crypto {
@@ -28,6 +32,12 @@ namespace tink {
 namespace internal {
 
 absl::Status AddKeyDerivation2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(SerializationRegistry* serialization_registry,
+                        ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(
+      RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(
+          *serialization_registry));
+
   absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<KeysetDeriverWrapper>(), config);
   if (!status.ok()) {

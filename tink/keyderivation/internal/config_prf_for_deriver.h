@@ -19,9 +19,12 @@
 
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
+#include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
@@ -33,6 +36,11 @@ inline const Configuration& ConfigPrfForDeriver() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
 
+    absl::StatusOr<SerializationRegistry*> serialization_registry =
+        ConfigurationImpl::GetSerializationRegistry(*config);
+    ABSL_CHECK_OK(serialization_registry);
+    ABSL_CHECK_OK(RegisterHkdfPrfProtoSerializationWithRegistry(
+        **serialization_registry));
     ABSL_CHECK_OK(ConfigurationImpl::AddKeyTypeManager(
         std::make_unique<HkdfPrfKeyManager>(), *config));
 

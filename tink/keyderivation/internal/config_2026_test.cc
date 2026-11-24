@@ -16,19 +16,30 @@
 
 #include "tink/keyderivation/internal/config_2026.h"
 
+#include <memory>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyderivation/internal/key_gen_config_2026.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
+#include "tink/keyderivation/internal/prf_based_key_derivation_test_vectors.h"
 #include "tink/keyderivation/keyset_deriver.h"
+#include "tink/keyderivation/prf_based_key_derivation_key.h"
+#include "tink/parameters.h"
 
 namespace crypto {
 namespace tink {
@@ -63,6 +74,34 @@ TEST(KeyDerivationV0Test, KeyManagers) {
   for (const KeyTypeInfoStore* s : {*store, *key_gen_store}) {
     EXPECT_THAT(s->Get(PrfBasedDeriverKeyManager().get_key_type()), IsOk());
   }
+}
+
+TEST(KeyDerivationV0Test, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddKeyDerivation2026(config), IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  const PrfBasedKeyDerivationKey& key =
+      GetPrfBasedKeyDerivationHkdfTestVector().key;
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+      (*registry)->SerializeParameters<ProtoParametersSerialization>(
+          key.GetParameters());
+  ASSERT_THAT(serialized_params, IsOk());
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+      (*registry)->ParseParameters(**serialized_params);
+  ASSERT_THAT(parsed_params, IsOk());
+  EXPECT_EQ(**parsed_params, key.GetParameters());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+      (*registry)->SerializeKey<ProtoKeySerialization>(
+          key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_key, IsOk());
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+      (*registry)->ParseKey(**serialized_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key, IsOk());
+  EXPECT_EQ(**parsed_key, key);
 }
 
 }  // namespace

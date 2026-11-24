@@ -17,35 +17,37 @@
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
-#include "absl/memory/memory.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "openssl/bn.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/rsa_util.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/key.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/restricted_data.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/sig_util.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
-#include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
-using ::google::crypto::tink::RsaSsaPkcs1Params;
 using RsaSsaPkcs1PrivateKeyProto =
     ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
 
@@ -67,18 +69,36 @@ RsaSsaPkcs1PrivateKeyProto RsaPrivateKeySubtleToProto(
   return key_proto;
 }
 
-internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
-    const RsaSsaPkcs1PrivateKeyProto& key_proto) {
-  internal::RsaPrivateKey key;
-  key.n = key_proto.public_key().n();
-  key.e = key_proto.public_key().e();
-  key.d = SecretData(key_proto.d());
-  key.p = SecretData(key_proto.p());
-  key.q = SecretData(key_proto.q());
-  key.dp = SecretData(key_proto.dp());
-  key.dq = SecretData(key_proto.dq());
-  key.crt = SecretData(key_proto.crt());
-  return key;
+absl::StatusOr<RsaSsaPkcs1PrivateKey> ParseRsaSsaPkcs1PrivateKeyWithNoPrefix(
+    const RsaSsaPkcs1PrivateKeyProto& rsa_ssa_pkcs1_private_key) {
+  static const internal::SerializationRegistry* registry = []() {
+    auto* registry = new internal::SerializationRegistry();
+    ABSL_CHECK_OK(
+        internal::RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(*registry));
+    return registry;
+  }();
+  // KeyTypeManager primitives only receive the raw key proto (without
+  // OutputPrefixType or key ID) and must produce raw (kNoPrefix) primitives;
+  // the output prefix is handled by PublicKeySignWrapper.
+  ABSL_ASSIGN_OR_RETURN(
+      internal::ProtoKeySerialization serialization,
+      internal::ProtoKeySerialization::Create(
+          RsaSsaPkcs1SignKeyManager().get_key_type(),
+          RestrictedData(rsa_ssa_pkcs1_private_key.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          google::crypto::tink::internal::KeyDataTP::KeyMaterialTypeTP::
+              kAsymmetricPrivate,
+          google::crypto::tink::internal::OutputPrefixTypeTP::kRaw,
+          /*id_requirement=*/std::nullopt));
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<Key> key,
+      registry->ParseKey(serialization, InsecureSecretKeyAccess::Get()));
+  const auto* private_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(key.get());
+  if (private_key == nullptr) {
+    return absl::InternalError("Failed to cast to RsaSsaPkcs1PrivateKey");
+  }
+  return *private_key;
 }
 
 }  // namespace
@@ -111,19 +131,17 @@ absl::StatusOr<RsaSsaPkcs1PrivateKeyProto> RsaSsaPkcs1SignKeyManager::CreateKey(
 absl::StatusOr<std::unique_ptr<PublicKeySign>>
 RsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
     const RsaSsaPkcs1PrivateKeyProto& private_key) const {
-  auto key = RsaPrivateKeyProtoToSubtle(private_key);
-  internal::RsaSsaPkcs1Params params;
-  const RsaSsaPkcs1Params& params_proto = private_key.public_key().params();
-  params.hash_type = Enums::ProtoToSubtle(params_proto.hash_type());
-  auto signer = subtle::RsaSsaPkcs1SignBoringSsl::New(key, params);
-  if (!signer.ok()) return signer.status();
+  ABSL_ASSIGN_OR_RETURN(RsaSsaPkcs1PrivateKey key,
+                        ParseRsaSsaPkcs1PrivateKeyWithNoPrefix(private_key));
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<PublicKeySign> signer,
+                        subtle::RsaSsaPkcs1SignBoringSsl::New(key));
   // To check that the key is correct, we sign a test message with private key
   // and verify with public key.
-  auto verifier = RsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(
-      private_key.public_key());
-  if (!verifier.ok()) return verifier.status();
-  auto sign_verify_result =
-      SignAndVerify(signer.value().get(), verifier.value().get());
+  ABSL_ASSIGN_OR_RETURN(
+      std::unique_ptr<PublicKeyVerify> verifier,
+      RsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(
+          private_key.public_key()));
+  absl::Status sign_verify_result = SignAndVerify(signer.get(), verifier.get());
   if (!sign_verify_result.ok()) {
     return absl::Status(absl::StatusCode::kInternal,
                         "security bug: signing with private key followed by "

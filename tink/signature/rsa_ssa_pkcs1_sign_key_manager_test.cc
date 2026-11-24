@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "openssl/bn.h"
@@ -53,6 +54,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
@@ -373,6 +375,22 @@ INSTANTIATE_TEST_SUITE_P(
     RsaSsaPkcs1SignKeyManagerTestVectorTest,
     RsaSsaPkcs1SignKeyManagerTestVectorTest,
     testing::ValuesIn(internal::CreateRsaSsaPkcs1TestVectors()));
+
+TEST(RsaSsaPkcs1SignKeyManagerTest, CreateFailsWithWrongVersion) {
+  RsaSsaPkcs1PrivateKeyProto key =
+      ToRsaSsaPkcs1PrivateKeyProto(internal::Create3072BitsTestVector());
+  key.set_version(1);
+  EXPECT_THAT(RsaSsaPkcs1SignKeyManager().GetPrimitive<PublicKeySign>(key),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaSsaPkcs1SignKeyManagerTest, CreateFailsWithWrongPublicKeyVersion) {
+  RsaSsaPkcs1PrivateKeyProto key =
+      ToRsaSsaPkcs1PrivateKeyProto(internal::Create3072BitsTestVector());
+  key.mutable_public_key()->set_version(1);
+  EXPECT_THAT(RsaSsaPkcs1SignKeyManager().GetPrimitive<PublicKeySign>(key),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
 
 }  // namespace
 }  // namespace tink

@@ -246,31 +246,40 @@ tink_cc_library(
     rsa_ssa_pkcs1_sign_key_manager.cc
     rsa_ssa_pkcs1_sign_key_manager.h
   DEPS
+    tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::sig_util
+    absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
+    tink::internal::boringssl
     tink::core::private_key_type_manager
     tink::core::template_util
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::core::restricted_data
     tink::internal::bn_util
     tink::internal::fips_utils
+    tink::internal::proto_key_serialization
     tink::internal::rsa_util
+    tink::internal::serialization_registry
     tink::internal::ssl_unique_ptr
+    tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::util::constants
-    tink::util::enums
     tink::util::errors
     tink::util::protobuf_helper
-    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::validation
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(
@@ -1014,6 +1023,7 @@ tink_cc_test(
     tink::signature::signature_config
     GTest::gmock
     absl::flat_hash_set
+    absl::status
     absl::status_matchers
     absl::statusor
     tink::internal::boringssl

@@ -23,7 +23,9 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
+#include "tink/experimental/kem/kem_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -34,6 +36,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -150,6 +153,26 @@ TEST(MlKemParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(MlKemParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<MlKemParameters>()));
+  EXPECT_THAT(DynamicCast<const KemParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const MlKemParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const ChaCha20Poly1305Parameters*>(base_parameters),
+              IsNull());
+
+  const KemParameters* kem_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const MlKemParameters*>(kem_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

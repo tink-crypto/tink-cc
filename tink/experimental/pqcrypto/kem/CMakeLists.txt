@@ -25,7 +25,9 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     tink::core::parameters
+    tink::core::rtti
     tink::aead::chacha20_poly1305_parameters
+    tink::experimental::kem::kem_parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -71,7 +73,10 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
+    tink::experimental::kem::kem_private_key
     tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::statusor
@@ -117,8 +122,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
+    tink::experimental::kem::kem_public_key
     tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::statusor

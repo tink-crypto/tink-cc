@@ -28,13 +28,16 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mlkem.h"
+#include "tink/experimental/kem/kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -47,6 +50,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -324,6 +328,42 @@ TEST(MlKemPrivateKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = private_key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*private_key));
+}
+
+TEST(MlKemPrivateKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  ASSERT_THAT(key_pair, IsOk());
+
+  absl::StatusOr<MlKemPublicKey> public_key =
+      MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  const Key* base_key = &*private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<MlKemPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const KemPrivateKey*>(base_key), Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const MlKemPrivateKey*>(base_key), Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const MlKemPublicKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &*private_key;
+  EXPECT_THAT(DynamicCast<const KemPrivateKey*>(base_private_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const MlKemPrivateKey*>(base_private_key),
+              Eq(&*private_key));
+
+  const KemPrivateKey* kem_private_key = &*private_key;
+  EXPECT_THAT(DynamicCast<const MlKemPrivateKey*>(kem_private_key),
+              Eq(&*private_key));
 }
 
 }  // namespace

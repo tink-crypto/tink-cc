@@ -28,13 +28,16 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mlkem.h"
+#include "tink/experimental/kem/kem_public_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
@@ -48,6 +51,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -263,6 +267,30 @@ TEST(MlKemPublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = public_key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*public_key));
+}
+
+TEST(MlKemPublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes = GeneratePublicKey();
+  absl::StatusOr<MlKemPublicKey> public_key =
+      MlKemPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<MlKemPublicKey>()));
+  EXPECT_THAT(DynamicCast<const KemPublicKey*>(base_key), Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const MlKemPublicKey*>(base_key), Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), IsNull());
+  EXPECT_THAT(DynamicCast<const MlKemPrivateKey*>(base_key), IsNull());
+
+  const KemPublicKey* kem_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const MlKemPublicKey*>(kem_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

@@ -25,7 +25,9 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
+#include "tink/daead/deterministic_aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -37,6 +39,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -235,6 +238,26 @@ TEST(AesSivParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(AesSivParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+      /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<AesSivParameters>()));
+  EXPECT_THAT(DynamicCast<const DeterministicAeadParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const AesSivParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const ChaCha20Poly1305Parameters*>(base_parameters),
+              IsNull());
+
+  const DeterministicAeadParameters* daead_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const AesSivParameters*>(daead_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

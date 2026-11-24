@@ -315,11 +315,13 @@ tink_cc_test(
   SRCS
     prf_based_key_derivation_parameters_test.cc
   DEPS
+    tink::keyderivation::key_derivation_parameters
     tink::keyderivation::prf_based_key_derivation_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
+    tink::core::rtti
     tink::aead::chacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_parameters
     tink::prf::aes_cmac_prf_parameters
@@ -333,6 +335,7 @@ tink_cc_test(
   SRCS
     prf_based_key_derivation_key_test.cc
   DEPS
+    tink::keyderivation::key_derivation_key
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     GTest::gmock
@@ -341,6 +344,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::aead::chacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_parameters
     tink::prf::aes_cmac_prf_key

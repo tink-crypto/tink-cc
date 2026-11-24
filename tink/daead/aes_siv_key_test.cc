@@ -28,10 +28,12 @@
 #include "tink/aead/chacha20_poly1305_key.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/deterministic_aead_key.h"
 #include "tink/daead/internal/aes_siv_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +42,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -253,6 +256,20 @@ TEST(AesSivKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(key));
+}
+
+TEST(AesSivKeyTest, DynamicCastAndTypeIndex) {
+  const AesSivKey& key =
+      internal::GetAesSivTestVector(64, AesSivParameters::Variant::kTink).key;
+
+  const Key* base_key = &key;
+  EXPECT_THAT(GetTypeIndex(*base_key), Eq(GetStaticTypeIndex<AesSivKey>()));
+  EXPECT_THAT(DynamicCast<const DeterministicAeadKey*>(base_key), Eq(&key));
+  EXPECT_THAT(DynamicCast<const AesSivKey*>(base_key), Eq(&key));
+  EXPECT_THAT(DynamicCast<const ChaCha20Poly1305Key*>(base_key), IsNull());
+
+  const DeterministicAeadKey* daead_key = &key;
+  EXPECT_THAT(DynamicCast<const AesSivKey*>(daead_key), Eq(&key));
 }
 
 }  // namespace

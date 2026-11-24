@@ -25,9 +25,11 @@
 #include "absl/status/status_matchers.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/keyderivation/key_derivation_parameters.h"
 #include "tink/parameters.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/prf/hmac_prf_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -39,6 +41,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 
 TEST(PrfBasedKeyDerivationParametersTest, Build) {
   absl::StatusOr<AesCmacPrfParameters> prf_parameters =
@@ -353,6 +356,40 @@ TEST(PrfBasedKeyDerivationParametersTest, DifferentParametersTypeNotEqual) {
   EXPECT_TRUE(*derived_key_parameters != *parameters);
   EXPECT_FALSE(*parameters == *derived_key_parameters);
   EXPECT_FALSE(*derived_key_parameters == *parameters);
+}
+
+TEST(PrfBasedKeyDerivationParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<AesCmacPrfParameters> prf_parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
+  ASSERT_THAT(prf_parameters, IsOk());
+
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(derived_key_parameters, IsOk());
+
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(*prf_parameters)
+          .SetDerivedKeyParameters(*derived_key_parameters)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<PrfBasedKeyDerivationParameters>()));
+  EXPECT_THAT(DynamicCast<const KeyDerivationParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(
+      DynamicCast<const PrfBasedKeyDerivationParameters*>(base_parameters),
+      Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const XChaCha20Poly1305Parameters*>(base_parameters),
+              IsNull());
+
+  const KeyDerivationParameters* key_derivation_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const PrfBasedKeyDerivationParameters*>(
+                  key_derivation_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

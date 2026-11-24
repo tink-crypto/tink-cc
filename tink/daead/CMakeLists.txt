@@ -298,10 +298,12 @@ tink_cc_test(
     aes_siv_parameters_test.cc
   DEPS
     tink::daead::aes_siv_parameters
+    tink::daead::deterministic_aead_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     tink::core::parameters
+    tink::core::rtti
     tink::aead::chacha20_poly1305_parameters
     tink::util::statusor
     tink::util::test_matchers
@@ -314,6 +316,7 @@ tink_cc_test(
   DEPS
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
+    tink::daead::deterministic_aead_key
     GTest::gmock
     absl::no_destructor
     absl::flat_hash_map
@@ -327,6 +330,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters

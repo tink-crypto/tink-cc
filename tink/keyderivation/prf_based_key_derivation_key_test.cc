@@ -27,12 +27,14 @@
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/key.h"
+#include "tink/keyderivation/key_derivation_key.h"
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/prf/internal/aes_cmac_prf_test_vectors.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -42,6 +44,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 
 TEST(PrfBasedKeyDerivationKeyTest, CreateWithIdRequirement) {
   const AesCmacPrfKey& prf_key = internal::GetAesCmacPrfTestVector(32).key;
@@ -515,6 +518,40 @@ TEST(PrfBasedKeyDerivationKeyTest, DifferentKeyTypeNotEqual) {
   EXPECT_TRUE(prf_key != *key);
   EXPECT_FALSE(*key == prf_key);
   EXPECT_FALSE(prf_key == *key);
+}
+
+TEST(PrfBasedKeyDerivationKeyTest, DynamicCastAndTypeIndex) {
+  const AesCmacPrfKey& prf_key = internal::GetAesCmacPrfTestVector(32).key;
+
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(derived_key_parameters, IsOk());
+
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+      PrfBasedKeyDerivationParameters::Builder()
+          .SetPrfParameters(prf_key.GetParameters())
+          .SetDerivedKeyParameters(*derived_key_parameters)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
+      PrfBasedKeyDerivationKey::Create(*parameters, prf_key,
+                                       /*id_requirement=*/123,
+                                       GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  const Key* base_key = &*key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<PrfBasedKeyDerivationKey>()));
+  EXPECT_THAT(DynamicCast<const KeyDerivationKey*>(base_key), Eq(&*key));
+  EXPECT_THAT(DynamicCast<const PrfBasedKeyDerivationKey*>(base_key),
+              Eq(&*key));
+  EXPECT_THAT(DynamicCast<const AesCmacPrfKey*>(base_key), IsNull());
+
+  const KeyDerivationKey* key_derivation_key = &*key;
+  EXPECT_THAT(DynamicCast<const PrfBasedKeyDerivationKey*>(key_derivation_key),
+              Eq(&*key));
 }
 
 }  // namespace

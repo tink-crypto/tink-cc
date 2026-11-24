@@ -40,6 +40,9 @@ TypeIndex GetStaticTypeIndex() {
 #if defined(__cpp_rtti) || defined(__GXX_RTTI) || defined(_CPPRTTI)
   return std::type_index(typeid(T));
 #else
+  // static_assert(sizeof(T) == 0) always fails compilation when
+  // GetStaticTypeIndex is instantiated (in contrast to
+  // std::type_index(typeid(T)) which would fail when this file is parsed).
   static_assert(sizeof(T) == 0,
                 "GetStaticTypeIndex requires -frtti or TINK_USE_CUSTOM_RTTI.");
   std::abort();
@@ -59,6 +62,9 @@ TypeIndex GetTypeIndex(const T& object) {
 #if defined(__cpp_rtti) || defined(__GXX_RTTI) || defined(_CPPRTTI)
   return std::type_index(typeid(object));
 #else
+  // static_assert(sizeof(T) == 0) always fails compilation when GetTypeIndex
+  // is instantiated (in contrast to std::type_index(typeid(object)) which would
+  // fail when this file is parsed).
   (void)object;
   static_assert(sizeof(T) == 0,
                 "GetTypeIndex requires -frtti or TINK_USE_CUSTOM_RTTI.");
@@ -74,6 +80,9 @@ To DynamicCast(From* from) {
 #if defined(__cpp_rtti) || defined(__GXX_RTTI) || defined(_CPPRTTI)
   return dynamic_cast<To>(from);
 #else
+  // static_assert(sizeof(T) == 0) always fails compilation when DynamicCast
+  // is instantiated (in contrast to dynamic_cast<To>(from) which would
+  // fail when this file is parsed).
   (void)from;
   static_assert(sizeof(To) == 0,
                 "DynamicCast requires -frtti or TINK_USE_CUSTOM_RTTI.");

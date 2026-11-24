@@ -604,11 +604,13 @@ tink_cc_test(
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::streamingaead::streaming_aead_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -622,6 +624,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::streamingaead::streaming_aead_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -630,6 +633,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
     tink::streamingaead::internal::testing::streamingaead_test_vector
 )
@@ -672,11 +676,13 @@ tink_cc_test(
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::streamingaead::streaming_aead_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -690,6 +696,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::streamingaead::streaming_aead_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -697,6 +704,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::streamingaead::internal::testing::aes_gcm_hkdf_streaming_test_vectors
 )
 

@@ -29,11 +29,13 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
+#include "tink/streamingaead/streaming_aead_key.h"
 
 namespace crypto {
 namespace tink {
@@ -43,6 +45,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
@@ -247,6 +250,35 @@ TEST(AesCtrHmacStreamingKeyTest, MoveAssignment) {
   key2 = std::move(key1);
 
   EXPECT_THAT(key2, Eq(expected));
+}
+
+TEST(AesCtrHmacStreamingKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, RestrictedData(/*num_random_bytes=*/35),
+      GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  const Key* base_key = &*key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<AesCtrHmacStreamingKey>()));
+  EXPECT_THAT(DynamicCast<const StreamingAeadKey*>(base_key), Eq(&*key));
+  EXPECT_THAT(DynamicCast<const AesCtrHmacStreamingKey*>(base_key), Eq(&*key));
+  EXPECT_THAT(DynamicCast<const AesGcmHkdfStreamingKey*>(base_key), IsNull());
+
+  const StreamingAeadKey* streaming_aead_key = &*key;
+  EXPECT_THAT(DynamicCast<const AesCtrHmacStreamingKey*>(streaming_aead_key),
+              Eq(&*key));
 }
 
 }  // namespace

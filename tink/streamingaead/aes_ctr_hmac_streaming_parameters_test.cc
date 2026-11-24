@@ -25,7 +25,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/streaming_aead_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -38,6 +40,7 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsFalse;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -703,6 +706,36 @@ TEST(AesCtrHmacStreamingParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(AesCtrHmacStreamingParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<AesCtrHmacStreamingParameters>()));
+  EXPECT_THAT(DynamicCast<const StreamingAeadParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(
+      DynamicCast<const AesCtrHmacStreamingParameters*>(base_parameters),
+      Eq(&*parameters));
+  EXPECT_THAT(
+      DynamicCast<const AesGcmHkdfStreamingParameters*>(base_parameters),
+      IsNull());
+
+  const StreamingAeadParameters* streaming_aead_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const AesCtrHmacStreamingParameters*>(
+                  streaming_aead_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

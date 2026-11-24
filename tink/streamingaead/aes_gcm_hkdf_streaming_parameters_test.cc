@@ -25,7 +25,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/streamingaead/streaming_aead_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -38,6 +40,7 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsFalse;
+using ::testing::IsNull;
 using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -481,6 +484,34 @@ TEST(AesGcmHkdfStreamingParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(AesGcmHkdfStreamingParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<AesGcmHkdfStreamingParameters>()));
+  EXPECT_THAT(DynamicCast<const StreamingAeadParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(
+      DynamicCast<const AesGcmHkdfStreamingParameters*>(base_parameters),
+      Eq(&*parameters));
+  EXPECT_THAT(
+      DynamicCast<const AesCtrHmacStreamingParameters*>(base_parameters),
+      IsNull());
+
+  const StreamingAeadParameters* streaming_aead_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const AesGcmHkdfStreamingParameters*>(
+                  streaming_aead_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

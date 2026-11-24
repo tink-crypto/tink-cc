@@ -36,8 +36,13 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
 #include "tink/jwt/internal/jwt_mac_key_gen_config_2026.h"
+#include "tink/jwt/internal/testing/jwt_hmac_test_vectors.h"
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/jwt/jwt_key_templates.h"
@@ -48,6 +53,7 @@
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 
@@ -299,6 +305,54 @@ TEST_P(JwtMacTest, GetPrimitive) {
 
 INSTANTIATE_TEST_SUITE_P(JwtMacTestSuite, JwtMacTest,
                          testing::ValuesIn(GetJwtMacTestParams()));
+
+TEST(JwtMac2026Test, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddJwtMac2026(config), IsOk());
+  absl::StatusOr<internal::SerializationRegistry*> registry =
+      internal::ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddJwtMacKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<internal::SerializationRegistry*> key_gen_registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(
+          key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  struct NamedRegistry {
+    std::string name;
+    const internal::SerializationRegistry* registry;
+  };
+  const JwtHmacKey& key =
+      GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256).key;
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const internal::SerializationRegistry* serialization_registry =
+        entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<internal::ProtoParametersSerialization>(
+                key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+        serialization_registry->ParseParameters(**serialized_params);
+    ASSERT_THAT(parsed_params, IsOk());
+    EXPECT_EQ(**parsed_params, key.GetParameters());
+
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+        serialization_registry->SerializeKey<internal::ProtoKeySerialization>(
+            key, InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(serialized_key, IsOk());
+    absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+        serialization_registry->ParseKey(**serialized_key,
+                                         InsecureSecretKeyAccess::Get());
+    ASSERT_THAT(parsed_key, IsOk());
+    EXPECT_EQ(**parsed_key, key);
+  }
+}
 
 }  // namespace
 }  // namespace jwt_internal

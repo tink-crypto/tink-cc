@@ -17,6 +17,7 @@
 #include "tink/jwt/internal/jwt_signature_config_2026.h"
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -25,6 +26,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -40,8 +42,11 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/ssl_unique_ptr.h"
-#include "tink/internal/ssl_util.h"
 #include "tink/internal/util.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
@@ -50,12 +55,17 @@
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_signature_key_gen_config_2026.h"
+#include "tink/jwt/internal/testing/jwt_ecdsa_test_vectors.h"
+#include "tink/jwt/internal/testing/jwt_ml_dsa_test_vectors.h"
+#include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_proto_serialization.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/jwt/jwt_key_templates.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
+#include "tink/jwt/jwt_ml_dsa_private_key.h"
+#include "tink/jwt/jwt_ml_dsa_public_key.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_public_key_verify.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
@@ -64,15 +74,18 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
+#include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
+#include "tink/subtle/common_enums.h"
 
 namespace crypto {
 namespace tink {
@@ -80,7 +93,10 @@ namespace jwt_internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::google::crypto::tink::KeyTemplate;
+using ::testing::Eq;
+using ::testing::Pointee;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -844,6 +860,108 @@ TEST(JwtSignature2026Test, GetJwtMlDsaPrimitive) {
   absl::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator), IsOk());
+}
+
+std::shared_ptr<const JwtSignaturePrivateKey> CreateJwtMlDsa65PrivateKey() {
+  const JwtMlDsaTestVector& ml_dsa_tv =
+      GetJwtMlDsaTestVector(JwtMlDsaParameters::Algorithm::kMlDsa65);
+  absl::StatusOr<JwtMlDsaParameters> ml_dsa_params = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kIgnored, ml_dsa_tv.algorithm);
+  ABSL_CHECK_OK(ml_dsa_params);
+  absl::StatusOr<JwtMlDsaPublicKey> ml_dsa_public_key =
+      JwtMlDsaPublicKey::Builder()
+          .SetParameters(*ml_dsa_params)
+          .SetPublicKeyBytes(ml_dsa_tv.public_key_bytes)
+          .Build(GetPartialKeyAccess());
+  ABSL_CHECK_OK(ml_dsa_public_key);
+  absl::StatusOr<JwtMlDsaPrivateKey> ml_dsa_private_key =
+      JwtMlDsaPrivateKey::Create(*ml_dsa_public_key,
+                                 RestrictedData(ml_dsa_tv.private_seed_bytes,
+                                                InsecureSecretKeyAccess::Get()),
+                                 GetPartialKeyAccess());
+  ABSL_CHECK_OK(ml_dsa_private_key);
+  return std::make_shared<JwtMlDsaPrivateKey>(*ml_dsa_private_key);
+}
+
+absl::StatusOr<std::unique_ptr<Key>> RoundTripKey(
+    const internal::SerializationRegistry& registry, const Key& key) {
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<Serialization> serialized_key,
+                        registry.SerializeKey<internal::ProtoKeySerialization>(
+                            key, InsecureSecretKeyAccess::Get()));
+  return registry.ParseKey(*serialized_key, InsecureSecretKeyAccess::Get());
+}
+
+struct NamedJwtSignatureKey {
+  std::string test_name;
+  std::shared_ptr<const JwtSignaturePrivateKey> private_key;
+};
+
+using JwtSignature2026SerializationTest = TestWithParam<NamedJwtSignatureKey>;
+
+INSTANTIATE_TEST_SUITE_P(
+    JwtSignature2026SerializationTestSuite, JwtSignature2026SerializationTest,
+    Values(
+        NamedJwtSignatureKey{
+            "JwtEcdsa",
+            std::make_shared<JwtEcdsaPrivateKey>(
+                GetJwtEcdsaTestVector(subtle::EllipticCurveType::NIST_P256)
+                    .key)},
+        NamedJwtSignatureKey{
+            "JwtRsaSsaPkcs1",
+            std::make_shared<JwtRsaSsaPkcs1PrivateKey>(
+                GetJwtRsaSsaPkcs1TestVector(
+                    JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
+                    .key)},
+        NamedJwtSignatureKey{"JwtRsaSsaPss",
+                             std::make_shared<JwtRsaSsaPssPrivateKey>(
+                                 GetJwtRsaSsaPssTestVector(
+                                     JwtRsaSsaPssParameters::Algorithm::kPs256)
+                                     .key)},
+        NamedJwtSignatureKey{"JwtMlDsa", CreateJwtMlDsa65PrivateKey()}),
+    [](const testing::TestParamInfo<NamedJwtSignatureKey>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(JwtSignature2026SerializationTest, SerializationRegistry) {
+  Configuration config;
+  ASSERT_THAT(AddJwtSignature2026(config), IsOk());
+  absl::StatusOr<internal::SerializationRegistry*> registry =
+      internal::ConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddJwtSignatureKeyGen2026(key_gen_config), IsOk());
+  absl::StatusOr<internal::SerializationRegistry*> key_gen_registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(
+          key_gen_config);
+  ASSERT_THAT(key_gen_registry, IsOk());
+
+  struct NamedRegistry {
+    std::string name;
+    const internal::SerializationRegistry* registry;
+  };
+  const JwtSignaturePrivateKey& private_key = *GetParam().private_key;
+  for (const NamedRegistry& entry :
+       {NamedRegistry{"Configuration", *registry},
+        NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {
+    SCOPED_TRACE(entry.name);
+    const internal::SerializationRegistry* serialization_registry =
+        entry.registry;
+    absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+        serialization_registry
+            ->SerializeParameters<internal::ProtoParametersSerialization>(
+                private_key.GetParameters());
+    ASSERT_THAT(serialized_params, IsOk());
+    EXPECT_THAT(
+        serialization_registry->ParseParameters(**serialized_params),
+        IsOkAndHolds(Pointee(Eq(std::cref(private_key.GetParameters())))));
+
+    EXPECT_THAT(RoundTripKey(*serialization_registry, private_key),
+                IsOkAndHolds(Pointee(Eq(std::cref(private_key)))));
+    EXPECT_THAT(
+        RoundTripKey(*serialization_registry, private_key.GetPublicKey()),
+        IsOkAndHolds(Pointee(Eq(std::cref(private_key.GetPublicKey())))));
+  }
 }
 
 }  // namespace

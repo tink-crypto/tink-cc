@@ -16,10 +16,14 @@
 
 #include "tink/jwt/internal/jwt_mac_key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
+#include "tink/jwt/internal/jwt_hmac_proto_serialization_impl.h"
 #include "tink/key_gen_configuration.h"
 
 namespace crypto {
@@ -27,6 +31,11 @@ namespace tink {
 namespace jwt_internal {
 
 absl::Status AddJwtMacKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterJwtHmacProtoSerializationWithRegistry(
+      *serialization_registry));
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<JwtHmacKeyManager>(), config);
 }

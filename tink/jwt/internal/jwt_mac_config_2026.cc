@@ -22,11 +22,14 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
+#include "tink/jwt/internal/jwt_hmac_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_mac_impl.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/internal/jwt_mac_wrapper.h"
@@ -126,6 +129,12 @@ absl::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwtHmacInternal(
 }  // namespace
 
 absl::Status AddJwtMac2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterJwtHmacProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = RegisterJwtHmacProtoSerialization();
   if (!status.ok()) {
     return status;

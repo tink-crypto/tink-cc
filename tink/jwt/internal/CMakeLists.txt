@@ -1356,17 +1356,20 @@ tink_cc_library(
     jwt_mac_config_2026.h
   DEPS
     tink::jwt::internal::jwt_hmac_key_manager
+    tink::jwt::internal::jwt_hmac_proto_serialization_impl
     tink::jwt::internal::jwt_mac_impl
     tink::jwt::internal::jwt_mac_internal
     tink::jwt::internal::jwt_mac_wrapper
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     tink::core::configuration
     tink::core::mac
     tink::core::partial_key_access
     tink::internal::configuration_impl
     tink::internal::internal_insecure_secret_key_access
+    tink::internal::serialization_registry
     tink::jwt::jwt_hmac_key
     tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_hmac_proto_serialization
@@ -1395,18 +1398,24 @@ tink_cc_test(
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::jwt::jwt_hmac_key
     tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_key_templates
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
+    tink::jwt::internal::testing::jwt_hmac_test_vectors
 )
 
 tink_cc_library(
@@ -1416,10 +1425,12 @@ tink_cc_library(
     jwt_mac_key_gen_config_2026.h
   DEPS
     tink::jwt::internal::jwt_hmac_key_manager
-    absl::memory
+    tink::jwt::internal::jwt_hmac_proto_serialization_impl
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
 )
 
 tink_cc_library(
@@ -1428,8 +1439,10 @@ tink_cc_library(
     jwt_signature_config_2026.cc
     jwt_signature_config_2026.h
   DEPS
+    tink::jwt::internal::jwt_ecdsa_proto_serialization_impl
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_ml_dsa_proto_serialization_impl
     tink::jwt::internal::jwt_ml_dsa_signer
     tink::jwt::internal::jwt_ml_dsa_verifier
     tink::jwt::internal::jwt_public_key_sign_impl
@@ -1438,12 +1451,15 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_verify_impl
     tink::jwt::internal::jwt_public_key_verify_internal
     tink::jwt::internal::jwt_public_key_verify_wrapper
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_proto_serialization_impl
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_proto_serialization_impl
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::optional
@@ -1455,6 +1471,7 @@ tink_cc_library(
     tink::core::public_key_verify
     tink::core::restricted_data
     tink::internal::configuration_impl
+    tink::internal::serialization_registry
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
@@ -1502,6 +1519,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_signature_key_gen_config_2026
     GTest::gmock
     absl::absl_check
+    absl::status_macros
     absl::status_matchers
     absl::statusor
     absl::strings
@@ -1516,6 +1534,7 @@ tink_cc_test(
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_data
@@ -1524,8 +1543,11 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
     tink::internal::ssl_unique_ptr
-    tink::internal::ssl_util
     tink::internal::util
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
@@ -1533,6 +1555,8 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_key_templates
     tink::jwt::jwt_ml_dsa_parameters
+    tink::jwt::jwt_ml_dsa_private_key
+    tink::jwt::jwt_ml_dsa_public_key
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
@@ -1541,8 +1565,13 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key
+    tink::jwt::jwt_signature_private_key
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
+    tink::jwt::internal::testing::jwt_ecdsa_test_vectors
+    tink::jwt::internal::testing::jwt_ml_dsa_test_vectors
+    tink::jwt::internal::testing::jwt_rsa_ssa_test_vectors
+    tink::subtle::common_enums
 )
 
 tink_cc_library(
@@ -1551,17 +1580,22 @@ tink_cc_library(
     jwt_signature_key_gen_config_2026.cc
     jwt_signature_key_gen_config_2026.h
   DEPS
+    tink::jwt::internal::jwt_ecdsa_proto_serialization_impl
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
     tink::jwt::internal::jwt_ml_dsa_key_creator
+    tink::jwt::internal::jwt_ml_dsa_proto_serialization_impl
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_proto_serialization_impl
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_proto_serialization_impl
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
-    absl::memory
     absl::status
+    absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
+    tink::internal::serialization_registry
     tink::jwt::jwt_ml_dsa_parameters
     tink::jwt::jwt_ml_dsa_proto_serialization
 )

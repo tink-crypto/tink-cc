@@ -16,14 +16,21 @@
 
 #include "tink/jwt/internal/jwt_signature_key_gen_config_2026.h"
 
-#include "absl/memory/memory.h"
+#include <memory>
+
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/jwt/internal/jwt_ecdsa_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_ml_dsa_key_creator.h"
+#include "tink/jwt/internal/jwt_ml_dsa_proto_serialization_impl.h"
+#include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/jwt/internal/jwt_rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
@@ -35,6 +42,20 @@ namespace tink {
 namespace jwt_internal {
 
 absl::Status AddJwtSignatureKeyGen2026(KeyGenConfiguration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterJwtEcdsaProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterJwtRsaSsaPkcs1ProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterJwtRsaSsaPssProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(internal::RegisterJwtMlDsaProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status =
       internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
           std::make_unique<JwtEcdsaSignKeyManager>(),

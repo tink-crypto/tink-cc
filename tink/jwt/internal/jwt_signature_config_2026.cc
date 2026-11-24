@@ -22,14 +22,18 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/configuration.h"
 #include "tink/ec_point.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/jwt/internal/jwt_ecdsa_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
+#include "tink/jwt/internal/jwt_ml_dsa_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_ml_dsa_signer.h"
 #include "tink/jwt/internal/jwt_ml_dsa_verifier.h"
 #include "tink/jwt/internal/jwt_public_key_sign_impl.h"
@@ -38,8 +42,10 @@
 #include "tink/jwt/internal/jwt_public_key_verify_impl.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/internal/jwt_public_key_verify_wrapper.h"
+#include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/jwt/internal/jwt_rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
@@ -649,6 +655,20 @@ NewJwtRsaSsaPssVerifyInternal(
 }  // namespace
 
 absl::Status AddJwtSignature2026(Configuration& config) {
+  ABSL_ASSIGN_OR_RETURN(
+      internal::SerializationRegistry * serialization_registry,
+      internal::ConfigurationImpl::GetSerializationRegistry(config));
+  ABSL_RETURN_IF_ERROR(internal::RegisterJwtEcdsaProtoSerializationWithRegistry(
+      *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterJwtRsaSsaPkcs1ProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::RegisterJwtRsaSsaPssProtoSerializationWithRegistry(
+          *serialization_registry));
+  ABSL_RETURN_IF_ERROR(internal::RegisterJwtMlDsaProtoSerializationWithRegistry(
+      *serialization_registry));
+
   absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       std::make_unique<JwtPublicKeySignWrapper>(), config);
   if (!status.ok()) {

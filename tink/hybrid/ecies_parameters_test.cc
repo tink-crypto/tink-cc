@@ -33,7 +33,9 @@
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_parameters.h"
 #include "tink/hybrid/hpke_parameters.h"
+#include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -46,6 +48,7 @@ using ::absl_testing::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
 using ::testing::Gt;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -836,6 +839,32 @@ TEST(EciesParametersTest, Clone) {
   std::unique_ptr<Parameters> cloned_ecies_parameters =
       ecies_parameters->Clone();
   ASSERT_THAT(*cloned_ecies_parameters, Eq(*ecies_parameters));
+}
+
+TEST(EciesParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<EciesParameters> parameters =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kXChaCha20Poly1305Raw)
+          .SetSalt(test::HexDecodeOrDie(kSalt))
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<EciesParameters>()));
+  EXPECT_THAT(DynamicCast<const HybridParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const EciesParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const HpkeParameters*>(base_parameters), IsNull());
+
+  const HybridParameters* hybrid_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const EciesParameters*>(hybrid_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

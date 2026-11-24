@@ -28,14 +28,18 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "tink/internal/secret_buffer.h"
+#include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_public_key.h"
+#include "tink/hybrid/hybrid_private_key.h"
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
 
@@ -58,6 +62,8 @@ using ::crypto::tink::internal::X25519SecretValue;
 using ::crypto::tink::internal::XWingPublicValue;
 using ::crypto::tink::internal::XWingSecretValue;
 using ::testing::Eq;
+using ::testing::IsNull;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -596,6 +602,34 @@ TEST(HpkePrivateKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(key));
+}
+
+TEST(HpkePrivateKeyTest, DynamicCastAndTypeIndex) {
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+
+  const Key* base_key = private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<HpkePrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(private_key));
+  EXPECT_THAT(DynamicCast<const HybridPrivateKey*>(base_key), Eq(private_key));
+  EXPECT_THAT(DynamicCast<const HpkePrivateKey*>(base_key), Eq(private_key));
+  EXPECT_THAT(DynamicCast<const EciesPrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = private_key;
+  EXPECT_THAT(DynamicCast<const HybridPrivateKey*>(base_private_key),
+              Eq(private_key));
+  EXPECT_THAT(DynamicCast<const HpkePrivateKey*>(base_private_key),
+              Eq(private_key));
+
+  const HybridPrivateKey* hybrid_private_key = private_key;
+  EXPECT_THAT(DynamicCast<const HpkePrivateKey*>(hybrid_private_key),
+              Eq(private_key));
 }
 
 }  // namespace

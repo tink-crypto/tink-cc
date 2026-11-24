@@ -29,17 +29,21 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/subtle/random.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_public_key.h"
+#include "tink/hybrid/hpke_private_key.h"
+#include "tink/hybrid/hybrid_private_key.h"
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/subtle/random.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -54,6 +58,7 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::IsNull;
 using ::testing::StrEq;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
@@ -576,6 +581,29 @@ TEST(EciesPrivateKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = private_key.Clone();
 
   ASSERT_THAT(*cloned_key, Eq(private_key));
+}
+
+TEST(EciesPrivateKeyTest, DynamicCastAndTypeIndex) {
+  const EciesPrivateKey& private_key =
+      *internal::GetEciesPrivateKey(subtle::EllipticCurveType::CURVE25519);
+
+  const Key* base_key = &private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<EciesPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const HybridPrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const EciesPrivateKey*>(base_key), Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const HpkePrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const HybridPrivateKey*>(base_private_key),
+              Eq(&private_key));
+  EXPECT_THAT(DynamicCast<const EciesPrivateKey*>(base_private_key),
+              Eq(&private_key));
+
+  const HybridPrivateKey* hybrid_private_key = &private_key;
+  EXPECT_THAT(DynamicCast<const EciesPrivateKey*>(hybrid_private_key),
+              Eq(&private_key));
 }
 
 }  // namespace

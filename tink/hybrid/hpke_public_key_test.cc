@@ -32,10 +32,12 @@
 #include "tink/hybrid/ecies_public_key.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_private_key.h"
+#include "tink/hybrid/hybrid_public_key.h"
 #include "tink/hybrid/internal/testing/hpke_test_vectors.h"
 #include "tink/internal/ec_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_util.h"
 
@@ -56,6 +58,8 @@ using ::crypto::tink::internal::P256PointAsString;
 using ::crypto::tink::internal::X25519PublicValue;
 using ::crypto::tink::internal::XWingPublicValue;
 using ::testing::Eq;
+using ::testing::IsNull;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -561,6 +565,27 @@ TEST(HpkePublicKeyTest, DifferentKeyTypeNotEqual) {
   EXPECT_TRUE(*other_key != *public_key);
   EXPECT_FALSE(*public_key == *other_key);
   EXPECT_FALSE(*other_key == *public_key);
+}
+
+TEST(HpkePublicKeyTest, DynamicCastAndTypeIndex) {
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& public_key = private_key->GetPublicKey();
+
+  const Key* base_key = &public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key), Eq(GetStaticTypeIndex<HpkePublicKey>()));
+  EXPECT_THAT(DynamicCast<const HybridPublicKey*>(base_key), Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const HpkePublicKey*>(base_key), Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const EciesPublicKey*>(base_key), IsNull());
+
+  const HybridPublicKey* hybrid_public_key = &public_key;
+  EXPECT_THAT(DynamicCast<const HpkePublicKey*>(hybrid_public_key),
+              Eq(&public_key));
 }
 
 }  // namespace

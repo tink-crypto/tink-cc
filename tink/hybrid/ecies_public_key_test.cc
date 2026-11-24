@@ -34,11 +34,13 @@
 #include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_public_key.h"
+#include "tink/hybrid/hybrid_public_key.h"
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/testing/ec_test_vectors.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/test_util.h"
@@ -54,6 +56,7 @@ using ::crypto::tink::internal::GetEciesPrivateKey;
 using ::crypto::tink::internal::HybridTestVector;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsNull;
 using ::testing::Pointee;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
@@ -487,6 +490,22 @@ TEST(EciesPublicKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = public_key.Clone();
 
   ASSERT_THAT(cloned_key, Pointee(Eq(public_key)));
+}
+
+TEST(EciesPublicKeyTest, DynamicCastAndTypeIndex) {
+  const EciesPublicKey& public_key =
+      GetEciesPrivateKey(subtle::EllipticCurveType::CURVE25519)->GetPublicKey();
+
+  const Key* base_key = &public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<EciesPublicKey>()));
+  EXPECT_THAT(DynamicCast<const HybridPublicKey*>(base_key), Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const EciesPublicKey*>(base_key), Eq(&public_key));
+  EXPECT_THAT(DynamicCast<const HpkePublicKey*>(base_key), IsNull());
+
+  const HybridPublicKey* hybrid_public_key = &public_key;
+  EXPECT_THAT(DynamicCast<const EciesPublicKey*>(hybrid_public_key),
+              Eq(&public_key));
 }
 
 }  // namespace

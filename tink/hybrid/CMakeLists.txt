@@ -698,11 +698,13 @@ tink_cc_test(
   DEPS
     tink::hybrid::ecies_parameters
     tink::hybrid::hpke_parameters
+    tink::hybrid::hybrid_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::test_matchers
 )
 
@@ -716,6 +718,7 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
+    tink::hybrid::hybrid_public_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -723,6 +726,7 @@ tink_cc_test(
     absl::optional
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::ec_util
     tink::subtle::common_enums
@@ -734,9 +738,11 @@ tink_cc_test(
   SRCS
     hpke_private_key_test.cc
   DEPS
+    tink::hybrid::ecies_private_key
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
+    tink::hybrid::hybrid_private_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -746,7 +752,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::internal::secret_buffer
     tink::util::secret_data
@@ -793,6 +801,7 @@ tink_cc_test(
   DEPS
     tink::hybrid::ecies_parameters
     tink::hybrid::hpke_parameters
+    tink::hybrid::hybrid_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -800,6 +809,7 @@ tink_cc_test(
     absl::string_view
     absl::optional
     tink::core::parameters
+    tink::core::rtti
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_gcm_parameters
     tink::aead::xchacha20_poly1305_parameters
@@ -818,6 +828,7 @@ tink_cc_test(
     tink::hybrid::ecies_public_key
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_public_key
+    tink::hybrid::hybrid_public_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -827,6 +838,7 @@ tink_cc_test(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::internal::ec_util
     tink::internal::testing::ec_test_vectors
@@ -843,6 +855,8 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hybrid_private_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -855,7 +869,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
     tink::subtle::common_enums
     tink::subtle::random

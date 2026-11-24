@@ -26,7 +26,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/hybrid/ecies_parameters.h"
+#include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -37,6 +39,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Combine;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -431,6 +434,30 @@ TEST(HpkeParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(HpkeParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<HpkeParameters>()));
+  EXPECT_THAT(DynamicCast<const HybridParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const HpkeParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const EciesParameters*>(base_parameters), IsNull());
+
+  const HybridParameters* hybrid_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const HpkeParameters*>(hybrid_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

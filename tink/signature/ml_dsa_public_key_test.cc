@@ -31,9 +31,11 @@
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/signature_public_key.h"
 #include "tink/subtle/random.h"
 
 namespace crypto {
@@ -44,6 +46,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -416,6 +419,31 @@ TEST(MlDsaPublicKeyTest, MoveAssignment) {
   *moved = std::move(*public_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(MlDsaPublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes =
+      GeneratePublicKey(MlDsaParameters::Instance::kMlDsa65);
+  absl::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<MlDsaPublicKey>()));
+  EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const MlDsaPublicKey*>(base_key), Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(base_key), IsNull());
+
+  const SignaturePublicKey* signature_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const MlDsaPublicKey*>(signature_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

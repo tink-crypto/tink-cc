@@ -30,8 +30,10 @@
 #include "openssl/slhdsa.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/signature/signature_public_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/subtle/random.h"
 
@@ -43,6 +45,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -400,6 +403,32 @@ TEST(SlhDsaPublicKeyTest, MoveAssignment) {
   *moved = std::move(*public_key);
 
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(SlhDsaPublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, subtle::Random::GetRandomBytes(32),
+      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<SlhDsaPublicKey>()));
+  EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const SlhDsaPublicKey*>(base_key), Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(base_key), IsNull());
+
+  const SignaturePublicKey* signature_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const SlhDsaPublicKey*>(signature_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

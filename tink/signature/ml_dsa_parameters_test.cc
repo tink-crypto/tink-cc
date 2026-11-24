@@ -25,7 +25,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/signature_parameters.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -35,6 +37,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -227,6 +230,25 @@ TEST(MlDsaParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
+TEST(MlDsaParametersTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  const Parameters* base_parameters = &*parameters;
+  EXPECT_THAT(GetTypeIndex(*base_parameters),
+              Eq(GetStaticTypeIndex<MlDsaParameters>()));
+  EXPECT_THAT(DynamicCast<const SignatureParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const MlDsaParameters*>(base_parameters),
+              Eq(&*parameters));
+  EXPECT_THAT(DynamicCast<const Ed25519Parameters*>(base_parameters), IsNull());
+
+  const SignatureParameters* signature_parameters = &*parameters;
+  EXPECT_THAT(DynamicCast<const MlDsaParameters*>(signature_parameters),
+              Eq(&*parameters));
 }
 
 }  // namespace

@@ -29,6 +29,7 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_util.h"
 #include "tink/signature/ml_dsa_private_key.h"
@@ -46,6 +47,7 @@ using ::crypto::tink::internal::GenerateClassicalPrivateKeyForTestOrDie;
 using ::crypto::tink::internal::GenerateMlDsaPrivateKeyForTestOrDie;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -606,6 +608,40 @@ TEST(CompositeMlDsaPublicKeyTest, MoveAssignment) {
 
   EXPECT_THAT(*moved, Eq(expected));
   EXPECT_THAT(moved->GetOutputPrefix(), Eq(expected.GetOutputPrefix()));
+}
+
+TEST(CompositeMlDsaPublicKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+          CompositeMlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  MlDsaPublicKey ml_dsa_public_key = GenerateMlDsaPublicKeyOrDie(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
+  std::unique_ptr<SignaturePublicKey> classical_public_key =
+      GenerateClassicalPublicKeyOrDie(
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
+
+  absl::StatusOr<CompositeMlDsaPublicKey> public_key =
+      CompositeMlDsaPublicKey::Create(
+          *parameters, ml_dsa_public_key, std::move(classical_public_key),
+          /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  const Key* base_key = &*public_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<CompositeMlDsaPublicKey>()));
+  EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const CompositeMlDsaPublicKey*>(base_key),
+              Eq(&*public_key));
+  EXPECT_THAT(DynamicCast<const MlDsaPublicKey*>(base_key), IsNull());
+
+  const SignaturePublicKey* signature_public_key = &*public_key;
+  EXPECT_THAT(DynamicCast<const CompositeMlDsaPublicKey*>(signature_public_key),
+              Eq(&*public_key));
 }
 
 }  // namespace

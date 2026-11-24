@@ -27,15 +27,19 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"  // IWYU pragma: keep
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
+#include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
+#include "tink/signature/signature_private_key.h"
 #include "tink/subtle/random.h"
 
 namespace crypto {
@@ -46,6 +50,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -344,6 +349,32 @@ TEST(MlDsaPrivateKeyTest, MoveAssignment) {
   other_private_key = std::move(private_key);
 
   EXPECT_THAT(other_private_key, Eq(expected));
+}
+
+TEST(MlDsaPrivateKeyTest, DynamicCastAndTypeIndex) {
+  const auto* private_key = static_cast<const MlDsaPrivateKey*>(
+      internal::GetMlDsaTestVector(MlDsaParameters::Instance::kMlDsa65,
+                                   MlDsaParameters::Variant::kTink)
+          .signature_private_key.get());
+
+  const Key* base_key = private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<MlDsaPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(private_key));
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_key),
+              Eq(private_key));
+  EXPECT_THAT(DynamicCast<const MlDsaPrivateKey*>(base_key), Eq(private_key));
+  EXPECT_THAT(DynamicCast<const Ed25519PrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = private_key;
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_private_key),
+              Eq(private_key));
+  EXPECT_THAT(DynamicCast<const MlDsaPrivateKey*>(base_private_key),
+              Eq(private_key));
+
+  const SignaturePrivateKey* signature_private_key = private_key;
+  EXPECT_THAT(DynamicCast<const MlDsaPrivateKey*>(signature_private_key),
+              Eq(private_key));
 }
 
 }  // namespace

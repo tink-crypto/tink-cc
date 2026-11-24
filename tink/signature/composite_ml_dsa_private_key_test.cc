@@ -28,6 +28,8 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
+#include "tink/private_key.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_util.h"
 #include "tink/signature/ml_dsa_private_key.h"
@@ -41,6 +43,7 @@ using ::absl_testing::IsOk;
 using ::crypto::tink::internal::GenerateClassicalPrivateKeyForTestOrDie;
 using ::crypto::tink::internal::GenerateMlDsaPrivateKeyForTestOrDie;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -512,6 +515,48 @@ TEST(CompositeMlDsaPrivateKeyTest, MoveAssignment) {
   CompositeMlDsaPrivateKey expected(*private_key);
   *moved = std::move(*private_key);
   EXPECT_THAT(*moved, Eq(expected));
+}
+
+TEST(CompositeMlDsaPrivateKeyTest, DynamicCastAndTypeIndex) {
+  absl::StatusOr<CompositeMlDsaParameters> parameters =
+      CompositeMlDsaParameters::Create(
+          CompositeMlDsaParameters::MlDsaInstance::kMlDsa65,
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519,
+          CompositeMlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  MlDsaPrivateKey ml_dsa_private_key = GenerateMlDsaPrivateKeyForTestOrDie(
+      CompositeMlDsaParameters::MlDsaInstance::kMlDsa65);
+  std::unique_ptr<SignaturePrivateKey> classical_private_key =
+      GenerateClassicalPrivateKeyForTestOrDie(
+          CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519);
+
+  absl::StatusOr<CompositeMlDsaPrivateKey> private_key =
+      CompositeMlDsaPrivateKey::Create(
+          *parameters, ml_dsa_private_key, std::move(classical_private_key),
+          /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  const Key* base_key = &*private_key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<CompositeMlDsaPrivateKey>()));
+  EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const CompositeMlDsaPrivateKey*>(base_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const MlDsaPrivateKey*>(base_key), IsNull());
+
+  const PrivateKey* base_private_key = &*private_key;
+  EXPECT_THAT(DynamicCast<const SignaturePrivateKey*>(base_private_key),
+              Eq(&*private_key));
+  EXPECT_THAT(DynamicCast<const CompositeMlDsaPrivateKey*>(base_private_key),
+              Eq(&*private_key));
+
+  const SignaturePrivateKey* signature_private_key = &*private_key;
+  EXPECT_THAT(
+      DynamicCast<const CompositeMlDsaPrivateKey*>(signature_private_key),
+      Eq(&*private_key));
 }
 
 }  // namespace

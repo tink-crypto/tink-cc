@@ -1658,11 +1658,13 @@ tink_cc_test(
   DEPS
     tink::signature::ed25519_parameters
     tink::signature::ml_dsa_parameters
+    tink::signature::signature_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::test_matchers
 )
 
@@ -1696,9 +1698,11 @@ tink_cc_test(
   SRCS
     ml_dsa_private_key_test.cc
   DEPS
+    tink::signature::ed25519_private_key
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
+    tink::signature::signature_private_key
     GTest::gmock
     absl::status
     absl::status_matchers
@@ -1707,7 +1711,9 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::fips_utils
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
@@ -1742,6 +1748,7 @@ tink_cc_test(
     tink::signature::ed25519_public_key
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key
+    tink::signature::signature_public_key
     GTest::gmock
     absl::absl_log
     absl::status
@@ -1751,6 +1758,7 @@ tink_cc_test(
     absl::optional
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::subtle::random
 )
 
@@ -1774,6 +1782,7 @@ tink_cc_test(
     slh_dsa_parameters_test.cc
   DEPS
     tink::signature::ed25519_parameters
+    tink::signature::signature_parameters
     tink::signature::slh_dsa_parameters
     GTest::gmock
     absl::no_destructor
@@ -1782,6 +1791,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::test_matchers
 )
 
@@ -1816,6 +1826,8 @@ tink_cc_test(
   SRCS
     slh_dsa_private_key_test.cc
   DEPS
+    tink::signature::ed25519_private_key
+    tink::signature::signature_private_key
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
@@ -1827,9 +1839,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::fips_utils
     tink::signature::internal::slh_dsa_parameter_set
     tink::signature::internal::slh_dsa_sign_boringssl
@@ -1866,6 +1880,7 @@ tink_cc_test(
   DEPS
     tink::signature::ed25519_parameters
     tink::signature::ed25519_public_key
+    tink::signature::signature_public_key
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_public_key
     GTest::gmock
@@ -1876,6 +1891,7 @@ tink_cc_test(
     tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::subtle::random
 )
 
@@ -1898,11 +1914,13 @@ tink_cc_test(
   DEPS
     tink::signature::composite_ml_dsa_parameters
     tink::signature::ed25519_parameters
+    tink::signature::signature_parameters
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::test_matchers
 )
 
@@ -1941,6 +1959,8 @@ tink_cc_test(
     absl::statusor
     tink::core::key
     tink::core::partial_key_access
+    tink::core::private_key
+    tink::core::rtti
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
 )
@@ -1993,6 +2013,7 @@ tink_cc_test(
     absl::statusor
     tink::core::key
     tink::core::partial_key_access
+    tink::core::rtti
     tink::internal::util
     tink::signature::internal::testing::composite_ml_dsa_test_util
 )

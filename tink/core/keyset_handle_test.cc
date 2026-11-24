@@ -74,6 +74,7 @@ namespace crypto {
 namespace tink {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::crypto::tink::TestKeysetHandle;
 using ::crypto::tink::internal::CreateTestOnlyKey;
@@ -180,6 +181,23 @@ class KeysetHandleLegacyTest : public ::testing::Test {
     internal::UnSetFipsRestricted();
   }
 };
+
+// Matches a pointer to a `KeysetHandle` whose keys are all `LegacyProtoKey`s,
+// so that operations on it go through key managers.
+MATCHER(HasOnlyLegacyProtoKeys, "") {
+  if (arg == nullptr) {
+    *result_listener << "is null";
+    return false;
+  }
+  for (int i = 0; i < arg->size(); ++i) {
+    if (dynamic_cast<const internal::LegacyProtoKey*>(
+            (*arg)[i].GetKey().get()) == nullptr) {
+      *result_listener << "key " << i << " is not a LegacyProtoKey";
+      return false;
+    }
+  }
+  return true;
+}
 
 // Fake AEAD key type manager for testing.
 class FakeAeadKeyManager
@@ -1815,14 +1833,14 @@ TEST_F(KeysetHandleLegacyTest, GenerateNewWithBespokeConfig) {
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
                   std::make_unique<TestOnlyKeyTypeManager>(), config),
               IsOk());
-  EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), config).status(),
-              IsOk());
+  EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), config),
+              IsOkAndHolds(HasOnlyLegacyProtoKeys()));
 }
 
 TEST_F(KeysetHandleLegacyTest, GenerateNewWithGlobalRegistryConfig) {
   EXPECT_THAT(KeysetHandle::GenerateNew(TestOnlyKeyTemplate(),
                                         KeyGenConfigGlobalRegistry()),
-              IsOk());
+              IsOkAndHolds(HasOnlyLegacyProtoKeys()));
 }
 
 TEST_F(KeysetHandleLegacyTest, GenerateNewWithAnnotations) {
@@ -1955,7 +1973,7 @@ TEST_F(KeysetHandleLegacyTest, GetPrimitiveWithBespokeConfigSucceeds) {
               IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(TestOnlyKeyTemplate(), key_gen_config);
-  ASSERT_THAT(handle, IsOk());
+  ASSERT_THAT(handle, IsOkAndHolds(HasOnlyLegacyProtoKeys()));
 
   Configuration config;
   ASSERT_THAT(internal::ConfigurationImpl::AddKeyTypeManager(
@@ -1986,7 +2004,7 @@ TEST_F(KeysetHandleLegacyTest, GetPrimitiveWithGlobalRegistryConfig) {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(TestOnlyKeyTemplate(),
                                 KeyGenConfigGlobalRegistry());
-  ASSERT_THAT(handle, IsOk());
+  ASSERT_THAT(handle, IsOkAndHolds(HasOnlyLegacyProtoKeys()));
 
   EXPECT_THAT((*handle)->GetPrimitive<Aead>(ConfigGlobalRegistry()), IsOk());
 }
@@ -2069,6 +2087,7 @@ TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
   Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
       TestKeysetHandle::GetKeysetHandle(keyset);
+  ASSERT_THAT(handle, HasOnlyLegacyProtoKeys());
 
   KeyGenConfiguration config;
   ASSERT_THAT(internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
@@ -2077,7 +2096,7 @@ TEST_F(KeysetHandleLegacyTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
               IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(config);
-  ASSERT_THAT(public_handle, IsOk());
+  ASSERT_THAT(public_handle, IsOkAndHolds(HasOnlyLegacyProtoKeys()));
 
   const Keyset& public_keyset = TestKeysetHandle::GetKeyset(**public_handle);
   EXPECT_EQ(keyset.primary_key_id(), public_keyset.primary_key_id());
@@ -2119,10 +2138,11 @@ TEST_F(KeysetHandleLegacyTest,
   Keyset keyset = CreateTestOnlyPrivateMultiKeyset();
   std::unique_ptr<KeysetHandle> handle =
       TestKeysetHandle::GetKeysetHandle(keyset);
+  ASSERT_THAT(handle, HasOnlyLegacyProtoKeys());
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
-  ASSERT_THAT(public_handle, IsOk());
+  ASSERT_THAT(public_handle, IsOkAndHolds(HasOnlyLegacyProtoKeys()));
 
   const Keyset& public_keyset = TestKeysetHandle::GetKeyset(**public_handle);
   EXPECT_EQ(keyset.primary_key_id(), public_keyset.primary_key_id());

@@ -86,20 +86,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME hybrid_decrypt_factory
-  SRCS
-    hybrid_decrypt_factory.cc
-    hybrid_decrypt_factory.h
-)
-
-tink_cc_library(
-  NAME hybrid_encrypt_factory
-  SRCS
-    hybrid_encrypt_factory.cc
-    hybrid_encrypt_factory.h
-)
-
-tink_cc_library(
   NAME hybrid_key_templates
   SRCS
     hybrid_key_templates.cc

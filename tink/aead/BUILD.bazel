@@ -117,12 +117,6 @@ cc_library(
 )
 
 cc_library(
-    name = "aead_factory",
-    srcs = ["aead_factory.cc"],
-    hdrs = ["aead_factory.h"],
-)
-
-cc_library(
     name = "aead_key_templates",
     srcs = ["aead_key_templates.cc"],
     hdrs = ["aead_key_templates.h"],

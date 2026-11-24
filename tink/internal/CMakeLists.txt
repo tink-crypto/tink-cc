@@ -65,6 +65,7 @@ tink_cc_library(
     tink::internal::key_info
     tink::internal::keyset_wrapper
     tink::internal::mutable_serialization_registry
+    tink::internal::primitive_set
     tink::internal::proto_key_serialization
     tink::internal::tink_proto_structs
     absl::flat_hash_map
@@ -73,7 +74,6 @@ tink_cc_library(
     absl::statusor
     absl::optional
     tink::core::key
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::restricted_data
     tink::util::validation
@@ -116,6 +116,7 @@ tink_cc_library(
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
     tink::internal::monitoring
+    tink::internal::primitive_set
     absl::core_headers
     absl::flat_hash_map
     absl::any_invocable
@@ -129,7 +130,6 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::key
     tink::core::key_manager
-    tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::util::errors
     tink::util::status
@@ -495,11 +495,11 @@ tink_cc_library(
   DEPS
     tink::internal::key_status_util
     tink::internal::monitoring
+    tink::internal::primitive_set
     absl::flat_hash_map
     absl::status
     absl::strings
     tink::core::key_status
-    tink::core::primitive_set
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto

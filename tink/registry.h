@@ -23,9 +23,9 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/primitive_set.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/key_manager.h"
-#include "tink/primitive_set.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

@@ -88,13 +88,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME aead_factory
-  SRCS
-    aead_factory.cc
-    aead_factory.h
-)
-
-tink_cc_library(
   NAME aead_key_templates
   SRCS
     aead_key_templates.cc

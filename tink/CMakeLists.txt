@@ -32,7 +32,6 @@ tink_cc_library(
   SRCS
     aead.h
     aead_config.h
-    aead_factory.h
     aead_key_templates.h
     annotations.h
     binary_keyset_reader.h
@@ -40,13 +39,10 @@ tink_cc_library(
     cleartext_keyset_handle.h
     deterministic_aead.h
     deterministic_aead_config.h
-    deterministic_aead_factory.h
     deterministic_aead_key_templates.h
     hybrid_config.h
     hybrid_decrypt.h
-    hybrid_decrypt_factory.h
     hybrid_encrypt.h
-    hybrid_encrypt_factory.h
     hybrid_key_templates.h
     input_stream.h
     json_keyset_reader.h
@@ -60,14 +56,11 @@ tink_cc_library(
     kms_client.h
     mac.h
     mac_config.h
-    mac_factory.h
     mac_key_templates.h
     output_stream.h
     output_stream_with_result.h
     public_key_sign.h
-    public_key_sign_factory.h
     public_key_verify.h
-    public_key_verify_factory.h
     random_access_stream.h
     registry.h
     signature_config.h
@@ -101,7 +94,6 @@ tink_cc_library(
     tink::core::output_stream
     tink::core::output_stream_with_result
     tink::core::parameters
-    tink::core::primitive_set
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::random_access_stream
@@ -117,27 +109,21 @@ tink_cc_library(
     absl::strings
     absl::synchronization
     tink::aead::aead_config
-    tink::aead::aead_factory
     tink::aead::aead_key_templates
     tink::aead::config_v0
     tink::config::tink_config
     tink::daead::config_v0
     tink::daead::deterministic_aead_config
-    tink::daead::deterministic_aead_factory
     tink::daead::deterministic_aead_key_templates
     tink::hybrid::hybrid_config
-    tink::hybrid::hybrid_decrypt_factory
-    tink::hybrid::hybrid_encrypt_factory
     tink::hybrid::hybrid_key_templates
     tink::internal::key_info
     tink::internal::keyset_handle_builder_entry
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::mac::mac_config
-    tink::mac::mac_factory
     tink::mac::mac_key_templates
     tink::pem::signature_key_parser
-    tink::signature::public_key_sign_factory
-    tink::signature::public_key_verify_factory
     tink::signature::signature_config
     tink::signature::signature_key_templates
     tink::streamingaead::streaming_aead_config
@@ -381,21 +367,12 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME primitive_set
-  SRCS
-    primitive_set.h
-    primitive_set.h
-  DEPS
-    tink::internal::primitive_set
-)
-
-tink_cc_library(
   NAME primitive_wrapper
   SRCS
     primitive_wrapper.h
   DEPS
-    tink::core::primitive_set
     absl::statusor
+    tink::internal::primitive_set
 )
 
 tink_cc_library(
@@ -404,10 +381,10 @@ tink_cc_library(
     registry.h
   DEPS
     tink::core::key_manager
-    tink::core::primitive_set
     absl::status
     absl::statusor
     absl::strings
+    tink::internal::primitive_set
     tink::internal::registry_impl
     tink::proto::tink_cc_proto
 )

@@ -50,12 +50,6 @@ cc_library(
 )
 
 cc_library(
-    name = "mac_factory",
-    srcs = ["mac_factory.cc"],
-    hdrs = ["mac_factory.h"],
-)
-
-cc_library(
     name = "mac_key_templates",
     srcs = ["mac_key_templates.cc"],
     hdrs = ["mac_key_templates.h"],

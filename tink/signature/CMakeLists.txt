@@ -49,13 +49,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME public_key_verify_factory
-  SRCS
-    public_key_verify_factory.cc
-    public_key_verify_factory.h
-)
-
-tink_cc_library(
   NAME public_key_sign_wrapper
   SRCS
     public_key_sign_wrapper.cc
@@ -75,13 +68,6 @@ tink_cc_library(
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
-)
-
-tink_cc_library(
-  NAME public_key_sign_factory
-  SRCS
-    public_key_sign_factory.cc
-    public_key_sign_factory.h
 )
 
 tink_cc_library(

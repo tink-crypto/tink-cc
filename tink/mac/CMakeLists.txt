@@ -47,13 +47,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME mac_factory
-  SRCS
-    mac_factory.cc
-    mac_factory.h
-)
-
-tink_cc_library(
   NAME mac_key_templates
   SRCS
     mac_key_templates.cc

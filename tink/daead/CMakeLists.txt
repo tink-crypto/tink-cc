@@ -71,13 +71,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME deterministic_aead_factory
-  SRCS
-    deterministic_aead_factory.cc
-    deterministic_aead_factory.h
-)
-
-tink_cc_library(
   NAME deterministic_aead_key_templates
   SRCS
     deterministic_aead_key_templates.cc

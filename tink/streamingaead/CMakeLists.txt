@@ -239,6 +239,7 @@ tink_cc_library(
     streaming_aead_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -249,6 +250,7 @@ tink_cc_library(
     tink::streamingaead::streaming_aead_parameters
     absl::optional
     tink::core::key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -263,6 +265,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::parameters
+    tink::core::rtti
     tink::util::statusor
 )
 
@@ -279,6 +282,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -305,6 +309,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -322,6 +327,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )

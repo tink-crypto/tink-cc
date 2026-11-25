@@ -21,6 +21,7 @@
 
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/streaming_aead_parameters.h"
 #include "tink/util/statusor.h"
 
@@ -95,6 +96,9 @@ class AesGcmHkdfStreamingParameters : public StreamingAeadParameters {
         derived_key_size_in_bytes_(derived_key_size_in_bytes),
         hash_type_(hash_type),
         segment_size_in_bytes_(segment_size_in_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(StreamingAeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(605);
 
   int key_size_in_bytes_;
   int derived_key_size_in_bytes_;

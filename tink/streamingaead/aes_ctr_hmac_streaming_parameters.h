@@ -21,6 +21,7 @@
 
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/streaming_aead_parameters.h"
 #include "tink/util/statusor.h"
 
@@ -105,6 +106,9 @@ class AesCtrHmacStreamingParameters : public StreamingAeadParameters {
         hmac_hash_type_(hmac_hash_type),
         tag_size_in_bytes_(tag_size_in_bytes),
         segment_size_in_bytes_(segment_size_in_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(StreamingAeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(603);
 
   int key_size_in_bytes_;
   int derived_key_size_in_bytes_;

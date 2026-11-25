@@ -20,6 +20,7 @@
 #include <cstdint>
 #include "absl/types/optional.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/streaming_aead_parameters.h"
 
 namespace crypto {
@@ -35,6 +36,10 @@ class StreamingAeadKey : public Key {
   }
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(602);
 };
 
 }  // namespace tink

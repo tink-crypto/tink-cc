@@ -18,6 +18,7 @@
 #define TINK_STREAMINGAEAD_STREAMING_AEAD_PARAMETERS_H_
 
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -27,6 +28,10 @@ namespace tink {
 class StreamingAeadParameters : public Parameters {
  public:
   bool HasIdRequirement() const override { return false; }
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(601);
 };
 
 }  // namespace tink

@@ -20,6 +20,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -40,7 +41,7 @@ absl::StatusOr<AesCtrHmacStreamingKey> AesCtrHmacStreamingKey::Create(
 
 bool AesCtrHmacStreamingKey::operator==(const Key& other) const {
   const AesCtrHmacStreamingKey* that =
-      dynamic_cast<const AesCtrHmacStreamingKey*>(&other);
+      DynamicCast<const AesCtrHmacStreamingKey*>(&other);
   if (that == nullptr) {
     return false;
   }

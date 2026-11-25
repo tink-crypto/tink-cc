@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -115,7 +116,7 @@ AesGcmHkdfStreamingParameters::Builder::Build() {
 
 bool AesGcmHkdfStreamingParameters::operator==(const Parameters& other) const {
   const AesGcmHkdfStreamingParameters* that =
-      dynamic_cast<const AesGcmHkdfStreamingParameters*>(&other);
+      DynamicCast<const AesGcmHkdfStreamingParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

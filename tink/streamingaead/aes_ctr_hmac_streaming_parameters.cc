@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -143,7 +144,7 @@ AesCtrHmacStreamingParameters::Builder::Build() {
 
 bool AesCtrHmacStreamingParameters::operator==(const Parameters& other) const {
   const AesCtrHmacStreamingParameters* that =
-      dynamic_cast<const AesCtrHmacStreamingParameters*>(&other);
+      DynamicCast<const AesCtrHmacStreamingParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

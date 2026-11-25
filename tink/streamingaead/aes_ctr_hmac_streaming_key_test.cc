@@ -47,6 +47,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsNull;
 using ::testing::Not;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -59,31 +60,35 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(AesCtrHmacStreamingKeyTest, CreateSucceeds) {
   const internal::StreamingAeadTestVector& test_vector = GetParam();
-  const AesCtrHmacStreamingKey& key =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *test_vector.streamingaead_key);
+  const AesCtrHmacStreamingKey* key =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          test_vector.streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesCtrHmacStreamingKey> created_key =
       AesCtrHmacStreamingKey::Create(
-          key.GetParameters(), key.GetInitialKeyMaterial(GetPartialKeyAccess()),
+          key->GetParameters(),
+          key->GetInitialKeyMaterial(GetPartialKeyAccess()),
           GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
-  EXPECT_THAT(created_key->GetParameters(), Eq(key.GetParameters()));
+  EXPECT_THAT(created_key->GetParameters(), Eq(key->GetParameters()));
   EXPECT_THAT(created_key->GetInitialKeyMaterial(GetPartialKeyAccess()),
-              Eq(key.GetInitialKeyMaterial(GetPartialKeyAccess())));
-  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key.GetIdRequirement()));
+              Eq(key->GetInitialKeyMaterial(GetPartialKeyAccess())));
+  EXPECT_THAT(created_key->GetIdRequirement(), Eq(key->GetIdRequirement()));
 }
 
 TEST(AesCtrHmacStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
-  const AesCtrHmacStreamingKey& key =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
+  const AesCtrHmacStreamingKey* key =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   RestrictedData mismatched_initial_key_material =
-      RestrictedData(key.GetParameters().KeySizeInBytes() + 1);
+      RestrictedData(key->GetParameters().KeySizeInBytes() + 1);
 
-  EXPECT_THAT(AesCtrHmacStreamingKey::Create(key.GetParameters(),
+  EXPECT_THAT(AesCtrHmacStreamingKey::Create(key->GetParameters(),
                                              mismatched_initial_key_material,
                                              GetPartialKeyAccess())
                   .status(),
@@ -93,19 +98,22 @@ TEST(AesCtrHmacStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
 
 TEST_P(AesCtrHmacStreamingKeyTest, KeyEquals) {
   const internal::StreamingAeadTestVector& test_vector = GetParam();
-  const AesCtrHmacStreamingKey& key =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *test_vector.streamingaead_key);
+  const AesCtrHmacStreamingKey* key =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          test_vector.streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   absl::StatusOr<AesCtrHmacStreamingKey> created_key =
       AesCtrHmacStreamingKey::Create(
-          key.GetParameters(), key.GetInitialKeyMaterial(GetPartialKeyAccess()),
+          key->GetParameters(),
+          key->GetInitialKeyMaterial(GetPartialKeyAccess()),
           GetPartialKeyAccess());
   ASSERT_THAT(created_key, IsOk());
 
   absl::StatusOr<AesCtrHmacStreamingKey> other_key =
       AesCtrHmacStreamingKey::Create(
-          key.GetParameters(), key.GetInitialKeyMaterial(GetPartialKeyAccess()),
+          key->GetParameters(),
+          key->GetInitialKeyMaterial(GetPartialKeyAccess()),
           GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -116,44 +124,50 @@ TEST_P(AesCtrHmacStreamingKeyTest, KeyEquals) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, DifferentSecretDataNotEqual) {
-  const AesCtrHmacStreamingKey& key1 =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
-  const AesCtrHmacStreamingKey& key2 =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(32).streamingaead_key);
+  const AesCtrHmacStreamingKey* key1 =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key1, NotNull());
+  const AesCtrHmacStreamingKey* key2 =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(32)
+              .streamingaead_key.get());
+  ASSERT_THAT(key2, NotNull());
 
   RestrictedData initial_key_material2 =
-      RestrictedData(key2.GetInitialKeyMaterial(GetPartialKeyAccess())
+      RestrictedData(key2->GetInitialKeyMaterial(GetPartialKeyAccess())
                          .GetSecret(InsecureSecretKeyAccess::Get())
-                         .substr(0, key1.GetParameters().KeySizeInBytes()),
+                         .substr(0, key1->GetParameters().KeySizeInBytes()),
                      InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<AesCtrHmacStreamingKey> other_key =
       AesCtrHmacStreamingKey::Create(
-          key1.GetParameters(), initial_key_material2, GetPartialKeyAccess());
+          key1->GetParameters(), initial_key_material2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
-  EXPECT_TRUE(key1 != *other_key);
-  EXPECT_TRUE(*other_key != key1);
-  EXPECT_FALSE(key1 == *other_key);
-  EXPECT_FALSE(*other_key == key1);
+  EXPECT_TRUE(*key1 != *other_key);
+  EXPECT_TRUE(*other_key != *key1);
+  EXPECT_FALSE(*key1 == *other_key);
+  EXPECT_FALSE(*other_key == *key1);
 }
 
 TEST(AesCtrHmacStreamingKeyTest, DifferentParametersNotEqual) {
   const std::vector<internal::StreamingAeadTestVector>& test_vectors =
       internal::CreateAesCtrHmacStreamingTestVectors();
-  const AesCtrHmacStreamingKey& key1 =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *test_vectors[0].streamingaead_key);
-  const AesCtrHmacStreamingKey& key2 =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *test_vectors[2].streamingaead_key);
+  const AesCtrHmacStreamingKey* key1 =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          test_vectors[0].streamingaead_key.get());
+  ASSERT_THAT(key1, NotNull());
+  const AesCtrHmacStreamingKey* key2 =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          test_vectors[2].streamingaead_key.get());
+  ASSERT_THAT(key2, NotNull());
 
-  EXPECT_TRUE(key1 != key2);
-  EXPECT_TRUE(key2 != key1);
-  EXPECT_FALSE(key1 == key2);
-  EXPECT_FALSE(key2 == key1);
+  EXPECT_TRUE(*key1 != *key2);
+  EXPECT_TRUE(*key2 != *key1);
+  EXPECT_FALSE(*key1 == *key2);
+  EXPECT_FALSE(*key2 == *key1);
 }
 
 TEST(AesCtrHmacStreamingKeyTest, DifferentKeyTypeNotEqual) {
@@ -195,44 +209,56 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentKeyTypeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, Clone) {
-  const AesCtrHmacStreamingKey& key =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
+  const AesCtrHmacStreamingKey* key =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  std::unique_ptr<Key> cloned_key = key.Clone();
+  std::unique_ptr<Key> cloned_key = key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(key));
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 TEST(AesCtrHmacStreamingKeyTest, CopyConstructor) {
-  const AesCtrHmacStreamingKey& key =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
+  const AesCtrHmacStreamingKey* key =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  AesCtrHmacStreamingKey copy(key);
+  AesCtrHmacStreamingKey copy(*key);
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesCtrHmacStreamingKeyTest, CopyAssignment) {
-  const AesCtrHmacStreamingKey& key1 =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
-  const AesCtrHmacStreamingKey& key2 =
-      dynamic_cast<const AesCtrHmacStreamingKey&>(
-          *internal::GetAesCtrHmacStreamingTestVector(32).streamingaead_key);
+  const AesCtrHmacStreamingKey* key1 =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key1, NotNull());
+  const AesCtrHmacStreamingKey* key2 =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(32)
+              .streamingaead_key.get());
+  ASSERT_THAT(key2, NotNull());
 
-  AesCtrHmacStreamingKey copy = key2;
-  ASSERT_THAT(copy, Not(Eq(key1)));
+  AesCtrHmacStreamingKey copy = *key2;
+  ASSERT_THAT(copy, Not(Eq(*key1)));
 
-  copy = key1;
+  copy = *key1;
 
-  EXPECT_THAT(copy, Eq(key1));
+  EXPECT_THAT(copy, Eq(*key1));
 }
 
 TEST(AesCtrHmacStreamingKeyTest, MoveConstructor) {
-  AesCtrHmacStreamingKey key = dynamic_cast<const AesCtrHmacStreamingKey&>(
-      *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
+  const AesCtrHmacStreamingKey* key_ptr =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key_ptr, NotNull());
+  AesCtrHmacStreamingKey key = *key_ptr;
 
   AesCtrHmacStreamingKey expected = key;
   AesCtrHmacStreamingKey move(std::move(key));
@@ -241,10 +267,18 @@ TEST(AesCtrHmacStreamingKeyTest, MoveConstructor) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, MoveAssignment) {
-  AesCtrHmacStreamingKey key1 = dynamic_cast<const AesCtrHmacStreamingKey&>(
-      *internal::GetAesCtrHmacStreamingTestVector(16).streamingaead_key);
-  AesCtrHmacStreamingKey key2 = dynamic_cast<const AesCtrHmacStreamingKey&>(
-      *internal::GetAesCtrHmacStreamingTestVector(32).streamingaead_key);
+  const AesCtrHmacStreamingKey* key1_ptr =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key1_ptr, NotNull());
+  const AesCtrHmacStreamingKey* key2_ptr =
+      DynamicCast<const AesCtrHmacStreamingKey*>(
+          internal::GetAesCtrHmacStreamingTestVector(32)
+              .streamingaead_key.get());
+  ASSERT_THAT(key2_ptr, NotNull());
+  AesCtrHmacStreamingKey key1 = *key1_ptr;
+  AesCtrHmacStreamingKey key2 = *key2_ptr;
 
   AesCtrHmacStreamingKey expected = key1;
   key2 = std::move(key1);

@@ -45,6 +45,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsNull;
 using ::testing::Not;
+using ::testing::NotNull;
 
 TEST(AesGcmHkdfStreamingKeyTest, CreateSucceeds) {
   absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
@@ -224,45 +225,57 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentKeyTypeNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, Clone) {
-  const AesGcmHkdfStreamingKey& key =
-      dynamic_cast<const AesGcmHkdfStreamingKey&>(
-          *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
+  const AesGcmHkdfStreamingKey* key =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
   // Clone the key.
-  std::unique_ptr<Key> cloned_key = key.Clone();
+  std::unique_ptr<Key> cloned_key = key->Clone();
 
-  ASSERT_THAT(*cloned_key, Eq(key));
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, CopyConstructor) {
-  const AesGcmHkdfStreamingKey& key =
-      dynamic_cast<const AesGcmHkdfStreamingKey&>(
-          *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
+  const AesGcmHkdfStreamingKey* key =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key, NotNull());
 
-  AesGcmHkdfStreamingKey copy(key);
+  AesGcmHkdfStreamingKey copy(*key);
 
-  EXPECT_THAT(copy, Eq(key));
+  EXPECT_THAT(copy, Eq(*key));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, CopyAssignment) {
-  const AesGcmHkdfStreamingKey& key1 =
-      dynamic_cast<const AesGcmHkdfStreamingKey&>(
-          *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
-  const AesGcmHkdfStreamingKey& key2 =
-      dynamic_cast<const AesGcmHkdfStreamingKey&>(
-          *internal::GetAesGcmHkdfStreamingTestVector(32).streamingaead_key);
+  const AesGcmHkdfStreamingKey* key1 =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key1, NotNull());
+  const AesGcmHkdfStreamingKey* key2 =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(32)
+              .streamingaead_key.get());
+  ASSERT_THAT(key2, NotNull());
 
-  AesGcmHkdfStreamingKey copy = key2;
-  ASSERT_THAT(copy, Not(Eq(key1)));
+  AesGcmHkdfStreamingKey copy = *key2;
+  ASSERT_THAT(copy, Not(Eq(*key1)));
 
-  copy = key1;
+  copy = *key1;
 
-  EXPECT_THAT(copy, Eq(key1));
+  EXPECT_THAT(copy, Eq(*key1));
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, MoveConstructor) {
-  AesGcmHkdfStreamingKey key = dynamic_cast<const AesGcmHkdfStreamingKey&>(
-      *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
+  const AesGcmHkdfStreamingKey* key_ptr =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key_ptr, NotNull());
+  AesGcmHkdfStreamingKey key = *key_ptr;
 
   AesGcmHkdfStreamingKey expected = key;
   AesGcmHkdfStreamingKey move(std::move(key));
@@ -271,10 +284,18 @@ TEST(AesGcmHkdfStreamingKeyTest, MoveConstructor) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, MoveAssignment) {
-  AesGcmHkdfStreamingKey key1 = dynamic_cast<const AesGcmHkdfStreamingKey&>(
-      *internal::GetAesGcmHkdfStreamingTestVector(16).streamingaead_key);
-  AesGcmHkdfStreamingKey key2 = dynamic_cast<const AesGcmHkdfStreamingKey&>(
-      *internal::GetAesGcmHkdfStreamingTestVector(32).streamingaead_key);
+  const AesGcmHkdfStreamingKey* key1_ptr =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(16)
+              .streamingaead_key.get());
+  ASSERT_THAT(key1_ptr, NotNull());
+  const AesGcmHkdfStreamingKey* key2_ptr =
+      DynamicCast<const AesGcmHkdfStreamingKey*>(
+          internal::GetAesGcmHkdfStreamingTestVector(32)
+              .streamingaead_key.get());
+  ASSERT_THAT(key2_ptr, NotNull());
+  AesGcmHkdfStreamingKey key1 = *key1_ptr;
+  AesGcmHkdfStreamingKey key2 = *key2_ptr;
 
   AesGcmHkdfStreamingKey expected = key1;
   key2 = std::move(key1);

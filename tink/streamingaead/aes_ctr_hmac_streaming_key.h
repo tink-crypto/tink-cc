@@ -23,6 +23,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/streaming_aead_key.h"
 #include "tink/util/statusor.h"
@@ -64,6 +65,9 @@ class AesCtrHmacStreamingKey final : public StreamingAeadKey {
   AesCtrHmacStreamingKey(const AesCtrHmacStreamingParameters& parameters,
                          const RestrictedData& initial_key_material)
       : parameters_(parameters), initial_key_material_(initial_key_material) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(StreamingAeadKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(604);
 
   AesCtrHmacStreamingParameters parameters_;
   RestrictedData initial_key_material_;

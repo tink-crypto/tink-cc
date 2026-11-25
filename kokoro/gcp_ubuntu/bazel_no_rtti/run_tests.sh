@@ -151,6 +151,14 @@ readonly TARGETS=(
   "//tink/prf:hmac_prf_parameters_test"
   "//tink/prf:prf_key"
   "//tink/prf:prf_parameters"
+  "//tink/streamingaead:aes_ctr_hmac_streaming_key"
+  "//tink/streamingaead:aes_ctr_hmac_streaming_parameters"
+  "//tink/streamingaead:aes_ctr_hmac_streaming_parameters_test"
+  "//tink/streamingaead:aes_gcm_hkdf_streaming_key"
+  "//tink/streamingaead:aes_gcm_hkdf_streaming_parameters"
+  "//tink/streamingaead:aes_gcm_hkdf_streaming_parameters_test"
+  "//tink/streamingaead:streaming_aead_key"
+  "//tink/streamingaead:streaming_aead_parameters"
   "//tools:check_rtti_type_ids_test"
 )
 

@@ -74,6 +74,12 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 502 //third_party/tink/cc/keyderivation/key_derivation_key.h
 503 //third_party/tink/cc/keyderivation/prf_based_key_derivation_parameters.h
 504 //third_party/tink/cc/keyderivation/prf_based_key_derivation_key.h
+601 //third_party/tink/cc/streamingaead/streaming_aead_parameters.h
+602 //third_party/tink/cc/streamingaead/streaming_aead_key.h
+603 //third_party/tink/cc/streamingaead/aes_ctr_hmac_streaming_parameters.h
+604 //third_party/tink/cc/streamingaead/aes_ctr_hmac_streaming_key.h
+605 //third_party/tink/cc/streamingaead/aes_gcm_hkdf_streaming_parameters.h
+606 //third_party/tink/cc/streamingaead/aes_gcm_hkdf_streaming_key.h
 30001 //third_party/tink/cc/internal/util_test.cc
 30002 //third_party/tink/cc/internal/util_test.cc
 30003 //third_party/tink/cc/internal/util_test.cc

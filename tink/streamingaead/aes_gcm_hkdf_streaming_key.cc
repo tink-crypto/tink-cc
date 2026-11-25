@@ -20,6 +20,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -40,7 +41,7 @@ absl::StatusOr<AesGcmHkdfStreamingKey> AesGcmHkdfStreamingKey::Create(
 
 bool AesGcmHkdfStreamingKey::operator==(const Key& other) const {
   const AesGcmHkdfStreamingKey* that =
-      dynamic_cast<const AesGcmHkdfStreamingKey*>(&other);
+      DynamicCast<const AesGcmHkdfStreamingKey*>(&other);
   if (that == nullptr) {
     return false;
   }

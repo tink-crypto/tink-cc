@@ -235,3 +235,36 @@ tink_cc_test(
     tink::internal::testing::wycheproof_util
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME aes_siv_key_creator
+  SRCS
+    aes_siv_key_creator.cc
+    aes_siv_key_creator.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+)
+
+tink_cc_test(
+  NAME aes_siv_key_creator_test
+  SRCS
+    aes_siv_key_creator_test.cc
+  DEPS
+    tink::daead::internal::aes_siv_key_creator
+    tink::daead::internal::aes_siv_test_vectors
+    GTest::gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::internal::key_gen_configuration_impl
+)

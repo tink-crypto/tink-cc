@@ -1381,6 +1381,7 @@ tink_cc_library(
     tink::signature::internal::ml_dsa_verify_boringssl
     tink::signature::internal::prehash_wrapper
     tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_sign_boringssl
     tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
     tink::signature::internal::rsa_ssa_pss_sign_boringssl
     tink::signature::internal::rsa_ssa_pss_verify_boringssl
@@ -1433,7 +1434,6 @@ tink_cc_library(
     tink::signature::subtle::composite_ml_dsa_verify_boringssl
     tink::subtle::ed25519_sign_boringssl
     tink::subtle::ed25519_verify_boringssl
-    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
 )
 

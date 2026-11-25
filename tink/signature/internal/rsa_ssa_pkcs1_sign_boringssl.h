@@ -20,8 +20,6 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "tink/internal/rsa_util.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 

@@ -75,6 +75,7 @@ tink_cc_library(
   DEPS
     tink::keyderivation::key_derivation_parameters
     tink::core::key
+    tink::core::rtti
   PUBLIC
 )
 
@@ -84,6 +85,7 @@ tink_cc_library(
     key_derivation_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
   PUBLIC
 )
 
@@ -97,6 +99,7 @@ tink_cc_library(
     absl::memory
     absl::status
     tink::core::parameters
+    tink::core::rtti
     tink::prf::prf_parameters
     tink::util::status
     tink::util::statusor
@@ -117,6 +120,7 @@ tink_cc_library(
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::prf::prf_key
     tink::util::status
     tink::util::statusor

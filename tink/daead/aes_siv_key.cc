@@ -27,6 +27,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -91,7 +92,7 @@ absl::StatusOr<AesSivKey> AesSivKey::Create(const AesSivParameters& parameters,
 }
 
 bool AesSivKey::operator==(const Key& other) const {
-  const AesSivKey* that = dynamic_cast<const AesSivKey*>(&other);
+  const AesSivKey* that = DynamicCast<const AesSivKey*>(&other);
   if (that == nullptr) {
     return false;
   }

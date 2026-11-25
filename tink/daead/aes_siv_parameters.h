@@ -21,6 +21,7 @@
 
 #include "tink/daead/deterministic_aead_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -69,6 +70,9 @@ class AesSivParameters : public DeterministicAeadParameters {
  private:
   AesSivParameters(int key_size_in_bytes, Variant variant)
       : key_size_in_bytes_(key_size_in_bytes), variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(DeterministicAeadParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(403);
 
   int key_size_in_bytes_;
   Variant variant_;

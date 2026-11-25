@@ -18,6 +18,7 @@
 #define TINK_KEYDERIVATION_KEY_DERIVATION_PARAMETERS_H_
 
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -31,6 +32,9 @@ class KeyDerivationParameters : public Parameters {
     // ID requirement always matches the ID requirement for the derived key.
     return GetDerivedKeyParameters().HasIdRequirement();
   }
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(501);
 };
 
 }  // namespace tink

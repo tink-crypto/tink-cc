@@ -19,6 +19,7 @@
 
 #include "tink/key.h"
 #include "tink/keyderivation/key_derivation_parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -29,6 +30,10 @@ class KeyDerivationKey : public Key {
   const KeyDerivationParameters& GetParameters() const override = 0;
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(502);
 };
 
 }  // namespace tink

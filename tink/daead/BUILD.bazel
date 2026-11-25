@@ -103,7 +103,10 @@ cc_library(
     name = "deterministic_aead_parameters",
     hdrs = ["deterministic_aead_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -113,6 +116,7 @@ cc_library(
     deps = [
         ":deterministic_aead_parameters",
         "//tink:key",
+        "//tink:rtti",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -125,6 +129,7 @@ cc_library(
     deps = [
         ":deterministic_aead_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
@@ -143,6 +148,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/internal:output_prefix_util",
         "//tink/util:status",
         "//tink/util:statusor",

@@ -18,13 +18,18 @@
 #define TINK_DAEAD_DETERMINISTIC_AEAD_PARAMETERS_H_
 
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
 
 // Describes a `DeterministicAeadKey` (e.g., key attributes), excluding the
 // randomly chosen key material.
-class DeterministicAeadParameters : public Parameters {};
+class DeterministicAeadParameters : public Parameters {
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(401);
+};
 
 }  // namespace tink
 }  // namespace crypto

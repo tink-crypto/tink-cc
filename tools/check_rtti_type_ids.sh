@@ -66,6 +66,14 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 306 //third_party/tink/cc/prf/hkdf_prf_key.h
 307 //third_party/tink/cc/prf/hmac_prf_parameters.h
 308 //third_party/tink/cc/prf/hmac_prf_key.h
+401 //third_party/tink/cc/daead/deterministic_aead_parameters.h
+402 //third_party/tink/cc/daead/deterministic_aead_key.h
+403 //third_party/tink/cc/daead/aes_siv_parameters.h
+404 //third_party/tink/cc/daead/aes_siv_key.h
+501 //third_party/tink/cc/keyderivation/key_derivation_parameters.h
+502 //third_party/tink/cc/keyderivation/key_derivation_key.h
+503 //third_party/tink/cc/keyderivation/prf_based_key_derivation_parameters.h
+504 //third_party/tink/cc/keyderivation/prf_based_key_derivation_key.h
 30001 //third_party/tink/cc/internal/util_test.cc
 30002 //third_party/tink/cc/internal/util_test.cc
 30003 //third_party/tink/cc/internal/util_test.cc

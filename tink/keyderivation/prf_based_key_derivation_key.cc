@@ -26,6 +26,7 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/prf_key.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -55,7 +56,7 @@ absl::StatusOr<PrfBasedKeyDerivationKey> PrfBasedKeyDerivationKey::Create(
 
   std::unique_ptr<Parameters> cloned_parameters = parameters.Clone();
   const PrfBasedKeyDerivationParameters* parameters_ptr =
-      dynamic_cast<const PrfBasedKeyDerivationParameters*>(
+      DynamicCast<const PrfBasedKeyDerivationParameters*>(
           cloned_parameters.get());
   if (parameters_ptr == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
@@ -63,22 +64,22 @@ absl::StatusOr<PrfBasedKeyDerivationKey> PrfBasedKeyDerivationKey::Create(
   }
 
   std::unique_ptr<Key> cloned_prf_key = prf_key.Clone();
-  const PrfKey* prf_key_ptr = dynamic_cast<const PrfKey*>(cloned_prf_key.get());
+  const PrfKey* prf_key_ptr = DynamicCast<const PrfKey*>(cloned_prf_key.get());
   if (prf_key_ptr == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Unable to clone PRF key.");
   }
+  cloned_parameters.release();
+  cloned_prf_key.release();
 
-  return PrfBasedKeyDerivationKey(
-      absl::WrapUnique(dynamic_cast<const PrfBasedKeyDerivationParameters*>(
-          cloned_parameters.release())),
-      absl::WrapUnique(dynamic_cast<const PrfKey*>(cloned_prf_key.release())),
-      id_requirement);
+  return PrfBasedKeyDerivationKey(absl::WrapUnique(parameters_ptr),
+                                  absl::WrapUnique(prf_key_ptr),
+                                  id_requirement);
 }
 
 bool PrfBasedKeyDerivationKey::operator==(const Key& other) const {
   const PrfBasedKeyDerivationKey* that =
-      dynamic_cast<const PrfBasedKeyDerivationKey*>(&other);
+      DynamicCast<const PrfBasedKeyDerivationKey*>(&other);
   if (that == nullptr) {
     return false;
   }

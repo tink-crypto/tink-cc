@@ -79,6 +79,7 @@ cc_library(
     deps = [
         ":key_derivation_parameters",
         "//tink:key",
+        "//tink:rtti",
     ],
 )
 
@@ -86,7 +87,10 @@ cc_library(
     name = "key_derivation_parameters",
     hdrs = ["key_derivation_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -97,6 +101,7 @@ cc_library(
     deps = [
         ":key_derivation_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/prf:prf_parameters",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -116,6 +121,7 @@ cc_library(
         "//tink:key",
         "//tink:parameters",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/prf:prf_key",
         "//tink/util:status",
         "//tink/util:statusor",

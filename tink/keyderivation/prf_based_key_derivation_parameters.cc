@@ -23,6 +23,7 @@
 #include "absl/status/status.h"
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -55,22 +56,21 @@ PrfBasedKeyDerivationParameters::Builder::Build() {
   }
 
   const PrfParameters* prf_params =
-      dynamic_cast<const PrfParameters*>(prf_parameters_.get());
+      DynamicCast<const PrfParameters*>(prf_parameters_.get());
   if (prf_params == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "PRF parameters cannot be set to non-PRF parameters.");
   }
+  prf_parameters_.release();
 
-  return PrfBasedKeyDerivationParameters(
-      absl::WrapUnique(
-          dynamic_cast<const PrfParameters*>(prf_parameters_.release())),
-      std::move(derived_key_parameters_));
+  return PrfBasedKeyDerivationParameters(absl::WrapUnique(prf_params),
+                                         std::move(derived_key_parameters_));
 }
 
 bool PrfBasedKeyDerivationParameters::operator==(
     const Parameters& other) const {
   const PrfBasedKeyDerivationParameters* that =
-      dynamic_cast<const PrfBasedKeyDerivationParameters*>(&other);
+      DynamicCast<const PrfBasedKeyDerivationParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

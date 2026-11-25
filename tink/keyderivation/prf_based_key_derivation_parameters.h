@@ -24,6 +24,7 @@
 #include "tink/keyderivation/key_derivation_parameters.h"
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -80,6 +81,9 @@ class PrfBasedKeyDerivationParameters : public KeyDerivationParameters {
       std::unique_ptr<const Parameters> derived_key_parameters)
       : prf_parameters_(std::move(prf_parameters)),
         derived_key_parameters_(std::move(derived_key_parameters)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(KeyDerivationParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(503);
 
   std::shared_ptr<const PrfParameters> prf_parameters_;
   std::shared_ptr<const Parameters> derived_key_parameters_;

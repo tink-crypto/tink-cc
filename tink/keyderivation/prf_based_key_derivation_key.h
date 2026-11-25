@@ -27,6 +27,7 @@
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/prf_key.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -70,6 +71,9 @@ class PrfBasedKeyDerivationKey final : public KeyDerivationKey {
       : parameters_(std::move(parameters)),
         prf_key_(std::move(prf_key)),
         id_requirement_(id_requirement) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(KeyDerivationKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(504);
 
   std::shared_ptr<const PrfBasedKeyDerivationParameters> parameters_;
   std::shared_ptr<const PrfKey> prf_key_;

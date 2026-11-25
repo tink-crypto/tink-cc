@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -47,7 +48,7 @@ absl::StatusOr<AesSivParameters> AesSivParameters::Create(int key_size_in_bytes,
 }
 
 bool AesSivParameters::operator==(const Parameters& other) const {
-  const AesSivParameters* that = dynamic_cast<const AesSivParameters*>(&other);
+  const AesSivParameters* that = DynamicCast<const AesSivParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

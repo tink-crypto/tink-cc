@@ -55,6 +55,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -1206,6 +1207,75 @@ TEST(RsaSsaPssPrivateKeyTest, DynamicCastAndTypeIndex) {
   const SignaturePrivateKey* signature_private_key = &private_key;
   EXPECT_THAT(DynamicCast<const RsaSsaPssPrivateKey*>(signature_private_key),
               Eq(&private_key));
+}
+
+TEST(RsaSsaPssPrivateKeyTest, BuilderCopyAndMove) {
+  RsaSsaPssPublicKey public_key = GetValidPublicKey();
+  PrivateValues private_values = GetValidPrivateValues();
+
+  RsaSsaPssPrivateKey::Builder builder =
+      RsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(public_key)
+          .SetPrimeP(private_values.p)
+          .SetPrimeQ(private_values.q)
+          .SetPrimeExponentP(private_values.dp)
+          .SetPrimeExponentQ(private_values.dq)
+          .SetPrivateExponent(private_values.d)
+          .SetCrtCoefficient(private_values.q_inv);
+
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(kModulusSizeInBits)
+          .SetPublicExponent(GetF4())
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
+          .SetSaltLengthInBytes(48)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(other_parameters, IsOk());
+  absl::StatusOr<RsaSsaPssPublicKey> other_public_key =
+      RsaSsaPssPublicKey::Create(*other_parameters,
+                                 public_key.GetModulus(GetPartialKeyAccess()),
+                                 /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  auto flip_data = [](const RestrictedData& data) {
+    return RestrictedData(
+        FlipFirstByte(data.GetSecret(InsecureSecretKeyAccess::Get())),
+        InsecureSecretKeyAccess::Get());
+  };
+  RsaSsaPssPrivateKey::Builder other_builder =
+      RsaSsaPssPrivateKey::Builder()
+          .SetPublicKey(*other_public_key)
+          .SetPrimeP(flip_data(private_values.p))
+          .SetPrimeQ(flip_data(private_values.q))
+          .SetPrimeExponentP(flip_data(private_values.dp))
+          .SetPrimeExponentQ(flip_data(private_values.dq))
+          .SetPrivateExponent(flip_data(private_values.d))
+          .SetCrtCoefficient(flip_data(private_values.q_inv));
+
+  RsaSsaPssPrivateKey::Builder copy_constructed(builder);
+  RsaSsaPssPrivateKey::Builder copy_assigned = other_builder;
+  copy_assigned = builder;
+
+  absl::StatusOr<RsaSsaPssPrivateKey> original_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(original_key, IsOk());
+
+  EXPECT_THAT(copy_constructed.Build(GetPartialKeyAccess()),
+              IsOkAndHolds(Eq(*original_key)));
+
+  EXPECT_THAT(copy_assigned.Build(GetPartialKeyAccess()),
+              IsOkAndHolds(Eq(*original_key)));
+
+  RsaSsaPssPrivateKey::Builder move_constructed(std::move(copy_constructed));
+  EXPECT_THAT(move_constructed.Build(GetPartialKeyAccess()),
+              IsOkAndHolds(Eq(*original_key)));
+
+  RsaSsaPssPrivateKey::Builder move_assigned = other_builder;
+  move_assigned = std::move(copy_assigned);
+  EXPECT_THAT(move_assigned.Build(GetPartialKeyAccess()),
+              IsOkAndHolds(Eq(*original_key)));
 }
 
 }  // namespace

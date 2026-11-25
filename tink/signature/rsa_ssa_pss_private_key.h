@@ -47,7 +47,7 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
    public:
     // Copyable and movable.
     Builder(const Builder& other) = default;
-    Builder& operator=(const Builder& other) = delete;
+    Builder& operator=(const Builder& other) = default;
     Builder(Builder&& other) = default;
     Builder& operator=(Builder&& other) = default;
 

@@ -593,3 +593,38 @@ tink_cc_test(
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
 )
+
+tink_cc_library(
+  NAME aes_cmac_key_creator
+  SRCS
+    aes_cmac_key_creator.cc
+    aes_cmac_key_creator.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+)
+
+tink_cc_test(
+  NAME aes_cmac_key_creator_test
+  SRCS
+    aes_cmac_key_creator_test.cc
+  DEPS
+    tink::mac::internal::aes_cmac_key_creator
+    tink::mac::internal::aes_cmac_test_vectors
+    GTest::gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::core::partial_key_access
+    tink::internal::key_gen_configuration_impl
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+)

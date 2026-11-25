@@ -27,6 +27,7 @@
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_parameters.h"
 
 namespace crypto {
@@ -115,7 +116,7 @@ absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
 }
 
 bool MlDsaPublicKey::operator==(const Key& other) const {
-  const MlDsaPublicKey* that = dynamic_cast<const MlDsaPublicKey*>(&other);
+  const MlDsaPublicKey* that = DynamicCast<const MlDsaPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

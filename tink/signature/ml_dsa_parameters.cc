@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -44,7 +45,7 @@ absl::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
 }
 
 bool MlDsaParameters::operator==(const Parameters& other) const {
-  const MlDsaParameters* that = dynamic_cast<const MlDsaParameters*>(&other);
+  const MlDsaParameters* that = DynamicCast<const MlDsaParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -21,6 +21,7 @@
 
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_parameters.h"
 
 namespace crypto {
@@ -98,6 +99,9 @@ class CompositeMlDsaParameters : public SignatureParameters {
       : ml_dsa_instance_(ml_dsa_instance),
         classical_algorithm_(classical_algorithm),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(822);
 
   MlDsaInstance ml_dsa_instance_;
   ClassicalAlgorithm classical_algorithm_;

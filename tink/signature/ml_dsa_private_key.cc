@@ -36,6 +36,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/secret_data.h"
@@ -510,7 +511,7 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
 }
 
 bool MlDsaPrivateKey::operator==(const Key& other) const {
-  const MlDsaPrivateKey* that = dynamic_cast<const MlDsaPrivateKey*>(&other);
+  const MlDsaPrivateKey* that = DynamicCast<const MlDsaPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

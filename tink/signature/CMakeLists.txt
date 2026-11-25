@@ -1662,6 +1662,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -1701,6 +1702,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::util::secret_data
@@ -1749,6 +1751,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::output_prefix_util
 )
 
@@ -1787,6 +1790,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -1826,6 +1830,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
@@ -1882,6 +1887,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::statusor
 )
@@ -1918,6 +1924,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -1955,6 +1962,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::util
 )
 
@@ -2005,6 +2013,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::internal::util
 )

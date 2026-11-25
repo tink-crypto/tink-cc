@@ -28,6 +28,7 @@
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_public_key.h"
@@ -84,6 +85,9 @@ class CompositeMlDsaPublicKey final : public SignaturePublicKey {
         classical_public_key_(std::move(classical_public_key)),
         id_requirement_(id_requirement),
         output_prefix_(output_prefix) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignaturePublicKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(823);
 
   CompositeMlDsaParameters parameters_;
   MlDsaPublicKey ml_dsa_public_key_;

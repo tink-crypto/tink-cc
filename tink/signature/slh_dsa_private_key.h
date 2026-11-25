@@ -24,6 +24,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_public_key.h"
@@ -86,6 +87,9 @@ class SlhDsaPrivateKey final : public SignaturePrivateKey {
   explicit SlhDsaPrivateKey(const SlhDsaPublicKey& public_key,
                             const RestrictedData& private_key_bytes)
       : public_key_(public_key), private_key_bytes_(private_key_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(821);
 
   SlhDsaPublicKey public_key_;
   RestrictedData private_key_bytes_;

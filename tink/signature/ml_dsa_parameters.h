@@ -21,6 +21,7 @@
 
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_parameters.h"
 
 namespace crypto {
@@ -82,6 +83,9 @@ class MlDsaParameters : public SignatureParameters {
  private:
   explicit MlDsaParameters(Instance instance, Variant variant)
       : instance_(instance), variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(816);
 
   Instance instance_;
   Variant variant_;

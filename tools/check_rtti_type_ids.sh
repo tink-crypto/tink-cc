@@ -102,6 +102,15 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 813 //third_party/tink/cc/signature/rsa_ssa_pss_parameters.h
 814 //third_party/tink/cc/signature/rsa_ssa_pss_public_key.h
 815 //third_party/tink/cc/signature/rsa_ssa_pss_private_key.h
+816 //third_party/tink/cc/signature/ml_dsa_parameters.h
+817 //third_party/tink/cc/signature/ml_dsa_public_key.h
+818 //third_party/tink/cc/signature/ml_dsa_private_key.h
+819 //third_party/tink/cc/signature/slh_dsa_parameters.h
+820 //third_party/tink/cc/signature/slh_dsa_public_key.h
+821 //third_party/tink/cc/signature/slh_dsa_private_key.h
+822 //third_party/tink/cc/signature/composite_ml_dsa_parameters.h
+823 //third_party/tink/cc/signature/composite_ml_dsa_public_key.h
+824 //third_party/tink/cc/signature/composite_ml_dsa_private_key.h
 30001 //third_party/tink/cc/internal/util_test.cc
 30002 //third_party/tink/cc/internal/util_test.cc
 30003 //third_party/tink/cc/internal/util_test.cc

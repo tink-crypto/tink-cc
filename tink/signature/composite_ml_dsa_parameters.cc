@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -96,7 +97,7 @@ absl::StatusOr<CompositeMlDsaParameters> CompositeMlDsaParameters::Create(
 
 bool CompositeMlDsaParameters::operator==(const Parameters& other) const {
   const CompositeMlDsaParameters* other_composite_mldsa_parameters =
-      dynamic_cast<const CompositeMlDsaParameters*>(&other);
+      DynamicCast<const CompositeMlDsaParameters*>(&other);
   if (other_composite_mldsa_parameters == nullptr) return false;
   return ml_dsa_instance_ ==
              other_composite_mldsa_parameters->ml_dsa_instance_ &&

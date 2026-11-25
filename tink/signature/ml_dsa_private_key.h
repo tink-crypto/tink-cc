@@ -25,6 +25,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
@@ -131,6 +132,9 @@ class MlDsaPrivateKey final : public SignaturePrivateKey {
       const MlDsaParameters& parameters,
       const RestrictedData& private_seed_bytes,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(818);
 
   MlDsaPublicKey public_key_;
   RestrictedData private_seed_bytes_;

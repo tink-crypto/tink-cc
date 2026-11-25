@@ -32,6 +32,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/signature/internal/slh_dsa_parameter_set.h"
 #include "tink/signature/slh_dsa_parameters.h"
@@ -251,7 +252,7 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::CreateFromSeed(
 }
 
 bool SlhDsaPrivateKey::operator==(const Key& other) const {
-  const SlhDsaPrivateKey* that = dynamic_cast<const SlhDsaPrivateKey*>(&other);
+  const SlhDsaPrivateKey* that = DynamicCast<const SlhDsaPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

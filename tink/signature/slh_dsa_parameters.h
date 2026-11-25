@@ -21,6 +21,7 @@
 
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_parameters.h"
 
 namespace crypto {
@@ -95,6 +96,9 @@ class SlhDsaParameters : public SignatureParameters {
         private_key_size_in_bytes_(private_key_size_in_bytes),
         signature_type_(signature_type),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(819);
 
   HashType hash_type_;
   int private_key_size_in_bytes_;

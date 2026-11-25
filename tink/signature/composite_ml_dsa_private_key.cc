@@ -26,6 +26,7 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_public_key.h"
 #include "tink/signature/ml_dsa_private_key.h"
@@ -80,7 +81,7 @@ absl::StatusOr<CompositeMlDsaPrivateKey> CompositeMlDsaPrivateKey::Create(
 
 bool CompositeMlDsaPrivateKey::operator==(const Key& other) const {
   const CompositeMlDsaPrivateKey* that =
-      dynamic_cast<const CompositeMlDsaPrivateKey*>(&other);
+      DynamicCast<const CompositeMlDsaPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

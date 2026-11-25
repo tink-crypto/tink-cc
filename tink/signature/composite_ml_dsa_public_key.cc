@@ -32,6 +32,7 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ed25519_parameters.h"
@@ -273,7 +274,7 @@ absl::StatusOr<CompositeMlDsaPublicKey> CompositeMlDsaPublicKey::Create(
 
 bool CompositeMlDsaPublicKey::operator==(const Key& other) const {
   const CompositeMlDsaPublicKey* that =
-      dynamic_cast<const CompositeMlDsaPublicKey*>(&other);
+      DynamicCast<const CompositeMlDsaPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

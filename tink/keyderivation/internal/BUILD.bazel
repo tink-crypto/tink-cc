@@ -600,3 +600,44 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "prf_based_key_derivation_key_creator",
+    srcs = ["prf_based_key_derivation_key_creator.cc"],
+    hdrs = ["prf_based_key_derivation_key_creator.h"],
+    deps = [
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/keyderivation:prf_based_key_derivation_key",
+        "//tink/keyderivation:prf_based_key_derivation_parameters",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "prf_based_key_derivation_key_creator_test",
+    srcs = ["prf_based_key_derivation_key_creator_test.cc"],
+    deps = [
+        ":prf_based_key_derivation_key_creator",
+        ":prf_based_key_derivation_test_vectors",
+        "//tink:key",
+        "//tink:key_gen_configuration",
+        "//tink/aead:xchacha20_poly1305_parameters",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/keyderivation:prf_based_key_derivation_key",
+        "//tink/keyderivation:prf_based_key_derivation_parameters",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

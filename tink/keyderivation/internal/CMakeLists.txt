@@ -593,3 +593,44 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME prf_based_key_derivation_key_creator
+  SRCS
+    prf_based_key_derivation_key_creator.cc
+    prf_based_key_derivation_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::keyderivation::prf_based_key_derivation_key
+    tink::keyderivation::prf_based_key_derivation_parameters
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+)
+
+tink_cc_test(
+  NAME prf_based_key_derivation_key_creator_test
+  SRCS
+    prf_based_key_derivation_key_creator_test.cc
+  DEPS
+    tink::keyderivation::internal::prf_based_key_derivation_key_creator
+    tink::keyderivation::internal::prf_based_key_derivation_test_vectors
+    GTest::gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::aead::xchacha20_poly1305_parameters
+    tink::internal::key_gen_configuration_impl
+    tink::keyderivation::prf_based_key_derivation_key
+    tink::keyderivation::prf_based_key_derivation_parameters
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+)

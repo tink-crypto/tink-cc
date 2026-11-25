@@ -85,9 +85,13 @@ class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
     absl::optional<RestrictedData> q_inv_;
   };
 
-  const RestrictedData& GetPrimePData() const { return p_; }
+  const RestrictedData& GetPrimePData(PartialKeyAccessToken token) const {
+    return p_;
+  }
 
-  const RestrictedData& GetPrimeQData() const { return q_; }
+  const RestrictedData& GetPrimeQData(PartialKeyAccessToken token) const {
+    return q_;
+  }
 
   const RestrictedData& GetPrimeExponentPData() const { return dp_; }
 

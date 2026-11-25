@@ -289,10 +289,10 @@ RsaSsaPssPrivateKeyProto ToRsaSsaPssPrivateKeyProto(
   proto.set_version(0);
   proto.set_d(std::string(private_key.GetPrivateExponentData().GetSecret(
       InsecureSecretKeyAccess::Get())));
-  proto.set_p(std::string(
-      private_key.GetPrimePData().GetSecret(InsecureSecretKeyAccess::Get())));
-  proto.set_q(std::string(
-      private_key.GetPrimeQData().GetSecret(InsecureSecretKeyAccess::Get())));
+  proto.set_p(std::string(private_key.GetPrimePData(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get())));
+  proto.set_q(std::string(private_key.GetPrimeQData(GetPartialKeyAccess())
+                              .GetSecret(InsecureSecretKeyAccess::Get())));
   proto.set_dp(std::string(private_key.GetPrimeExponentPData().GetSecret(
       InsecureSecretKeyAccess::Get())));
   proto.set_dq(std::string(private_key.GetPrimeExponentQData().GetSecret(

@@ -443,10 +443,10 @@ KeyValues GetKeyValues(const RsaSsaPssPrivateKey& key) {
           key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue()),
       std::string(
           key.GetPublicKey().GetParameters().GetPublicExponent().GetValue()),
-      std::string(
-          key.GetPrimePData().GetSecret(InsecureSecretKeyAccess::Get())),
-      std::string(
-          key.GetPrimeQData().GetSecret(InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimePData(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get())),
+      std::string(key.GetPrimeQData(GetPartialKeyAccess())
+                      .GetSecret(InsecureSecretKeyAccess::Get())),
       std::string(key.GetPrimeExponentPData().GetSecret(
           InsecureSecretKeyAccess::Get())),
       std::string(key.GetPrimeExponentQData().GetSecret(

@@ -107,8 +107,8 @@ const RsaSsaPssPrivateKey& Get2048BitPrivateKey() {
 // Returns valid private values extracted from Get2048BitPrivateKey().
 PrivateValues GetValidPrivateValues() {
   const RsaSsaPssPrivateKey& key = Get2048BitPrivateKey();
-  return PrivateValues{/*p=*/key.GetPrimePData(),
-                       /*q=*/key.GetPrimeQData(),
+  return PrivateValues{/*p=*/key.GetPrimePData(GetPartialKeyAccess()),
+                       /*q=*/key.GetPrimeQData(GetPartialKeyAccess()),
                        /*dp=*/key.GetPrimeExponentPData(),
                        /*dq=*/key.GetPrimeExponentQData(),
                        /*d=*/key.GetPrivateExponentData(),
@@ -207,8 +207,10 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(private_key->GetPrimePData(), Eq(private_values.p));
-  EXPECT_THAT(private_key->GetPrimeQData(), Eq(private_values.q));
+  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess()),
+              Eq(private_values.p));
+  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess()),
+              Eq(private_values.q));
   EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
@@ -251,8 +253,10 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeyAllowNonConstantTimeSucceeds) {
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(private_key->GetPrimePData(), Eq(private_values.p));
-  EXPECT_THAT(private_key->GetPrimeQData(), Eq(private_values.q));
+  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess()),
+              Eq(private_values.p));
+  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess()),
+              Eq(private_values.q));
   EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
@@ -317,8 +321,10 @@ TEST(RsaSsaPssPrivateKeyTest,
 
   EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
-  EXPECT_THAT(private_key->GetPrimePData(), Eq(private_values.p));
-  EXPECT_THAT(private_key->GetPrimeQData(), Eq(private_values.q));
+  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess()),
+              Eq(private_values.p));
+  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess()),
+              Eq(private_values.q));
   EXPECT_THAT(private_key->GetPrimeExponentPData(), Eq(private_values.dp));
   EXPECT_THAT(private_key->GetPrimeExponentQData(), Eq(private_values.dq));
   EXPECT_THAT(private_key->GetCrtCoefficientData(), Eq(private_values.q_inv));
@@ -435,12 +441,12 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
 
   EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
-  EXPECT_THAT(
-      private_key->GetPrimePData().GetSecret(InsecureSecretKeyAccess::Get()),
-      Eq(*p_str));
-  EXPECT_THAT(
-      private_key->GetPrimeQData().GetSecret(InsecureSecretKeyAccess::Get()),
-      Eq(*q_str));
+  EXPECT_THAT(private_key->GetPrimePData(GetPartialKeyAccess())
+                  .GetSecret(InsecureSecretKeyAccess::Get()),
+              Eq(*p_str));
+  EXPECT_THAT(private_key->GetPrimeQData(GetPartialKeyAccess())
+                  .GetSecret(InsecureSecretKeyAccess::Get()),
+              Eq(*q_str));
   EXPECT_THAT(private_key->GetPrimeExponentPData().GetSecret(
                   InsecureSecretKeyAccess::Get()),
               Eq(*dp_str));

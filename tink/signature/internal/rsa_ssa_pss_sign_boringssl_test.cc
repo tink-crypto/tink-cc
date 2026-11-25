@@ -70,8 +70,8 @@ absl::StatusOr<RsaSsaPssPrivateKey> CloneKeyWithSaltLengthAndVariant(
           id_requirement, GetPartialKeyAccess()));
   return RsaSsaPssPrivateKey::Builder()
       .SetPublicKey(public_key)
-      .SetPrimeP(base_key.GetPrimePData())
-      .SetPrimeQ(base_key.GetPrimeQData())
+      .SetPrimeP(base_key.GetPrimePData(GetPartialKeyAccess()))
+      .SetPrimeQ(base_key.GetPrimeQData(GetPartialKeyAccess()))
       .SetPrimeExponentP(base_key.GetPrimeExponentPData())
       .SetPrimeExponentQ(base_key.GetPrimeExponentQData())
       .SetPrivateExponent(base_key.GetPrivateExponentData())

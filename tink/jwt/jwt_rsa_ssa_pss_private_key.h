@@ -89,11 +89,11 @@ class JwtRsaSsaPssPrivateKey final : public JwtSignaturePrivateKey {
   };
 
   const RestrictedData& GetPrimePData(PartialKeyAccessToken token) const {
-    return rsa_ssa_pss_private_key_.GetPrimePData();
+    return rsa_ssa_pss_private_key_.GetPrimePData(token);
   }
 
   const RestrictedData& GetPrimeQData(PartialKeyAccessToken token) const {
-    return rsa_ssa_pss_private_key_.GetPrimeQData();
+    return rsa_ssa_pss_private_key_.GetPrimeQData(token);
   }
 
   const RestrictedData& GetPrivateExponentData(

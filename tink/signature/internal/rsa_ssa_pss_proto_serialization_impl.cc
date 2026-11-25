@@ -587,8 +587,8 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
   proto_private_key.mutable_public_key()->set_e(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  proto_private_key.set_p(key.GetPrimePData().Get(*token));
-  proto_private_key.set_q(key.GetPrimeQData().Get(*token));
+  proto_private_key.set_p(key.GetPrimePData(GetPartialKeyAccess()).Get(*token));
+  proto_private_key.set_q(key.GetPrimeQData(GetPartialKeyAccess()).Get(*token));
   proto_private_key.set_dp(key.GetPrimeExponentPData().Get(*token));
   proto_private_key.set_dq(key.GetPrimeExponentQData().Get(*token));
   proto_private_key.set_d(key.GetPrivateExponentData().Get(*token));

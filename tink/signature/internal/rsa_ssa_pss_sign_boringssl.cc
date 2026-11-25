@@ -235,8 +235,10 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSignBoringSsl(
       key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
   private_key.d =
       key.GetPrivateExponentData().Get(InsecureSecretKeyAccess::Get());
-  private_key.p = key.GetPrimePData().Get(InsecureSecretKeyAccess::Get());
-  private_key.q = key.GetPrimeQData().Get(InsecureSecretKeyAccess::Get());
+  private_key.p = key.GetPrimePData(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get());
+  private_key.q = key.GetPrimeQData(GetPartialKeyAccess())
+                      .Get(InsecureSecretKeyAccess::Get());
   private_key.dp =
       key.GetPrimeExponentPData().Get(InsecureSecretKeyAccess::Get());
   private_key.dq =

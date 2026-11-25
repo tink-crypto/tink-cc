@@ -17,6 +17,7 @@
 #include "tink/jwt/internal/jwt_signature_key_gen_config_2026.h"
 
 #include <memory>
+#include <optional>
 
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
@@ -82,7 +83,11 @@ absl::Status AddJwtSignatureKeyGen2026(KeyGenConfiguration& config) {
     return status;
   }
   status = internal::KeyGenConfigurationImpl::AddKeyCreator<JwtMlDsaParameters>(
-      internal::CreateJwtMlDsaKey, config);
+      [](const JwtMlDsaParameters& parameters,
+         std::optional<int> id_requirement) {
+        return internal::CreateJwtMlDsaKey(parameters, id_requirement);
+      },
+      config);
   if (!status.ok()) {
     return status;
   }

@@ -17,11 +17,13 @@
 #include "tink/jwt/internal/jwt_ml_dsa_key_creator.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
@@ -39,6 +41,7 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
@@ -94,7 +97,11 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithJwtMlDsaKeyWorks) {
   KeyGenConfiguration key_creator_config;
   ASSERT_THAT(
       internal::KeyGenConfigurationImpl::AddKeyCreator<JwtMlDsaParameters>(
-          CreateJwtMlDsaKey, key_creator_config),
+          [](const JwtMlDsaParameters& parameters,
+             std::optional<int> id_requirement) {
+            return CreateJwtMlDsaKey(parameters, id_requirement);
+          },
+          key_creator_config),
       IsOk());
 
   KeysetHandleBuilder::Entry entry =
@@ -110,6 +117,72 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithJwtMlDsaKeyWorks) {
   EXPECT_THAT((*handle)[0].GetStatus(), Eq(KeyStatus::kEnabled));
   EXPECT_THAT((*handle)[0].IsPrimary(), IsTrue());
   EXPECT_THAT((*handle)[0].GetKey()->GetParameters(), Eq(*parameters));
+}
+
+using CustomKidTest = TestWithParam<JwtMlDsaParameters::Algorithm>;
+
+INSTANTIATE_TEST_SUITE_P(CustomKidTestSuite, CustomKidTest,
+                         Values(JwtMlDsaParameters::Algorithm::kMlDsa44,
+                                JwtMlDsaParameters::Algorithm::kMlDsa65,
+                                JwtMlDsaParameters::Algorithm::kMlDsa87));
+
+TEST_P(CustomKidTest, CreateJwtMlDsaKeyWithCustomKidWorks) {
+  absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kCustom, GetParam());
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> private_key =
+      CreateJwtMlDsaKey(*parameters, /*id_requirement=*/std::nullopt,
+                        /*custom_kid=*/"my_custom_kid");
+  ASSERT_THAT(private_key, IsOk());
+  EXPECT_THAT((*private_key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(std::nullopt));
+  EXPECT_THAT((*private_key)->GetKid(), Eq("my_custom_kid"));
+}
+
+TEST(JwtMlDsaKeyCreatorTest, CreateJwtMlDsaKeyMissingCustomKidForCustomFails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kCustom,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(CreateJwtMlDsaKey(*parameters, /*id_requirement=*/std::nullopt,
+                                /*custom_kid=*/std::nullopt),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(JwtMlDsaKeyCreatorTest,
+     CreateJwtMlDsaKeyIdRequirementGivenForCustomFails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kCustom,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(CreateJwtMlDsaKey(*parameters, /*id_requirement=*/123,
+                                /*custom_kid=*/"my_custom_kid"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(JwtMlDsaKeyCreatorTest, CreateJwtMlDsaKeyCustomKidGivenForBase64Fails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(CreateJwtMlDsaKey(*parameters, /*id_requirement=*/123,
+                                /*custom_kid=*/"my_custom_kid"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(JwtMlDsaKeyCreatorTest, CreateJwtMlDsaKeyCustomKidGivenForIgnoredFails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kIgnored,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(CreateJwtMlDsaKey(*parameters, /*id_requirement=*/std::nullopt,
+                                /*custom_kid=*/"my_custom_kid"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

@@ -1695,12 +1695,9 @@ tink_cc_library(
     jwt_ml_dsa_key_creator.cc
     jwt_ml_dsa_key_creator.h
   DEPS
-    absl::log
-    absl::memory
     absl::status
     absl::statusor
     absl::string_view
-    absl::optional
     tink::internal::boringssl
     tink::core::partial_key_access
     tink::core::restricted_data
@@ -1721,6 +1718,7 @@ tink_cc_test(
   DEPS
     tink::jwt::internal::jwt_ml_dsa_key_creator
     GTest::gmock
+    absl::status
     absl::status_matchers
     absl::statusor
     absl::optional

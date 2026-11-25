@@ -18,6 +18,7 @@
 #define TINK_JWT_SUBTLE_CREATE_JWT_ML_DSA_KEY_H_
 
 #include <optional>
+#include <string_view>
 
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
@@ -33,7 +34,8 @@ namespace subtle {
 // Generates a new standalone JwtMlDsaPrivateKey from parameters.
 absl::StatusOr<JwtMlDsaPrivateKey> CreateJwtMlDsaPrivateKey(
     const JwtMlDsaParameters& parameters,
-    std::optional<int> id_requirement = std::nullopt);
+    std::optional<int> id_requirement = std::nullopt,
+    std::optional<std::string_view> custom_kid = std::nullopt);
 
 }  // namespace subtle
 }  // namespace tink

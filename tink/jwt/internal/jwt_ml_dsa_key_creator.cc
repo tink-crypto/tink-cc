@@ -18,15 +18,14 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
-#include "absl/log/log.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "openssl/mldsa.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
@@ -45,13 +44,17 @@ namespace internal {
 namespace {
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> BuildJwtMlDsaKey(
-    const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement,
+    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement,
+    std::optional<std::string_view> custom_kid,
     absl::string_view public_key_bytes, SecretData private_key_seed_bytes) {
   JwtMlDsaPublicKey::Builder builder = JwtMlDsaPublicKey::Builder()
                                            .SetParameters(parameters)
                                            .SetPublicKeyBytes(public_key_bytes);
   if (id_requirement.has_value()) {
     builder.SetIdRequirement(*id_requirement);
+  }
+  if (custom_kid.has_value()) {
+    builder.SetCustomKid(*custom_kid);
   }
   absl::StatusOr<JwtMlDsaPublicKey> public_key =
       builder.Build(GetPartialKeyAccess());
@@ -71,7 +74,8 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> BuildJwtMlDsaKey(
 }
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa44Key(
-    const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement) {
+    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement,
+    std::optional<std::string_view> custom_kid) {
   if (parameters.GetAlgorithm() != JwtMlDsaParameters::Algorithm::kMlDsa44) {
     return absl::InternalError("Expected ML-DSA-44 instance");
   }
@@ -91,12 +95,13 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa44Key(
   SecretData secret_data =
       SecretData(std::move(private_seed_bytes));
 
-  return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
-                          std::move(secret_data));
+  return BuildJwtMlDsaKey(parameters, id_requirement, custom_kid,
+                          public_key_bytes, std::move(secret_data));
 }
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa65Key(
-    const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement) {
+    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement,
+    std::optional<std::string_view> custom_kid) {
   if (parameters.GetAlgorithm() != JwtMlDsaParameters::Algorithm::kMlDsa65) {
     return absl::InternalError("Expected ML-DSA-65 instance");
   }
@@ -116,12 +121,13 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa65Key(
   SecretData secret_data =
       SecretData(std::move(private_seed_bytes));
 
-  return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
-                          std::move(secret_data));
+  return BuildJwtMlDsaKey(parameters, id_requirement, custom_kid,
+                          public_key_bytes, std::move(secret_data));
 }
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
-    const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement) {
+    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement,
+    std::optional<std::string_view> custom_kid) {
   if (parameters.GetAlgorithm() != JwtMlDsaParameters::Algorithm::kMlDsa87) {
     return absl::InternalError("Expected ML-DSA-87 instance");
   }
@@ -140,21 +146,22 @@ absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsa87Key(
   SecretData secret_data =
       SecretData(std::move(private_seed_bytes));
 
-  return BuildJwtMlDsaKey(parameters, id_requirement, public_key_bytes,
-                          std::move(secret_data));
+  return BuildJwtMlDsaKey(parameters, id_requirement, custom_kid,
+                          public_key_bytes, std::move(secret_data));
 }
 
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsaKey(
-    const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement) {
+    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement,
+    std::optional<std::string_view> custom_kid) {
   switch (parameters.GetAlgorithm()) {
     case JwtMlDsaParameters::Algorithm::kMlDsa44:
-      return CreateJwtMlDsa44Key(parameters, id_requirement);
+      return CreateJwtMlDsa44Key(parameters, id_requirement, custom_kid);
     case JwtMlDsaParameters::Algorithm::kMlDsa65:
-      return CreateJwtMlDsa65Key(parameters, id_requirement);
+      return CreateJwtMlDsa65Key(parameters, id_requirement, custom_kid);
     case JwtMlDsaParameters::Algorithm::kMlDsa87:
-      return CreateJwtMlDsa87Key(parameters, id_requirement);
+      return CreateJwtMlDsa87Key(parameters, id_requirement, custom_kid);
     default:
       return absl::InvalidArgumentError(
           "Only ML-DSA-44, ML-DSA-65, and ML-DSA-87 are supported");

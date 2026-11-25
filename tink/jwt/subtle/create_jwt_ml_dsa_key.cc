@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <utility>
 
 #include "absl/status/status_macros.h"
@@ -31,10 +32,11 @@ namespace tink {
 namespace subtle {
 
 absl::StatusOr<JwtMlDsaPrivateKey> CreateJwtMlDsaPrivateKey(
-    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement) {
+    const JwtMlDsaParameters& parameters, std::optional<int> id_requirement,
+    std::optional<std::string_view> custom_kid) {
   ABSL_ASSIGN_OR_RETURN(
       std::unique_ptr<JwtMlDsaPrivateKey> key,
-      internal::CreateJwtMlDsaKey(parameters, id_requirement));
+      internal::CreateJwtMlDsaKey(parameters, id_requirement, custom_kid));
   return std::move(*key);
 }
 

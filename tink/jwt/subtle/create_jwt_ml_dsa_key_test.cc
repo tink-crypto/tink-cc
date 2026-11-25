@@ -84,6 +84,59 @@ TEST(CreateJwtMlDsaKeyTest,
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST(CreateJwtMlDsaKeyTest, CreateJwtMlDsaPrivateKeyWorksCustomKid) {
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kCustom,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<JwtMlDsaPrivateKey> private_key =
+      CreateJwtMlDsaPrivateKey(*parameters, /*id_requirement=*/std::nullopt,
+                               /*custom_kid=*/"my_custom_kid");
+  ASSERT_THAT(private_key, IsOk());
+  EXPECT_THAT(private_key->GetIdRequirement().has_value(), IsFalse());
+  EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(private_key->GetPublicKey().GetKid(), Eq("my_custom_kid"));
+}
+
+TEST(CreateJwtMlDsaKeyTest,
+     CreateJwtMlDsaPrivateKeyMissingCustomKidForCustomFails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kCustom,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(
+      CreateJwtMlDsaPrivateKey(*parameters, /*id_requirement=*/std::nullopt,
+                               /*custom_kid=*/std::nullopt),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(CreateJwtMlDsaKeyTest,
+     CreateJwtMlDsaPrivateKeyCustomKidGivenForBase64Fails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
+      JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(CreateJwtMlDsaPrivateKey(*parameters, /*id_requirement=*/123,
+                                       /*custom_kid=*/"my_custom_kid"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(CreateJwtMlDsaKeyTest,
+     CreateJwtMlDsaPrivateKeyCustomKidGivenForIgnoredFails) {
+  absl::StatusOr<JwtMlDsaParameters> parameters =
+      JwtMlDsaParameters::Create(JwtMlDsaParameters::KidStrategy::kIgnored,
+                                 JwtMlDsaParameters::Algorithm::kMlDsa65);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(
+      CreateJwtMlDsaPrivateKey(*parameters, /*id_requirement=*/std::nullopt,
+                               /*custom_kid=*/"my_custom_kid"),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 TEST(CreateJwtMlDsaKeyTest, CreateJwtMlDsaPrivateKeySuccessiveKeysAreDistinct) {
   absl::StatusOr<JwtMlDsaParameters> parameters = JwtMlDsaParameters::Create(
       JwtMlDsaParameters::KidStrategy::kBase64EncodedKeyId,

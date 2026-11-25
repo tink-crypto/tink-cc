@@ -18,9 +18,10 @@
 #define TINK_JWT_INTERNAL_JWT_ML_DSA_KEY_CREATOR_H_
 
 #include <memory>
+#include <optional>
+#include <string_view>
 
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/jwt/jwt_ml_dsa_private_key.h"
 
@@ -28,17 +29,18 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// Creates a new JWT ML-DSA private key from `parameters`. If `id_requirement`
-// is set, the key will have the specified ID requirement. Otherwise, the key
-// will have no ID requirement.
+// Generates a new standalone JwtMlDsaPrivateKey from parameters.
 //
-// NOTE: Tink does not allow random generation of JWT ML-DSA key objects from
-// parameters objects with `KidStrategy::kCustom`, so there is no corresponding
-// parameter to specify a custom kid.
-//
-// This function unconditionally returns an error in non-BoringSSL builds.
+// Preconditions for optional parameters:
+// - `id_requirement` is required if and only if `parameters.HasIdRequirement()`
+//   is true (`KidStrategy::kBase64EncodedKeyId`).
+// - `custom_kid` is required if and only if `parameters.GetKidStrategy() ==
+//   JwtMlDsaParameters::KidStrategy::kCustom`.
+// - Both should be omitted for `KidStrategy::kIgnored`.
 absl::StatusOr<std::unique_ptr<JwtMlDsaPrivateKey>> CreateJwtMlDsaKey(
-    const JwtMlDsaParameters& parameters, absl::optional<int> id_requirement);
+    const JwtMlDsaParameters& parameters,
+    std::optional<int> id_requirement = std::nullopt,
+    std::optional<std::string_view> custom_kid = std::nullopt);
 
 }  // namespace internal
 }  // namespace tink

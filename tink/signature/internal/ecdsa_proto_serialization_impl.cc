@@ -68,7 +68,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-bool EcdsaSignatureEncodingValid(uint32_t c) { return 0 <= c && c <= 2; }
+bool EcdsaSignatureEncodingValid(int c) { return 0 <= c && c <= 2; }
 
 // Enum representing the proto enum `google.crypto.tink.EcdsaSignatureEncoding`.
 enum class EcdsaSignatureEncodingEnum : uint32_t {

@@ -35,8 +35,9 @@ namespace proto_parsing {
 
 class EnumFieldBase : public Field {
  public:
-  explicit EnumFieldBase(int field_number,
-                         std::function<bool(uint32_t)> is_valid,
+  // `is_valid` is called with the parsed value converted to int, following the
+  // convention of the protobuf-generated `<Enum>_IsValid(int)` functions.
+  explicit EnumFieldBase(int field_number, bool (*is_valid)(int),
                          uint32_t default_value, ProtoFieldOptions options);
 
   void Clear() override;
@@ -53,7 +54,7 @@ class EnumFieldBase : public Field {
  private:
   bool RequiresSerialization() const;
 
-  std::function<bool(uint32_t)> is_valid_;
+  bool (*is_valid_)(int);
   std::optional<uint32_t> value_;
   uint32_t default_value_;
   ProtoFieldOptions options_;
@@ -75,10 +76,10 @@ class EnumFieldBase : public Field {
 template <typename Enum>
 class EnumField : public EnumFieldBase {
  public:
-  explicit EnumField(int field_number, std::function<bool(uint32_t)> is_valid,
+  explicit EnumField(int field_number, bool (*is_valid)(int),
                      Enum default_value = {},
                      ProtoFieldOptions options = ProtoFieldOptions::kExplicit)
-      : EnumFieldBase(field_number, std::move(is_valid),
+      : EnumFieldBase(field_number, is_valid,
                       static_cast<uint32_t>(default_value), options) {}
 
   // Copyable and movable.

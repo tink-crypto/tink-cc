@@ -63,7 +63,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-bool IsSlhDsaHashTypeValid(uint32_t c) { return 0 <= c && c <= 2; }
+bool IsSlhDsaHashTypeValid(int c) { return 0 <= c && c <= 2; }
 
 // Enum representing the proto enum `google.crypto.tink.SlhDsaHashType`.
 enum class SlhDsaHashTypeEnum : uint32_t {
@@ -72,7 +72,7 @@ enum class SlhDsaHashTypeEnum : uint32_t {
   kShake,
 };
 
-bool IsSlhDsaSignatureTypeValid(uint32_t c) { return 0 <= c && c <= 2; }
+bool IsSlhDsaSignatureTypeValid(int c) { return 0 <= c && c <= 2; }
 
 // Enum representing the proto enum `google.crypto.tink.SlhDsaSignatureType`.
 enum class SlhDsaSignatureTypeEnum : uint32_t {

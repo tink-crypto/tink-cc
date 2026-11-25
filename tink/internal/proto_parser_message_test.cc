@@ -736,10 +736,10 @@ enum class TestEnum : uint32_t {
   kTwo = 2,
 };
 
-bool TestEnum_IsValid(uint32_t value) {
-  return value == static_cast<uint32_t>(TestEnum::kZero) ||
-         value == static_cast<uint32_t>(TestEnum::kOne) ||
-         value == static_cast<uint32_t>(TestEnum::kTwo);
+bool TestEnum_IsValid(int value) {
+  return value == static_cast<int>(TestEnum::kZero) ||
+         value == static_cast<int>(TestEnum::kOne) ||
+         value == static_cast<int>(TestEnum::kTwo);
 }
 
 class TestMessage : public Message {

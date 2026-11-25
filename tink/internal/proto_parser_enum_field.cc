@@ -18,8 +18,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
-#include <utility>
 
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
@@ -34,13 +32,13 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-EnumFieldBase::EnumFieldBase(int field_number,
-                             std::function<bool(uint32_t)> is_valid,
+EnumFieldBase::EnumFieldBase(int field_number, bool (*is_valid)(int),
                              uint32_t default_value, ProtoFieldOptions options)
     : Field(field_number, WireType::kVarint),
-      is_valid_(std::move(is_valid)),
+      is_valid_(is_valid),
       default_value_(default_value),
       options_(options) {
+  ABSL_CHECK(is_valid_ != nullptr) << "is_valid must not be null.";
   // NOTE: The following works because [1,2]:
   // 1. IMPLICIT enums must always be OPEN
   // 2. OPEN enums's first value must be 0.
@@ -85,7 +83,7 @@ bool EnumFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   if (!ConsumeVarintIntoUint32(serialized, result)) {
     return false;
   }
-  if (!is_valid_(result)) {
+  if (!is_valid_(static_cast<int>(result))) {
     return true;
   }
   value_ = static_cast<uint32_t>(result);

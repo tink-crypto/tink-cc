@@ -50,8 +50,8 @@ enum class MyEnum : uint32_t {
   k1 = 1,
 };
 
-bool AlwaysValid(uint32_t v) { return true; }
-bool IsZeroOrOne(uint32_t v) { return v == 0 || v == 1; }
+bool AlwaysValid(int v) { return true; }
+bool IsZeroOrOne(int v) { return v == 0 || v == 1; }
 
 std::vector<std::pair<std::string, uint32_t>> GetUint32TestCases() {
   return std::vector<std::pair<std::string, uint32_t>>{
@@ -77,6 +77,11 @@ TEST(EnumFieldDeathTest, CreateWithNonDefaultEnumValueAndkImplicit) {
   EXPECT_DEATH(EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
                                        ProtoFieldOptions::kImplicit),
                "Default value must be 0 if options are kImplicit.");
+}
+
+TEST(EnumFieldDeathTest, CreateWithNullValidator) {
+  EXPECT_DEATH(EnumField<MyEnum> field(1, nullptr),
+               "is_valid must not be null.");
 }
 
 TEST(EnumField, ClearkImplicit) {
@@ -169,6 +174,30 @@ TEST(EnumField, ConsumeIntoMemberInvalidIgnores) {
   ParsingState parsing_state = ParsingState(serialized);
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
   EXPECT_THAT(field.value(), Eq(MyEnum::k1));
+}
+
+// Values >= 2^31 are passed to the validator as negative ints, as with
+// protobuf's `<Enum>_IsValid(int)`.
+TEST(EnumField, ConsumeIntoMemberValuesAbove2To31AreNegative) {
+  EnumField<MyEnum> field(1, [](int v) { return v >= 0; });
+  for (std::string test_case : {/* 2^31 */ "8080808008",
+                                /* 2^32 - 1 */ "ffffffff0f"}) {
+    SCOPED_TRACE(test_case);
+    field.set_value(MyEnum::k1);
+    std::string serialized = HexDecodeOrDie(test_case);
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+    EXPECT_THAT(field.value(), Eq(MyEnum::k1));
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+  }
+}
+
+TEST(EnumField, ConsumeIntoMemberValuesAbove2To31AlwaysValid) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
+  std::string serialized = HexDecodeOrDie(/* 2^31 */ "8080808008");
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field.value(), Eq(static_cast<MyEnum>(uint32_t{1} << 31)));
 }
 
 TEST(EnumField, SerializeVarintSuccessCases) {

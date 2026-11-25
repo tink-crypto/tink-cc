@@ -27,6 +27,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -82,7 +83,7 @@ absl::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
 
 bool Ed25519PrivateKey::operator==(const Key& other) const {
   const Ed25519PrivateKey* that =
-      dynamic_cast<const Ed25519PrivateKey*>(&other);
+      DynamicCast<const Ed25519PrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -63,7 +63,7 @@ using ::testing::Values;
 const EcdsaPrivateKey& GetTestPrivateKey(
     EcdsaParameters::CurveType curve_type) {
   if (curve_type == EcdsaParameters::CurveType::kNistP256) {
-    const EcdsaPrivateKey* key = dynamic_cast<const EcdsaPrivateKey*>(
+    const EcdsaPrivateKey* key = DynamicCast<const EcdsaPrivateKey*>(
         internal::GetEcdsaTestVector(
             EcdsaParameters::CurveType::kNistP256,
             EcdsaParameters::HashType::kSha256,
@@ -74,7 +74,7 @@ const EcdsaPrivateKey& GetTestPrivateKey(
     return *key;
   }
   if (curve_type == EcdsaParameters::CurveType::kNistP384) {
-    const EcdsaPrivateKey* key = dynamic_cast<const EcdsaPrivateKey*>(
+    const EcdsaPrivateKey* key = DynamicCast<const EcdsaPrivateKey*>(
         internal::GetEcdsaTestVector(
             EcdsaParameters::CurveType::kNistP384,
             EcdsaParameters::HashType::kSha384,
@@ -85,7 +85,7 @@ const EcdsaPrivateKey& GetTestPrivateKey(
     return *key;
   }
   if (curve_type == EcdsaParameters::CurveType::kNistP521) {
-    const EcdsaPrivateKey* key = dynamic_cast<const EcdsaPrivateKey*>(
+    const EcdsaPrivateKey* key = DynamicCast<const EcdsaPrivateKey*>(
         internal::GetEcdsaTestVector(
             EcdsaParameters::CurveType::kNistP521,
             EcdsaParameters::HashType::kSha512,

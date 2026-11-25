@@ -23,6 +23,7 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_parameters.h"
 #include "tink/util/statusor.h"
 
@@ -127,6 +128,9 @@ class RsaSsaPssParameters : public SignatureParameters {
         mgf1_hash_type_(mgf1_hash_type),
         salt_length_in_bytes_(salt_length_in_bytes),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(813);
 
   int modulus_size_in_bits_;
   BigInteger public_exponent_;

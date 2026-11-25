@@ -28,6 +28,7 @@
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -103,7 +104,7 @@ absl::StatusOr<RsaSsaPkcs1PublicKey> RsaSsaPkcs1PublicKey::Create(
 
 bool RsaSsaPkcs1PublicKey::operator==(const Key& other) const {
   const RsaSsaPkcs1PublicKey* that =
-      dynamic_cast<const RsaSsaPkcs1PublicKey*>(&other);
+      DynamicCast<const RsaSsaPkcs1PublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

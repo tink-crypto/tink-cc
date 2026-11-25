@@ -21,6 +21,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -150,7 +151,7 @@ int EcdsaParameters::GetPrivateKeyLength() const {
 }
 
 bool EcdsaParameters::operator==(const Parameters& other) const {
-  const EcdsaParameters* that = dynamic_cast<const EcdsaParameters*>(&other);
+  const EcdsaParameters* that = DynamicCast<const EcdsaParameters*>(&other);
   if (that == nullptr) return false;
   return curve_type_ == that->curve_type_ && hash_type_ == that->hash_type_ &&
          signature_encoding_ == that->signature_encoding_ &&

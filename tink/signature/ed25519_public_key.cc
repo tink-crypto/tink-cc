@@ -26,6 +26,7 @@
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -92,7 +93,7 @@ absl::StatusOr<Ed25519PublicKey> Ed25519PublicKey::Create(
 }
 
 bool Ed25519PublicKey::operator==(const Key& other) const {
-  const Ed25519PublicKey* that = dynamic_cast<const Ed25519PublicKey*>(&other);
+  const Ed25519PublicKey* that = DynamicCast<const Ed25519PublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

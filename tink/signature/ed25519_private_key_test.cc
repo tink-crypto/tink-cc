@@ -58,7 +58,7 @@ using ::testing::Values;
 internal::Ed25519Key GetTestEd25519Key() {
   static const absl::NoDestructor<internal::Ed25519Key> key([]() {
     const Ed25519PrivateKey* ed25519_private_key =
-        dynamic_cast<const Ed25519PrivateKey*>(
+        DynamicCast<const Ed25519PrivateKey*>(
             internal::GetEd25519TestVector(
                 Ed25519Parameters::Variant::kNoPrefix)
                 .signature_private_key.get());

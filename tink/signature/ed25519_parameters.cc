@@ -20,6 +20,7 @@
 
 #include "absl/status/status.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -40,7 +41,7 @@ absl::StatusOr<Ed25519Parameters> Ed25519Parameters::Create(Variant variant) {
 
 bool Ed25519Parameters::operator==(const Parameters& other) const {
   const Ed25519Parameters* that =
-      dynamic_cast<const Ed25519Parameters*>(&other);
+      DynamicCast<const Ed25519Parameters*>(&other);
   if (that == nullptr) {
     return false;
   }

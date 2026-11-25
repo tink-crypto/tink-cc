@@ -453,6 +453,7 @@ tink_cc_library(
     signature_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -463,6 +464,7 @@ tink_cc_library(
     tink::signature::signature_parameters
     absl::strings
     tink::core::key
+    tink::core::rtti
   PUBLIC
 )
 
@@ -477,6 +479,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::private_key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -488,6 +491,7 @@ tink_cc_library(
     tink::signature::signature_parameters
     absl::status
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -506,6 +510,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -527,6 +532,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::ec_util
     tink::util::secret_data
     tink::util::status
@@ -555,6 +561,7 @@ tink_cc_library(
     absl::optional
     tink::core::big_integer
     tink::core::parameters
+    tink::core::rtti
     tink::internal::rsa_util
     tink::util::status
     tink::util::statusor
@@ -576,6 +583,7 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -600,6 +608,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
 )
@@ -648,6 +657,7 @@ tink_cc_library(
     absl::optional
     tink::core::big_integer
     tink::core::parameters
+    tink::core::rtti
     tink::internal::rsa_util
     tink::util::statusor
 )
@@ -669,6 +679,7 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
@@ -695,6 +706,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
 )
@@ -722,6 +734,7 @@ tink_cc_library(
     absl::string_view
     absl::optional
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -742,6 +755,7 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::core::secret_data
     tink::internal::ec_util
     tink::internal::output_prefix_util
@@ -770,6 +784,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection

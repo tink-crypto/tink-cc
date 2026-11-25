@@ -24,6 +24,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/signature/signature_private_key.h"
@@ -123,6 +124,9 @@ class RsaSsaPkcs1PrivateKey final : public SignaturePrivateKey {
         dq_(dq),
         d_(d),
         q_inv_(q_inv) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(812);
 
   RsaSsaPkcs1PublicKey public_key_;
   RestrictedData p_;

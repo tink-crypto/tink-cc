@@ -24,6 +24,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
@@ -88,6 +89,9 @@ class EcdsaPrivateKey final : public SignaturePrivateKey {
                            RestrictedData private_key_value)
       : public_key_(public_key),
         private_key_value_(std::move(private_key_value)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(806);
 
   EcdsaPublicKey public_key_;
   RestrictedData private_key_value_;

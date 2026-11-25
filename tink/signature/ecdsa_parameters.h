@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_parameters.h"
 
 namespace crypto {
@@ -124,6 +125,9 @@ class EcdsaParameters : public SignatureParameters {
         hash_type_(hash_type),
         signature_encoding_(signature_encoding),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(SignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(804);
 
   CurveType curve_type_;
   HashType hash_type_;

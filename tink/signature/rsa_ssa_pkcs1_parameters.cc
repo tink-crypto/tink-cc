@@ -24,6 +24,7 @@
 #include "tink/big_integer.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -111,7 +112,7 @@ absl::StatusOr<RsaSsaPkcs1Parameters> RsaSsaPkcs1Parameters::Builder::Build() {
 
 bool RsaSsaPkcs1Parameters::operator==(const Parameters& other) const {
   const RsaSsaPkcs1Parameters* that =
-      dynamic_cast<const RsaSsaPkcs1Parameters*>(&other);
+      DynamicCast<const RsaSsaPkcs1Parameters*>(&other);
   if (that == nullptr) {
     return false;
   }

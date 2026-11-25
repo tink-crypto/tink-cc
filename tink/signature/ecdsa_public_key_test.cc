@@ -57,7 +57,7 @@ using ::testing::Values;
 // Returns static EC public key from GetEcdsaTestVector() for the given curve.
 const EcdsaPublicKey& GetTestPublicKey(EcdsaParameters::CurveType curve_type) {
   if (curve_type == EcdsaParameters::CurveType::kNistP256) {
-    const EcdsaPublicKey* key = dynamic_cast<const EcdsaPublicKey*>(
+    const EcdsaPublicKey* key = DynamicCast<const EcdsaPublicKey*>(
         &internal::GetEcdsaTestVector(
              EcdsaParameters::CurveType::kNistP256,
              EcdsaParameters::HashType::kSha256,
@@ -68,7 +68,7 @@ const EcdsaPublicKey& GetTestPublicKey(EcdsaParameters::CurveType curve_type) {
     return *key;
   }
   if (curve_type == EcdsaParameters::CurveType::kNistP384) {
-    const EcdsaPublicKey* key = dynamic_cast<const EcdsaPublicKey*>(
+    const EcdsaPublicKey* key = DynamicCast<const EcdsaPublicKey*>(
         &internal::GetEcdsaTestVector(
              EcdsaParameters::CurveType::kNistP384,
              EcdsaParameters::HashType::kSha384,
@@ -79,7 +79,7 @@ const EcdsaPublicKey& GetTestPublicKey(EcdsaParameters::CurveType curve_type) {
     return *key;
   }
   if (curve_type == EcdsaParameters::CurveType::kNistP521) {
-    const EcdsaPublicKey* key = dynamic_cast<const EcdsaPublicKey*>(
+    const EcdsaPublicKey* key = DynamicCast<const EcdsaPublicKey*>(
         &internal::GetEcdsaTestVector(
              EcdsaParameters::CurveType::kNistP521,
              EcdsaParameters::HashType::kSha512,

@@ -32,6 +32,7 @@
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
@@ -145,7 +146,7 @@ absl::StatusOr<EcdsaPublicKey> EcdsaPublicKey::Create(
 }
 
 bool EcdsaPublicKey::operator==(const Key& other) const {
-  const EcdsaPublicKey* that = dynamic_cast<const EcdsaPublicKey*>(&other);
+  const EcdsaPublicKey* that = DynamicCast<const EcdsaPublicKey*>(&other);
   if (that == nullptr) return false;
   return GetParameters() == that->GetParameters() &&
          id_requirement_ == that->id_requirement_ &&

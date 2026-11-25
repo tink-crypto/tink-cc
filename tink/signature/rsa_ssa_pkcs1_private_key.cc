@@ -31,6 +31,7 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 
 namespace crypto {
@@ -168,7 +169,7 @@ RsaSsaPkcs1PrivateKey::Builder::BuildAllowNonConstantTime(
 
 bool RsaSsaPkcs1PrivateKey::operator==(const Key& other) const {
   const RsaSsaPkcs1PrivateKey* that =
-      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(&other);
+      DynamicCast<const RsaSsaPkcs1PrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

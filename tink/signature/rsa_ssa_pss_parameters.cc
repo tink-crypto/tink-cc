@@ -25,6 +25,7 @@
 #include "tink/big_integer.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -151,7 +152,7 @@ absl::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
 
 bool RsaSsaPssParameters::operator==(const Parameters& other) const {
   const RsaSsaPssParameters* that =
-      dynamic_cast<const RsaSsaPssParameters*>(&other);
+      DynamicCast<const RsaSsaPssParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -52,7 +52,7 @@ using ::testing::Values;
 
 // Returns static Ed25519 public key from GetEd25519TestVector().
 const Ed25519PublicKey& GetTestPublicKey() {
-  const Ed25519PublicKey* key = dynamic_cast<const Ed25519PublicKey*>(
+  const Ed25519PublicKey* key = DynamicCast<const Ed25519PublicKey*>(
       &internal::GetEd25519TestVector(Ed25519Parameters::Variant::kNoPrefix)
            .signature_private_key->GetPublicKey());
   ABSL_CHECK_NE(key, nullptr);

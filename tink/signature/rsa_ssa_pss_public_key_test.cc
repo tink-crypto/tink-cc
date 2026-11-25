@@ -71,7 +71,7 @@ const BigInteger& GetF4() {
 // Returns static 2048-bit RSA SSA PSS public key from
 // CreateRsaSsaPssTestVectors().
 const RsaSsaPssPublicKey& Get2048BitPublicKey() {
-  const RsaSsaPssPublicKey* key = dynamic_cast<const RsaSsaPssPublicKey*>(
+  const RsaSsaPssPublicKey* key = DynamicCast<const RsaSsaPssPublicKey*>(
       &internal::GetRsaSsaPssTestVector(2048,
                                         RsaSsaPssParameters::HashType::kSha256,
                                         RsaSsaPssParameters::Variant::kNoPrefix)

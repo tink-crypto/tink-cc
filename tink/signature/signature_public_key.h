@@ -19,6 +19,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/signature/signature_parameters.h"
 
 namespace crypto {
@@ -41,6 +42,10 @@ class SignaturePublicKey : public Key {
   const SignatureParameters& GetParameters() const override = 0;
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(802);
 };
 
 }  // namespace tink

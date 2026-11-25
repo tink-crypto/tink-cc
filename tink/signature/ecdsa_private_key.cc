@@ -36,6 +36,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
@@ -175,7 +176,7 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
 }
 
 bool EcdsaPrivateKey::operator==(const Key& other) const {
-  const EcdsaPrivateKey* that = dynamic_cast<const EcdsaPrivateKey*>(&other);
+  const EcdsaPrivateKey* that = DynamicCast<const EcdsaPrivateKey*>(&other);
   if (that == nullptr) return false;
   return public_key_ == that->public_key_ &&
          private_key_value_ == that->private_key_value_;

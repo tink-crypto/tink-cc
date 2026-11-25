@@ -92,7 +92,7 @@ const BigInteger& GetF4() {
 // CreateRsaSsaPssTestVectors().
 const RsaSsaPssPrivateKey& Get2048BitPrivateKey() {
   static const absl::NoDestructor<RsaSsaPssPrivateKey> key([]() {
-    const RsaSsaPssPrivateKey* key = dynamic_cast<const RsaSsaPssPrivateKey*>(
+    const RsaSsaPssPrivateKey* key = DynamicCast<const RsaSsaPssPrivateKey*>(
         internal::GetRsaSsaPssTestVector(
             2048, RsaSsaPssParameters::HashType::kSha256,
             RsaSsaPssParameters::Variant::kNoPrefix)

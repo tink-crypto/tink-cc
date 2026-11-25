@@ -579,6 +579,7 @@ TEST(HpkePublicKeyTest, DynamicCastAndTypeIndex) {
 
   const Key* base_key = &public_key;
   EXPECT_THAT(GetTypeIndex(*base_key), Eq(GetStaticTypeIndex<HpkePublicKey>()));
+  EXPECT_THAT(DynamicCast<const Key*>(base_key), Eq(&public_key));
   EXPECT_THAT(DynamicCast<const HybridPublicKey*>(base_key), Eq(&public_key));
   EXPECT_THAT(DynamicCast<const HpkePublicKey*>(base_key), Eq(&public_key));
   EXPECT_THAT(DynamicCast<const EciesPublicKey*>(base_key), IsNull());

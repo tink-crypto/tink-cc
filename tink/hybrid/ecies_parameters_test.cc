@@ -856,6 +856,8 @@ TEST(EciesParametersTest, DynamicCastAndTypeIndex) {
   const Parameters* base_parameters = &*parameters;
   EXPECT_THAT(GetTypeIndex(*base_parameters),
               Eq(GetStaticTypeIndex<EciesParameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base_parameters),
+              Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const HybridParameters*>(base_parameters),
               Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const EciesParameters*>(base_parameters),

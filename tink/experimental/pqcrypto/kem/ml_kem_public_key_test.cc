@@ -283,6 +283,7 @@ TEST(MlKemPublicKeyTest, DynamicCastAndTypeIndex) {
   const Key* base_key = &*public_key;
   EXPECT_THAT(GetTypeIndex(*base_key),
               Eq(GetStaticTypeIndex<MlKemPublicKey>()));
+  EXPECT_THAT(DynamicCast<const Key*>(base_key), Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const KemPublicKey*>(base_key), Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const MlKemPublicKey*>(base_key), Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const PrivateKey*>(base_key), IsNull());

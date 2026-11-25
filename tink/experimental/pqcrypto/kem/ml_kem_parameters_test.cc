@@ -163,6 +163,8 @@ TEST(MlKemParametersTest, DynamicCastAndTypeIndex) {
   const Parameters* base_parameters = &*parameters;
   EXPECT_THAT(GetTypeIndex(*base_parameters),
               Eq(GetStaticTypeIndex<MlKemParameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base_parameters),
+              Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const KemParameters*>(base_parameters),
               Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const MlKemParameters*>(base_parameters),

@@ -16,6 +16,7 @@
 
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -23,19 +24,17 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/internal/rsa_util.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
-#include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
-#include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
+#include "proto/common.pb.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
 
@@ -46,8 +45,6 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
-using RsaSsaPkcs1PrivateKeyProto =
-    ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
 using RsaSsaPkcs1PublicKeyProto = ::google::crypto::tink::RsaSsaPkcs1PublicKey;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -70,45 +67,39 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, ValidateEmptyKey) {
       Not(IsOk()));
 }
 
-RsaSsaPkcs1PublicKeyProto CreateValidPublicKey() {
-  const internal::SignatureTestVector& test_vector =
-      internal::Create3072BitsTestVector();
-  const RsaSsaPkcs1PrivateKey& private_key =
-      dynamic_cast<const RsaSsaPkcs1PrivateKey&>(
-          *test_vector.signature_private_key);
-  const RsaSsaPkcs1PublicKey& public_key = private_key.GetPublicKey();
+HashType ToProtoHashType(RsaSsaPkcs1Parameters::HashType hash_type) {
+  switch (hash_type) {
+    case RsaSsaPkcs1Parameters::HashType::kSha256:
+      return HashType::SHA256;
+    case RsaSsaPkcs1Parameters::HashType::kSha384:
+      return HashType::SHA384;
+    case RsaSsaPkcs1Parameters::HashType::kSha512:
+      return HashType::SHA512;
+    default:
+      return HashType::UNKNOWN_HASH;
+  }
+}
+
+RsaSsaPkcs1PublicKeyProto ToRsaSsaPkcs1PublicKeyProto(
+    const RsaSsaPkcs1PublicKey& public_key) {
   RsaSsaPkcs1PublicKeyProto proto;
   proto.set_version(0);
   proto.set_n(
       std::string(public_key.GetModulus(GetPartialKeyAccess()).GetValue()));
   proto.set_e(
       std::string(public_key.GetParameters().GetPublicExponent().GetValue()));
-  proto.mutable_params()->set_hash_type(HashType::SHA256);
+  proto.mutable_params()->set_hash_type(
+      ToProtoHashType(public_key.GetParameters().GetHashType()));
   return proto;
 }
 
-RsaSsaPkcs1PrivateKeyProto CreateValidPrivateKey() {
+RsaSsaPkcs1PublicKeyProto CreateValidPublicKey() {
   const internal::SignatureTestVector& test_vector =
       internal::Create3072BitsTestVector();
   const RsaSsaPkcs1PrivateKey& private_key =
       dynamic_cast<const RsaSsaPkcs1PrivateKey&>(
           *test_vector.signature_private_key);
-  RsaSsaPkcs1PrivateKeyProto proto;
-  proto.set_version(0);
-  proto.set_d(std::string(private_key.GetPrivateExponentData().GetSecret(
-      InsecureSecretKeyAccess::Get())));
-  proto.set_p(std::string(private_key.GetPrimePData(GetPartialKeyAccess())
-                              .GetSecret(InsecureSecretKeyAccess::Get())));
-  proto.set_q(std::string(private_key.GetPrimeQData(GetPartialKeyAccess())
-                              .GetSecret(InsecureSecretKeyAccess::Get())));
-  proto.set_dp(std::string(private_key.GetPrimeExponentPData().GetSecret(
-      InsecureSecretKeyAccess::Get())));
-  proto.set_dq(std::string(private_key.GetPrimeExponentQData().GetSecret(
-      InsecureSecretKeyAccess::Get())));
-  proto.set_crt(std::string(private_key.GetCrtCoefficientData().GetSecret(
-      InsecureSecretKeyAccess::Get())));
-  *proto.mutable_public_key() = CreateValidPublicKey();
-  return proto;
+  return ToRsaSsaPkcs1PublicKeyProto(private_key.GetPublicKey());
 }
 
 // Checks that a public key is considered valid.
@@ -139,31 +130,25 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, ValidateKeyFormatSmallModulusDisallowed) {
 }
 
 TEST(RsaSsaPkcs1VerifyKeyManagerTest, Create) {
-  RsaSsaPkcs1PrivateKeyProto private_key = CreateValidPrivateKey();
-  RsaSsaPkcs1PublicKeyProto public_key = private_key.public_key();
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitsTestVector();
+  const auto& private_key = dynamic_cast<const RsaSsaPkcs1PrivateKey&>(
+      *test_vector.signature_private_key);
+  RsaSsaPkcs1PublicKeyProto public_key =
+      ToRsaSsaPkcs1PublicKeyProto(private_key.GetPublicKey());
 
-  internal::RsaPrivateKey private_key_subtle;
-  private_key_subtle.n = private_key.public_key().n();
-  private_key_subtle.e = private_key.public_key().e();
-  private_key_subtle.d = SecretData(private_key.d());
-  private_key_subtle.p = SecretData(private_key.p());
-  private_key_subtle.q = SecretData(private_key.q());
-  private_key_subtle.dp = SecretData(private_key.dp());
-  private_key_subtle.dq = SecretData(private_key.dq());
-  private_key_subtle.crt = SecretData(private_key.crt());
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+      subtle::RsaSsaPkcs1SignBoringSsl::New(private_key);
+  ASSERT_THAT(direct_signer, IsOk());
 
-  auto direct_signer_or = subtle::RsaSsaPkcs1SignBoringSsl::New(
-      private_key_subtle, {crypto::tink::subtle::HashType::SHA256});
-  ASSERT_THAT(direct_signer_or, IsOk());
-
-  auto verifier_or =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(public_key);
-  ASSERT_THAT(verifier_or, IsOk());
+  ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  EXPECT_THAT(verifier_or.value()->Verify(
-                  direct_signer_or.value()->Sign(message).value(), message),
-              IsOk());
+  absl::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
 
 TEST(RsaSsaPkcs1VerifyKeyManagerTest, NistTestVector) {

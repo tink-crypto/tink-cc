@@ -901,6 +901,7 @@ tink_cc_test(
   SRCS
     rsa_ssa_pkcs1_verify_key_manager_test.cc
   DEPS
+    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
@@ -908,17 +909,14 @@ tink_cc_test(
     absl::status
     absl::status_matchers
     absl::statusor
-    tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
-    tink::internal::rsa_util
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
-    tink::util::secret_data
     tink::util::test_util
+    tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )

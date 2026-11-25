@@ -21,16 +21,18 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "tink/internal/rsa_util.h"
 #include "tink/jwt/internal/testing/jwt_rsa_ssa_test_vectors.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
-#include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
-#include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
@@ -47,6 +49,34 @@ using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
+using ::testing::ValuesIn;
+
+JwtRsaSsaPkcs1Algorithm ToProtoAlgorithm(
+    JwtRsaSsaPkcs1Parameters::Algorithm algorithm) {
+  switch (algorithm) {
+    case JwtRsaSsaPkcs1Parameters::Algorithm::kRs256:
+      return JwtRsaSsaPkcs1Algorithm::RS256;
+    case JwtRsaSsaPkcs1Parameters::Algorithm::kRs384:
+      return JwtRsaSsaPkcs1Algorithm::RS384;
+    case JwtRsaSsaPkcs1Parameters::Algorithm::kRs512:
+      return JwtRsaSsaPkcs1Algorithm::RS512;
+    default:
+      ABSL_LOG(FATAL) << "Unsupported algorithm";
+  }
+}
+
+JwtRsaSsaPkcs1PublicKey ToJwtRsaSsaPkcs1PublicKeyProto(
+    const crypto::tink::JwtRsaSsaPkcs1PublicKey& public_key) {
+  JwtRsaSsaPkcs1PublicKey proto;
+  proto.set_version(0);
+  proto.set_algorithm(
+      ToProtoAlgorithm(public_key.GetParameters().GetAlgorithm()));
+  proto.set_n(
+      std::string(public_key.GetModulus(GetPartialKeyAccess()).GetValue()));
+  proto.set_e(
+      std::string(public_key.GetParameters().GetPublicExponent().GetValue()));
+  return proto;
+}
 
 TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, Basics) {
   EXPECT_THAT(RawJwtRsaSsaPkcs1VerifyKeyManager().get_version(), Eq(0));
@@ -103,29 +133,17 @@ TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, KeyFormatWithSmallModulusInvalid) {
                        HasSubstr("only modulus size >= 2048")));
 }
 
-TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
-  const jwt_internal::RsaSsaTestVector& vector =
-      jwt_internal::GetRsa3072BitVector();
+using RawJwtRsaSsaPkcs1VerifyKeyManagerTestVectorTest =
+    testing::TestWithParam<jwt_internal::JwtRsaSsaPkcs1TestVector>;
 
-  JwtRsaSsaPkcs1PublicKey public_key;
-  public_key.set_version(0);
-  public_key.set_algorithm(JwtRsaSsaPkcs1Algorithm::RS256);
-  public_key.set_n(vector.n);
-  public_key.set_e(vector.e);
-
-  internal::RsaPrivateKey private_key_subtle;
-  private_key_subtle.n = vector.n;
-  private_key_subtle.e = vector.e;
-  private_key_subtle.d = SecretData(vector.d);
-  private_key_subtle.p = SecretData(vector.p);
-  private_key_subtle.q = SecretData(vector.q);
-  private_key_subtle.dp = SecretData(vector.dp);
-  private_key_subtle.dq = SecretData(vector.dq);
-  private_key_subtle.crt = SecretData(vector.q_inv);
+TEST_P(RawJwtRsaSsaPkcs1VerifyKeyManagerTestVectorTest, Create) {
+  const crypto::tink::JwtRsaSsaPkcs1PrivateKey& private_key = GetParam().key;
+  JwtRsaSsaPkcs1PublicKey public_key =
+      ToJwtRsaSsaPkcs1PublicKeyProto(private_key.GetPublicKey());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::RsaSsaPkcs1SignBoringSsl::New(
-          private_key_subtle, {crypto::tink::subtle::HashType::SHA256});
+          private_key.GetRsaSsaPkcs1PrivateKey(GetPartialKeyAccess()));
   ASSERT_THAT(direct_signer, IsOk());
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
@@ -137,7 +155,13 @@ TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
   absl::StatusOr<std::string> sig = (*direct_signer)->Sign(message);
   ASSERT_THAT(sig, IsOk());
   EXPECT_THAT((*verifier)->Verify(*sig, message), IsOk());
+  EXPECT_THAT((*verifier)->Verify(*sig, "wrong message"), Not(IsOk()));
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    RawJwtRsaSsaPkcs1VerifyKeyManagerTestVectorTests,
+    RawJwtRsaSsaPkcs1VerifyKeyManagerTestVectorTest,
+    ValuesIn(jwt_internal::CreateJwtRsaSsaPkcs1TestVectors()));
 
 TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, NistTestVector) {
   // Test vector from

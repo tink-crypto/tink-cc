@@ -131,6 +131,16 @@ readonly TARGETS=(
   "//tink/mac:hmac_parameters_test"
   "//tink/mac:mac_key"
   "//tink/mac:mac_parameters"
+  "//tink/prf:aes_cmac_prf_key"
+  "//tink/prf:aes_cmac_prf_parameters"
+  "//tink/prf:aes_cmac_prf_parameters_test"
+  "//tink/prf:hkdf_prf_key"
+  "//tink/prf:hkdf_prf_parameters"
+  "//tink/prf:hmac_prf_key"
+  "//tink/prf:hmac_prf_parameters"
+  "//tink/prf:hmac_prf_parameters_test"
+  "//tink/prf:prf_key"
+  "//tink/prf:prf_parameters"
   "//tools:check_rtti_type_ids_test"
 )
 

@@ -20,6 +20,7 @@
 #include <memory>
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -49,6 +50,9 @@ class AesCmacPrfParameters : public PrfParameters {
  private:
   explicit AesCmacPrfParameters(int key_size_in_bytes)
       : key_size_in_bytes_(key_size_in_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(PrfParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(303);
 
   int key_size_in_bytes_;
 };

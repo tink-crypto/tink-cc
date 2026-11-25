@@ -21,6 +21,7 @@
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/prf/prf_parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -35,6 +36,10 @@ class PrfKey : public Key {
   }
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(302);
 };
 
 }  // namespace tink

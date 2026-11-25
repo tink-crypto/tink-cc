@@ -18,6 +18,7 @@
 
 #include "absl/status/status.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -35,7 +36,7 @@ absl::StatusOr<AesCmacPrfParameters> AesCmacPrfParameters::Create(
 
 bool AesCmacPrfParameters::operator==(const Parameters& other) const {
   const AesCmacPrfParameters* that =
-      dynamic_cast<const AesCmacPrfParameters*>(&other);
+      DynamicCast<const AesCmacPrfParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

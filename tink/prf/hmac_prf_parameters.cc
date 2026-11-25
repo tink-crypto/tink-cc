@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -48,7 +49,7 @@ absl::StatusOr<HmacPrfParameters> HmacPrfParameters::Create(
 
 bool HmacPrfParameters::operator==(const Parameters& other) const {
   const HmacPrfParameters* that =
-      dynamic_cast<const HmacPrfParameters*>(&other);
+      DynamicCast<const HmacPrfParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

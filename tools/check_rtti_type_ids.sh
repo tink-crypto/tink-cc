@@ -58,6 +58,14 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 218 //third_party/tink/cc/aead/x_aes_gcm_key.h
 219 //third_party/tink/cc/aead/xchacha20_poly1305_parameters.h
 220 //third_party/tink/cc/aead/xchacha20_poly1305_key.h
+301 //third_party/tink/cc/prf/prf_parameters.h
+302 //third_party/tink/cc/prf/prf_key.h
+303 //third_party/tink/cc/prf/aes_cmac_prf_parameters.h
+304 //third_party/tink/cc/prf/aes_cmac_prf_key.h
+305 //third_party/tink/cc/prf/hkdf_prf_parameters.h
+306 //third_party/tink/cc/prf/hkdf_prf_key.h
+307 //third_party/tink/cc/prf/hmac_prf_parameters.h
+308 //third_party/tink/cc/prf/hmac_prf_key.h
 30001 //third_party/tink/cc/internal/util_test.cc
 30002 //third_party/tink/cc/internal/util_test.cc
 30003 //third_party/tink/cc/internal/util_test.cc

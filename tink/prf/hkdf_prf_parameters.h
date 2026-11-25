@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -81,6 +82,9 @@ class HkdfPrfParameters : public PrfParameters {
       salt_ = std::nullopt;
     }
   }
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(PrfParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(305);
 
   int key_size_in_bytes_;
   HashType hash_type_;

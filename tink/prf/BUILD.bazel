@@ -234,7 +234,10 @@ cc_library(
     name = "prf_parameters",
     hdrs = ["prf_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -244,6 +247,7 @@ cc_library(
     deps = [
         ":prf_parameters",
         "//tink:key",
+        "//tink:rtti",
         "@abseil-cpp//absl/types:optional",
     ],
 )
@@ -256,6 +260,7 @@ cc_library(
     deps = [
         ":prf_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
@@ -273,6 +278,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status:statusor",
     ],
@@ -296,6 +302,7 @@ cc_library(
     deps = [
         ":prf_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
@@ -314,6 +321,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
@@ -338,6 +346,7 @@ cc_library(
     deps = [
         ":prf_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",
@@ -358,6 +367,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/status",

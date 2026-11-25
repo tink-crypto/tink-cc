@@ -22,6 +22,7 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -38,7 +39,7 @@ absl::StatusOr<AesCmacPrfKey> AesCmacPrfKey::Create(
 }
 
 bool AesCmacPrfKey::operator==(const Key& other) const {
-  const AesCmacPrfKey* that = dynamic_cast<const AesCmacPrfKey*>(&other);
+  const AesCmacPrfKey* that = DynamicCast<const AesCmacPrfKey*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -21,6 +21,7 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -39,7 +40,7 @@ absl::StatusOr<HmacPrfKey> HmacPrfKey::Create(
 }
 
 bool HmacPrfKey::operator==(const Key& other) const {
-  const HmacPrfKey* that = dynamic_cast<const HmacPrfKey*>(&other);
+  const HmacPrfKey* that = DynamicCast<const HmacPrfKey*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -21,6 +21,7 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -39,7 +40,7 @@ absl::StatusOr<HkdfPrfKey> HkdfPrfKey::Create(
 }
 
 bool HkdfPrfKey::operator==(const Key& other) const {
-  const HkdfPrfKey* that = dynamic_cast<const HkdfPrfKey*>(&other);
+  const HkdfPrfKey* that = DynamicCast<const HkdfPrfKey*>(&other);
   if (that == nullptr) {
     return false;
   }

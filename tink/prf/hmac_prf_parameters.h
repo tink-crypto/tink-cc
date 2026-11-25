@@ -20,6 +20,7 @@
 #include <memory>
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -61,6 +62,9 @@ class HmacPrfParameters : public PrfParameters {
  private:
   explicit HmacPrfParameters(int key_size_in_bytes, HashType hash_type)
       : key_size_in_bytes_(key_size_in_bytes), hash_type_(hash_type) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(PrfParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(307);
 
   int key_size_in_bytes_;
   HashType hash_type_;

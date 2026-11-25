@@ -23,6 +23,7 @@
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/prf/prf_key.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -60,6 +61,9 @@ class HmacPrfKey final : public PrfKey {
   HmacPrfKey(const HmacPrfParameters& parameters,
              const RestrictedData& key_bytes)
       : parameters_(parameters), key_bytes_(key_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(PrfKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(308);
 
   HmacPrfParameters parameters_;
   RestrictedData key_bytes_;

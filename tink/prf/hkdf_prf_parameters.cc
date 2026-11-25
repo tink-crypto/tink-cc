@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -52,7 +53,7 @@ absl::StatusOr<HkdfPrfParameters> HkdfPrfParameters::Create(
 
 bool HkdfPrfParameters::operator==(const Parameters& other) const {
   const HkdfPrfParameters* that =
-      dynamic_cast<const HkdfPrfParameters*>(&other);
+      DynamicCast<const HkdfPrfParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

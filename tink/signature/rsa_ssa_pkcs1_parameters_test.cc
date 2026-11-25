@@ -517,6 +517,8 @@ TEST(RsaSsaPkcs1ParametersTest, DynamicCastAndTypeIndex) {
   const Parameters* base_parameters = &*parameters;
   EXPECT_THAT(GetTypeIndex(*base_parameters),
               Eq(GetStaticTypeIndex<RsaSsaPkcs1Parameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base_parameters),
+              Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const SignatureParameters*>(base_parameters),
               Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const RsaSsaPkcs1Parameters*>(base_parameters),

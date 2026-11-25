@@ -195,6 +195,8 @@ TEST(Ed25519ParametersTest, DynamicCastAndTypeIndex) {
   const Parameters* base_parameters = &*parameters;
   EXPECT_THAT(GetTypeIndex(*base_parameters),
               Eq(GetStaticTypeIndex<Ed25519Parameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base_parameters),
+              Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const SignatureParameters*>(base_parameters),
               Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const Ed25519Parameters*>(base_parameters),

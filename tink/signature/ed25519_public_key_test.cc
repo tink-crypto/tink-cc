@@ -383,6 +383,7 @@ TEST(Ed25519PublicKeyTest, DynamicCastAndTypeIndex) {
   const Key* base_key = &*public_key;
   EXPECT_THAT(GetTypeIndex(*base_key),
               Eq(GetStaticTypeIndex<Ed25519PublicKey>()));
+  EXPECT_THAT(DynamicCast<const Key*>(base_key), Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
               Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const Ed25519PublicKey*>(base_key), Eq(&*public_key));

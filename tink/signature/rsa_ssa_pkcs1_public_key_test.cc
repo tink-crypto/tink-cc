@@ -552,6 +552,7 @@ TEST(RsaSsaPkcs1PublicKeyTest, DynamicCastAndTypeIndex) {
   const Key* base_key = &*public_key;
   EXPECT_THAT(GetTypeIndex(*base_key),
               Eq(GetStaticTypeIndex<RsaSsaPkcs1PublicKey>()));
+  EXPECT_THAT(DynamicCast<const Key*>(base_key), Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const SignaturePublicKey*>(base_key),
               Eq(&*public_key));
   EXPECT_THAT(DynamicCast<const RsaSsaPkcs1PublicKey*>(base_key),

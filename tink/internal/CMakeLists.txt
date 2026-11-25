@@ -2273,3 +2273,20 @@ tink_cc_test(
     tink::core::secret_data
     tink::proto::tink_cc_proto
 )
+
+tink_cc_test(
+  NAME proto_parser_benchmark
+  SRCS
+    proto_parser_benchmark.cc
+  DEPS
+    GTest::gmock
+    absl::crc32c
+    absl::absl_check
+    absl::statusor
+    absl::strings
+    absl::string_view
+    benchmark::benchmark_main
+    tink::core::secret_data
+    tink::util::secret_data
+    tink::proto::tink_cc_tinkpb
+)

@@ -2292,3 +2292,20 @@ cc_library(
         "@boringssl//:crypto",
     ],
 )
+
+cc_test(
+    name = "proto_parser_benchmark",
+    srcs = ["proto_parser_benchmark.cc"],
+    deps = [
+        "//proto:tink_cc_tinkpb",
+        "//tink:secret_data",
+        "//tink/util:secret_data",
+        "@abseil-cpp//absl/crc:crc32c",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@google_benchmark//:benchmark_main",
+        "@googletest//:gtest_main",
+    ],
+)

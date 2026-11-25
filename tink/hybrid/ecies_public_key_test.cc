@@ -66,7 +66,7 @@ std::vector<EciesPublicKey> CreateTestKeys() {
   std::vector<EciesPublicKey> keys;
   for (const HybridTestVector& vector : CreateEciesTestVectors()) {
     const EciesPrivateKey* private_key =
-        dynamic_cast<const EciesPrivateKey*>(vector.hybrid_private_key.get());
+        DynamicCast<const EciesPrivateKey*>(vector.hybrid_private_key.get());
     if (private_key->GetPublicKey().GetParameters().GetCurveType() ==
         EciesParameters::CurveType::kX25519) {
       continue;

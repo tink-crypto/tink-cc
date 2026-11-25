@@ -229,7 +229,10 @@ cc_library(
     name = "hybrid_parameters",
     hdrs = ["hybrid_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -239,6 +242,7 @@ cc_library(
     deps = [
         ":hybrid_parameters",
         "//tink:key",
+        "//tink:rtti",
         "@abseil-cpp//absl/strings",
     ],
 )
@@ -252,6 +256,7 @@ cc_library(
         ":hybrid_public_key",
         "//tink:key",
         "//tink:private_key",
+        "//tink:rtti",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:optional",
     ],
@@ -265,6 +270,7 @@ cc_library(
     deps = [
         ":hybrid_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
     ],
@@ -280,6 +286,7 @@ cc_library(
         ":hybrid_public_key",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/internal:ec_util",
         "//tink/internal:output_prefix_util",
         "//tink/subtle:common_enums",
@@ -306,6 +313,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink:secret_data",
         "//tink/internal:bn_util",
         "//tink/internal:call_with_core_dump_protection",
@@ -393,6 +401,7 @@ cc_library(
     deps = [
         ":hybrid_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/aead:aes_ctr_hmac_aead_parameters",
         "//tink/aead:aes_gcm_parameters",
         "//tink/aead:xchacha20_poly1305_parameters",
@@ -416,6 +425,7 @@ cc_library(
         "//tink:ec_point",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/internal:ec_util",
         "//tink/internal:output_prefix_util",
         "//tink/internal:ssl_unique_ptr",
@@ -444,6 +454,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink:secret_data",
         "//tink/internal:bn_util",
         "//tink/internal:call_with_core_dump_protection",

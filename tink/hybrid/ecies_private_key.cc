@@ -41,6 +41,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 
@@ -227,7 +228,7 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
 }
 
 bool EciesPrivateKey::operator==(const Key& other) const {
-  const EciesPrivateKey* that = dynamic_cast<const EciesPrivateKey*>(&other);
+  const EciesPrivateKey* that = DynamicCast<const EciesPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

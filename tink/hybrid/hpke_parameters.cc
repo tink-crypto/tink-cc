@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -80,7 +81,7 @@ absl::StatusOr<HpkeParameters> HpkeParameters::Builder::Build() {
 }
 
 bool HpkeParameters::operator==(const Parameters& other) const {
-  const HpkeParameters* that = dynamic_cast<const HpkeParameters*>(&other);
+  const HpkeParameters* that = DynamicCast<const HpkeParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

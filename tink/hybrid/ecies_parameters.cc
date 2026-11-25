@@ -31,6 +31,7 @@
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/daead/aes_siv_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -230,7 +231,7 @@ EciesParameters::CreateDemParameters() const {
 }
 
 bool EciesParameters::operator==(const Parameters& other) const {
-  const EciesParameters* that = dynamic_cast<const EciesParameters*>(&other);
+  const EciesParameters* that = DynamicCast<const EciesParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

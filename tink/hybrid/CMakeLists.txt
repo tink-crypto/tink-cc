@@ -221,6 +221,7 @@ tink_cc_library(
     hybrid_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -231,6 +232,7 @@ tink_cc_library(
     tink::hybrid::hybrid_parameters
     absl::strings
     tink::core::key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -244,6 +246,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::private_key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -256,6 +259,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -273,6 +277,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::ec_util
     tink::internal::output_prefix_util
     tink::subtle::common_enums
@@ -297,6 +302,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection
@@ -352,6 +358,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::parameters
+    tink::core::rtti
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_gcm_parameters
     tink::aead::xchacha20_poly1305_parameters
@@ -374,6 +381,7 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::ec_util
     tink::internal::output_prefix_util
     tink::internal::ssl_unique_ptr
@@ -404,6 +412,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection

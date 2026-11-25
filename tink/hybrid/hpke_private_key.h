@@ -25,6 +25,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -67,6 +68,9 @@ class HpkePrivateKey final : public HybridPrivateKey {
   explicit HpkePrivateKey(const HpkePublicKey& public_key,
                           const RestrictedData& private_key_bytes)
       : public_key_(public_key), private_key_bytes_(private_key_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(HybridPrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(909);
 
   HpkePublicKey public_key_;
   RestrictedData private_key_bytes_;

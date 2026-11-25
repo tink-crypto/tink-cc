@@ -111,6 +111,15 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 822 //third_party/tink/cc/signature/composite_ml_dsa_parameters.h
 823 //third_party/tink/cc/signature/composite_ml_dsa_public_key.h
 824 //third_party/tink/cc/signature/composite_ml_dsa_private_key.h
+901 //third_party/tink/cc/hybrid/hybrid_parameters.h
+902 //third_party/tink/cc/hybrid/hybrid_public_key.h
+903 //third_party/tink/cc/hybrid/hybrid_private_key.h
+904 //third_party/tink/cc/hybrid/ecies_parameters.h
+905 //third_party/tink/cc/hybrid/ecies_public_key.h
+906 //third_party/tink/cc/hybrid/ecies_private_key.h
+907 //third_party/tink/cc/hybrid/hpke_parameters.h
+908 //third_party/tink/cc/hybrid/hpke_public_key.h
+909 //third_party/tink/cc/hybrid/hpke_private_key.h
 30001 //third_party/tink/cc/internal/util_test.cc
 30002 //third_party/tink/cc/internal/util_test.cc
 30003 //third_party/tink/cc/internal/util_test.cc

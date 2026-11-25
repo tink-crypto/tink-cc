@@ -29,6 +29,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -96,6 +97,9 @@ class EciesPrivateKey final : public HybridPrivateKey {
   explicit EciesPrivateKey(const EciesPublicKey& public_key,
                            const RestrictedData& private_key_value)
       : public_key_(public_key), private_key_bytes_(private_key_value) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(HybridPrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(906);
 
   EciesPublicKey public_key_;
   absl::optional<RestrictedData> private_key_bytes_;

@@ -336,13 +336,14 @@ TEST_P(HpkePublicKeyTest, NistCurvePublicKeyEquals) {
 }
 
 TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const HpkePublicKey& public_key = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& public_key = private_key->GetPublicKey();
   HpkePublicKey other_public_key = public_key;
 
   EXPECT_TRUE(public_key == other_public_key);
@@ -352,13 +353,14 @@ TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
 }
 
 TEST(HpkePublicKeyTest, XWingPublicKeyEquals) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kXWing,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const HpkePublicKey& public_key = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kXWing,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& public_key = private_key->GetPublicKey();
   HpkePublicKey other_public_key = public_key;
 
   EXPECT_TRUE(public_key == other_public_key);
@@ -378,20 +380,22 @@ TEST_P(HpkeMlKemPublicKeyTest, MlKemPublicKeyEquals) {
 }
 
 TEST(HpkePublicKeyTest, DifferentVariantNotEqual) {
-  const auto& private_key1 = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kTink)
-           .hybrid_private_key);
-  const auto& private_key2 = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kCrunchy)
-           .hybrid_private_key);
-  const HpkePublicKey& public_key1 = private_key1.GetPublicKey();
-  const HpkePublicKey& public_key2 = private_key2.GetPublicKey();
+  const auto* private_key1 = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kTink)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key1, NotNull());
+  const auto* private_key2 = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kCrunchy)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key2, NotNull());
+  const HpkePublicKey& public_key1 = private_key1->GetPublicKey();
+  const HpkePublicKey& public_key2 = private_key2->GetPublicKey();
 
   EXPECT_TRUE(public_key1 != public_key2);
   EXPECT_TRUE(public_key2 != public_key1);
@@ -400,13 +404,14 @@ TEST(HpkePublicKeyTest, DifferentVariantNotEqual) {
 }
 
 TEST(HpkePublicKeyTest, DifferentPublicKeyBytesNotEqual) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const HpkePublicKey& public_key1 = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& public_key1 = private_key->GetPublicKey();
 
   std::string public_key_bytes2 = X25519PublicValue();
   public_key_bytes2[0] ^= 1;
@@ -423,13 +428,14 @@ TEST(HpkePublicKeyTest, DifferentPublicKeyBytesNotEqual) {
 }
 
 TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kTink)
-           .hybrid_private_key);
-  const HpkePublicKey& public_key1 = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kTink)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& public_key1 = private_key->GetPublicKey();
 
   absl::StatusOr<HpkePublicKey> public_key2 = HpkePublicKey::Create(
       public_key1.GetParameters(),
@@ -444,13 +450,14 @@ TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(HpkePublicKeyTest, CopyConstructor) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const HpkePublicKey& public_key = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& public_key = private_key->GetPublicKey();
 
   HpkePublicKey copy(public_key);
 
@@ -458,20 +465,22 @@ TEST(HpkePublicKeyTest, CopyConstructor) {
 }
 
 TEST(HpkePublicKeyTest, CopyAssignment) {
-  const auto& private_key1 = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const auto& private_key2 = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kCrunchy)
-           .hybrid_private_key);
-  const HpkePublicKey& key1 = private_key1.GetPublicKey();
-  const HpkePublicKey& key2 = private_key2.GetPublicKey();
+  const auto* private_key1 = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key1, NotNull());
+  const auto* private_key2 = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kCrunchy)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key2, NotNull());
+  const HpkePublicKey& key1 = private_key1->GetPublicKey();
+  const HpkePublicKey& key2 = private_key2->GetPublicKey();
 
   HpkePublicKey copy = key2;
   copy = key1;
@@ -480,13 +489,14 @@ TEST(HpkePublicKeyTest, CopyAssignment) {
 }
 
 TEST(HpkePublicKeyTest, MoveConstructor) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  HpkePublicKey key = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  HpkePublicKey key = private_key->GetPublicKey();
 
   HpkePublicKey expected = key;
   HpkePublicKey moved(std::move(key));
@@ -495,20 +505,22 @@ TEST(HpkePublicKeyTest, MoveConstructor) {
 }
 
 TEST(HpkePublicKeyTest, MoveAssignment) {
-  const auto& private_key1 = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const auto& private_key2 = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kCrunchy)
-           .hybrid_private_key);
-  HpkePublicKey key1 = private_key1.GetPublicKey();
-  HpkePublicKey key2 = private_key2.GetPublicKey();
+  const auto* private_key1 = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key1, NotNull());
+  const auto* private_key2 = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemP256HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kCrunchy)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key2, NotNull());
+  HpkePublicKey key1 = private_key1->GetPublicKey();
+  HpkePublicKey key2 = private_key2->GetPublicKey();
 
   HpkePublicKey expected = key1;
   key2 = std::move(key1);
@@ -517,13 +529,14 @@ TEST(HpkePublicKeyTest, MoveAssignment) {
 }
 
 TEST(HpkePublicKeyTest, Clone) {
-  const auto& private_key = dynamic_cast<const HpkePrivateKey&>(
-      *GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
-                         HpkeParameters::KdfId::kHkdfSha256,
-                         HpkeParameters::AeadId::kAesGcm128,
-                         HpkeParameters::Variant::kNoPrefix)
-           .hybrid_private_key);
-  const HpkePublicKey& key = private_key.GetPublicKey();
+  const auto* private_key = DynamicCast<const HpkePrivateKey*>(
+      GetHpkeTestVector(HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                        HpkeParameters::KdfId::kHkdfSha256,
+                        HpkeParameters::AeadId::kAesGcm128,
+                        HpkeParameters::Variant::kNoPrefix)
+          .hybrid_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  const HpkePublicKey& key = private_key->GetPublicKey();
 
   // Clone the key.
   std::unique_ptr<Key> cloned_key = key.Clone();

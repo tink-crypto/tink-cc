@@ -27,6 +27,7 @@
 #include "tink/hybrid/hybrid_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -76,6 +77,9 @@ class HpkePublicKey final : public HybridPublicKey {
         public_key_bytes_(public_key_bytes),
         id_requirement_(id_requirement),
         output_prefix_(output_prefix) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(HybridPublicKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(908);
 
   HpkeParameters parameters_;
   std::string public_key_bytes_;

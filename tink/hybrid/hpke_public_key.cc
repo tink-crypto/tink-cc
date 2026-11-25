@@ -30,6 +30,7 @@
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -168,7 +169,7 @@ absl::StatusOr<HpkePublicKey> HpkePublicKey::Create(
 }
 
 bool HpkePublicKey::operator==(const Key& other) const {
-  const HpkePublicKey* that = dynamic_cast<const HpkePublicKey*>(&other);
+  const HpkePublicKey* that = DynamicCast<const HpkePublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

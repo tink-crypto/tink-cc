@@ -33,6 +33,7 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -178,7 +179,7 @@ absl::StatusOr<EciesPublicKey> EciesPublicKey::CreateForCurveX25519(
 }
 
 bool EciesPublicKey::operator==(const Key& other) const {
-  const EciesPublicKey* that = dynamic_cast<const EciesPublicKey*>(&other);
+  const EciesPublicKey* that = DynamicCast<const EciesPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

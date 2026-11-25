@@ -24,6 +24,7 @@
 #include "tink/hybrid/hybrid_public_key.h"
 #include "tink/key.h"
 #include "tink/private_key.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -55,6 +56,10 @@ class HybridPrivateKey : public PrivateKey {
   }
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(PrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(903);
 };
 
 }  // namespace tink

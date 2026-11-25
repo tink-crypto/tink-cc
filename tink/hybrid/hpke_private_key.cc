@@ -39,6 +39,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/subtle/common_enums.h"
 
 namespace crypto {
@@ -273,7 +274,7 @@ absl::StatusOr<HpkePrivateKey> HpkePrivateKey::Create(
 }
 
 bool HpkePrivateKey::operator==(const Key& other) const {
-  const HpkePrivateKey* that = dynamic_cast<const HpkePrivateKey*>(&other);
+  const HpkePrivateKey* that = DynamicCast<const HpkePrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

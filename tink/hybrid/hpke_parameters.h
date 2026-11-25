@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -130,6 +131,9 @@ class HpkeParameters : public HybridParameters {
         kdf_id_(kdf_id),
         aead_id_(aead_id),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(HybridParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(907);
 
   KemId kem_id_;
   KdfId kdf_id_;

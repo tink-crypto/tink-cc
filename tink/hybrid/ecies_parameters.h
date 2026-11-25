@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -163,6 +164,9 @@ class EciesParameters : public HybridParameters {
         dem_id_(dem_id),
         salt_(salt),
         variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(HybridParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(904);
 
   CurveType curve_type_;
   HashType hash_type_;

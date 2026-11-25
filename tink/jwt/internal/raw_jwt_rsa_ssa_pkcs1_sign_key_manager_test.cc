@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "openssl/bn.h"
@@ -42,6 +43,7 @@ namespace tink {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::crypto::tink::subtle::RsaSsaPkcs1VerifyBoringSsl;
 using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
 using ::google::crypto::tink::JwtRsaSsaPkcs1KeyFormat;
@@ -268,6 +270,24 @@ TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
   absl::StatusOr<std::string> sig = (*signer)->Sign(message);
   ASSERT_THAT(sig, IsOk());
   EXPECT_THAT((*direct_verifier)->Verify(*sig, message), IsOk());
+}
+
+TEST(JwtRsaSsaPkcs1SignKeyManagerTest, CreateFailsWithWrongVersion) {
+  JwtRsaSsaPkcs1PrivateKey key = CreateValidRs256PrivateKey();
+  key.set_version(1);
+
+  EXPECT_THAT(
+      RawJwtRsaSsaPkcs1SignKeyManager().GetPrimitive<PublicKeySign>(key),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(JwtRsaSsaPkcs1SignKeyManagerTest, CreateFailsWithWrongPublicKeyVersion) {
+  JwtRsaSsaPkcs1PrivateKey key = CreateValidRs256PrivateKey();
+  key.mutable_public_key()->set_version(1);
+
+  EXPECT_THAT(
+      RawJwtRsaSsaPkcs1SignKeyManager().GetPrimitive<PublicKeySign>(key),
+      StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

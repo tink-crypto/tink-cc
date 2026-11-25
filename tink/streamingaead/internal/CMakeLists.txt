@@ -373,3 +373,40 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME aes_ctr_hmac_streaming_key_creator
+  SRCS
+    aes_ctr_hmac_streaming_key_creator.cc
+    aes_ctr_hmac_streaming_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
+)
+
+tink_cc_test(
+  NAME aes_ctr_hmac_streaming_key_creator_test
+  SRCS
+    aes_ctr_hmac_streaming_key_creator_test.cc
+  DEPS
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_key_creator
+    GTest::gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::core::partial_key_access
+    tink::internal::key_gen_configuration_impl
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
+)

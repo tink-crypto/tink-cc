@@ -12,6 +12,7 @@ cc_library(
     hdrs = ["ml_kem_parameters.h"],
     deps = [
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/experimental/kem:kem_parameters",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -29,6 +30,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/experimental/kem:kem_private_key",
         "//tink/util:secret_data",
         "//tink/util:status",
@@ -51,6 +53,7 @@ cc_library(
         ":ml_kem_parameters",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/experimental/kem:kem_public_key",
         "//tink/internal:output_prefix_util",
         "//tink/util:status",

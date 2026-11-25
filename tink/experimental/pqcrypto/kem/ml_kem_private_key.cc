@@ -33,6 +33,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -103,7 +104,7 @@ absl::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
 }
 
 bool MlKemPrivateKey::operator==(const Key& other) const {
-  const MlKemPrivateKey* that = dynamic_cast<const MlKemPrivateKey*>(&other);
+  const MlKemPrivateKey* that = DynamicCast<const MlKemPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

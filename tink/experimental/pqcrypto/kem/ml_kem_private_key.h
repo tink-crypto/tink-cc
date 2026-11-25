@@ -26,6 +26,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -68,6 +69,9 @@ class MlKemPrivateKey final : public KemPrivateKey {
   explicit MlKemPrivateKey(const MlKemPublicKey& public_key,
                            const RestrictedData& private_seed_bytes)
       : public_key_(public_key), private_seed_bytes_(private_seed_bytes) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(KemPrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(706);
 
   MlKemPublicKey public_key_;
   RestrictedData private_seed_bytes_;

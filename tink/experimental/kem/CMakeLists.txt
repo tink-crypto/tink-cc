@@ -6,6 +6,7 @@ tink_cc_library(
     kem_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -19,6 +20,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::private_key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -29,4 +31,5 @@ tink_cc_library(
     tink::experimental::kem::kem_parameters
     absl::string_view
     tink::core::key
+    tink::core::rtti
 )

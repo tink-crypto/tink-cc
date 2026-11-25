@@ -10,6 +10,7 @@ tink_cc_library(
   DEPS
     absl::status
     tink::core::parameters
+    tink::core::rtti
     tink::experimental::kem::kem_parameters
     tink::util::status
     tink::util::statusor
@@ -50,6 +51,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::experimental::kem::kem_private_key
     tink::util::secret_data
     tink::util::status
@@ -99,6 +101,7 @@ tink_cc_library(
     tink::internal::boringssl
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::experimental::kem::kem_public_key
     tink::internal::output_prefix_util
     tink::util::status

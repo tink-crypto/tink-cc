@@ -27,6 +27,7 @@
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -92,7 +93,7 @@ absl::StatusOr<MlKemPublicKey> MlKemPublicKey::Create(
 }
 
 bool MlKemPublicKey::operator==(const Key& other) const {
-  const MlKemPublicKey* that = dynamic_cast<const MlKemPublicKey*>(&other);
+  const MlKemPublicKey* that = DynamicCast<const MlKemPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

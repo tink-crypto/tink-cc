@@ -677,6 +677,7 @@ tink_cc_library(
     private_key.h
   DEPS
     tink::core::key
+    tink::core::rtti
 )
 
 tink_cc_library(

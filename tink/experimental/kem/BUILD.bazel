@@ -7,7 +7,10 @@ licenses(["notice"])
 cc_library(
     name = "kem_parameters",
     hdrs = ["kem_parameters.h"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -18,6 +21,7 @@ cc_library(
         ":kem_public_key",
         "//tink:key",
         "//tink:private_key",
+        "//tink:rtti",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
     ],
@@ -29,6 +33,7 @@ cc_library(
     deps = [
         ":kem_parameters",
         "//tink:key",
+        "//tink:rtti",
         "@abseil-cpp//absl/strings:string_view",
     ],
 )

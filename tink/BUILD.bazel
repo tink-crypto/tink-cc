@@ -685,7 +685,10 @@ cc_library(
     name = "private_key",
     hdrs = ["private_key.h"],
     visibility = ["//visibility:public"],
-    deps = [":key"],
+    deps = [
+        ":key",
+        ":rtti",
+    ],
 )
 
 cc_library(

@@ -18,13 +18,18 @@
 #define TINK_EXPERIMENTAL_KEM_KEM_PARAMETERS_H_
 
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
 
 // Describes a key encapsulation mechanism key pair (e.g. key attributes),
 // excluding the randomly chosen key material.
-class KemParameters : public Parameters {};
+class KemParameters : public Parameters {
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(701);
+};
 
 }  // namespace tink
 }  // namespace crypto

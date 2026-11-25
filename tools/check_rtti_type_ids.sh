@@ -32,6 +32,7 @@ set -euo pipefail
 DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 1 //third_party/tink/cc/parameters.h
 2 //third_party/tink/cc/key.h
+3 //third_party/tink/cc/private_key.h
 101 //third_party/tink/cc/mac/mac_parameters.h
 102 //third_party/tink/cc/mac/mac_key.h
 103 //third_party/tink/cc/mac/hmac_parameters.h
@@ -80,6 +81,12 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 604 //third_party/tink/cc/streamingaead/aes_ctr_hmac_streaming_key.h
 605 //third_party/tink/cc/streamingaead/aes_gcm_hkdf_streaming_parameters.h
 606 //third_party/tink/cc/streamingaead/aes_gcm_hkdf_streaming_key.h
+701 //third_party/tink/cc/experimental/kem/kem_parameters.h
+702 //third_party/tink/cc/experimental/kem/kem_public_key.h
+703 //third_party/tink/cc/experimental/kem/kem_private_key.h
+704 //third_party/tink/cc/experimental/pqcrypto/kem/ml_kem_parameters.h
+705 //third_party/tink/cc/experimental/pqcrypto/kem/ml_kem_public_key.h
+706 //third_party/tink/cc/experimental/pqcrypto/kem/ml_kem_private_key.h
 30001 //third_party/tink/cc/internal/util_test.cc
 30002 //third_party/tink/cc/internal/util_test.cc
 30003 //third_party/tink/cc/internal/util_test.cc

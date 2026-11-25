@@ -18,6 +18,7 @@
 #define TINK_PRIVATE_KEY_H_
 
 #include "tink/key.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -27,6 +28,10 @@ namespace tink {
 class PrivateKey : public Key {
  public:
   virtual const Key& GetPublicKey() const = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(3);
 };
 
 }  // namespace tink

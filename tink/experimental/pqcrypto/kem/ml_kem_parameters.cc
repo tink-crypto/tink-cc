@@ -18,6 +18,7 @@
 
 #include "absl/status/status.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -42,7 +43,7 @@ absl::StatusOr<MlKemParameters> MlKemParameters::Create(int key_size,
 }
 
 bool MlKemParameters::operator==(const Parameters& other) const {
-  const MlKemParameters* that = dynamic_cast<const MlKemParameters*>(&other);
+  const MlKemParameters* that = DynamicCast<const MlKemParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

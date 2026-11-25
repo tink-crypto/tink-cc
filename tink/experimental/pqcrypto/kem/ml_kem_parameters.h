@@ -21,6 +21,7 @@
 
 #include "tink/experimental/kem/kem_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -69,6 +70,9 @@ class MlKemParameters : public KemParameters {
  private:
   explicit MlKemParameters(int key_size, Variant variant)
       : key_size_(key_size), variant_(variant) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(KemParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(704);
 
   int key_size_;
   Variant variant_;

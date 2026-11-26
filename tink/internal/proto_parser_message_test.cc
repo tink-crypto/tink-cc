@@ -647,6 +647,67 @@ TEST(RepeatedMessageField, SerializeNonEmptyWithEmptyInnerStruct) {
   EXPECT_THAT(buffer.substr(2), Eq("FFER"));
 }
 
+class BytesMessage final : public Message {
+ public:
+  BytesMessage() = default;
+  explicit BytesMessage(absl::string_view value) {
+    bytes_field_.set_value(value);
+  }
+
+ private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{{&bytes_field_}}[i];
+  }
+
+  BytesField bytes_field_{1};
+};
+
+TEST(RepeatedMessageField, SerializeLargeSubmessage) {
+  RepeatedMessageField<BytesMessage> field{1};
+  const std::string payload(128, 'a');
+  field.mutable_values()->push_back(BytesMessage(payload));
+  const std::string expected =
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(payload)});
+  // Inner message: tag (1) + varint length 128 (2) + 128 = 131 bytes.
+  // Outer field: tag (1) + varint length 131 (2) + 131 = 134 bytes.
+  EXPECT_THAT(expected.size(), Eq(134));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(expected.size()));
+
+  std::string buffer(expected.size() + 4, 'X');
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(4));
+  EXPECT_THAT(buffer.substr(0, expected.size()), Eq(expected));
+  EXPECT_THAT(buffer.substr(expected.size()), Eq("XXXX"));
+}
+
+TEST(RepeatedMessageField, SerializeMultipleSubmessagesOver127BytesTotal) {
+  RepeatedMessageField<BytesMessage> field{1};
+  const std::string payload1(60, 'a');
+  const std::string payload2(60, 'b');
+  const std::string payload3(60, 'c');
+  field.mutable_values()->push_back(BytesMessage(payload1));
+  field.mutable_values()->push_back(BytesMessage(payload2));
+  field.mutable_values()->push_back(BytesMessage(payload3));
+  const std::string expected = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(payload1)}),
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(payload2)}),
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(payload3)}));
+  // Each inner message is 62 bytes (< 128, 1-byte length varint), so each
+  // repeated entry is 64 bytes (192 total; cumulative size reaches 128 before
+  // the third element).
+  EXPECT_THAT(expected.size(), Eq(192));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(expected.size()));
+
+  std::string buffer(expected.size() + 4, 'X');
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(4));
+  EXPECT_THAT(buffer.substr(0, expected.size()), Eq(expected));
+  EXPECT_THAT(buffer.substr(expected.size()), Eq("XXXX"));
+}
+
 TEST(RepeatedMessageField, SerializeTooSmallBuffer) {
   RepeatedMessageField<InnerStruct> field{1};
   field.mutable_values()->push_back(InnerStruct(0x23, 0x7a));

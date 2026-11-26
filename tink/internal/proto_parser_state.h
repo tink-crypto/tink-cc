@@ -62,10 +62,8 @@ class ParsingState final {
   void Advance(size_t length) {
     if (crc_to_update_ != nullptr) {
       CallWithCoreDumpProtection([&]() {
-        *crc_to_update_ = absl::ConcatCrc32c(
-            *crc_to_update_,
-            absl::ComputeCrc32c(remaining_view_to_parse_.substr(0, length)),
-            length);
+        *crc_to_update_ = absl::ExtendCrc32c(
+            *crc_to_update_, remaining_view_to_parse_.substr(0, length));
       });
     }
     remaining_view_to_parse_.remove_prefix(length);
@@ -140,10 +138,12 @@ class SerializationState final {
       return;
     }
     CallWithCoreDumpProtection([&]() {
-      absl::crc32c_t crc =
-          absl::ComputeCrc32c(absl::string_view(output_buffer_.data(), length));
-      AdvanceWithCrc(length, crc);
+      auto data_to_update =
+          absl::string_view(output_buffer_.data(), output_buffer_.size())
+              .substr(0, length);
+      *crc_to_update_ = absl::ExtendCrc32c(*crc_to_update_, data_to_update);
     });
+    output_buffer_.remove_prefix(length);
   }
 
   // Removes the next `length` bytes from the data to be parsed and updates the

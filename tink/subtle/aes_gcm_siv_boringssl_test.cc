@@ -103,6 +103,19 @@ TEST(AesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
   }
 }
 
+TEST(AesGcmSivBoringSslTest, InvalidKeySizes) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  for (int key_size : {0, 15, 17, 24, 31, 33, 64}) {
+    SecretData key(key_size, 'x');
+    EXPECT_THAT(AesGcmSivBoringSsl::New(key).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument))
+        << "key_size=" << key_size;
+  }
+}
+
 TEST(AesGcmSivBoringSslTest, TestFipsOnly) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";

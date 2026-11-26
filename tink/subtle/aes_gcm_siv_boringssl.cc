@@ -17,16 +17,20 @@
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
 
 #include <memory>
+#include <optional>
 #include <utility>
 
-#include "absl/memory/memory.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_siv_key.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/aead/internal/zero_copy_aes_gcm_siv_boringssl.h"
-#include "tink/internal/fips_utils.h"
+#include "tink/aead/subtle/create_aes_gcm_siv_aead.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 
 namespace crypto {
@@ -35,34 +39,22 @@ namespace subtle {
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmSivBoringSsl::New(
     const AesGcmSivKey& key) {
-  auto status = internal::CheckFipsCompatibility<AesGcmSivBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-
-  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> aead =
-      internal::ZeroCopyAesGcmSivBoringSsl::New(key);
-  if (!aead.ok()) {
-    return aead.status();
-  }
-
-  return {absl::WrapUnique(new AesGcmSivBoringSsl(*std::move(aead)))};
+  return CreateAesGcmSivAead(key);
 }
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmSivBoringSsl::New(
     const SecretData& key) {
-  auto status = internal::CheckFipsCompatibility<AesGcmSivBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-
-  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> aead =
-      internal::ZeroCopyAesGcmSivBoringSsl::New(key);
-  if (!aead.ok()) {
-    return aead.status();
-  }
-
-  return {absl::WrapUnique(new AesGcmSivBoringSsl(*std::move(aead)))};
+  // CreateAesGcmSivAead already checks FIPS compatibility.
+  ABSL_ASSIGN_OR_RETURN(
+      AesGcmSivParameters parameters,
+      AesGcmSivParameters::Create(key.size(),
+                                  AesGcmSivParameters::Variant::kNoPrefix));
+  ABSL_ASSIGN_OR_RETURN(
+      AesGcmSivKey aes_gcm_siv_key,
+      AesGcmSivKey::Create(
+          parameters, RestrictedData(key, InsecureSecretKeyAccess::Get()),
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
+  return CreateAesGcmSivAead(aes_gcm_siv_key);
 }
 
 AesGcmSivBoringSsl::AesGcmSivBoringSsl(

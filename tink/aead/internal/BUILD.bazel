@@ -1978,3 +1978,36 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "legacy_kms_aead_key_creator",
+    srcs = ["legacy_kms_aead_key_creator.cc"],
+    hdrs = ["legacy_kms_aead_key_creator.h"],
+    deps = [
+        "//tink:key",
+        "//tink/aead:legacy_kms_aead_key",
+        "//tink/aead:legacy_kms_aead_parameters",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "legacy_kms_aead_key_creator_test",
+    srcs = ["legacy_kms_aead_key_creator_test.cc"],
+    deps = [
+        ":legacy_kms_aead_key_creator",
+        "//tink:key",
+        "//tink:key_gen_configuration",
+        "//tink/aead:legacy_kms_aead_key",
+        "//tink/aead:legacy_kms_aead_parameters",
+        "//tink/internal:key_gen_configuration_impl",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)

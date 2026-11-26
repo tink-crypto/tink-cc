@@ -1229,6 +1229,7 @@ cc_library(
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/functional:any_invocable",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

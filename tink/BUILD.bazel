@@ -605,6 +605,7 @@ cc_library(
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/functional:any_invocable",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

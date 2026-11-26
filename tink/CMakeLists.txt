@@ -579,6 +579,7 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::key_manager
     absl::base
+    absl::any_invocable
     absl::memory
     absl::status
     absl::statusor

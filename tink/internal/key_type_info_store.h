@@ -18,7 +18,6 @@
 #define TINK_INTERNAL_KEY_TYPE_INFO_STORE_H_
 
 #include <atomic>
-#include <functional>
 #include <initializer_list>
 #include <memory>
 #include <string>
@@ -26,6 +25,7 @@
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -197,8 +197,8 @@ class KeyTypeInfoStore {
 
     const KeyFactory& key_factory() const { return *key_factory_; }
 
-    const std::function<absl::StatusOr<google::crypto::tink::KeyData>(
-        absl::string_view, InputStream*)>&
+    const absl::AnyInvocable<absl::StatusOr<google::crypto::tink::KeyData>(
+        absl::string_view, InputStream*) const>&
     key_deriver() const {
       return key_deriver_;
     }
@@ -237,8 +237,8 @@ class KeyTypeInfoStore {
     // Derives a key if Info was constructed from a KeyTypeManager with a
     // non-void KeyFormat type. Else, this function is empty and casting to a
     // bool returns false.
-    std::function<absl::StatusOr<google::crypto::tink::KeyData>(
-        absl::string_view, InputStream*)>
+    absl::AnyInvocable<absl::StatusOr<google::crypto::tink::KeyData>(
+        absl::string_view, InputStream*) const>
         key_deriver_;
   };
 

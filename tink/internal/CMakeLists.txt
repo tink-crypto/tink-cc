@@ -1208,6 +1208,7 @@ tink_cc_library(
   DEPS
     tink::internal::fips_utils
     absl::flat_hash_map
+    absl::any_invocable
     absl::status
     absl::statusor
     absl::strings

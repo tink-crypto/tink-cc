@@ -17,12 +17,12 @@
 #define TINK_CORE_KEY_MANAGER_IMPL_H_
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "absl/base/casts.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -258,8 +258,8 @@ std::unique_ptr<KeyManager<Primitive>> MakeKeyManager(
 // Note that the returned function stores a pointer to the given KeyTypeManager,
 // which must remain valid for the lifetime of the function.
 template <class KeyProto, class KeyFormatProto, class... Primitives>
-std::function<absl::StatusOr<google::crypto::tink::KeyData>(absl::string_view,
-                                                            InputStream*)>
+absl::AnyInvocable<absl::StatusOr<google::crypto::tink::KeyData>(
+    absl::string_view, InputStream*) const>
 CreateDeriverFunctionFor(
     KeyTypeManager<KeyProto, KeyFormatProto, List<Primitives...>>*
         key_type_manager) {
@@ -296,8 +296,8 @@ CreateDeriverFunctionFor(
 // Template specialization of CreateDeriverFor in case the KeyTypeManager has
 // KeyFormatProto = void, and hence there is no key derivation.
 template <class KeyProto, class... Primitives>
-std::function<absl::StatusOr<google::crypto::tink::KeyData>(absl::string_view,
-                                                            InputStream*)>
+absl::AnyInvocable<absl::StatusOr<google::crypto::tink::KeyData>(
+    absl::string_view, InputStream*) const>
 CreateDeriverFunctionFor(
     KeyTypeManager<KeyProto, void, List<Primitives...>>* key_type_manager) {
   return [key_type_manager](absl::string_view serialized_key_format,

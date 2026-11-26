@@ -83,7 +83,9 @@ class KeyTypeInfoStore {
         : key_manager_type_index_(std::type_index(typeid(*manager))),
           public_key_type_manager_type_index_(std::nullopt),
           new_key_allowed_(new_key_allowed),
-          key_type_manager_(absl::WrapUnique(manager)),
+          key_type_manager_(
+              manager, &Delete<KeyTypeManager<KeyProto, KeyFormatProto,
+                                              List<Primitives...>>>),
           internal_key_factory_(
               absl::make_unique<internal::KeyFactoryImpl<KeyTypeManager<
                   KeyProto, KeyFormatProto, List<Primitives...>>>>(manager)),
@@ -111,7 +113,11 @@ class KeyTypeInfoStore {
           public_key_type_manager_type_index_(
               std::type_index(typeid(*public_manager))),
           new_key_allowed_(new_key_allowed),
-          key_type_manager_(absl::WrapUnique(private_manager)),
+          key_type_manager_(
+              private_manager,
+              &Delete<PrivateKeyTypeManager<PrivateKeyProto, KeyFormatProto,
+                                            PublicKeyProto,
+                                            List<PrivatePrimitives...>>>),
           internal_key_factory_(
               absl::make_unique<internal::PrivateKeyFactoryImpl<
                   PrivateKeyProto, KeyFormatProto, PublicKeyProto,
@@ -135,7 +141,7 @@ class KeyTypeInfoStore {
         : key_manager_type_index_(std::type_index(typeid(*manager))),
           public_key_type_manager_type_index_(std::nullopt),
           new_key_allowed_(new_key_allowed),
-          key_type_manager_(nullptr),
+          key_type_manager_(nullptr, &NoopDelete),
           internal_key_factory_(nullptr),
           key_factory_(&manager->get_key_factory()) {
       primitive_to_manager_.emplace(std::type_index(typeid(P)),
@@ -198,6 +204,13 @@ class KeyTypeInfoStore {
     }
 
    private:
+    template <typename T>
+    static void Delete(void* p) {
+      delete static_cast<T*>(p);
+    }
+
+    static void NoopDelete(void*) {}
+
     // Dynamic type_index of the KeyManager or KeyTypeManager for this key type.
     std::type_index key_manager_type_index_;
     // Dynamic type_index of the public KeyTypeManager for this key type when
@@ -212,7 +225,7 @@ class KeyTypeInfoStore {
         primitive_to_manager_;
     // Key type manager. Equals nullptr if Info was constructed from a
     // KeyManager.
-    const std::shared_ptr<void> key_type_manager_;
+    std::unique_ptr<void, void (*)(void*)> key_type_manager_;
 
     // Key factory. Equals nullptr if Info was constructed from a KeyManager.
     std::unique_ptr<const KeyFactory> internal_key_factory_;

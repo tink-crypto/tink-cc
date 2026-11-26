@@ -98,13 +98,16 @@ class KeysetWrapperStore {
                   PrimitiveGetterFn<P, Key> primitive_getter_from_key)
         : is_same_primitive_wrapping_(std::is_same_v<P, Q>),
           wrapper_type_index_(std::type_index(typeid(*wrapper))),
-          q_type_index_(std::type_index(typeid(Q))) {
+          q_type_index_(std::type_index(typeid(Q))),
+          original_wrapper_(nullptr, +[](void*) {}) {
       auto typed_wrapper = absl::make_unique<KeysetWrapperImpl<P, Q>>(
           wrapper.get(), std::move(primitive_getter),
           std::move(primitive_getter_from_key));
       keyset_wrapper_ = absl::make_unique<UntypedKeysetWrapperImpl<Q>>(
           std::move(typed_wrapper));
-      original_wrapper_ = std::move(wrapper);
+      original_wrapper_ = std::unique_ptr<void, void (*)(void*)>(
+          wrapper.release(),
+          +[](void* p) { delete static_cast<PrimitiveWrapper<P, Q>*>(p); });
     }
 
     template <typename Q>
@@ -159,11 +162,10 @@ class KeysetWrapperStore {
     std::type_index wrapper_type_index_;
     // dynamic std::type_index of Q, when PrimitiveWrapper<P,Q> was inserted.
     std::type_index q_type_index_;
-    // The primitive_wrapper passed in. We use a shared_ptr because
-    // unique_ptr<void> is invalid.
-    std::shared_ptr<void> original_wrapper_;
+    // The input primitive wrapper, type-erased with a custom deleter.
+    std::unique_ptr<void, void (*)(void*)> original_wrapper_;
     // The keyset_wrapper_.
-    std::shared_ptr<UntypedKeysetWrapper> keyset_wrapper_;
+    std::unique_ptr<UntypedKeysetWrapper> keyset_wrapper_;
   };
 
   // Map from primitive type_index to Info.
@@ -190,10 +192,9 @@ absl::Status KeysetWrapperStore::Add(
     return absl::OkStatus();
   }
 
-  primitive_to_info_.insert(
-      {std::type_index(typeid(Q)),
-       Info(std::move(wrapper), std::move(primitive_getter),
-            std::move(primitive_getter_from_key))});
+  primitive_to_info_.try_emplace(std::type_index(typeid(Q)), std::move(wrapper),
+                                 std::move(primitive_getter),
+                                 std::move(primitive_getter_from_key));
 
   return absl::OkStatus();
 }

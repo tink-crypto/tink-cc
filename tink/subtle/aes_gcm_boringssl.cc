@@ -17,15 +17,18 @@
 #include "tink/subtle/aes_gcm_boringssl.h"
 
 #include <memory>
-#include <utility>
+#include <optional>
 
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_key.h"
-#include "tink/aead/internal/aead_from_zero_copy.h"
-#include "tink/aead/internal/zero_copy_aead.h"
-#include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
-#include "tink/util/secret_data.h"
+#include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/subtle/create_aes_gcm_aead.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -33,26 +36,25 @@ namespace subtle {
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const AesGcmKey& key) {
-  // ZeroCopyAesGcmBoringSsl::New already checks FIPS compatibility.
-  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
-      internal::ZeroCopyAesGcmBoringSsl::New(key);
-  if (!zero_copy_aead.ok()) {
-    return zero_copy_aead.status();
-  }
-  return {
-      std::make_unique<internal::AeadFromZeroCopy>(*std::move(zero_copy_aead))};
+  return CreateAesGcmAead(key);
 }
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const SecretData& key) {
-  // ZeroCopyAesGcmBoringSsl::New already checks FIPS compatibility.
-  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
-      internal::ZeroCopyAesGcmBoringSsl::New(key);
-  if (!zero_copy_aead.ok()) {
-    return zero_copy_aead.status();
-  }
-  return {
-      std::make_unique<internal::AeadFromZeroCopy>(*std::move(zero_copy_aead))};
+  // CreateAesGcmAead already checks FIPS compatibility.
+  ABSL_ASSIGN_OR_RETURN(AesGcmParameters parameters,
+                        AesGcmParameters::Builder()
+                            .SetKeySizeInBytes(key.size())
+                            .SetIvSizeInBytes(12)
+                            .SetTagSizeInBytes(16)
+                            .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+                            .Build());
+  ABSL_ASSIGN_OR_RETURN(
+      AesGcmKey aes_gcm_key,
+      AesGcmKey::Create(
+          parameters, RestrictedData(key, InsecureSecretKeyAccess::Get()),
+          /*id_requirement=*/std::nullopt, GetPartialKeyAccess()));
+  return CreateAesGcmAead(aes_gcm_key);
 }
 
 }  // namespace subtle

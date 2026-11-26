@@ -317,13 +317,17 @@ tink_cc_library(
     aes_gcm_boringssl.h
   DEPS
     absl::core_headers
+    absl::status_macros
     absl::statusor
     absl::strings
     tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
     tink::aead::aes_gcm_key
-    tink::aead::internal::aead_from_zero_copy
-    tink::aead::internal::zero_copy_aead
-    tink::aead::internal::zero_copy_aes_gcm_boringssl
+    tink::aead::aes_gcm_parameters
+    tink::aead::subtle::create_aes_gcm_aead
     tink::internal::fips_utils
     tink::util::secret_data
     tink::util::statusor

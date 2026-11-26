@@ -1188,12 +1188,15 @@ tink_cc_test(
     absl::absl_check
     absl::status
     absl::status_matchers
+    absl::statusor
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::secret_buffer
+    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors

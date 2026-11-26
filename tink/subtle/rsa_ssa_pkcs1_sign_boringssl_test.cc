@@ -24,14 +24,17 @@
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
@@ -323,6 +326,132 @@ TEST_F(RsaPkcs1SignBoringsslTest, TestAllowedFipsModuli) {
   internal::RsaSsaPkcs1Params params{/*sig_hash=*/HashType::SHA256};
   EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(private_key, params).status(),
               IsOk());
+}
+
+TEST(RsaSsaPkcs1SignBoringSslTest, EncodesPkcs1) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  const internal::SignatureTestVector& test_vector =
+      internal::Create2048BitsTestVector();
+  const auto* private_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPkcs1SignBoringSsl::New(*private_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::string> signature = (*signer)->Sign("testdata");
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT(*signature, Not(IsEmpty()));
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(private_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "testdata"), IsOk());
+}
+
+TEST(RsaSsaPkcs1SignBoringSslTest, EncodesPkcs1WithSha384) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  const auto* sha384_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      internal::GetRsaSsaPkcs1TestVector(
+          2048, RsaSsaPkcs1Parameters::HashType::kSha384,
+          RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha384_key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPkcs1SignBoringSsl::New(*sha384_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::string> signature = (*signer)->Sign("testdata");
+  ASSERT_THAT(signature, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(sha384_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "testdata"), IsOk());
+
+  const auto* sha256_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      internal::GetRsaSsaPkcs1TestVector(
+          2048, RsaSsaPkcs1Parameters::HashType::kSha256,
+          RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha256_key, NotNull());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> sha256_verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(sha256_key->GetPublicKey());
+  ASSERT_THAT(sha256_verifier, IsOk());
+  EXPECT_THAT((*sha256_verifier)->Verify(*signature, "testdata"), Not(IsOk()));
+}
+
+TEST(RsaSsaPkcs1SignBoringSslTest, EncodesPkcs1WithSha512) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Test not run in FIPS-only mode";
+  }
+
+  const auto* sha512_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      internal::GetRsaSsaPkcs1TestVector(
+          2048, RsaSsaPkcs1Parameters::HashType::kSha512,
+          RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha512_key, NotNull());
+
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPkcs1SignBoringSsl::New(*sha512_key);
+  ASSERT_THAT(signer, IsOk());
+
+  absl::StatusOr<std::string> signature = (*signer)->Sign("testdata");
+  ASSERT_THAT(signature, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(sha512_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, "testdata"), IsOk());
+
+  const auto* sha384_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      internal::GetRsaSsaPkcs1TestVector(
+          2048, RsaSsaPkcs1Parameters::HashType::kSha384,
+          RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .signature_private_key.get());
+  ASSERT_THAT(sha384_key, NotNull());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> sha384_verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(sha384_key->GetPublicKey());
+  ASSERT_THAT(sha384_verifier, IsOk());
+  EXPECT_THAT((*sha384_verifier)->Verify(*signature, "testdata"), Not(IsOk()));
+}
+
+// FIPS-only mode tests
+TEST(RsaSsaPkcs1SignBoringSslTest, TestFipsFailWithoutBoringCrypto) {
+  if (!internal::IsFipsModeEnabled() || internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
+  }
+
+  const internal::SignatureTestVector& test_vector =
+      internal::Create2048BitsTestVector();
+  const auto* private_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(*private_key).status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(RsaSsaPkcs1SignBoringSslTest, TestAllowedFipsModuli) {
+  if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test assumes kOnlyUseFips and BoringCrypto.";
+  }
+
+  const internal::SignatureTestVector& test_vector =
+      internal::Create3072BitsTestVector();
+  const auto* typed_key = dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+      test_vector.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(*typed_key).status(), IsOk());
 }
 
 using RsaSsaPkcs1SignBoringSSLTestVectorTest =

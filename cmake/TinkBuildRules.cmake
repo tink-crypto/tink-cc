@@ -237,7 +237,13 @@ target_compile_features(tink PUBLIC cxx_std_${TINK_CXX_STANDARD})
 set_property(TARGET tink PROPERTY FOLDER "${TINK_IDE_FOLDER}")
 set_property(TARGET tink PROPERTY OUTPUT_NAME tink${PROJECT_VERSION_MAJOR})
 set_property(TARGET tink PROPERTY VERSION "${PROJECT_VERSION}")
-set_property(TARGET tink PROPERTY SOVERSION "${PROJECT_VERSION_MAJOR}")
+# Tink currently provides no ABI stability guarantees across versions.
+# Only API stability follows semantic versioning.
+#
+# Using precisely 3 version components to potentially allow future use of the
+# "tweak" version for ABI compatible patches.
+set_property(TARGET tink PROPERTY SOVERSION
+             "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 add_library(tink::tink ALIAS tink)
 
 # Declare the test-only Tink library target.
@@ -260,7 +266,13 @@ if(TINK_BUILD_TESTONLY)
   set_property(TARGET tink_testonly PROPERTY FOLDER "${TINK_IDE_FOLDER}")
   set_property(TARGET tink_testonly PROPERTY OUTPUT_NAME tink${PROJECT_VERSION_MAJOR}_testonly)
   set_property(TARGET tink_testonly PROPERTY VERSION "${PROJECT_VERSION}")
-  set_property(TARGET tink_testonly PROPERTY SOVERSION "${PROJECT_VERSION_MAJOR}")
+  # Tink currently provides no ABI stability guarantees across versions.
+  # Only API stability follows semantic versioning.
+  #
+  # Using precisely 3 version components to potentially allow future use of
+  # the "tweak" version for ABI compatible patches.
+  set_property(TARGET tink_testonly PROPERTY SOVERSION
+             "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
   add_library(tink::testonly ALIAS tink_testonly)
 endif()
 

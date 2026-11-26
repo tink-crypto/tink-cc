@@ -638,3 +638,36 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "hmac_key_creator",
+    srcs = ["hmac_key_creator.cc"],
+    hdrs = ["hmac_key_creator.h"],
+    deps = [
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/mac:hmac_key",
+        "//tink/mac:hmac_parameters",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "hmac_key_creator_test",
+    srcs = ["hmac_key_creator_test.cc"],
+    deps = [
+        ":hmac_key_creator",
+        ":hmac_test_vectors",
+        "//tink:key",
+        "//tink:key_gen_configuration",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/mac:hmac_key",
+        "//tink/mac:hmac_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

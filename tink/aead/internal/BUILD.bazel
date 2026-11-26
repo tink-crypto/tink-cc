@@ -1944,3 +1944,37 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "chacha20_poly1305_key_creator",
+    srcs = ["chacha20_poly1305_key_creator.cc"],
+    hdrs = ["chacha20_poly1305_key_creator.h"],
+    deps = [
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/aead:chacha20_poly1305_key",
+        "//tink/aead:chacha20_poly1305_parameters",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "chacha20_poly1305_key_creator_test",
+    srcs = ["chacha20_poly1305_key_creator_test.cc"],
+    deps = [
+        ":chacha20_poly1305_key_creator",
+        "//tink:key",
+        "//tink:key_gen_configuration",
+        "//tink/aead:chacha20_poly1305_key",
+        "//tink/aead:chacha20_poly1305_parameters",
+        "//tink/aead/internal/testing:aead_test_vector",
+        "//tink/aead/internal/testing:chacha20_poly1305_test_vectors",
+        "//tink/internal:key_gen_configuration_impl",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

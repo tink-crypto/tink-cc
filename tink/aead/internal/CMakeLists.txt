@@ -1935,3 +1935,37 @@ tink_cc_test(
     tink::subtle::subtle_util
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME chacha20_poly1305_key_creator
+  SRCS
+    chacha20_poly1305_key_creator.cc
+    chacha20_poly1305_key_creator.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+)
+
+tink_cc_test(
+  NAME chacha20_poly1305_key_creator_test
+  SRCS
+    chacha20_poly1305_key_creator_test.cc
+  DEPS
+    tink::aead::internal::chacha20_poly1305_key_creator
+    GTest::gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::chacha20_poly1305_test_vectors
+    tink::internal::key_gen_configuration_impl
+)

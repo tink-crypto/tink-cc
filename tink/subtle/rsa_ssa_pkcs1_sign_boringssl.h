@@ -21,19 +21,17 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
-namespace internal {
-struct RsaPrivateKey;
-struct RsaSsaPkcs1Params;
-}  // namespace internal
 namespace subtle {
 
 // The RSA SSA (Signature Schemes with Appendix) using PKCS1 (Public-Key
@@ -43,11 +41,9 @@ namespace subtle {
 class RsaSsaPkcs1SignBoringSsl : public PublicKeySign {
  public:
   static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const internal::RsaPrivateKey& private_key,
-      const internal::RsaSsaPkcs1Params& params);
-
-  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const RsaSsaPkcs1PrivateKey& key);
+      const RsaSsaPkcs1PrivateKey& key) {
+    return internal::NewRsaSsaPkcs1SignBoringSsl(key);
+  }
 
   // Computes the signature for 'data'.
   absl::StatusOr<std::string> Sign(absl::string_view data) const override = 0;

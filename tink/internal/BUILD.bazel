@@ -1463,6 +1463,7 @@ cc_test(
         "//tink:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/crc:crc32c",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

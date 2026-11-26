@@ -1458,6 +1458,7 @@ tink_cc_test(
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     GTest::gmock
+    absl::crc32c
     absl::status
     absl::statusor
     absl::strings

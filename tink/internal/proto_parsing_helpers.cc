@@ -46,15 +46,19 @@ constexpr int kSkipGroupLimit = 100;
 // follow it closely. In tags, we should restrict parsing to size 5 and handle
 // overflows by taking mod 2^32.
 bool ConsumeVarintForTag(ParsingState& parsing_state, uint32_t& result) {
-  result = 0;
-  for (int i = 0; i < kMax32BitVarintLength; ++i) {
-    if (parsing_state.ParsingDone()) {
-      return false;
-    }
-    uint32_t byte = parsing_state.PeekByte();
+  const absl::string_view data = parsing_state.RemainingData();
+  if (!data.empty() && static_cast<uint8_t>(data[0]) < 0x80) {
+    result = static_cast<uint8_t>(data[0]);
     parsing_state.Advance(1);
-    result |= ((byte & 0x7F) << (i * 7));
+    return true;
+  }
+  result = 0;
+  absl::string_view maybe_varint = data.substr(0, kMax32BitVarintLength);
+  for (size_t i = 0; i < maybe_varint.size(); ++i) {
+    uint8_t byte = static_cast<uint8_t>(maybe_varint[i]);
+    result |= (static_cast<uint32_t>(byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
+      parsing_state.Advance(i + 1);
       return true;
     }
   }
@@ -68,20 +72,26 @@ bool ConsumeVarintForTag(ParsingState& parsing_state, uint32_t& result) {
 // currently want to follow it closely. In size, we are very strict and do not
 // allow additional bits set.
 bool ConsumeVarintForSize(ParsingState& parsing_state, uint32_t& result) {
+  const absl::string_view data = parsing_state.RemainingData();
+  if (!data.empty() && static_cast<uint8_t>(data[0]) < 0x80) {
+    result = static_cast<uint8_t>(data[0]);
+    parsing_state.Advance(1);
+    return true;
+  }
   result = 0;
-  for (int i = 0; i < kMax32BitVarintLength; ++i) {
-    if (parsing_state.ParsingDone()) {
-      return false;
-    }
-    uint32_t byte = parsing_state.PeekByte();
+  absl::string_view maybe_varint = data.substr(0, kMax32BitVarintLength);
+  for (size_t i = 0; i < maybe_varint.size(); ++i) {
+    uint8_t byte = static_cast<uint8_t>(maybe_varint[i]);
     if (i == kMax32BitVarintLength - 1) {
+      // The 5th byte holds bits 28-34 of the value; only its low 4 bits fit in
+      // a uint32_t (max >> 28 == 0xF), so reject anything larger.
       if ((byte & 0x7F) > (std::numeric_limits<uint32_t>::max() >> (i * 7))) {
         return false;
       }
     }
-    parsing_state.Advance(1);
-    result |= ((byte & 0x7F) << (i * 7));
+    result |= (static_cast<uint32_t>(byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
+      parsing_state.Advance(i + 1);
       return true;
     }
   }
@@ -93,15 +103,19 @@ bool ConsumeVarintForSize(ParsingState& parsing_state, uint32_t& result) {
 
 // https://protobuf.dev/programming-guides/encoding/#varints
 bool ConsumeVarintIntoUint64(ParsingState& parsing_state, uint64_t& result) {
-  result = 0;
-  for (int i = 0; i < kMax64BitVarintLength; ++i) {
-    if (parsing_state.ParsingDone()) {
-      return false;
-    }
-    uint64_t byte = parsing_state.PeekByte();
+  const absl::string_view data = parsing_state.RemainingData();
+  if (!data.empty() && static_cast<uint8_t>(data[0]) < 0x80) {
+    result = static_cast<uint8_t>(data[0]);
     parsing_state.Advance(1);
-    result |= ((byte & 0x7F) << (i * 7));
+    return true;
+  }
+  result = 0;
+  absl::string_view maybe_varint = data.substr(0, kMax64BitVarintLength);
+  for (size_t i = 0; i < maybe_varint.size(); ++i) {
+    uint8_t byte = static_cast<uint8_t>(maybe_varint[i]);
+    result |= (static_cast<uint64_t>(byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
+      parsing_state.Advance(i + 1);
       return true;
     }
   }

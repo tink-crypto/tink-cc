@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -161,6 +162,76 @@ TEST(ProtoParserTest, VarintParsingFailure) {
     ParsingState parsing_state = ParsingState(bytes);
     uint64_t result;
     EXPECT_THAT(ConsumeVarintIntoUint64(parsing_state, result), IsFalse());
+  }
+}
+
+TEST(ProtoParserTest, ConsumeVarintIntoUint64TruncatedFails) {
+  // Each input ends with a byte that has the continuation bit set, but no
+  // more bytes follow.
+  for (absl::string_view hex_encoded_bytes : {
+           "80",                  // 1 byte, value bits 0
+           "ff",                  // 1 byte, value bits all set
+           "ffff",                // 2 bytes
+           "80808080",            // 4 bytes
+           "808080808080808080",  // 9 bytes, one short of the 10-byte max
+       }) {
+    SCOPED_TRACE(hex_encoded_bytes);
+    std::string bytes = HexDecodeOrDie(hex_encoded_bytes);
+    ParsingState parsing_state = ParsingState(bytes);
+    uint64_t result;
+    EXPECT_THAT(ConsumeVarintIntoUint64(parsing_state, result), IsFalse());
+  }
+}
+
+TEST(ProtoParserTest, ConsumeVarintForSizeTruncatedFails) {
+  // Each input ends with a byte that has the continuation bit set, but no
+  // more bytes follow.
+  for (absl::string_view hex_encoded_bytes : {
+           "80",        // 1 byte, value bits 0
+           "ff",        // 1 byte, value bits all set
+           "ffff",      // 2 bytes
+           "80808080",  // 4 bytes, one short of the 5-byte max
+       }) {
+    SCOPED_TRACE(hex_encoded_bytes);
+    std::string bytes = HexDecodeOrDie(hex_encoded_bytes);
+    ParsingState parsing_state = ParsingState(bytes);
+    uint32_t result;
+    EXPECT_THAT(ConsumeVarintForSize(parsing_state, result), IsFalse());
+  }
+}
+
+TEST(ProtoParserTest, ConsumeIntoWireTypeAndFieldNumberTruncatedFails) {
+  // Each input is a tag varint that ends with a byte that has the continuation
+  // bit set, but no more bytes follow.
+  for (absl::string_view hex_encoded_bytes : {
+           "80",        // 1 byte, value bits 0
+           "ff",        // 1 byte, value bits all set
+           "ffff",      // 2 bytes
+           "80808080",  // 4 bytes, one short of the 5-byte max
+       }) {
+    SCOPED_TRACE(hex_encoded_bytes);
+    std::string bytes = HexDecodeOrDie(hex_encoded_bytes);
+    ParsingState parsing_state = ParsingState(bytes);
+    WireType wire_type;
+    int field_number;
+    EXPECT_THAT(ConsumeIntoWireTypeAndFieldNumber(parsing_state, wire_type,
+                                                  field_number),
+                IsFalse());
+  }
+}
+
+TEST(ProtoParserTest, VarintUpdatesCrcWithConsumedBytesOnly) {
+  for (absl::string_view hex_encoded_bytes :
+       {"01", "a274", "ffffffff0f", "ffffffffffffffffff01"}) {
+    SCOPED_TRACE(hex_encoded_bytes);
+    std::string varint = HexDecodeOrDie(hex_encoded_bytes);
+    std::string bytes = absl::StrCat(varint, "rest");
+    absl::crc32c_t crc = absl::crc32c_t(0);
+    ParsingState parsing_state = ParsingState(bytes, &crc);
+    uint64_t result;
+    ASSERT_THAT(ConsumeVarintIntoUint64(parsing_state, result), IsTrue());
+    EXPECT_THAT(parsing_state.RemainingData(), Eq("rest"));
+    EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(varint)));
   }
 }
 

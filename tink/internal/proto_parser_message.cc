@@ -47,7 +47,8 @@ namespace proto_parsing {
 // Message.
 
 bool Message::FieldsAreSorted() const {
-  for (size_t i = 1; i < num_fields(); ++i) {
+  const int n = static_cast<int>(num_fields());
+  for (int i = 1; i < n; ++i) {
     if (field(i - 1)->FieldNumber() >= field(i)->FieldNumber()) {
       return false;
     }
@@ -82,7 +83,8 @@ const Field* /*absl_nullable - not yet supported*/ Message::FieldWithNumber(uint
 }
 
 void Message::Clear() {
-  for (size_t i = 0; i < num_fields(); ++i) {
+  const int n = static_cast<int>(num_fields());
+  for (int i = 0; i < n; ++i) {
     const_cast<Field*>(field(i))->Clear();
   }
 }
@@ -142,7 +144,8 @@ std::string Message::SerializeAsString() const {
 }
 
 bool Message::Serialize(SerializationState& out) const {
-  for (size_t i = 0; i < num_fields(); ++i) {
+  const int n = static_cast<int>(num_fields());
+  for (int i = 0; i < n; ++i) {
     if (!field(i)->SerializeWithTagInto(out)) {
       return false;
     }
@@ -152,7 +155,8 @@ bool Message::Serialize(SerializationState& out) const {
 
 size_t Message::ByteSizeLong() const {
   size_t size = 0;
-  for (size_t i = 0; i < num_fields(); ++i) {
+  const int n = static_cast<int>(num_fields());
+  for (int i = 0; i < n; ++i) {
     size += field(i)->GetSerializedSizeIncludingTag();
   }
   return size;
@@ -291,9 +295,9 @@ size_t RepeatedMessageFieldBase::GetSerializedSizeIncludingTag() const {
       WireTypeAndFieldNumberLength(GetWireType(), FieldNumber());
   size_t size = 0;
   for (size_t i = 0; i < num_messages(); ++i) {
-    const Message& msg = message(i);
-    size += msg.ByteSizeLong() + VarintLength(msg.ByteSizeLong()) +
-            wire_type_and_field_number_length;
+    const size_t msg_size = message(i).ByteSizeLong();
+    size +=
+        msg_size + VarintLength(msg_size) + wire_type_and_field_number_length;
   }
   return size;
 }

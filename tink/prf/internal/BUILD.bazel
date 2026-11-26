@@ -374,3 +374,37 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "hkdf_prf_key_creator",
+    srcs = ["hkdf_prf_key_creator.cc"],
+    hdrs = ["hkdf_prf_key_creator.h"],
+    deps = [
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "hkdf_prf_key_creator_test",
+    srcs = ["hkdf_prf_key_creator_test.cc"],
+    deps = [
+        ":hkdf_prf_key_creator",
+        ":hkdf_prf_test_vectors",
+        "//tink:key",
+        "//tink:key_gen_configuration",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/prf:hkdf_prf_key",
+        "//tink/prf:hkdf_prf_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -447,6 +447,7 @@ TEST(JwtHmacKeyTest, DynamicCastAndTypeIndex) {
 
   const Key* base_key = &key;
   EXPECT_THAT(GetTypeIndex(*base_key), Eq(GetStaticTypeIndex<JwtHmacKey>()));
+  EXPECT_THAT(DynamicCast<const Key*>(base_key), Eq(&key));
   EXPECT_THAT(DynamicCast<const JwtMacKey*>(base_key), Eq(&key));
   EXPECT_THAT(DynamicCast<const JwtHmacKey*>(base_key), Eq(&key));
   EXPECT_THAT(DynamicCast<const JwtMlDsaPublicKey*>(base_key), IsNull());

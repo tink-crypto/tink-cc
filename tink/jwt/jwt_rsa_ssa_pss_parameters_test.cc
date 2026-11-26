@@ -503,6 +503,8 @@ TEST(JwtRsaSsaPssParametersTest, DynamicCastAndTypeIndex) {
   const Parameters* base_parameters = &*parameters;
   EXPECT_THAT(GetTypeIndex(*base_parameters),
               Eq(GetStaticTypeIndex<JwtRsaSsaPssParameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base_parameters),
+              Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const JwtSignatureParameters*>(base_parameters),
               Eq(&*parameters));
   EXPECT_THAT(DynamicCast<const JwtRsaSsaPssParameters*>(base_parameters),

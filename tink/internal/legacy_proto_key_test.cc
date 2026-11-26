@@ -44,6 +44,7 @@ using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::IsTrue;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -294,6 +295,171 @@ TEST_F(LegacyProtoKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*key));
+}
+
+TEST_F(LegacyProtoKeyTest, ParametersEquals) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(other_serialization.status(), IsOk());
+
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> other_key = LegacyProtoKey::Create(
+      *other_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(other_key.status(), IsOk());
+
+  EXPECT_TRUE(key->GetParameters() == other_key->GetParameters());
+  EXPECT_TRUE(other_key->GetParameters() == key->GetParameters());
+  EXPECT_FALSE(key->GetParameters() != other_key->GetParameters());
+  EXPECT_FALSE(other_key->GetParameters() != key->GetParameters());
+}
+
+TEST_F(LegacyProtoKeyTest, ParametersEqualsIgnoresKeySpecificFields) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  RestrictedData other_serialized_key =
+      RestrictedData("other_serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
+      ProtoKeySerialization::Create("type_url", other_serialized_key,
+                                    KeyMaterialTypeTP::kRemote,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/6789);
+  ASSERT_THAT(other_serialization.status(), IsOk());
+
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> other_key = LegacyProtoKey::Create(
+      *other_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(other_key.status(), IsOk());
+
+  EXPECT_TRUE(key->GetParameters() == other_key->GetParameters());
+  EXPECT_TRUE(other_key->GetParameters() == key->GetParameters());
+  EXPECT_FALSE(key->GetParameters() != other_key->GetParameters());
+  EXPECT_FALSE(other_key->GetParameters() != key->GetParameters());
+}
+
+TEST_F(LegacyProtoKeyTest, ParametersTypeUrlNotEqual) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
+      ProtoKeySerialization::Create("other_type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(other_serialization.status(), IsOk());
+
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> other_key = LegacyProtoKey::Create(
+      *other_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(other_key.status(), IsOk());
+
+  EXPECT_TRUE(key->GetParameters() != other_key->GetParameters());
+  EXPECT_TRUE(other_key->GetParameters() != key->GetParameters());
+  EXPECT_FALSE(key->GetParameters() == other_key->GetParameters());
+  EXPECT_FALSE(other_key->GetParameters() == key->GetParameters());
+}
+
+TEST_F(LegacyProtoKeyTest, ParametersOutputPrefixTypeNotEqual) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kCrunchy,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(other_serialization.status(), IsOk());
+
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> other_key = LegacyProtoKey::Create(
+      *other_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(other_key.status(), IsOk());
+
+  EXPECT_TRUE(key->GetParameters() != other_key->GetParameters());
+  EXPECT_TRUE(other_key->GetParameters() != key->GetParameters());
+  EXPECT_FALSE(key->GetParameters() == other_key->GetParameters());
+  EXPECT_FALSE(other_key->GetParameters() == key->GetParameters());
+}
+
+TEST_F(LegacyProtoKeyTest, ParametersDifferentTypeNotEqual) {
+  class OtherParameters : public Parameters {
+   public:
+    bool HasIdRequirement() const override { return true; }
+    bool operator==(const Parameters&) const override {
+      ADD_FAILURE() << "Do not call";
+      return false;
+    }
+    std::unique_ptr<Parameters> Clone() const override { return nullptr; }
+  };
+
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+
+  OtherParameters other_parameters;
+  EXPECT_TRUE(key->GetParameters() != other_parameters);
+  EXPECT_FALSE(key->GetParameters() == other_parameters);
+}
+
+TEST_F(LegacyProtoKeyTest, ParametersClone) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = key->GetParameters().Clone();
+  ASSERT_THAT(cloned_parameters, NotNull());
+  EXPECT_TRUE(*cloned_parameters == key->GetParameters());
+  EXPECT_TRUE(key->GetParameters() == *cloned_parameters);
 }
 
 using AllOutputPrefixTypesTest =

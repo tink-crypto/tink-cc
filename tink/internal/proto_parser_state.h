@@ -24,7 +24,6 @@
 #include "absl/crc/crc32c.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 
 namespace crypto {
 namespace tink {

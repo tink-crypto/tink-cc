@@ -1512,7 +1512,6 @@ tink_cc_library(
     proto_parser_state.cc
     proto_parser_state.h
   DEPS
-    tink::internal::call_with_core_dump_protection
     absl::nullability
     absl::crc32c
     absl::string_view

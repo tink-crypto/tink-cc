@@ -17,7 +17,6 @@
 #ifndef TINK_INTERNAL_CONFIGURATION_IMPL_H_
 #define TINK_INTERNAL_CONFIGURATION_IMPL_H_
 
-#include <functional>
 #include <memory>
 #include <tuple>
 #include <typeindex>
@@ -59,10 +58,8 @@ class ConfigurationImpl {
     // `primitive_getter` must be defined here, as PW::InputPrimitive is not
     // accessible later.
     // TODO(b/284084337): Move primitive getter out of key manager.
-    std::function<absl::StatusOr<std::unique_ptr<typename PW::InputPrimitive>>(
-        const google::crypto::tink::KeyData& key_data)>
-        primitive_getter =
-            [&config](const google::crypto::tink::KeyData& key_data)
+    auto primitive_getter =
+        [&config](const google::crypto::tink::KeyData& key_data)
         -> absl::StatusOr<std::unique_ptr<typename PW::InputPrimitive>> {
       absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*>
           info = config.key_type_info_store_.Get(key_data.type_url());
@@ -101,7 +98,7 @@ class ConfigurationImpl {
 
     return config.keyset_wrapper_store_
         .Add<typename PW::InputPrimitive, typename PW::Primitive>(
-            std::move(wrapper), primitive_getter,
+            std::move(wrapper), std::move(primitive_getter),
             std::move(primitive_getter_from_key));
   }
 

@@ -92,11 +92,11 @@ void Message::Clear() {
 bool Message::ParseFromStringImpl(absl::string_view in,
                                   absl::crc32c_t* /*absl_nullable - not yet supported*/ result_crc) {
   Clear();
-  // Run the whole parse within a single CallWithCoreDumpProtection, so that
-  // the ones done per ParsingState::Advance() (when tracking the CRC) and per
-  // SecretDataField are nested, and thus cheap. Recursion depth is bounded by
-  // the schema's nesting. As in SerializeAsSecretData(), field values may be
-  // allocated while running on the secret stack.
+  // Run the whole parse within a single CallWithCoreDumpProtection: the CRC
+  // updates in ParsingState rely on this, and the calls per SecretDataField
+  // are nested, and thus cheap. Recursion depth is bounded by the schema's
+  // nesting. As in SerializeAsSecretData(), field values may be allocated while
+  // running on the secret stack.
   return CallWithCoreDumpProtection([&]() -> bool {
     ParsingState state(in, result_crc);
     if (!Parse(state)) {

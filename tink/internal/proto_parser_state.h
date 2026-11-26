@@ -45,7 +45,9 @@ class ParsingState final {
   // Creates a new parsing state which maintains the crc of the parsed data.
   // Whenever Advance or AdvanceGetCrc is called, `crc_to_update` is
   // updated with it. This is done consistently with the value of AdvanceGetCrc.
-  // All the CRC calculations are done within a CallWithCoreDumpProtection.
+  //
+  // The CRC is sensitive: a parsing state created with this constructor must
+  // only be used within CallWithCoreDumpProtection.
   explicit ParsingState(absl::string_view serialization_to_parse,
                         absl::crc32c_t* /*absl_nullable - not yet supported*/ crc_to_update)
       : remaining_view_to_parse_(serialization_to_parse),
@@ -61,10 +63,8 @@ class ParsingState final {
   // internal CRC if any.
   void Advance(size_t length) {
     if (crc_to_update_ != nullptr) {
-      CallWithCoreDumpProtection([&]() {
-        *crc_to_update_ = absl::ExtendCrc32c(
-            *crc_to_update_, remaining_view_to_parse_.substr(0, length));
-      });
+      *crc_to_update_ = absl::ExtendCrc32c(
+          *crc_to_update_, remaining_view_to_parse_.substr(0, length));
     }
     remaining_view_to_parse_.remove_prefix(length);
   }
@@ -118,7 +118,9 @@ class SerializationState final {
   // Creates a new serialization state which maintains the CRC of the parsed
   // data. Whenever Advance or AdvanceWithCrc is called, `crc_to_update_` is
   // updated, if not nullptr. For AdvanceWithCrc, the passed in CRC is used.
-  // All the CRC calculations are done within a CallWithCoreDumpProtection.
+  //
+  // The CRC is sensitive: a serialization state created with this constructor
+  // must only be used within CallWithCoreDumpProtection.
   explicit SerializationState(absl::Span<char> output_buffer,
                               absl::crc32c_t* /*absl_nonnull - not yet supported*/ crc_to_update)
       : output_buffer_(output_buffer), crc_to_update_(crc_to_update) {}
@@ -137,12 +139,10 @@ class SerializationState final {
       output_buffer_.remove_prefix(length);
       return;
     }
-    CallWithCoreDumpProtection([&]() {
-      auto data_to_update =
-          absl::string_view(output_buffer_.data(), output_buffer_.size())
-              .substr(0, length);
-      *crc_to_update_ = absl::ExtendCrc32c(*crc_to_update_, data_to_update);
-    });
+    auto data_to_update =
+        absl::string_view(output_buffer_.data(), output_buffer_.size())
+            .substr(0, length);
+    *crc_to_update_ = absl::ExtendCrc32c(*crc_to_update_, data_to_update);
     output_buffer_.remove_prefix(length);
   }
 

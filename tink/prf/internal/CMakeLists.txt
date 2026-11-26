@@ -333,3 +333,37 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME aes_cmac_prf_key_creator
+  SRCS
+    aes_cmac_prf_key_creator.cc
+    aes_cmac_prf_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_parameters
+)
+
+tink_cc_test(
+  NAME aes_cmac_prf_key_creator_test
+  SRCS
+    aes_cmac_prf_key_creator_test.cc
+  DEPS
+    tink::prf::internal::aes_cmac_prf_key_creator
+    tink::prf::internal::aes_cmac_prf_test_vectors
+    GTest::gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_parameters
+)

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -514,6 +515,66 @@ TEST(MessageTest, ParseFromStringFails) {
   OuterStruct s;
   s.Clear();
   EXPECT_FALSE(s.ParseFromString(bytes));
+}
+
+struct MessageWithGapsAndRepeatedField : public Message {
+ public:
+  Uint32Field uint32_field_1{1};
+  RepeatedMessageField<InnerStruct> repeated_field_2{2};
+  BytesField bytes_field_3{3};
+  Uint32Field uint32_field_5{5};
+
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{{&uint32_field_1, &repeated_field_2,
+                                        &bytes_field_3, &uint32_field_5}}[i];
+  }
+};
+
+std::vector<uint32_t> RepeatedMember1Values(
+    const MessageWithGapsAndRepeatedField& m) {
+  std::vector<uint32_t> result;
+  for (int i = 0; i < m.repeated_field_2.values_size(); ++i) {
+    result.push_back(m.repeated_field_2.values(i).uint32_member_1());
+  }
+  return result;
+}
+
+TEST(MessageTest, ParseFieldsInOrderWithRepeatedField) {
+  std::string bytes = absl::StrCat(
+      FieldWithNumber(1).IsVarint(10),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(1)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(2)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(3)}),
+      FieldWithNumber(3).IsString("bytes"), FieldWithNumber(5).IsVarint(50));
+  MessageWithGapsAndRepeatedField m;
+  ASSERT_TRUE(m.ParseFromString(bytes));
+  EXPECT_THAT(m.uint32_field_1.value(), Eq(10));
+  EXPECT_THAT(RepeatedMember1Values(m), ElementsAre(1, 2, 3));
+  EXPECT_THAT(m.bytes_field_3.value(), Eq("bytes"));
+  EXPECT_THAT(m.uint32_field_5.value(), Eq(50));
+}
+
+TEST(MessageTest, ParseFieldsOutOfOrderWithUnknownAndMismatchedFields) {
+  std::string bytes = absl::StrCat(
+      FieldWithNumber(5).IsVarint(50), FieldWithNumber(3).IsString("bytes"),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(1)}),
+      /* Unknown field. */ FieldWithNumber(4).IsVarint(9),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(2)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(3)}),
+      /* Wrong wire type, skipped. */ FieldWithNumber(1).IsString("x"),
+      FieldWithNumber(1).IsVarint(10),
+      /* Wrong wire type, skipped. */ FieldWithNumber(3).IsVarint(7),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsVarint(4)}),
+      /* Last one wins. */ FieldWithNumber(1).IsVarint(11),
+      /* Unknown field. */ FieldWithNumber(6).IsString("unknown"));
+  MessageWithGapsAndRepeatedField m;
+  ASSERT_TRUE(m.ParseFromString(bytes));
+  EXPECT_THAT(m.uint32_field_1.value(), Eq(11));
+  EXPECT_THAT(RepeatedMember1Values(m), ElementsAre(1, 2, 3, 4));
+  EXPECT_THAT(m.bytes_field_3.value(), Eq("bytes"));
+  EXPECT_THAT(m.uint32_field_5.value(), Eq(50));
 }
 
 // -----------------------------------------------------------------------------

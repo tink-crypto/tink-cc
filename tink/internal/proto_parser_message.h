@@ -101,9 +101,15 @@ class Message {
   friend class RepeatedMessageFieldBase;
 
   bool FieldsAreSorted() const;
+  // Returns the index of the field with `field_number`, or -1 if there is none.
+  int SearchFieldWithNumber(uint32_t field_number) const;
   // Returns the field with the given `field_number`, or nullptr if no such
-  // field exists.
-  const Field* /*absl_nullable - not yet supported*/ FieldWithNumber(uint32_t field_number);
+  // field exists. `next_index` is a hint of the index of the field expected
+  // next: the fields at `next_index` and `next_index - 1` are checked first
+  // before searching. On a match, `next_index` is updated to follow the
+  // returned field.
+  const Field* /*absl_nullable - not yet supported*/ FieldWithNumber(uint32_t field_number,
+                                             size_t& next_index) const;
   bool ParseFromStringImpl(absl::string_view in,
                            absl::crc32c_t* /*absl_nullable - not yet supported*/ result_crc);
 

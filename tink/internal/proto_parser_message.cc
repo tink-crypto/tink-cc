@@ -56,12 +56,7 @@ bool Message::FieldsAreSorted() const {
   return true;
 }
 
-const Field* /*absl_nullable - not yet supported*/ Message::FieldWithNumber(uint32_t field_number) {
-  // Assumes fields returned by field() are sorted in strictly increasing order
-  // of their field number.
-  ABSL_DCHECK(FieldsAreSorted())
-      << "Fields returned by field() must be sorted in strictly increasing "
-         "order of their field number.";
+int Message::SearchFieldWithNumber(uint32_t field_number) const {
   int low = 0;
   int high = num_fields() - 1;
   while (low <= high) {
@@ -69,17 +64,46 @@ const Field* /*absl_nullable - not yet supported*/ Message::FieldWithNumber(uint
     // high].
     int mid = low + (high - low) / 2;
     const Field* f = field(mid);
-    if (f->FieldNumber() == field_number) {
-      return f;
-    }
-    if (f->FieldNumber() < field_number) {
+    const uint32_t mid_field_number = f->FieldNumber();
+    if (mid_field_number == field_number) {
+      return mid;
+    } else if (mid_field_number < field_number) {
       low = mid + 1;
     } else {
       high = mid - 1;
     }
   }
   // field_number is not in the array.
-  return nullptr;
+  return -1;
+}
+
+const Field* /*absl_nullable - not yet supported*/ Message::FieldWithNumber(uint32_t field_number,
+                                                    size_t& next_index) const {
+  // Fast path: fields usually arrive in increasing field number order, so the
+  // field is most likely the one following the previously parsed field, or the
+  // previously parsed field itself (for repeated fields).
+  // Check the next field.
+  if (next_index < num_fields()) {
+    const Field* f = field(next_index);
+    if (f->FieldNumber() == field_number) {
+      ++next_index;
+      return f;
+    }
+  }
+  // Check the previous field (for repeated fields).
+  if (next_index > 0) {
+    const Field* f = field(next_index - 1);
+    if (f->FieldNumber() == field_number) {
+      return f;
+    }
+  }
+  // Slow path: binary search the field in the array.
+  const int index = SearchFieldWithNumber(field_number);
+  if (index < 0) {
+    return nullptr;
+  }
+  next_index = index + 1;
+  return field(index);
 }
 
 void Message::Clear() {
@@ -163,6 +187,13 @@ size_t Message::ByteSizeLong() const {
 }
 
 bool Message::Parse(ParsingState& in) {
+  // FieldWithNumber() assumes fields returned by field() are sorted in strictly
+  // increasing order of their field number.
+  ABSL_DCHECK(FieldsAreSorted())
+      << "Fields returned by field() must be sorted in strictly increasing "
+         "order of their field number.";
+  // Index of the field expected to come next; see FieldWithNumber().
+  size_t next_index = 0;
   while (!in.ParsingDone()) {
     WireType wire_type;
     int field_number;
@@ -170,7 +201,8 @@ bool Message::Parse(ParsingState& in) {
       return false;
     }
 
-    const Field* /*absl_nullable - not yet supported*/ field = FieldWithNumber(field_number);
+    const Field* /*absl_nullable - not yet supported*/ field =
+        FieldWithNumber(field_number, next_index);
     if (field == nullptr || field->GetWireType() != wire_type) {
       if (wire_type == WireType::kStartGroup) {
         if (!SkipGroup(field_number, in)) {

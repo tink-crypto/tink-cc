@@ -48,6 +48,7 @@ if [[ "${IS_KOKORO}" == "true" ]]; then
     # Files created inside the Docker container are owned by root.
     sudo rm -rf "${TINK_SRC_DIR}/ccache" \
       "${TINK_SRC_DIR}/out" \
+      "${TINK_SRC_DIR}/out_install" \
       "${TINK_SRC_DIR}/out_examples"
   }
   # Kokoro rsyncs all created/modified files under KOKORO_ARTIFACTS_DIR back
@@ -65,39 +66,40 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -m "type=bind,src=/tmp,dst=/tmp" )
 fi
 
-EXTRA_CMAKE_ARGS=(-DBUILD_SHARED_LIBS=ON)
+EXTRA_CMAKE_ARGS=(
+  -DBUILD_SHARED_LIBS=ON
+  -DTINK_USE_INSTALLED_ABSEIL=ON
+  -DTINK_USE_INSTALLED_GOOGLETEST=ON
+  -DTINK_USE_INSTALLED_PROTOBUF=ON
+)
 
 # CMake output directory.
 mkdir -p out
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
   source kokoro/testutils/ccache_enable.sh "${TINK_CC_CMAKE_IMAGE_HASH}"
-
-  # Try to use the config cache only if the remote cache was successfully enabled.
-  if [[ -n "${REMOTE_CACHE_URL:-}" ]]; then
-    if gcloud storage objects list --stat --fetch-encrypted-object-hashes "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" &> /dev/null; then
-      echo "Using config cache: ${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"
-      gcloud storage cat "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz" \
-        | tar -C . -xzf -
-    fi
-  fi
 fi
 readonly EXTRA_CMAKE_ARGS
 
 # Construct the command to be executed inside the Docker container (or on the host).
 # This command:
 # 1. Sets up the ccache environment variables.
-# 2. Runs the main Tink C++ CMake tests.
-# 3. Runs the examples CMake tests.
+# 2. Compiles and installs GoogleTest, Abseil, and Protobuf into /usr/local.
+# 3. Runs the main Tink C++ CMake tests and verifies installation.
+# 4. Runs the examples CMake tests.
 # Both test suites are run in the same container instance to preserve the ccache
-# environment and avoid the overhead of starting a second container.
+# environment and installed dependencies, avoiding the overhead of starting a
+# second container.
 cat << EOF > /tmp/do_run_test.sh
 set -euo pipefail
 export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_NOREADONLY=true
 set -x
-mkdir -p out
-./kokoro/testutils/run_cmake_tests.sh -o out . -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+./kokoro/testutils/install_cmake_deps.sh
+rm -rf out_install
+mkdir -p out out_install
+./kokoro/testutils/run_cmake_tests.sh -o out . -DCMAKE_INSTALL_PREFIX="\$(pwd)/out_install" -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+./kokoro/testutils/run_cmake_install_tests.sh out out_install
 mkdir -p out_examples
 ./kokoro/testutils/run_cmake_tests.sh -o out_examples examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF

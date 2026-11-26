@@ -2002,3 +2002,42 @@ tink_cc_test(
     tink::aead::legacy_kms_aead_parameters
     tink::internal::key_gen_configuration_impl
 )
+
+tink_cc_library(
+  NAME legacy_kms_envelope_aead_key_creator
+  SRCS
+    legacy_kms_envelope_aead_key_creator.cc
+    legacy_kms_envelope_aead_key_creator.h
+  DEPS
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::aead::legacy_kms_envelope_aead_key
+    tink::aead::legacy_kms_envelope_aead_parameters
+)
+
+tink_cc_test(
+  NAME legacy_kms_envelope_aead_key_creator_test
+  SRCS
+    legacy_kms_envelope_aead_key_creator_test.cc
+  DEPS
+    tink::aead::internal::legacy_kms_envelope_aead_key_creator
+    GTest::gmock
+    absl::no_destructor
+    absl::absl_check
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    absl::string_view
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::aead::aead_parameters
+    tink::aead::aes_gcm_parameters
+    tink::aead::legacy_kms_envelope_aead_key
+    tink::aead::legacy_kms_envelope_aead_parameters
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::internal::testing::aead_test_vector
+    tink::aead::internal::testing::aes_gcm_test_vectors
+    tink::aead::internal::testing::xchacha20_poly1305_test_vectors
+    tink::internal::key_gen_configuration_impl
+)

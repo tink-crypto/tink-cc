@@ -401,3 +401,37 @@ tink_cc_test(
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
 )
+
+tink_cc_library(
+  NAME hmac_prf_key_creator
+  SRCS
+    hmac_prf_key_creator.cc
+    hmac_prf_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
+)
+
+tink_cc_test(
+  NAME hmac_prf_key_creator_test
+  SRCS
+    hmac_prf_key_creator_test.cc
+  DEPS
+    tink::prf::internal::hmac_prf_key_creator
+    tink::prf::internal::hmac_prf_test_vectors
+    GTest::gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
+)

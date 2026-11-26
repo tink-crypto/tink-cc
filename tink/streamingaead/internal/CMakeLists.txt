@@ -410,3 +410,38 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
 )
+
+tink_cc_library(
+  NAME aes_gcm_hkdf_streaming_key_creator
+  SRCS
+    aes_gcm_hkdf_streaming_key_creator.cc
+    aes_gcm_hkdf_streaming_key_creator.h
+  DEPS
+    absl::status
+    absl::status_macros
+    absl::statusor
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+)
+
+tink_cc_test(
+  NAME aes_gcm_hkdf_streaming_key_creator_test
+  SRCS
+    aes_gcm_hkdf_streaming_key_creator_test.cc
+  DEPS
+    tink::streamingaead::internal::aes_gcm_hkdf_streaming_key_creator
+    GTest::gmock
+    absl::status
+    absl::status_matchers
+    absl::statusor
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::streamingaead::internal::testing::aes_gcm_hkdf_streaming_test_vectors
+    tink::streamingaead::internal::testing::streamingaead_test_vector
+)

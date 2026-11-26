@@ -419,3 +419,38 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "aes_gcm_hkdf_streaming_key_creator",
+    srcs = ["aes_gcm_hkdf_streaming_key_creator.cc"],
+    hdrs = ["aes_gcm_hkdf_streaming_key_creator.h"],
+    deps = [
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/streamingaead:aes_gcm_hkdf_streaming_key",
+        "//tink/streamingaead:aes_gcm_hkdf_streaming_parameters",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_macros",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "aes_gcm_hkdf_streaming_key_creator_test",
+    srcs = ["aes_gcm_hkdf_streaming_key_creator_test.cc"],
+    deps = [
+        ":aes_gcm_hkdf_streaming_key_creator",
+        "//tink:key",
+        "//tink:key_gen_configuration",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/streamingaead:aes_gcm_hkdf_streaming_key",
+        "//tink/streamingaead:aes_gcm_hkdf_streaming_parameters",
+        "//tink/streamingaead/internal/testing:aes_gcm_hkdf_streaming_test_vectors",
+        "//tink/streamingaead/internal/testing:streamingaead_test_vector",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+    ],
+)

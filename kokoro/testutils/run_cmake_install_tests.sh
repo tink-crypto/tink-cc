@@ -25,24 +25,26 @@ echo "==========================================================================
 
 set -euo pipefail
 
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <build directory> <install prefix>"
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <build directory> <install prefix> <deps install prefix>"
   exit 1
 fi
-CMAKE_BUILD_DIR=$(cd "$1" && pwd)
-CMAKE_INSTALL_PREFIX=$(cd "$2" && pwd)
+CMAKE_BUILD_DIR="$(cd "$1" && pwd)"
+readonly CMAKE_BUILD_DIR
+CMAKE_INSTALL_PREFIX="$(cd "$2" && pwd)"
+readonly CMAKE_INSTALL_PREFIX
+DEPS_INSTALL_PREFIX="$(cd "$3" && pwd)"
+readonly DEPS_INSTALL_PREFIX
 
 test_headers() {
   local header
   while read header; do
     echo "Testing header: ${header}"
-    local include=${header#*/tink-*/}
-    local prefix=${header%${include}}
     local macros
     macros=$(
       c++ \
         -E -dM \
-        -I "${prefix}" \
+        "$@" \
         -x c++ -std=c++17 "${header}"
     )
     case "${macros}" in
@@ -73,6 +75,12 @@ test_libraries() {
           return 1
         fi
         ;;
+      *.dylib)
+        # `otool -L` does not check for missing dependencies.
+        #
+        # For now, let's skip this check for .dylib, and just rely on the
+        # compiled and linked executable running.
+        ;;
       *)
         echo "Don't know how to test ${library}"
         ;;
@@ -83,7 +91,33 @@ test_libraries() {
 test_installation() {
   cd "${CMAKE_INSTALL_PREFIX}"
 
+  echo "=== Finding build configuration: ==="
+
+  local cppflags=()
+  local ldflags=()
   local ldpath="${CMAKE_INSTALL_PREFIX}/lib64:${CMAKE_INSTALL_PREFIX}/lib"
+
+  # Make dependencies accessible.
+  cppflags+=(-I "${DEPS_INSTALL_PREFIX}/include")
+  ldflags+=(-L "${DEPS_INSTALL_PREFIX}/lib")
+  ldpath="${ldpath}:${DEPS_INSTALL_PREFIX}/lib64:${DEPS_INSTALL_PREFIX}/lib"
+
+  # Add Tink's flags.
+  # TODO(b/570488948): Migrate from hardcoding to pkg-config to discover Tink.
+  cppflags+=(-I "${CMAKE_INSTALL_PREFIX}/include")
+  local incdir
+  local tink_major_version
+  for incdir in "${CMAKE_INSTALL_PREFIX}/include"/tink-*; do
+    cppflags+=(-I "${incdir}")
+    tink_major_version="${incdir##*-}"
+  done
+  ldflags+=(-L "${CMAKE_INSTALL_PREFIX}/lib64" -L "${CMAKE_INSTALL_PREFIX}/lib")
+  ldflags+=(-ltink${tink_major_version} -ltink${tink_major_version}_testonly)
+
+  echo "Complete C++ flags: ${cppflags[*]@Q}"
+  echo "Complete linker flags: ${ldflags[*]@Q}"
+  echo "Complete library path: ${ldpath}"
+  echo
 
   echo "=== List of installed files: ==="
   find . -ls
@@ -92,11 +126,11 @@ test_installation() {
   echo "=== Testing headers: ==="
   find "${CMAKE_INSTALL_PREFIX}/include"/tink-* \
     -name '*.h' -not -path '*/internal/*' |\
-    test_headers
+    test_headers ${cppflags[@]+"${cppflags[@]}"}
   echo
 
   echo "=== Testing libraries: ==="
-  find "${CMAKE_INSTALL_PREFIX}"/lib* -name '*.so' |\
+  find "${CMAKE_INSTALL_PREFIX}"/lib* \( -name '*.so' -o -name '*.dylib' \) |\
     test_libraries "${ldpath}"
   echo
 
@@ -131,20 +165,16 @@ int main() {
   return 0;
 }
 EOF
-  # TODO(b/570488948): Migrate from hardcoding to pkg-config to discover Tink.
-  set -- "${CMAKE_INSTALL_PREFIX}"/include/tink-*
-  tink_major_version=${1##*-}
   c++ \
-    -I "$1" \
+    ${cppflags[@]+"${cppflags[@]}"} \
     -o "${testdir}/comptest" \
     -std=c++17 "${testdir}/comptest.cc" \
-    -L "${CMAKE_INSTALL_PREFIX}/lib64" \
-    -L "${CMAKE_INSTALL_PREFIX}/lib" \
-    -ltink"${tink_major_version}"_testonly \
-    -ltink"${tink_major_version}"
+    ${ldflags[@]+"${ldflags[@]}"}
   env \
     LD_LIBRARY_PATH="${ldpath}" \
     LD_DEBUG=libs \
+    DYLD_LIBRARY_PATH="${ldpath}" \
+    DYLD_PRINT_SEARCHING=1 \
     "${testdir}/comptest"
   echo
 }

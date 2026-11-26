@@ -95,11 +95,11 @@ set -euo pipefail
 export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_NOREADONLY=true
 set -x
-./kokoro/testutils/install_cmake_deps.sh
+./kokoro/testutils/install_cmake_deps.sh /usr/local
 rm -rf out_install
 mkdir -p out out_install
 ./kokoro/testutils/run_cmake_tests.sh -o out . -DCMAKE_INSTALL_PREFIX="\$(pwd)/out_install" -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
-./kokoro/testutils/run_cmake_install_tests.sh out out_install
+./kokoro/testutils/run_cmake_install_tests.sh out out_install /usr/local
 mkdir -p out_examples
 ./kokoro/testutils/run_cmake_tests.sh -o out_examples examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
 EOF

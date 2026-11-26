@@ -14,8 +14,8 @@
 # limitations under the License.
 ################################################################################
 
-# Downloads, compiles, and installs GoogleTest, Abseil, and Protobuf using CMake
-# into /usr/local.
+# Downloads, compiles, and installs GoogleTest, Abseil, and Protobuf using CMake.
+# Supports both Linux and macOS.
 
 # Generated with openssl rand -hex 10
 echo "================================================================================"
@@ -24,14 +24,44 @@ echo "==========================================================================
 
 set -euo pipefail
 
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <install prefix>"
+  exit 1
+fi
+INSTALL_PREFIX=$(cd "$1" && pwd)
+readonly INSTALL_PREFIX
+
+get_ncpus() {
+  if command -v nproc &> /dev/null; then
+    nproc
+  else
+    sysctl -n hw.ncpu
+  fi
+}
+
+verify_sha256() {
+  local -r sha256="$1"
+  local -r file="$2"
+  if command -v sha256sum &> /dev/null; then
+    echo "${sha256}  ${file}" | sha256sum -c -
+  else
+    echo "${sha256}  ${file}" | shasum -a 256 -c -
+  fi
+}
+
 run_cmake_install() {
   local -r build_dir="$1"
-  if [[ -w /usr/local ]]; then
+  if [[ -w "${build_dir}" ]]; then
     cmake --install "${build_dir}"
-    ldconfig
   else
     sudo cmake --install "${build_dir}"
-    sudo ldconfig
+  fi
+  if command -v ldconfig &> /dev/null && [[ "${INSTALL_PREFIX}" == "/usr" || "${INSTALL_PREFIX}" == "/usr/local" ]]; then
+    if [[ -w "${build_dir}" ]]; then
+      ldconfig
+    else
+      sudo ldconfig
+    fi
   fi
 }
 
@@ -46,7 +76,7 @@ install_cmake_dep() {
   local -r work_dir="${TMP_DIR}/${name}"
   mkdir -p "${work_dir}"
   curl -LsS "${url}" -o "${archive}"
-  echo "${sha256}  ${archive}" | sha256sum -c -
+  verify_sha256 "${sha256}" "${archive}"
   if [[ "${url}" == *.zip ]]; then
     unzip -q "${archive}" -d "${work_dir}"
   else
@@ -56,7 +86,9 @@ install_cmake_dep() {
     -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_CXX_STANDARD=17 \
     -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" \
+    -DCMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/lib" \
+    -DCMAKE_PREFIX_PATH="${INSTALL_PREFIX}" \
     ${CMAKE_LAUNCHER_ARGS[@]+"${CMAKE_LAUNCHER_ARGS[@]}"} \
     "$@"
   cmake --build "${work_dir}/build" --parallel "${NCPUS}"
@@ -68,7 +100,7 @@ TMP_DIR="$(mktemp -dt tink-cmake-deps.XXXXXX)"
 readonly TMP_DIR
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
-NCPUS="$(nproc)"
+NCPUS="$(get_ncpus)"
 readonly NCPUS
 
 CMAKE_LAUNCHER_ARGS=()

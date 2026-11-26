@@ -25,6 +25,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
@@ -35,6 +36,7 @@
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
 #include "tink/secret_data.h"
@@ -49,6 +51,7 @@ constexpr int kTagSizeInBytes = 16;
 
 absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
     const SecretData &key) {
+  ABSL_RETURN_IF_ERROR(CheckFipsCompatibility<ZeroCopyAesGcmBoringSsl>());
   absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
       internal::CreateAesGcmOneShotCrypter(key);
   if (!aead.ok()) {
@@ -59,6 +62,7 @@ absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
 
 absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
     const AesGcmKey& key) {
+  ABSL_RETURN_IF_ERROR(CheckFipsCompatibility<ZeroCopyAesGcmBoringSsl>());
   if (key.GetParameters().IvSizeInBytes() != kIvSizeInBytes) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

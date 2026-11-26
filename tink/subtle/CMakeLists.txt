@@ -328,7 +328,7 @@ tink_cc_library(
     aes_gcm_boringssl.h
   DEPS
     absl::core_headers
-    absl::memory
+    absl::statusor
     absl::strings
     tink::core::aead
     tink::aead::aes_gcm_key
@@ -337,7 +337,6 @@ tink_cc_library(
     tink::aead::internal::zero_copy_aes_gcm_boringssl
     tink::internal::fips_utils
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 

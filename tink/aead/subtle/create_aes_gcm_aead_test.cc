@@ -32,6 +32,7 @@
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/internal/testing/aead_test_vector.h"
 #include "tink/aead/internal/testing/aes_gcm_test_vectors.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 
@@ -51,7 +52,15 @@ using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-using CreateAesGcmAeadTestVectorTest = TestWithParam<AeadTestVector>;
+class CreateAesGcmAeadTestVectorTest : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+      GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                      "unavailable.";
+    }
+  }
+};
 
 TEST_P(CreateAesGcmAeadTestVectorTest, DecryptTestVectors) {
   const AeadTestVector& test_vector = GetParam();
@@ -84,6 +93,10 @@ INSTANTIATE_TEST_SUITE_P(CreateAesGcmAeadTestVectorTests,
                          ValuesIn(CreateAesGcmTestVectors()));
 
 TEST(CreateAesGcmAeadTest, Rejects24ByteAesKey) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(24)
@@ -102,6 +115,10 @@ TEST(CreateAesGcmAeadTest, Rejects24ByteAesKey) {
 }
 
 TEST(CreateAesGcmAeadTest, RejectsInvalidIvSize) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
@@ -120,6 +137,10 @@ TEST(CreateAesGcmAeadTest, RejectsInvalidIvSize) {
 }
 
 TEST(CreateAesGcmAeadTest, RejectsInvalidTagSize) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
@@ -138,6 +159,10 @@ TEST(CreateAesGcmAeadTest, RejectsInvalidTagSize) {
 }
 
 TEST(CreateAesGcmAeadTest, DecryptFailsWithModifiedCiphertextOrAssociatedData) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   const AeadTestVector& test_vector =
       GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
   const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
@@ -166,6 +191,40 @@ TEST(CreateAesGcmAeadTest, DecryptFailsWithModifiedCiphertextOrAssociatedData) {
             .status(),
         Not(IsOk()));
   }
+}
+
+TEST(CreateAesGcmAeadTest, FipsModeSucceedsWithBoringCrypto) {
+  if (!internal::IsFipsModeEnabled() || !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test only runs in FIPS-only mode with BoringCrypto.";
+  }
+  const AeadTestVector& test_vector_128 =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AeadTestVector& test_vector_256 =
+      GetAesGcmTestVector(32, AesGcmParameters::Variant::kTink);
+  const AesGcmKey& key_128 =
+      dynamic_cast<const AesGcmKey&>(*test_vector_128.aead_key);
+  const AesGcmKey& key_256 =
+      dynamic_cast<const AesGcmKey&>(*test_vector_256.aead_key);
+  EXPECT_THAT(CreateAesGcmAead(key_128), IsOk());
+  EXPECT_THAT(CreateAesGcmAead(key_256), IsOk());
+}
+
+TEST(CreateAesGcmAeadTest, FipsModeFailsWithoutBoringCrypto) {
+  if (!internal::IsFipsModeEnabled() || internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test only runs in FIPS-only mode without BoringCrypto.";
+  }
+  const AeadTestVector& test_vector_128 =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AeadTestVector& test_vector_256 =
+      GetAesGcmTestVector(32, AesGcmParameters::Variant::kTink);
+  const AesGcmKey& key_128 =
+      dynamic_cast<const AesGcmKey&>(*test_vector_128.aead_key);
+  const AesGcmKey& key_256 =
+      dynamic_cast<const AesGcmKey&>(*test_vector_256.aead_key);
+  EXPECT_THAT(CreateAesGcmAead(key_128).status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(CreateAesGcmAead(key_256).status(),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

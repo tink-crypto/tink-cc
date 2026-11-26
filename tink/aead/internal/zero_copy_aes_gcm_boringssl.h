@@ -29,6 +29,7 @@
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 
@@ -38,6 +39,10 @@ namespace internal {
 
 class ZeroCopyAesGcmBoringSsl : public ZeroCopyAead {
  public:
+  static constexpr FipsCompatibility kFipsStatus =
+      FipsCompatibility::kRequiresBoringCrypto;
+
+  // Both `New` overloads enforce `kFipsStatus` (`kRequiresBoringCrypto`).
   static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
       const SecretData &key);
 

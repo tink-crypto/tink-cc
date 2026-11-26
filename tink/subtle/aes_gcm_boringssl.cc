@@ -19,16 +19,13 @@
 #include <memory>
 #include <utility>
 
-#include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -36,11 +33,7 @@ namespace subtle {
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const AesGcmKey& key) {
-  absl::Status status = internal::CheckFipsCompatibility<AesGcmBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-
+  // ZeroCopyAesGcmBoringSsl::New already checks FIPS compatibility.
   absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
       internal::ZeroCopyAesGcmBoringSsl::New(key);
   if (!zero_copy_aead.ok()) {
@@ -52,11 +45,7 @@ absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const SecretData& key) {
-  absl::Status status = internal::CheckFipsCompatibility<AesGcmBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-
+  // ZeroCopyAesGcmBoringSsl::New already checks FIPS compatibility.
   absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
       internal::ZeroCopyAesGcmBoringSsl::New(key);
   if (!zero_copy_aead.ok()) {

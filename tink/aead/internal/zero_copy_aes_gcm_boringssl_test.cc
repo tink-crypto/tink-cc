@@ -40,6 +40,7 @@
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
@@ -62,6 +63,8 @@ using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
 constexpr absl::string_view kKey128Hex = "000102030405060708090a0b0c0d0e0f";
+constexpr absl::string_view kKey256Hex =
+    "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f";
 constexpr absl::string_view kMessage = "Some data to encrypt.";
 constexpr absl::string_view kAssociatedData = "Some data to authenticate.";
 
@@ -78,6 +81,10 @@ constexpr absl::string_view kEncodedCiphertext =
 class ZeroCopyAesGcmBoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
+    if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+      GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                      "unavailable.";
+    }
     SecretData key =
         SecretData(test::HexDecodeOrDie(kKey128Hex));
     absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
@@ -192,6 +199,10 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, DecryptOverlappingPlaintextCiphertext) {
 class ZeroCopyAesGcmBoringSslWycheproofTest
     : public TestWithParam<WycheproofTestVector> {
   void SetUp() override {
+    if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+      GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                      "unavailable.";
+    }
     WycheproofTestVector test_vector = GetParam();
     if ((test_vector.key.size() != 16 && test_vector.key.size() != 32) ||
         test_vector.nonce.size() != 12 || test_vector.tag.size() != 16) {
@@ -233,7 +244,16 @@ INSTANTIATE_TEST_SUITE_P(ZeroCopyAesGcmBoringSslWycheproofTests,
                          ValuesIn(ReadWycheproofTestVectors(
                              /*file_name=*/"aes_gcm_test.json")));
 
-using ZeroCopyAesGcmBoringSslTestVectorTest = TestWithParam<AeadTestVector>;
+class ZeroCopyAesGcmBoringSslTestVectorTest
+    : public TestWithParam<AeadTestVector> {
+ protected:
+  void SetUp() override {
+    if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+      GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                      "unavailable.";
+    }
+  }
+};
 
 TEST_P(ZeroCopyAesGcmBoringSslTestVectorTest, Decrypt) {
   const AeadTestVector& test_vector = GetParam();
@@ -306,6 +326,10 @@ INSTANTIATE_TEST_SUITE_P(ZeroCopyAesGcmBoringSslTestVectorTests,
                          ValuesIn(CreateAesGcmTestVectors()));
 
 TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidIvSizeFails) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
@@ -325,6 +349,10 @@ TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidIvSizeFails) {
 }
 
 TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidTagSizeFails) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
@@ -344,6 +372,10 @@ TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidTagSizeFails) {
 }
 
 TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidKeySizeFails) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(24)
@@ -362,6 +394,10 @@ TEST(ZeroCopyAesGcmBoringSslKeyTest, InvalidKeySizeFails) {
 }
 
 TEST(ZeroCopyAesGcmBoringSslKeyTest, DecryptWithBadPrefixFails) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
   const AeadTestVector& test_vector =
       GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
   const AesGcmKey& key = dynamic_cast<const AesGcmKey&>(*test_vector.aead_key);
@@ -380,6 +416,55 @@ TEST(ZeroCopyAesGcmBoringSslKeyTest, DecryptWithBadPrefixFails) {
                             absl::MakeSpan(plaintext))
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(ZeroCopyAesGcmBoringSslFipsTest, FipsOnly) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test should not run in FIPS mode when BoringCrypto is "
+                    "unavailable.";
+  }
+
+  SecretData key_128 = SecretData(test::HexDecodeOrDie(kKey128Hex));
+  SecretData key_256 = SecretData(test::HexDecodeOrDie(kKey256Hex));
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(key_128), IsOk());
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(key_256), IsOk());
+
+  const AeadTestVector& test_vector_128 =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AeadTestVector& test_vector_256 =
+      GetAesGcmTestVector(32, AesGcmParameters::Variant::kTink);
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(
+                  dynamic_cast<const AesGcmKey&>(*test_vector_128.aead_key)),
+              IsOk());
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(
+                  dynamic_cast<const AesGcmKey&>(*test_vector_256.aead_key)),
+              IsOk());
+}
+
+TEST(ZeroCopyAesGcmBoringSslFipsTest, FipsFailWithoutBoringCrypto) {
+  if (!IsFipsModeEnabled() || IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test only runs in FIPS-only mode without BoringCrypto.";
+  }
+
+  SecretData key_128 = SecretData(test::HexDecodeOrDie(kKey128Hex));
+  SecretData key_256 = SecretData(test::HexDecodeOrDie(kKey256Hex));
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(key_128).status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(key_256).status(),
+              StatusIs(absl::StatusCode::kInternal));
+
+  const AeadTestVector& test_vector_128 =
+      GetAesGcmTestVector(16, AesGcmParameters::Variant::kTink);
+  const AeadTestVector& test_vector_256 =
+      GetAesGcmTestVector(32, AesGcmParameters::Variant::kTink);
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(
+                  dynamic_cast<const AesGcmKey&>(*test_vector_128.aead_key))
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(ZeroCopyAesGcmBoringSsl::New(
+                  dynamic_cast<const AesGcmKey&>(*test_vector_256.aead_key))
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

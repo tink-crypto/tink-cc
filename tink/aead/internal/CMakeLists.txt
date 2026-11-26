@@ -157,6 +157,7 @@ tink_cc_library(
     absl::absl_check
     absl::memory
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::str_format
@@ -165,6 +166,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::secret_data
     tink::aead::aes_gcm_key
+    tink::internal::fips_utils
     tink::internal::util
     tink::subtle::random
     tink::util::secret_data
@@ -321,6 +323,7 @@ tink_cc_test(
     tink::aead::aes_gcm_parameters
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_test_vectors
+    tink::internal::fips_utils
     tink::subtle::subtle_util
     tink::util::secret_data
     tink::util::test_util

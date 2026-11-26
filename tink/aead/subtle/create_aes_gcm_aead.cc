@@ -32,6 +32,7 @@ namespace tink {
 namespace subtle {
 
 absl::StatusOr<std::unique_ptr<Aead>> CreateAesGcmAead(const AesGcmKey& key) {
+  // ZeroCopyAesGcmBoringSsl::New already checks FIPS compatibility.
   ABSL_ASSIGN_OR_RETURN(std::unique_ptr<internal::ZeroCopyAead> zero_copy_aead,
                         internal::ZeroCopyAesGcmBoringSsl::New(key));
   return std::make_unique<internal::AeadFromZeroCopy>(

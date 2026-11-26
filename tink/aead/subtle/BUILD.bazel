@@ -162,6 +162,7 @@ cc_library(
 cc_test(
     name = "create_aes_gcm_aead_test",
     srcs = ["create_aes_gcm_aead_test.cc"],
+    tags = ["fips"],
     deps = [
         ":create_aes_gcm_aead",
         "//tink:aead",
@@ -171,6 +172,7 @@ cc_test(
         "//tink/aead:aes_gcm_parameters",
         "//tink/aead/internal/testing:aead_test_vector",
         "//tink/aead/internal/testing:aes_gcm_test_vectors",
+        "//tink/internal:fips_utils",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",

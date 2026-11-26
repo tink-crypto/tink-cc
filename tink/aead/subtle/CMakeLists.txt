@@ -172,6 +172,7 @@ tink_cc_test(
     tink::aead::aes_gcm_parameters
     tink::aead::internal::testing::aead_test_vector
     tink::aead::internal::testing::aes_gcm_test_vectors
+    tink::internal::fips_utils
 )
 
 tink_cc_library(

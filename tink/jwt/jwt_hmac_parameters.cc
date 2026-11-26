@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -71,7 +72,7 @@ absl::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
 
 bool JwtHmacParameters::operator==(const Parameters& other) const {
   const JwtHmacParameters* that =
-      dynamic_cast<const JwtHmacParameters*>(&other);
+      DynamicCast<const JwtHmacParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

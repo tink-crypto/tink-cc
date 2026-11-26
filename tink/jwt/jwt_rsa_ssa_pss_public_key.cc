@@ -32,6 +32,7 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 
@@ -171,7 +172,7 @@ absl::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
 
 bool JwtRsaSsaPssPublicKey::operator==(const Key& other) const {
   const JwtRsaSsaPssPublicKey* that =
-      dynamic_cast<const JwtRsaSsaPssPublicKey*>(&other);
+      DynamicCast<const JwtRsaSsaPssPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

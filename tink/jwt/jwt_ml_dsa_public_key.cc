@@ -33,6 +33,7 @@
 #include "tink/jwt/jwt_ml_dsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 
@@ -177,7 +178,7 @@ absl::StatusOr<JwtMlDsaPublicKey> JwtMlDsaPublicKey::Builder::Build(
 
 bool JwtMlDsaPublicKey::operator==(const Key& other) const {
   const JwtMlDsaPublicKey* that =
-      dynamic_cast<const JwtMlDsaPublicKey*>(&other);
+      DynamicCast<const JwtMlDsaPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

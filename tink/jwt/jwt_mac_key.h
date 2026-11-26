@@ -22,6 +22,7 @@
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_mac_parameters.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -52,6 +53,10 @@ class JwtMacKey : public Key {
   const JwtMacParameters& GetParameters() const override = 0;
 
   bool operator==(const Key& other) const override = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1002);
 };
 
 }  // namespace tink

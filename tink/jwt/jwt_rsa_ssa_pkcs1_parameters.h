@@ -24,6 +24,7 @@
 #include "tink/big_integer.h"
 #include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -144,6 +145,9 @@ class JwtRsaSsaPkcs1Parameters : public JwtSignatureParameters {
         kid_strategy_(kid_strategy),
         modulus_size_in_bits_(modulus_size_in_bits),
         public_exponent_(public_exponent) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtSignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1014);
 
   Algorithm algorithm_;
   KidStrategy kid_strategy_;

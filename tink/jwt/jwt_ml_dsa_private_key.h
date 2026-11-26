@@ -28,6 +28,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_private_key.h"
 
 namespace crypto {
@@ -72,6 +73,9 @@ class JwtMlDsaPrivateKey : public JwtSignaturePrivateKey {
                               MlDsaPrivateKey ml_dsa_private_key)
       : public_key_(public_key),
         ml_dsa_private_key_(std::move(ml_dsa_private_key)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtSignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1013);
 
   JwtMlDsaPublicKey public_key_;
   MlDsaPrivateKey ml_dsa_private_key_;

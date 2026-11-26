@@ -31,6 +31,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 
 namespace crypto {
@@ -129,6 +130,9 @@ class JwtRsaSsaPkcs1PrivateKey final : public JwtSignaturePrivateKey {
       RsaSsaPkcs1PrivateKey rsa_ssa_pkcs1_private_key)
       : public_key_(public_key),
         rsa_ssa_pkcs1_private_key_(std::move(rsa_ssa_pkcs1_private_key)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtSignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1016);
 
   JwtRsaSsaPkcs1PublicKey public_key_;
   RsaSsaPkcs1PrivateKey rsa_ssa_pkcs1_private_key_;

@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -103,6 +104,9 @@ class JwtMlDsaParameters : public JwtSignatureParameters {
  private:
   JwtMlDsaParameters(KidStrategy kid_strategy, Algorithm algorithm)
       : kid_strategy_(kid_strategy), algorithm_(algorithm) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtSignatureParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1011);
 
   KidStrategy kid_strategy_;
   Algorithm algorithm_;

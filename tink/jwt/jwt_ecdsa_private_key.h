@@ -30,6 +30,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_private_key.h"
 
 namespace crypto {
@@ -76,6 +77,9 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
                               EcdsaPrivateKey ecdsa_private_key)
       : public_key_(public_key),
         ecdsa_private_key_(std::move(ecdsa_private_key)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtSignaturePrivateKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1010);
 
   JwtEcdsaPublicKey public_key_;
   EcdsaPrivateKey ecdsa_private_key_;

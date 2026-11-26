@@ -18,6 +18,7 @@
 #define TINK_JWT_JWT_MAC_PARAMETERS_H_
 
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -26,6 +27,10 @@ namespace tink {
 class JwtMacParameters : public Parameters {
   // Returns true if verification is allowed for tokens without a `kid` header.
   virtual bool AllowKidAbsent() const = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1001);
 };
 
 }  // namespace tink

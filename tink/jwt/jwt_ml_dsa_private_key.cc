@@ -27,6 +27,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ml_dsa_private_key.h"
 
 namespace crypto {
@@ -51,7 +52,7 @@ absl::StatusOr<JwtMlDsaPrivateKey> JwtMlDsaPrivateKey::Create(
 
 bool JwtMlDsaPrivateKey::operator==(const Key& other) const {
   const JwtMlDsaPrivateKey* that =
-      dynamic_cast<const JwtMlDsaPrivateKey*>(&other);
+      DynamicCast<const JwtMlDsaPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

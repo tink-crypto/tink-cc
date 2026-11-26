@@ -32,6 +32,7 @@
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 
@@ -168,7 +169,7 @@ absl::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
 
 bool JwtEcdsaPublicKey::operator==(const Key& other) const {
   const JwtEcdsaPublicKey* that =
-      dynamic_cast<const JwtEcdsaPublicKey*>(&other);
+      DynamicCast<const JwtEcdsaPublicKey*>(&other);
   if (that == nullptr) {
     return false;
   }

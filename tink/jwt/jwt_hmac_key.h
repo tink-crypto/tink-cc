@@ -29,6 +29,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -99,6 +100,9 @@ class JwtHmacKey final : public JwtMacKey {
         key_bytes_(key_bytes),
         id_requirement_(id_requirement),
         kid_(kid) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtMacKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1004);
 
   JwtHmacParameters parameters_;
   RestrictedData key_bytes_;

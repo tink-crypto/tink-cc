@@ -25,6 +25,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 
 namespace crypto {
@@ -140,7 +141,7 @@ JwtRsaSsaPssPrivateKey::Builder::BuildAllowNonConstantTime(
 
 bool JwtRsaSsaPssPrivateKey::operator==(const Key& other) const {
   const JwtRsaSsaPssPrivateKey* that =
-      dynamic_cast<const JwtRsaSsaPssPrivateKey*>(&other);
+      DynamicCast<const JwtRsaSsaPssPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_mac_parameters.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -111,6 +112,9 @@ class JwtHmacParameters : public JwtMacParameters {
       : key_size_in_bytes_(key_size_in_bytes),
         kid_strategy_(kid_strategy),
         algorithm_(algorithm) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtMacParameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1003);
 
   int key_size_in_bytes_;
   KidStrategy kid_strategy_;

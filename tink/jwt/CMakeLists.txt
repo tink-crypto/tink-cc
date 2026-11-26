@@ -170,6 +170,7 @@ tink_cc_library(
     jwt_mac_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -180,6 +181,7 @@ tink_cc_library(
     tink::jwt::jwt_mac_parameters
     absl::optional
     tink::core::key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -193,6 +195,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -211,6 +214,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::endian
 )
 
@@ -230,6 +234,7 @@ tink_cc_library(
     jwt_signature_parameters.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -240,6 +245,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_parameters
     absl::optional
     tink::core::key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -252,6 +258,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::private_key
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -264,6 +271,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -284,6 +292,7 @@ tink_cc_library(
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::endian
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_public_key
@@ -305,6 +314,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::signature::ecdsa_private_key
 )
 
@@ -333,6 +343,7 @@ tink_cc_library(
     absl::optional
     tink::core::big_integer
     tink::core::parameters
+    tink::core::rtti
     tink::internal::rsa_util
 )
 
@@ -354,6 +365,7 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::endian
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
@@ -376,6 +388,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::signature::rsa_ssa_pkcs1_private_key
 )
 
@@ -404,6 +417,7 @@ tink_cc_library(
     absl::optional
     tink::core::big_integer
     tink::core::parameters
+    tink::core::rtti
     tink::internal::rsa_util
 )
 
@@ -425,6 +439,7 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::endian
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
@@ -447,6 +462,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::signature::rsa_ssa_pss_private_key
 )
 
@@ -1107,6 +1123,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -1142,6 +1159,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
+    tink::core::rtti
     tink::internal::endian
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key
@@ -1189,6 +1207,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::core::rtti
     tink::signature::ml_dsa_private_key
 )
 

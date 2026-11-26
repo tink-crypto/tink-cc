@@ -24,6 +24,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_private_key.h"
 
 namespace crypto {
@@ -52,7 +53,7 @@ JwtEcdsaPrivateKey::CreateAllowNonConstantTime(
 
 bool JwtEcdsaPrivateKey::operator==(const Key& other) const {
   const JwtEcdsaPrivateKey* that =
-      dynamic_cast<const JwtEcdsaPrivateKey*>(&other);
+      DynamicCast<const JwtEcdsaPrivateKey*>(&other);
   if (that == nullptr) {
     return false;
   }

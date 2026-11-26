@@ -180,7 +180,10 @@ cc_library(
     name = "jwt_mac_parameters",
     hdrs = ["jwt_mac_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -190,6 +193,7 @@ cc_library(
     deps = [
         ":jwt_mac_parameters",
         "//tink:key",
+        "//tink:rtti",
         "@abseil-cpp//absl/types:optional",
     ],
 )
@@ -202,6 +206,7 @@ cc_library(
     deps = [
         ":jwt_mac_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -219,6 +224,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/internal:endian",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -242,7 +248,10 @@ cc_library(
     name = "jwt_signature_parameters",
     hdrs = ["jwt_signature_parameters.h"],
     visibility = ["//visibility:public"],
-    deps = ["//tink:parameters"],
+    deps = [
+        "//tink:parameters",
+        "//tink:rtti",
+    ],
 )
 
 cc_library(
@@ -252,6 +261,7 @@ cc_library(
     deps = [
         ":jwt_signature_parameters",
         "//tink:key",
+        "//tink:rtti",
         "@abseil-cpp//absl/types:optional",
     ],
 )
@@ -265,6 +275,7 @@ cc_library(
         ":jwt_signature_public_key",
         "//tink:key",
         "//tink:private_key",
+        "//tink:rtti",
         "@abseil-cpp//absl/types:optional",
     ],
 )
@@ -277,6 +288,7 @@ cc_library(
     deps = [
         ":jwt_signature_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
     ],
@@ -293,6 +305,7 @@ cc_library(
         "//tink:ec_point",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/internal:endian",
         "//tink/signature:ecdsa_parameters",
         "//tink/signature:ecdsa_public_key",
@@ -317,6 +330,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/signature:ecdsa_private_key",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status:status_macros",
@@ -345,6 +359,7 @@ cc_library(
         ":jwt_signature_parameters",
         "//tink:big_integer",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/internal:rsa_util",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status",
@@ -366,6 +381,7 @@ cc_library(
         "//tink:big_integer",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/internal:endian",
         "//tink/signature:rsa_ssa_pkcs1_parameters",
         "//tink/signature:rsa_ssa_pkcs1_public_key",
@@ -390,6 +406,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/signature:rsa_ssa_pkcs1_private_key",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
@@ -419,6 +436,7 @@ cc_library(
         ":jwt_signature_parameters",
         "//tink:big_integer",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/internal:rsa_util",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status",
@@ -440,6 +458,7 @@ cc_library(
         "//tink:big_integer",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/internal:endian",
         "//tink/signature:rsa_ssa_pss_parameters",
         "//tink/signature:rsa_ssa_pss_public_key",
@@ -464,6 +483,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/signature:rsa_ssa_pss_private_key",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
@@ -1186,6 +1206,7 @@ cc_library(
     deps = [
         ":jwt_signature_parameters",
         "//tink:parameters",
+        "//tink:rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
     ],
@@ -1217,6 +1238,7 @@ cc_library(
         ":jwt_signature_public_key",
         "//tink:key",
         "//tink:partial_key_access_token",
+        "//tink:rtti",
         "//tink/internal:endian",
         "//tink/signature:ml_dsa_parameters",
         "//tink/signature:ml_dsa_public_key",
@@ -1266,6 +1288,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/signature:ml_dsa_private_key",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",

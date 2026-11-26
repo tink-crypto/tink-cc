@@ -29,6 +29,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -129,7 +130,7 @@ absl::StatusOr<JwtHmacKey> JwtHmacKey::Builder::Build(
 }
 
 bool JwtHmacKey::operator==(const Key& other) const {
-  const JwtHmacKey* that = dynamic_cast<const JwtHmacKey*>(&other);
+  const JwtHmacKey* that = DynamicCast<const JwtHmacKey*>(&other);
   if (that == nullptr) {
     return false;
   }

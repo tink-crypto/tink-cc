@@ -31,6 +31,7 @@
 #include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/rtti.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 
 namespace crypto {
@@ -108,6 +109,9 @@ class JwtRsaSsaPssPublicKey final : public JwtSignaturePublicKey {
         rsa_ssa_pss_public_key_(std::move(rsa_ssa_pss_public_key)),
         id_requirement_(id_requirement),
         kid_(std::move(kid)) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(JwtSignaturePublicKey);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(1018);
 
   JwtRsaSsaPssParameters parameters_;
   RsaSsaPssPublicKey rsa_ssa_pss_public_key_;

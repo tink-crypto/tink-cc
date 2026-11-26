@@ -24,6 +24,7 @@
 #include "tink/big_integer.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -113,7 +114,7 @@ JwtRsaSsaPssParameters::Builder::Build() {
 
 bool JwtRsaSsaPssParameters::operator==(const Parameters& other) const {
   const JwtRsaSsaPssParameters* that =
-      dynamic_cast<const JwtRsaSsaPssParameters*>(&other);
+      DynamicCast<const JwtRsaSsaPssParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

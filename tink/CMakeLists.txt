@@ -45,8 +45,6 @@ tink_cc_library(
     hybrid_encrypt.h
     hybrid_key_templates.h
     input_stream.h
-    json_keyset_reader.h
-    json_keyset_writer.h
     key_manager.h
     keyset_handle.h
     keyset_manager.h
@@ -81,8 +79,6 @@ tink_cc_library(
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
     tink::core::input_stream
-    tink::core::json_keyset_reader
-    tink::core::json_keyset_writer
     tink::core::key
     tink::core::key_manager
     tink::core::keyset_handle
@@ -334,22 +330,6 @@ tink_cc_library(
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
-)
-
-tink_cc_library(
-  NAME json_keyset_reader
-  SRCS
-    json_keyset_reader.h
-  DEPS
-    tink::json::json_keyset_reader
-)
-
-tink_cc_library(
-  NAME json_keyset_writer
-  SRCS
-    json_keyset_writer.h
-  DEPS
-    tink::json::json_keyset_writer
 )
 
 tink_cc_library(

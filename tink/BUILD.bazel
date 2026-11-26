@@ -47,8 +47,6 @@ cc_library(
         "hybrid_encrypt.h",
         "hybrid_key_templates.h",
         "input_stream.h",
-        "json_keyset_reader.h",
-        "json_keyset_writer.h",
         "key_manager.h",
         "keyset_handle.h",
         "keyset_manager.h",
@@ -83,8 +81,6 @@ cc_library(
         ":hybrid_decrypt",
         ":hybrid_encrypt",
         ":input_stream",
-        ":json_keyset_reader",
-        ":json_keyset_writer",
         ":key",
         ":key_manager",
         ":keyset_handle",
@@ -344,20 +340,6 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
-)
-
-cc_library(
-    name = "json_keyset_reader",
-    hdrs = ["json_keyset_reader.h"],
-    visibility = ["//visibility:public"],
-    deps = ["//tink/json:json_keyset_reader"],
-)
-
-cc_library(
-    name = "json_keyset_writer",
-    hdrs = ["json_keyset_writer.h"],
-    visibility = ["//visibility:public"],
-    deps = ["//tink/json:json_keyset_writer"],
 )
 
 cc_library(

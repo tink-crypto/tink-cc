@@ -58,6 +58,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@tink_cc//tink:cleartext_keyset_handle",
         "@tink_cc//tink:tink_cc",
+        "@tink_cc//tink/json:json_keyset_reader",
     ],
 )
 
@@ -84,6 +85,7 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@tink_cc//tink:tink_cc",
+        "@tink_cc//tink/json:json_keyset_reader",
     ],
 )
 
@@ -171,6 +173,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@tink_cc//tink:cleartext_keyset_handle",
         "@tink_cc//tink:tink_cc",
+        "@tink_cc//tink/json:json_keyset_writer",
     ],
 )
 

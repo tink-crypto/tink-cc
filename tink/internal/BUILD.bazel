@@ -536,7 +536,10 @@ cc_test(
 cc_library(
     name = "serialization",
     hdrs = ["serialization.h"],
-    deps = ["@abseil-cpp//absl/strings"],
+    deps = [
+        "//tink:rtti",
+        "@abseil-cpp//absl/strings",
+    ],
 )
 
 cc_library(
@@ -548,6 +551,7 @@ cc_library(
         ":tink_proto_structs",
         ":util",
         "//proto:tink_cc_proto",
+        "//tink:rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -559,9 +563,12 @@ cc_test(
     srcs = ["proto_parameters_serialization_test.cc"],
     deps = [
         ":proto_parameters_serialization",
+        ":serialization",
+        ":serialization_test_util",
         ":tink_proto_structs",
         "//proto:test_proto_cc_proto",
         "//proto:tink_cc_proto",
+        "//tink:rtti",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
@@ -579,6 +586,7 @@ cc_library(
         ":tink_proto_structs",
         ":util",
         "//tink:restricted_data",
+        "//tink:rtti",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -592,9 +600,12 @@ cc_test(
     srcs = ["proto_key_serialization_test.cc"],
     deps = [
         ":proto_key_serialization",
+        ":serialization",
+        ":serialization_test_util",
         ":tink_proto_structs",
         "//tink:insecure_secret_key_access",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_matchers",
@@ -614,6 +625,7 @@ cc_library(
         ":tink_proto_structs",
         "//proto:tink_cc_proto",
         "//tink:parameters",
+        "//tink:rtti",
     ],
 )
 
@@ -623,9 +635,11 @@ cc_test(
     deps = [
         ":legacy_proto_parameters",
         ":proto_parameters_serialization",
+        ":serialization_test_util",
         ":tink_proto_structs",
         "//proto:test_proto_cc_proto",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status:status_matchers",
         "@abseil-cpp//absl/status:statusor",
@@ -643,6 +657,7 @@ cc_library(
         "//proto:tink_cc_proto",
         "//tink:key",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink:secret_key_access_token",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
@@ -658,11 +673,13 @@ cc_test(
     deps = [
         ":legacy_proto_key",
         ":proto_key_serialization",
+        ":serialization_test_util",
         ":tink_proto_structs",
         "//tink:insecure_secret_key_access",
         "//tink:key",
         "//tink:parameters",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink:secret_key_access_token",
         "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
@@ -1070,6 +1087,7 @@ cc_library(
         ":serialization",
         "//tink:key",
         "//tink:parameters",
+        "//tink:rtti",
         "//tink:secret_key_access_token",
         "//tink/util:statusor",
         "@abseil-cpp//absl/strings",

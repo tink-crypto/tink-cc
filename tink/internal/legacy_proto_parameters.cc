@@ -18,6 +18,7 @@
 
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -25,7 +26,7 @@ namespace internal {
 
 bool LegacyProtoParameters::operator==(const Parameters& other) const {
   const LegacyProtoParameters* that =
-      dynamic_cast<const LegacyProtoParameters*>(&other);
+      DynamicCast<const LegacyProtoParameters*>(&other);
   if (that == nullptr) {
     return false;
   }

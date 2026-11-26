@@ -23,8 +23,10 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_test_util.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 #include "proto/test_proto.pb.h"
 
@@ -35,7 +37,9 @@ namespace internal {
 using ::absl_testing::IsOk;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::google::crypto::tink::TestProto;
+using ::testing::Eq;
 using ::testing::IsFalse;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 
 class LegacyProtoParametersTest : public ::testing::Test {
@@ -188,6 +192,24 @@ TEST_F(LegacyProtoParametersTest, Clone) {
 
   std::unique_ptr<Parameters> cloned_parameters = parameters.Clone();
   ASSERT_THAT(*cloned_parameters, testing::Eq(parameters));
+}
+
+TEST_F(LegacyProtoParametersTest, DynamicCastAndTypeIndex) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  absl::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
+                                           test_proto.SerializeAsString());
+  ASSERT_THAT(serialization.status(), IsOk());
+  LegacyProtoParameters parameters(*serialization);
+
+  const Parameters* base = &parameters;
+  EXPECT_THAT(GetTypeIndex(*base),
+              Eq(GetStaticTypeIndex<LegacyProtoParameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base), Eq(&parameters));
+  EXPECT_THAT(DynamicCast<const LegacyProtoParameters*>(base), Eq(&parameters));
+  EXPECT_THAT(DynamicCast<const NoIdParams*>(base), IsNull());
+  EXPECT_FALSE(parameters == NoIdParams());
 }
 
 }  // namespace internal

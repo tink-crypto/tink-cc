@@ -23,6 +23,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/rtti.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -82,6 +83,9 @@ class ProtoParametersSerialization : public Serialization {
   // `LegacyProtoParameters` class.
   bool EqualsWithPotentialFalseNegatives(
       const ProtoParametersSerialization& other) const;
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Serialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(6);
 
   google::crypto::tink::internal::KeyTemplateTP proto_key_template_;
 };

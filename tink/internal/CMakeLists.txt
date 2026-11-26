@@ -530,6 +530,7 @@ tink_cc_library(
     serialization.h
   DEPS
     absl::strings
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -544,6 +545,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    tink::core::rtti
     tink::proto::tink_cc_proto
 )
 
@@ -553,11 +555,14 @@ tink_cc_test(
     proto_parameters_serialization_test.cc
   DEPS
     tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
+    tink::core::rtti
     tink::util::test_matchers
     tink::proto::test_proto_cc_proto
     tink::proto::tink_cc_proto
@@ -578,6 +583,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::restricted_data
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -586,6 +592,8 @@ tink_cc_test(
     proto_key_serialization_test.cc
   DEPS
     tink::internal::proto_key_serialization
+    tink::internal::serialization
+    tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
     GTest::gmock
     absl::status
@@ -595,6 +603,7 @@ tink_cc_test(
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::util::test_matchers
 )
 
@@ -607,6 +616,7 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::tink_proto_structs
     tink::core::parameters
+    tink::core::rtti
     tink::proto::tink_cc_proto
 )
 
@@ -617,11 +627,13 @@ tink_cc_test(
   DEPS
     tink::internal::legacy_proto_parameters
     tink::internal::proto_parameters_serialization
+    tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
     GTest::gmock
     absl::status_matchers
     absl::statusor
     tink::core::parameters
+    tink::core::rtti
     tink::util::test_matchers
     tink::proto::test_proto_cc_proto
 )
@@ -641,6 +653,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::parameters
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::proto::tink_cc_proto
 )
@@ -652,6 +665,7 @@ tink_cc_test(
   DEPS
     tink::internal::legacy_proto_key
     tink::internal::proto_key_serialization
+    tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
     GTest::gmock
     absl::status
@@ -662,6 +676,7 @@ tink_cc_test(
     tink::core::key
     tink::core::parameters
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::util::test_matchers
 )
@@ -1065,6 +1080,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::parameters
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::util::statusor
   TESTONLY

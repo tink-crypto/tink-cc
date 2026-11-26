@@ -21,7 +21,10 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_test_util.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 #include "proto/test_proto.pb.h"
 #include "proto/tink.pb.h"
@@ -39,6 +42,7 @@ using ::google::crypto::tink::TestProto;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsFalse;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 
 class ProtoParametersSerializationTest : public ::testing::Test {
@@ -260,6 +264,23 @@ TEST_F(ProtoParametersSerializationTest, DifferentValueNotEqual) {
   ASSERT_THAT(other_serialization.status(), IsOk());
 
   EXPECT_THAT(Equals(*serialization, *other_serialization), IsFalse());
+}
+
+TEST_F(ProtoParametersSerializationTest, DynamicCastAndTypeIndex) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  absl::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create("type_url", OutputPrefixTypeTP::kRaw,
+                                           test_proto.SerializeAsString());
+  ASSERT_THAT(serialization.status(), IsOk());
+
+  const Serialization* base = &*serialization;
+  EXPECT_THAT(GetTypeIndex(*base),
+              Eq(GetStaticTypeIndex<ProtoParametersSerialization>()));
+  EXPECT_THAT(DynamicCast<const Serialization*>(base), Eq(&*serialization));
+  EXPECT_THAT(DynamicCast<const ProtoParametersSerialization*>(base),
+              Eq(&*serialization));
+  EXPECT_THAT(DynamicCast<const NoIdSerialization*>(base), IsNull());
 }
 
 }  // namespace internal

@@ -33,6 +33,12 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 1 //third_party/tink/cc/parameters.h
 2 //third_party/tink/cc/key.h
 3 //third_party/tink/cc/private_key.h
+4 //third_party/tink/cc/internal/serialization.h
+5 //third_party/tink/cc/internal/proto_key_serialization.h
+6 //third_party/tink/cc/internal/proto_parameters_serialization.h
+7 //third_party/tink/cc/internal/legacy_proto_key.h
+8 //third_party/tink/cc/internal/legacy_proto_key.h
+9 //third_party/tink/cc/internal/legacy_proto_parameters.h
 101 //third_party/tink/cc/mac/mac_parameters.h
 102 //third_party/tink/cc/mac/mac_key.h
 103 //third_party/tink/cc/mac/hmac_parameters.h
@@ -148,6 +154,14 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 30007 //third_party/tink/cc/mac/aes_cmac_key_test.cc
 30008 //third_party/tink/cc/mac/hmac_parameters_test.cc
 30009 //third_party/tink/cc/mac/hmac_key_test.cc
+30010 //third_party/tink/cc/internal/serialization_test_util.h
+30011 //third_party/tink/cc/internal/serialization_test_util.h
+30012 //third_party/tink/cc/internal/serialization_test_util.h
+30013 //third_party/tink/cc/internal/serialization_test_util.h
+30014 //third_party/tink/cc/internal/serialization_test_util.h
+30015 //third_party/tink/cc/internal/serialization_test_util.h
+30016 //third_party/tink/cc/internal/serialization_test_util.h
+30017 //third_party/tink/cc/internal/serialization_test_util.h
 EOF
 )"
 readonly DEFAULT_EXPECTED_IDS

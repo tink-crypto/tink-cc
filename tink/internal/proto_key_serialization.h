@@ -27,6 +27,7 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -99,6 +100,9 @@ class ProtoKeySerialization : public Serialization {
   // `LegacyKeyParameters` class.
   bool EqualsWithPotentialFalseNegatives(
       const ProtoKeySerialization& other) const;
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Serialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(5);
 
   std::string type_url_;
   std::string object_identifier_;

@@ -27,10 +27,12 @@
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/serialization_test_util.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/test_matchers.h"
 
@@ -43,6 +45,7 @@ using ::absl_testing::StatusIs;
 using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -617,6 +620,37 @@ TEST_P(NonSecretKeyMaterialTypesTest, SerializationWithoutSecretAccessToken) {
   absl::StatusOr<const ProtoKeySerialization&> key_serialization =
       key->Serialization(/*token=*/std::nullopt);
   ASSERT_THAT(key_serialization.status(), IsOk());
+}
+
+TEST_F(LegacyProtoKeyTest, DynamicCastAndTypeIndex) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  absl::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+
+  const Key* base_key = &*key;
+  EXPECT_THAT(GetTypeIndex(*base_key),
+              Eq(GetStaticTypeIndex<LegacyProtoKey>()));
+  EXPECT_THAT(DynamicCast<const Key*>(base_key), Eq(&*key));
+  EXPECT_THAT(DynamicCast<const LegacyProtoKey*>(base_key), Eq(&*key));
+  EXPECT_THAT(DynamicCast<const NoIdKey*>(base_key), IsNull());
+  EXPECT_FALSE(*key == NoIdKey());
+
+  const Parameters* base_params = &key->GetParameters();
+  EXPECT_THAT(GetTypeIndex(*base_params),
+              Eq(GetStaticTypeIndex<UnusableLegacyProtoParameters>()));
+  EXPECT_THAT(DynamicCast<const Parameters*>(base_params), Eq(base_params));
+  EXPECT_THAT(DynamicCast<const UnusableLegacyProtoParameters*>(base_params),
+              Eq(base_params));
+  EXPECT_THAT(DynamicCast<const NoIdParams*>(base_params), IsNull());
+  EXPECT_FALSE(*base_params == NoIdParams());
 }
 
 }  // namespace internal

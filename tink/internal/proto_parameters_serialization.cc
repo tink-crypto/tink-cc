@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/internal/util.h"
+#include "tink/rtti.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -77,7 +78,7 @@ ProtoParametersSerialization::Create(
 bool ProtoParametersSerialization::EqualsWithPotentialFalseNegatives(
     const ProtoParametersSerialization& other) const {
   const ProtoParametersSerialization* that =
-      dynamic_cast<const ProtoParametersSerialization*>(&other);
+      DynamicCast<const ProtoParametersSerialization*>(&other);
   if (that == nullptr) {
     return false;
   }

@@ -26,6 +26,7 @@
 #include "tink/internal/serialization.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/statusor.h"
 
@@ -51,6 +52,9 @@ class BaseSerialization : public Serialization {
   }
 
  private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Serialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30010);
+
   std::string object_identifier_;
 };
 
@@ -58,12 +62,20 @@ class BaseSerialization : public Serialization {
 class NoIdSerialization : public BaseSerialization {
  public:
   NoIdSerialization() : BaseSerialization(kNoIdTypeUrl) {}
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(BaseSerialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30011);
 };
 
 // Serialization for parameters with an ID requirement.
 class IdParamsSerialization : public BaseSerialization {
  public:
   IdParamsSerialization() : BaseSerialization(kIdTypeUrl) {}
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(BaseSerialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30012);
 };
 
 // Serialization for keys with an ID requirement.
@@ -75,6 +87,9 @@ class IdKeySerialization : public BaseSerialization {
   int GetKeyId() const { return id_; }
 
  private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(BaseSerialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30013);
+
   int id_;
 };
 
@@ -90,6 +105,10 @@ class NoIdParams : public Parameters {
   std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<NoIdParams>(*this);
   }
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30014);
 };
 
 // Key without an ID requirement.
@@ -111,6 +130,9 @@ class NoIdKey : public Key {
   }
 
  private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30015);
+
   NoIdParams params_;
 };
 
@@ -126,6 +148,10 @@ class IdParams : public Parameters {
   std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<IdParams>(*this);
   }
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30016);
 };
 
 // Key with an ID requirement.
@@ -146,6 +172,9 @@ class IdKey : public Key {
   }
 
  private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30017);
+
   IdParams params_;
   int id_;
 };

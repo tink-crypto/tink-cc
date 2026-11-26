@@ -24,8 +24,11 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_test_util.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -38,6 +41,7 @@ using ::crypto::tink::internal::KeyMaterialTypeTP;
 using ::crypto::tink::internal::OutputPrefixTypeTP;
 using ::testing::Eq;
 using ::testing::IsFalse;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 
 class ProtoKeySerializationTest : public ::testing::Test {
@@ -244,6 +248,25 @@ TEST_F(ProtoKeySerializationTest, AssignSecretToStringView) {
   absl::string_view secret = serialization->SerializedKeyProto().GetSecret(
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(secret, Eq("secret"));
+}
+
+TEST_F(ProtoKeySerializationTest, DynamicCastAndTypeIndex) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  absl::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyMaterialTypeTP::kSymmetric,
+                                    OutputPrefixTypeTP::kTink,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+
+  const Serialization* base = &*serialization;
+  EXPECT_THAT(GetTypeIndex(*base),
+              Eq(GetStaticTypeIndex<ProtoKeySerialization>()));
+  EXPECT_THAT(DynamicCast<const Serialization*>(base), Eq(&*serialization));
+  EXPECT_THAT(DynamicCast<const ProtoKeySerialization*>(base),
+              Eq(&*serialization));
+  EXPECT_THAT(DynamicCast<const NoIdSerialization*>(base), IsNull());
 }
 
 }  // namespace internal

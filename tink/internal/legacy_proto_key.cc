@@ -23,6 +23,7 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 
 namespace crypto {
@@ -51,7 +52,7 @@ absl::Status CheckKeyAccess(
 
 bool UnusableLegacyProtoParameters::operator==(const Parameters& other) const {
   const UnusableLegacyProtoParameters* that =
-      dynamic_cast<const UnusableLegacyProtoParameters*>(&other);
+      DynamicCast<const UnusableLegacyProtoParameters*>(&other);
   if (that == nullptr) {
     return false;
   }
@@ -71,7 +72,7 @@ absl::StatusOr<LegacyProtoKey> LegacyProtoKey::Create(
 }
 
 bool LegacyProtoKey::operator==(const Key& other) const {
-  const LegacyProtoKey* that = dynamic_cast<const LegacyProtoKey*>(&other);
+  const LegacyProtoKey* that = DynamicCast<const LegacyProtoKey*>(&other);
   if (that == nullptr) {
     return false;
   }

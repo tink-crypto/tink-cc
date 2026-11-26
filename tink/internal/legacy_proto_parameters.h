@@ -23,6 +23,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -57,6 +58,9 @@ class LegacyProtoParameters : public Parameters {
   }
 
  private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(9);
+
   ProtoParametersSerialization serialization_;
 };
 

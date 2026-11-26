@@ -28,6 +28,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "proto/tink.pb.h"
 
@@ -65,6 +66,9 @@ class UnusableLegacyProtoParameters : public Parameters {
   }
 
  private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Parameters);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(7);
+
   std::string type_url_;
   google::crypto::tink::OutputPrefixType output_prefix_type_;
 };
@@ -111,6 +115,9 @@ class LegacyProtoKey final : public Key {
             serialization.TypeUrl(),
             static_cast<google::crypto::tink::OutputPrefixType>(
                 serialization.GetOutputPrefixTypeTP())) {}
+
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Key);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(8);
 
   ProtoKeySerialization serialization_;
   UnusableLegacyProtoParameters unusable_proto_parameters_;

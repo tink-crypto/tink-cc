@@ -35,6 +35,7 @@
 #include "tink/key.h"
 #include "tink/public_key_sign.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
@@ -79,7 +80,7 @@ absl::StatusOr<EcdsaPrivateKey> ParseEcdsaPrivateKeyWithNoPrefix(
   ABSL_ASSIGN_OR_RETURN(
       std::unique_ptr<Key> key,
       registry->ParseKey(*serialization, InsecureSecretKeyAccess::Get()));
-  const auto* private_key = dynamic_cast<const EcdsaPrivateKey*>(key.get());
+  const auto* private_key = DynamicCast<const EcdsaPrivateKey*>(key.get());
   if (private_key == nullptr) {
     return absl::InternalError("Failed to cast to EcdsaPrivateKey");
   }

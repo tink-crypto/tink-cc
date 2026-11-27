@@ -892,6 +892,7 @@ tink_cc_library(
     tink::core::key_manager
     tink::core::parameters
     tink::core::public_key_sign
+    tink::core::rtti
     tink::internal::legacy_key_manager_impl
     tink::internal::tink_proto_structs
     tink::signature::ml_dsa_parameters
@@ -914,6 +915,7 @@ tink_cc_library(
     tink::core::key
     tink::core::key_manager
     tink::core::public_key_verify
+    tink::core::rtti
     tink::internal::legacy_key_manager_impl
     tink::internal::tink_proto_structs
     tink::signature::ml_dsa_public_key
@@ -977,6 +979,7 @@ tink_cc_library(
     tink::core::key_manager
     tink::core::parameters
     tink::core::public_key_sign
+    tink::core::rtti
     tink::internal::legacy_key_manager_impl
     tink::internal::tink_proto_structs
     tink::signature::slh_dsa_parameters
@@ -1023,6 +1026,7 @@ tink_cc_library(
     tink::core::key
     tink::core::key_manager
     tink::core::public_key_verify
+    tink::core::rtti
     tink::internal::legacy_key_manager_impl
     tink::internal::tink_proto_structs
     tink::signature::slh_dsa_public_key
@@ -1879,6 +1883,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     tink::core::public_key_sign
+    tink::core::rtti
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_private_key
@@ -1902,6 +1907,7 @@ tink_cc_test(
     absl::status_matchers
     absl::statusor
     tink::core::public_key_sign
+    tink::core::rtti
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_private_key
     tink::signature::internal::testing::composite_ml_dsa_test_vectors
@@ -1923,6 +1929,7 @@ tink_cc_library(
     absl::string_view
     tink::internal::boringssl
     tink::core::public_key_verify
+    tink::core::rtti
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_public_key
@@ -1948,6 +1955,7 @@ tink_cc_test(
     absl::statusor
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::core::rtti
     tink::internal::fips_utils
     tink::signature::composite_ml_dsa_private_key
     tink::signature::internal::testing::composite_ml_dsa_test_vectors

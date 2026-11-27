@@ -117,6 +117,7 @@ tink_cc_library(
     tink::core::key
     tink::core::public_key_sign
     tink::core::restricted_data
+    tink::core::rtti
     tink::config::tink_fips
     tink::internal::ec_key_from_seed
     tink::internal::ec_util
@@ -159,6 +160,7 @@ tink_cc_library(
     tink::core::key
     tink::core::public_key_verify
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::fips_utils
     tink::internal::proto_key_serialization
     tink::internal::serialization_registry
@@ -265,6 +267,7 @@ tink_cc_library(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::fips_utils
     tink::internal::proto_key_serialization
@@ -337,6 +340,7 @@ tink_cc_library(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::fips_utils
     tink::internal::proto_key_serialization
@@ -378,6 +382,7 @@ tink_cc_library(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::restricted_data
+    tink::core::rtti
     tink::internal::bn_util
     tink::internal::fips_utils
     tink::internal::md_util

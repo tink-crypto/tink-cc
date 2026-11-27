@@ -28,6 +28,7 @@
 #include "tink/key.h"
 #include "tink/key_manager.h"
 #include "tink/public_key_verify.h"
+#include "tink/rtti.h"
 #include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/util/constants.h"
@@ -58,7 +59,7 @@ class SlhDsaVerifyKeyManagerAdaptor
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetPrimitive(
       const Key& key) const final {
     const SlhDsaPublicKey* key_class =
-        dynamic_cast<const SlhDsaPublicKey*>(&key);
+        DynamicCast<const SlhDsaPublicKey*>(&key);
     if (key_class == nullptr) {
       return absl::InternalError("Unexpected key type.");
     }

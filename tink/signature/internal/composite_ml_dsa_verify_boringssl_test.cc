@@ -27,6 +27,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/internal/composite_ml_dsa_sign_boringssl.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
@@ -41,6 +42,7 @@ using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::Not;
+using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -52,12 +54,13 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyTestVectors) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewCompositeMlDsaVerify(private_key.GetPublicKey());
+      NewCompositeMlDsaVerify(private_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
@@ -70,15 +73,16 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, SignAndVerifyTestVectors) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewCompositeMlDsaSign(private_key);
+      NewCompositeMlDsaSign(*private_key);
   ASSERT_THAT(signer, IsOk());
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewCompositeMlDsaVerify(private_key.GetPublicKey());
+      NewCompositeMlDsaVerify(private_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   absl::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
@@ -92,12 +96,13 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewCompositeMlDsaVerify(private_key.GetPublicKey());
+      NewCompositeMlDsaVerify(private_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   EXPECT_THAT((*verifier)->Verify("wrong_signature", test_vector.message),
@@ -111,12 +116,13 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithModifiedSignatureFails) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewCompositeMlDsaVerify(private_key.GetPublicKey());
+      NewCompositeMlDsaVerify(private_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   std::string modified_signature = test_vector.signature;
@@ -131,15 +137,16 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithModifiedOutputPrefixFails) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
-  if (private_key.GetOutputPrefix().empty()) {
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
+  if (private_key->GetOutputPrefix().empty()) {
     GTEST_SKIP() << "Test requires a non-empty output prefix.";
   }
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewCompositeMlDsaVerify(private_key.GetPublicKey());
+      NewCompositeMlDsaVerify(private_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   std::string modified_signature = test_vector.signature;
@@ -154,12 +161,13 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewCompositeMlDsaVerify(private_key.GetPublicKey());
+      NewCompositeMlDsaVerify(private_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   EXPECT_THAT((*verifier)->Verify(test_vector.signature, "wrong_message"),
@@ -172,12 +180,13 @@ TEST_P(CompositeMlDsaVerifyBoringSslTest, FipsMode) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   // Check that creating the verifier fails in FIPS mode.
-  EXPECT_THAT(NewCompositeMlDsaVerify(private_key.GetPublicKey()).status(),
+  EXPECT_THAT(NewCompositeMlDsaVerify(private_key->GetPublicKey()).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

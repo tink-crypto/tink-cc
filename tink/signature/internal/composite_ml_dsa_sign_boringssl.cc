@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -49,7 +50,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> GetClassicalPublicKeySign(
   switch (private_key.GetPublicKey().GetParameters().GetClassicalAlgorithm()) {
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519: {
       const Ed25519PrivateKey* classical_private_key =
-          dynamic_cast<const Ed25519PrivateKey*>(
+          DynamicCast<const Ed25519PrivateKey*>(
               &private_key.GetClassicalPrivateKey());
       if (classical_private_key == nullptr) {
         return absl::InvalidArgumentError(
@@ -61,7 +62,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> GetClassicalPublicKeySign(
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521: {
       const EcdsaPrivateKey* classical_private_key =
-          dynamic_cast<const EcdsaPrivateKey*>(
+          DynamicCast<const EcdsaPrivateKey*>(
               &private_key.GetClassicalPrivateKey());
       if (classical_private_key == nullptr) {
         return absl::InvalidArgumentError(
@@ -72,7 +73,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> GetClassicalPublicKeySign(
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss: {
       const RsaSsaPssPrivateKey* classical_private_key =
-          dynamic_cast<const RsaSsaPssPrivateKey*>(
+          DynamicCast<const RsaSsaPssPrivateKey*>(
               &private_key.GetClassicalPrivateKey());
       if (classical_private_key == nullptr) {
         return absl::InvalidArgumentError(
@@ -83,7 +84,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> GetClassicalPublicKeySign(
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1: {
       const RsaSsaPkcs1PrivateKey* classical_private_key =
-          dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          DynamicCast<const RsaSsaPkcs1PrivateKey*>(
               &private_key.GetClassicalPrivateKey());
       if (classical_private_key == nullptr) {
         return absl::InvalidArgumentError(

@@ -26,6 +26,7 @@
 #include "absl/status/statusor.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_private_key.h"
 #include "tink/signature/internal/testing/composite_ml_dsa_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
@@ -37,6 +38,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::testing::NotNull;
 using ::testing::StartsWith;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
@@ -49,18 +51,19 @@ TEST_P(CompositeMlDsaSignBoringSslTest, SignatureOutputPrefixIsCorrect) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewCompositeMlDsaSign(private_key);
+      NewCompositeMlDsaSign(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   absl::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
   ASSERT_THAT(signature, IsOk());
 
-  EXPECT_THAT(*signature, StartsWith(private_key.GetOutputPrefix()));
+  EXPECT_THAT(*signature, StartsWith(private_key->GetOutputPrefix()));
 }
 
 TEST_P(CompositeMlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
@@ -69,12 +72,13 @@ TEST_P(CompositeMlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewCompositeMlDsaSign(private_key);
+      NewCompositeMlDsaSign(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   absl::StatusOr<std::string> first_signature =
@@ -93,12 +97,13 @@ TEST_P(CompositeMlDsaSignBoringSslTest, FipsMode) {
   }
 
   const SignatureTestVector& test_vector = GetParam();
-  const CompositeMlDsaPrivateKey& private_key =
-      dynamic_cast<const CompositeMlDsaPrivateKey&>(
-          *test_vector.signature_private_key);
+  const CompositeMlDsaPrivateKey* private_key =
+      DynamicCast<const CompositeMlDsaPrivateKey*>(
+          test_vector.signature_private_key.get());
+  ASSERT_THAT(private_key, NotNull());
 
   // Check that creating the signer fails in FIPS mode.
-  EXPECT_THAT(NewCompositeMlDsaSign(private_key).status(),
+  EXPECT_THAT(NewCompositeMlDsaSign(*private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

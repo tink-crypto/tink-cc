@@ -31,6 +31,7 @@
 #include "tink/key_manager.h"
 #include "tink/parameters.h"
 #include "tink/public_key_sign.h"
+#include "tink/rtti.h"
 #include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 #include "tink/signature/slh_dsa_parameters.h"
@@ -73,7 +74,7 @@ class SlhDsaSignKeyManagerAdaptor
     absl::StatusOr<std::unique_ptr<Key>> CreateKey(
         const Parameters& parameters) const final {
       const SlhDsaParameters* key_parameters =
-          dynamic_cast<const SlhDsaParameters*>(&parameters);
+          DynamicCast<const SlhDsaParameters*>(&parameters);
       if (key_parameters == nullptr) {
         return absl::InternalError("Unexpected parameters type.");
       }
@@ -99,7 +100,7 @@ class SlhDsaSignKeyManagerAdaptor
   absl::StatusOr<std::unique_ptr<PublicKeySign>> GetPrimitive(
       const Key& key) const final {
     const SlhDsaPrivateKey* key_class =
-        dynamic_cast<const SlhDsaPrivateKey*>(&key);
+        DynamicCast<const SlhDsaPrivateKey*>(&key);
     if (key_class == nullptr) {
       return absl::InternalError("Unexpected key type.");
     }

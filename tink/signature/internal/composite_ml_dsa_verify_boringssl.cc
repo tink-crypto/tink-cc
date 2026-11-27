@@ -28,6 +28,7 @@
 #include "openssl/mldsa.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_verify.h"
+#include "tink/rtti.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_public_key.h"
 #include "tink/signature/ecdsa_public_key.h"
@@ -52,7 +53,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetClassicalPublicKeyVerify(
   switch (public_key.GetParameters().GetClassicalAlgorithm()) {
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEd25519: {
       const Ed25519PublicKey* classical_public_key =
-          dynamic_cast<const Ed25519PublicKey*>(
+          DynamicCast<const Ed25519PublicKey*>(
               &public_key.GetClassicalPublicKey());
       if (classical_public_key == nullptr) {
         return absl::InvalidArgumentError(
@@ -64,7 +65,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetClassicalPublicKeyVerify(
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP384:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kEcdsaP521: {
       const EcdsaPublicKey* classical_public_key =
-          dynamic_cast<const EcdsaPublicKey*>(
+          DynamicCast<const EcdsaPublicKey*>(
               &public_key.GetClassicalPublicKey());
       if (classical_public_key == nullptr) {
         return absl::InvalidArgumentError(
@@ -75,7 +76,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetClassicalPublicKeyVerify(
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pss:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pss: {
       const RsaSsaPssPublicKey* classical_public_key =
-          dynamic_cast<const RsaSsaPssPublicKey*>(
+          DynamicCast<const RsaSsaPssPublicKey*>(
               &public_key.GetClassicalPublicKey());
       if (classical_public_key == nullptr) {
         return absl::InvalidArgumentError(
@@ -86,7 +87,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetClassicalPublicKeyVerify(
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa3072Pkcs1:
     case CompositeMlDsaParameters::ClassicalAlgorithm::kRsa4096Pkcs1: {
       const RsaSsaPkcs1PublicKey* classical_public_key =
-          dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+          DynamicCast<const RsaSsaPkcs1PublicKey*>(
               &public_key.GetClassicalPublicKey());
       if (classical_public_key == nullptr) {
         return absl::InvalidArgumentError(

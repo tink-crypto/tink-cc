@@ -38,7 +38,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 
-TEST(MlDsaSignatureKeyGenConfigV0Test, MlDsaCreateKeysetHandleWorks) {
+TEST(MlDsaSignatureKeyGenConfig2026Test, MlDsaCreateKeysetHandleWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
@@ -56,7 +56,7 @@ TEST(MlDsaSignatureKeyGenConfigV0Test, MlDsaCreateKeysetHandleWorks) {
   ASSERT_THAT(public_handle, IsOk());
 }
 
-TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
+TEST(PqcSignatureKeyGenConfig2026Test, PqcSignaturesCreateKeysetHandlesWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
 
@@ -91,7 +91,7 @@ TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
   ASSERT_THAT(public_handle, IsOk());
 }
 
-TEST(CompositeMlDsaSignatureKeyGenConfigV0Test,
+TEST(CompositeMlDsaSignatureKeyGenConfig2026Test,
      CompositeMlDsaCreateKeysetHandleWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());

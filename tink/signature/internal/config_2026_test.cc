@@ -81,7 +81,7 @@ using ::testing::Eq;
 using ::testing::Not;
 using ::testing::Pointee;
 
-TEST(SignatureV0Test, PrimitiveWrappers) {
+TEST(Signature2026Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
   absl::StatusOr<const KeysetWrapperStore*> store =
@@ -95,7 +95,7 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
   EXPECT_THAT((*store)->Get<ChunkedPrehash>(), IsOk());
 }
 
-TEST(SignatureV0Test, KeyManagers) {
+TEST(Signature2026Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
   absl::StatusOr<const KeyTypeInfoStore*> store =
@@ -116,7 +116,7 @@ TEST(SignatureV0Test, KeyManagers) {
   }
 }
 
-TEST(SignatureConfigV0Test, MlDsaPrehashPrimitiveCreatorWorks) {
+TEST(SignatureConfig2026Test, MlDsaPrehashPrimitiveCreatorWorks) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
@@ -144,7 +144,7 @@ TEST(SignatureConfigV0Test, MlDsaPrehashPrimitiveCreatorWorks) {
   EXPECT_THAT(*prehash_value, Eq(*test_vector.prehash));
 }
 
-TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
+TEST(SignatureConfig2026Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
@@ -170,7 +170,7 @@ TEST(SignatureConfigV0Test, MlDsaSignPrehashPrimitiveCreatorWorks) {
   ASSERT_THAT(signature, IsOk());
 }
 
-TEST(SignatureConfigV0Test, MlDsaChunkedPrehashPrimitiveCreatorWorks) {
+TEST(SignatureConfig2026Test, MlDsaChunkedPrehashPrimitiveCreatorWorks) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
@@ -201,7 +201,7 @@ TEST(SignatureConfigV0Test, MlDsaChunkedPrehashPrimitiveCreatorWorks) {
   EXPECT_THAT((*computation)->GetPrehash(), IsOkAndHolds(*test_vector.prehash));
 }
 
-TEST(SignatureConfigV0Test, MlDsaChunkedPrehashSignVerifyWorks) {
+TEST(SignatureConfig2026Test, MlDsaChunkedPrehashSignVerifyWorks) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
 
@@ -253,7 +253,7 @@ TEST(SignatureConfigV0Test, MlDsaChunkedPrehashSignVerifyWorks) {
   EXPECT_THAT((*verify)->Verify(*signature, "message in chunks"), IsOk());
 }
 
-TEST(SignatureConfigV0Test,
+TEST(SignatureConfig2026Test,
      MultipleEntriesKeysetHandleSignVerifyWithSlhDsaPrimaryWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
@@ -295,7 +295,7 @@ TEST(SignatureConfigV0Test,
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
 
-TEST(SignatureConfigV0Test,
+TEST(SignatureConfig2026Test,
      MultipleEntriesKeysetHandleSignVerifyWithMlDsaPrimaryWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());

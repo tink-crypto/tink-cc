@@ -70,7 +70,7 @@ process_args() {
       t) TEST_FLAGS=($(echo "${OPTARG}" | tr ',' '\n')) ;;
       c) CACHE_FLAGS=(
            "--remote_cache=https://storage.googleapis.com/${OPTARG}"
-           "--google_credentials=$(realpath ./cache_key)"
+           "--google_credentials=${TINK_BAZEL_CACHE_KEY:-$(realpath ./cache_key)}"
            "--remote_download_minimal"
          );;
       *) usage ;;

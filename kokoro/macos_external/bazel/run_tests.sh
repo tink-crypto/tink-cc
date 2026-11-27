@@ -27,9 +27,15 @@ if [[ -n "${KOKORO_ROOT:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
+# Keep the remote-cache credential out of the checkout. The checkout is
+# transferred back as a job artifact, so a key written here would outlive the
+# job.
+readonly CACHE_KEY_DIR="$(mktemp -d /tmp/tink-cache-key.XXXXXX)"
+trap 'rm -rf "${CACHE_KEY_DIR}"' EXIT
 CACHE_FLAGS=""
 if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
-  cp "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" ./cache_key
+  install -m 444 "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" "${CACHE_KEY_DIR}/cache_key"
+  export TINK_BAZEL_CACHE_KEY="${CACHE_KEY_DIR}/cache_key"
   CACHE_FLAGS="-c ${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET}/bazel/macos"
 fi
 readonly CACHE_FLAGS

@@ -16,11 +16,15 @@
 
 #include "tink/signature/internal/rsa_ssa_pkcs1_verify_boringssl.h"
 
+#include <atomic>
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "absl/numeric/bits.h"
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
@@ -45,6 +49,18 @@ namespace tink {
 namespace internal {
 
 namespace {
+
+// Returns the exact bit length of a leading-zero-stripped big-endian integer so
+// modulus size and FIPS constraints can be validated eagerly at construction
+// without allocating a BoringSSL BIGNUM.
+size_t ModulusBitLength(absl::string_view n) {
+  if (n.empty()) return 0;
+  if (n.size() > std::numeric_limits<size_t>::max() / 8) {
+    return std::numeric_limits<size_t>::max();
+  }
+  return (n.size() - 1) * 8 +
+         static_cast<size_t>(absl::bit_width(static_cast<uint8_t>(n[0])));
+}
 
 absl::Status RsaSsaPkcs1Verify(RSA* rsa, const EVP_MD* sig_hash,
                                absl::string_view signature,
@@ -73,22 +89,44 @@ absl::Status RsaSsaPkcs1Verify(RSA* rsa, const EVP_MD* sig_hash,
   return absl::OkStatus();
 }
 
-// Holds RSA verification state shared by prefixed and unprefixed verifiers.
+// Holds RSA verification state and defers BoringSSL RSA key allocation until
+// the first signature verification.
 class RsaSsaPkcs1VerifyCore {
  public:
-  RsaSsaPkcs1VerifyCore(SslUniquePtr<RSA> rsa, const EVP_MD* sig_hash)
-      : rsa_(std::move(rsa)), sig_hash_(sig_hash) {}
+  RsaSsaPkcs1VerifyCore(RsaPublicKey key, const EVP_MD* sig_hash)
+      : sig_hash_(sig_hash), key_(std::move(key)) {}
+
+  RsaSsaPkcs1VerifyCore(const RsaSsaPkcs1VerifyCore&) = delete;
+  RsaSsaPkcs1VerifyCore& operator=(const RsaSsaPkcs1VerifyCore&) = delete;
+
+  ~RsaSsaPkcs1VerifyCore() { RSA_free(rsa_.load(std::memory_order_relaxed)); }
 
   absl::Status VerifyWithoutPrefix(absl::string_view signature,
                                    absl::string_view data,
                                    bool append_null_byte) const {
-    return RsaSsaPkcs1Verify(rsa_.get(), sig_hash_, signature, data,
-                             append_null_byte);
+    RSA* rsa = rsa_.load(std::memory_order_acquire);
+    if (rsa == nullptr) {
+      ABSL_ASSIGN_OR_RETURN(rsa, GetOrCreateRsa());
+    }
+    return RsaSsaPkcs1Verify(rsa, sig_hash_, signature, data, append_null_byte);
   }
 
  private:
-  const SslUniquePtr<RSA> rsa_;
+  absl::StatusOr<RSA*> GetOrCreateRsa() const {
+    ABSL_ASSIGN_OR_RETURN(SslUniquePtr<RSA> created, RsaPublicKeyToRsa(key_));
+    RSA* expected = nullptr;
+    if (rsa_.compare_exchange_strong(expected, created.get(),
+                                     std::memory_order_release,
+                                     std::memory_order_acquire)) {
+      return created.release();
+    }
+    return expected;
+  }
+
+  // Owned by this instance; initialized at most once and freed on destruction.
+  mutable std::atomic<RSA*> rsa_{nullptr};
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+  const RsaPublicKey key_;
 };
 
 class RsaSsaPkcs1VerifyBoringSslImpl final : public PublicKeyVerify {
@@ -96,8 +134,8 @@ class RsaSsaPkcs1VerifyBoringSslImpl final : public PublicKeyVerify {
   static constexpr FipsCompatibility kFipsStatus =
       FipsCompatibility::kRequiresBoringCrypto;
 
-  RsaSsaPkcs1VerifyBoringSslImpl(SslUniquePtr<RSA> rsa, const EVP_MD* sig_hash)
-      : core_(std::move(rsa), sig_hash) {}
+  RsaSsaPkcs1VerifyBoringSslImpl(RsaPublicKey key, const EVP_MD* sig_hash)
+      : core_(std::move(key), sig_hash) {}
 
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override {
@@ -113,10 +151,10 @@ class RsaSsaPkcs1VerifyBoringSslImpl final : public PublicKeyVerify {
 // unprefixed verifiers do not carry unused prefix/suffix state.
 class RsaSsaPkcs1VerifyWithPrefix final : public PublicKeyVerify {
  public:
-  RsaSsaPkcs1VerifyWithPrefix(SslUniquePtr<RSA> rsa, const EVP_MD* sig_hash,
+  RsaSsaPkcs1VerifyWithPrefix(RsaPublicKey key, const EVP_MD* sig_hash,
                               absl::string_view output_prefix,
                               bool append_null_byte)
-      : core_(std::move(rsa), sig_hash),
+      : core_(std::move(key), sig_hash),
         output_prefix_(output_prefix),
         append_null_byte_(append_null_byte) {}
 
@@ -148,16 +186,15 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewVerifier(
     subtle::HashType hash_type, absl::string_view output_prefix,
     bool append_null_byte) {
   ABSL_ASSIGN_OR_RETURN(const EVP_MD* sig_hash, GetSigHash(hash_type));
-  ABSL_ASSIGN_OR_RETURN(
-      SslUniquePtr<RSA> rsa,
-      RsaPublicKeyToRsa(
-          RsaPublicKey{std::string(n_bytes), std::string(e_bytes)}));
+  const absl::string_view n = WithoutLeadingZeros(n_bytes);
+  ABSL_RETURN_IF_ERROR(ValidateRsaModulusSize(ModulusBitLength(n)));
+  RsaPublicKey key{std::string(n), std::string(WithoutLeadingZeros(e_bytes))};
   if (output_prefix.empty() && !append_null_byte) {
-    return std::make_unique<RsaSsaPkcs1VerifyBoringSslImpl>(std::move(rsa),
+    return std::make_unique<RsaSsaPkcs1VerifyBoringSslImpl>(std::move(key),
                                                             sig_hash);
   }
   return std::make_unique<RsaSsaPkcs1VerifyWithPrefix>(
-      std::move(rsa), sig_hash, output_prefix, append_null_byte);
+      std::move(key), sig_hash, output_prefix, append_null_byte);
 }
 
 }  // namespace

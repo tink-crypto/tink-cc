@@ -16,8 +16,13 @@
 
 #include "tink/signature/internal/rsa_ssa_pkcs1_verify_boringssl.h"
 
+#include <atomic>
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <thread>  // NOLINT(build/c++11)
+#include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -74,6 +79,19 @@ TEST(RsaSsaPkcs1VerifyBoringSslTest, NewErrors) {
   EXPECT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(valid_pub_key, sha1_params),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("SHA1 is not safe for digital signature")));
+
+  // 256-byte moduli with fewer than 2048 significant bits.
+  EXPECT_THAT(
+      NewRsaSsaPkcs1VerifyBoringSsl(
+          {absl::StrCat("\x7f", std::string(255, '\xff')), valid_pub_key.e},
+          valid_params),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Modulus size is 2047")));
+  EXPECT_THAT(
+      NewRsaSsaPkcs1VerifyBoringSsl({std::string(256, '\0'), valid_pub_key.e},
+                                    valid_params),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Modulus size is 0")));
 }
 
 using RsaSsaPkcs1VerifyBoringSslTestVectorTest =
@@ -186,6 +204,106 @@ INSTANTIATE_TEST_SUITE_P(
     RsaSsaPkcs1VerifyBoringSslTestVectorTest,
     RsaSsaPkcs1VerifyBoringSslTestVectorTest,
     testing::ValuesIn(CreateRsaSsaPkcs1VerifyOnlyTestVectors()));
+
+TEST(RsaSsaPkcs1VerifyBoringSslTest, DestroyWithoutVerify) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test assumes BoringCrypto when FIPS is enabled.";
+  }
+  const SignatureVerifyOnlyTestVector test_vector =
+      CreateRsaSsaPkcs1VerifyOnlyTestVectors()[0];
+  const auto* public_key = dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+      test_vector.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
+
+  EXPECT_THAT(NewRsaSsaPkcs1VerifyBoringSsl(*public_key), IsOk());
+}
+
+TEST(RsaSsaPkcs1VerifyBoringSslTest, RepeatedVerify) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test assumes BoringCrypto when FIPS is enabled.";
+  }
+  const SignatureVerifyOnlyTestVector test_vector =
+      CreateRsaSsaPkcs1VerifyOnlyTestVectors()[0];
+  const auto* public_key = dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+      test_vector.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      NewRsaSsaPkcs1VerifyBoringSsl(*public_key);
+  ASSERT_THAT(verifier, IsOk());
+
+  EXPECT_THAT((*verifier)->Verify("short", test_vector.message),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
+              IsOk());
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
+              IsOk());
+}
+
+TEST(RsaSsaPkcs1VerifyBoringSslTest, LeadingZeroModulusAndExponent) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test assumes BoringCrypto when FIPS is enabled.";
+  }
+  const SignatureVerifyOnlyTestVector test_vector =
+      CreateRsaSsaPkcs1VerifyOnlyTestVectors()[0];
+  const auto* public_key = dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+      test_vector.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
+  RsaPublicKey padded_key{
+      absl::StrCat(absl::string_view("\0", 1),
+                   public_key->GetModulus(GetPartialKeyAccess()).GetValue()),
+      absl::StrCat(
+          absl::string_view("\0", 1),
+          public_key->GetParameters().GetPublicExponent().GetValue())};
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      NewRsaSsaPkcs1VerifyBoringSsl(padded_key, {subtle::HashType::SHA256});
+  ASSERT_THAT(verifier, IsOk());
+
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
+              IsOk());
+  EXPECT_THAT(
+      (*verifier)->Verify(
+          absl::StrCat(absl::string_view("\0", 1), test_vector.signature),
+          test_vector.message),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(RsaSsaPkcs1VerifyBoringSslTest, ConcurrentVerify) {
+  if (IsFipsModeEnabled() && !IsFipsEnabledInSsl()) {
+    GTEST_SKIP() << "Test assumes BoringCrypto when FIPS is enabled.";
+  }
+  const SignatureVerifyOnlyTestVector test_vector =
+      CreateRsaSsaPkcs1VerifyOnlyTestVectors()[0];
+  const auto* public_key = dynamic_cast<const RsaSsaPkcs1PublicKey*>(
+      test_vector.signature_public_key.get());
+  ASSERT_THAT(public_key, NotNull());
+  // Create fresh verifiers so each iteration races on first-time RSA setup.
+  std::vector<std::unique_ptr<PublicKeyVerify>> verifiers(16);
+  for (size_t i = 0; i < verifiers.size(); ++i) {
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> created =
+        NewRsaSsaPkcs1VerifyBoringSsl(*public_key);
+    ASSERT_THAT(created, IsOk()) << i;
+    verifiers[i] = *std::move(created);
+  }
+
+  std::atomic<size_t> ready{0};
+  auto verify_all = [&] {
+    for (size_t i = 0; i < verifiers.size(); ++i) {
+      // Wait for both threads at each step to force concurrent initialization.
+      ready.fetch_add(1, std::memory_order_acq_rel);
+      while (ready.load(std::memory_order_acquire) < (i + 1) * 2) {
+        std::this_thread::yield();
+      }
+      EXPECT_THAT(
+          verifiers[i]->Verify(test_vector.signature, test_vector.message),
+          IsOk())
+          << i;
+    }
+  };
+  std::thread t1(verify_all);
+  std::thread t2(verify_all);
+  t1.join();
+  t2.join();
+}
 
 }  // namespace
 }  // namespace internal

@@ -2270,6 +2270,7 @@ cc_library(
         "//tink/signature:rsa_ssa_pkcs1_parameters",
         "//tink/signature:rsa_ssa_pkcs1_public_key",
         "//tink/subtle:common_enums",
+        "@abseil-cpp//absl/numeric:bits",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_macros",
         "@abseil-cpp//absl/status:statusor",

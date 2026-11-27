@@ -2243,6 +2243,7 @@ tink_cc_library(
     rsa_ssa_pkcs1_verify_boringssl.cc
     rsa_ssa_pkcs1_verify_boringssl.h
   DEPS
+    absl::bits
     absl::status
     absl::status_macros
     absl::statusor

@@ -22,24 +22,38 @@
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
+#include "tink/aead/internal/aes_ctr_hmac_key_creator.h"
+#include "tink/aead/internal/aes_gcm_key_creator.h"
 #include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/mac/hmac_key_manager.h"
+#include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/hmac_key_creator.h"
 #include "tink/mac/internal/hmac_proto_serialization_impl.h"
 #include "tink/prf/hmac_prf_key_manager.h"
+#include "tink/prf/hmac_prf_parameters.h"
+#include "tink/prf/internal/hmac_prf_key_creator.h"
 #include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/internal/ecdsa_key_creator.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_key_creator.h"
 #include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pss_key_creator.h"
 #include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 
@@ -53,6 +67,9 @@ absl::Status AddMac(KeyGenConfiguration& config) {
       internal::KeyGenConfigurationImpl::GetSerializationRegistry(config));
   ABSL_RETURN_IF_ERROR(internal::RegisterHmacProtoSerializationWithRegistry(
       *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<HmacParameters>(
+          internal::CreateHmacKey, config));
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<HmacKeyManager>(), config);
 }
@@ -66,6 +83,12 @@ absl::Status AddAead(KeyGenConfiguration& config) {
           *serialization_registry));
   ABSL_RETURN_IF_ERROR(internal::RegisterAesGcmProtoSerializationWithRegistry(
       *serialization_registry));
+  ABSL_RETURN_IF_ERROR(internal::KeyGenConfigurationImpl::AddKeyCreator<
+                       AesCtrHmacAeadParameters>(internal::CreateAesCtrHmacKey,
+                                                 config));
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<AesGcmParameters>(
+          internal::CreateAesGcmKey, config));
   absl::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
@@ -81,6 +104,9 @@ absl::Status AddPrf(KeyGenConfiguration& config) {
       internal::KeyGenConfigurationImpl::GetSerializationRegistry(config));
   ABSL_RETURN_IF_ERROR(internal::RegisterHmacPrfProtoSerializationWithRegistry(
       *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<HmacPrfParameters>(
+          internal::CreateHmacPrfKey, config));
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<HmacPrfKeyManager>(), config);
 }
@@ -97,6 +123,15 @@ absl::Status AddSignature(KeyGenConfiguration& config) {
   ABSL_RETURN_IF_ERROR(
       internal::RegisterRsaSsaPkcs1ProtoSerializationWithRegistry(
           *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<EcdsaParameters>(
+          internal::CreateEcdsaKey, config));
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<RsaSsaPssParameters>(
+          internal::CreateRsaSsaPssKey, config));
+  ABSL_RETURN_IF_ERROR(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<RsaSsaPkcs1Parameters>(
+          internal::CreateRsaSsaPkcs1Key, config));
   absl::Status status =
       internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
           std::make_unique<EcdsaSignKeyManager>(),

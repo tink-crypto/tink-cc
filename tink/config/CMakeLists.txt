@@ -99,24 +99,38 @@ tink_cc_library(
     absl::status_macros
     tink::core::key_gen_configuration
     tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_gcm_key_manager
+    tink::aead::aes_gcm_parameters
     tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
+    tink::aead::internal::aes_ctr_hmac_key_creator
+    tink::aead::internal::aes_gcm_key_creator
     tink::aead::internal::aes_gcm_proto_serialization_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
     tink::internal::serialization_registry
     tink::mac::hmac_key_manager
+    tink::mac::hmac_parameters
+    tink::mac::internal::hmac_key_creator
     tink::mac::internal::hmac_proto_serialization_impl
     tink::prf::hmac_prf_key_manager
+    tink::prf::hmac_prf_parameters
+    tink::prf::internal::hmac_prf_key_creator
     tink::prf::internal::hmac_prf_proto_serialization_impl
+    tink::signature::ecdsa_parameters
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
+    tink::signature::internal::ecdsa_key_creator
     tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_key_creator
     tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_key_creator
     tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
 )
 

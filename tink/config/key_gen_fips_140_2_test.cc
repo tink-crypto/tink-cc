@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -173,6 +174,18 @@ TEST_P(KeyGenFips1402AllowedTest, GenerateKeysetSucceeds) {
   EXPECT_THAT(GenerateKeyset(), IsOk());
 }
 
+TEST_P(KeyGenFips1402AllowedTest, CreateKey) {
+  std::optional<int> id_requirement =
+      GetParam().params->HasIdRequirement() ? std::optional<int>(123)
+                                            : std::nullopt;
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      internal::KeyGenConfigurationImpl::CreateKey(
+          *GetParam().params, id_requirement, KeyGenConfigFips140_2());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_EQ((*key)->GetParameters(), *GetParam().params);
+  EXPECT_EQ((*key)->GetIdRequirement(), id_requirement);
+}
+
 TEST_P(KeyGenFips1402AllowedTest, SerializationRegistry) {
   absl::StatusOr<const internal::SerializationRegistry*> registry =
       internal::KeyGenConfigurationImpl::GetSerializationRegistry(
@@ -202,6 +215,15 @@ using KeyGenFips1402DeniedTest = KeyGenFips1402ParamTest;
 
 TEST_P(KeyGenFips1402DeniedTest, GenerateKeysetFails) {
   EXPECT_THAT(GenerateKeyset(), Not(IsOk()));
+}
+
+TEST_P(KeyGenFips1402DeniedTest, CreateKeyFails) {
+  std::optional<int> id_requirement =
+      GetParam().params->HasIdRequirement() ? std::optional<int>(123)
+                                            : std::nullopt;
+  EXPECT_THAT(internal::KeyGenConfigurationImpl::CreateKey(
+                  *GetParam().params, id_requirement, KeyGenConfigFips140_2()),
+              StatusIs(absl::StatusCode::kUnimplemented));
 }
 
 TEST_P(KeyGenFips1402DeniedTest, SerializationRegistryRejectsDeniedParameters) {

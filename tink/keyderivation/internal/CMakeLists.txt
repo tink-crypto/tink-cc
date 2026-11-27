@@ -537,12 +537,14 @@ tink_cc_library(
     key_gen_config_2026.h
   DEPS
     tink::keyderivation::internal::prf_based_deriver_key_manager
+    tink::keyderivation::internal::prf_based_key_derivation_key_creator
     tink::keyderivation::internal::prf_based_key_derivation_proto_serialization_impl
     absl::status
     absl::status_macros
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::internal::serialization_registry
+    tink::keyderivation::prf_based_key_derivation_parameters
 )
 
 tink_cc_test(

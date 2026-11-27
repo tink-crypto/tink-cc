@@ -24,7 +24,9 @@
 #include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
+#include "tink/keyderivation/internal/prf_based_key_derivation_key_creator.h"
 #include "tink/keyderivation/internal/prf_based_key_derivation_proto_serialization_impl.h"
+#include "tink/keyderivation/prf_based_key_derivation_parameters.h"
 
 namespace crypto {
 namespace tink {
@@ -37,6 +39,9 @@ absl::Status AddKeyDerivationKeyGen2026(KeyGenConfiguration& config) {
   ABSL_RETURN_IF_ERROR(
       RegisterPrfBasedKeyDerivationProtoSerializationWithRegistry(
           *serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<PrfBasedKeyDerivationParameters>(
+          CreatePrfBasedKeyDerivationKey, config));
   return KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<PrfBasedDeriverKeyManager>(), config);
 }

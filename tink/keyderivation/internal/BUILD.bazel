@@ -539,10 +539,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":prf_based_deriver_key_manager",
+        ":prf_based_key_derivation_key_creator",
         ":prf_based_key_derivation_proto_serialization_impl",
         "//tink:key_gen_configuration",
         "//tink/internal:key_gen_configuration_impl",
         "//tink/internal:serialization_registry",
+        "//tink/keyderivation:prf_based_key_derivation_parameters",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:status_macros",
     ],

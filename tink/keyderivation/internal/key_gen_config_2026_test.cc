@@ -82,6 +82,21 @@ TEST(KeyDerivationKeyGenV0Test, SerializationRegistry) {
   EXPECT_EQ(**parsed_key, key);
 }
 
+TEST(KeyDerivationKeyGenV0Test, CreateKey) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddKeyDerivationKeyGen2026(key_gen_config), IsOk());
+
+  const PrfBasedKeyDerivationKey& expected_key =
+      GetPrfBasedKeyDerivationHkdfTestVector().key;
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      KeyGenConfigurationImpl::CreateKey(expected_key.GetParameters(),
+                                         expected_key.GetIdRequirement(),
+                                         key_gen_config);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_EQ((*key)->GetParameters(), expected_key.GetParameters());
+  EXPECT_EQ((*key)->GetIdRequirement(), expected_key.GetIdRequirement());
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

@@ -19,8 +19,9 @@
 
 #include <string>
 
-#include "absl/strings/string_view.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -62,6 +63,10 @@ class HybridEncrypt {
       absl::string_view plaintext, absl::string_view context_info) const = 0;
 
   virtual ~HybridEncrypt() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(54);
 };
 
 }  // namespace tink

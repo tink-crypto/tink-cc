@@ -21,6 +21,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -91,6 +92,10 @@ class ChunkedMac {
   CreateVerification(absl::string_view tag) const = 0;
 
   virtual ~ChunkedMac() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(51);
 };
 
 }  // namespace tink

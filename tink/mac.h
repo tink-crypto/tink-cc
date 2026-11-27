@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -42,6 +43,10 @@ class Mac {
                                  absl::string_view data) const = 0;
 
   virtual ~Mac() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(55);
 };
 
 }  // namespace tink

@@ -19,11 +19,12 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/output_stream.h"
 #include "tink/random_access_stream.h"
-#include "absl/status/statusor.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -80,6 +81,10 @@ class StreamingAead {
       absl::string_view associated_data) const = 0;
 
   virtual ~StreamingAead() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(58);
 };
 
 }  // namespace tink

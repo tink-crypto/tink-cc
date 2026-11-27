@@ -39,6 +39,16 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 7 //third_party/tink/cc/internal/legacy_proto_key.h
 8 //third_party/tink/cc/internal/legacy_proto_key.h
 9 //third_party/tink/cc/internal/legacy_proto_parameters.h
+50 //third_party/tink/cc/aead.h
+51 //third_party/tink/cc/chunked_mac.h
+52 //third_party/tink/cc/deterministic_aead.h
+53 //third_party/tink/cc/hybrid_decrypt.h
+54 //third_party/tink/cc/hybrid_encrypt.h
+55 //third_party/tink/cc/mac.h
+56 //third_party/tink/cc/public_key_sign.h
+57 //third_party/tink/cc/public_key_verify.h
+58 //third_party/tink/cc/streaming_aead.h
+59 //third_party/tink/cc/streaming_mac.h
 101 //third_party/tink/cc/mac/mac_parameters.h
 102 //third_party/tink/cc/mac/mac_key.h
 103 //third_party/tink/cc/mac/hmac_parameters.h

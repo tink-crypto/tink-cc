@@ -21,6 +21,7 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -52,6 +53,10 @@ class Aead {
       absl::string_view associated_data) const = 0;
 
   virtual ~Aead() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(50);
 };
 
 }  // namespace tink

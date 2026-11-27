@@ -183,6 +183,7 @@ cc_library(
     hdrs = ["aead.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -193,6 +194,7 @@ cc_library(
     hdrs = ["deterministic_aead.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -207,6 +209,7 @@ cc_library(
         ":input_stream",
         ":output_stream",
         ":random_access_stream",
+        ":rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -218,6 +221,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":output_stream_with_result",
+        ":rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -229,6 +233,7 @@ cc_library(
     hdrs = ["chunked_mac.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "//tink/util:status",
         "//tink/util:statusor",
         "@abseil-cpp//absl/strings",
@@ -240,6 +245,7 @@ cc_library(
     hdrs = ["hybrid_decrypt.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -250,6 +256,7 @@ cc_library(
     hdrs = ["hybrid_encrypt.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -260,6 +267,7 @@ cc_library(
     hdrs = ["mac.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -271,6 +279,7 @@ cc_library(
     hdrs = ["public_key_sign.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -281,6 +290,7 @@ cc_library(
     hdrs = ["public_key_verify.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
     ],

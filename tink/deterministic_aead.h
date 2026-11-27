@@ -19,9 +19,10 @@
 
 #include <string>
 
-#include "absl/strings/string_view.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -55,6 +56,10 @@ class DeterministicAead {
       absl::string_view associated_data) const = 0;
 
   virtual ~DeterministicAead() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(52);
 };
 
 }  // namespace tink

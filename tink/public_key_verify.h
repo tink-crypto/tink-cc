@@ -19,6 +19,7 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -38,6 +39,10 @@ class PublicKeyVerify {
                               absl::string_view data) const = 0;
 
   virtual ~PublicKeyVerify() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(57);
 };
 
 }  // namespace tink

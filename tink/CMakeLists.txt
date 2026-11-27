@@ -187,6 +187,7 @@ tink_cc_library(
   SRCS
     aead.h
   DEPS
+    tink::core::rtti
     absl::statusor
     absl::strings
 )
@@ -196,6 +197,7 @@ tink_cc_library(
   SRCS
     deterministic_aead.h
   DEPS
+    tink::core::rtti
     absl::status
     absl::statusor
     absl::strings
@@ -209,6 +211,7 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::output_stream
     tink::core::random_access_stream
+    tink::core::rtti
     absl::statusor
     absl::strings
 )
@@ -219,6 +222,7 @@ tink_cc_library(
     streaming_mac.h
   DEPS
     tink::core::output_stream_with_result
+    tink::core::rtti
     absl::status
     absl::statusor
     absl::strings
@@ -229,6 +233,7 @@ tink_cc_library(
   SRCS
     chunked_mac.h
   DEPS
+    tink::core::rtti
     absl::strings
     tink::util::status
     tink::util::statusor
@@ -239,6 +244,7 @@ tink_cc_library(
   SRCS
     hybrid_decrypt.h
   DEPS
+    tink::core::rtti
     absl::statusor
     absl::strings
 )
@@ -248,6 +254,7 @@ tink_cc_library(
   SRCS
     hybrid_encrypt.h
   DEPS
+    tink::core::rtti
     absl::statusor
     absl::strings
 )
@@ -257,6 +264,7 @@ tink_cc_library(
   SRCS
     mac.h
   DEPS
+    tink::core::rtti
     absl::status
     absl::statusor
     absl::strings
@@ -267,6 +275,7 @@ tink_cc_library(
   SRCS
     public_key_sign.h
   DEPS
+    tink::core::rtti
     absl::statusor
     absl::strings
 )
@@ -276,6 +285,7 @@ tink_cc_library(
   SRCS
     public_key_verify.h
   DEPS
+    tink::core::rtti
     absl::status
     absl::strings
 )

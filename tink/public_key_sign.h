@@ -19,8 +19,9 @@
 
 #include <string>
 
-#include "absl/strings/string_view.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -39,6 +40,10 @@ class PublicKeySign {
   virtual absl::StatusOr<std::string> Sign(absl::string_view data) const = 0;
 
   virtual ~PublicKeySign() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(56);
 };
 
 }  // namespace tink

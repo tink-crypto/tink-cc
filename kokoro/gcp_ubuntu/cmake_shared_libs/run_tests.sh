@@ -95,6 +95,17 @@ set -euo pipefail
 export CCACHE_DIR="\$(pwd)/ccache"
 export CCACHE_NOREADONLY=true
 set -x
+if ! command -v pkg-config &> /dev/null; then
+  if [[ "\$(id -u)" -ne 0 ]]; then
+    echo "ERROR: pkg-config is required. Install pkg-config or set CONTAINER_IMAGE." >&2
+    exit 1
+  fi
+  # TODO(b/570488948): Remove once TINK_CC_CMAKE_IMAGE_HASH is updated to an
+  # image containing pkg-config.
+  apt-get update -o Acquire::Retries=3
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    -o Acquire::Retries=3 pkg-config
+fi
 ./kokoro/testutils/install_cmake_deps.sh /usr/local
 rm -rf out_install
 mkdir -p out out_install

@@ -596,6 +596,22 @@ INSTANTIATE_TEST_SUITE_P(
       return info.param.test_name;
     });
 
+TEST_P(Signature2026KeysTest, CreateKey) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddSignatureKeyGen2026(key_gen_config), IsOk());
+
+  const SignaturePrivateKey& expected_key =
+      *GetParam().test_vector.signature_private_key;
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      KeyGenConfigurationImpl::CreateKey(expected_key.GetParameters(),
+                                         expected_key.GetIdRequirement(),
+                                         key_gen_config);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT((*key)->GetParameters(),
+              Eq(std::cref(expected_key.GetParameters())));
+  EXPECT_EQ((*key)->GetIdRequirement(), expected_key.GetIdRequirement());
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

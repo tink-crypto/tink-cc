@@ -1501,12 +1501,16 @@ tink_cc_library(
   DEPS
     tink::signature::internal::composite_ml_dsa_key_creator
     tink::signature::internal::composite_ml_dsa_proto_serialization_impl
+    tink::signature::internal::ecdsa_key_creator
     tink::signature::internal::ecdsa_proto_serialization_impl
+    tink::signature::internal::ed25519_key_creator
     tink::signature::internal::ed25519_proto_serialization_impl
     tink::signature::internal::ml_dsa_key_creator
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::ml_dsa_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pkcs1_key_creator
     tink::signature::internal::rsa_ssa_pkcs1_proto_serialization_impl
+    tink::signature::internal::rsa_ssa_pss_key_creator
     tink::signature::internal::rsa_ssa_pss_proto_serialization_impl
     tink::signature::internal::slh_dsa_key_creator
     tink::signature::internal::slh_dsa_proto_serialization
@@ -1518,16 +1522,20 @@ tink_cc_library(
     tink::internal::serialization_registry
     tink::signature::composite_ml_dsa_parameters
     tink::signature::composite_ml_dsa_proto_serialization
+    tink::signature::ecdsa_parameters
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_parameters
     tink::signature::ed25519_proto_serialization
     tink::signature::ed25519_sign_key_manager
     tink::signature::ed25519_verify_key_manager
     tink::signature::ml_dsa_parameters
+    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_proto_serialization
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_proto_serialization
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager

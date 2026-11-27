@@ -25,28 +25,36 @@
 #include "tink/key_gen_configuration.h"
 #include "tink/signature/composite_ml_dsa_parameters.h"
 #include "tink/signature/composite_ml_dsa_proto_serialization.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/composite_ml_dsa_key_creator.h"
 #include "tink/signature/internal/composite_ml_dsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ecdsa_key_creator.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/signature/internal/ed25519_key_creator.h"
 #include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 #include "tink/signature/internal/ml_dsa_key_creator.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pkcs1_key_creator.h"
 #include "tink/signature/internal/rsa_ssa_pkcs1_proto_serialization_impl.h"
+#include "tink/signature/internal/rsa_ssa_pss_key_creator.h"
 #include "tink/signature/internal/rsa_ssa_pss_proto_serialization_impl.h"
 #include "tink/signature/internal/slh_dsa_key_creator.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
 #include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
@@ -74,6 +82,19 @@ absl::Status AddSignatureKeyGen2026(KeyGenConfiguration& config) {
       RegisterSlhDsaProtoSerializationWithRegistry(*serialization_registry));
   ABSL_RETURN_IF_ERROR(RegisterCompositeMlDsaProtoSerializationWithRegistry(
       *serialization_registry));
+
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<EcdsaParameters>(
+          CreateEcdsaKey, config));
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<RsaSsaPssParameters>(
+          CreateRsaSsaPssKey, config));
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<RsaSsaPkcs1Parameters>(
+          CreateRsaSsaPkcs1Key, config));
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<Ed25519Parameters>(
+          CreateEd25519Key, config));
 
   absl::Status status = RegisterEcdsaProtoSerialization();
   if (!status.ok()) {

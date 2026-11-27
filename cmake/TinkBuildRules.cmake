@@ -29,11 +29,12 @@
 #   TINK_CXX_STANDARD C++ standard to enforce, 11 for now.
 #   TINK_BUILD_TESTS enables building tests (requires TINK_BUILD_TESTONLY).
 #   TINK_BUILD_TESTONLY enables building test-only helper libraries.
-#   TINK_ENABLE_INSTALL enables installation.
+#   TINK_ENABLE_INSTALL enables installation and package export.
 #
 # Sensible defaults are provided for all variables, except TINK_MODULE, which is
 # defined by calls to tink_module(). Please don't alter it directly.
 
+include(CMakePackageConfigHelpers)
 include(CMakeParseArguments)
 include(GNUInstallDirs)
 
@@ -229,7 +230,7 @@ endfunction()
 # Actual sources and headers are added to this target by `tink_cc_library`.
 add_library(tink "")
 target_include_directories(tink PUBLIC
-                           "${PROJECT_SOURCE_DIR}" ${TINK_INCLUDE_DIRS})
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${TINK_INCLUDE_DIRS}>")
 _tink_target_link_merged_library(TARGET tink
                                  LIBRARY tink::internal::boringssl)
 target_compile_options(tink PRIVATE ${TINK_DEFAULT_COPTS})
@@ -265,6 +266,7 @@ if(TINK_BUILD_TESTONLY)
   target_compile_features(tink_testonly PUBLIC cxx_std_${TINK_CXX_STANDARD})
   set_property(TARGET tink_testonly PROPERTY FOLDER "${TINK_IDE_FOLDER}")
   set_property(TARGET tink_testonly PROPERTY OUTPUT_NAME tink${PROJECT_VERSION_MAJOR}_testonly)
+  set_property(TARGET tink_testonly PROPERTY EXPORT_NAME testonly)
   set_property(TARGET tink_testonly PROPERTY VERSION "${PROJECT_VERSION}")
   # Tink currently provides no ABI stability guarantees across versions.
   # Only API stability follows semantic versioning.
@@ -304,10 +306,10 @@ function(_tink_collect_pkg_config_requires)
              "tink-${PROJECT_VERSION_MAJOR} = ${PROJECT_VERSION}")
       elseif(dep MATCHES "^absl::(.+)$")
         list(APPEND external_requires "absl_${CMAKE_MATCH_1}")
-      elseif(dep STREQUAL "protobuf::libprotobuf")
-        list(APPEND external_requires "protobuf")
       elseif(dep STREQUAL "GTest::gmock")
         list(APPEND external_requires "gmock")
+      elseif(dep STREQUAL "protobuf::libprotobuf")
+        list(APPEND external_requires "protobuf")
       else()
         message(FATAL_ERROR
                 "Unsupported link dependency ${dep} for pkg-config")
@@ -406,15 +408,64 @@ function(_tink_install_pkg_config_files)
 endfunction()
 
 if(TINK_ENABLE_INSTALL)
-  install(TARGETS tink)
-  if(TINK_BUILD_TESTONLY)
-    install(TARGETS tink_testonly)
+  set(_tink_cmake_install_dir
+      "${CMAKE_INSTALL_LIBDIR}/cmake/tink-${PROJECT_VERSION_MAJOR}")
+  set(_tink_include_install_dir
+      "${CMAKE_INSTALL_INCLUDEDIR}/tink-${PROJECT_VERSION_MAJOR}")
+  if(NOT BUILD_SHARED_LIBS AND TARGET Threads::Threads)
+    set(_tink_needs_threads ON)
+  else()
+    set(_tink_needs_threads OFF)
   endif()
+
+  install(TARGETS tink
+          EXPORT TinkTargets
+          INCLUDES DESTINATION "${_tink_include_install_dir}")
+  install(EXPORT TinkTargets
+          FILE tink-targets.cmake
+          NAMESPACE tink::
+          DESTINATION "${_tink_cmake_install_dir}")
+
+  if(TINK_BUILD_TESTONLY)
+    install(TARGETS tink_testonly
+            EXPORT TinkTestonlyTargets
+            INCLUDES DESTINATION "${_tink_include_install_dir}")
+    install(EXPORT TinkTestonlyTargets
+            FILE tink-testonly-targets.cmake
+            NAMESPACE tink::
+            DESTINATION "${_tink_cmake_install_dir}")
+  endif()
+
+  configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/tink-config.cmake.in"
+    "${PROJECT_BINARY_DIR}/tink-config.cmake"
+    INSTALL_DESTINATION "${_tink_cmake_install_dir}"
+    NO_SET_AND_CHECK_MACRO)
+  # Tink currently provides no ABI stability guarantees across versions.
+  # Only API stability follows semantic versioning.
+  #
+  # Using precisely 3 version components to potentially allow future use of the
+  # "tweak" version for ABI compatible patches. Note that `ExactVersion` is
+  # actually the same as the more recently added `SamePatchVersion`, i.e. it
+  # only uses the first three components of the version.
+  write_basic_package_version_file(
+    "${PROJECT_BINARY_DIR}/tink-config-version.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY ExactVersion)
+  install(FILES
+            "${PROJECT_BINARY_DIR}/tink-config.cmake"
+            "${PROJECT_BINARY_DIR}/tink-config-version.cmake"
+          DESTINATION "${_tink_cmake_install_dir}")
+
   # Defer pkg-config generation until the end of the top-level CMakeLists.txt so
   # `add_subdirectory(tink)` and `add_subdirectory(proto)` have populated target
   # dependencies.
   cmake_language(DEFER DIRECTORY "${PROJECT_SOURCE_DIR}"
     CALL _tink_install_pkg_config_files)
+
+  unset(_tink_cmake_install_dir)
+  unset(_tink_include_install_dir)
+  unset(_tink_needs_threads)
 endif()
 
 # Preference list of source directories for headers. Headers will be assumed

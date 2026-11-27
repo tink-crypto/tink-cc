@@ -66,16 +66,12 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -m "type=bind,src=/tmp,dst=/tmp" )
 fi
 
-EXTRA_CMAKE_ARGS=(
-  -DBUILD_SHARED_LIBS=ON
-  -DTINK_USE_INSTALLED_ABSEIL=ON
-  -DTINK_USE_INSTALLED_GOOGLETEST=ON
-  -DTINK_USE_INSTALLED_PROTOBUF=ON
-)
-
 # CMake output directory.
 mkdir -p out
 
+EXTRA_CMAKE_ARGS=(
+  -DBUILD_SHARED_LIBS=ON
+)
 if [[ "${IS_KOKORO}" == "true" ]]; then
   source kokoro/testutils/ccache_enable.sh "${TINK_CC_CMAKE_IMAGE_HASH}"
 fi
@@ -86,7 +82,7 @@ readonly EXTRA_CMAKE_ARGS
 # 1. Sets up the ccache environment variables.
 # 2. Compiles and installs GoogleTest, Abseil, and Protobuf into /usr/local.
 # 3. Runs the main Tink C++ CMake tests and verifies installation.
-# 4. Runs the examples CMake tests.
+# 4. Runs the examples CMake tests against the installed Tink.
 # Both test suites are run in the same container instance to preserve the ccache
 # environment and installed dependencies, avoiding the overhead of starting a
 # second container.
@@ -107,12 +103,32 @@ if ! command -v pkg-config &> /dev/null; then
     -o Acquire::Retries=3 pkg-config
 fi
 ./kokoro/testutils/install_cmake_deps.sh /usr/local
-rm -rf out_install
-mkdir -p out out_install
-./kokoro/testutils/run_cmake_tests.sh -o out . -DCMAKE_INSTALL_PREFIX="\$(pwd)/out_install" -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+
+rm -rf out out_install out_examples
+mkdir -p out out_install out_examples
+
+TINK_EXTRA_CMAKE_ARGS=(
+  ${EXTRA_CMAKE_ARGS[@]@Q}
+  -DCMAKE_INSTALL_PREFIX="\$(pwd)/out_install"
+  -DTINK_USE_INSTALLED_ABSEIL=ON
+  -DTINK_USE_INSTALLED_BENCHMARK=ON
+  -DTINK_USE_INSTALLED_GOOGLETEST=ON
+  -DTINK_USE_INSTALLED_PROTOBUF=ON
+)
+./kokoro/testutils/run_cmake_tests.sh -o out . "\${TINK_EXTRA_CMAKE_ARGS[@]}"
+
 ./kokoro/testutils/run_cmake_install_tests.sh out out_install /usr/local
-mkdir -p out_examples
-./kokoro/testutils/run_cmake_tests.sh -o out_examples examples -DTINK_USE_INSTALLED_BENCHMARK=ON ${EXTRA_CMAKE_ARGS[@]@Q}
+
+# Compile examples out-of-tree to ensure it has no access to Tink's sources.
+EXAMPLES_TMP_DIR="\$(mktemp -dt tink-examples.XXXXXX)"
+trap 'rm -rf "\${EXAMPLES_TMP_DIR}"' EXIT
+cp -R examples "\${EXAMPLES_TMP_DIR}/examples"
+EXAMPLES_EXTRA_CMAKE_ARGS=(
+  ${EXTRA_CMAKE_ARGS[@]@Q}
+  -DCMAKE_PREFIX_PATH="\$(pwd)/out_install"
+  -DTINK_USE_INSTALLED_TINK=ON
+)
+./kokoro/testutils/run_cmake_tests.sh -o out_examples "\${EXAMPLES_TMP_DIR}/examples" "\${EXAMPLES_EXTRA_CMAKE_ARGS[@]}"
 EOF
 
 readonly RUN_COMMAND_ARGS

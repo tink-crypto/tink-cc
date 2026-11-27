@@ -33,9 +33,13 @@ echo "retry-all-errors" > "${HOMEBREW_CURLRC}"
 DEPS_PREFIX="$(mktemp -dt tink-cmake-deps.XXXXXX)"
 DEPS_PREFIX="$(cd "${DEPS_PREFIX}" && pwd -P)"
 readonly DEPS_PREFIX
+EXAMPLES_TMP_DIR="$(mktemp -dt tink-examples.XXXXXX)"
+EXAMPLES_TMP_DIR="$(cd "${EXAMPLES_TMP_DIR}" && pwd -P)"
+readonly EXAMPLES_TMP_DIR
+
 TINK_SRC_DIR=""
 cleanup() {
-  rm -rf "${DEPS_PREFIX}"
+  rm -rf "${DEPS_PREFIX}" "${EXAMPLES_TMP_DIR}"
   if [[ -n "${TINK_SRC_DIR}" ]]; then
     # Kokoro rsyncs all created/modified files under KOKORO_ARTIFACTS_DIR back
     # off the VM when the job ends; delete build and cache directories on exit so
@@ -67,21 +71,37 @@ fi
 
 export CCACHE_DIR="$(pwd)/ccache"
 mkdir -p "${CCACHE_DIR}"
+
 EXTRA_CMAKE_ARGS=(
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
   -DCMAKE_C_COMPILER_LAUNCHER=ccache
   -DCMAKE_ASM_COMPILER_LAUNCHER=ccache
+  -DBUILD_SHARED_LIBS=ON
+)
+
+rm -rf out out_install out_examples
+mkdir -p out out_install out_examples
+
+./kokoro/testutils/install_cmake_deps.sh "${DEPS_PREFIX}"
+
+TINK_EXTRA_CMAKE_ARGS=(
+  "${EXTRA_CMAKE_ARGS[@]}"
+  -DCMAKE_INSTALL_PREFIX="$(pwd)/out_install"
   -DCMAKE_PREFIX_PATH="${DEPS_PREFIX}"
   -DCMAKE_INSTALL_RPATH="${DEPS_PREFIX}/lib"
-  -DBUILD_SHARED_LIBS=ON
   -DTINK_USE_INSTALLED_ABSEIL=ON
   -DTINK_USE_INSTALLED_GOOGLETEST=ON
   -DTINK_USE_INSTALLED_PROTOBUF=ON
 )
+./kokoro/testutils/run_cmake_tests.sh -o out . "${TINK_EXTRA_CMAKE_ARGS[@]}"
 
-rm -rf out_install
-mkdir -p out out_install out_examples
-./kokoro/testutils/install_cmake_deps.sh "${DEPS_PREFIX}"
-./kokoro/testutils/run_cmake_tests.sh -o out . -DCMAKE_INSTALL_PREFIX="$(pwd)/out_install" "${EXTRA_CMAKE_ARGS[@]}"
 ./kokoro/testutils/run_cmake_install_tests.sh out out_install "${DEPS_PREFIX}"
-./kokoro/testutils/run_cmake_tests.sh -o out_examples "examples" -DTINK_BUILD_TESTS=OFF "${EXTRA_CMAKE_ARGS[@]}"
+
+# Compile examples out-of-tree to ensure it has no access to Tink's sources.
+cp -R examples "${EXAMPLES_TMP_DIR}/examples"
+EXAMPLES_EXTRA_CMAKE_ARGS=(
+  "${EXTRA_CMAKE_ARGS[@]}"
+  -DCMAKE_PREFIX_PATH="$(pwd)/out_install;${DEPS_PREFIX}"
+  -DTINK_USE_INSTALLED_TINK=ON
+)
+./kokoro/testutils/run_cmake_tests.sh -o out_examples "${EXAMPLES_TMP_DIR}/examples" "${EXAMPLES_EXTRA_CMAKE_ARGS[@]}"

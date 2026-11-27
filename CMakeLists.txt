@@ -52,7 +52,7 @@ if (PROJECT_IS_TOP_LEVEL
   set(_tink_enable_install_default ON)
 endif()
 option(TINK_ENABLE_INSTALL
-  "Enable installation of Tink"
+  "Enable installation and package export of Tink"
   ${_tink_enable_install_default})
 unset(_tink_enable_install_default)
 

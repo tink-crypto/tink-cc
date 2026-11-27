@@ -729,6 +729,27 @@ TEST(SerializationRegistryTest, IsEmpty) {
   }
 }
 
+TEST(SerializationRegistryTest,
+     ParseParametersWithLegacyFallbackInvalidSerializationType) {
+  SerializationRegistry registry;
+
+  EXPECT_THAT(
+      registry.ParseParametersWithLegacyFallback(NoIdSerialization()).status(),
+      StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(SerializationRegistryTest,
+     ParseKeyWithLegacyFallbackInvalidSerializationType) {
+  SerializationRegistry registry;
+
+  EXPECT_THAT(
+      registry
+          .ParseKeyWithLegacyFallback(NoIdSerialization(),
+                                      InsecureSecretKeyAccess::Get())
+          .status(),
+      StatusIs(absl::StatusCode::kInternal));
+}
+
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

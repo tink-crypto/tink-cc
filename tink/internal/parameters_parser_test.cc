@@ -39,6 +39,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsFalse;
 
 TEST(ParametersParserTest, Create) {
@@ -66,12 +67,14 @@ TEST(ParametersParserTest, ParseParameters) {
 TEST(ParametersParserTest, ParseParametersWithInvalidSerializationType) {
   std::unique_ptr<ParametersParser> parser =
       std::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
-          kNoIdTypeUrl, ParseNoIdParams);
+          kIdTypeUrl, ParseNoIdParams);
 
   IdParamsSerialization serialization;
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       parser->ParseParameters(serialization);
-  ASSERT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(params.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid serialization type")));
 }
 
 TEST(ParametersParserTest, ParseParametersWithInvalidObjectIdentifier) {
@@ -79,10 +82,12 @@ TEST(ParametersParserTest, ParseParametersWithInvalidObjectIdentifier) {
       std::make_unique<ParametersParserImpl<NoIdSerialization, NoIdParams>>(
           "mismatched_type_url", ParseNoIdParams);
 
-  IdParamsSerialization serialization;
+  NoIdSerialization serialization;
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       parser->ParseParameters(serialization);
-  ASSERT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(params.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid object identifier")));
 }
 
 }  // namespace

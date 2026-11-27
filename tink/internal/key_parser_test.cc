@@ -43,6 +43,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 
 TEST(KeyParserTest, Create) {
   std::unique_ptr<KeyParser> parser =
@@ -86,12 +87,13 @@ TEST(KeyParserTest, ParsePublicKeyNoAccessToken) {
 TEST(KeyParserTest, ParseKeyWithInvalidSerializationType) {
   std::unique_ptr<KeyParser> parser =
       std::make_unique<KeyParserImpl<NoIdSerialization, NoIdKey>>(
-          "example_type_url", ParseNoIdKey);
+          kIdTypeUrl, ParseNoIdKey);
 
   IdKeySerialization serialization(/*id=*/123);
   absl::StatusOr<std::unique_ptr<Key>> key =
       parser->ParseKey(serialization, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                     HasSubstr("Invalid serialization type")));
 }
 
 TEST(KeyParserTest, ParseKeyWithInvalidObjectIdentifier) {
@@ -102,7 +104,8 @@ TEST(KeyParserTest, ParseKeyWithInvalidObjectIdentifier) {
   NoIdSerialization serialization;
   absl::StatusOr<std::unique_ptr<Key>> key =
       parser->ParseKey(serialization, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                     HasSubstr("Invalid object identifier")));
 }
 
 }  // namespace

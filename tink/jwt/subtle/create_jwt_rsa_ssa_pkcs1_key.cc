@@ -16,8 +16,10 @@
 
 #include "tink/jwt/subtle/create_jwt_rsa_ssa_pkcs1_key.h"
 
+#include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
@@ -33,10 +35,10 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> CreateJwtRsaSsaPkcs1PrivateKey(
     const JwtRsaSsaPkcs1Parameters& parameters,
     std::optional<int> id_requirement,
     std::optional<std::string_view> custom_kid) {
-  ABSL_ASSIGN_OR_RETURN(JwtRsaSsaPkcs1PrivateKey key,
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<JwtRsaSsaPkcs1PrivateKey> key,
                         internal::CreatePrivateJwtRsaSsaPkcs1Key(
                             parameters, id_requirement, custom_kid));
-  return key;
+  return std::move(*key);
 }
 
 }  // namespace subtle

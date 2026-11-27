@@ -17,6 +17,7 @@
 #ifndef TINK_JWT_INTERNAL_JWT_MAC_KEY_CREATOR_H_
 #define TINK_JWT_INTERNAL_JWT_MAC_KEY_CREATOR_H_
 
+#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -36,7 +37,7 @@ namespace internal {
 // - `custom_kid` is required if and only if `parameters.GetKidStrategy() ==
 //   JwtHmacParameters::KidStrategy::kCustom`.
 // - Both should be omitted for `KidStrategy::kIgnored`.
-absl::StatusOr<JwtHmacKey> CreateJwtMacKey(
+absl::StatusOr<std::unique_ptr<JwtHmacKey>> CreateJwtMacKey(
     const JwtHmacParameters& parameters,
     std::optional<int> id_requirement = std::nullopt,
     std::optional<std::string_view> custom_kid = std::nullopt);

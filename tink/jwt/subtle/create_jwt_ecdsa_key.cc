@@ -16,8 +16,10 @@
 
 #include "tink/jwt/subtle/create_jwt_ecdsa_key.h"
 
+#include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
@@ -32,10 +34,10 @@ namespace subtle {
 absl::StatusOr<JwtEcdsaPrivateKey> CreateJwtEcdsaPrivateKey(
     const JwtEcdsaParameters& parameters, std::optional<int> id_requirement,
     std::optional<std::string_view> custom_kid) {
-  ABSL_ASSIGN_OR_RETURN(JwtEcdsaPrivateKey key,
+  ABSL_ASSIGN_OR_RETURN(std::unique_ptr<JwtEcdsaPrivateKey> key,
                         internal::CreateJwtEcdsaPrivateKey(
                             parameters, id_requirement, custom_kid));
-  return key;
+  return std::move(*key);
 }
 
 }  // namespace subtle

@@ -16,8 +16,10 @@
 
 #include "tink/jwt/internal/jwt_ecdsa_key_creator.h"
 
+#include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
@@ -56,7 +58,7 @@ absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
 
 }  // namespace
 
-absl::StatusOr<JwtEcdsaPrivateKey> CreateJwtEcdsaPrivateKey(
+absl::StatusOr<std::unique_ptr<JwtEcdsaPrivateKey>> CreateJwtEcdsaPrivateKey(
     const JwtEcdsaParameters& parameters, std::optional<int> id_requirement,
     std::optional<std::string_view> custom_kid) {
   ABSL_ASSIGN_OR_RETURN(subtle::EllipticCurveType curve_type,
@@ -78,12 +80,14 @@ absl::StatusOr<JwtEcdsaPrivateKey> CreateJwtEcdsaPrivateKey(
   ABSL_ASSIGN_OR_RETURN(JwtEcdsaPublicKey public_key,
                         pub_builder.Build(GetPartialKeyAccess()));
 
-  RestrictedData private_key_value =
-      RestrictedData(ec_key.priv.AsStringView(),
-                     GetInsecureSecretKeyAccessInternal());
+  RestrictedData private_key_value = RestrictedData(
+      ec_key.priv.AsStringView(), GetInsecureSecretKeyAccessInternal());
 
-  return JwtEcdsaPrivateKey::Create(public_key, private_key_value,
-                                    GetPartialKeyAccess());
+  ABSL_ASSIGN_OR_RETURN(
+      JwtEcdsaPrivateKey private_key,
+      JwtEcdsaPrivateKey::Create(public_key, private_key_value,
+                                 GetPartialKeyAccess()));
+  return std::make_unique<JwtEcdsaPrivateKey>(std::move(private_key));
 }
 
 }  // namespace internal

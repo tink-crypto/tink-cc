@@ -16,6 +16,7 @@
 
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_key_creator.h"
 
+#include <memory>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -32,9 +33,11 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsFalse;
+using ::testing::NotNull;
 
 TEST(JwtRsaSsaPssKeyCreatorTest,
      CreatePrivateJwtRsaSsaPssKeyWorksBase64EncodedKeyId) {
@@ -47,11 +50,11 @@ TEST(JwtRsaSsaPssKeyCreatorTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key =
+  absl::StatusOr<std::unique_ptr<JwtRsaSsaPssPrivateKey>> key =
       CreatePrivateJwtRsaSsaPssKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(123));
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
 }
 
 TEST(JwtRsaSsaPssKeyCreatorTest, CreatePrivateJwtRsaSsaPssKeyWorksIgnored) {
@@ -63,11 +66,11 @@ TEST(JwtRsaSsaPssKeyCreatorTest, CreatePrivateJwtRsaSsaPssKeyWorksIgnored) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key =
+  absl::StatusOr<std::unique_ptr<JwtRsaSsaPssPrivateKey>> key =
       CreatePrivateJwtRsaSsaPssKey(*parameters);
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement().has_value(), IsFalse());
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetIdRequirement().has_value(), IsFalse());
 }
 
 TEST(JwtRsaSsaPssKeyCreatorTest, CreatePrivateJwtRsaSsaPssKeyWorksCustomKid) {
@@ -79,12 +82,12 @@ TEST(JwtRsaSsaPssKeyCreatorTest, CreatePrivateJwtRsaSsaPssKeyWorksCustomKid) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key =
+  absl::StatusOr<std::unique_ptr<JwtRsaSsaPssPrivateKey>> key =
       CreatePrivateJwtRsaSsaPssKey(*parameters, /*id_requirement=*/std::nullopt,
                                    /*custom_kid=*/"my_custom_kid");
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetPublicKey().GetKid(), Eq("my_custom_kid"));
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetPublicKey().GetKid(), Eq("my_custom_kid"));
 }
 
 TEST(JwtRsaSsaPssKeyCreatorTest, MissingIdRequirementForBase64KeyIdFails) {
@@ -127,15 +130,15 @@ TEST(JwtRsaSsaPssKeyCreatorTest, SuccessiveKeysAreDistinct) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key1 =
+  absl::StatusOr<std::unique_ptr<JwtRsaSsaPssPrivateKey>> key1 =
       CreatePrivateJwtRsaSsaPssKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key1, IsOk());
+  ASSERT_THAT(key1, IsOkAndHolds(NotNull()));
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKey> key2 =
+  absl::StatusOr<std::unique_ptr<JwtRsaSsaPssPrivateKey>> key2 =
       CreatePrivateJwtRsaSsaPssKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key2, IsOk());
+  ASSERT_THAT(key2, IsOkAndHolds(NotNull()));
 
-  EXPECT_NE(*key1, *key2);
+  EXPECT_NE(**key1, **key2);
 }
 
 }  // namespace

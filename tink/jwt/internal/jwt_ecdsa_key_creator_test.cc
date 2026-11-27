@@ -16,6 +16,7 @@
 
 #include "tink/jwt/internal/jwt_ecdsa_key_creator.h"
 
+#include <memory>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -33,10 +34,12 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::Ne;
+using ::testing::NotNull;
 
 TEST(JwtEcdsaKeyCreatorTest, CreateJwtEcdsaPrivateKeyWorksBase64EncodedKeyId) {
   absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
@@ -44,12 +47,12 @@ TEST(JwtEcdsaKeyCreatorTest, CreateJwtEcdsaPrivateKeyWorksBase64EncodedKeyId) {
       JwtEcdsaParameters::Algorithm::kEs256);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> key =
+  absl::StatusOr<std::unique_ptr<JwtEcdsaPrivateKey>> key =
       CreateJwtEcdsaPrivateKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(123));
-  EXPECT_THAT(key->GetPublicKey().GetKid(), Eq("AAAAew"));
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
+  EXPECT_THAT((*key)->GetPublicKey().GetKid(), Eq("AAAAew"));
 }
 
 TEST(JwtEcdsaKeyCreatorTest, CreateJwtEcdsaPrivateKeyWorksIgnored) {
@@ -58,12 +61,12 @@ TEST(JwtEcdsaKeyCreatorTest, CreateJwtEcdsaPrivateKeyWorksIgnored) {
                                  JwtEcdsaParameters::Algorithm::kEs384);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> key =
+  absl::StatusOr<std::unique_ptr<JwtEcdsaPrivateKey>> key =
       CreateJwtEcdsaPrivateKey(*parameters);
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement().has_value(), IsFalse());
-  EXPECT_THAT(key->GetPublicKey().GetKid().has_value(), IsFalse());
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetIdRequirement().has_value(), IsFalse());
+  EXPECT_THAT((*key)->GetPublicKey().GetKid().has_value(), IsFalse());
 }
 
 TEST(JwtEcdsaKeyCreatorTest, CreateJwtEcdsaPrivateKeyWorksCustomKid) {
@@ -72,12 +75,12 @@ TEST(JwtEcdsaKeyCreatorTest, CreateJwtEcdsaPrivateKeyWorksCustomKid) {
                                  JwtEcdsaParameters::Algorithm::kEs512);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> key =
+  absl::StatusOr<std::unique_ptr<JwtEcdsaPrivateKey>> key =
       CreateJwtEcdsaPrivateKey(*parameters, /*id_requirement=*/std::nullopt,
                                /*custom_kid=*/"my_custom_kid");
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetPublicKey().GetKid(), Eq("my_custom_kid"));
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetPublicKey().GetKid(), Eq("my_custom_kid"));
 }
 
 TEST(JwtEcdsaKeyCreatorTest, MissingIdRequirementForBase64KeyIdFails) {
@@ -153,16 +156,17 @@ TEST(JwtEcdsaKeyCreatorTest, SuccessiveKeysAreDistinct) {
       JwtEcdsaParameters::Algorithm::kEs256);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtEcdsaPrivateKey> key1 =
+  absl::StatusOr<std::unique_ptr<JwtEcdsaPrivateKey>> key1 =
       CreateJwtEcdsaPrivateKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key1, IsOk());
+  ASSERT_THAT(key1, IsOkAndHolds(NotNull()));
 
-  absl::StatusOr<JwtEcdsaPrivateKey> key2 =
+  absl::StatusOr<std::unique_ptr<JwtEcdsaPrivateKey>> key2 =
       CreateJwtEcdsaPrivateKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key2, IsOk());
+  ASSERT_THAT(key2, IsOkAndHolds(NotNull()));
 
-  EXPECT_THAT(key1->GetPublicKey().GetPublicPoint(GetPartialKeyAccess()),
-              Ne(key2->GetPublicKey().GetPublicPoint(GetPartialKeyAccess())));
+  EXPECT_THAT(
+      (*key1)->GetPublicKey().GetPublicPoint(GetPartialKeyAccess()),
+      Ne((*key2)->GetPublicKey().GetPublicPoint(GetPartialKeyAccess())));
 }
 
 }  // namespace

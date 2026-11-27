@@ -16,6 +16,7 @@
 
 #include "tink/jwt/internal/jwt_mac_key_creator.h"
 
+#include <memory>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -33,10 +34,12 @@ namespace internal {
 namespace {
 
 using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::Ne;
+using ::testing::NotNull;
 
 TEST(JwtMacKeyCreatorTest, CreateJwtMacKeyWorksBase64EncodedKeyIdStratgy) {
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
@@ -45,11 +48,11 @@ TEST(JwtMacKeyCreatorTest, CreateJwtMacKeyWorksBase64EncodedKeyIdStratgy) {
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtHmacKey> key =
+  absl::StatusOr<std::unique_ptr<JwtHmacKey>> key =
       CreateJwtMacKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement(), Eq(123));
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
 }
 
 TEST(JwtMacKeyCreatorTest, CreateJwtMacKeyWorksIgnoredStrategy) {
@@ -58,10 +61,11 @@ TEST(JwtMacKeyCreatorTest, CreateJwtMacKeyWorksIgnoredStrategy) {
       JwtHmacParameters::Algorithm::kHs384);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtHmacKey> key = CreateJwtMacKey(*parameters);
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetIdRequirement().has_value(), IsFalse());
+  absl::StatusOr<std::unique_ptr<JwtHmacKey>> key =
+      CreateJwtMacKey(*parameters);
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetIdRequirement().has_value(), IsFalse());
 }
 
 TEST(JwtMacKeyCreatorTest, CreateJwtMacKeyWorksCustomKid) {
@@ -70,12 +74,12 @@ TEST(JwtMacKeyCreatorTest, CreateJwtMacKeyWorksCustomKid) {
       JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtHmacKey> key =
+  absl::StatusOr<std::unique_ptr<JwtHmacKey>> key =
       CreateJwtMacKey(*parameters, /*id_requirement=*/std::nullopt,
                       /*custom_kid=*/"my_custom_kid");
-  ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(key->GetParameters(), Eq(*parameters));
-  EXPECT_THAT(key->GetKid(), Eq("my_custom_kid"));
+  ASSERT_THAT(key, IsOkAndHolds(NotNull()));
+  EXPECT_THAT((*key)->GetParameters(), Eq(*parameters));
+  EXPECT_THAT((*key)->GetKid(), Eq("my_custom_kid"));
 }
 
 TEST(JwtMacKeyCreatorTest, MissingIdRequirementForBase64KeyIdFails) {
@@ -140,16 +144,16 @@ TEST(JwtMacKeyCreatorTest, SuccessiveKeysAreDistinct) {
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<JwtHmacKey> key1 =
+  absl::StatusOr<std::unique_ptr<JwtHmacKey>> key1 =
       CreateJwtMacKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key1, IsOk());
+  ASSERT_THAT(key1, IsOkAndHolds(NotNull()));
 
-  absl::StatusOr<JwtHmacKey> key2 =
+  absl::StatusOr<std::unique_ptr<JwtHmacKey>> key2 =
       CreateJwtMacKey(*parameters, /*id_requirement=*/123);
-  ASSERT_THAT(key2, IsOk());
+  ASSERT_THAT(key2, IsOkAndHolds(NotNull()));
 
-  EXPECT_THAT(key1->GetKeyBytes(GetPartialKeyAccess()),
-              Ne(key2->GetKeyBytes(GetPartialKeyAccess())));
+  EXPECT_THAT((*key1)->GetKeyBytes(GetPartialKeyAccess()),
+              Ne((*key2)->GetKeyBytes(GetPartialKeyAccess())));
 }
 
 }  // namespace

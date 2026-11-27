@@ -16,8 +16,10 @@
 
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_key_creator.h"
 
+#include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/status_macros.h"
@@ -38,10 +40,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> CreatePrivateJwtRsaSsaPkcs1Key(
-    const JwtRsaSsaPkcs1Parameters& parameters,
-    std::optional<int> id_requirement,
-    std::optional<std::string_view> custom_kid) {
+absl::StatusOr<std::unique_ptr<JwtRsaSsaPkcs1PrivateKey>>
+CreatePrivateJwtRsaSsaPkcs1Key(const JwtRsaSsaPkcs1Parameters& parameters,
+                               std::optional<int> id_requirement,
+                               std::optional<std::string_view> custom_kid) {
   internal::RsaPrivateKey rsa_private_key;
   internal::RsaPublicKey rsa_public_key;
   ABSL_ASSIGN_OR_RETURN(
@@ -65,21 +67,24 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> CreatePrivateJwtRsaSsaPkcs1Key(
   ABSL_ASSIGN_OR_RETURN(JwtRsaSsaPkcs1PublicKey public_key,
                         pub_builder.Build(GetPartialKeyAccess()));
 
-  return JwtRsaSsaPkcs1PrivateKey::Builder()
-      .SetPublicKey(public_key)
-      .SetPrimeP(RestrictedData(rsa_private_key.p,
-                                GetInsecureSecretKeyAccessInternal()))
-      .SetPrimeQ(RestrictedData(rsa_private_key.q,
-                                GetInsecureSecretKeyAccessInternal()))
-      .SetPrimeExponentP(RestrictedData(rsa_private_key.dp,
-                                        GetInsecureSecretKeyAccessInternal()))
-      .SetPrimeExponentQ(RestrictedData(rsa_private_key.dq,
-                                        GetInsecureSecretKeyAccessInternal()))
-      .SetPrivateExponent(RestrictedData(rsa_private_key.d,
-                                         GetInsecureSecretKeyAccessInternal()))
-      .SetCrtCoefficient(RestrictedData(rsa_private_key.crt,
-                                        GetInsecureSecretKeyAccessInternal()))
-      .Build(GetPartialKeyAccess());
+  ABSL_ASSIGN_OR_RETURN(
+      JwtRsaSsaPkcs1PrivateKey private_key,
+      JwtRsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(public_key)
+          .SetPrimeP(RestrictedData(rsa_private_key.p,
+                                    GetInsecureSecretKeyAccessInternal()))
+          .SetPrimeQ(RestrictedData(rsa_private_key.q,
+                                    GetInsecureSecretKeyAccessInternal()))
+          .SetPrimeExponentP(RestrictedData(
+              rsa_private_key.dp, GetInsecureSecretKeyAccessInternal()))
+          .SetPrimeExponentQ(RestrictedData(
+              rsa_private_key.dq, GetInsecureSecretKeyAccessInternal()))
+          .SetPrivateExponent(RestrictedData(
+              rsa_private_key.d, GetInsecureSecretKeyAccessInternal()))
+          .SetCrtCoefficient(RestrictedData(
+              rsa_private_key.crt, GetInsecureSecretKeyAccessInternal()))
+          .Build(GetPartialKeyAccess()));
+  return std::make_unique<JwtRsaSsaPkcs1PrivateKey>(std::move(private_key));
 }
 
 }  // namespace internal

@@ -1985,6 +1985,7 @@ tink_cc_library(
     jwt_mac_key_creator.cc
     jwt_mac_key_creator.h
   DEPS
+    absl::status_macros
     absl::statusor
     tink::core::partial_key_access
     tink::core::restricted_data

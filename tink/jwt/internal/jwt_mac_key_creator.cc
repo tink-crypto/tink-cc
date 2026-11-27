@@ -16,9 +16,12 @@
 
 #include "tink/jwt/internal/jwt_mac_key_creator.h"
 
+#include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
@@ -29,7 +32,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-absl::StatusOr<JwtHmacKey> CreateJwtMacKey(
+absl::StatusOr<std::unique_ptr<JwtHmacKey>> CreateJwtMacKey(
     const JwtHmacParameters& parameters, std::optional<int> id_requirement,
     std::optional<std::string_view> custom_kid) {
   JwtHmacKey::Builder builder =
@@ -42,7 +45,8 @@ absl::StatusOr<JwtHmacKey> CreateJwtMacKey(
   if (custom_kid.has_value()) {
     builder.SetCustomKid(*custom_kid);
   }
-  return builder.Build(GetPartialKeyAccess());
+  ABSL_ASSIGN_OR_RETURN(JwtHmacKey key, builder.Build(GetPartialKeyAccess()));
+  return std::make_unique<JwtHmacKey>(std::move(key));
 }
 
 }  // namespace internal

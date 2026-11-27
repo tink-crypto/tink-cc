@@ -16,8 +16,10 @@
 
 #include "tink/jwt/subtle/create_jwt_hmac_key.h"
 
+#include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
@@ -33,9 +35,9 @@ absl::StatusOr<JwtHmacKey> CreateJwtHmacKey(
     const JwtHmacParameters& parameters, std::optional<int> id_requirement,
     std::optional<std::string_view> custom_kid) {
   ABSL_ASSIGN_OR_RETURN(
-      JwtHmacKey key,
+      std::unique_ptr<JwtHmacKey> key,
       internal::CreateJwtMacKey(parameters, id_requirement, custom_kid));
-  return key;
+  return std::move(*key);
 }
 
 }  // namespace subtle

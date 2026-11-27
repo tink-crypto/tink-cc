@@ -17,6 +17,7 @@
 #ifndef TINK_JWT_INTERNAL_JWT_RSA_SSA_PKCS1_KEY_CREATOR_H_
 #define TINK_JWT_INTERNAL_JWT_RSA_SSA_PKCS1_KEY_CREATOR_H_
 
+#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -36,7 +37,8 @@ namespace internal {
 // - `custom_kid` is required if and only if `parameters.GetKidStrategy() ==
 //   JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom`.
 // - Both should be omitted for `KidStrategy::kIgnored`.
-absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> CreatePrivateJwtRsaSsaPkcs1Key(
+absl::StatusOr<std::unique_ptr<JwtRsaSsaPkcs1PrivateKey>>
+CreatePrivateJwtRsaSsaPkcs1Key(
     const JwtRsaSsaPkcs1Parameters& parameters,
     std::optional<int> id_requirement = std::nullopt,
     std::optional<std::string_view> custom_kid = std::nullopt);

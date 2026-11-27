@@ -91,9 +91,9 @@ class SerializationRegistry {
   absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
       const Serialization& serialization) const;
 
-  // Serializes `parameters` into a `Serialization` instance.
+  // Serializes `parameters` into a `SerializationT` instance.
   template <typename SerializationT>
-  absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+  absl::StatusOr<std::unique_ptr<SerializationT>> SerializeParameters(
       const Parameters& parameters) const {
     SerializerIndex index = SerializerIndex::Create<SerializationT>(parameters);
     auto it = parameters_serializers_.find(index);
@@ -105,7 +105,23 @@ class SerializationRegistry {
               GetTypeIndex(parameters).name()));
     }
 
-    return it->second->SerializeParameters(parameters);
+    absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+        it->second->SerializeParameters(parameters);
+    if (!serialization.ok()) {
+      return serialization.status();
+    }
+    SerializationT* result = DynamicCast<SerializationT*>(serialization->get());
+    if (result == nullptr) {
+      return absl::Status(
+          absl::StatusCode::kInternal,
+          absl::StrFormat(
+              "Registered parameters serializer for parameters type %s did not "
+              "return a serialization of type %s",
+              GetTypeIndex(parameters).name(),
+              GetStaticTypeIndex<SerializationT>().name()));
+    }
+    serialization->release();
+    return std::unique_ptr<SerializationT>(result);
   }
 
   // Parses `serialization` into a `Key` instance.
@@ -118,9 +134,9 @@ class SerializationRegistry {
   absl::StatusOr<std::unique_ptr<Key>> ParseKeyWithLegacyFallback(
       const Serialization& serialization, SecretKeyAccessToken token) const;
 
-  // Serializes `key` into a `Serialization` instance.
+  // Serializes `key` into a `SerializationT` instance.
   template <typename SerializationT>
-  absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+  absl::StatusOr<std::unique_ptr<SerializationT>> SerializeKey(
       const Key& key, absl::optional<SecretKeyAccessToken> token) const {
     SerializerIndex index = SerializerIndex::Create<SerializationT>(key);
     auto it = key_serializers_.find(index);
@@ -131,7 +147,23 @@ class SerializationRegistry {
                           GetTypeIndex(key).name()));
     }
 
-    return it->second->SerializeKey(key, token);
+    absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+        it->second->SerializeKey(key, token);
+    if (!serialization.ok()) {
+      return serialization.status();
+    }
+    SerializationT* result = DynamicCast<SerializationT*>(serialization->get());
+    if (result == nullptr) {
+      return absl::Status(
+          absl::StatusCode::kInternal,
+          absl::StrFormat(
+              "Registered key serializer for key type %s did not return a "
+              "serialization of type %s",
+              GetTypeIndex(key).name(),
+              GetStaticTypeIndex<SerializationT>().name()));
+    }
+    serialization->release();
+    return std::unique_ptr<SerializationT>(result);
   }
 
  private:

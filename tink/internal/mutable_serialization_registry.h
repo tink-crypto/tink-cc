@@ -75,9 +75,9 @@ class MutableSerializationRegistry {
   absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
       const Serialization& serialization) ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
-  // Serializes `parameters` into a `Serialization` instance.
+  // Serializes `parameters` into a `SerializationT` instance.
   template <typename SerializationT>
-  absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+  absl::StatusOr<std::unique_ptr<SerializationT>> SerializeParameters(
       const Parameters& parameters) ABSL_LOCKS_EXCLUDED(registry_mutex_) {
     absl::ReaderMutexLock lock(registry_mutex_);
     return registry_.SerializeParameters<SerializationT>(parameters);
@@ -95,9 +95,9 @@ class MutableSerializationRegistry {
       const Serialization& serialization, SecretKeyAccessToken token)
       ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
-  // Serializes `parameters` into a `Serialization` instance.
+  // Serializes `key` into a `SerializationT` instance.
   template <typename SerializationT>
-  absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+  absl::StatusOr<std::unique_ptr<SerializationT>> SerializeKey(
       const Key& key, absl::optional<SecretKeyAccessToken> token)
       ABSL_LOCKS_EXCLUDED(registry_mutex_) {
     absl::ReaderMutexLock lock(registry_mutex_);

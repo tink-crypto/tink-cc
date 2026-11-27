@@ -32,7 +32,6 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/serialization.h"
 #include "tink/internal/serialization_test_util.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
@@ -142,12 +141,12 @@ TEST(MutableSerializationRegistryTest, SerializeParameters) {
   ASSERT_THAT(registry.RegisterParametersSerializer(&serializer1), IsOk());
   ASSERT_THAT(registry.RegisterParametersSerializer(&serializer2), IsOk());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization1 =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization1 =
       registry.SerializeParameters<NoIdSerialization>(NoIdParams());
   ASSERT_THAT(serialization1, IsOk());
   EXPECT_THAT((*serialization1)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization2 =
+  absl::StatusOr<std::unique_ptr<IdParamsSerialization>> serialization2 =
       registry.SerializeParameters<IdParamsSerialization>(IdParams());
   ASSERT_THAT(serialization2, IsOk());
   EXPECT_THAT((*serialization2)->ObjectIdentifier(), Eq(kIdTypeUrl));
@@ -282,17 +281,18 @@ TEST(MutableSerializationRegistryTest, SerializeKey) {
   ASSERT_THAT(registry.RegisterKeySerializer(&serializer1), IsOk());
   ASSERT_THAT(registry.RegisterKeySerializer(&serializer2), IsOk());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization1 =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization1 =
       registry.SerializeKey<NoIdSerialization>(NoIdKey(),
                                                InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization1, IsOk());
   EXPECT_THAT((*serialization1)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization2 =
+  absl::StatusOr<std::unique_ptr<IdKeySerialization>> serialization2 =
       registry.SerializeKey<IdKeySerialization>(IdKey(123),
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization2, IsOk());
   EXPECT_THAT((*serialization2)->ObjectIdentifier(), Eq(kIdTypeUrl));
+  EXPECT_THAT((*serialization2)->GetKeyId(), Eq(123));
 }
 
 TEST(MutableSerializationRegistryTest, SerializeKeyNoSecretAccess) {
@@ -300,7 +300,7 @@ TEST(MutableSerializationRegistryTest, SerializeKeyNoSecretAccess) {
   KeySerializerImpl<NoIdKey, NoIdSerialization> serializer(SerializeNoIdKey);
   ASSERT_THAT(registry.RegisterKeySerializer(&serializer), IsOk());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization =
       registry.SerializeKey<NoIdSerialization>(NoIdKey(), std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -355,13 +355,13 @@ TEST(MutableSerializationRegistryTest, Reset) {
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(NoIdSerialization());
   ASSERT_THAT(params, IsOk());
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization1 =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization1 =
       registry.SerializeParameters<NoIdSerialization>(NoIdParams());
   ASSERT_THAT(serialization1, IsOk());
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization2 =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization2 =
       registry.SerializeKey<NoIdSerialization>(NoIdKey(),
                                                InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization2, IsOk());

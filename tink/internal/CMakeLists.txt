@@ -1017,11 +1017,13 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::serialization_test_util
+    tink::internal::serializer_index
     tink::internal::tink_proto_structs
     GTest::gmock
     absl::status
     absl::status_matchers
     absl::statusor
+    absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1065,7 +1067,6 @@ tink_cc_test(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::serialization
     tink::internal::serialization_test_util
     tink::internal::tink_proto_structs
     GTest::gmock

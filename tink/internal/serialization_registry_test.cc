@@ -26,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_parser.h"
@@ -36,6 +37,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_test_util.h"
+#include "tink/internal/serializer_index.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
@@ -143,15 +145,74 @@ TEST(SerializationRegistryTest, SerializeParameters) {
   ASSERT_THAT(registry.RegisterParametersSerializer(&serializer1), IsOk());
   ASSERT_THAT(registry.RegisterParametersSerializer(&serializer2), IsOk());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization1 =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization1 =
       registry.SerializeParameters<NoIdSerialization>(NoIdParams());
   ASSERT_THAT(serialization1, IsOk());
   EXPECT_THAT((*serialization1)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization2 =
+  absl::StatusOr<std::unique_ptr<IdParamsSerialization>> serialization2 =
       registry.SerializeParameters<IdParamsSerialization>(IdParams());
   ASSERT_THAT(serialization2, IsOk());
   EXPECT_THAT((*serialization2)->ObjectIdentifier(), Eq(kIdTypeUrl));
+}
+
+TEST(SerializationRegistryTest, SerializeParametersReturnsWrongType) {
+  class WrongTypeParametersSerializer : public ParametersSerializer {
+   public:
+    absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+        const Parameters& parameters) const override {
+      return std::make_unique<IdParamsSerialization>();
+    }
+    absl::string_view ObjectIdentifier() const override { return kNoIdTypeUrl; }
+    SerializerIndex Index() const override {
+      return SerializerIndex::Create<NoIdParams, NoIdSerialization>();
+    }
+  };
+
+  SerializationRegistry registry;
+  WrongTypeParametersSerializer serializer;
+  ASSERT_THAT(registry.RegisterParametersSerializer(&serializer), IsOk());
+
+  EXPECT_THAT(
+      registry.SerializeParameters<NoIdSerialization>(NoIdParams()).status(),
+      StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(SerializationRegistryTest, SerializeParametersReturnsNull) {
+  class NullParametersSerializer : public ParametersSerializer {
+   public:
+    absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+        const Parameters& parameters) const override {
+      return nullptr;
+    }
+    absl::string_view ObjectIdentifier() const override { return kNoIdTypeUrl; }
+    SerializerIndex Index() const override {
+      return SerializerIndex::Create<NoIdParams, NoIdSerialization>();
+    }
+  };
+
+  SerializationRegistry registry;
+  NullParametersSerializer serializer;
+  ASSERT_THAT(registry.RegisterParametersSerializer(&serializer), IsOk());
+
+  EXPECT_THAT(
+      registry.SerializeParameters<NoIdSerialization>(NoIdParams()).status(),
+      StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(SerializationRegistryTest, SerializeParametersPropagatesSerializerError) {
+  ParametersSerializerImpl<NoIdParams, NoIdSerialization> serializer(
+      kNoIdTypeUrl, [](NoIdParams) -> absl::StatusOr<NoIdSerialization> {
+        return absl::Status(absl::StatusCode::kInvalidArgument,
+                            "parameters serialization failed");
+      });
+  SerializationRegistry registry;
+  ASSERT_THAT(registry.RegisterParametersSerializer(&serializer), IsOk());
+
+  EXPECT_THAT(
+      registry.SerializeParameters<NoIdSerialization>(NoIdParams()).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               "parameters serialization failed"));
 }
 
 TEST(SerializationRegistryTest, SerializeParametersWithoutRegistration) {
@@ -282,17 +343,84 @@ TEST(SerializationRegistryTest, SerializeKey) {
   ASSERT_THAT(registry.RegisterKeySerializer(&serializer1), IsOk());
   ASSERT_THAT(registry.RegisterKeySerializer(&serializer2), IsOk());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization1 =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization1 =
       registry.SerializeKey<NoIdSerialization>(NoIdKey(),
                                                InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization1, IsOk());
   EXPECT_THAT((*serialization1)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization2 =
+  absl::StatusOr<std::unique_ptr<IdKeySerialization>> serialization2 =
       registry.SerializeKey<IdKeySerialization>(IdKey(123),
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization2, IsOk());
   EXPECT_THAT((*serialization2)->ObjectIdentifier(), Eq(kIdTypeUrl));
+  EXPECT_THAT((*serialization2)->GetKeyId(), Eq(123));
+}
+
+TEST(SerializationRegistryTest, SerializeKeyReturnsWrongType) {
+  class WrongTypeKeySerializer : public KeySerializer {
+   public:
+    absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+        const Key& key,
+        absl::optional<SecretKeyAccessToken> token) const override {
+      return std::make_unique<IdKeySerialization>(/*id=*/123);
+    }
+    SerializerIndex Index() const override {
+      return SerializerIndex::Create<NoIdKey, NoIdSerialization>();
+    }
+  };
+
+  SerializationRegistry registry;
+  WrongTypeKeySerializer serializer;
+  ASSERT_THAT(registry.RegisterKeySerializer(&serializer), IsOk());
+
+  EXPECT_THAT(registry
+                  .SerializeKey<NoIdSerialization>(
+                      NoIdKey(), InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(SerializationRegistryTest, SerializeKeyReturnsNull) {
+  class NullKeySerializer : public KeySerializer {
+   public:
+    absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+        const Key& key,
+        absl::optional<SecretKeyAccessToken> token) const override {
+      return nullptr;
+    }
+    SerializerIndex Index() const override {
+      return SerializerIndex::Create<NoIdKey, NoIdSerialization>();
+    }
+  };
+
+  SerializationRegistry registry;
+  NullKeySerializer serializer;
+  ASSERT_THAT(registry.RegisterKeySerializer(&serializer), IsOk());
+
+  EXPECT_THAT(registry
+                  .SerializeKey<NoIdSerialization>(
+                      NoIdKey(), InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST(SerializationRegistryTest, SerializeKeyPropagatesSerializerError) {
+  KeySerializerImpl<NoIdKey, NoIdSerialization> serializer(
+      +[](const NoIdKey&, absl::optional<SecretKeyAccessToken>)
+          -> absl::StatusOr<NoIdSerialization> {
+        return absl::Status(absl::StatusCode::kInvalidArgument,
+                            "key serialization failed");
+      });
+  SerializationRegistry registry;
+  ASSERT_THAT(registry.RegisterKeySerializer(&serializer), IsOk());
+
+  EXPECT_THAT(
+      registry
+          .SerializeKey<NoIdSerialization>(NoIdKey(),
+                                           InsecureSecretKeyAccess::Get())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument, "key serialization failed"));
 }
 
 TEST(SerializationRegistryTest, SerializeKeyNoSecretAccess) {
@@ -300,7 +428,7 @@ TEST(SerializationRegistryTest, SerializeKeyNoSecretAccess) {
   KeySerializerImpl<NoIdKey, NoIdSerialization> serializer(SerializeNoIdKey);
   ASSERT_THAT(registry.RegisterKeySerializer(&serializer), IsOk());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialization =
       registry.SerializeKey<NoIdSerialization>(NoIdKey(), std::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -355,7 +483,7 @@ TEST(SerializationRegistryTest, RegistryCopy) {
   EXPECT_THAT((*params)->HasIdRequirement(), IsFalse());
   EXPECT_THAT(GetTypeIndex(**params), GetStaticTypeIndex<NoIdParams>());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> params_serialization =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> params_serialization =
       registry2.SerializeParameters<NoIdSerialization>(NoIdParams());
   ASSERT_THAT(params_serialization, IsOk());
   EXPECT_THAT((*params_serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -365,7 +493,7 @@ TEST(SerializationRegistryTest, RegistryCopy) {
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(GetTypeIndex(**key), GetStaticTypeIndex<NoIdKey>());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> key_serialization =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> key_serialization =
       registry2.SerializeKey<NoIdSerialization>(NoIdKey(),
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key_serialization, IsOk());
@@ -498,7 +626,7 @@ TEST(SerializationRegistryTest, RegistryMove) {
   EXPECT_THAT((*params)->HasIdRequirement(), IsFalse());
   EXPECT_THAT(GetTypeIndex(**params), GetStaticTypeIndex<NoIdParams>());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> params_serialization =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> params_serialization =
       registry2.SerializeParameters<NoIdSerialization>(NoIdParams());
   ASSERT_THAT(params_serialization, IsOk());
   EXPECT_THAT((*params_serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -508,7 +636,7 @@ TEST(SerializationRegistryTest, RegistryMove) {
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(GetTypeIndex(**key), GetStaticTypeIndex<NoIdKey>());
 
-  absl::StatusOr<std::unique_ptr<Serialization>> key_serialization =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> key_serialization =
       registry2.SerializeKey<NoIdSerialization>(NoIdKey(),
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key_serialization, IsOk());
@@ -643,7 +771,7 @@ TEST(SerializationRegistryTest, DirectRegistrationAndRoundTrip) {
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT(GetTypeIndex(**params), Eq(GetStaticTypeIndex<NoIdParams>()));
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<NoIdSerialization>> serialized_params =
       registry.SerializeParameters<NoIdSerialization>(NoIdParams());
   ASSERT_THAT(serialized_params, IsOk());
   EXPECT_THAT((*serialized_params)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -653,11 +781,12 @@ TEST(SerializationRegistryTest, DirectRegistrationAndRoundTrip) {
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(42));
 
-  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<IdKeySerialization>> serialized_key =
       registry.SerializeKey<IdKeySerialization>(IdKey(42),
                                                 InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_key, IsOk());
   EXPECT_THAT((*serialized_key)->ObjectIdentifier(), Eq(kIdTypeUrl));
+  EXPECT_THAT((*serialized_key)->GetKeyId(), Eq(42));
 }
 
 TEST(SerializationRegistryTest, DirectRegistrationRejectsConflicts) {

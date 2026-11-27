@@ -14,14 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef TINK_INTERNAL_LEGACY_ANNOTATIONS_H_
+#define TINK_INTERNAL_LEGACY_ANNOTATIONS_H_
+
 #include <string>
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
 #include "tink/annotations.h"
-
-#ifndef TINK_INTERNAL_LEGACY_ANNOTATIONS_H_
-#define TINK_INTERNAL_LEGACY_ANNOTATIONS_H_
 
 namespace crypto {
 namespace tink {

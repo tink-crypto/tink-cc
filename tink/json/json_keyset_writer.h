@@ -39,7 +39,6 @@ class JsonKeysetWriter : public KeysetWriter {
       std::unique_ptr<std::ostream> destination_stream);
 
   absl::Status Write(const google::crypto::tink::Keyset& keyset) override;
-  ;
 
   absl::Status Write(
       const google::crypto::tink::EncryptedKeyset& encrypted_keyset) override;

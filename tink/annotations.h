@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef TINK_ANNOTATIONS_ANNOTATIONS_H_
-#define TINK_ANNOTATIONS_ANNOTATIONS_H_
+#ifndef TINK_ANNOTATIONS_H_
+#define TINK_ANNOTATIONS_H_
 
 #include "absl/base/nullability.h"
 
@@ -46,4 +46,4 @@ class Annotations {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_ANNOTATIONS_ANNOTATIONS_H_
+#endif  // TINK_ANNOTATIONS_H_

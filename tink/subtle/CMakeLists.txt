@@ -22,17 +22,17 @@ tink_cc_library(
     tink::subtle::hmac_boringssl
     tink::subtle::random
     absl::core_headers
+    absl::status
+    absl::statusor
     absl::strings
     absl::span
-    tink::internal::boringssl
     tink::core::aead
     tink::core::deterministic_aead
     tink::core::mac
-    tink::aead::internal::aead_from_zero_copy
-    tink::aead::internal::zero_copy_aead
-    tink::internal::aes_util
+    tink::core::secret_data
+    tink::aead::aes_gcm_key
+    tink::daead::aes_siv_key
     tink::internal::fips_utils
-    tink::internal::ssl_unique_ptr
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

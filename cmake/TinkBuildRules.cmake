@@ -276,11 +276,145 @@ if(TINK_BUILD_TESTONLY)
   add_library(tink::testonly ALIAS tink_testonly)
 endif()
 
+# Collects the pkg-config `Requires` entries for a given target from its
+# `INTERFACE_LINK_LIBRARIES` (deduplicated and sorted, with any `tink-*`
+# requirement listed first).
+#
+# Arguments:
+#   TARGET            CMake target to collect requires for.
+#   OUTPUT_VARIABLE   Variable to store the list of collected requires in.
+function(_tink_collect_pkg_config_requires)
+  cmake_parse_arguments(PARSE_ARGV 0 arg
+    ""
+    "TARGET;OUTPUT_VARIABLE"
+    ""
+  )
+  get_target_property(link_libs ${arg_TARGET} INTERFACE_LINK_LIBRARIES)
+  set(tink_requires)
+  set(external_requires)
+  if(link_libs)
+    foreach(dep IN LISTS link_libs)
+      if(dep MATCHES "^::@")
+        # CMake CMP0079 cross-directory target_link_libraries scope markers.
+      elseif(dep STREQUAL "$<LINK_ONLY:Threads::Threads>")
+        # Private static-library link dependency of BoringSSL; handled via
+        # EXTRA_LIBS rather than pkg-config Requires.
+      elseif(dep STREQUAL "tink")
+        list(APPEND tink_requires
+             "tink-${PROJECT_VERSION_MAJOR} = ${PROJECT_VERSION}")
+      elseif(dep MATCHES "^absl::(.+)$")
+        list(APPEND external_requires "absl_${CMAKE_MATCH_1}")
+      elseif(dep STREQUAL "protobuf::libprotobuf")
+        list(APPEND external_requires "protobuf")
+      elseif(dep STREQUAL "GTest::gmock")
+        list(APPEND external_requires "gmock")
+      else()
+        message(FATAL_ERROR
+                "Unsupported link dependency ${dep} for pkg-config")
+      endif()
+    endforeach()
+  endif()
+  if(tink_requires)
+    list(REMOVE_DUPLICATES tink_requires)
+    list(SORT tink_requires)
+  endif()
+  if(external_requires)
+    list(REMOVE_DUPLICATES external_requires)
+    list(SORT external_requires)
+  endif()
+  set(${arg_OUTPUT_VARIABLE} ${tink_requires} ${external_requires} PARENT_SCOPE)
+endfunction()
+
+# Generates and installs a pkg-config `.pc` file.
+#
+# Arguments:
+#   TARGET                    CMake target to generate a pkg-config file for.
+#   NAME                      Name of the pkg-config file, without extension.
+#   DESCRIPTION               Description of the pkg-config file.
+#   EXTRA_LIBS                List of extra libs to append to the file.
+#   REQUIRES                  List of pkg-config Requires entries.
+function(_tink_install_pkg_config_file)
+  cmake_parse_arguments(PARSE_ARGV 0 arg
+    ""
+    "TARGET;NAME;DESCRIPTION"
+    "EXTRA_LIBS;REQUIRES"
+  )
+  get_target_property(output_name ${arg_TARGET} OUTPUT_NAME)
+
+  set(pc_requires_line "")
+  if(arg_REQUIRES)
+    list(JOIN arg_REQUIRES ", " pc_requires_str)
+    set(pc_requires_line "Requires: ${pc_requires_str}\n")
+  endif()
+
+  set(pc_extra_libs_str "")
+  if(arg_EXTRA_LIBS)
+    list(JOIN arg_EXTRA_LIBS " " pc_extra_libs_joined)
+    set(pc_extra_libs_str " ${pc_extra_libs_joined}")
+  endif()
+
+  if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+    set(pc_libdir "${CMAKE_INSTALL_LIBDIR}")
+  else()
+    set(pc_libdir "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+  endif()
+
+  if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(pc_includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+  else()
+    set(pc_includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+  endif()
+
+  set(pc_file "${PROJECT_BINARY_DIR}/${arg_NAME}.pc")
+  configure_file("${PROJECT_SOURCE_DIR}/cmake/tink.pc.in" "${pc_file}" @ONLY)
+
+  install(FILES "${pc_file}" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endfunction()
+
+function(_tink_install_pkg_config_files)
+  set(pc_boringssl_libs)
+  if(NOT BUILD_SHARED_LIBS AND CMAKE_THREAD_LIBS_INIT)
+    string(STRIP "${CMAKE_THREAD_LIBS_INIT}" thread_libs)
+    if(thread_libs)
+      list(APPEND pc_boringssl_libs "${thread_libs}")
+    endif()
+  endif()
+
+  _tink_collect_pkg_config_requires(
+    TARGET tink
+    OUTPUT_VARIABLE tink_pc_requires)
+  _tink_install_pkg_config_file(
+    TARGET tink
+    NAME "tink-${PROJECT_VERSION_MAJOR}"
+    DESCRIPTION "Tink cryptographic library (C++)"
+    EXTRA_LIBS ${pc_boringssl_libs}
+    REQUIRES ${tink_pc_requires})
+
+  if(TINK_BUILD_TESTONLY)
+    _tink_collect_pkg_config_requires(
+      TARGET tink_testonly
+      OUTPUT_VARIABLE tink_testonly_pc_requires)
+    if(tink_pc_requires AND tink_testonly_pc_requires)
+      list(REMOVE_ITEM tink_testonly_pc_requires ${tink_pc_requires})
+    endif()
+    _tink_install_pkg_config_file(
+      TARGET tink_testonly
+      NAME "tink-${PROJECT_VERSION_MAJOR}-testonly"
+      DESCRIPTION "Tink cryptographic library test-only helpers (C++)"
+      REQUIRES ${tink_testonly_pc_requires})
+  endif()
+endfunction()
+
 if(TINK_ENABLE_INSTALL)
   install(TARGETS tink)
   if(TINK_BUILD_TESTONLY)
     install(TARGETS tink_testonly)
   endif()
+  # Defer pkg-config generation until the end of the top-level CMakeLists.txt so
+  # `add_subdirectory(tink)` and `add_subdirectory(proto)` have populated target
+  # dependencies.
+  cmake_language(DEFER DIRECTORY "${PROJECT_SOURCE_DIR}"
+    CALL _tink_install_pkg_config_files)
 endif()
 
 # Preference list of source directories for headers. Headers will be assumed

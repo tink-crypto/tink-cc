@@ -96,24 +96,28 @@ test_installation() {
   local cppflags=()
   local ldflags=()
   local ldpath="${CMAKE_INSTALL_PREFIX}/lib64:${CMAKE_INSTALL_PREFIX}/lib"
+  local pc_path="${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig:${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
 
   # Make dependencies accessible.
   cppflags+=(-I "${DEPS_INSTALL_PREFIX}/include")
   ldflags+=(-L "${DEPS_INSTALL_PREFIX}/lib")
   ldpath="${ldpath}:${DEPS_INSTALL_PREFIX}/lib64:${DEPS_INSTALL_PREFIX}/lib"
+  pc_path="${pc_path}:${DEPS_INSTALL_PREFIX}/lib64/pkgconfig:${DEPS_INSTALL_PREFIX}/lib/pkgconfig"
 
-  # Add Tink's flags.
-  # TODO(b/570488948): Migrate from hardcoding to pkg-config to discover Tink.
-  cppflags+=(-I "${CMAKE_INSTALL_PREFIX}/include")
-  local incdir
-  local tink_major_version
-  for incdir in "${CMAKE_INSTALL_PREFIX}/include"/tink-*; do
-    cppflags+=(-I "${incdir}")
-    tink_major_version="${incdir##*-}"
-  done
-  ldflags+=(-L "${CMAKE_INSTALL_PREFIX}/lib64" -L "${CMAKE_INSTALL_PREFIX}/lib")
-  ldflags+=(-ltink${tink_major_version} -ltink${tink_major_version}_testonly)
+  # Figure out the Tink major version.
+  set -- "${CMAKE_INSTALL_PREFIX}"/include/tink-*
+  local tink_major_version=${1##*/tink-}
 
+  # Add Tink's pkg-config flags.
+  local pc_cppflags pc_ldflags
+  pc_cppflags=$(PKG_CONFIG_PATH="${pc_path}" \
+    pkg-config --cflags "tink-${tink_major_version}-testonly")
+  cppflags+=(${pc_cppflags})
+  pc_ldflags=$(PKG_CONFIG_PATH="${pc_path}" \
+    pkg-config --libs "tink-${tink_major_version}-testonly")
+  ldflags+=(${pc_ldflags})
+
+  echo "Complete pkg-config path: ${pc_path}"
   echo "Complete C++ flags: ${cppflags[*]@Q}"
   echo "Complete linker flags: ${ldflags[*]@Q}"
   echo "Complete library path: ${ldpath}"

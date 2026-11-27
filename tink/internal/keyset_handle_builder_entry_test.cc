@@ -19,11 +19,11 @@
 #include <sys/stat.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -36,6 +36,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/testing/test_only_key.h"
 #include "tink/internal/testing/test_only_key_managers.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -48,9 +49,9 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/test_matchers.h"
 #include "proto/test_only_key.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
@@ -267,6 +268,83 @@ TEST(CreateKeysetKeyCustomConfigTest,
               Eq((*key_from_creator_fn)->output_prefix_type()));
   EXPECT_THAT((*key_from_manager)->key_data().type_url(),
               Eq((*key_from_creator_fn)->key_data().type_url()));
+}
+
+TEST(CreateKeysetKeyCustomConfigTest,
+     CreateKeysetKeyFromParametersUsesConfigSerializationRegistry) {
+  MutableSerializationRegistry::GlobalInstance().Reset();
+
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  ParametersEntry entry =
+      ParametersEntry(std::make_unique<TestOnlyParameters>(*params));
+  entry.SetStatus(KeyStatus::kEnabled);
+  entry.SetFixedId(123);
+
+  KeyGenConfiguration config_without_serialization;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+                  std::make_unique<TestOnlyKeyTypeManager>(),
+                  config_without_serialization),
+              IsOk());
+  EXPECT_THAT(
+      entry.CreateKeysetKey(/*id=*/123, config_without_serialization).status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+
+  KeyGenConfiguration config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+                  std::make_unique<TestOnlyKeyTypeManager>(), config),
+              IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+  ASSERT_THAT(RegisterTestOnlyProtoSerializationWithRegistry(**registry),
+              IsOk());
+
+  absl::StatusOr<util::SecretProto<Keyset::Key>> key =
+      entry.CreateKeysetKey(/*id=*/123, config);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT((*key)->status(), Eq(KeyStatusType::ENABLED));
+  EXPECT_THAT((*key)->key_id(), Eq(123));
+  EXPECT_THAT((*key)->output_prefix_type(), Eq(OutputPrefixType::TINK));
+  EXPECT_THAT((*key)->key_data().type_url(), Eq(kTestOnlyKeyTypeUrl));
+}
+
+TEST(CreateKeysetKeyCustomConfigTest,
+     CreateKeysetKeyFromParametersPropagatesConfigSerializationError) {
+  MutableSerializationRegistry::GlobalInstance().Reset();
+  ASSERT_THAT(RegisterTestOnlyProtoSerialization(), IsOk());
+
+  absl::StatusOr<TestOnlyParameters> params =
+      TestOnlyParameters::Create(TestOnlyParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  ParametersEntry entry =
+      ParametersEntry(std::make_unique<TestOnlyParameters>(*params));
+  entry.SetStatus(KeyStatus::kEnabled);
+  entry.SetFixedId(123);
+
+  ParametersSerializerImpl<TestOnlyParameters, ProtoParametersSerialization>
+      failing_serializer(kTestOnlyKeyTypeUrl,
+                         [](const TestOnlyParameters&)
+                             -> absl::StatusOr<ProtoParametersSerialization> {
+                           return absl::Status(absl::StatusCode::kInternal,
+                                               "config serializer failure");
+                         });
+  KeyGenConfiguration config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+                  std::make_unique<TestOnlyKeyTypeManager>(), config),
+              IsOk());
+  absl::StatusOr<SerializationRegistry*> registry =
+      internal::KeyGenConfigurationImpl::GetSerializationRegistry(config);
+  ASSERT_THAT(registry, IsOk());
+  ASSERT_THAT((*registry)->RegisterParametersSerializer(&failing_serializer),
+              IsOk());
+
+  EXPECT_THAT(
+      entry.CreateKeysetKey(/*id=*/123, config).status(),
+      StatusIs(absl::StatusCode::kInternal, "config serializer failure"));
 }
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromKey) {

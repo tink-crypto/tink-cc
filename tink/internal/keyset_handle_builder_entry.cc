@@ -18,9 +18,10 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
+#include <optional>
 
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -35,7 +36,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
-#include "tink/internal/tink_proto_structs.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/parameters.h"
@@ -44,6 +45,7 @@
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_proto.h"
 #include "proto/tink.pb.h"
+#include "proto/tink.tinkpb.h"
 
 namespace crypto {
 namespace tink {
@@ -74,12 +76,9 @@ SecretProto<Keyset::Key> ToKeysetKey(
   return key;
 }
 
-absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
-    const Parameters& params) {
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
-          .SerializeParameters<ProtoParametersSerialization>(params);
-  if (!serialization.ok()) return serialization.status();
+absl::StatusOr<ProtoParametersSerialization> ToProtoParametersSerialization(
+    const absl::StatusOr<std::unique_ptr<Serialization>>& serialization) {
+  ABSL_RETURN_IF_ERROR(serialization.status());
 
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
@@ -103,9 +102,30 @@ absl::StatusOr<ProtoParametersSerialization> SerializeLegacyParameters(
 }
 
 absl::StatusOr<ProtoParametersSerialization> GetProtoParametersSerialization(
-    const Parameters& params) {
+    const Parameters& params, const KeyGenConfiguration& config) {
+  if (!internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
+    ABSL_ASSIGN_OR_RETURN(
+        const SerializationRegistry* registry,
+        internal::KeyGenConfigurationImpl::GetSerializationRegistry(config));
+
+    absl::StatusOr<ProtoParametersSerialization> serialization =
+        ToProtoParametersSerialization(
+            registry->SerializeParameters<ProtoParametersSerialization>(
+                params));
+    // TODO(b/582254954): Remove the fallback to
+    // `MutableSerializationRegistry::GlobalInstance()` once all non-global
+    // `KeyGenConfiguration`s register their own serializers.
+    // TODO(b/359489205): Make sure that this excludes kNotFound error
+    // potentially returned by registered classes.
+    if (serialization.ok() ||
+        serialization.status().code() != absl::StatusCode::kNotFound) {
+      return serialization;
+    }
+  }
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      SerializeParameters(params);
+      ToProtoParametersSerialization(
+          MutableSerializationRegistry::GlobalInstance()
+              .SerializeParameters<ProtoParametersSerialization>(params));
   // TODO(b/359489205): Make sure that this excludes kNotFound error
   // potentially returned by registered classes.
   if (serialization.status().code() == absl::StatusCode::kNotFound) {
@@ -165,7 +185,7 @@ absl::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKeyFromParameters(
     const Parameters& parameters, int id, KeyStatusType status,
     const KeyGenConfiguration& config) {
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      GetProtoParametersSerialization(parameters);
+      GetProtoParametersSerialization(parameters, config);
   if (!serialization.ok()) {
     return serialization.status();
   }

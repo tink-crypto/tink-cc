@@ -915,8 +915,9 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::internal::tink_proto_structs
+    tink::internal::serialization_registry
     absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
     absl::optional
@@ -931,6 +932,7 @@ tink_cc_library(
     tink::util::secret_proto
     tink::util::statusor
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_test(
@@ -946,9 +948,9 @@ tink_cc_test(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     GTest::gmock
-    absl::memory
     absl::status
     absl::status_matchers
     absl::statusor
@@ -966,9 +968,9 @@ tink_cc_test(
     tink::internal::testing::test_only_key
     tink::internal::testing::test_only_key_managers
     tink::util::secret_proto
-    tink::util::test_matchers
     tink::proto::test_only_key_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::tink_cc_tinkpb
 )
 
 tink_cc_library(

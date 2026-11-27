@@ -142,6 +142,19 @@ TEST(XChacha20Poly1305BoringSslTest, DecryptFailsIfCiphertextTooSmall) {
   }
 }
 
+TEST(XChacha20Poly1305BoringSslTest, InvalidKeySizes) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  for (int key_size : {0, 16, 24, 31, 33, 64}) {
+    SecretData key(key_size, 'x');
+    EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument))
+        << "key_size=" << key_size;
+  }
+}
+
 TEST(XChacha20Poly1305BoringSslTest, FailisOnFipsOnlyMode) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only ran in in FIPS-only mode";

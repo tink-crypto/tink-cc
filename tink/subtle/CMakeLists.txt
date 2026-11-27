@@ -472,14 +472,18 @@ tink_cc_library(
     xchacha20_poly1305_boringssl.cc
     xchacha20_poly1305_boringssl.h
   DEPS
-    absl::memory
+    absl::status_macros
     absl::statusor
     tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
     tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
     tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::zero_copy_aead
-    tink::aead::internal::zero_copy_xchacha20_poly1305_boringssl
+    tink::aead::subtle::create_xchacha20_poly1305_aead
     tink::internal::fips_utils
     tink::util::secret_data
 )

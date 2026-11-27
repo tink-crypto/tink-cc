@@ -937,11 +937,14 @@ tink_cc_test(
     tink::core::key_manager
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::internal::testing::ml_dsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
+    tink::util::protobuf_helper
     tink::proto::ml_dsa_cc_proto
+    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1009,7 +1012,9 @@ tink_cc_test(
     tink::signature::slh_dsa_private_key
     tink::signature::internal::testing::signature_test_vector
     tink::signature::internal::testing::slh_dsa_test_vectors
+    tink::util::protobuf_helper
     tink::proto::slh_dsa_cc_proto
+    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

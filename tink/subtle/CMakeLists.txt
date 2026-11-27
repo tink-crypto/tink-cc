@@ -198,13 +198,19 @@ tink_cc_library(
     hmac_boringssl.h
   DEPS
     tink::subtle::common_enums
+    absl::status
+    absl::status_macros
     absl::statusor
     absl::strings
-    tink::internal::boringssl
+    tink::core::insecure_secret_key_access
     tink::core::mac
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::core::secret_data
     tink::internal::fips_utils
-    tink::mac::internal::hmac_boringssl
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
+    tink::mac::subtle::create_hmac_mac
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -827,9 +833,6 @@ tink_cc_test(
     tink::core::mac
     tink::internal::fips_utils
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
     tink::util::test_util
 )
 

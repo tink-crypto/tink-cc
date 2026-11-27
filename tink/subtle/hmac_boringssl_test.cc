@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -35,9 +36,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -195,6 +193,22 @@ TEST_F(HmacBoringSslTest, TestFipsFailWithoutBoringCrypto) {
               StatusIs(absl::StatusCode::kInternal));
 }
 
+TEST_F(HmacBoringSslTest, TagSizeTooSmallFails) {
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    GTEST_SKIP()
+        << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
+  }
+
+  SecretData key(test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  for (uint32_t tag_size = 0; tag_size < 10; ++tag_size) {
+    EXPECT_THAT(HmacBoringSsl::New(HashType::SHA256, tag_size, key).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument))
+        << "tag_size=" << tag_size;
+  }
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA256, /*tag_size=*/10, key),
+              IsOk());
+}
+
 TEST_F(HmacBoringSslTest, TagSizeExceedingDigestSizeFails) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
@@ -229,6 +243,16 @@ TEST_F(HmacBoringSslTest, TagSizeExceedingDigestSizeFails) {
   EXPECT_THAT(
       HmacBoringSsl::New(HashType::SHA512, /*tag_size=*/65, key).status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      HmacBoringSsl::New(
+          HashType::SHA512,
+          static_cast<uint32_t>(std::numeric_limits<int>::max()) + 1, key)
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(HmacBoringSsl::New(HashType::SHA512,
+                                 std::numeric_limits<uint32_t>::max(), key)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(HmacBoringSslTest, UnsupportedHashTypeFails) {

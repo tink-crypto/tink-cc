@@ -143,11 +143,13 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
+    tink::daead::internal::aes_siv_key_creator
     tink::daead::internal::aes_siv_proto_serialization_impl
     absl::memory
     absl::status_macros
     tink::core::key_gen_configuration
     tink::daead::aes_siv_key_manager
+    tink::daead::aes_siv_parameters
     tink::internal::key_gen_configuration_impl
     tink::internal::serialization_registry
     tink::util::status

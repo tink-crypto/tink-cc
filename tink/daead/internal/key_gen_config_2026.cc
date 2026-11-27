@@ -19,6 +19,8 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status_macros.h"
 #include "tink/daead/aes_siv_key_manager.h"
+#include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/internal/aes_siv_key_creator.h"
 #include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/serialization_registry.h"
@@ -35,6 +37,9 @@ absl::Status AddDeterministicAeadKeyGen2026(KeyGenConfiguration& config) {
       KeyGenConfigurationImpl::GetSerializationRegistry(config));
   ABSL_RETURN_IF_ERROR(
       RegisterAesSivProtoSerializationWithRegistry(*serialization_registry));
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<AesSivParameters>(
+          CreateAesSivKey, config));
   return KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesSivKeyManager>(), config);
 }

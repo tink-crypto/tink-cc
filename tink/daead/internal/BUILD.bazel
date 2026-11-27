@@ -29,9 +29,11 @@ cc_library(
     hdrs = ["key_gen_config_2026.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":aes_siv_key_creator",
         ":aes_siv_proto_serialization_impl",
         "//tink:key_gen_configuration",
         "//tink/daead:aes_siv_key_manager",
+        "//tink/daead:aes_siv_parameters",
         "//tink/internal:key_gen_configuration_impl",
         "//tink/internal:serialization_registry",
         "//tink/util:status",

@@ -153,6 +153,23 @@ TEST(DeterministicAead2026Test, SerializationRegistry) {
   }
 }
 
+TEST(DeterministicAead2026Test, CreateKey) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddDeterministicAeadKeyGen2026(key_gen_config), IsOk());
+
+  const AesSivKey& expected_key =
+      GetAesSivTestVector(/*key_size_in_bytes=*/64,
+                          AesSivParameters::Variant::kTink)
+          .key;
+  absl::StatusOr<std::unique_ptr<Key>> key =
+      KeyGenConfigurationImpl::CreateKey(expected_key.GetParameters(),
+                                         expected_key.GetIdRequirement(),
+                                         key_gen_config);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_EQ((*key)->GetParameters(), expected_key.GetParameters());
+  EXPECT_EQ((*key)->GetIdRequirement(), expected_key.GetIdRequirement());
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

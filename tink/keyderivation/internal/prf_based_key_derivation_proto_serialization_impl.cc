@@ -60,6 +60,7 @@
 #include "tink/prf/prf_key.h"
 #include "tink/prf/prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
@@ -255,13 +256,13 @@ PrfParametersFromKeyTemplate(const KeyTemplateTP& key_template) {
     return parameters.status();
   }
   const PrfParameters* prf_parameters =
-      dynamic_cast<const PrfParameters*>(parameters->get());
+      DynamicCast<const PrfParameters*>(parameters->get());
   if (prf_parameters == nullptr) {
     return absl::InvalidArgumentError(
         "Non-PRF parameters stored in the `prf_key_template` field.");
   }
   return absl::WrapUnique(
-      dynamic_cast<const PrfParameters*>(parameters->release()));
+      DynamicCast<const PrfParameters*>(parameters->release()));
 }
 
 absl::StatusOr<KeyTemplateTP> ParametersToKeyTemplate(
@@ -273,7 +274,7 @@ absl::StatusOr<KeyTemplateTP> ParametersToKeyTemplate(
   }
 
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   if (proto_serialization == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto parameters.");
@@ -304,13 +305,13 @@ absl::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
     return key.status();
   }
 
-  const PrfKey* prf_key = dynamic_cast<const PrfKey*>(key->get());
+  const PrfKey* prf_key = DynamicCast<const PrfKey*>(key->get());
   if (prf_key == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-PRF key stored in the `prf_key` field.");
   }
 
-  return absl::WrapUnique(dynamic_cast<const PrfKey*>(key->release()));
+  return absl::WrapUnique(DynamicCast<const PrfKey*>(key->release()));
 }
 
 absl::StatusOr<KeyDataTP> PrfKeyToKeyData(const PrfKey& prf_key,
@@ -323,7 +324,7 @@ absl::StatusOr<KeyDataTP> PrfKeyToKeyData(const PrfKey& prf_key,
   }
 
   const ProtoKeySerialization* proto_serialization =
-      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+      DynamicCast<const ProtoKeySerialization*>(serialization->get());
   if (proto_serialization == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto key.");

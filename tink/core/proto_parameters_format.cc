@@ -28,6 +28,7 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -37,7 +38,7 @@ using ::google::crypto::tink::internal::KeyTemplateTP;
 absl::StatusOr<std::string> SerializeParametersToProtoFormat(
     const Parameters& parameters) {
   const internal::LegacyProtoParameters* legacy_proto_params =
-      dynamic_cast<const internal::LegacyProtoParameters*>(&parameters);
+      DynamicCast<const internal::LegacyProtoParameters*>(&parameters);
   if (legacy_proto_params != nullptr) {
     const KeyTemplateTP& key_template =
         legacy_proto_params->Serialization().GetKeyTemplate();
@@ -53,7 +54,7 @@ absl::StatusOr<std::string> SerializeParametersToProtoFormat(
   }
 
   const internal::ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoParametersSerialization*>(
+      DynamicCast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   if (proto_serialization == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,

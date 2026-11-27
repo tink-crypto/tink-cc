@@ -261,6 +261,7 @@ cc_library(
         "//proto:tink_cc_tinkpb",
         "//tink:parameters",
         "//tink:restricted_data",
+        "//tink:rtti",
         "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/aead:aead_parameters",

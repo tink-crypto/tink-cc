@@ -57,6 +57,7 @@
 #include "tink/internal/serialization_registry.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "proto/tink.tinkpb.h"
@@ -201,7 +202,7 @@ ParametersToKeyTemplate(const Parameters& parameters) {
     return serialization.status();
   }
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   if (proto_serialization == nullptr) {
     return absl::InternalError("Failed to serialize proto parameters.");
   }
@@ -229,7 +230,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
   }
 
   const AeadParameters* aead_parameters =
-      dynamic_cast<const AeadParameters*>(dek_parameters->get());
+      DynamicCast<const AeadParameters*>(dek_parameters->get());
   if (aead_parameters == nullptr) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -237,19 +238,24 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
   }
 
   LegacyKmsEnvelopeAeadParameters::DekParsingStrategy dek_parsing_strategy;
-  if (typeid(*aead_parameters) == typeid(AesCtrHmacAeadParameters)) {
+  if (GetTypeIndex(*aead_parameters) ==
+      GetStaticTypeIndex<AesCtrHmacAeadParameters>()) {
     dek_parsing_strategy =
         LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesCtrHmac;
-  } else if (typeid(*aead_parameters) == typeid(AesEaxParameters)) {
+  } else if (GetTypeIndex(*aead_parameters) ==
+             GetStaticTypeIndex<AesEaxParameters>()) {
     dek_parsing_strategy =
         LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax;
-  } else if (typeid(*aead_parameters) == typeid(AesGcmParameters)) {
+  } else if (GetTypeIndex(*aead_parameters) ==
+             GetStaticTypeIndex<AesGcmParameters>()) {
     dek_parsing_strategy =
         LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm;
-  } else if (typeid(*aead_parameters) == typeid(AesGcmSivParameters)) {
+  } else if (GetTypeIndex(*aead_parameters) ==
+             GetStaticTypeIndex<AesGcmSivParameters>()) {
     dek_parsing_strategy =
         LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcmSiv;
-  } else if (typeid(*aead_parameters) == typeid(XChaCha20Poly1305Parameters)) {
+  } else if (GetTypeIndex(*aead_parameters) ==
+             GetStaticTypeIndex<XChaCha20Poly1305Parameters>()) {
     dek_parsing_strategy = LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
         kAssumeXChaCha20Poly1305;
   } else {

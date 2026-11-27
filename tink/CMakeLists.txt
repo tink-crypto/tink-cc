@@ -768,6 +768,7 @@ tink_cc_library(
     proto_parameters_format.h
   DEPS
     tink::core::parameters
+    tink::core::rtti
     absl::status
     absl::statusor
     absl::strings

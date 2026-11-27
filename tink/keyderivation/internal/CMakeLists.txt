@@ -367,6 +367,7 @@ tink_cc_library(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl

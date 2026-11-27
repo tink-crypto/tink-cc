@@ -191,6 +191,7 @@ tink_cc_library(
     absl::string_view
     tink::core::parameters
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::aead_parameters

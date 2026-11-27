@@ -30,6 +30,7 @@
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -39,7 +40,7 @@ absl::StatusOr<std::unique_ptr<Key>> CreatePrfBasedKeyDerivationKey(
     const PrfBasedKeyDerivationParameters& parameters,
     std::optional<int> id_requirement) {
   const auto* hkdf_prf_parameters =
-      dynamic_cast<const HkdfPrfParameters*>(&parameters.GetPrfParameters());
+      DynamicCast<const HkdfPrfParameters*>(&parameters.GetPrfParameters());
   if (hkdf_prf_parameters == nullptr) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

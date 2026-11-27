@@ -78,6 +78,7 @@
 #include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -385,7 +386,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesCtrHmacAeadKey* key =
-      dynamic_cast<const AesCtrHmacAeadKey*>(&**std::move(generic_key));
+      DynamicCast<const AesCtrHmacAeadKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
 
   ASSERT_THAT(
@@ -415,7 +416,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
   ASSERT_THAT(
@@ -448,7 +449,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesGcmKey* key =
-      dynamic_cast<const AesGcmKey*>(&**std::move(generic_key));
+      DynamicCast<const AesGcmKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
 
   std::string key_bytes =
@@ -472,7 +473,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesGcmKeyFormat key_format;
   ASSERT_THAT(
@@ -496,7 +497,7 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const XChaCha20Poly1305Key* key =
-      dynamic_cast<const XChaCha20Poly1305Key*>(&**std::move(generic_key));
+      DynamicCast<const XChaCha20Poly1305Key*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string key_bytes =
       test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
@@ -514,7 +515,7 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::XChaCha20Poly1305KeyFormat key_format;
   ASSERT_THAT(
@@ -537,7 +538,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesSivKey* key =
-      dynamic_cast<const AesSivKey*>(&**std::move(generic_key));
+      DynamicCast<const AesSivKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string key_bytes =
       test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
@@ -555,7 +556,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesSivKeyFormat key_format;
   ASSERT_THAT(
@@ -579,7 +580,7 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
 
-  const HmacKey* key = dynamic_cast<const HmacKey*>(&**std::move(generic_key));
+  const HmacKey* key = DynamicCast<const HmacKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string key_bytes =
       test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
@@ -598,7 +599,7 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::HmacKeyFormat key_format;
   ASSERT_THAT(
@@ -622,7 +623,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCmacPrf) {
   ASSERT_THAT(generic_key, IsOk());
 
   const AesCmacPrfKey* key =
-      dynamic_cast<const AesCmacPrfKey*>(&**std::move(generic_key));
+      DynamicCast<const AesCmacPrfKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string key_bytes =
       test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
@@ -640,7 +641,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCmacPrf_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesCmacPrfKeyFormat key_format;
   ASSERT_THAT(
@@ -665,7 +666,7 @@ TEST_F(KeyDeriversRfcVectorTest, HkdfPrf) {
   ASSERT_THAT(generic_key, IsOk());
 
   const HkdfPrfKey* key =
-      dynamic_cast<const HkdfPrfKey*>(&**std::move(generic_key));
+      DynamicCast<const HkdfPrfKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string key_bytes =
       test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
@@ -684,7 +685,7 @@ TEST_F(KeyDeriversRfcVectorTest, HkdfPrf_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::HkdfPrfKeyFormat key_format;
   ASSERT_THAT(
@@ -707,7 +708,7 @@ TEST_F(KeyDeriversRfcVectorTest, HmacPrf) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const HmacPrfKey* key =
-      dynamic_cast<const HmacPrfKey*>(&**std::move(generic_key));
+      DynamicCast<const HmacPrfKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string key_bytes =
       test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
@@ -725,7 +726,7 @@ TEST_F(KeyDeriversRfcVectorTest, HmacPrf_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::HmacPrfKeyFormat key_format;
   ASSERT_THAT(
@@ -755,7 +756,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const EcdsaPrivateKey* key =
-      dynamic_cast<const EcdsaPrivateKey*>(&**std::move(generic_key));
+      DynamicCast<const EcdsaPrivateKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string locally_derived_key_value =
       test::HexEncode(key->GetPrivateKey(GetPartialKeyAccess())
@@ -767,7 +768,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::EcdsaKeyFormat key_format;
   ASSERT_THAT(
@@ -792,7 +793,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const Ed25519PrivateKey* key =
-      dynamic_cast<const Ed25519PrivateKey*>(&**std::move(generic_key));
+      DynamicCast<const Ed25519PrivateKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
   std::string locally_derived_key_value =
       test::HexEncode(key->GetPrivateKeyBytes(GetPartialKeyAccess())
@@ -804,7 +805,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::Ed25519KeyFormat key_format;
   ASSERT_THAT(
@@ -835,7 +836,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacStreaming) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesCtrHmacStreamingKey* key =
-      dynamic_cast<const AesCtrHmacStreamingKey*>(&**std::move(generic_key));
+      DynamicCast<const AesCtrHmacStreamingKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
 
   std::string key_bytes =
@@ -861,7 +862,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacStreaming_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesCtrHmacStreamingKeyFormat key_format;
   ASSERT_THAT(
@@ -891,7 +892,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcmHkdfStreaming) {
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesGcmHkdfStreamingKey* key =
-      dynamic_cast<const AesGcmHkdfStreamingKey*>(&**std::move(generic_key));
+      DynamicCast<const AesGcmHkdfStreamingKey*>(&**std::move(generic_key));
   ASSERT_THAT(key, NotNull());
 
   std::string key_bytes =
@@ -915,7 +916,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcmHkdfStreaming_GlobalRegistry) {
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+      DynamicCast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesGcmHkdfStreamingKeyFormat key_format;
   ASSERT_THAT(

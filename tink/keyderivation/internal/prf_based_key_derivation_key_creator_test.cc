@@ -36,6 +36,7 @@
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -114,13 +115,13 @@ TEST_P(PrfBasedKeyDerivationKeyCreatorParameterizedTest, CreateKeyWorks) {
   ASSERT_THAT(key, IsOk());
 
   const auto* derivation_key =
-      dynamic_cast<const PrfBasedKeyDerivationKey*>(key->get());
+      DynamicCast<const PrfBasedKeyDerivationKey*>(key->get());
   ASSERT_NE(derivation_key, nullptr);
   EXPECT_THAT(derivation_key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(derivation_key->GetParameters(), Eq(test_case.parameters));
 
   const auto* hkdf_prf_key =
-      dynamic_cast<const HkdfPrfKey*>(&derivation_key->GetPrfKey());
+      DynamicCast<const HkdfPrfKey*>(&derivation_key->GetPrfKey());
   ASSERT_NE(hkdf_prf_key, nullptr);
   EXPECT_EQ(hkdf_prf_key->GetParameters(),
             test_case.parameters.GetPrfParameters());

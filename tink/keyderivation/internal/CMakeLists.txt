@@ -147,6 +147,7 @@ tink_cc_library(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_data
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
@@ -226,6 +227,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::registry
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_key_manager
@@ -609,6 +611,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::rtti
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::hkdf_prf_key
@@ -630,6 +633,7 @@ tink_cc_test(
     absl::statusor
     tink::core::key
     tink::core::key_gen_configuration
+    tink::core::rtti
     tink::aead::xchacha20_poly1305_parameters
     tink::internal::key_gen_configuration_impl
     tink::keyderivation::prf_based_key_derivation_key

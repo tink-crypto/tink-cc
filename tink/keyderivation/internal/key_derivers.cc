@@ -17,7 +17,6 @@
 #include "tink/keyderivation/internal/key_derivers.h"
 
 #include <memory>
-#include <typeindex>
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
@@ -63,6 +62,7 @@
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/prf/hmac_prf_proto_serialization.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -103,7 +103,7 @@ constexpr int kXChaCha20Poly1305KeyLen = 32;
 
 using KeyDeriverFn = absl::AnyInvocable<absl::StatusOr<std::unique_ptr<Key>>(
     const Parameters&, InputStream*) const>;
-using KeyDeriverFnMap = absl::flat_hash_map<std::type_index, KeyDeriverFn>;
+using KeyDeriverFnMap = absl::flat_hash_map<TypeIndex, KeyDeriverFn>;
 
 absl::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
     const Parameters& generic_params, InputStream* rand_stream) {
@@ -121,7 +121,7 @@ absl::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
   //     same HMAC key, but different AES keys (offset by 1 byte).
 
   const AesCtrHmacAeadParameters* params =
-      dynamic_cast<const AesCtrHmacAeadParameters*>(&generic_params);
+      DynamicCast<const AesCtrHmacAeadParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesCtrHmacAeadParameters.");
@@ -154,7 +154,7 @@ absl::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
 absl::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const AesGcmParameters* params =
-      dynamic_cast<const AesGcmParameters*>(&generic_params);
+      DynamicCast<const AesGcmParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesGcmParameters.");
@@ -177,7 +177,7 @@ absl::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
 DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
                            InputStream* rand_stream) {
   const XChaCha20Poly1305Parameters* params =
-      dynamic_cast<const XChaCha20Poly1305Parameters*>(&generic_params);
+      DynamicCast<const XChaCha20Poly1305Parameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not XChaCha20Poly1305Parameters.");
@@ -200,7 +200,7 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
 absl::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const AesSivParameters* params =
-      dynamic_cast<const AesSivParameters*>(&generic_params);
+      DynamicCast<const AesSivParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesSivParameters.");
@@ -222,7 +222,7 @@ absl::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
 absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const HmacParameters* params =
-      dynamic_cast<const HmacParameters*>(&generic_params);
+      DynamicCast<const HmacParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HmacParameters.");
@@ -244,7 +244,7 @@ absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
 absl::StatusOr<std::unique_ptr<AesCmacPrfKey>> DeriveAesCmacPrfKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const AesCmacPrfParameters* params =
-      dynamic_cast<const AesCmacPrfParameters*>(&generic_params);
+      DynamicCast<const AesCmacPrfParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesCmacPrfParameters.");
@@ -266,7 +266,7 @@ absl::StatusOr<std::unique_ptr<AesCmacPrfKey>> DeriveAesCmacPrfKey(
 absl::StatusOr<std::unique_ptr<HkdfPrfKey>> DeriveHkdfPrfKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const HkdfPrfParameters* params =
-      dynamic_cast<const HkdfPrfParameters*>(&generic_params);
+      DynamicCast<const HkdfPrfParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HkdfPrfParameters.");
@@ -288,7 +288,7 @@ absl::StatusOr<std::unique_ptr<HkdfPrfKey>> DeriveHkdfPrfKey(
 absl::StatusOr<std::unique_ptr<HmacPrfKey>> DeriveHmacPrfKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const HmacPrfParameters* params =
-      dynamic_cast<const HmacPrfParameters*>(&generic_params);
+      DynamicCast<const HmacPrfParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HmacPrfParameters.");
@@ -310,7 +310,7 @@ absl::StatusOr<std::unique_ptr<HmacPrfKey>> DeriveHmacPrfKey(
 absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const EcdsaParameters* params =
-      dynamic_cast<const EcdsaParameters*>(&generic_params);
+      DynamicCast<const EcdsaParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not EcdsaParameters.");
@@ -368,7 +368,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
 absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const Ed25519Parameters* params =
-      dynamic_cast<const Ed25519Parameters*>(&generic_params);
+      DynamicCast<const Ed25519Parameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not Ed25519Parameters.");
@@ -405,7 +405,7 @@ absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> DeriveMlDsaPrivateKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const MlDsaParameters* params =
-      dynamic_cast<const MlDsaParameters*>(&generic_params);
+      DynamicCast<const MlDsaParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not MlDsaParameters.");
@@ -430,7 +430,7 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> DeriveMlDsaPrivateKey(
 absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> DeriveSlhDsaPrivateKey(
     const Parameters& generic_params, InputStream* rand_stream) {
   const SlhDsaParameters* params =
-      dynamic_cast<const SlhDsaParameters*>(&generic_params);
+      DynamicCast<const SlhDsaParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not SlhDsaParameters.");
@@ -464,7 +464,7 @@ absl::StatusOr<std::unique_ptr<AesCtrHmacStreamingKey>>
 DeriveAesCtrHmacStreamingKey(const Parameters& generic_params,
                              InputStream* rand_stream) {
   const AesCtrHmacStreamingParameters* params =
-      dynamic_cast<const AesCtrHmacStreamingParameters*>(&generic_params);
+      DynamicCast<const AesCtrHmacStreamingParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesCtrHmacStreamingParameters.");
@@ -487,7 +487,7 @@ absl::StatusOr<std::unique_ptr<AesGcmHkdfStreamingKey>>
 DeriveAesGcmHkdfStreamingKey(const Parameters& generic_params,
                              InputStream* rand_stream) {
   const AesGcmHkdfStreamingParameters* params =
-      dynamic_cast<const AesGcmHkdfStreamingParameters*>(&generic_params);
+      DynamicCast<const AesGcmHkdfStreamingParameters*>(&generic_params);
   if (params == nullptr) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesGcmHkdfStreamingParameters.");
@@ -512,51 +512,51 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
 
     // AEAD.
     ABSL_CHECK_OK(RegisterAesCtrHmacAeadProtoSerialization());
-    m->insert({std::type_index(typeid(AesCtrHmacAeadParameters)),
+    m->insert({GetStaticTypeIndex<AesCtrHmacAeadParameters>(),
                DeriveAesCtrHmacAeadKey});
     ABSL_CHECK_OK(RegisterAesGcmProtoSerialization());
-    m->insert({std::type_index(typeid(AesGcmParameters)), DeriveAesGcmKey});
+    m->insert({GetStaticTypeIndex<AesGcmParameters>(), DeriveAesGcmKey});
     ABSL_CHECK_OK(RegisterXChaCha20Poly1305ProtoSerialization());
-    m->insert({std::type_index(typeid(XChaCha20Poly1305Parameters)),
+    m->insert({GetStaticTypeIndex<XChaCha20Poly1305Parameters>(),
                DeriveXChaCha20Poly1305Key});
 
     // Deterministic AEAD.
     ABSL_CHECK_OK(RegisterAesSivProtoSerialization());
-    m->insert({std::type_index(typeid(AesSivParameters)), DeriveAesSivKey});
+    m->insert({GetStaticTypeIndex<AesSivParameters>(), DeriveAesSivKey});
 
     // MAC.
     ABSL_CHECK_OK(RegisterHmacProtoSerialization());
-    m->insert({std::type_index(typeid(HmacParameters)), DeriveHmacKey});
+    m->insert({GetStaticTypeIndex<HmacParameters>(), DeriveHmacKey});
 
     // PRF.
     ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerialization());
     m->insert(
-        {std::type_index(typeid(AesCmacPrfParameters)), DeriveAesCmacPrfKey});
+        {GetStaticTypeIndex<AesCmacPrfParameters>(), DeriveAesCmacPrfKey});
     ABSL_CHECK_OK(RegisterHkdfPrfProtoSerialization());
-    m->insert({std::type_index(typeid(HkdfPrfParameters)), DeriveHkdfPrfKey});
+    m->insert({GetStaticTypeIndex<HkdfPrfParameters>(), DeriveHkdfPrfKey});
     ABSL_CHECK_OK(RegisterHmacPrfProtoSerialization());
-    m->insert({std::type_index(typeid(HmacPrfParameters)), DeriveHmacPrfKey});
+    m->insert({GetStaticTypeIndex<HmacPrfParameters>(), DeriveHmacPrfKey});
 
     // Signature.
     ABSL_CHECK_OK(RegisterEcdsaProtoSerialization());
     m->insert(
-        {std::type_index(typeid(EcdsaParameters)), DeriveEcdsaPrivateKey});
+        {GetStaticTypeIndex<EcdsaParameters>(), DeriveEcdsaPrivateKey});
     ABSL_CHECK_OK(RegisterEd25519ProtoSerialization());
     m->insert(
-        {std::type_index(typeid(Ed25519Parameters)), DeriveEd25519PrivateKey});
+        {GetStaticTypeIndex<Ed25519Parameters>(), DeriveEd25519PrivateKey});
     ABSL_CHECK_OK(RegisterMlDsaProtoSerialization());
     m->insert(
-        {std::type_index(typeid(MlDsaParameters)), DeriveMlDsaPrivateKey});
+        {GetStaticTypeIndex<MlDsaParameters>(), DeriveMlDsaPrivateKey});
     ABSL_CHECK_OK(RegisterSlhDsaProtoSerialization());
     m->insert(
-        {std::type_index(typeid(SlhDsaParameters)), DeriveSlhDsaPrivateKey});
+        {GetStaticTypeIndex<SlhDsaParameters>(), DeriveSlhDsaPrivateKey});
 
     // Streaming AEAD.
     ABSL_CHECK_OK(RegisterAesCtrHmacStreamingProtoSerialization());
-    m->insert({std::type_index(typeid(AesCtrHmacStreamingParameters)),
+    m->insert({GetStaticTypeIndex<AesCtrHmacStreamingParameters>(),
                DeriveAesCtrHmacStreamingKey});
     ABSL_CHECK_OK(RegisterAesGcmHkdfStreamingProtoSerialization());
-    m->insert({std::type_index(typeid(AesGcmHkdfStreamingParameters)),
+    m->insert({GetStaticTypeIndex<AesGcmHkdfStreamingParameters>(),
                DeriveAesGcmHkdfStreamingKey});
 
     return m;
@@ -568,11 +568,12 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
 
 absl::StatusOr<std::unique_ptr<Key>> DeriveKey(const Parameters& params,
                                                InputStream* rand_stream) {
-  auto it = ParametersToKeyDeriver().find(std::type_index(typeid(params)));
+  TypeIndex type_index = GetTypeIndex(params);
+  auto it = ParametersToKeyDeriver().find(type_index);
   if (it == ParametersToKeyDeriver().end()) {
     return absl::Status(
         absl::StatusCode::kUnimplemented,
-        absl::StrCat("Key deriver not found for ", typeid(params).name()));
+        absl::StrCat("Key deriver not found for ", type_index.name()));
   }
   return it->second(params, rand_stream);
 }

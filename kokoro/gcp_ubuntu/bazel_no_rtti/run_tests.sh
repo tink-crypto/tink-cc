@@ -236,6 +236,8 @@ readonly TARGETS=(
   "//tink/keyderivation:prf_based_key_derivation_parameters"
   "//tink/keyderivation:prf_based_key_derivation_parameters_test"
   "//tink/keyderivation:prf_based_key_derivation_proto_serialization"
+  "//tink/keyderivation/internal:key_derivers"
+  "//tink/keyderivation/internal:prf_based_key_derivation_key_creator"
   "//tink/mac:aes_cmac_key"
   "//tink/mac:aes_cmac_parameters"
   "//tink/mac:aes_cmac_parameters_test"

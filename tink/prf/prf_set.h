@@ -24,6 +24,7 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -61,6 +62,10 @@ class Prf {
   // algorithm is less than outputLength.
   virtual absl::StatusOr<std::string> Compute(absl::string_view input,
                                               size_t output_length) const = 0;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(61);
 };
 
 // A Tink Keyset can be converted into a set of PRFs using this primitive. Every
@@ -79,6 +84,10 @@ class PrfSet {
   // See PRF.compute for details of the parameters.
   absl::StatusOr<std::string> ComputePrimary(absl::string_view input,
                                              size_t output_length) const;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(62);
 };
 
 }  // namespace tink

@@ -11,6 +11,7 @@ cc_library(
     hdrs = ["prehash.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tink:rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -22,6 +23,7 @@ cc_library(
     hdrs = ["sign_prehash.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tink:rtti",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
@@ -2202,6 +2204,7 @@ cc_library(
     hdrs = ["chunked_prehash.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tink:rtti",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

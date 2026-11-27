@@ -21,6 +21,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/keyset_handle.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -38,6 +39,10 @@ class KeysetDeriver {
       absl::string_view salt) const = 0;
 
   virtual ~KeysetDeriver() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(63);
 };
 
 }  // namespace tink

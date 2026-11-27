@@ -7,6 +7,7 @@ tink_cc_library(
   DEPS
     absl::strings
     tink::core::input_stream
+    tink::core::rtti
 )
 
 tink_cc_library(

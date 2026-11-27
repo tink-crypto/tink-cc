@@ -20,6 +20,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -39,6 +40,10 @@ class StreamingPrf {
       absl::string_view input) const = 0;
 
   virtual ~StreamingPrf() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(77);
 };
 
 }  // namespace tink

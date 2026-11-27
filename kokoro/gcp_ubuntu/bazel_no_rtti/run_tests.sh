@@ -259,6 +259,8 @@ readonly TARGETS=(
   "//tink/prf:hmac_prf_proto_serialization"
   "//tink/prf:prf_key"
   "//tink/prf:prf_parameters"
+  "//tink/prf:prf_set"
+  "//tink/signature:chunked_prehash"
   "//tink/signature:composite_ml_dsa_parameters"
   "//tink/signature:composite_ml_dsa_parameters_test"
   "//tink/signature:composite_ml_dsa_private_key"
@@ -281,6 +283,7 @@ readonly TARGETS=(
   "//tink/signature:ml_dsa_public_key"
   "//tink/signature:ml_dsa_public_key_test"
   "//tink/signature:predefined_signature_parameters"
+  "//tink/signature:prehash"
   "//tink/signature:rsa_ssa_pkcs1_parameters"
   "//tink/signature:rsa_ssa_pkcs1_parameters_test"
   "//tink/signature:rsa_ssa_pkcs1_private_key"
@@ -291,6 +294,7 @@ readonly TARGETS=(
   "//tink/signature:rsa_ssa_pss_private_key"
   "//tink/signature:rsa_ssa_pss_proto_serialization"
   "//tink/signature:rsa_ssa_pss_public_key"
+  "//tink/signature:sign_prehash"
   "//tink/signature:signature_parameters"
   "//tink/signature:signature_private_key"
   "//tink/signature:signature_public_key"
@@ -311,6 +315,7 @@ readonly TARGETS=(
   "//tink/streamingaead:aes_gcm_hkdf_streaming_proto_serialization"
   "//tink/streamingaead:streaming_aead_key"
   "//tink/streamingaead:streaming_aead_parameters"
+  "//tink/subtle/prf:streaming_prf"
   "//tools:check_rtti_type_ids_test"
 )
 

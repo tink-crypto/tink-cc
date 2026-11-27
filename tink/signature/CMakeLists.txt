@@ -11,6 +11,7 @@ tink_cc_library(
   DEPS
     absl::statusor
     absl::strings
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -21,6 +22,7 @@ tink_cc_library(
   DEPS
     absl::statusor
     absl::strings
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -2152,6 +2154,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    tink::core::rtti
 )
 
 tink_cc_library(

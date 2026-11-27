@@ -21,6 +21,7 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -33,6 +34,10 @@ class Prehash {
   virtual absl::StatusOr<std::string> Compute(absl::string_view data) const = 0;
 
   virtual ~Prehash();
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(69);
 };
 
 }  // namespace tink

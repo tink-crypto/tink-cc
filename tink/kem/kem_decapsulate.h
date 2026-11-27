@@ -19,6 +19,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/keyset_handle.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -36,6 +37,10 @@ class KemDecapsulate {
       absl::string_view ciphertext) const = 0;
 
   virtual ~KemDecapsulate() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(67);
 };
 
 }  // namespace tink

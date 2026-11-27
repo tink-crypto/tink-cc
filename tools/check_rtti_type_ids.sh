@@ -49,6 +49,15 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 57 //third_party/tink/cc/public_key_verify.h
 58 //third_party/tink/cc/streaming_aead.h
 59 //third_party/tink/cc/streaming_mac.h
+61 //third_party/tink/cc/prf/prf_set.h
+62 //third_party/tink/cc/prf/prf_set.h
+63 //third_party/tink/cc/keyderivation/keyset_deriver.h
+67 //third_party/tink/cc/kem/kem_decapsulate.h
+68 //third_party/tink/cc/kem/kem_encapsulate.h
+69 //third_party/tink/cc/signature/prehash.h
+70 //third_party/tink/cc/signature/sign_prehash.h
+71 //third_party/tink/cc/signature/chunked_prehash.h
+77 //third_party/tink/cc/subtle/prf/streaming_prf.h
 101 //third_party/tink/cc/mac/mac_parameters.h
 102 //third_party/tink/cc/mac/mac_key.h
 103 //third_party/tink/cc/mac/hmac_parameters.h

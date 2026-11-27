@@ -10,6 +10,7 @@ cc_library(
     hdrs = ["streaming_prf.h"],
     deps = [
         "//tink:input_stream",
+        "//tink:rtti",
         "@abseil-cpp//absl/strings",
     ],
 )

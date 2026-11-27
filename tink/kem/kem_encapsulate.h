@@ -20,6 +20,7 @@
 #include <string>
 
 #include "tink/keyset_handle.h"
+#include "tink/rtti.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -47,6 +48,10 @@ class KemEncapsulate {
   virtual absl::StatusOr<KemEncapsulation> Encapsulate() const = 0;
 
   virtual ~KemEncapsulate() = default;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_BASE();
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(68);
 };
 
 }  // namespace tink

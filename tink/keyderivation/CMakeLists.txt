@@ -10,6 +10,7 @@ tink_cc_library(
   DEPS
     absl::strings
     tink::core::keyset_handle
+    tink::core::rtti
     tink::util::statusor
   PUBLIC
 )

@@ -278,10 +278,10 @@ struct NamedHybridKey {
   const HybridPrivateKey* private_key;
 };
 
-using Hybrid2026SerializationTest = TestWithParam<NamedHybridKey>;
+using Hybrid2026KeysTest = TestWithParam<NamedHybridKey>;
 
 INSTANTIATE_TEST_SUITE_P(
-    Hybrid2026SerializationTestSuite, Hybrid2026SerializationTest,
+    Hybrid2026KeysTestSuite, Hybrid2026KeysTest,
     Values(
         NamedHybridKey{
             "Hpke",
@@ -296,7 +296,7 @@ INSTANTIATE_TEST_SUITE_P(
       return info.param.test_name;
     });
 
-TEST_P(Hybrid2026SerializationTest, SerializationRegistry) {
+TEST_P(Hybrid2026KeysTest, SerializationRegistry) {
   Configuration config;
   ASSERT_THAT(AddHybrid2026(config), IsOk());
   absl::StatusOr<SerializationRegistry*> registry =

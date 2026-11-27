@@ -896,10 +896,10 @@ struct NamedJwtSignatureKey {
   std::shared_ptr<const JwtSignaturePrivateKey> private_key;
 };
 
-using JwtSignature2026SerializationTest = TestWithParam<NamedJwtSignatureKey>;
+using JwtSignature2026KeysTest = TestWithParam<NamedJwtSignatureKey>;
 
 INSTANTIATE_TEST_SUITE_P(
-    JwtSignature2026SerializationTestSuite, JwtSignature2026SerializationTest,
+    JwtSignature2026KeysTestSuite, JwtSignature2026KeysTest,
     Values(
         NamedJwtSignatureKey{
             "JwtEcdsa",
@@ -922,7 +922,7 @@ INSTANTIATE_TEST_SUITE_P(
       return info.param.test_name;
     });
 
-TEST_P(JwtSignature2026SerializationTest, SerializationRegistry) {
+TEST_P(JwtSignature2026KeysTest, SerializationRegistry) {
   Configuration config;
   ASSERT_THAT(AddJwtSignature2026(config), IsOk());
   absl::StatusOr<internal::SerializationRegistry*> registry =

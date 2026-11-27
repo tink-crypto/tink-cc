@@ -306,7 +306,28 @@ TEST_P(JwtMacTest, GetPrimitive) {
 INSTANTIATE_TEST_SUITE_P(JwtMacTestSuite, JwtMacTest,
                          testing::ValuesIn(GetJwtMacTestParams()));
 
-TEST(JwtMac2026Test, SerializationRegistry) {
+struct NamedJwtMacKey {
+  std::string test_name;
+  const JwtHmacKey* key;
+};
+
+using JwtMac2026KeysTest = TestWithParam<NamedJwtMacKey>;
+
+INSTANTIATE_TEST_SUITE_P(
+    JwtMac2026KeysTestSuite, JwtMac2026KeysTest,
+    Values(NamedJwtMacKey{
+               "JwtHmacHs256",
+               &GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256)
+                    .key},
+           NamedJwtMacKey{
+               "JwtHmacHs512",
+               &GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs512)
+                    .key}),
+    [](const testing::TestParamInfo<NamedJwtMacKey>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(JwtMac2026KeysTest, SerializationRegistry) {
   Configuration config;
   ASSERT_THAT(AddJwtMac2026(config), IsOk());
   absl::StatusOr<internal::SerializationRegistry*> registry =
@@ -324,8 +345,7 @@ TEST(JwtMac2026Test, SerializationRegistry) {
     std::string name;
     const internal::SerializationRegistry* registry;
   };
-  const JwtHmacKey& key =
-      GetJwtHmacTestVector(JwtHmacParameters::Algorithm::kHs256).key;
+  const JwtHmacKey& key = *GetParam().key;
   for (const NamedRegistry& entry :
        {NamedRegistry{"Configuration", *registry},
         NamedRegistry{"KeyGenConfiguration", *key_gen_registry}}) {

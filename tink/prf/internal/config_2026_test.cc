@@ -125,10 +125,10 @@ struct NamedKey {
   const Key* key;
 };
 
-using Prf2026SerializationTest = TestWithParam<NamedKey>;
+using Prf2026KeysTest = TestWithParam<NamedKey>;
 
 INSTANTIATE_TEST_SUITE_P(
-    Prf2026SerializationTestSuite, Prf2026SerializationTest,
+    Prf2026KeysTestSuite, Prf2026KeysTest,
     Values(NamedKey{"AesCmac",
                     &GetAesCmacPrfTestVector(/*key_size_in_bytes=*/32).key},
            NamedKey{"Hkdf", &GetHkdfPrfTestVector(
@@ -143,7 +143,7 @@ INSTANTIATE_TEST_SUITE_P(
       return info.param.test_name;
     });
 
-TEST_P(Prf2026SerializationTest, SerializationRegistry) {
+TEST_P(Prf2026KeysTest, SerializationRegistry) {
   Configuration config;
   ASSERT_THAT(AddPrf2026(config), IsOk());
   absl::StatusOr<SerializationRegistry*> registry =

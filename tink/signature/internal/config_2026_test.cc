@@ -514,10 +514,10 @@ struct NamedSignatureTestVector {
   internal::SignatureTestVector test_vector;
 };
 
-using SignatureSerializationTest =
+using Signature2026KeysTest =
     testing::TestWithParam<NamedSignatureTestVector>;
 
-TEST_P(SignatureSerializationTest, SerializationRegistry) {
+TEST_P(Signature2026KeysTest, SerializationRegistry) {
   Configuration config;
   ASSERT_THAT(AddSignature2026(config), IsOk());
   absl::StatusOr<SerializationRegistry*> registry =
@@ -559,7 +559,7 @@ TEST_P(SignatureSerializationTest, SerializationRegistry) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    SignatureSerializationTestSuite, SignatureSerializationTest,
+    Signature2026KeysTestSuite, Signature2026KeysTest,
     testing::Values(
         NamedSignatureTestVector{"RsaSsaPkcs1",
                                  internal::GetRsaSsaPkcs1TestVector(

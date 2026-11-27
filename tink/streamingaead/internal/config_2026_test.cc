@@ -17,6 +17,7 @@
 #include "tink/streamingaead/internal/config_2026.h"
 
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -25,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
@@ -191,6 +193,40 @@ TEST_P(StreamingAead2026SerializationTest, SerializationRegistry) {
     ASSERT_THAT(parsed_key, IsOk());
     EXPECT_EQ(**parsed_key, key);
   }
+}
+
+struct NamedStreamingAeadTestVector {
+  std::string test_name;
+  StreamingAeadTestVector vector;
+};
+
+using StreamingAead2026KeyGenTest =
+    testing::TestWithParam<NamedStreamingAeadTestVector>;
+
+INSTANTIATE_TEST_SUITE_P(
+    StreamingAead2026KeyGenTestSuite, StreamingAead2026KeyGenTest,
+    testing::Values(
+        NamedStreamingAeadTestVector{
+            "AesCtrHmacStreaming",
+            GetAesCtrHmacStreamingTestVector(/*key_size_in_bytes=*/32)},
+        NamedStreamingAeadTestVector{
+            "AesGcmHkdfStreaming",
+            GetAesGcmHkdfStreamingTestVector(/*key_size_in_bytes=*/32)}),
+    [](const testing::TestParamInfo<NamedStreamingAeadTestVector>& info) {
+      return info.param.test_name;
+    });
+
+TEST_P(StreamingAead2026KeyGenTest, CreateKey) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddStreamingAeadKeyGen2026(key_gen_config), IsOk());
+
+  const Parameters& params =
+      GetParam().vector.streamingaead_key->GetParameters();
+  absl::StatusOr<std::unique_ptr<Key>> key = KeyGenConfigurationImpl::CreateKey(
+      params, /*id_requirement=*/std::nullopt, key_gen_config);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_EQ((*key)->GetParameters(), params);
+  EXPECT_EQ((*key)->GetIdRequirement(), std::nullopt);
 }
 
 }  // namespace

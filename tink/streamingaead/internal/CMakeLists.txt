@@ -161,6 +161,7 @@ tink_cc_test(
     GTest::gmock
     absl::memory
     absl::status_matchers
+    absl::statusor
     tink::core::configuration
     tink::core::input_stream
     tink::core::insecure_secret_key_access_testonly
@@ -199,7 +200,9 @@ tink_cc_library(
     key_gen_config_2026.cc
     key_gen_config_2026.h
   DEPS
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_key_creator
     tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
+    tink::streamingaead::internal::aes_gcm_hkdf_streaming_key_creator
     tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
     absl::status
     absl::status_macros
@@ -207,7 +210,9 @@ tink_cc_library(
     tink::internal::key_gen_configuration_impl
     tink::internal::serialization_registry
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::util::status
 )
 

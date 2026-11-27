@@ -24,8 +24,12 @@
 #include "tink/internal/serialization_registry.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_key_creator.h"
 #include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_key_creator.h"
 #include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 
 namespace crypto {
@@ -42,6 +46,13 @@ absl::Status AddStreamingAeadKeyGen2026(KeyGenConfiguration& config) {
   ABSL_RETURN_IF_ERROR(
       RegisterAesGcmHkdfStreamingProtoSerializationWithRegistry(
           *serialization_registry));
+
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<AesCtrHmacStreamingParameters>(
+          CreateAesCtrHmacStreamingKey, config));
+  ABSL_RETURN_IF_ERROR(
+      KeyGenConfigurationImpl::AddKeyCreator<AesGcmHkdfStreamingParameters>(
+          CreateAesGcmHkdfStreamingKey, config));
 
   absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       std::make_unique<AesCtrHmacStreamingKeyManager>(), config);

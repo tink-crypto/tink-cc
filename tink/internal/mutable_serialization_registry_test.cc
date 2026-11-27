@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <string_view>
-#include <typeindex>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -39,6 +38,7 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/test_matchers.h"
 
@@ -67,15 +67,13 @@ TEST(MutableSerializationRegistryTest, ParseParameters) {
       registry.ParseParameters(NoIdSerialization());
   ASSERT_THAT(no_id_params, IsOk());
   EXPECT_THAT((*no_id_params)->HasIdRequirement(), IsFalse());
-  EXPECT_THAT(std::type_index(typeid(**no_id_params)),
-              std::type_index(typeid(NoIdParams)));
+  EXPECT_THAT(GetTypeIndex(**no_id_params), GetStaticTypeIndex<NoIdParams>());
 
   absl::StatusOr<std::unique_ptr<Parameters>> id_params =
       registry.ParseParameters(IdParamsSerialization());
   ASSERT_THAT(id_params, IsOk());
   EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
-  EXPECT_THAT(std::type_index(typeid(**id_params)),
-              std::type_index(typeid(IdParams)));
+  EXPECT_THAT(GetTypeIndex(**id_params), GetStaticTypeIndex<IdParams>());
 }
 
 TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
@@ -89,8 +87,7 @@ TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
       registry.ParseParameters(IdParamsSerialization());
   ASSERT_THAT(id_params, IsOk());
   EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
-  EXPECT_THAT(std::type_index(typeid(**id_params)),
-              std::type_index(typeid(IdParams)));
+  EXPECT_THAT(GetTypeIndex(**id_params), GetStaticTypeIndex<IdParams>());
 
   // Parse parameters without registered parameters parser.
   absl::StatusOr<ProtoParametersSerialization> serialization =
@@ -196,14 +193,12 @@ TEST(MutableSerializationRegistryTest, ParseKey) {
   absl::StatusOr<std::unique_ptr<Key>> no_id_key =
       registry.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(no_id_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**no_id_key)),
-              std::type_index(typeid(NoIdKey)));
+  EXPECT_THAT(GetTypeIndex(**no_id_key), GetStaticTypeIndex<NoIdKey>());
 
   absl::StatusOr<std::unique_ptr<Key>> id_key = registry.ParseKey(
       IdKeySerialization(/*id=*/123), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(id_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**id_key)),
-              std::type_index(typeid(IdKey)));
+  EXPECT_THAT(GetTypeIndex(**id_key), GetStaticTypeIndex<IdKey>());
   EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
 }
 
@@ -215,8 +210,7 @@ TEST(MutableSerializationRegistryTest, ParseKeyNoSecretAccess) {
   absl::StatusOr<std::unique_ptr<Key>> no_id_public_key =
       registry.ParseKey(NoIdSerialization(), std::nullopt);
   ASSERT_THAT(no_id_public_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**no_id_public_key)),
-              std::type_index(typeid(NoIdKey)));
+  EXPECT_THAT(GetTypeIndex(**no_id_public_key), GetStaticTypeIndex<NoIdKey>());
 }
 
 TEST(MutableSerializationRegistryTest, ParseKeyWithLegacyFallback) {
@@ -229,8 +223,7 @@ TEST(MutableSerializationRegistryTest, ParseKeyWithLegacyFallback) {
       registry.ParseKeyWithLegacyFallback(IdKeySerialization(/*id=*/123),
                                           InsecureSecretKeyAccess::Get());
   ASSERT_THAT(id_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**id_key)),
-              std::type_index(typeid(IdKey)));
+  EXPECT_THAT(GetTypeIndex(**id_key), GetStaticTypeIndex<IdKey>());
   EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
 
   // Parse key without registered key parser.
@@ -405,8 +398,7 @@ TEST(MutableSerializationRegistryTest, GlobalInstance) {
           NoIdSerialization());
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsFalse());
-  EXPECT_THAT(std::type_index(typeid(**params)),
-              std::type_index(typeid(NoIdParams)));
+  EXPECT_THAT(GetTypeIndex(**params), GetStaticTypeIndex<NoIdParams>());
 }
 
 }  // namespace internal

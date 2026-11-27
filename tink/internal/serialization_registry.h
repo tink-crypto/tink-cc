@@ -20,8 +20,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <typeindex>
-#include <typeinfo>
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
@@ -37,6 +35,7 @@
 #include "tink/internal/serializer_index.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -103,7 +102,7 @@ class SerializationRegistry {
           absl::StatusCode::kNotFound,
           absl::StrFormat(
               "No parameters serializer found for parameters type %s",
-              typeid(parameters).name()));
+              GetTypeIndex(parameters).name()));
     }
 
     return it->second->SerializeParameters(parameters);
@@ -129,7 +128,7 @@ class SerializationRegistry {
       return absl::Status(
           absl::StatusCode::kNotFound,
           absl::StrFormat("No key serializer found for key type %s",
-                          typeid(key).name()));
+                          GetTypeIndex(key).name()));
     }
 
     return it->second->SerializeKey(key, token);

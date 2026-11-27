@@ -17,7 +17,6 @@
 #include "tink/internal/serialization_registry.h"
 
 #include <memory>
-#include <typeinfo>
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
@@ -38,6 +37,7 @@
 #include "tink/internal/serializer_index.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -97,7 +97,7 @@ SerializationRegistry::ParseParameters(
     return absl::Status(
         absl::StatusCode::kNotFound,
         absl::StrFormat("No parameters parser found for parameters type %s",
-                        typeid(serialization).name()));
+                        GetTypeIndex(serialization).name()));
   }
 
   return it->second->ParseParameters(serialization);
@@ -110,7 +110,7 @@ SerializationRegistry::ParseParametersWithLegacyFallback(
       ParseParameters(serialization);
   if (parameters.status().code() == absl::StatusCode::kNotFound) {
     const ProtoParametersSerialization* proto_serialization =
-        dynamic_cast<const ProtoParametersSerialization*>(&serialization);
+        DynamicCast<const ProtoParametersSerialization*>(&serialization);
     if (proto_serialization == nullptr) {
       return absl::Status(
           absl::StatusCode::kInternal,
@@ -133,7 +133,7 @@ absl::StatusOr<std::unique_ptr<Key>> SerializationRegistry::ParseKey(
     return absl::Status(
         absl::StatusCode::kNotFound,
         absl::StrFormat("No key parser found for serialization type %s",
-                        typeid(serialization).name()));
+                        GetTypeIndex(serialization).name()));
   }
 
   return it->second->ParseKey(serialization, token);
@@ -145,7 +145,7 @@ SerializationRegistry::ParseKeyWithLegacyFallback(
   absl::StatusOr<std::unique_ptr<Key>> key = ParseKey(serialization, token);
   if (key.status().code() == absl::StatusCode::kNotFound) {
     const ProtoKeySerialization* proto_serialization =
-        dynamic_cast<const ProtoKeySerialization*>(&serialization);
+        DynamicCast<const ProtoKeySerialization*>(&serialization);
     if (proto_serialization == nullptr) {
       return absl::Status(
           absl::StatusCode::kInternal,

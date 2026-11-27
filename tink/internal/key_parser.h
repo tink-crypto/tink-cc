@@ -20,7 +20,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <typeindex>
 #include <utility>
 
 #include "absl/functional/function_ref.h"
@@ -31,6 +30,7 @@
 #include "tink/internal/parser_index.h"
 #include "tink/internal/serialization.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -91,7 +91,7 @@ class KeyParserImpl : public KeyParser {
                           "Invalid object identifier for this key parser.");
     }
     const SerializationT* st =
-        dynamic_cast<const SerializationT*>(&serialization);
+        DynamicCast<const SerializationT*>(&serialization);
     if (st == nullptr) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid serialization type for this key parser.");

@@ -19,7 +19,6 @@
 #include <memory>
 #include <optional>
 #include <string_view>
-#include <typeindex>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -41,6 +40,7 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 
 namespace crypto {
@@ -68,15 +68,13 @@ TEST(SerializationRegistryTest, ParseParameters) {
       registry.ParseParameters(NoIdSerialization());
   ASSERT_THAT(no_id_params, IsOk());
   EXPECT_THAT((*no_id_params)->HasIdRequirement(), IsFalse());
-  EXPECT_THAT(std::type_index(typeid(**no_id_params)),
-              std::type_index(typeid(NoIdParams)));
+  EXPECT_THAT(GetTypeIndex(**no_id_params), GetStaticTypeIndex<NoIdParams>());
 
   absl::StatusOr<std::unique_ptr<Parameters>> id_params =
       registry.ParseParameters(IdParamsSerialization());
   ASSERT_THAT(id_params, IsOk());
   EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
-  EXPECT_THAT(std::type_index(typeid(**id_params)),
-              std::type_index(typeid(IdParams)));
+  EXPECT_THAT(GetTypeIndex(**id_params), GetStaticTypeIndex<IdParams>());
 }
 
 TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
@@ -90,8 +88,7 @@ TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
       registry.ParseParameters(IdParamsSerialization());
   ASSERT_THAT(id_params, IsOk());
   EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
-  EXPECT_THAT(std::type_index(typeid(**id_params)),
-              std::type_index(typeid(IdParams)));
+  EXPECT_THAT(GetTypeIndex(**id_params), GetStaticTypeIndex<IdParams>());
 
   // Parse parameters without registered parameters parser.
   absl::StatusOr<ProtoParametersSerialization> serialization =
@@ -197,14 +194,12 @@ TEST(SerializationRegistryTest, ParseKey) {
   absl::StatusOr<std::unique_ptr<Key>> no_id_key =
       registry.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(no_id_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**no_id_key)),
-              std::type_index(typeid(NoIdKey)));
+  EXPECT_THAT(GetTypeIndex(**no_id_key), GetStaticTypeIndex<NoIdKey>());
 
   absl::StatusOr<std::unique_ptr<Key>> id_key = registry.ParseKey(
       IdKeySerialization(/*id=*/123), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(id_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**id_key)),
-              std::type_index(typeid(IdKey)));
+  EXPECT_THAT(GetTypeIndex(**id_key), GetStaticTypeIndex<IdKey>());
   EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
 }
 
@@ -218,8 +213,7 @@ TEST(SerializationRegistryTest, ParseKeyWithLegacyFallback) {
       registry.ParseKeyWithLegacyFallback(IdKeySerialization(/*id=*/123),
                                           InsecureSecretKeyAccess::Get());
   ASSERT_THAT(id_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**id_key)),
-              std::type_index(typeid(IdKey)));
+  EXPECT_THAT(GetTypeIndex(**id_key), GetStaticTypeIndex<IdKey>());
   EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
 
   // Parse key without registered key parser.
@@ -251,8 +245,7 @@ TEST(SerializationRegistryTest, ParseKeyNoSecretAccess) {
   absl::StatusOr<std::unique_ptr<Key>> no_id_public_key =
       registry.ParseKey(NoIdSerialization(), std::nullopt);
   ASSERT_THAT(no_id_public_key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**no_id_public_key)),
-              std::type_index(typeid(NoIdKey)));
+  EXPECT_THAT(GetTypeIndex(**no_id_public_key), GetStaticTypeIndex<NoIdKey>());
 }
 
 TEST(SerializationRegistryTest, ParseKeyWithoutRegistration) {
@@ -360,8 +353,7 @@ TEST(SerializationRegistryTest, RegistryCopy) {
       registry2.ParseParameters(NoIdSerialization());
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsFalse());
-  EXPECT_THAT(std::type_index(typeid(**params)),
-              std::type_index(typeid(NoIdParams)));
+  EXPECT_THAT(GetTypeIndex(**params), GetStaticTypeIndex<NoIdParams>());
 
   absl::StatusOr<std::unique_ptr<Serialization>> params_serialization =
       registry2.SerializeParameters<NoIdSerialization>(NoIdParams());
@@ -371,7 +363,7 @@ TEST(SerializationRegistryTest, RegistryCopy) {
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry2.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**key)), std::type_index(typeid(NoIdKey)));
+  EXPECT_THAT(GetTypeIndex(**key), GetStaticTypeIndex<NoIdKey>());
 
   absl::StatusOr<std::unique_ptr<Serialization>> key_serialization =
       registry2.SerializeKey<NoIdSerialization>(NoIdKey(),
@@ -504,8 +496,7 @@ TEST(SerializationRegistryTest, RegistryMove) {
       registry2.ParseParameters(NoIdSerialization());
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsFalse());
-  EXPECT_THAT(std::type_index(typeid(**params)),
-              std::type_index(typeid(NoIdParams)));
+  EXPECT_THAT(GetTypeIndex(**params), GetStaticTypeIndex<NoIdParams>());
 
   absl::StatusOr<std::unique_ptr<Serialization>> params_serialization =
       registry2.SerializeParameters<NoIdSerialization>(NoIdParams());
@@ -515,7 +506,7 @@ TEST(SerializationRegistryTest, RegistryMove) {
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry2.ParseKey(NoIdSerialization(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**key)), std::type_index(typeid(NoIdKey)));
+  EXPECT_THAT(GetTypeIndex(**key), GetStaticTypeIndex<NoIdKey>());
 
   absl::StatusOr<std::unique_ptr<Serialization>> key_serialization =
       registry2.SerializeKey<NoIdSerialization>(NoIdKey(),
@@ -650,8 +641,7 @@ TEST(SerializationRegistryTest, DirectRegistrationAndRoundTrip) {
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(NoIdSerialization());
   ASSERT_THAT(params, IsOk());
-  EXPECT_THAT(std::type_index(typeid(**params)),
-              Eq(std::type_index(typeid(NoIdParams))));
+  EXPECT_THAT(GetTypeIndex(**params), Eq(GetStaticTypeIndex<NoIdParams>()));
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       registry.SerializeParameters<NoIdSerialization>(NoIdParams());

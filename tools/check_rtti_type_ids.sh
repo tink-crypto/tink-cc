@@ -162,6 +162,8 @@ DEFAULT_EXPECTED_IDS="$(cat <<'EOF'
 30015 //third_party/tink/cc/internal/serialization_test_util.h
 30016 //third_party/tink/cc/internal/serialization_test_util.h
 30017 //third_party/tink/cc/internal/serialization_test_util.h
+30018 //third_party/tink/cc/internal/parser_index_test.cc
+30019 //third_party/tink/cc/internal/parser_index_test.cc
 EOF
 )"
 readonly DEFAULT_EXPECTED_IDS

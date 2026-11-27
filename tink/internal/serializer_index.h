@@ -17,12 +17,12 @@
 #ifndef TINK_INTERNAL_SERIALIZER_INDEX_H_
 #define TINK_INTERNAL_SERIALIZER_INDEX_H_
 
-#include <string>
-#include <typeindex>
+#include <utility>
 
 #include "tink/internal/serialization.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -34,24 +34,24 @@ class SerializerIndex {
   // `SerializationT` types. Useful for key and parameters serializers.
   template <typename KeyOrParameterT, typename SerializationT>
   static SerializerIndex Create() {
-    return SerializerIndex(std::type_index(typeid(KeyOrParameterT)),
-                           std::type_index(typeid(SerializationT)));
+    return SerializerIndex(GetStaticTypeIndex<KeyOrParameterT>(),
+                           GetStaticTypeIndex<SerializationT>());
   }
 
   // Create registry lookup key for `SerializationT` type and `parameters`.
   // Useful for the serialization registry.
   template <typename SerializationT>
   static SerializerIndex Create(const Parameters& parameters) {
-    return SerializerIndex(std::type_index(typeid(parameters)),
-                           std::type_index(typeid(SerializationT)));
+    return SerializerIndex(GetTypeIndex(parameters),
+                           GetStaticTypeIndex<SerializationT>());
   }
 
   // Create registry lookup key for `SerializationT` type and `key`. Useful for
   // the serialization registry.
   template <typename SerializationT>
   static SerializerIndex Create(const Key& key) {
-    return SerializerIndex(std::type_index(typeid(key)),
-                           std::type_index(typeid(SerializationT)));
+    return SerializerIndex(GetTypeIndex(key),
+                           GetStaticTypeIndex<SerializationT>());
   }
 
   // Returns true if key/parameters index and serialization type index match.
@@ -68,11 +68,11 @@ class SerializerIndex {
   }
 
  private:
-  SerializerIndex(std::type_index kp_index, std::type_index serialization_index)
+  SerializerIndex(TypeIndex kp_index, TypeIndex serialization_index)
       : kp_index_(kp_index), serialization_index_(serialization_index) {}
 
-  std::type_index kp_index_;
-  std::type_index serialization_index_;
+  TypeIndex kp_index_;
+  TypeIndex serialization_index_;
 };
 
 }  // namespace internal

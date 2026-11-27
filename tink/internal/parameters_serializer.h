@@ -20,7 +20,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <typeindex>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -29,6 +28,7 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/serializer_index.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -74,7 +74,7 @@ class ParametersSerializerImpl : public ParametersSerializer {
 
   absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
       const Parameters& parameters) const override {
-    const ParametersT* pt = dynamic_cast<const ParametersT*>(&parameters);
+    const ParametersT* pt = DynamicCast<const ParametersT*>(&parameters);
     if (pt == nullptr) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,

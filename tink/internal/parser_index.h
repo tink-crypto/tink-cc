@@ -18,10 +18,11 @@
 #define TINK_INTERNAL_PARSER_INDEX_H_
 
 #include <string>
-#include <typeindex>
+#include <utility>
 
 #include "absl/strings/string_view.h"
 #include "tink/internal/serialization.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -33,14 +34,13 @@ class ParserIndex {
   // `object_identifier`. Useful for key and parameters parsers.
   template <typename SerializationT>
   static ParserIndex Create(absl::string_view object_identifier) {
-    return ParserIndex(std::type_index(typeid(SerializationT)),
-                       object_identifier);
+    return ParserIndex(GetStaticTypeIndex<SerializationT>(), object_identifier);
   }
 
   // Create registry lookup key for `serialization`. Useful for the
   // serialization registry.
   static ParserIndex Create(const Serialization& serialization) {
-    return ParserIndex(std::type_index(typeid(serialization)),
+    return ParserIndex(GetTypeIndex(serialization),
                        serialization.ObjectIdentifier());
   }
 
@@ -57,10 +57,10 @@ class ParserIndex {
   }
 
  private:
-  ParserIndex(std::type_index index, absl::string_view object_identifier)
+  ParserIndex(TypeIndex index, absl::string_view object_identifier)
       : index_(index), object_identifier_(object_identifier) {}
 
-  std::type_index index_;
+  TypeIndex index_;
   std::string object_identifier_;
 };
 

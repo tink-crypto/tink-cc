@@ -20,7 +20,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <typeindex>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -29,6 +28,7 @@
 #include "tink/internal/parser_index.h"
 #include "tink/internal/serialization.h"
 #include "tink/parameters.h"
+#include "tink/rtti.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -84,7 +84,7 @@ class ParametersParserImpl : public ParametersParser {
           "Invalid object identifier for this parameters parser.");
     }
     const SerializationT* st =
-        dynamic_cast<const SerializationT*>(&serialization);
+        DynamicCast<const SerializationT*>(&serialization);
     if (st == nullptr) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,

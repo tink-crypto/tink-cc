@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/serialization.h"
+#include "tink/rtti.h"
 
 namespace crypto {
 namespace tink {
@@ -41,12 +42,20 @@ class ExampleSerialization : public Serialization {
 
  protected:
   std::string object_identifier_;
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(Serialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30018);
 };
 
 class DifferentSerialization : public ExampleSerialization {
  public:
   explicit DifferentSerialization(absl::string_view object_identifier)
       : ExampleSerialization(object_identifier) {}
+
+ private:
+  TINK_INTERNAL_RTTI_ADD_METHODS_DERIVED(ExampleSerialization);
+  TINK_INTERNAL_RTTI_SET_TYPE_ID(30019);
 };
 
 TEST(ParserIndex, CreateEquivalent) {

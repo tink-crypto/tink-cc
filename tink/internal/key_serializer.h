@@ -19,7 +19,6 @@
 
 #include <functional>
 #include <memory>
-#include <typeindex>
 #include <utility>
 
 #include "absl/functional/function_ref.h"
@@ -29,6 +28,7 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/serializer_index.h"
 #include "tink/key.h"
+#include "tink/rtti.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -66,7 +66,7 @@ class KeySerializerImpl : public KeySerializer {
   absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
       const Key& key,
       absl::optional<SecretKeyAccessToken> token) const override {
-    const KeyT* kt = dynamic_cast<const KeyT*>(&key);
+    const KeyT* kt = DynamicCast<const KeyT*>(&key);
     if (kt == nullptr) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid key type for this key serializer.");

@@ -688,6 +688,7 @@ tink_cc_library(
   DEPS
     tink::internal::serialization
     absl::strings
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -699,6 +700,7 @@ tink_cc_test(
     tink::internal::serialization
     GTest::gmock
     absl::strings
+    tink::core::rtti
 )
 
 tink_cc_library(
@@ -709,6 +711,7 @@ tink_cc_library(
     tink::internal::serialization
     tink::core::key
     tink::core::parameters
+    tink::core::rtti
 )
 
 tink_cc_test(
@@ -732,6 +735,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -765,6 +769,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::core::parameters
+    tink::core::rtti
     tink::util::status
     tink::util::statusor
 )
@@ -800,6 +805,7 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::key
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::util::status
     tink::util::statusor
@@ -838,6 +844,7 @@ tink_cc_library(
     absl::statusor
     absl::optional
     tink::core::key
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::util::status
     tink::util::statusor
@@ -988,6 +995,7 @@ tink_cc_library(
     absl::optional
     tink::core::key
     tink::core::parameters
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::util::status
     tink::util::statusor
@@ -1017,6 +1025,7 @@ tink_cc_test(
     tink::core::key
     tink::core::parameters
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_key_access_token
 )
 
@@ -1066,6 +1075,7 @@ tink_cc_test(
     tink::core::key
     tink::core::parameters
     tink::core::restricted_data
+    tink::core::rtti
     tink::core::secret_key_access_token
     tink::util::test_matchers
 )
